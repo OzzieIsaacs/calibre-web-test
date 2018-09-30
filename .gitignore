@@ -1,0 +1,28 @@
+### Python ###
+# Byte-compiled / optimized / DLL files
+__pycache__/
+*.py[cod]
+*$py.class
+
+# Distribution / packaging
+.Python
+env/
+eggs/
+.eggs/
+*.egg-info/
+.installed.cfg
+*.egg
+
+# Helper files
+*.db
+*.log
+
+# IDE
+.idea/
+*.bak
+*.log.*
+tags
+
+build/translations/*.po
+test/Calibre_db/
+selenium
