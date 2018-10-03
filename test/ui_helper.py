@@ -2,6 +2,7 @@
 # -*- coding: utf-8 -*-
 
 from selenium.webdriver.common.by import By
+from selenium.webdriver.common.keys import Keys
 from selenium.webdriver.support.ui import WebDriverWait, Select
 from selenium.webdriver.support import expected_conditions as EC
 from selenium.common.exceptions import TimeoutException
@@ -60,9 +61,11 @@ class ui_class():
         return False
 
     @classmethod
-    def check_user_logged_in(cls,user):
+    def check_user_logged_in(cls,user, noCompare=False):
         user_element = cls.check_element_on_page((By.ID, "top_user"))
-        if user:
+        if user_element:
+            if noCompare:
+                return True
             if user_element.text.lower() == user.lower():
                 return True
         return False
@@ -105,6 +108,12 @@ class ui_class():
             return ret_ele
         else:
             return ret_shelfs
+
+    @classmethod
+    def page_has_loaded(cls):
+        # self.log.info("Checking if {} page is loaded.".format(self.driver.current_url))
+        page_state = cls.driver.execute_script('return document.readyState;')
+        return page_state == 'complete'
 
     @classmethod
     def goto_page(cls, page_target):
@@ -283,8 +292,10 @@ class ui_class():
             if name == ele.text:
                 ele.click()
                 if not cls.check_element_on_page((By.ID, "email")):
+                    print('Could user: %s not edit' % name)
                     return False
                 return cls.change_user(element)
+        print('User: %s not found' % name)
         return False
 
 
@@ -302,6 +313,17 @@ class ui_class():
             ele.clear()
             ele.send_keys(nav_element['kindle_mail'])
             nav_element.pop('kindle_mail')
+        if 'password' in nav_element:
+            ele = cls.driver.find_element_by_id('password')
+            ele.clear()
+            ele.send_keys(nav_element['password'])
+            nav_element.pop('password')
+        if 'email' in nav_element:
+            ele = cls.driver.find_element_by_id('email')
+            ele.clear()
+            ele.send_keys(nav_element['email'])
+            nav_element.pop('email')
+
 
         # check if checkboxes are in list and seperate lists
         for element,key in enumerate(nav_element):
@@ -322,7 +344,7 @@ class ui_class():
             select.select_by_visible_text(process_selects[key])
 
         # finally submit settings
-        cls.driver.find_element_by_name("submit").click()
+        cls.driver.find_element_by_id("submit").click()
 
 
     def create_shelf(self, name, public=False):
@@ -377,6 +399,8 @@ class ui_class():
                 eleclick = cls.driver.find_element_by_id(checkbox)
                 if (config[checkbox] == 1 and not eleclick.is_selected()) or config[checkbox] == 0 and eleclick.is_selected():
                     print('click did not work')
+                    time.sleep(2)
+                    ele.click()
 
 
         # process all selects
@@ -412,6 +436,7 @@ class ui_class():
             meta=ele[1].getchildren()
             book_r = dict()
             book_r['link'] = ele[0].getchildren()[0].attrib['href']
+            book_r['ele'] = cls.check_element_on_page((By.XPATH,"//a[@href='"+book_r['link']+"']/img"))
             book_r['id'] = book_r['link'][6:]
             book_r['title']= meta[0].text
             authors = meta[1].getchildren()
@@ -433,7 +458,7 @@ class ui_class():
             bk = dict()
             bk['link'] = ele[0].getchildren()[0].attrib['href']
             bk['id'] = bk['link'][6:]
-
+            bk['ele'] = cls.check_element_on_page((By.XPATH,"//a[@href='"+bk['link']+"']/img"))
             bk['title']= meta[0].text
             authors = meta[1].getchildren()
             bk['author'] = [a.text for a in authors]
@@ -543,9 +568,11 @@ class ui_class():
             #         tree.xpath("//*[contains(@href,'series')]")[1].text
             series = tree.xpath("//*[contains(@href,'series')]/ancestor::p")
             if series:
-                ret['series'] = ""
+                ret['series_all'] = ""
+                ret['series_index'] = series[0].text[5:-3]
                 for ele in series[0].iter():
-                    ret['series'] += ele.text
+                    ret['series_all'] += ele.text
+                    ret['series'] = ele.text
                     # series = cls.driver.find_elements_by_xpath("//*[contains(@href,'series')]//ancestor::p")
                     # if series:
                     #    ret['series']=series[0].text
@@ -574,7 +601,7 @@ class ui_class():
 
 
     @classmethod
-    def edit_book(cls, id=-1, content=dict(), detail_v=0, root_url='http://127.0.0.1:8083'):
+    def edit_book(cls, id=-1, content=dict(), detail_v=False, root_url='http://127.0.0.1:8083'):
         if id>0:
             cls.driver.get(root_url + "/admin/book/"+str(id))
         cls.check_element_on_page((By.ID,"book_edit_frm"))
@@ -582,15 +609,18 @@ class ui_class():
         if 'rating' in content:
             cls.driver.execute_script("arguments[0].setAttribute('value', arguments[1])",
                                   cls.driver.find_element_by_xpath("//input[@id='rating']"), content['rating'])
-        content.pop('rating')
+            content.pop('rating')
         for element, key in enumerate(content):
-            ele = cls.driver.find_element_by_id(key)
-            ele.clear()
+            ele = cls.check_element_on_page((By.ID, key))
+            ele.send_keys(Keys.CONTROL, "a")
+            ele.send_keys(Keys.DELETE)
+            if ele.get_attribute('value') != '':
+                print("clear didn't work")
             ele.send_keys(content[key])
 
         # don't stay on page after edit
         if detail_v:
-            cls.check_element_on_page((By.ID, "detail_view")).click()
+            cls.check_element_on_page((By.NAME, "detail_view")).click()
 
         submit = cls.check_element_on_page((By.ID, "submit"))
         submit.click()

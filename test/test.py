@@ -7,7 +7,7 @@ import os
 import time
 import requests
 from subproc_wrapper import process_open
-from testconfig import SELENIUM_SERVER
+from testconfig import SELENIUM_SERVER, CALIBRE_WEB_PATH
 from test_helper import calibre_helper
 from test_logging import test_logging
 from test_cli import test_cli
@@ -22,6 +22,7 @@ from test_login import test_login
 from test_opds_feed import test_opds_feed
 from test_updater import test_updater
 from test_register import test_register
+
 
 if __name__ == '__main__':
     result=False
@@ -42,7 +43,6 @@ if __name__ == '__main__':
         if result:
             break
 
-    dir = os.getcwd()
     calibre_web_Test = unittest.TestLoader().loadTestsFromTestCase(calibre_web_visibilitys)
     helper_test = unittest.TestLoader().loadTestsFromTestCase(calibre_helper)
     logging_test = unittest.TestLoader().loadTestsFromTestCase(test_logging)
@@ -58,11 +58,11 @@ if __name__ == '__main__':
     shelf_test = unittest.TestLoader().loadTestsFromTestCase(test_shelf)
     user_template_test = unittest.TestLoader().loadTestsFromTestCase(test_user_template)
     all_tests = unittest.TestSuite([shelf_test, logging_test, helper_test, calibre_web_Test, user_template_test,
-                                    test_anonymous, test_ebook_convert, test_edit_books, test_edit_books_gdrive,
-                                    test_login, test_opds_feed, test_updater, test_register, cli_test])
-    # all_tests = unittest.TestSuite([calibre_web_Test, user_template_test])
+                                    anonymous_test, ebook_convert_test, edit_books_test, edit_books_gdrive_test,
+                                    login_test, opds_feed_test, updater_test, register_test, cli_test])
+    # all_tests = unittest.TestSuite([edit_books_gdrive_test])
     # open the report file
-    outfile = open(os.path.join(dir ,"Calibre-Web TestSummary.html"), "w")
+    outfile = open(os.path.join(CALIBRE_WEB_PATH,'test',"Calibre-Web TestSummary.html"), "w")
     # configure HTMLTestRunner options
     runner = HTMLTestRunner.HTMLTestRunner(stream=outfile, title='Test Report', description='All Calibre-Web tests')
     # run the suite using HTMLTestRunner

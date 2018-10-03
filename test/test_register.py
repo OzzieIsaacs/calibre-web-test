@@ -18,7 +18,7 @@ use mitmproxy
 use secure smtp
 '''
 
-class test_user_template(unittest.TestCase, ui_class):
+class test_register(unittest.TestCase, ui_class):
     p=None
     driver = None
 
@@ -70,21 +70,26 @@ class test_user_template(unittest.TestCase, ui_class):
             self.login('admin','admin123')
 
     # no emailserver configure, email server not reachable
+    @unittest.skip("Not Implemented")
     def test_registering_user(self):
-        pass
+        self.assertIsNone('Not Implemented')
 
     # no emailadress during register double username, emailadress, capital letters, lowercase characters
+    @unittest.skip("Not Implemented")
     def test_registering_user_fail(self):
-        pass
+        self.assertIsNone('Not Implemented')
 
     # no emailadress during register double username, emailadress, capital letters, lowercase characters
+    @unittest.skip("Not Implemented")
     def test_login_with_password(self):
-        pass
+        self.assertIsNone('Not Implemented')
 
     # admin resends password
+    @unittest.skip("Not Implemented")
     def test_resend_password(self):
-        pass
+        self.assertIsNone('Not Implemented')
 
     # admin resends password
+    @unittest.skip("Not Implemented")
     def user_change_password(self):
-        pass
+        self.assertIsNone('Not Implemented')

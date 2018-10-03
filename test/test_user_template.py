@@ -372,12 +372,15 @@ class test_user_template(unittest.TestCase, ui_class):
         # delete user
         self.edit_user('drand',{'delete':1})
 
+    @unittest.skip("Not Implemented")
     def test_ui_language_settings(self):
         pass
 
+    @unittest.skip("Not Implemented")
     def test_limit_book_languages(self):
         pass
 
+    @unittest.skip("Not Implemented")
     def test_mature_content_settings(self):
         pass
 

@@ -17,7 +17,7 @@ from testconfig import CALIBRE_WEB_PATH, TEST_DB
 use secure-smtp
 '''
 
-class test_convert_email(unittest.TestCase, ui_class):
+class test_ebook_convert(unittest.TestCase, ui_class):
     p=None
     driver = None
 
@@ -72,16 +72,19 @@ class test_convert_email(unittest.TestCase, ui_class):
     # Set excecutable to wrong exe and start convert
     # set excecutable not existing and start convert
     # set excecutable non excecutable and start convert
+    @unittest.skip("Not Implemented")
     def test_convert_wrong_excecutable(self):
-        pass
+        self.assertIsNone('Not Implemented')
 
     # deactivate converter and check send to kindle and convert are not visible anymore
+    @unittest.skip("Not Implemented")
     def test_convert_deactivate(self):
-        pass
+        self.assertIsNone('Not Implemented')
 
     # set parameters for convert and start conversion
+    @unittest.skip("Not Implemented")
     def test_convert_parameter(self):
-        pass
+        self.assertIsNone('Not Implemented')
 
     # convert everything to everything
     # start conversion of azw3 -> mobi
@@ -101,44 +104,53 @@ class test_convert_email(unittest.TestCase, ui_class):
     # logout
     # login as admin
     # check conversion result conversion of other user visible
+    @unittest.skip("Not Implemented")
     def test_convert_only(self):
-        pass
+        self.assertIsNone('Not Implemented')
 
     # start conversion of epub -> mobi
     # wait for finished
     # start sending e-mail
     # check email received
+    @unittest.skip("Not Implemented")
     def test_email_only(self):
-        pass
+        self.assertIsNone('Not Implemented')
 
     # press send to kindle for not converted book
     # wait for finished
     # check email received
+    @unittest.skip("Not Implemented")
     def test_convert_email(self):
-        pass
+        self.assertIsNone('Not Implemented')
 
     # check visiblility kindle button for user with not set kindle-email
+    @unittest.skip("Not Implemented")
     def test_kindle_send_not_configured(self):
-        pass
+        self.assertIsNone('Not Implemented')
 
     # check behavior for failed email (size)
     # conversion okay, email failed
+    @unittest.skip("Not Implemented")
     def test_email_failed(self):
-        pass
+        self.assertIsNone('Not Implemented')
 
     # check conversion and email started and conversion failes
+    @unittest.skip("Not Implemented")
     def test_convert_failed_and_email(self):
-        pass
+        self.assertIsNone('Not Implemented')
 
     # check behavior for failed server setup (non-SSL)
+    @unittest.skip("Not Implemented")
     def test_smtp_setup_error(self):
-        pass
+        self.assertIsNone('Not Implemented')
 
     # check behavior for failed server setup (SSL)
+    @unittest.skip("Not Implemented")
     def test_SSL_smtp_setup_error(self):
-        pass
+        self.assertIsNone('Not Implemented')
 
     # check behavior for failed server setup (STARTTLS)
+    @unittest.skip("Not Implemented")
     def test_STARTTLS_smtp_setup_error(self):
-        pass
+        self.assertIsNone('Not Implemented')
 

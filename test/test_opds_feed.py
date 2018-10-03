@@ -64,10 +64,6 @@ class test_opds_feed(unittest.TestCase, ui_class):
         cls.driver.quit()
         cls.p.terminate()
 
-    def tearDown(self):
-        if not self.check_user_logged_in('admin'):
-            self.logout()
-            self.login('admin','admin123')
-
-    def test_random_user_template(self):
-        self.fill_view_config({'show_random':0})
+    @unittest.skip("Not Implemented")
+    def test_opds(self):
+        self.assertIsNone('Not Implemented')

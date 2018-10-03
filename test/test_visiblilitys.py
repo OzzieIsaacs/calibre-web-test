@@ -336,27 +336,7 @@ class calibre_web_visibilitys(unittest.TestCase, ui_class):
                 return
         self.assertIsNone("Error creating new users")
 
-    '''def test_soso(self):
-        self.edit_book(13,{'rating':'2'})
-        # test = self.get_books_displayed()
-        # test = self.get_book_details(5)
-        self.goto_page('admin')'''
-
     # checks if admin can change user language
     '''def test_admin_alter_user(self):
-        pass
-
-    # checks if admin can create shelfs
-    def test_create_public_shelf(self):
-        self.goto_page('shelf_create')
-        self.create_shelf('Pü 执',False)
-
-        pass
-
-    # checks if admin can change shelfs
-    def test_alter_shelf(self):
-        pass
-
-    # checks if admin can show details of book
-    def test_show_book(self):
         pass'''
+
