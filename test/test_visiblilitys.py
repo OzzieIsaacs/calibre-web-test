@@ -107,10 +107,16 @@ class calibre_web_visibilitys(unittest.TestCase, ui_class):
         list_element[0].click()
         self.assertTrue(self.check_element_on_page((By.ID, "books_rand")))
 
-        # check random books shown in hot section -> make
+        # check random books shown in hot section
         list_element = self.goto_page('nav_author')
         self.assertIsNotNone(list_element)
         self.goto_page('nav_hot')
+        self.assertTrue(self.check_element_on_page((By.ID, "books_rand")))
+
+        # check random books shown in publisher section
+        list_element = self.goto_page('nav_publisher')
+        self.assertIsNotNone(list_element)
+        list_element[0].click()
         self.assertTrue(self.check_element_on_page((By.ID, "books_rand")))
 
         # Check random menu is in sidebar
@@ -155,6 +161,11 @@ class calibre_web_visibilitys(unittest.TestCase, ui_class):
         self.assertFalse(self.check_element_on_page((By.ID, "nav_rand")))
         # check random books not shown in author section
         list_element = self.goto_page("nav_author")
+        list_element[0].click()
+        self.assertTrue(self.check_element_on_page((By.ID, "books")))
+        self.assertFalse(self.check_element_on_page((By.ID, "nav_rand")))
+        # check random books not shown in publisher section
+        list_element = self.goto_page("nav_publisher")
         list_element[0].click()
         self.assertTrue(self.check_element_on_page((By.ID, "books")))
         self.assertFalse(self.check_element_on_page((By.ID, "nav_rand")))
@@ -260,6 +271,17 @@ class calibre_web_visibilitys(unittest.TestCase, ui_class):
         self.change_user({'show_series': 1})
         self.assertTrue(self.check_element_on_page((By.ID, "flash_success")))
         self.assertTrue(self.check_element_on_page((By.ID, "nav_serie")))
+
+    # checks if admin can change publisher
+    def test_admin_change_visibility_publisher(self):
+        self.goto_page('user_setup')
+        self.change_user({'show_publisher':0})
+        self.assertTrue(self.check_element_on_page((By.ID, "flash_success")))
+        self.assertFalse(self.check_element_on_page((By.ID, "nav_publisher")))
+        self.change_user({'show_publisher': 1})
+        self.assertTrue(self.check_element_on_page((By.ID, "flash_success")))
+        self.assertTrue(self.check_element_on_page((By.ID, "nav_publisher")))
+
 
     # checks if admin can change author
     # testcase always failed for unknown reason, therefor sleep calls ToDo: Why failed??

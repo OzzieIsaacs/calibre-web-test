@@ -9,7 +9,10 @@ import cPickle
 import babel.messages.pofile as pofile
 
 # Path to calibre-web location with -> location of mo files
-FILEPATH="D:\\Desktop\\calibre-web\\"
+if os.name == 'nt':
+    FILEPATH="D:\\Desktop\\calibre-web\\"
+else:
+    FILEPATH=os.path.abspath("./../../calibre-web/") + '/'
 
 with open('iso639.pickle', 'rb') as f:
     need_iso = cPickle.load(f)
@@ -24,7 +27,9 @@ p.wait()
 
 # update all translation files with the new content of the template file
 # adding --ignore-obsolete will delete all obsolete translations
-p = subprocess.Popen("pybabel update --no-wrap -i "+FILEPATH+"messages.pot -d "+FILEPATH+"cps/translations".encode(sys.getfilesystemencoding()),
+pot_path = os.path.join(FILEPATH,"messages.pot")
+translation_path = os.path.join(FILEPATH,'cps','translations').encode(sys.getfilesystemencoding())
+p = subprocess.Popen("pybabel update --no-wrap -i "+ pot_path + " -d " + translation_path,
                      shell=True, stdout=subprocess.PIPE, stdin=subprocess.PIPE)
 p.wait()
 
@@ -34,7 +39,8 @@ os.chdir(workdir)
 invers_lang_table = [x for x in need_iso['3bto3t'].values()]
 for file in glob.glob1("./translations", "*.po"):
     langcode=file[23:-3]
-    translateFile=open(FILEPATH+"cps\\translations\\"+langcode+"\\LC_MESSAGES\\messages.po")
+    message_path = os.path.join(FILEPATH,'cps','translations',langcode, 'LC_MESSAGES','messages.po')
+    translateFile=open(message_path)
     mergedTranslation=pofile.read_po(translateFile,locale=langcode)
     translateFile.close()
     languageFile=open("./translations/"+file)
@@ -56,8 +62,11 @@ for file in glob.glob1("./translations", "*.po"):
                 else:
                     iso_translations[lCode] = msg.id
     # mergedTranslation.header_comment=mergedTranslation.header_comment+LanguageTranslation.header_comment
-    shutil.move(os.path.join(FILEPATH,"cps\\translations\\"+langcode+"\\LC_MESSAGES\\messages.po"), os.path.join(FILEPATH,"cps\\translations\\"+langcode+"\\LC_MESSAGES\\messages_all.po"))
-    targetFile = open(FILEPATH + "cps\\translations\\" + langcode + "\\LC_MESSAGES\\messages.po",'w')
+    message_path = os.path.join(FILEPATH, 'cps', 'translations', langcode, 'LC_MESSAGES', 'messages.po')
+    allmessage_path = os.path.join(FILEPATH, "cps","translations" , langcode, "LC_MESSAGES","messages_all.po")
+    shutil.move(message_path, allmessage_path) # os.path.join(FILEPATH,"cps\\translations\\"+langcode+"\\LC_MESSAGES\\messages_all.po"))
+    target_path = os.path.join(FILEPATH , "cps","translations" , langcode , "LC_MESSAGES","messages.po") # FILEPATH + "cps\\translations\\" + langcode + "\\LC_MESSAGES\\messages.po"
+    targetFile = open(target_path,'w')
     pofile.write_po(targetFile,mergedTranslation,ignore_obsolete=True)
     targetFile.close()
     out_iso[langcode]=iso_translations
@@ -82,10 +91,7 @@ p.wait()
 # Rename messages_all.mo in messages.mo und delete messages_all.po
 for file in glob.glob1("./translations", "*.po"):
     langcode=file[23:-3]
-    file_path = FILEPATH+"cps\\translations\\"+langcode+"\\LC_MESSAGES\\"
+    file_path = os.path.join(FILEPATH,"cps","translations",langcode,"LC_MESSAGES")
     shutil.move(os.path.join(file_path, "messages_all.po"), os.path.join(file_path, "messages.po"))
 
-# start all tests
-
-    # Server.startServer()
 

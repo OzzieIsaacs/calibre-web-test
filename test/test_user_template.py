@@ -84,6 +84,7 @@ class test_user_template(unittest.TestCase, ui_class):
         self.assertTrue(self.check_element_on_page((By.ID, "nav_serie")))
         self.assertTrue(self.check_element_on_page((By.ID, "nav_author")))
         self.assertTrue(self.check_element_on_page((By.ID, "nav_lang")))
+        self.assertTrue(self.check_element_on_page((By.ID, "nav_publisher")))
         self.logout()
         self.login('admin','admin123')
         # delete user
@@ -108,6 +109,7 @@ class test_user_template(unittest.TestCase, ui_class):
         self.assertTrue(self.check_element_on_page((By.ID, "nav_serie")))
         self.assertTrue(self.check_element_on_page((By.ID, "nav_author")))
         self.assertTrue(self.check_element_on_page((By.ID, "nav_lang")))
+        self.assertTrue(self.check_element_on_page((By.ID, "nav_publisher")))
         self.logout()
         self.login('admin','admin123')
         # delete user
@@ -132,6 +134,7 @@ class test_user_template(unittest.TestCase, ui_class):
         self.assertTrue(self.check_element_on_page((By.ID, "nav_serie")))
         self.assertTrue(self.check_element_on_page((By.ID, "nav_author")))
         self.assertTrue(self.check_element_on_page((By.ID, "nav_lang")))
+        self.assertTrue(self.check_element_on_page((By.ID, "nav_publisher")))
         self.logout()
         self.login('admin','admin123')
         # delete user
@@ -156,6 +159,7 @@ class test_user_template(unittest.TestCase, ui_class):
         self.assertTrue(self.check_element_on_page((By.ID, "nav_serie")))
         self.assertTrue(self.check_element_on_page((By.ID, "nav_author")))
         self.assertTrue(self.check_element_on_page((By.ID, "nav_lang")))
+        self.assertTrue(self.check_element_on_page((By.ID, "nav_publisher")))
         self.logout()
         self.login('admin','admin123')
         # delete user
@@ -180,6 +184,7 @@ class test_user_template(unittest.TestCase, ui_class):
         self.assertTrue(self.check_element_on_page((By.ID, "nav_serie")))
         self.assertTrue(self.check_element_on_page((By.ID, "nav_author")))
         self.assertTrue(self.check_element_on_page((By.ID, "nav_lang")))
+        self.assertTrue(self.check_element_on_page((By.ID, "nav_publisher")))
         self.logout()
         self.login('admin','admin123')
         # delete user
@@ -204,6 +209,7 @@ class test_user_template(unittest.TestCase, ui_class):
         self.assertTrue(self.check_element_on_page((By.ID, "nav_serie")))
         self.assertTrue(self.check_element_on_page((By.ID, "nav_author")))
         self.assertFalse(self.check_element_on_page((By.ID, "nav_lang")))
+        self.assertTrue(self.check_element_on_page((By.ID, "nav_publisher")))
         self.logout()
         self.login('admin','admin123')
         # delete user
@@ -228,6 +234,7 @@ class test_user_template(unittest.TestCase, ui_class):
         self.assertFalse(self.check_element_on_page((By.ID, "nav_serie")))
         self.assertTrue(self.check_element_on_page((By.ID, "nav_author")))
         self.assertTrue(self.check_element_on_page((By.ID, "nav_lang")))
+        self.assertTrue(self.check_element_on_page((By.ID, "nav_publisher")))
         self.logout()
         self.login('admin','admin123')
         # delete user
@@ -252,10 +259,36 @@ class test_user_template(unittest.TestCase, ui_class):
         self.assertTrue(self.check_element_on_page((By.ID, "nav_serie")))
         self.assertTrue(self.check_element_on_page((By.ID, "nav_author")))
         self.assertTrue(self.check_element_on_page((By.ID, "nav_lang")))
+        self.assertTrue(self.check_element_on_page((By.ID, "nav_publisher")))
         self.logout()
         self.login('admin','admin123')
         # delete user
         self.edit_user('cat',{'delete':1})
+
+    def test_publisher_user_template(self):
+        self.fill_view_config({'show_publisher':0})
+        self.goto_page('create_user')
+        self.create_user('pub',{'password':'1234','email':'a9@b.com'})
+        self.assertTrue(self.check_element_on_page((By.ID, "flash_success")))
+        self.fill_view_config({'show_publisher':1})
+        self.logout()
+        self.login('pub','1234')
+        self.assertTrue(self.check_element_on_page((By.ID, "nav_new")))
+        self.assertTrue(self.check_element_on_page((By.ID, "nav_sort")))
+        self.assertTrue(self.check_element_on_page((By.ID, "nav_hot")))
+        self.assertTrue(self.check_element_on_page((By.ID, "nav_rated")))
+        self.assertTrue(self.check_element_on_page((By.ID, "nav_read")))
+        self.assertTrue(self.check_element_on_page((By.ID, "nav_unread")))
+        self.assertTrue(self.check_element_on_page((By.ID, "nav_rand")))
+        self.assertTrue(self.check_element_on_page((By.ID, "nav_cat")))
+        self.assertTrue(self.check_element_on_page((By.ID, "nav_serie")))
+        self.assertTrue(self.check_element_on_page((By.ID, "nav_author")))
+        self.assertTrue(self.check_element_on_page((By.ID, "nav_lang")))
+        self.assertFalse(self.check_element_on_page((By.ID, "nav_publisher")))
+        self.logout()
+        self.login('admin','admin123')
+        # delete user
+        self.edit_user('pub',{'delete':1})
 
     def test_author_user_template(self):
         self.fill_view_config({'show_author':0})
@@ -276,6 +309,7 @@ class test_user_template(unittest.TestCase, ui_class):
         self.assertTrue(self.check_element_on_page((By.ID, "nav_serie")))
         self.assertFalse(self.check_element_on_page((By.ID, "nav_author")))
         self.assertTrue(self.check_element_on_page((By.ID, "nav_lang")))
+        self.assertTrue(self.check_element_on_page((By.ID, "nav_publisher")))
         self.logout()
         self.login('admin','admin123')
         # delete user
@@ -300,6 +334,7 @@ class test_user_template(unittest.TestCase, ui_class):
         self.assertTrue(self.check_element_on_page((By.ID, "nav_serie")))
         self.assertTrue(self.check_element_on_page((By.ID, "nav_author")))
         self.assertTrue(self.check_element_on_page((By.ID, "nav_lang")))
+        self.assertTrue(self.check_element_on_page((By.ID, "nav_publisher")))
         self.logout()
         self.login('admin','admin123')
         # delete user
@@ -324,6 +359,7 @@ class test_user_template(unittest.TestCase, ui_class):
         self.assertTrue(self.check_element_on_page((By.ID, "nav_serie")))
         self.assertTrue(self.check_element_on_page((By.ID, "nav_author")))
         self.assertTrue(self.check_element_on_page((By.ID, "nav_lang")))
+        self.assertTrue(self.check_element_on_page((By.ID, "nav_publisher")))
         self.goto_page("nav_new")
         self.assertFalse(self.check_element_on_page((By.ID, "books_rand")))
         # check random books not shown in category section
@@ -343,6 +379,11 @@ class test_user_template(unittest.TestCase, ui_class):
         self.assertFalse(self.check_element_on_page((By.ID, "books_rand")))
         # check random books not shown in language section
         list_element = self.goto_page("nav_lang")
+        list_element[0].click()
+        self.assertTrue(self.check_element_on_page((By.ID, "books")))
+        self.assertFalse(self.check_element_on_page((By.ID, "books_rand")))
+        # check random books not shown in publisher section
+        list_element = self.goto_page("nav_publisher")
         list_element[0].click()
         self.assertTrue(self.check_element_on_page((By.ID, "books")))
         self.assertFalse(self.check_element_on_page((By.ID, "books_rand")))

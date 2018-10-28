@@ -13,6 +13,7 @@ from StringIO import StringIO
 # Dict for pages and the way to reach them
 page = dict()
 page['nav_serie']={'check':(By.TAG_NAME, "h1"),'click':[(By.ID, "nav_serie")]}
+page['nav_publisher']={'check':(By.TAG_NAME, "h1"),'click':[(By.ID, "nav_publisher")]}
 page['nav_new']={'check':None,'click':[(By.ID, "nav_new")]}
 page['nav_cat']={'check':(By.TAG_NAME, "h1"),'click':[(By.ID, "nav_cat")]}
 page['nav_author']={'check':(By.TAG_NAME, "h1"),'click':[(By.ID, "nav_author")]}
@@ -228,7 +229,7 @@ class ui_class():
         checkboxes = ['admin_role', 'download_role', 'upload_role', 'edit_role', 'delete_role', 'passwd_role',
                         'edit_shelf_role', 'show_random', 'show_recent', 'show_sorted', 'show_hot', 'show_best_rated',
                         'show_language', 'show_series', 'show_category', 'show_author', 'show_read_and_unread',
-                        'show_detail_random', 'show_mature_content']
+                        'show_detail_random', 'show_mature_content', 'show_publisher']
         options = ['config_read_column']
         # depending on elements open accordions or not
         if any(key in elements for key in ['config_calibre_web_title', 'config_books_per_page',
@@ -240,7 +241,8 @@ class ui_class():
             opener.append(1)
         if any(key in elements for key in ['show_random', 'show_recent', 'show_sorted', 'show_hot', 'show_best_rated',
                                            'show_language', 'show_series', 'show_category', 'show_author',
-                                           'show_read_and_unread', 'show_detail_random', 'show_mature_content']):
+                                           'show_read_and_unread', 'show_detail_random', 'show_mature_content',
+                                            'show_publisher']):
             opener.append(2)
 
         # open all necessary accordions
@@ -520,7 +522,7 @@ class ui_class():
             ret['tag'] = [tag.text for tag in tags]
 
             # publishers = cls.driver.find_elements_by_xpath("//*[@class='publishers']//span")
-            publishers = tree.findall("//*[@class='publishers']//span")
+            publishers = tree.findall("//*[@class='publishers']//a")
             ret['publisher'] = [pub.text for pub in publishers]
 
             # Pubdate

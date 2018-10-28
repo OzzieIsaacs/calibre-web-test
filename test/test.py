@@ -32,8 +32,10 @@ if __name__ == '__main__':
             r = requests.get('http://localhost:4444/wd/hub/status').json()
             result=True
         except:
+            my_env = os.environ.copy()
+            my_env["PATH"] = SELENIUM_SERVER + ":" + my_env["PATH"]
             print ('Selenium not running')
-            p = process_open(["java", "-jar", SELENIUM_SERVER], (2))
+            p = process_open(["java", "-jar", SELENIUM_SERVER], (2), my_env)
             time.sleep(5)
             result= False
             retry +=1
@@ -57,10 +59,10 @@ if __name__ == '__main__':
     register_test = unittest.TestLoader().loadTestsFromTestCase(test_register)
     shelf_test = unittest.TestLoader().loadTestsFromTestCase(test_shelf)
     user_template_test = unittest.TestLoader().loadTestsFromTestCase(test_user_template)
-    all_tests = unittest.TestSuite([shelf_test, logging_test, helper_test, calibre_web_Test, user_template_test,
+    all_tests = unittest.TestSuite([shelf_test, logging_test, calibre_web_Test, user_template_test,
                                     anonymous_test, ebook_convert_test, edit_books_test, edit_books_gdrive_test,
-                                    login_test, opds_feed_test, updater_test, register_test, cli_test])
-    # all_tests = unittest.TestSuite([edit_books_gdrive_test])
+                                    login_test, opds_feed_test, updater_test, helper_test, register_test, cli_test])
+    # all_tests = unittest.TestSuite([calibre_web_Test])
     # open the report file
     outfile = open(os.path.join(CALIBRE_WEB_PATH,'test',"Calibre-Web TestSummary.html"), "w")
     # configure HTMLTestRunner options

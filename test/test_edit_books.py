@@ -273,10 +273,10 @@ class test_edit_books(unittest.TestCase, ui_class):
         self.edit_book(content={'series':u'loko'})
         values=self.get_book_details()
         # ToDo: Fix, fails currently
-        # self.assertEqual(u'loko',values['series'])
+        self.assertEqual(u'loko',values['series'])
         list_element = self.goto_page('nav_serie')
         # ToDo: Fix, fails currently
-        # self.assertEqual(list_element[1].text, u'loko')
+        self.assertEqual(list_element[1].text, u'loko')
 
         self.get_book_details(4)
         self.check_element_on_page((By.ID, "edit_book")).click()
@@ -328,6 +328,46 @@ class test_edit_books(unittest.TestCase, ui_class):
         values = self.get_book_details()
         self.assertEqual(u'gênot',values['tag'][0])
 
+
+    def test_edit_publisher(self):
+        self.get_book_details(7)
+        self.check_element_on_page((By.ID, "edit_book")).click()
+        self.edit_book(content={'publisher':u'O0ü 执'})
+        values=self.get_book_details()
+        self.assertEqual(len(values['publisher']),1)
+        self.assertEqual(u'O0ü 执',values['publisher'][0])
+        self.check_element_on_page((By.ID, "edit_book")).click()
+        self.edit_book(content={'publisher':u'Beta|,Bet'})
+        values=self.get_book_details()
+        self.assertEqual(u'Beta|,Bet',values['publisher'][0])
+        list_element = self.goto_page('nav_publisher')
+        self.assertEqual(list_element[1].text, u'Beta|,Bet')
+
+        self.get_book_details(7)
+        self.check_element_on_page((By.ID, "edit_book")).click()
+        self.edit_book(content={'publisher':''})
+        values=self.get_book_details()
+        self.assertEqual(len(values['publisher']), 0)
+
+        self.check_element_on_page((By.ID, "edit_book")).click()
+        self.edit_book(content={'publisher':u' Gênot & Peter '},detail_v=True)
+        publisher = self.check_element_on_page((By.ID, "publisher"))
+        self.assertEqual(u'Gênot & Peter', publisher.get_attribute('value'))
+
+        self.edit_book(content={'publisher':u' Gênot , Peter '})
+        values = self.get_book_details()
+        self.assertEqual(u'Gênot , Peter',values['publisher'][0])
+
+        self.check_element_on_page((By.ID, "edit_book")).click()
+        self.edit_book(content={'publisher':u'gênot'})
+        values = self.get_book_details()
+        self.assertEqual(u'gênot',values['publisher'][0])
+        self.check_element_on_page((By.ID, "edit_book")).click()
+        self.edit_book(content={'publisher':u'Gênot'})
+        values = self.get_book_details()
+        self.assertEqual(u'Gênot', values['publisher'][0])
+
+
     # choose language not part ob lib
     @unittest.skip("Not Implemented")
     def test_edit_language(self):
@@ -335,10 +375,6 @@ class test_edit_books(unittest.TestCase, ui_class):
 
     @unittest.skip("Not Implemented")
     def test_edit_publishing_date(self):
-        self.assertIsNone('Not Implemented')
-
-    @unittest.skip("Not Implemented")
-    def test_edit_publisher(self):
         self.assertIsNone('Not Implemented')
 
     # change rating, delete rating

@@ -34,6 +34,7 @@ class test_cli(unittest.TestCase, ui_class):
     def tearDownClass(cls):
         # close the browser window
         cls.driver.quit()
+        os.remove(os.path.join(CALIBRE_WEB_PATH, 'app.db'))
 
     def test_cli_different_folder(self):
         os.chdir(CALIBRE_WEB_PATH)  
