@@ -165,9 +165,11 @@ class ui_class():
         process_checkboxes = dict()
         process_elements = dict()
         process_options =dict()
+        process_select = dict()
         # special handling for checkboxes
         checkboxes = ['config_uploading', 'config_anonbrowse', 'config_public_reg', 'config_remote_login']
         options = ['config_log_level', 'config_google_drive_folder']
+        selects = ['config_ebookconverter']
         # depending on elements open accordions or not
         if any(key in elements for key in ['config_port', 'config_certfile','config_keyfile']):
             opener.append(1)
@@ -190,6 +192,8 @@ class ui_class():
                 process_checkboxes[key] = elements[key]
             elif key in options:
                 process_options[key] = elements[key]
+            elif key in selects:
+                process_select[key] = elements[key]
             else:
                 process_elements[key] = elements[key]
         # process all checkboxes Todo: If status was wrong before is not included in response
@@ -197,6 +201,13 @@ class ui_class():
             ele = cls.driver.find_element_by_id(checkbox)
             if (elements[checkbox] == 1 and not ele.is_selected() )or elements[checkbox] == 0 and ele.is_selected():
                 ele.click()
+
+        for select in process_select:
+            ele = cls.driver.find_elements_by_name(select)
+            for el in ele:
+                if el.get_attribute('id') == elements[select]:
+                    el.click()
+                    break
 
         # process all selects
         for option, key in enumerate(process_options):
@@ -224,7 +235,7 @@ class ui_class():
         opener = list()
         process_checkboxes = dict()
         process_elements = dict()
-        process_options =dict()
+        process_options = dict()
         # special handling for checkboxes
         checkboxes = ['admin_role', 'download_role', 'upload_role', 'edit_role', 'delete_role', 'passwd_role',
                         'edit_shelf_role', 'show_random', 'show_recent', 'show_sorted', 'show_hot', 'show_best_rated',
@@ -261,6 +272,13 @@ class ui_class():
             ele = cls.driver.find_element_by_id(checkbox)
             if (elements[checkbox] == 1 and not ele.is_selected() )or elements[checkbox] == 0 and ele.is_selected():
                 ele.click()
+
+        # process all text fields
+        for element, key in enumerate(process_elements):
+            ele = cls.driver.find_element_by_id(key)
+            ele.clear()
+            ele.send_keys(process_elements[key])
+
         # finally submit settings
         cls.driver.find_element_by_name("submit").click()
 
@@ -277,6 +295,36 @@ class ui_class():
         self.driver.find_element_by_id('admin_stop').click()
         element = self.check_element_on_page((By.ID, "shutdown"))
         element.click()
+
+    @classmethod
+    def setup_server(cls, test_on_return, elements):
+        cls.goto_page('mail_server')
+        process_options = dict()
+        process_elements = dict()
+        options = ['mail_use_ssl']
+        for element,key in enumerate(elements):
+            if key in options:
+                process_options[key] = elements[key]
+            else:
+                process_elements[key] = elements[key]
+
+        # process all selects
+        for option, key in enumerate(process_options):
+            select = Select(cls.driver.find_element_by_id(key))
+            select.select_by_visible_text(process_options[key])
+
+        # process all text fields
+        for element, key in enumerate(process_elements):
+            ele = cls.driver.find_element_by_id(key)
+            ele.clear()
+            ele.send_keys(process_elements[key])
+        if test_on_return:
+            clicker = 'test'
+        else:
+            clicker = 'submit'
+        cls.driver.find_element_by_name(clicker).click()
+
+
 
     @classmethod
     def check_element_on_page(cls, element, timeout=5):

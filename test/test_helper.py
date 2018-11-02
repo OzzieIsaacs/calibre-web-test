@@ -57,6 +57,12 @@ class calibre_helper(unittest.TestCase):
         self.assertEqual(helper.get_sorted_author(u'Herb Suli jr.'), u'Suli, Herb jr.')
         self.assertEqual(helper.get_sorted_author(u'Herb Suli jr'), u'Suli, Herb jr')
 
+    def test_author_sort_oneword(self):
+        self.assertEqual(helper.get_sorted_author(u'Single'), u'Single')
+
+    def test_author_sort_comma(self):
+        self.assertEqual(helper.get_sorted_author(u'Single, name'), u'Single, name')
+
     @classmethod
     def tearDownClass(cls):
         helper.global_WorkerThread.stop()

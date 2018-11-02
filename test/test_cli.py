@@ -216,6 +216,12 @@ class test_cli(unittest.TestCase, ui_class):
         self.assertTrue(self.check_element_on_page((By.ID, "config_calibre_dir")))
         p.kill()
 
-
+    @unittest.expectedFailure
+    def test_already_started(self):
+        # start calibre-web in process A.
+        # Start calibre-web in process B.
+        # Check process B terminates with exit code 1
+        # stop process A
+        pass
 
 

@@ -4,6 +4,7 @@
 import unittest
 from selenium import webdriver
 import os
+import sys
 from selenium.webdriver.common.by import By
 from selenium.webdriver.support.ui import WebDriverWait
 from selenium.webdriver.support import expected_conditions as EC
@@ -12,17 +13,85 @@ import shutil
 from ui_helper import ui_class
 from subproc_wrapper import process_open
 from testconfig import CALIBRE_WEB_PATH, TEST_DB
+from secure_smtpd import SMTPServer
+import threading
+import asyncore
 
 '''
 use secure-smtp
 '''
 
+
+class CredentialValidator(object):
+
+    def validate(self, username, password):
+        if username == 'name@host.com' and password == '10234':
+            return True
+        return False
+
+
+class threaded_SMPTPServer(SMTPServer, threading.Thread):
+
+    def __init__(self, *args, **kwargs):
+        SMTPServer.__init__(self, *args, **kwargs)
+        self._stopevent = threading.Event()
+        threading.Thread.__init__(self)
+        # self.status = 0
+
+    def process_message(self, peer, mailfrom, rcpttos, message_data):
+        print(message_data)
+
+    def run(self):
+        asyncore.loop()
+        print('email server stoppes')
+
+    def stop(self):
+        self.close()
+
+
+def is_calibre_not_present():
+    if calibre_path():
+        return False
+    else:
+        return True
+
+def calibre_path():
+    if sys.platform == "win32":
+        calibre_path = ["C:\\program files\calibre\calibre-convert.exe", "C:\\program files(x86)\calibre\calibre-convert.exe"]
+    else:
+        calibre_path = ["/opt/calibre/ebook-convert"]
+    for element in calibre_path:
+        if os.path.isfile(element):
+            return element
+    return None
+
+
+class SSLSMTPServer(SMTPServer):
+    def process_message(self, peer, mailfrom, rcpttos, message_data):
+        print(message_data)
+
+
+@unittest.skipIf(is_calibre_not_present(),"Skipping convert, calibre not found")
 class test_ebook_convert(unittest.TestCase, ui_class):
     p=None
     driver = None
+    email_server = None
 
     @classmethod
     def setUpClass(cls):
+        # start email server
+        cls.email_server = threaded_SMPTPServer(
+            # cls,
+            ('127.0.0.1', 1025),
+            None,
+            require_authentication=True,
+            use_ssl=True,
+            certfile='examples/server.crt',
+            keyfile='examples/server.key',
+            credential_validator=CredentialValidator(),
+        )
+        cls.email_server.start()
+
         try:
             os.remove(os.path.join(CALIBRE_WEB_PATH,'app.db'))
         except:
@@ -43,7 +112,8 @@ class test_ebook_convert(unittest.TestCase, ui_class):
         cls.driver.get("http://127.0.0.1:8083")
 
         # Wait for config screen to show up
-        cls.fill_initial_config({'config_calibre_dir':TEST_DB})
+        cls.fill_initial_config({'config_calibre_dir':TEST_DB, 'config_converterpath':calibre_path(),
+                                 'config_ebookconverter':'converter2'})
 
         # wait for cw to reboot
         time.sleep(5)
@@ -55,7 +125,11 @@ class test_ebook_convert(unittest.TestCase, ui_class):
 
         # login
         cls.login("admin", "admin123")
-        # ToDo: set converter to calibre-convert, setup email server
+        cls.edit_user('admin', {'email': 'a5@b.com','kindle_mail': 'a1@b.com'})
+        cls.setup_server(True, {'mail_server':'127.0.0.1', 'mail_port':'1025',
+                            'mail_use_ssl':'SSL/TLS','mail_login':'name@host.com','mail_password':'1234',
+                            'mail_from':'name@host.com'})
+        print('configured')
 
 
     @classmethod
@@ -63,6 +137,7 @@ class test_ebook_convert(unittest.TestCase, ui_class):
         # close the browser window and stop calibre-web
         cls.driver.quit()
         cls.p.terminate()
+        cls.email_server.stop()
 
     def tearDown(self):
         if not self.check_user_logged_in('admin'):
@@ -72,9 +147,10 @@ class test_ebook_convert(unittest.TestCase, ui_class):
     # Set excecutable to wrong exe and start convert
     # set excecutable not existing and start convert
     # set excecutable non excecutable and start convert
-    @unittest.skip("Not Implemented")
+    # @unittest.skip("Not Implemented")
     def test_convert_wrong_excecutable(self):
-        self.assertIsNone('Not Implemented')
+        self.fill_basic_config({'config_converterpath':'/opt/calibre/ebook-polish'})
+        self.assertIsNone('fail')
 
     # deactivate converter and check send to kindle and convert are not visible anymore
     @unittest.skip("Not Implemented")
@@ -153,4 +229,3 @@ class test_ebook_convert(unittest.TestCase, ui_class):
     @unittest.skip("Not Implemented")
     def test_STARTTLS_smtp_setup_error(self):
         self.assertIsNone('Not Implemented')
-

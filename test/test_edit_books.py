@@ -205,10 +205,10 @@ class test_edit_books(unittest.TestCase, ui_class):
         self.assertTrue(os.path.isdir(os.path.join(TEST_DB,values['author'][0],'book8 (8)')))
         self.check_element_on_page((By.ID, "edit_book")).click()
         # Check authorsort
-        '''self.edit_book(content={'bookAuthor':'de Marco, Lulu'})
+        self.edit_book(content={'bookAuthor':'Marco, Lulu de'})
         values=self.get_book_details()
         os.path.join(TEST_DB,values['author'][0],'book8 (8)')
-        self.assertEqual(values['author'][0],'de Marco, Lulu')        
+        self.assertEqual(values['author'][0],'Marco, Lulu de')
         list_element = self.goto_page('nav_author')
         # ToDo check names of List elements
         self.get_book_details(8)
