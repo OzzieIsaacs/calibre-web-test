@@ -59,10 +59,11 @@ if __name__ == '__main__':
     register_test = unittest.TestLoader().loadTestsFromTestCase(test_register)
     shelf_test = unittest.TestLoader().loadTestsFromTestCase(test_shelf)
     user_template_test = unittest.TestLoader().loadTestsFromTestCase(test_user_template)
+    # cli test has to be last, helper test has to be used after smtp server started/stopped
     all_tests = unittest.TestSuite([shelf_test, logging_test, calibre_web_Test, user_template_test,
-                                    anonymous_test, ebook_convert_test, edit_books_test, edit_books_gdrive_test,
+                                    anonymous_test, edit_books_test, edit_books_gdrive_test, ebook_convert_test,
                                     login_test, opds_feed_test, updater_test, helper_test, register_test, cli_test])
-    # all_tests = unittest.TestSuite([calibre_web_Test])
+    # all_tests = unittest.TestSuite([ebook_convert_test, helper_test])
     # open the report file
     outfile = open(os.path.join(CALIBRE_WEB_PATH,'test',"Calibre-Web TestSummary.html"), "w")
     # configure HTMLTestRunner options

@@ -213,7 +213,7 @@ class test_edit_books(unittest.TestCase, ui_class):
         # ToDo check names of List elements
         self.get_book_details(8)
         self.check_element_on_page((By.ID, "edit_book")).click()        
-        '''
+
         self.edit_book(content={'bookAuthor': 'Sigurd Lindgren'},detail_v=True)
         author = self.check_element_on_page((By.ID, "bookAuthor")).get_attribute('value')
         self.assertEqual(u'Sigurd Lindgren', author)
@@ -221,11 +221,11 @@ class test_edit_books(unittest.TestCase, ui_class):
         self.edit_book(content={'bookAuthor': 'Sigurd Lindgren&Leo Baskerville'}, detail_v=True)
         self.assertTrue(os.path.isdir(os.path.join(TEST_DB, 'Sigurd Lindgren', 'book8 (8)')))
         self.assertFalse(os.path.isdir(os.path.join(TEST_DB, 'Leo Baskerville', 'book8 (8)')))
-        '''author = self.check_element_on_page((By.ID, "bookAuthor"))
+        author = self.check_element_on_page((By.ID, "bookAuthor"))
         self.assertEqual(u'Sigurd Lindgren & Leo Baskerville', author.get_attribute('value'))
         self.edit_book(content={'bookAuthor': ' Leo Baskerville & Sigurd Lindgren '}, detail_v=True)
         self.assertFalse(os.path.isdir(os.path.join(TEST_DB, 'Sigurd Lindgren', 'book8 (8)')))
-        self.assertTrue(os.path.isdir(os.path.join(TEST_DB, 'Leo Baskerville', 'book8 (8)')))'''
+        self.assertTrue(os.path.isdir(os.path.join(TEST_DB, 'Leo Baskerville', 'book8 (8)')))
         self.edit_book(content={'bookAuthor': 'Pipo| Pipe'}, detail_v=True)
         author = self.check_element_on_page((By.ID, "bookAuthor"))
         self.assertEqual(u'Pipo, Pipe', author.get_attribute('value'))

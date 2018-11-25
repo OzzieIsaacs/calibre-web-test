@@ -36,16 +36,19 @@ class threaded_SMPTPServer(SMTPServer, threading.Thread):
         SMTPServer.__init__(self, *args, **kwargs)
         self._stopevent = threading.Event()
         threading.Thread.__init__(self)
-        # self.status = 0
+        self.status = 1
 
     def process_message(self, peer, mailfrom, rcpttos, message_data):
         print(message_data)
 
     def run(self):
         asyncore.loop()
-        print('email server stoppes')
+        while self.status:
+            time.sleep(1)
+        print('email server stopps')
 
     def stop(self):
+        self.status = 0
         self.close()
 
 
@@ -86,8 +89,8 @@ class test_ebook_convert(unittest.TestCase, ui_class):
             None,
             require_authentication=True,
             use_ssl=True,
-            certfile='examples/server.crt',
-            keyfile='examples/server.key',
+            certfile='SSL/ssl.crt',
+            keyfile='SSL/ssl.key',
             credential_validator=CredentialValidator(),
         )
         cls.email_server.start()
@@ -129,7 +132,7 @@ class test_ebook_convert(unittest.TestCase, ui_class):
         cls.setup_server(True, {'mail_server':'127.0.0.1', 'mail_port':'1025',
                             'mail_use_ssl':'SSL/TLS','mail_login':'name@host.com','mail_password':'1234',
                             'mail_from':'name@host.com'})
-        print('configured')
+        # print('configured')
 
 
     @classmethod
@@ -150,7 +153,20 @@ class test_ebook_convert(unittest.TestCase, ui_class):
     # @unittest.skip("Not Implemented")
     def test_convert_wrong_excecutable(self):
         self.fill_basic_config({'config_converterpath':'/opt/calibre/ebook-polish'})
-        self.assertIsNone('fail')
+        self.goto_page('nav_about')
+        element = self.check_element_on_page((By.XPATH,"//tr/th[text()='Calibre converter']/following::td[1]"))
+        self.assertEqual(element.text,'not installed')
+        details = self.get_book_details(5)
+        self.assertTrue(details['kindle'])
+        # Todo: push button -> fail
+        self.fill_basic_config({'config_converterpath':'/opt/calibre/kuku'})
+        self.assertTrue(details['kindle'])
+        # Todo: push button -> fail
+        self.goto_page('nav_about')
+        element = self.check_element_on_page((By.XPATH,"//tr/th[text()='Calibre converter']/following::td[1]"))
+        self.assertEqual(element.text,'not installed')
+        # .click()
+        # self.assertIsNone('fail')
 
     # deactivate converter and check send to kindle and convert are not visible anymore
     @unittest.skip("Not Implemented")

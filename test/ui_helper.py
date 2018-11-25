@@ -598,13 +598,15 @@ class ui_class():
 
             # ret['kindle'] = cls.check_element_on_page((By.ID, "sendbtn"))
             ret['kindle'] = bool(tree.find("//*[@id='sendbtn']"))
+            if not ret['kindle']:
+                ret['kindle'] = tree.findall("//*[@aria-labelledby='send-to-kindle']/li/a")
 
             # download1 = cls.driver.find_elements_by_xpath("//*[@aria-labelledby='btnGroupDrop1']//a")
             download1 = tree.findall("//*[@aria-labelledby='btnGroupDrop1']//a")
             if not download1:
                 download1 = tree.xpath("//*[starts-with(@id,'btnGroupDrop')]")
                 if download1:
-                    ret['download'] =list()
+                    ret['download'] = list()
                     for ele in download1:
                         ret['download'].append(ele.getchildren()[0].tail.strip())
             else:
