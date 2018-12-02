@@ -35,6 +35,7 @@ page['user_setup']={'check':(By.ID, "kindle_mail"),'click':[(By.ID, "top_user")]
 page['create_shelf']={'check':(By.ID, "title"),'click':[(By.ID, "nav_createshelf")]}
 page['create_user']={'check':(By.ID, "nickname"),'click':[(By.ID, "top_admin"),(By.ID, "admin_new_user")]}
 page['register']={'check':(By.ID, "nickname"),'click':[(By.ID, "register")]}
+page['tasks']={'check':(By.TAG_NAME, "h2"),'click':[(By.ID, "top_tasks")]}
 
 class ui_class():
 
@@ -131,7 +132,10 @@ class ui_class():
                 # check if got to page
                 if page[page_target]['check'][0] == By.TAG_NAME:
                     WebDriverWait(cls.driver, 5).until(EC.presence_of_element_located(page[page_target]['check']))
-                    list_type=cls.driver.find_element_by_tag_name('h1')
+                    if page[page_target]['check'][1] == 'h1':
+                        list_type=cls.driver.find_element_by_tag_name(page[page_target]['check'][1])
+                    else:
+                        return True
                 if page[page_target]['check'][0] == By.ID:
                     WebDriverWait(cls.driver, 5).until(EC.presence_of_element_located(page[page_target]['check']))
                     return True
@@ -597,9 +601,32 @@ class ui_class():
             ret['edit_enable'] = bool(tree.find("//*[@class='glyphicon glyphicon-edit']"))
 
             # ret['kindle'] = cls.check_element_on_page((By.ID, "sendbtn"))
-            ret['kindle'] = bool(tree.find("//*[@id='sendbtn']"))
-            if not ret['kindle']:
-                ret['kindle'] = tree.findall("//*[@aria-labelledby='send-to-kindle']/li/a")
+            ele = tree.findall("//*[@id='sendbtn']")
+
+            # bk['ele'] = cls.check_element_on_page((By.XPATH, "//a[@href='" + bk['link'] + "']/img"))
+            # ret['kindle'] = bool(tree.find("//*[@id='sendbtn']"))
+            if not ele:
+                all = tree.findall("//*[@aria-labelledby='send-to-kindle']/li/a")
+                if all:
+                    # ret['kindlebtn'] = cls.driver.find_elements_by_xpath("//*[@aria-labelledby='send-to-kindle']/li/a")
+                    ret['kindlebtn'] = cls.driver.find_element_by_id("sendbtn2")
+                    ret['kindle'] = all
+                    '''ret['kindle'] = list()
+                    for el in all:
+                        ret['kindle']
+                        ele = dict()
+                        ele['ele'] = el
+                        ele['link'] = el.get_attribute('href')
+                        ret['kindle'].append(ele)'''
+                else:
+                    ret['kindle'] = None
+                    ret['kindlebtn'] = None
+            else:
+                ret['kindlebtn'] = cls.driver.find_element_by_id("/sendbtn")
+                ele = dict()
+                ele['ele'] = ele
+                ele['link'] = ele.get_attribute('href')
+                ret['kindle'] = list(ele)
 
             # download1 = cls.driver.find_elements_by_xpath("//*[@aria-labelledby='btnGroupDrop1']//a")
             download1 = tree.findall("//*[@aria-labelledby='btnGroupDrop1']//a")
@@ -651,6 +678,23 @@ class ui_class():
         else:
             return False
 
+    @classmethod
+    def check_tasks(cls):
+        if cls.goto_page('tasks'):
+            parser = lxml.etree.HTMLParser()
+            html = cls.driver.page_source
+
+            tree = lxml.etree.parse(StringIO(html), parser)
+            vals = tree.xpath("//table[@id='table']/tbody/tr")
+            val = list()
+            for va in vals:
+                go = va.getchildren()
+                val.append({'user':go[0].text,'task':go[1].text,'result':go[2].text,
+                            'progress':go[3].text,'duration':go[4].text,'start':go[5].text})
+            # val = cls.driver.find_elements_by_xpath("//table[@id='table']/tbody/tr/td")
+            return val
+        else:
+            return False
 
     @classmethod
     def edit_book(cls, id=-1, content=dict(), detail_v=False, root_url='http://127.0.0.1:8083'):

@@ -157,16 +157,22 @@ class test_ebook_convert(unittest.TestCase, ui_class):
         element = self.check_element_on_page((By.XPATH,"//tr/th[text()='Calibre converter']/following::td[1]"))
         self.assertEqual(element.text,'not installed')
         details = self.get_book_details(5)
-        self.assertTrue(details['kindle'])
-        # Todo: push button -> fail
+        # ToDo: change behavior convert should only be visible if ebookconverter has valid entry
+        self.assertEqual(len(details['kindle']),2)
+
         self.fill_basic_config({'config_converterpath':'/opt/calibre/kuku'})
-        self.assertTrue(details['kindle'])
-        # Todo: push button -> fail
+        details = self.get_book_details(5)
+        self.assertEqual(len(details['kindle']),2)
+        details['kindlebtn'].click()
+        conv = self.check_element_on_page((By.LINK_TEXT, details['kindle'][0].text))
+        self.assertTrue(conv)
+        conv.click()
+        self.assertTrue(self.check_element_on_page((By.ID, "flash_success")))
         self.goto_page('nav_about')
-        element = self.check_element_on_page((By.XPATH,"//tr/th[text()='Calibre converter']/following::td[1]"))
-        self.assertEqual(element.text,'not installed')
-        # .click()
-        # self.assertIsNone('fail')
+        element = self.check_element_on_page((By.XPATH, "//tr/th[text()='Calibre converter']/following::td[1]"))
+        self.assertEqual(element.text, 'not installed')
+        ret = self.check_tasks()
+        print('a')
 
     # deactivate converter and check send to kindle and convert are not visible anymore
     @unittest.skip("Not Implemented")
