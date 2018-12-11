@@ -12,9 +12,9 @@ error_code = Value('i', 0)
 except ImportError:
     # We're on python3
     from queue import Empty'''
-'''manager = Manager()
+manager = Manager()
 emails = manager.list(range(10))
-config = manager.dict()'''
+config = manager.dict()
 
 smtpd.DEBUGSTREAM = sys.stdout
 
@@ -33,7 +33,7 @@ class SMTPServer(smtpd.SMTPServer):
         self.ssl = use_ssl
         self.maximum_execution_time = maximum_execution_time
         self.process_count = process_count
-        # config['error_code'] = 0
+        config['error_code'] = 0
 
     def handle_accept(self):
         for i in range(0, self.process_count):
@@ -71,9 +71,9 @@ class SMTPServer(smtpd.SMTPServer):
                         require_authentication=self.require_authentication,
                         credential_validator=self.credential_validator,
                         map=map,
-                        error_code = error_code
+                        er_code = error_code,
                         # emails = emails,
-                        # config = config
+                        config = config
                     )
 
                     self.logger.info('_accept_subprocess(): starting asyncore within subprocess.')
