@@ -13,7 +13,7 @@ except ImportError:
     # We're on python3
     from queue import Empty'''
 manager = Manager()
-emails = manager.list(range(10))
+emails = manager.list()
 config = manager.dict()
 
 smtpd.DEBUGSTREAM = sys.stdout
@@ -37,12 +37,12 @@ class SMTPServer(smtpd.SMTPServer):
 
     def handle_accept(self):
         for i in range(0, self.process_count):
-            process = Process(target=self._accept_subprocess, args=[error_code]) # (emails,config))
+            process = Process(target=self._accept_subprocess, args=[emails,config]) # (emails,config))
             process.daemon = True
             process.start()
         self.close()
 
-    def _accept_subprocess(self, error_code): # emails, config):
+    def _accept_subprocess(self, emails, config): # emails, config):
         while True:
             try:
                 self.socket.setblocking(1)
@@ -71,8 +71,8 @@ class SMTPServer(smtpd.SMTPServer):
                         require_authentication=self.require_authentication,
                         credential_validator=self.credential_validator,
                         map=map,
-                        er_code = error_code,
-                        # emails = emails,
+                        # er_code = error_code,
+                        emails = emails,
                         config = config
                     )
 
@@ -89,8 +89,8 @@ class SMTPServer(smtpd.SMTPServer):
                 self.logger.error('_accept_subprocess(): uncaught exception: %s' % str(e))
 
     def set_return_value(self, val):
-        # config['error_code'] = val
-        error_code.value = val
+        config['error_code'] = val
+        # error_code.value = val
 
     def get_message_size(self):
         if 'size' in emails[-1]:

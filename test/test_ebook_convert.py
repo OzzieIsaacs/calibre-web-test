@@ -41,22 +41,22 @@ class threaded_SMPTPServer(SMTPServer, threading.Thread):
         self.error_c = None
         self.size = 0
 
-    def process_message(self, peer, mailfrom, rcpttos, message_data, error_code): #emails, config):
+    def process_message(self, peer, mailfrom, rcpttos, message_data, emails, config): #emails, config):
         print('Receiving message from:', peer)
         print('Message addressed from:', mailfrom)
         print('Message addressed to  :', rcpttos)
         print('Message length        :', len(message_data))
-        # emails.append({'mailfrom':mailfrom,'recipents':rcpttos, 'size': len(message_data)})
+        emails.append({'mailfrom':mailfrom,'recipents':rcpttos, 'size': len(message_data)})
         # print('Shared Memory: %i' % error_code.value})
         '''self.mailfrom = mailfrom
         self.recipents = rcpttos
         self.payload = message_from_string(message_data)
         self.size = len(message_data)'''
-        print('Shared Memory: %i' % error_code.value)
-        #print('Shared Memory: %i' % config['error_code'])
+        # print('Shared Memory: %i' % error_code.value)
+        print('Shared Memory: %i' % config['error_code'])
         # config['error_code']
-        # if config['error_code'] == 552:
-        if error_code.value == 552:
+        if config['error_code'] == 552:
+        # if error_code.value == 552:
             return '552 Requested mail action aborted: exceeded storage allocation'
         return
 
@@ -441,7 +441,7 @@ class test_ebook_convert(unittest.TestCase, ui_class):
             i += 1
         # time.sleep(1000)
         self.assertEqual(ret[-1]['result'], 'Failed')
-        # print(self.email_server.get_message_size())
+        print(self.email_server.get_message_size())
         # self.assertEqual(self.email_server.get_message_size(),76122)
         #print('Message addressed from:', self.email_server.get_sender())
         #print('Message addressed to  :', self.email_server.get_recipents())

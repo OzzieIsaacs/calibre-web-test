@@ -25,7 +25,7 @@ def encode_b64(data):
 
 class SMTPChannel(smtpd.SMTPChannel):
 
-    def __init__(self, smtp_server, newsocket, fromaddr, require_authentication=False, credential_validator=None, map=None, er_code=None):
+    def __init__(self, smtp_server, newsocket, fromaddr, require_authentication=False, credential_validator=None, map=None, emails=None, config=None):
         smtpd.SMTPChannel.__init__(self, smtp_server, newsocket, fromaddr)
         asynchat.async_chat.__init__(self, newsocket, map=map)
 
@@ -39,7 +39,9 @@ class SMTPChannel(smtpd.SMTPChannel):
         self.password = None
         self.credential_validator = credential_validator
         self.logger = logging.getLogger(secure_smtpd.LOG_NAME)
-        self.er_code = er_code
+        # self.er_code = er_code
+        self.emails = emails
+        self.config = config
 
     def smtp_QUIT(self, arg):
         self.push('221 Bye')
@@ -218,7 +220,8 @@ class SMTPChannel(smtpd.SMTPChannel):
                 self.__mailfrom,
                 self.__rcpttos,
                 self.__data,
-                self.er_code
+                self.emails,
+                self.config
             )
             self.__rcpttos = []
             self.__mailfrom = None
