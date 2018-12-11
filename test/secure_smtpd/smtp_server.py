@@ -1,15 +1,22 @@
 import secure_smtpd
 import ssl, smtpd, asyncore, socket, logging, signal, time, sys
-
 from .smtp_channel import SMTPChannel
 from asyncore import ExitNow
-from .process_pool import ProcessPool
 from ssl import SSLError
-try:
+from multiprocessing import Value, Process, Manager
+
+error_code = Value('i', 0)
+
+'''try:
     from Queue import Empty
 except ImportError:
     # We're on python3
-    from queue import Empty
+    from queue import Empty'''
+'''manager = Manager()
+emails = manager.list(range(10))
+config = manager.dict()'''
+
+smtpd.DEBUGSTREAM = sys.stdout
 
 class SMTPServer(smtpd.SMTPServer):
 
@@ -26,13 +33,16 @@ class SMTPServer(smtpd.SMTPServer):
         self.ssl = use_ssl
         self.maximum_execution_time = maximum_execution_time
         self.process_count = process_count
-        self.process_pool = None
+        # config['error_code'] = 0
 
     def handle_accept(self):
-        self.process_pool = ProcessPool(self._accept_subprocess, process_count=self.process_count)
+        for i in range(0, self.process_count):
+            process = Process(target=self._accept_subprocess, args=[error_code]) # (emails,config))
+            process.daemon = True
+            process.start()
         self.close()
 
-    def _accept_subprocess(self, queue):
+    def _accept_subprocess(self, error_code): # emails, config):
         while True:
             try:
                 self.socket.setblocking(1)
@@ -54,13 +64,16 @@ class SMTPServer(smtpd.SMTPServer):
                             keyfile=self.keyfile,
                             ssl_version=self.ssl_version,
                         )
-                    channel = SMTPChannel(
+                    SMTPChannel(
                         self,
                         newsocket,
                         fromaddr,
                         require_authentication=self.require_authentication,
                         credential_validator=self.credential_validator,
-                        map=map
+                        map=map,
+                        error_code = error_code
+                        # emails = emails,
+                        # config = config
                     )
 
                     self.logger.info('_accept_subprocess(): starting asyncore within subprocess.')
@@ -74,6 +87,16 @@ class SMTPServer(smtpd.SMTPServer):
             except Exception as e:
                 self._shutdown_socket(newsocket)
                 self.logger.error('_accept_subprocess(): uncaught exception: %s' % str(e))
+
+    def set_return_value(self, val):
+        # config['error_code'] = val
+        error_code.value = val
+
+    def get_message_size(self):
+        if 'size' in emails[-1]:
+            return emails[-1]['size']
+        else:
+            return 0
 
     def _shutdown_socket(self, s):
         try:

@@ -688,9 +688,17 @@ class ui_class():
             vals = tree.xpath("//table[@id='table']/tbody/tr")
             val = list()
             for va in vals:
-                go = va.getchildren()
-                val.append({'user':go[0].text,'task':go[1].text,'result':go[2].text,
-                            'progress':go[3].text,'duration':go[4].text,'start':go[5].text})
+                try:
+                    go = va.getchildren()
+                    if len(go) == 6:
+                        val.append({'user':go[0].text,'task':go[1].text,'result':go[2].text,
+                                    'progress':go[3].text,'duration':go[4].text,'start':go[5].text})
+                    else:
+                        val.append({'user':None,'task':go[0].text,'result':go[1].text,
+                                    'progress':go[2].text,'duration':go[3].text,'start':go[4].text})
+
+                except IndexError:
+                    pass
             # val = cls.driver.find_elements_by_xpath("//table[@id='table']/tbody/tr/td")
             return val
         else:
@@ -732,3 +740,23 @@ class ui_class():
         custom coloums
         'detail_view'
         'get_meta' '''
+
+    @classmethod
+    def get_convert_book(cls, id=-1, root_url='http://127.0.0.1:8083'):
+        if id>0:
+            cls.driver.get(root_url + "/admin/book/"+str(id))
+        cls.check_element_on_page((By.ID,"book_edit_frm"))
+        parser = lxml.etree.HTMLParser()
+        html = cls.driver.page_source
+
+        tree = lxml.etree.parse(StringIO(html), parser)
+        ret = dict()
+        ret['from_book'] = tree.findall("//select[@id='book_format_from']/option")
+        ret['to_book'] = tree.findall("//select[@id='book_format_to']/option")
+        if not ret['from_book'] and not ret['to_book']:
+            ret['btn_from'] = False
+            ret['btn_to'] = False
+        else:
+            ret['btn_from'] = cls.check_element_on_page((By.XPATH, "//select[@id='book_format_from']"))
+            ret['btn_to'] = cls.check_element_on_page((By.XPATH, "//select[@id='book_format_to']"))
+        return ret

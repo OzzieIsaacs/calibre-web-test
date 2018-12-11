@@ -20,7 +20,7 @@ class Log(object):
     def _add_handler(self):
         try:
             handler = RotatingFileHandler(
-                '/var/log/%s.log' % self.log_name,
+                './%s.log' % self.log_name,
                 maxBytes=10485760,
                 backupCount=3
             )

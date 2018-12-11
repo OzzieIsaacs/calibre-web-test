@@ -6,7 +6,7 @@ import os
 import sys
 
 
-def process_open(command, quotes=(), env=None):
+def process_open(command, quotes=(), env=None, sout=subprocess.PIPE):
     # Linux py2.7 encode as list without quotes no empty element for parameters
     # linux py3.x no encode and as list without quotes no empty element for parameters
     # windows py2.7 encode as string with quotes empty element for parameters is okay
@@ -23,4 +23,5 @@ def process_open(command, quotes=(), env=None):
         if sys.version_info < (3, 0):
             exc_command = [x.encode(sys.getfilesystemencoding()) for x in command]
 
-    return subprocess.Popen(exc_command, shell=False, stdout=subprocess.PIPE, universal_newlines=True, env=env)
+    # return subprocess.Popen(exc_command, shell=False, stdout=subprocess.PIPE, universal_newlines=True, env=env)
+    return subprocess.Popen(exc_command, shell=False, stdout=sout, universal_newlines=True, env=env)
