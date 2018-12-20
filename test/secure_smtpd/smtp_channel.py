@@ -58,11 +58,13 @@ class SMTPChannel(smtpd.SMTPChannel):
         else:
             self.__greeting = arg
             self.push('250-%s' % self.__fqdn)
-            self.push('250-AUTH PLAIN')
-
-            if self.__server.starttls:
+            if not self.__server.starttls:
+                self.push('250 AUTH PLAIN')
+            else:
+                self.push('250-AUTH PLAIN')
+                print('Starttls')
                 self.push('250 STARTTLS')
-            
+
     def smtp_STARTTLS(self, arg):
         if arg:
             self.push('501 Syntax error (no parameters allowed)')

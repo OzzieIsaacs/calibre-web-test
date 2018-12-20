@@ -22,6 +22,8 @@ from test_login import test_login
 from test_opds_feed import test_opds_feed
 from test_updater import test_updater
 from test_register import test_register
+from test_email_ssl import test_SSL
+from test_email_STARTTLS import test_STARTTLS
 
 
 if __name__ == '__main__':
@@ -59,9 +61,12 @@ if __name__ == '__main__':
     register_test = unittest.TestLoader().loadTestsFromTestCase(test_register)
     shelf_test = unittest.TestLoader().loadTestsFromTestCase(test_shelf)
     user_template_test = unittest.TestLoader().loadTestsFromTestCase(test_user_template)
+    email_SSL_test = unittest.TestLoader().loadTestsFromTestCase(test_SSL)
+    email_STARTTLS_test = unittest.TestLoader().loadTestsFromTestCase(test_STARTTLS)
     # cli test has to be last, helper test has to be used after smtp server started/stopped
     all_tests = unittest.TestSuite([shelf_test, logging_test, calibre_web_Test, user_template_test,
                                     anonymous_test, edit_books_test, edit_books_gdrive_test, ebook_convert_test,
+                                    test_SSL, test_STARTTLS,
                                     login_test, opds_feed_test, updater_test, helper_test, register_test, cli_test])
     # all_tests = unittest.TestSuite([ebook_convert_test, helper_test])
     # open the report file

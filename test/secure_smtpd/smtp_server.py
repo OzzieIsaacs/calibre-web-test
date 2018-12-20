@@ -98,6 +98,22 @@ class SMTPServer(smtpd.SMTPServer):
         else:
             return 0
 
+    def get_recipents(self):
+        if 'recipents' in emails[-1]:
+            return emails[-1]['recipents']
+        else:
+            return None
+
+    def get_sender(self):
+        if 'mailfrom' in emails[-1]:
+            return emails[-1]['mailfrom']
+        else:
+            return None
+
+    '''@property
+    def get_message_body(self):
+        return self.payload'''
+
     def _shutdown_socket(self, s):
         try:
             s.shutdown(socket.SHUT_RDWR)

@@ -13,103 +13,11 @@ import shutil
 from ui_helper import ui_class
 from subproc_wrapper import process_open
 from testconfig import CALIBRE_WEB_PATH, TEST_DB
-from secure_smtpd import SMTPServer
-import threading
-import asyncore
-from email import message_from_string
+from email_convert_helper import threaded_SMPTPServer, CredentialValidator
+import email_convert_helper
 
 
-class CredentialValidator(object):
-
-    def validate(self, username, password):
-        print('User: %s, Password: %s' % (username,password))
-        if username == 'name@host.com' and password == '10234':
-            return True
-        return False
-
-
-class threaded_SMPTPServer(SMTPServer, threading.Thread):
-
-    def __init__(self, *args, **kwargs):
-        SMTPServer.__init__(self, *args, **kwargs)
-        self._stopevent = threading.Event()
-        threading.Thread.__init__(self)
-        self.status = 1
-        self.mailfrom = None
-        self.recipents = None
-        self.payload = None
-        self.error_c = None
-        self.size = 0
-
-    def process_message(self, peer, mailfrom, rcpttos, message_data, emails, config): #emails, config):
-        print('Receiving message from:', peer)
-        print('Message addressed from:', mailfrom)
-        print('Message addressed to  :', rcpttos)
-        print('Message length        :', len(message_data))
-        emails.append({'mailfrom':mailfrom,'recipents':rcpttos, 'size': len(message_data)})
-        # print('Shared Memory: %i' % error_code.value})
-        '''self.mailfrom = mailfrom
-        self.recipents = rcpttos
-        self.payload = message_from_string(message_data)
-        self.size = len(message_data)'''
-        # print('Shared Memory: %i' % error_code.value)
-        print('Shared Memory: %i' % config['error_code'])
-        # config['error_code']
-        if config['error_code'] == 552:
-        # if error_code.value == 552:
-            return '552 Requested mail action aborted: exceeded storage allocation'
-        return
-
-    @property
-    def get_recipents(self):
-        return self.recipents
-
-    @property
-    def get_sender(self):
-        return self.mailfrom
-
-    '''@property
-    def get_message_size(self):
-        return self.size'''
-
-    @property
-    def get_message_body(self):
-        return self.payload
-
-    def run(self):
-        asyncore.loop()
-        while self.status:
-            time.sleep(1)
-        print('email server stopps')
-
-    def stop(self):
-        self.status = 0
-        self.close()
-
-
-def is_calibre_not_present():
-    if calibre_path():
-        return False
-    else:
-        return True
-
-def calibre_path():
-    if sys.platform == "win32":
-        calibre_path = ["C:\\program files\calibre\calibre-convert.exe", "C:\\program files(x86)\calibre\calibre-convert.exe"]
-    else:
-        calibre_path = ["/opt/calibre/ebook-convert"]
-    for element in calibre_path:
-        if os.path.isfile(element):
-            return element
-    return None
-
-
-class SSLSMTPServer(SMTPServer):
-    def process_message(self, peer, mailfrom, rcpttos, message_data):
-        print(message_data)
-
-
-@unittest.skipIf(is_calibre_not_present(),"Skipping convert, calibre not found")
+@unittest.skipIf(email_convert_helper.is_calibre_not_present(),"Skipping convert, calibre not found")
 class test_ebook_convert(unittest.TestCase, ui_class):
     p=None
     driver = None
@@ -123,9 +31,10 @@ class test_ebook_convert(unittest.TestCase, ui_class):
             ('127.0.0.1', 1025),
             None,
             require_authentication=True,
-            # use_ssl=True,
-            certfile='SSL/ssl.crt',
-            keyfile='SSL/ssl.key',
+            starttls=False,
+            use_ssl=False,
+            # certfile='SSL/ssl.crt',
+            # keyfile='SSL/ssl.key',
             credential_validator=CredentialValidator(),
             maximum_execution_time = 300
         )
@@ -151,7 +60,7 @@ class test_ebook_convert(unittest.TestCase, ui_class):
         cls.driver.get("http://127.0.0.1:8083")
 
         # Wait for config screen to show up
-        cls.fill_initial_config({'config_calibre_dir':TEST_DB, 'config_converterpath':calibre_path(),
+        cls.fill_initial_config({'config_calibre_dir':TEST_DB, 'config_converterpath':email_convert_helper.calibre_path(),
                                  'config_ebookconverter':'converter2','config_log_level':'DEBUG'})
 
         # wait for cw to reboot
@@ -183,6 +92,7 @@ class test_ebook_convert(unittest.TestCase, ui_class):
             self.logout()
             self.login('admin','admin123')
 
+
     # deactivate converter and check send to kindle and convert are not visible anymore
     def test_convert_deactivate(self):
         self.fill_basic_config({'config_ebookconverter': 'converter0'})
@@ -199,6 +109,7 @@ class test_ebook_convert(unittest.TestCase, ui_class):
     # set excecutable not existing and start convert
     # set excecutable non excecutable and start convert
     def test_convert_wrong_excecutable(self):
+        task_len = len(self.check_tasks())
         self.fill_basic_config({'config_converterpath':'/opt/calibre/ebook-polish'})
         self.goto_page('nav_about')
         element = self.check_element_on_page((By.XPATH,"//tr/th[text()='Calibre converter']/following::td[1]"))
@@ -240,16 +151,22 @@ class test_ebook_convert(unittest.TestCase, ui_class):
         conv.click()
         # ToDo: check convert function
         vals = self.get_convert_book(5)
-        # self.assertFalse(vals['btn_from'])
-        # self.assertFalse(vals['btn_to'])
+        i = 0
+        while i < 10:
+            time.sleep(2)
+            ret = self.check_tasks()
+            if len(ret) - task_len == 2:
+                if ret[-1]['result'] ==  'Finished' or ret[-1]['result'] ==  'Failed':
+                    break
+            i += 1
 
-        time.sleep(2)
-        ret = self.check_tasks()
-        # self.assertEqual(len(ret),3)
-        self.assertEqual(ret[-3]['result'], 'Failed')
+        # time.sleep(5)
+        # ret = self.check_tasks()
+        self.assertEqual(len(ret)-2,task_len)
+        # self.assertEqual(ret[-3]['result'], 'Failed')
         self.assertEqual(ret[-2]['result'], 'Failed')
         self.assertEqual(ret[-1]['result'], 'Failed')
-        self.fill_basic_config({'config_converterpath': calibre_path()})
+        self.fill_basic_config({'config_converterpath': email_convert_helper.calibre_path()})
 
 
     # set parameters for convert and start conversion
@@ -344,7 +261,7 @@ class test_ebook_convert(unittest.TestCase, ui_class):
         self.logout()
         self.login('solo', '123')
         ret = self.check_tasks()
-        self.assertEqual(memory-7, len(ret))
+        self.assertEqual(0, len(ret))
 
         vals = self.get_convert_book(7)
         select = Select(vals['btn_from'])
@@ -369,7 +286,7 @@ class test_ebook_convert(unittest.TestCase, ui_class):
     # check email received
     # check filename
     def test_email_only(self):
-        self.setup_server(True, {'mail_password':'10234'})
+        self.setup_server(True, {'mail_use_ssl':'None','mail_password':'10234'})
         task_len = len(self.check_tasks())
         vals = self.get_convert_book(5)
         select = Select(vals['btn_from'])
@@ -402,7 +319,7 @@ class test_ebook_convert(unittest.TestCase, ui_class):
                     break
             i += 1
         self.assertEqual(ret[-1]['result'], 'Finished')
-        self.assertEqual(self.email_server.get_message_size(),76122)
+        self.assertGreaterEqual(self.email_server.get_message_size(),30700)
         self.setup_server(False, {'mail_password':'1234'})
 
 
@@ -441,11 +358,6 @@ class test_ebook_convert(unittest.TestCase, ui_class):
             i += 1
         # time.sleep(1000)
         self.assertEqual(ret[-1]['result'], 'Failed')
-        print(self.email_server.get_message_size())
-        # self.assertEqual(self.email_server.get_message_size(),76122)
-        #print('Message addressed from:', self.email_server.get_sender())
-        #print('Message addressed to  :', self.email_server.get_recipents())
-        #print('Message length        :', self.email_server.get_message_size())
         self.email_server.set_return_value(0)
         self.setup_server(False, {'mail_password':'1234'})
 
@@ -455,16 +367,45 @@ class test_ebook_convert(unittest.TestCase, ui_class):
         self.assertIsNone('Not Implemented')
 
     # check behavior for failed server setup (non-SSL)
-    @unittest.skip("Not Implemented")
-    def test_smtp_setup_error(self):
-        self.assertIsNone('Not Implemented')
-
-    # check behavior for failed server setup (SSL)
-    @unittest.skip("Not Implemented")
-    def test_SSL_smtp_setup_error(self):
-        self.assertIsNone('Not Implemented')
 
     # check behavior for failed server setup (STARTTLS)
-    @unittest.skip("Not Implemented")
     def test_STARTTLS_smtp_setup_error(self):
-        self.assertIsNone('Not Implemented')
+        task_len = len(self.check_tasks())
+        self.setup_server(False, {'mail_use_ssl':'STARTTLS','mail_password':'10234'})
+        details = self.get_book_details(7)
+        details['kindlebtn'].click()
+        conv = self.check_element_on_page((By.LINK_TEXT, details['kindle'][0].text))
+        self.assertTrue(conv)
+        conv.click()
+        self.assertTrue(self.check_element_on_page((By.ID, "flash_success")))
+        i = 0
+        while i < 10:
+            time.sleep(2)
+            ret = self.check_tasks()
+            if len(ret) - task_len == 1:
+                if ret[-1]['result'] == 'Finished' or ret[-1]['result'] == 'Failed':
+                    break
+            i += 1
+        # time.sleep(1000)
+        self.assertEqual(ret[-1]['result'], 'Failed')
+
+        # check behavior for failed server setup (SSL)
+    def test_SSL_smtp_setup_error(self):
+        task_len = len(self.check_tasks())
+        self.setup_server(False, {'mail_use_ssl':'SSL/TLS','mail_password':'10234'})
+        details = self.get_book_details(7)
+        details['kindlebtn'].click()
+        conv = self.check_element_on_page((By.LINK_TEXT, details['kindle'][0].text))
+        self.assertTrue(conv)
+        conv.click()
+        self.assertTrue(self.check_element_on_page((By.ID, "flash_success")))
+        i = 0
+        while i < 10:
+            time.sleep(2)
+            ret = self.check_tasks()
+            if len(ret) - task_len == 1:
+                if ret[-1]['result'] == 'Finished' or ret[-1]['result'] == 'Failed':
+                    break
+            i += 1
+        # time.sleep(1000)
+        self.assertEqual(ret[-1]['result'], 'Failed')
