@@ -1,9 +1,12 @@
-from secure_smtpd import SMTPServer
-import threading
-import asyncore
+# from secure_smtpd import SMTPServer
 import sys
 import os
-import time
+
+from gevent import monkey
+from gsmtpd.server import SMTPServer
+# import logging
+
+monkey.patch_all()
 
 def is_calibre_not_present():
     if calibre_path():
@@ -31,40 +34,49 @@ class CredentialValidator(object):
         return False
 
 
-class threaded_SMPTPServer(SMTPServer, threading.Thread):
+class Gevent_SMPTPServer(SMTPServer):
 
     def __init__(self, *args, **kwargs):
         SMTPServer.__init__(self, *args, **kwargs)
-        self._stopevent = threading.Event()
-        threading.Thread.__init__(self)
+        #self._stopevent = threading.Event()
+        #threading.Thread.__init__(self)
         self.status = 1
         self.mailfrom = None
         self.recipents = None
         self.payload = None
         self.error_c = None
         self.size = 0
+        self.ret_value = 0
 
-    def process_message(self, peer, mailfrom, rcpttos, message_data, emails, config):
+    def process_message(self, peer, mailfrom, rcpttos, message_data):
         print('Receiving message from:', peer)
         print('Message addressed from:', mailfrom)
         print('Message addressed to  :', rcpttos)
         print('Message length        :', len(message_data))
-        emails.append({'mailfrom':mailfrom,'recipents':rcpttos, 'size': len(message_data)})
+        self.size = len(message_data)
+        # emails.append({'mailfrom':mailfrom,'recipents':rcpttos, 'size': len(message_data)})
         # print('Shared Memory: %i' % config['error_code'])
-        if config['error_code'] == 552:
+        if self.ret_value == 552:
             return '552 Requested mail action aborted: exceeded storage allocation'
         else:
             return
 
-    def run(self):
-        asyncore.loop()
-        while self.status:
-            time.sleep(1)
-        print('email server stopps')
+    @property
+    def message_size(self):
+        return self.size
 
-    def stop(self):
-        self.status = 0
-        self.close()
+    def set_return_value(self, value):
+        self.ret_value = value
+
+'''def run(self):
+    asyncore.loop()
+    while self.status:
+        time.sleep(1)
+    print('email server stopps')
+
+def stop(self):
+    self.status = 0
+    self.close()'''
 
 '''class SSLSMTPServer(SMTPServer):
     def process_message(self, peer, mailfrom, rcpttos, message_data):

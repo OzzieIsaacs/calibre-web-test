@@ -76,7 +76,7 @@ class test_logging(unittest.TestCase, ui_class):
             data = logfile.read()
         self.assertIsNotNone(re.findall('Login failed for user "admin" IP-adress:',data),"Login failed message not in Logfile")
 
-    @unittest.expectedFailure
+    @unittest.skip("Not Implemented")
     def test_failed_register(self):
         self.assertIsNone('not Implemented','Registering user with wrong domain is not in Logfile')
 

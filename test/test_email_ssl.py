@@ -5,6 +5,7 @@ import unittest
 from selenium import webdriver
 import os
 import sys
+import re
 from selenium.webdriver.common.by import By
 from selenium.webdriver.support.ui import WebDriverWait, Select
 from selenium.webdriver.support import expected_conditions as EC
@@ -13,7 +14,7 @@ import shutil
 from ui_helper import ui_class
 from subproc_wrapper import process_open
 from testconfig import CALIBRE_WEB_PATH, TEST_DB
-from email_convert_helper import threaded_SMPTPServer, CredentialValidator
+from email_convert_helper import Gevent_SMPTPServer, CredentialValidator
 import email_convert_helper
 
 
@@ -25,28 +26,30 @@ class test_SSL(unittest.TestCase, ui_class):
 
     @classmethod
     def setUpClass(cls):
-        # start email server
-        cls.email_server = threaded_SMPTPServer(
-            # cls,
-            ('127.0.0.1', 1025),
-            None,
-            require_authentication=True,
-            # starttls=False,
-            use_ssl=True,
-            certfile='SSL/ssl.crt',
-            keyfile='SSL/ssl.key',
-            credential_validator=CredentialValidator(),
-            maximum_execution_time = 14
-        )
-        cls.email_server.start()
-
         try:
             os.remove(os.path.join(CALIBRE_WEB_PATH,'app.db'))
+        except:
+            pass
+        try:
+            os.remove(os.path.join(CALIBRE_WEB_PATH, 'calibre-web.log'))
+            os.remove(os.path.join(CALIBRE_WEB_PATH, 'calibre-web.log.1'))
+            os.remove(os.path.join(CALIBRE_WEB_PATH, 'calibre-web.log.2'))
         except:
             pass
         shutil.rmtree(TEST_DB,ignore_errors=True)
         shutil.copytree('./Calibre_db', TEST_DB)
         cls.p = process_open([u"python", os.path.join(CALIBRE_WEB_PATH,u'cps.py')],(1),sout=None)
+
+        # start email server
+        cls.email_server = Gevent_SMPTPServer(
+            ('127.0.0.1', 1027),
+            only_ssl=True,
+            certfile='SSL/ssl.crt',
+            keyfile='SSL/ssl.key',
+            credential_validator=CredentialValidator(),
+            timeout = 10
+        )
+        cls.email_server.start()
 
         # create a new Firefox session
         cls.driver = webdriver.Firefox()
@@ -74,10 +77,9 @@ class test_SSL(unittest.TestCase, ui_class):
         # login
         cls.login("admin", "admin123")
         cls.edit_user('admin', {'email': 'a5@b.com','kindle_mail': 'a1@b.com'})
-        cls.setup_server(True, {'mail_server':'127.0.0.1', 'mail_port':'1025',
+        cls.setup_server(False, {'mail_server':'127.0.0.1', 'mail_port':'1027',
                             'mail_use_ssl':'SSL/TLS','mail_login':'name@host.com','mail_password':'10234',
                             'mail_from':'name@host.com'})
-        # print('configured')
 
 
     @classmethod
@@ -86,6 +88,7 @@ class test_SSL(unittest.TestCase, ui_class):
         cls.driver.quit()
         cls.p.terminate()
         cls.email_server.stop()
+        time.sleep(2)
 
 
     # start sending e-mail
@@ -128,10 +131,9 @@ class test_SSL(unittest.TestCase, ui_class):
                 if ret[-1]['result'] == 'Finished' or ret[-1]['result'] == 'Failed':
                     break
             i += 1
-        # time.sleep(1000)
         self.assertEqual(ret[-1]['result'], 'Failed')
 
-        # check behavior for failed server setup (NonSSL)
+    # check behavior for failed server setup (NonSSL)
     def test_SSL_None_setup_error(self):
         task_len = len(self.check_tasks())
         self.setup_server(False, {'mail_use_ssl':'None'})
@@ -150,3 +152,11 @@ class test_SSL(unittest.TestCase, ui_class):
                     break
             i += 1
         self.assertEqual(ret[-1]['result'], 'Failed')
+
+    # check if email traffic is logged to logfile
+    def test_logging_email(self):
+        self.setup_server(True, {})
+        time.sleep(2)
+        with open(os.path.join(CALIBRE_WEB_PATH,'calibre-web.log'),'r') as logfile:
+            data = logfile.read()
+        self.assertIsNotNone(re.findall('Subject: Calibre-Web test e-mail',data),"Email logging not working")

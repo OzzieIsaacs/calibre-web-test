@@ -67,3 +67,63 @@ class test_opds_feed(unittest.TestCase, ui_class):
     @unittest.skip("Not Implemented")
     def test_opds(self):
         self.assertIsNone('Not Implemented')
+
+    @unittest.skip("Not Implemented")
+    def test_opds_guest_user(self):
+        self.assertIsNone('Not Implemented')
+
+    @unittest.skip("Not Implemented")
+    def test_opds_search(self):
+        self.assertIsNone('Not Implemented')
+
+    @unittest.skip("Not Implemented")
+    def test_opds_shelf_access(self):
+        self.assertIsNone('Not Implemented')
+
+    @unittest.skip("Not Implemented")
+    def test_opds_non_admin(self):
+        self.assertIsNone('Not Implemented')
+
+    @unittest.skip("Not Implemented")
+    def test_opds_random(self):
+        self.assertIsNone('Not Implemented')
+
+    @unittest.skip("Not Implemented")
+    def test_opds_cover(self):
+        self.assertIsNone('Not Implemented')
+
+    @unittest.skip("Not Implemented")
+    def test_opds_download_book(self):
+        self.assertIsNone('Not Implemented')
+
+    @unittest.skip("Not Implemented")
+    def test_opds_read_unread(self):
+        self.assertIsNone('Not Implemented')
+
+    @unittest.skip("Not Implemented")
+    def test_opds_hot(self):
+        self.assertIsNone('Not Implemented')
+
+    @unittest.skip("Not Implemented")
+    def test_opds_language(self):
+        self.assertIsNone('Not Implemented')
+
+    @unittest.skip("Not Implemented")
+    def test_opds_series(self):
+        self.assertIsNone('Not Implemented')
+
+    @unittest.skip("Not Implemented")
+    def test_opds_calibre_companion(self):
+        self.assertIsNone('Not Implemented')
+
+    @unittest.skip("Not Implemented")
+    def test_opds_publisher(self):
+        self.assertIsNone('Not Implemented')
+
+    @unittest.skip("Not Implemented")
+    def test_opds_author(self):
+        self.assertIsNone('Not Implemented')
+
+    @unittest.skip("Not Implemented")
+    def test_opds_paging(self):
+        self.assertIsNone('Not Implemented')

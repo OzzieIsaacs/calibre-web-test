@@ -200,8 +200,10 @@ class test_cli(unittest.TestCase, ui_class):
         self.assertTrue(self.check_element_on_page((By.ID, "config_calibre_dir")))
         p.kill()
 
-    @unittest.expectedFailure
+    # @unittest.expectedFailure
+    @unittest.skip("Not Implemented")
     def test_cli_gdrive_location(self):
+        # ToDo: implement
         self.assertIsNone('not Implemented', 'Check if moving gdrive db on commandline works')
 
     def test_environ_port_setting(self):
@@ -216,12 +218,23 @@ class test_cli(unittest.TestCase, ui_class):
         self.assertTrue(self.check_element_on_page((By.ID, "config_calibre_dir")))
         p.kill()
 
-    @unittest.expectedFailure
+    # @unittest.expectedFailure
+    # @unittest.skip("Not Implemented")
+    # start calibre-web in process A.
+    # Start calibre-web in process B.
+    # Check process B terminates with exit code 1
+    # stop process A
     def test_already_started(self):
-        # start calibre-web in process A.
-        # Start calibre-web in process B.
-        # Check process B terminates with exit code 1
-        # stop process A
-        pass
+        os.chdir(CALIBRE_WEB_PATH)
+        p1 = process_open([u"python", u'cps.py'], (1))
+        time.sleep(5)
+        p2 = process_open([u"python", u'cps.py'], (1))
+        time.sleep(5)
+        result = p2.poll()
+        if result is None:
+            p2.kill()
+            self.assert_('2nd process not terminated, port is already in use')
+        self.assertEqual(result, 1)
+        p1.kill()
 
 

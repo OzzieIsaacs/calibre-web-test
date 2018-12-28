@@ -481,21 +481,14 @@ class HTMLTestRunner(Template_mixin):
 
     def _generate_heading(self, result):
         g1 = self.get_report_attributes(result)
-        #g2 = self.attributes['group2']
-        #g3 = self.attributes['group3']
 
         pg1 = self._parse_attributes_group(g1)
-        #pg2 = self._parse_attributes_group(g2)
-        #pg3 = self._parse_attributes_group(g3)
 
         heading = self.HEADING_TEMPLATE % dict(
             title=saxutils.escape(self.title),
             parameters_1=pg1[0],
             parameters_2=pg1[1],
             parameters_3=pg1[2],
-        #parameters_1 = ''.join(pg1),
-            #parameters_2=''.join(pg2),
-            #parameters_3=''.join(pg3),
             description=saxutils.escape(self.description),
         )
         return heading
@@ -568,6 +561,9 @@ class HTMLTestRunner(Template_mixin):
         has_output = bool(output or e)
         if n == 3:
             test_id = 's' + 't%s.%s' \
+                      % (class_id + 1, test_id + 1)
+        elif n == 2:
+            test_id = 'e' + 't%s.%s' \
                       % (class_id + 1, test_id + 1)
         else:
             test_id = (n == 0 and 'p' or 'f') + 't%s.%s' \

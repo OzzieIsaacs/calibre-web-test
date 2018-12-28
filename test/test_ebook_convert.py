@@ -13,7 +13,7 @@ import shutil
 from ui_helper import ui_class
 from subproc_wrapper import process_open
 from testconfig import CALIBRE_WEB_PATH, TEST_DB
-from email_convert_helper import threaded_SMPTPServer, CredentialValidator
+from email_convert_helper import Gevent_SMPTPServer, CredentialValidator
 import email_convert_helper
 
 
@@ -26,17 +26,11 @@ class test_ebook_convert(unittest.TestCase, ui_class):
     @classmethod
     def setUpClass(cls):
         # start email server
-        cls.email_server = threaded_SMPTPServer(
-            # cls,
+        cls.email_server = Gevent_SMPTPServer(
             ('127.0.0.1', 1025),
-            None,
-            require_authentication=True,
-            starttls=False,
-            use_ssl=False,
-            # certfile='SSL/ssl.crt',
-            # keyfile='SSL/ssl.key',
+            only_ssl=False,
             credential_validator=CredentialValidator(),
-            maximum_execution_time = 300
+            timeout=10
         )
         cls.email_server.start()
 
@@ -61,7 +55,7 @@ class test_ebook_convert(unittest.TestCase, ui_class):
 
         # Wait for config screen to show up
         cls.fill_initial_config({'config_calibre_dir':TEST_DB, 'config_converterpath':email_convert_helper.calibre_path(),
-                                 'config_ebookconverter':'converter2','config_log_level':'DEBUG'})
+                                 'config_ebookconverter':'converter2'})
 
         # wait for cw to reboot
         time.sleep(5)
@@ -77,7 +71,6 @@ class test_ebook_convert(unittest.TestCase, ui_class):
         cls.setup_server(True, {'mail_server':'127.0.0.1', 'mail_port':'1025',
                             'mail_use_ssl':'None','mail_login':'name@host.com','mail_password':'1234',
                             'mail_from':'name@host.com'})
-        # print('configured')
 
 
     @classmethod
@@ -86,6 +79,7 @@ class test_ebook_convert(unittest.TestCase, ui_class):
         cls.driver.quit()
         cls.p.terminate()
         cls.email_server.stop()
+        time.sleep(2)
 
     def tearDown(self):
         if not self.check_user_logged_in('admin'):
@@ -159,21 +153,115 @@ class test_ebook_convert(unittest.TestCase, ui_class):
                 if ret[-1]['result'] ==  'Finished' or ret[-1]['result'] ==  'Failed':
                     break
             i += 1
-
-        # time.sleep(5)
-        # ret = self.check_tasks()
         self.assertEqual(len(ret)-2,task_len)
-        # self.assertEqual(ret[-3]['result'], 'Failed')
         self.assertEqual(ret[-2]['result'], 'Failed')
         self.assertEqual(ret[-1]['result'], 'Failed')
         self.fill_basic_config({'config_converterpath': email_convert_helper.calibre_path()})
 
 
-    # set parameters for convert and start conversion
-    @unittest.skip("Not Implemented")
+    # set parameters for convert ( --margin-right 11.9) and start conversion -> conversion okay
+    # set parameters for convert ( --margin-righ) and start conversion -> conversion failed
+    # remove parameters for conversion
     def test_convert_parameter(self):
-        vals = self.get_convert_book(7)
-        self.assertIsNone('Not Implemented')
+        task_len = len(self.check_tasks())
+        self.fill_basic_config({'config_calibre': '--margin-right 11.9'})
+        vals = self.get_convert_book(8)
+        select = Select(vals['btn_from'])
+        select.select_by_visible_text('EPUB')
+        select = Select(vals['btn_to'])
+        select.select_by_visible_text('LIT')
+        self.driver.find_element_by_id("btn-book-convert").click()
+        self.assertTrue(self.check_element_on_page((By.ID, "flash_success")))
+        time.sleep(4)
+        ret = self.check_tasks()
+        self.assertEqual(len(ret) - 1, task_len)
+        self.assertEqual(ret[-1]['result'], 'Finished')
+
+        self.fill_basic_config({'config_calibre': '--margin-rght 11.9'})
+        vals = self.get_convert_book(8)
+        select = Select(vals['btn_from'])
+        select.select_by_visible_text('EPUB')
+        select = Select(vals['btn_to'])
+        select.select_by_visible_text('LRF')
+        self.driver.find_element_by_id("btn-book-convert").click()
+        self.assertTrue(self.check_element_on_page((By.ID, "flash_success")))
+        time.sleep(4)
+        ret = self.check_tasks()
+        self.assertEqual(len(ret) - 2, task_len)
+        self.assertEqual(ret[-1]['result'], 'Failed')
+        self.fill_basic_config({'config_calibre': ''})
+
+    # press send to kindle for not converted book
+    # wait for finished
+    # check email received
+    def test_convert_email(self):
+        self.setup_server(True, {'mail_password': '10234'})
+        task_len = len(self.check_tasks())
+        details = self.get_book_details(9)
+        self.assertEqual(len(details['kindle']),2)
+        details['kindlebtn'].click()
+        conv = self.check_element_on_page((By.LINK_TEXT, details['kindle'][1].text))
+        self.assertTrue(conv)
+        conv.click()
+        i = 0
+        while i < 10:
+            time.sleep(2)
+            ret = self.check_tasks()
+            if len(ret) - task_len == 2:
+                if ret[-1]['result'] ==  'Finished' or ret[-1]['result'] ==  'Failed':
+                    break
+            i += 1
+        self.assertEqual(ret[-2]['result'], 'Finished')
+        self.assertEqual(ret[-1]['result'], 'Finished')
+        self.setup_server(True, {'mail_password': '1234'})
+
+
+    # check visiblility kindle button for user with not set kindle-email
+    # create user -> no kindle email
+    # logout, login new user
+    # check button send to kindle not visible
+    def test_kindle_send_not_configured(self):
+        self.create_user('kindle', {'password': '123', 'email': 'a@b.com', 'edit_role':1})
+        self.logout()
+        self.login('kindle', '123')
+        details = self.get_book_details(5)
+        self.assertIsNone(details['kindlebtn'])
+        self.login('admin', 'admin123')
+
+    # check conversion and email started and conversion fails
+    # move valid file to invalid filename and create random file with extension for conversion
+    # start conversion. Check conversion fails
+    # delete ranom file and move invalid filename back to vaild filename
+    # convert valid file
+    def test_convert_failed_and_email(self):
+        orig_file = os.path.join(TEST_DB, u'Leo Baskerville/book8 (8)',
+                                 u'book8 - Leo Baskerville.epub').encode('UTF-8')
+        moved_file = os.path.join(TEST_DB, u'Leo Baskerville/book8 (8)',
+                                 u'book8.epub').encode('UTF-8')
+        os.rename(orig_file,moved_file)
+        with open(orig_file, 'wb') as fout:
+            fout.write(os.urandom(124))
+        self.setup_server(True, {'mail_password': '10234'})
+        task_len = len(self.check_tasks())
+        details = self.get_book_details(8)
+        self.assertEqual(len(details['kindle']),2)
+        details['kindlebtn'].click()
+        conv = self.check_element_on_page((By.LINK_TEXT, details['kindle'][1].text))
+        self.assertTrue(conv)
+        conv.click()
+        i = 0
+        while i < 10:
+            time.sleep(2)
+            ret = self.check_tasks()
+            if len(ret) - task_len == 1:
+                if ret[-1]['result'] ==  'Finished' or ret[-1]['result'] ==  'Failed':
+                    break
+            i += 1
+        self.assertEqual(ret[-1]['result'], 'Failed')
+        self.setup_server(True, {'mail_password': '1234'})
+        os.remove(orig_file)
+        os.rename(moved_file, orig_file)
+
 
     # convert everything to everything
     # start conversion of mobi -> azw3
@@ -319,26 +407,14 @@ class test_ebook_convert(unittest.TestCase, ui_class):
                     break
             i += 1
         self.assertEqual(ret[-1]['result'], 'Finished')
-        self.assertGreaterEqual(self.email_server.get_message_size(),30700)
+        self.assertGreaterEqual(self.email_server.message_size,30700)
         self.setup_server(False, {'mail_password':'1234'})
 
-
-    # press send to kindle for not converted book
-    # wait for finished
-    # check email received
-    @unittest.skip("Not Implemented")
-    def test_convert_email(self):
-        self.assertIsNone('Not Implemented')
-
-    # check visiblility kindle button for user with not set kindle-email
-    @unittest.skip("Not Implemented")
-    def test_kindle_send_not_configured(self):
-        self.assertIsNone('Not Implemented')
 
     # check behavior for failed email (size)
     # conversion okay, email failed
     def test_email_failed(self):
-        self.setup_server(True, {'mail_password': '10234'})
+        self.setup_server(False, {'mail_password': '10234'})
         task_len = len(self.check_tasks())
         details = self.get_book_details(5)
         self.email_server.set_return_value(552)
@@ -352,21 +428,14 @@ class test_ebook_convert(unittest.TestCase, ui_class):
         while i < 10:
             time.sleep(2)
             ret = self.check_tasks()
-            if len(ret) - task_len == 2:
+            if len(ret) - task_len == 1:
                 if ret[-1]['result'] == 'Finished' or ret[-1]['result'] == 'Failed':
                     break
             i += 1
-        # time.sleep(1000)
         self.assertEqual(ret[-1]['result'], 'Failed')
         self.email_server.set_return_value(0)
         self.setup_server(False, {'mail_password':'1234'})
 
-    # check conversion and email started and conversion fails
-    @unittest.skip("Not Implemented")
-    def test_convert_failed_and_email(self):
-        self.assertIsNone('Not Implemented')
-
-    # check behavior for failed server setup (non-SSL)
 
     # check behavior for failed server setup (STARTTLS)
     def test_STARTTLS_smtp_setup_error(self):
@@ -386,10 +455,9 @@ class test_ebook_convert(unittest.TestCase, ui_class):
                 if ret[-1]['result'] == 'Finished' or ret[-1]['result'] == 'Failed':
                     break
             i += 1
-        # time.sleep(1000)
         self.assertEqual(ret[-1]['result'], 'Failed')
 
-        # check behavior for failed server setup (SSL)
+    # check behavior for failed server setup (SSL)
     def test_SSL_smtp_setup_error(self):
         task_len = len(self.check_tasks())
         self.setup_server(False, {'mail_use_ssl':'SSL/TLS','mail_password':'10234'})
@@ -407,5 +475,4 @@ class test_ebook_convert(unittest.TestCase, ui_class):
                 if ret[-1]['result'] == 'Finished' or ret[-1]['result'] == 'Failed':
                     break
             i += 1
-        # time.sleep(1000)
         self.assertEqual(ret[-1]['result'], 'Failed')

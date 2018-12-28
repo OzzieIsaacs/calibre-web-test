@@ -13,7 +13,7 @@ import shutil
 from ui_helper import ui_class
 from subproc_wrapper import process_open
 from testconfig import CALIBRE_WEB_PATH, TEST_DB
-from email_convert_helper import threaded_SMPTPServer, CredentialValidator
+from email_convert_helper import Gevent_SMPTPServer, CredentialValidator
 import email_convert_helper
 
 
@@ -26,16 +26,13 @@ class test_STARTTLS(unittest.TestCase, ui_class):
     @classmethod
     def setUpClass(cls):
         # start email server
-        cls.email_server = threaded_SMPTPServer(
-            # cls,
-            ('127.0.0.1', 1025),
-            None,
-            require_authentication=True,
-            use_ssl=False,
+        cls.email_server = Gevent_SMPTPServer(
+            ('127.0.0.1', 1026),
+            only_ssl=False,
             certfile='SSL/ssl.crt',
             keyfile='SSL/ssl.key',
             credential_validator=CredentialValidator(),
-            maximum_execution_time = 30
+            timeout=10
         )
         cls.email_server.start()
 
@@ -60,7 +57,7 @@ class test_STARTTLS(unittest.TestCase, ui_class):
 
         # Wait for config screen to show up
         cls.fill_initial_config({'config_calibre_dir':TEST_DB, 'config_converterpath':email_convert_helper.calibre_path(),
-                                 'config_ebookconverter':'converter2','config_log_level':'DEBUG'})
+                                 'config_ebookconverter':'converter2'})
 
         # wait for cw to reboot
         time.sleep(5)
@@ -73,7 +70,7 @@ class test_STARTTLS(unittest.TestCase, ui_class):
         # login
         cls.login("admin", "admin123")
         cls.edit_user('admin', {'email': 'a5@b.com','kindle_mail': 'a1@b.com'})
-        cls.setup_server(True, {'mail_server':'127.0.0.1', 'mail_port':'1025',
+        cls.setup_server(True, {'mail_server':'127.0.0.1', 'mail_port':'1026',
                             'mail_use_ssl':'SSL/TLS','mail_login':'name@host.com','mail_password':'10234',
                             'mail_from':'name@host.com'})
 
@@ -84,6 +81,7 @@ class test_STARTTLS(unittest.TestCase, ui_class):
         cls.driver.quit()
         cls.p.terminate()
         cls.email_server.stop()
+        time.sleep(2)
 
 
     # start sending e-mail
