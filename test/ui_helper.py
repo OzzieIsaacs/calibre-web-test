@@ -8,7 +8,10 @@ from selenium.webdriver.support import expected_conditions as EC
 from selenium.common.exceptions import TimeoutException
 import time
 import lxml.etree
-from StringIO import StringIO
+try:
+    from StringIO import StringIO
+except ImportError:
+    from io import StringIO
 
 # Dict for pages and the way to reach them
 page = dict()
@@ -208,6 +211,7 @@ class ui_class():
 
         for select in process_select:
             ele = cls.driver.find_elements_by_name(select)
+            time.sleep(1)
             for el in ele:
                 if el.get_attribute('id') == elements[select]:
                     el.click()
@@ -240,14 +244,16 @@ class ui_class():
         process_checkboxes = dict()
         process_elements = dict()
         process_options = dict()
+        process_selects = dict()
         # special handling for checkboxes
         checkboxes = ['admin_role', 'download_role', 'upload_role', 'edit_role', 'delete_role', 'passwd_role',
                         'edit_shelf_role', 'show_random', 'show_recent', 'show_sorted', 'show_hot', 'show_best_rated',
                         'show_language', 'show_series', 'show_category', 'show_author', 'show_read_and_unread',
                         'show_detail_random', 'show_mature_content', 'show_publisher']
         options = ['config_read_column']
+        selects = ['config_theme']
         # depending on elements open accordions or not
-        if any(key in elements for key in ['config_calibre_web_title', 'config_books_per_page',
+        if any(key in elements for key in ['config_calibre_web_title', 'config_books_per_page', 'config_theme',
                                            'config_random_books', 'config_columns_to_ignore',
                                            'config_read_column', 'config_title_regex', 'config_mature_content_tags']):
             opener.append(0)
@@ -269,8 +275,11 @@ class ui_class():
                 process_checkboxes[key] = elements[key]
             elif key in options:
                 process_options[key] = elements[key]
+            elif key in selects:
+                process_selects[key] = elements[key]
             else:
                 process_elements[key] = elements[key]
+
         # process all checkboxes Todo: If status was wrong before is not included in response
         for checkbox in process_checkboxes:
             ele = cls.driver.find_element_by_id(checkbox)
@@ -282,6 +291,10 @@ class ui_class():
             ele = cls.driver.find_element_by_id(key)
             ele.clear()
             ele.send_keys(process_elements[key])
+
+        for option, key in enumerate(process_selects):
+            select = Select(cls.driver.find_element_by_id(key))
+            select.select_by_visible_text(process_selects[key])
 
         # finally submit settings
         cls.driver.find_element_by_name("submit").click()
@@ -358,7 +371,7 @@ class ui_class():
         ''' All Checkboses are:
             'show_random','show_recent', 'show_hot', 'show_best_rated', 'show_language', 'show_series',
             'show_category', 'show_author', 'show_read_and_unread', 'show_detail_random' '''
-        selects = ['locale', 'theme', 'default_language']
+        selects = ['locale', 'default_language']
         cls.goto_page('user_setup')
         process_selects = dict()
         process_checkboxes = dict()
@@ -431,7 +444,7 @@ class ui_class():
         ''' All Checkboses are:
             'show_random','show_recent', 'show_hot', 'show_best_rated', 'show_language', 'show_series',
             'show_category', 'show_author', 'show_read_and_unread', 'show_detail_random' '''
-        selects = ['locale', 'theme', 'default_language']
+        selects = ['locale', 'default_language']
         text_inputs = ['kindle_mail','email', 'password', 'nickname']
         process_selects = dict()
         process_checkboxes = dict()
@@ -455,7 +468,6 @@ class ui_class():
                     print('click did not work')
                     time.sleep(2)
                     ele.click()
-
 
         # process all selects
         for option, key in enumerate(process_selects):
@@ -559,11 +571,14 @@ class ui_class():
             ret['author'] = [aut.text for aut in author]
 
             # ret['rating'] = cls.driver.find_elements_by_xpath("//*[@class='glyphicon glyphicon-star good']/span")
-            ret['rating']= tree.findall("//*[@class='glyphicon glyphicon-star good']/span")
+            ret['rating']= len(tree.findall("//*[@class='glyphicon glyphicon-star good']"))
 
             # languages = cls.driver.find_elements_by_xpath("//*[@class='languages']//span")
             languages = tree.findall("//*[@class='languages']//span")
-            ret['languages'] = [lang.text for lang in languages]
+            if languages:
+                only_lang = languages[0].text.split(': ')[1].lstrip()
+                ret['languages'] = only_lang.split(', ')
+            # ret['languages'] = [lang.text.split(': ')[1].lstrip() for lang in languages]
 
             # ids = cls.driver.find_elements_by_xpath("//*[@class='identifiers']//a")
             ids = tree.findall("//*[@class='identifiers']//a")
@@ -585,10 +600,15 @@ class ui_class():
 
             # ret['comment'] = cls.check_element_on_page((By.TAG_NAME, "h3"))
             comment = tree.find("//*[@class='comments']")
+            ret['comment'] = ''
             if comment is not None:
-                ret['comment'] = ''
-                for ele in comment.getchildren()[1].getchildren():
-                    ret['comment'] += ele.text
+                try:
+                    for ele in comment.getchildren()[1:]:
+                        ret['comment'] += ele.text
+                except:
+                    for ele in comment.getchildren()[1].getchildren():
+                        ret['comment'] += ele.text
+
             # add_shelf = cls.driver.find_elements_by_xpath("//*[@id='add-to-shelves']//a")
             add_shelf = tree.findall("//*[@id='add-to-shelves']//a")
             ret['add_shelf'] = [sh.text.strip().lstrip() for sh in add_shelf]
@@ -655,8 +675,35 @@ class ui_class():
                     # series = cls.driver.find_elements_by_xpath("//*[contains(@href,'series')]//ancestor::p")
                     # if series:
                     #    ret['series']=series[0].text
+            cust_columns = tree.xpath("//div[@class='custom_columns']")
+            if len(cust_columns) == 2:      # we have custom columns
+                ret['cust_columns']=list()
 
-            # custom cloumns ??
+                if len(cust_columns[0].getchildren()[0].getchildren()):
+                    first_element = dict()
+                    if cust_columns[0].getchildren()[0].getchildren()[0].tag == 'span':
+                        first_element['Text'] = cust_columns[0].getchildren()[0].getchildren()[0].getparent().text.lstrip().split(':')[0]
+                        first_element['value'] = cust_columns[0].getchildren()[0].getchildren()[0].attrib['class'][20:]
+                        ret['cust_columns'].append(first_element)
+                    elif ':' in cust_columns[0].getchildren()[0].text:
+                        first_element['Text'] = cust_columns[0].getchildren()[0].text.lstrip().split(':')[0]
+                        first_element['value'] = cust_columns[0].getchildren()[0].text.split(':')[1].strip()
+                        ret['cust_columns'].append(first_element)
+                    else:
+                        pass
+                    for col in cust_columns[0].getchildren()[0].getchildren()[1:]:
+                        element = dict()
+                        if col.tag == 'span':
+                            element['Text'] = col.getparent().text.lstrip().split(':')[0]
+                            element['value'] = col.attrib['class'][20:]
+                            ret['cust_columns'].append(element)
+                        elif ':' in col.tail:
+                            element['Text'] = col.tail.lstrip().split(':')[0]
+                            element['value'] = col.tail.split(':')[1].strip()
+                            ret['cust_columns'].append(element)
+                        else:
+                            pass
+
             # cover type
 
         except Exception as e:
@@ -705,15 +752,60 @@ class ui_class():
             return False
 
     @classmethod
-    def edit_book(cls, id=-1, content=dict(), detail_v=False, root_url='http://127.0.0.1:8083'):
+    def edit_book(cls, id=-1, content=dict(), custom_content=dict(), detail_v=False, root_url='http://127.0.0.1:8083'):
         if id>0:
             cls.driver.get(root_url + "/admin/book/"+str(id))
         cls.check_element_on_page((By.ID,"book_edit_frm"))
+
+        if custom_content:
+            # Handle custom columns:
+            parser = lxml.etree.HTMLParser()
+            html = cls.driver.page_source
+
+            tree = lxml.etree.parse(StringIO(html), parser)
+
+            cust_columns = tree.xpath("//*[starts-with(@for,'custom_column')]")
+            if cust_columns:
+                for col in cust_columns:
+                    element = dict()
+                    element['label'] = col.text
+                    element['index'] = col.attrib['for']
+                    if element['label'] in custom_content:
+                        # element['element'] = cls.check_element_on_page((By.ID, element['index']))
+                        if col.getnext().tag == 'select':
+                            select = Select(cls.driver.find_element_by_id(element['index']))
+                            select.select_by_visible_text(custom_content[element['label']])
+                            # element['options'] = [x.text for x in tree.findall("//select[@id='"+
+                            #                                                  col.attrib['for'] + "']/option")]
+                            # element['type'] = 'select'
+                        elif col.getnext().tag == 'input':
+                            edit = cls.check_element_on_page((By.ID, element['index']))
+                            edit.send_keys(Keys.CONTROL, "a")
+                            edit.send_keys(Keys.DELETE)
+                            edit.send_keys(custom_content[element['label']])
+                            '''if 'min' in col.getnext().attrib:
+                                element['type'] = 'rating'
+                            elif 'text' in col.getnext().attrib:
+                                element['type'] = 'text'
+                            else:
+                                element['type'] = 'number'''
+                        # elif col.getnext().tag == 'input':
+                        # ret.append(element)
 
         if 'rating' in content:
             cls.driver.execute_script("arguments[0].setAttribute('value', arguments[1])",
                                   cls.driver.find_element_by_xpath("//input[@id='rating']"), content['rating'])
             content.pop('rating')
+
+        if 'description' in content:
+            cls.driver.switch_to_frame("description_ifr")
+            ele = cls.check_element_on_page((By.ID, 'tinymce'))
+            ele.clear()
+            ele.send_keys(content['description'])
+            cls.driver.switch_to_default_content()
+            content.pop('description')
+
+
         for element, key in enumerate(content):
             ele = cls.check_element_on_page((By.ID, key))
             ele.send_keys(Keys.CONTROL, "a")
@@ -722,6 +814,12 @@ class ui_class():
                 print("clear didn't work")
             ele.send_keys(content[key])
 
+        # not working
+        if 'pubdate' in content:
+            ele = cls.check_element_on_page((By.ID, 'pubdate'))
+            cls.driver.execute_script("$('#fake_pubdate').val('2019-10-11');")
+
+
         # don't stay on page after edit
         if detail_v:
             cls.check_element_on_page((By.NAME, "detail_view")).click()
@@ -729,11 +827,9 @@ class ui_class():
         submit = cls.check_element_on_page((By.ID, "submit"))
         submit.click()
         return
-        # return cls.check_element_on_page(((By.ID, "flash_success")))
 
 
         '''number
-        'rating'
         'upload-cover'
         'pubdate'
         'upload-format'

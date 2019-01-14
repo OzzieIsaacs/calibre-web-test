@@ -33,10 +33,14 @@ An RFC 2821 smtp proxy server port from Python Standrad Library for Gevent usage
 # - handle error codes from the backend smtpd
 
 import logging
+import log
 import ssl
 from ssl import CERT_NONE
 from .channel import SMTPChannel
-from UserDict import UserDict
+try:
+    from UserDict import UserDict
+except ImportError:
+    from collections import UserDict
 from gevent import socket, monkey, Timeout
 
 monkey.patch_all()
@@ -44,7 +48,7 @@ monkey.patch_all()
 from gevent.server import StreamServer
 
 
-logger = logging.getLogger(__name__)
+logger = logging.getLogger(log.LOG_NAME)
 
 __all__ = ["SMTPServer", 'SSLSettings']
 
@@ -118,6 +122,7 @@ class SMTPServer(StreamServer):
     def handle(self, sock, addr):
 
         logger.debug('Incomming connection %s:%s', *addr[:2])
+        print('Incomming connection %s:%s' % (addr[0], addr[1]))
 
         if self.relay and not addr[0] in self.remoteaddr:
             logger.debug('Not in remoteaddr', *addr[:2])
@@ -130,6 +135,7 @@ class SMTPServer(StreamServer):
 
         except ConnectionTimeout:
             logger.warn('%s:%s Timeouted', *addr[:2])
+            print('%s:%s Timeouted' % (addr[0],addr[1]))
             try:
                 sc.smtp_TIMEOUT()
             except Exception as err:

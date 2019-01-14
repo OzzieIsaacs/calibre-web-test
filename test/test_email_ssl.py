@@ -16,16 +16,23 @@ from subproc_wrapper import process_open
 from testconfig import CALIBRE_WEB_PATH, TEST_DB
 from email_convert_helper import Gevent_SMPTPServer, CredentialValidator
 import email_convert_helper
+from parameterized import parameterized_class
 
-
+@parameterized_class([
+   { "py_version": u'python','LOG_LEVEL':'DEBUG'},
+   { "py_version": u'python3','LOG_LEVEL':'INFO'},
+],names=('Python27','Python36'))
 @unittest.skipIf(email_convert_helper.is_calibre_not_present(),"Skipping convert, calibre not found")
 class test_SSL(unittest.TestCase, ui_class):
     p=None
     driver = None
     email_server = None
+    # py_version = 'python3'
+    # LOG_LEVEL = 'INFO'
 
     @classmethod
     def setUpClass(cls):
+        print('test_SSL')
         try:
             os.remove(os.path.join(CALIBRE_WEB_PATH,'app.db'))
         except:
@@ -38,7 +45,7 @@ class test_SSL(unittest.TestCase, ui_class):
             pass
         shutil.rmtree(TEST_DB,ignore_errors=True)
         shutil.copytree('./Calibre_db', TEST_DB)
-        cls.p = process_open([u"python", os.path.join(CALIBRE_WEB_PATH,u'cps.py')],(1),sout=None)
+        cls.p = process_open([cls.py_version, os.path.join(CALIBRE_WEB_PATH,u'cps.py')],(1), sout=None)
 
         # start email server
         cls.email_server = Gevent_SMPTPServer(
@@ -62,9 +69,10 @@ class test_SSL(unittest.TestCase, ui_class):
         # navigate to the application home page
         cls.driver.get("http://127.0.0.1:8083")
 
+        # INFO: Crash on python3 and DEBUG output, where normal start works in python3
         # Wait for config screen to show up
         cls.fill_initial_config({'config_calibre_dir':TEST_DB, 'config_converterpath':email_convert_helper.calibre_path(),
-                                 'config_ebookconverter':'converter2','config_log_level':'DEBUG'})
+                                 'config_ebookconverter':'converter2', 'config_log_level':cls.LOG_LEVEL})
 
         # wait for cw to reboot
         time.sleep(5)
@@ -151,12 +159,17 @@ class test_SSL(unittest.TestCase, ui_class):
                 if ret[-1]['result'] == 'Finished' or ret[-1]['result'] == 'Failed':
                     break
             i += 1
-        self.assertEqual(ret[-1]['result'], 'Failed')
+        self.assertEqual('Failed', ret[-1]['result'])
 
     # check if email traffic is logged to logfile
+    # @unittest.skipIf(py_version=='python3', 'Python3 testing not working woth email ')
     def test_logging_email(self):
-        self.setup_server(True, {})
-        time.sleep(2)
-        with open(os.path.join(CALIBRE_WEB_PATH,'calibre-web.log'),'r') as logfile:
-            data = logfile.read()
-        self.assertIsNotNone(re.findall('Subject: Calibre-Web test e-mail',data),"Email logging not working")
+        if self.py_version == 'python3':
+            self.assertTrue(False, "Email logging not working in python3 testing")
+        else:
+            self.setup_server(True, {})
+            time.sleep(2)
+            with open(os.path.join(CALIBRE_WEB_PATH,'calibre-web.log'),'r') as logfile:
+                data = logfile.read()
+            self.assertTrue(len(re.findall('Subject: Calibre-Web test e-mail',data)),"Email logging not working")
+

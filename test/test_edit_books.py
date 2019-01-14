@@ -1,7 +1,8 @@
 #!/usr/bin/env python
 # -*- coding: utf-8 -*-
 
-import unittest
+
+from unittest import TestCase, skip
 from selenium import webdriver
 import os
 from selenium.webdriver.common.by import By
@@ -12,11 +13,16 @@ import shutil
 from ui_helper import ui_class
 from subproc_wrapper import process_open
 from testconfig import CALIBRE_WEB_PATH, TEST_DB
+from parameterized import parameterized_class
 
-
-class test_edit_books(unittest.TestCase, ui_class):
+@parameterized_class([
+   { "py_version": u'python'},
+   { "py_version": u'python3'},
+],names=('Python27','Python36'))
+class test_edit_books(TestCase, ui_class):
     p=None
     driver = None
+    # py_version = 'python'
 
     @classmethod
     def setUpClass(cls):
@@ -26,7 +32,7 @@ class test_edit_books(unittest.TestCase, ui_class):
             pass
         shutil.rmtree(TEST_DB,ignore_errors=True)
         shutil.copytree('./Calibre_db', TEST_DB)
-        cls.p = process_open([u"python", os.path.join(CALIBRE_WEB_PATH,u'cps.py')],(1))
+        cls.p = process_open([cls.py_version, os.path.join(CALIBRE_WEB_PATH,u'cps.py')],(1))
 
         # create a new Firefox session
         cls.driver = webdriver.Firefox()
@@ -50,7 +56,7 @@ class test_edit_books(unittest.TestCase, ui_class):
         login_button = cls.driver.find_element_by_name("login")
         login_button.click()
 
-        # login and create 2nd user
+        # login
         cls.login("admin", "admin123")
         time.sleep(3)
 
@@ -212,7 +218,7 @@ class test_edit_books(unittest.TestCase, ui_class):
         list_element = self.goto_page('nav_author')
         # ToDo check names of List elements
         self.get_book_details(8)
-        self.check_element_on_page((By.ID, "edit_book")).click()        
+        self.check_element_on_page((By.ID, "edit_book")).click()
 
         self.edit_book(content={'bookAuthor': 'Sigurd Lindgren'},detail_v=True)
         author = self.check_element_on_page((By.ID, "bookAuthor")).get_attribute('value')
@@ -272,10 +278,8 @@ class test_edit_books(unittest.TestCase, ui_class):
         self.check_element_on_page((By.ID, "edit_book")).click()
         self.edit_book(content={'series':u'loko'})
         values=self.get_book_details()
-        # ToDo: Fix, fails currently
         self.assertEqual(u'loko',values['series'])
         list_element = self.goto_page('nav_serie')
-        # ToDo: Fix, fails currently
         self.assertEqual(list_element[1].text, u'loko')
 
         self.get_book_details(4)
@@ -369,118 +373,217 @@ class test_edit_books(unittest.TestCase, ui_class):
 
 
     # choose language not part ob lib
-    @unittest.skip("Not Implemented")
     def test_edit_language(self):
-        self.assertIsNone('Not Implemented')
+        self.get_book_details(3)
+        self.check_element_on_page((By.ID, "edit_book")).click()
+        self.edit_book(content={'languages':u'english'})
+        values=self.get_book_details()
+        self.assertEqual(len(values['languages']),1)
+        self.assertEqual('English',values['languages'][0])
+        self.check_element_on_page((By.ID, "edit_book")).click()
+        self.edit_book(content={'languages':u'German'})
+        values=self.get_book_details()
+        self.assertEqual('German',values['languages'][0])
+        list_element = self.goto_page('nav_lang')
+        self.assertEqual(list_element[2].text, u'German')
+        self.get_book_details(3)
+        self.check_element_on_page((By.ID, "edit_book")).click()
+        self.edit_book(content={'languages':'German & English'}, detail_v=True)
+        self.check_element_on_page((By.ID, 'flash_alert'))
+        self.edit_book(content={'languages': 'German, English'})
+        self.get_book_details(3)
+        values=self.get_book_details()
+        self.assertEqual(len(values['languages']),2)
+        self.assertEqual('German',values['languages'][1])
+        self.assertEqual('English', values['languages'][0])
 
-    @unittest.skip("Not Implemented")
-    def test_edit_publishing_date(self):
-        self.assertIsNone('Not Implemented')
 
     # change rating, delete rating
     # check if book with rating of 4 stars appears in list of hot books
-    @unittest.skip("Not Implemented")
     def test_edit_rating(self):
-        self.assertIsNone('Not Implemented')
+        self.goto_page('nav_rated')
+        books=self.get_books_displayed()
+        self.assertEqual(1, len(books[1]))
+        self.get_book_details(3)
+        self.check_element_on_page((By.ID, "edit_book")).click()
+        self.edit_book(content={'rating':4})
+        values=self.get_book_details()
+        self.assertEqual(4, values['rating'])
+        self.goto_page('nav_rated')
+        books=self.get_books_displayed()
+        self.assertEqual(1, len(books[1]))
+        self.get_book_details(3)
+        self.check_element_on_page((By.ID, "edit_book")).click()
+        self.edit_book(content={'rating':5})
+        values=self.get_book_details()
+        self.assertEqual(5, values['rating'])
+        self.goto_page('nav_rated')
+        books=self.get_books_displayed()
+        self.assertEqual(2, len(books[1]))
+        self.get_book_details(3)
+        self.check_element_on_page((By.ID, "edit_book")).click()
+        self.edit_book(content={'rating':0})
+        values = self.get_book_details()
+        self.assertEqual(0, values['rating'])
 
     # change comments, add comments, delete comments
-    @unittest.skip("Not Implemented")
     def test_edit_comments(self):
-        self.assertIsNone('Not Implemented')
+        self.get_book_details(12)
+        self.check_element_on_page((By.ID, "edit_book")).click()
+        self.edit_book(content={'description':u'bogomirä 人物'})
+        values = self.get_book_details()
+        self.assertEqual(u'bogomirä 人物', values['comment'])
+        self.check_element_on_page((By.ID, "edit_book")).click()
+        self.edit_book(content={'description':''})
+        values = self.get_book_details()
+        self.assertEqual('', values['comment'])
 
     # change comments, add comments, delete comments
-    @unittest.skip("Not Implemented")
     def test_edit_custom_bool(self):
-        self.assertIsNone('Not Implemented')
+        self.get_book_details(5)
+        self.check_element_on_page((By.ID, "edit_book")).click()
+        self.edit_book(custom_content={u'Custom Bool 1 Ä':u'Yes'})
+        vals = self.get_book_details(5)
+        self.assertEqual(u'ok', vals['cust_columns'][0]['value'])
+        self.check_element_on_page((By.ID, "edit_book")).click()
+        self.edit_book(custom_content={u'Custom Bool 1 Ä': u""})
+        vals = self.get_book_details(5)
+        self.assertEqual(0,len(vals['cust_columns']))
+
 
     # change comments, add comments, delete comments
-    @unittest.skip("Not Implemented")
     def test_edit_custom_rating(self):
-        self.assertIsNone('Not Implemented')
+        self.get_book_details(5)
+        self.check_element_on_page((By.ID, "edit_book")).click()
+        self.edit_book(custom_content={u'Custom Rating 人物':'3'})
+        vals = self.get_book_details(5)
+        self.assertEqual('3', vals['cust_columns'][0]['value'])
+        self.check_element_on_page((By.ID, "edit_book")).click()
+        self.edit_book(custom_content={u'Custom Rating 人物': '6'})
+        vals = self.get_book_details(5)
+        self.assertEqual('3', vals['cust_columns'][0]['value'])
+        self.check_element_on_page((By.ID, "edit_book")).click()
+        self.edit_book(custom_content={u'Custom Rating 人物': ''})
+        vals = self.get_book_details(5)
+        self.assertEqual(0, len(vals['cust_columns']))
+
 
     # change comments, add comments, delete comments
-    @unittest.skip("Not Implemented")
     def test_edit_custom_single_select(self):
-        self.assertIsNone('Not Implemented')
+        self.get_book_details(5)
+        self.check_element_on_page((By.ID, "edit_book")).click()
+        self.edit_book(custom_content={u'Custom 人物 Enum':u'人物'})
+        vals = self.get_book_details(5)
+        self.assertEqual(u'人物', vals['cust_columns'][0]['value'])
+        self.check_element_on_page((By.ID, "edit_book")).click()
+        self.edit_book(custom_content={u'Custom 人物 Enum': ''})
+        vals = self.get_book_details(5)
+        self.assertEqual(0, len(vals['cust_columns']))
 
     # change comments, add comments, delete comments
-    @unittest.skip("Not Implemented")
     def test_edit_custom_text(self):
+        self.get_book_details(5)
+        self.check_element_on_page((By.ID, "edit_book")).click()
+        self.edit_book(custom_content={u'Custom Text 人物 *\'()&': u'Lulu 人 Ä'})
+        vals = self.get_book_details(5)
+        self.assertEqual(u'Lulu 人 Ä', vals['cust_columns'][0]['value'])
+        self.check_element_on_page((By.ID, "edit_book")).click()
+        self.edit_book(custom_content={u'Custom Text 人物 *\'()&': ''})
+        vals = self.get_book_details(5)
+        self.assertEqual(0, len(vals['cust_columns']))
+
+    @skip("Not Implemented")
+    def test_edit_publishing_date(self):
         self.assertIsNone('Not Implemented')
 
     # change comments, add comments, delete comments
-    @unittest.skip("Not Implemented")
+    @skip("Not Implemented")
     def test_typeahead_language(self):
         pass
 
-    @unittest.skip("Not Implemented")
+    @skip("Not Implemented")
     def test_typeahead_series(self):
         pass
 
-    @unittest.skip("Not Implemented")
+    @skip("Not Implemented")
     def test_typeahead_author(self):
         pass
 
-    @unittest.skip("Not Implemented")
+    @skip("Not Implemented")
     def test_typeahead_tag(self):
         pass
 
-    @unittest.skip("Not Implemented")
+    @skip("Not Implemented")
     def test_typeahead_publisher(self):
         pass
 
-    @unittest.skip("Not Implemented")
+    @skip("Not Implemented")
     def test_upload_cover_hdd(self):
         pass
 
-    @unittest.skip("Not Implemented")
+    @skip("Not Implemented")
     def test_delete_format(self):
         pass
 
-    @unittest.skip("Not Implemented")
+    @skip("Not Implemented")
     def test_delete_book(self):
         pass
 
     # check metadata_recocknition
-    @unittest.skip("Not Implemented")
+    @skip("Not Implemented")
     def upload_book_pdf(self):
         pass
 
     # check metadata_recocknition
-    @unittest.skip("Not Implemented")
+    @skip("Not Implemented")
     def upload_book_fb2(self):
         pass
 
-    @unittest.skip("Not Implemented")
+    @skip("Not Implemented")
     def upload_book_lit(self):
         pass
 
     # check metadata_recocknition
-    @unittest.skip("Not Implemented")
+    @skip("Not Implemented")
     def upload_book_epub(self):
         pass
 
     #check cover recocknition
-    @unittest.skip("Not Implemented")
+    @skip("Not Implemented")
     def upload_book_cbz(self):
         pass
 
     #check cover recocknition
-    @unittest.skip("Not Implemented")
+    @skip("Not Implemented")
     def upload_book_cbt(self):
         pass
 
     #check cover recocknition
-    @unittest.skip("Not Implemented")
+    @skip("Not Implemented")
     def upload_book_cbr(self):
         pass
 
     # database errors
-    @unittest.skip("Not Implemented")
+    @skip("Not Implemented")
     def test_database_errors(self):
         pass
 
     # download of books
-    @unittest.skip("Not Implemented")
+    @skip("Not Implemented")
     def test_database_errors(self):
         pass
+
+    # If more than one book has the same: author, tag or series it should be possible to change uppercase
+    # letters to lowercase and vice versa. Example:
+    # Book1 and Book2 are both part of the series "colLection". Changing the series to 'collection'
+    # Expected Behavior: Both books later on are part of the series 'collection'
+    @skip("Not Implemented")
+    def test_rename_uppercase_lowercase(self):
+        pass
+
+    # If authors are: "Claire North & Peter Snoogut" then authorsort should be: "North, Claire & Snoogut, Peter"
+    # The files should be saved in ../Claire North/...
+    # ------------ nachfolgendes kann man sich sparen ---------
+    # the IDs in books_authors links have to be arranged according to sort order of names e.g:
+    # before : Claire North (4) Peter Snoogut (100) -> "Peter Snoogut & Claire North"
+    # afterwards Claire North (100) Peter Snoogut (4)

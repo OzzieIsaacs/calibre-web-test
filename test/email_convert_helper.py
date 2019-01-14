@@ -38,8 +38,6 @@ class Gevent_SMPTPServer(SMTPServer):
 
     def __init__(self, *args, **kwargs):
         SMTPServer.__init__(self, *args, **kwargs)
-        #self._stopevent = threading.Event()
-        #threading.Thread.__init__(self)
         self.status = 1
         self.mailfrom = None
         self.recipents = None
@@ -54,8 +52,6 @@ class Gevent_SMPTPServer(SMTPServer):
         print('Message addressed to  :', rcpttos)
         print('Message length        :', len(message_data))
         self.size = len(message_data)
-        # emails.append({'mailfrom':mailfrom,'recipents':rcpttos, 'size': len(message_data)})
-        # print('Shared Memory: %i' % config['error_code'])
         if self.ret_value == 552:
             return '552 Requested mail action aborted: exceeded storage allocation'
         else:
@@ -67,17 +63,3 @@ class Gevent_SMPTPServer(SMTPServer):
 
     def set_return_value(self, value):
         self.ret_value = value
-
-'''def run(self):
-    asyncore.loop()
-    while self.status:
-        time.sleep(1)
-    print('email server stopps')
-
-def stop(self):
-    self.status = 0
-    self.close()'''
-
-'''class SSLSMTPServer(SMTPServer):
-    def process_message(self, peer, mailfrom, rcpttos, message_data):
-        print(message_data)'''

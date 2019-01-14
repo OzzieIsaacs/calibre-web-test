@@ -21,6 +21,12 @@ serie (leerzeichen, unicode, kein treffer)
 ergebnis zu shelf hinzufügen (kein ergebnis vorhanden, public shelf, private shelf, buch schon vorhanden, kein shelf vorhanden)
 '''
 
+from parameterized import parameterized_class
+
+@parameterized_class([
+   { "py_version": u'python'},
+   { "py_version": u'python3'},
+],names=('Python27','Python36'))
 class calibre_web_visibilitys(unittest.TestCase, ui_class):
 
     p=None
@@ -34,7 +40,7 @@ class calibre_web_visibilitys(unittest.TestCase, ui_class):
             pass
         shutil.rmtree(TEST_DB,ignore_errors=True)
         shutil.copytree('./Calibre_db', TEST_DB)
-        cls.p = process_open([u"python", os.path.join(CALIBRE_WEB_PATH,u'cps.py')],(1))
+        cls.p = process_open([cls.py_version, os.path.join(CALIBRE_WEB_PATH,u'cps.py')],(1))
 
         # create a new Firefox session
         cls.driver = webdriver.Firefox()

@@ -15,6 +15,12 @@ from ui_helper import ui_class
 from subproc_wrapper import process_open
 from testconfig import CALIBRE_WEB_PATH, TEST_DB
 
+from parameterized import parameterized_class
+
+@parameterized_class([
+   { "py_version": u'python'},
+   { "py_version": u'python3'},
+],names=('Python27','Python36'))
 class test_login(unittest.TestCase, ui_class):
     p=None
     driver = None
@@ -27,7 +33,7 @@ class test_login(unittest.TestCase, ui_class):
             pass
         shutil.rmtree(TEST_DB,ignore_errors=True)
         shutil.copytree('./Calibre_db', TEST_DB)
-        cls.p = process_open([u"python", os.path.join(CALIBRE_WEB_PATH,u'cps.py')],(1))
+        cls.p = process_open([cls.py_version, os.path.join(CALIBRE_WEB_PATH,u'cps.py')],(1))
 
         # create a new Firefox session
         cls.driver = webdriver.Firefox()
@@ -289,5 +295,10 @@ class test_login(unittest.TestCase, ui_class):
         self.login('admin2','admin2')
         self.create_user('admin',{'password':'admin123', 'admin_role':1,'email':'a4@b.com'})
         self.logout()
+
+    def test_login_locale_select(self):
+        # this one should work and throw not an error 500
+        #curl -H 'Accept-Language: fi;q=0.9,en;q=0.8,*;q=0.7' http://127.0.0.1:8083/login?next=%2Fbooks%2Ffiction%2F
+        pass
 
 

@@ -15,8 +15,12 @@ from subproc_wrapper import process_open
 from testconfig import CALIBRE_WEB_PATH, TEST_DB
 from email_convert_helper import Gevent_SMPTPServer, CredentialValidator
 import email_convert_helper
+from parameterized import parameterized_class
 
-
+@parameterized_class([
+   { "py_version": u'python'},
+   { "py_version": u'python3'},
+],names=('Python27','Python36'))
 @unittest.skipIf(email_convert_helper.is_calibre_not_present(),"Skipping convert, calibre not found")
 class test_STARTTLS(unittest.TestCase, ui_class):
     p=None
@@ -25,6 +29,7 @@ class test_STARTTLS(unittest.TestCase, ui_class):
 
     @classmethod
     def setUpClass(cls):
+        print('test_STARTTLS')
         # start email server
         cls.email_server = Gevent_SMPTPServer(
             ('127.0.0.1', 1026),
@@ -42,7 +47,7 @@ class test_STARTTLS(unittest.TestCase, ui_class):
             pass
         shutil.rmtree(TEST_DB,ignore_errors=True)
         shutil.copytree('./Calibre_db', TEST_DB)
-        cls.p = process_open([u"python", os.path.join(CALIBRE_WEB_PATH,u'cps.py')],(1),sout=None)
+        cls.p = process_open([cls.py_version, os.path.join(CALIBRE_WEB_PATH,u'cps.py')],(1),sout=None)
 
         # create a new Firefox session
         cls.driver = webdriver.Firefox()

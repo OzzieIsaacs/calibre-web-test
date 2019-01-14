@@ -18,6 +18,7 @@ opds feed tests
 
 '''
 
+
 class test_opds_feed(unittest.TestCase, ui_class):
     p=None
     driver = None

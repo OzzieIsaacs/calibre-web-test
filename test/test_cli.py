@@ -13,10 +13,17 @@ from subproc_wrapper import process_open
 from testconfig import CALIBRE_WEB_PATH, TEST_DB
 import re
 
+from parameterized import parameterized_class
+
+@parameterized_class([
+   { "py_version": u'python'},
+   { "py_version": u'python3'},
+],names=('Python27','Python36'))
 class test_cli(unittest.TestCase, ui_class):
 
     @classmethod
     def setUpClass(cls):
+        print('test_cli')
         cls.driver = webdriver.Firefox()
         cls.driver.implicitly_wait(10)
         cls.driver.maximize_window()
@@ -37,8 +44,8 @@ class test_cli(unittest.TestCase, ui_class):
         os.remove(os.path.join(CALIBRE_WEB_PATH, 'app.db'))
 
     def test_cli_different_folder(self):
-        os.chdir(CALIBRE_WEB_PATH)  
-        self.p = process_open([u"python", u'cps.py'],(1))
+        os.chdir(CALIBRE_WEB_PATH)
+        self.p = process_open([self.py_version, u'cps.py'],(1))
         os.chdir(os.path.dirname(__file__))
         try:
             # create a new Firefox session
@@ -68,7 +75,7 @@ class test_cli(unittest.TestCase, ui_class):
 
     def test_cli_different_settings_database(self):
         new_db = os.path.join(CALIBRE_WEB_PATH,"hü go.app")
-        self.p = process_open([u"python", os.path.join(CALIBRE_WEB_PATH,u'cps.py'),
+        self.p = process_open([self.py_version, os.path.join(CALIBRE_WEB_PATH,u'cps.py'),
                         '-p', new_db.decode('UTF-8')],(1,3))
 
         time.sleep(15)
@@ -97,7 +104,7 @@ class test_cli(unittest.TestCase, ui_class):
         real_key_file = os.path.join(CALIBRE_WEB_PATH, 'hü lo', 'lö g.key').decode('UTF-8')
         real_crt_file = os.path.join(CALIBRE_WEB_PATH, 'hü lo', 'lö g.crt').decode('UTF-8')
 
-        p = process_open([u"python", os.path.join(CALIBRE_WEB_PATH,u'cps.py'),
+        p = process_open([self.py_version, os.path.join(CALIBRE_WEB_PATH,u'cps.py'),
                         '-c', path_like_file],(1,3))
         time.sleep(2)
         nextline = p.communicate()[0]
@@ -105,7 +112,7 @@ class test_cli(unittest.TestCase, ui_class):
             p.kill()
         self.assertIsNotNone(re.findall('Certfilepath is invalid. Exiting', nextline))
 
-        p = process_open([u"python", os.path.join(CALIBRE_WEB_PATH,u'cps.py'),
+        p = process_open([self.py_version, os.path.join(CALIBRE_WEB_PATH,u'cps.py'),
                         '-k', path_like_file],(1,3))
         time.sleep(2)
         nextline = p.communicate()[0]
@@ -113,7 +120,7 @@ class test_cli(unittest.TestCase, ui_class):
             p.kill()
         self.assertIsNotNone(re.findall('Keyfilepath is invalid. Exiting', nextline))
 
-        p = process_open([u"python", os.path.join(CALIBRE_WEB_PATH,u'cps.py'),
+        p = process_open([self.py_version, os.path.join(CALIBRE_WEB_PATH,u'cps.py'),
                         '-c', only_path],(1,3))
         time.sleep(2)
         nextline = p.communicate()[0]
@@ -121,7 +128,7 @@ class test_cli(unittest.TestCase, ui_class):
             p.kill()
         self.assertIsNotNone(re.findall('Certfilepath is invalid. Exiting', nextline))
 
-        p = process_open([u"python", os.path.join(CALIBRE_WEB_PATH,u'cps.py'),
+        p = process_open([self.py_version, os.path.join(CALIBRE_WEB_PATH,u'cps.py'),
                         '-k', only_path],(1,3))
         time.sleep(2)
         nextline = p.communicate()[0]
@@ -129,7 +136,7 @@ class test_cli(unittest.TestCase, ui_class):
             p.kill()
         self.assertIsNotNone(re.findall('Keyfilepath is invalid. Exiting', nextline))
 
-        p = process_open([u"python", os.path.join(CALIBRE_WEB_PATH,u'cps.py'),
+        p = process_open([self.py_version, os.path.join(CALIBRE_WEB_PATH,u'cps.py'),
                         '-c', real_crt_file],(1,3))
         time.sleep(2)
         if p.poll() is None:
@@ -137,7 +144,7 @@ class test_cli(unittest.TestCase, ui_class):
         nextline = p.communicate()[0]
         self.assertIsNotNone(re.findall('Certfilepath is invalid. Exiting', nextline))
 
-        p = process_open([u"python", os.path.join(CALIBRE_WEB_PATH,u'cps.py'),
+        p = process_open([self.py_version, os.path.join(CALIBRE_WEB_PATH,u'cps.py'),
                         '-k', real_key_file],(1,3))
         time.sleep(2)
         if p.poll() is None:
@@ -151,7 +158,7 @@ class test_cli(unittest.TestCase, ui_class):
         with open(real_crt_file, 'wb') as fout:
             fout.write(os.urandom(124))
 
-        p = process_open([u"python", os.path.join(CALIBRE_WEB_PATH,u'cps.py'),
+        p = process_open([self.py_version, os.path.join(CALIBRE_WEB_PATH,u'cps.py'),
                         '-c', real_crt_file],(1,3))
         time.sleep(2)
         if p.poll() is None:
@@ -159,7 +166,7 @@ class test_cli(unittest.TestCase, ui_class):
         nextline = p.communicate()[0]
         self.assertIsNotNone(re.findall('Certfile and Keyfile have to be used together. Exiting', nextline))
 
-        p = process_open([u"python", os.path.join(CALIBRE_WEB_PATH,u'cps.py'),
+        p = process_open([self.py_version, os.path.join(CALIBRE_WEB_PATH,u'cps.py'),
                         '-k', real_key_file],(1,3))
         time.sleep(2)
         if p.poll() is None:
@@ -167,7 +174,7 @@ class test_cli(unittest.TestCase, ui_class):
         nextline = p.communicate()[0]
         self.assertIsNotNone(re.findall('Certfile and Keyfile have to be used together. Exiting', nextline))
 
-        p = process_open([u"python", os.path.join(CALIBRE_WEB_PATH,u'cps.py'),
+        p = process_open([self.py_version, os.path.join(CALIBRE_WEB_PATH,u'cps.py'),
                         '-c', real_crt_file, '-k', real_key_file],(1,3,5))
         if p.poll() is not None:
             self.assertIsNone('Fail','Unexpected error')
@@ -184,7 +191,7 @@ class test_cli(unittest.TestCase, ui_class):
         shutil.copytree('./SSL', os.path.join(CALIBRE_WEB_PATH, 'hü lo'))
         real_crt_file = os.path.join(CALIBRE_WEB_PATH, 'hü lo', 'ssl.crt').decode('UTF-8')
         real_key_file = os.path.join(CALIBRE_WEB_PATH, 'hü lo', 'ssl.key').decode('UTF-8')
-        p = process_open([u"python", os.path.join(CALIBRE_WEB_PATH,u'cps.py'),
+        p = process_open([self.py_version, os.path.join(CALIBRE_WEB_PATH,u'cps.py'),
                         '-c', real_crt_file, '-k', real_key_file],(1,3,5))
         if p.poll() is not None:
             self.assertIsNone('Fail','Unexpected error')
@@ -207,7 +214,7 @@ class test_cli(unittest.TestCase, ui_class):
         self.assertIsNone('not Implemented', 'Check if moving gdrive db on commandline works')
 
     def test_environ_port_setting(self):
-        p = process_open([u"python", os.path.join(CALIBRE_WEB_PATH,u'cps.py')],(1), env={'CALIBRE_PORT':'8082'})
+        p = process_open([self.py_version, os.path.join(CALIBRE_WEB_PATH,u'cps.py')],(1), env={'CALIBRE_PORT':'8082'})
 
         time.sleep(15)
         # navigate to the application home page
@@ -226,9 +233,9 @@ class test_cli(unittest.TestCase, ui_class):
     # stop process A
     def test_already_started(self):
         os.chdir(CALIBRE_WEB_PATH)
-        p1 = process_open([u"python", u'cps.py'], (1))
+        p1 = process_open([self.py_version, u'cps.py'], (1))
         time.sleep(5)
-        p2 = process_open([u"python", u'cps.py'], (1))
+        p2 = process_open([self.py_version, u'cps.py'], (1))
         time.sleep(5)
         result = p2.poll()
         if result is None:

@@ -15,6 +15,12 @@ from subproc_wrapper import process_open
 from testconfig import CALIBRE_WEB_PATH, TEST_DB
 import re
 
+from parameterized import parameterized_class
+
+@parameterized_class([
+   { "py_version": u'python'},
+   { "py_version": u'python3'},
+],names=('Python27','Python36'))
 class test_logging(unittest.TestCase, ui_class):
 
     p=None
@@ -34,7 +40,7 @@ class test_logging(unittest.TestCase, ui_class):
         shutil.rmtree(os.path.join(CALIBRE_WEB_PATH, u'hü lo').encode('UTF-8'), ignore_errors=True)
         shutil.rmtree(TEST_DB,ignore_errors=True)
         shutil.copytree('./Calibre_db', TEST_DB)
-        test_logging.p = process_open([u"python", os.path.join(CALIBRE_WEB_PATH,u'cps.py')],(1))
+        cls.p = process_open([cls.py_version, os.path.join(CALIBRE_WEB_PATH,u'cps.py')],(1))
 
         # create a new Firefox session
         cls.driver = webdriver.Firefox()
@@ -66,7 +72,7 @@ class test_logging(unittest.TestCase, ui_class):
     def tearDownClass(cls):
         # close the browser window and stop calibre-web
         cls.driver.quit()
-        test_logging.p.terminate()
+        cls.p.terminate()
 
     def test_failed_login(self):
         self.driver.find_element_by_id("logout").click()
