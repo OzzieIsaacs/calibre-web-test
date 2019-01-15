@@ -542,9 +542,7 @@ class ui_class():
         if len(pages):
             pagination = [p.text for p in pages]
         return [books_rand, books, pagination]
-        # elements = cls.driver.find_elements_by_xpath("//*[starts-with(@id,'books')]")
-        # print elements
-        # pass
+
 
     @classmethod
     def get_book_details(cls,id=-1,root_url="http://127.0.0.1:8083"):
@@ -553,52 +551,40 @@ class ui_class():
         cls.check_element_on_page((By.TAG_NAME,"h2"))
         ret = dict()
         try:
-            # WebDriverWait(cls.driver, 0)
             parser = lxml.etree.HTMLParser()
             html = cls.driver.page_source
 
             tree = lxml.etree.parse(StringIO(html), parser)
-            # reader = cls.driver.find_elements_by_xpath("//*[@aria-labelledby='read-in-browser']//li")
             reader = tree.findall("//*[@aria-labelledby='read-in-browser']/li/a")
             ret['reader'] = [r.text for r in reader]
 
-            # ret['title'] = cls.check_element_on_page((By.TAG_NAME,"h2")).text
             title = tree.find("//h2")
             if title is not None:
                 ret['title'] = title.text
-            # author = cls.driver.find_elements_by_xpath("//*[@class='author']/a")
             author = tree.findall("//*[@class='author']/a")
             ret['author'] = [aut.text for aut in author]
 
-            # ret['rating'] = cls.driver.find_elements_by_xpath("//*[@class='glyphicon glyphicon-star good']/span")
             ret['rating']= len(tree.findall("//*[@class='glyphicon glyphicon-star good']"))
 
-            # languages = cls.driver.find_elements_by_xpath("//*[@class='languages']//span")
             languages = tree.findall("//*[@class='languages']//span")
             if languages:
                 only_lang = languages[0].text.split(': ')[1].lstrip()
                 ret['languages'] = only_lang.split(', ')
-            # ret['languages'] = [lang.text.split(': ')[1].lstrip() for lang in languages]
 
-            # ids = cls.driver.find_elements_by_xpath("//*[@class='identifiers']//a")
             ids = tree.findall("//*[@class='identifiers']//a")
             ret['Identifier'] = [id.text for id in ids]
 
-            # tags = cls.driver.find_elements_by_xpath("//*[@class='tags']//a")
             tags = tree.findall("//*[@class='tags']//a")
             ret['tag'] = [tag.text for tag in tags]
 
-            # publishers = cls.driver.find_elements_by_xpath("//*[@class='publishers']//span")
             publishers = tree.findall("//*[@class='publishers']//a")
             ret['publisher'] = [pub.text for pub in publishers]
 
             # Pubdate
-            # pubdate = cls.driver.find_elements_by_xpath("//p[starts-with(.,'Publishing date:')]")
             pubdate = tree.xpath("//p[starts-with(text(),'Publishing date:')]")
             if len(pubdate):
                 ret['pubdate']= pubdate[0].text
 
-            # ret['comment'] = cls.check_element_on_page((By.TAG_NAME, "h3"))
             comment = tree.find("//*[@class='comments']")
             ret['comment'] = ''
             if comment is not None:
@@ -609,27 +595,22 @@ class ui_class():
                     for ele in comment.getchildren()[1].getchildren():
                         ret['comment'] += ele.text
 
-            # add_shelf = cls.driver.find_elements_by_xpath("//*[@id='add-to-shelves']//a")
             add_shelf = tree.findall("//*[@id='add-to-shelves']//a")
             ret['add_shelf'] = [sh.text.strip().lstrip() for sh in add_shelf]
 
-            # del_shelf = cls.driver.find_elements_by_xpath("//*[@id='remove-from-shelves']//a")
             del_shelf = tree.findall("//*[@id='remove-from-shelves']//a")
             ret['del_shelf'] = [sh.text.strip().lstrip() for sh in del_shelf]
 
-            # ret['edit_enable'] = cls.check_element_on_page((By.XPATH,"//*[@class='glyphicon glyphicon-edit']"))
             ret['edit_enable'] = bool(tree.find("//*[@class='glyphicon glyphicon-edit']"))
 
-            # ret['kindle'] = cls.check_element_on_page((By.ID, "sendbtn"))
             ele = tree.findall("//*[@id='sendbtn']")
-
             # bk['ele'] = cls.check_element_on_page((By.XPATH, "//a[@href='" + bk['link'] + "']/img"))
             # ret['kindle'] = bool(tree.find("//*[@id='sendbtn']"))
-            if not ele:
+            if ele:
                 all = tree.findall("//*[@aria-labelledby='send-to-kindle']/li/a")
                 if all:
                     # ret['kindlebtn'] = cls.driver.find_elements_by_xpath("//*[@aria-labelledby='send-to-kindle']/li/a")
-                    ret['kindlebtn'] = cls.driver.find_element_by_id("sendbtn2")
+                    ret['kindlebtn'] = cls.driver.find_element_by_id("sendbtn")
                     ret['kindle'] = all
                     '''ret['kindle'] = list()
                     for el in all:
@@ -639,6 +620,24 @@ class ui_class():
                         ele['link'] = el.get_attribute('href')
                         ret['kindle'].append(ele)'''
                 else:
+                    ret['kindlebtn'] = cls.driver.find_element_by_id("/sendbtn")
+                    ele = dict()
+                    ele['ele'] = ele
+                    ele['link'] = ele.get_attribute('href')
+                    ret['kindle'] = list(ele)
+            else:
+                ret['kindle'] = None
+                ret['kindlebtn'] = None
+
+
+            '''ele = tree.findall("//*[@id='sendbtn']")
+
+            if not ele:
+                all = tree.findall("//*[@aria-labelledby='send-to-kindle']/li/a")
+                if all:
+                    ret['kindlebtn'] = cls.driver.find_element_by_id("sendbtn2")
+                    ret['kindle'] = all
+                else:
                     ret['kindle'] = None
                     ret['kindlebtn'] = None
             else:
@@ -646,9 +645,8 @@ class ui_class():
                 ele = dict()
                 ele['ele'] = ele
                 ele['link'] = ele.get_attribute('href')
-                ret['kindle'] = list(ele)
+                ret['kindle'] = list(ele)'''
 
-            # download1 = cls.driver.find_elements_by_xpath("//*[@aria-labelledby='btnGroupDrop1']//a")
             download1 = tree.findall("//*[@aria-labelledby='btnGroupDrop1']//a")
             if not download1:
                 download1 = tree.xpath("//*[starts-with(@id,'btnGroupDrop')]")
@@ -657,14 +655,10 @@ class ui_class():
                     for ele in download1:
                         ret['download'].append(ele.getchildren()[0].tail.strip())
             else:
-                # download1 = cls.driver.find_elements_by_xpath("//*[@class='glyphicon glyphicon-download']//ancestor::a")
                 ret['download'] = [d.text for d in download1]
 
-            # ret['read'] = cls.check_element_on_page((By.ID,"have_read_cb"))
             ret['read']= bool(tree.find("//*[@id='have_read_cb']"))
 
-            # series = tree.xpath("//*[contains(@href,'series')]//ancestor::p")[0].text + \
-            #         tree.xpath("//*[contains(@href,'series')]")[1].text
             series = tree.xpath("//*[contains(@href,'series')]/ancestor::p")
             if series:
                 ret['series_all'] = ""
@@ -672,9 +666,7 @@ class ui_class():
                 for ele in series[0].iter():
                     ret['series_all'] += ele.text
                     ret['series'] = ele.text
-                    # series = cls.driver.find_elements_by_xpath("//*[contains(@href,'series')]//ancestor::p")
-                    # if series:
-                    #    ret['series']=series[0].text
+
             cust_columns = tree.xpath("//div[@class='custom_columns']")
             if len(cust_columns) == 2:      # we have custom columns
                 ret['cust_columns']=list()
