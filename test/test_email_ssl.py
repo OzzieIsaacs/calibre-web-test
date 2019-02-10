@@ -28,7 +28,7 @@ class test_SSL(unittest.TestCase, ui_class):
     driver = None
     email_server = None
     # py_version = 'python3'
-    # LOG_LEVEL = 'INFO'
+    # LOG_LEVEL = 'DEBUG'
 
     @classmethod
     def setUpClass(cls):
@@ -162,14 +162,10 @@ class test_SSL(unittest.TestCase, ui_class):
         self.assertEqual('Failed', ret[-1]['result'])
 
     # check if email traffic is logged to logfile
-    # @unittest.skipIf(py_version=='python3', 'Python3 testing not working woth email ')
-    def test_logging_email(self):
-        if self.py_version == 'python3':
-            self.assertTrue(False, "Email logging not working in python3 testing")
-        else:
-            self.setup_server(True, {})
-            time.sleep(2)
-            with open(os.path.join(CALIBRE_WEB_PATH,'calibre-web.log'),'r') as logfile:
-                data = logfile.read()
-            self.assertTrue(len(re.findall('Subject: Calibre-Web test e-mail',data)),"Email logging not working")
+    def test_SSL_logging_email(self):
+        self.setup_server(True, {'mail_use_ssl': 'SSL/TLS'})
+        time.sleep(2)
+        with open(os.path.join(CALIBRE_WEB_PATH,'calibre-web.log'),'r') as logfile:
+            data = logfile.read()
+        self.assertTrue(len(re.findall('Subject: Calibre-Web test e-mail',data)),"Email logging not working")
 

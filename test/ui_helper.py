@@ -603,24 +603,15 @@ class ui_class():
 
             ret['edit_enable'] = bool(tree.find("//*[@class='glyphicon glyphicon-edit']"))
 
-            ele = tree.findall("//*[@id='sendbtn']")
+            ele = tree.xpath("//*[starts-with(@id,'sendbtn')]")
             # bk['ele'] = cls.check_element_on_page((By.XPATH, "//a[@href='" + bk['link'] + "']/img"))
-            # ret['kindle'] = bool(tree.find("//*[@id='sendbtn']"))
-            if ele:
+            if len(ele):
                 all = tree.findall("//*[@aria-labelledby='send-to-kindle']/li/a")
                 if all:
-                    # ret['kindlebtn'] = cls.driver.find_elements_by_xpath("//*[@aria-labelledby='send-to-kindle']/li/a")
-                    ret['kindlebtn'] = cls.driver.find_element_by_id("sendbtn")
+                    ret['kindlebtn'] = cls.driver.find_element_by_id("sendbtn2")
                     ret['kindle'] = all
-                    '''ret['kindle'] = list()
-                    for el in all:
-                        ret['kindle']
-                        ele = dict()
-                        ele['ele'] = el
-                        ele['link'] = el.get_attribute('href')
-                        ret['kindle'].append(ele)'''
                 else:
-                    ret['kindlebtn'] = cls.driver.find_element_by_id("/sendbtn")
+                    ret['kindlebtn'] = cls.driver.find_element_by_id("sendbtn")
                     ele = dict()
                     ele['ele'] = ele
                     ele['link'] = ele.get_attribute('href')
@@ -628,24 +619,6 @@ class ui_class():
             else:
                 ret['kindle'] = None
                 ret['kindlebtn'] = None
-
-
-            '''ele = tree.findall("//*[@id='sendbtn']")
-
-            if not ele:
-                all = tree.findall("//*[@aria-labelledby='send-to-kindle']/li/a")
-                if all:
-                    ret['kindlebtn'] = cls.driver.find_element_by_id("sendbtn2")
-                    ret['kindle'] = all
-                else:
-                    ret['kindle'] = None
-                    ret['kindlebtn'] = None
-            else:
-                ret['kindlebtn'] = cls.driver.find_element_by_id("/sendbtn")
-                ele = dict()
-                ele['ele'] = ele
-                ele['link'] = ele.get_attribute('href')
-                ret['kindle'] = list(ele)'''
 
             download1 = tree.findall("//*[@aria-labelledby='btnGroupDrop1']//a")
             if not download1:

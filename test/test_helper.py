@@ -9,6 +9,7 @@ from testconfig import CALIBRE_WEB_PATH
 
 # Insert local directories into path
 sys.path.insert(0, os.path.join(CALIBRE_WEB_PATH, 'cps'))
+sys.path.append(CALIBRE_WEB_PATH)
 # sys.path.insert(0, os.path.join(CALIBRE_WEB_PATH, 'vendor'))
 
 

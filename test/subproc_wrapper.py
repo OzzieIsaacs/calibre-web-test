@@ -6,7 +6,7 @@ import os
 import sys
 
 
-def process_open(command, quotes=(), env=None, sout=subprocess.PIPE):
+def process_open(command, quotes=[], env=None, sout=subprocess.PIPE):
     # Linux py2.7 encode as list without quotes no empty element for parameters
     # linux py3.x no encode and as list without quotes no empty element for parameters
     # windows py2.7 encode as string with quotes empty element for parameters is okay

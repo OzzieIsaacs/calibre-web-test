@@ -24,6 +24,7 @@ from parameterized import parameterized_class
 class test_login(unittest.TestCase, ui_class):
     p=None
     driver = None
+    # py_version = 'python'
 
     @classmethod
     def setUpClass(cls):
@@ -170,7 +171,7 @@ class test_login(unittest.TestCase, ui_class):
         self.assertEqual(self.fail_access_page("http://127.0.0.1:8083/gdrive/watch/revoke"),1)
         # self.assertEqual(self.fail_access_page("http://127.0.0.1:8083/gdrive/watch/callback"),0)
         self.assertEqual(self.fail_access_page("http://127.0.0.1:8083/shutdown"),1)
-        self.assertEqual(self.fail_access_page("http://127.0.0.1:8083/update"),1)
+        self.assertEqual(self.fail_access_page("http://127.0.0.1:8083/update"),2)
         self.assertEqual(self.fail_access_page("http://127.0.0.1:8083/search"),1)
         self.assertEqual(self.fail_access_page("http://127.0.0.1:8083/advanced_search"),1)
         self.assertEqual(self.fail_access_page("http://127.0.0.1:8083/cover"),2)
