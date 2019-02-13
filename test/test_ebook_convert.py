@@ -118,8 +118,6 @@ class test_ebook_convert(unittest.TestCase, ui_class):
         self.assertEqual(len(details['kindle']),2)
         # ToDo: check convert function
         vals = self.get_convert_book(5)
-        # self.assertFalse(vals['btn_from'])
-        # self.assertFalse(vals['btn_to'])
 
         # ToDo: change behavior convert should only be visible if ebookconverter has valid entry
         self.fill_basic_config({'config_converterpath':'/opt/calibre/kuku'})

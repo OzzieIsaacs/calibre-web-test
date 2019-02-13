@@ -263,7 +263,7 @@ class ui_class():
         if any(key in elements for key in ['show_random', 'show_recent', 'show_sorted', 'show_hot', 'show_best_rated',
                                            'show_language', 'show_series', 'show_category', 'show_author',
                                            'show_read_and_unread', 'show_detail_random', 'show_mature_content',
-                                            'show_publisher']):
+                                           'show_publisher']):
             opener.append(2)
 
         # open all necessary accordions
@@ -483,6 +483,82 @@ class ui_class():
         # finally submit settings
         cls.driver.find_element_by_id("submit").click()
 
+
+    @classmethod
+    def get_opds_index(cls,text):
+        ret = dict()
+        parser = lxml.etree.HTMLParser()
+        try:
+            tree = lxml.etree.parse(StringIO(text.encode('utf-8')), parser)
+            ret['title'] = tree.xpath("/html/body/feed/title")[0].text
+            ret['id'] = tree.xpath("/html/body/feed/id")[0].text
+            ret['links'] = tree.xpath("/html/body/feed/link")
+            ret['update'] = tree.xpath("/html/body/feed/updated")[0].text
+            ret['author'] = tree.xpath("/html/body/feed/author/name")[0].text
+            ret['uri'] = tree.xpath("/html/body/feed/author/uri")[0].text
+            for element in tree.xpath("/html/body/feed/entry"):
+                el = dict()
+                el['link'] = element.find('link').attrib['href']
+                el['id'] = element.find('id').text
+                el['updated'] = element.find('updated').text
+                el['content'] = element.find('content').text
+                ret[element.find('title').text] = el
+        except:
+            pass
+        return ret
+
+
+    @classmethod
+    def get_opds_feed(cls, text):
+        ret = dict()
+        parser = lxml.etree.HTMLParser()
+        try:
+            tree = lxml.etree.parse(StringIO(text.encode('utf-8')), parser)
+            ret['title'] = tree.xpath("/html/body/feed/title")[0].text
+            ret['id'] = tree.xpath("/html/body/feed/id")[0].text
+            ret['links'] = tree.xpath("/html/body/feed/link")
+            ret['update'] = tree.xpath("/html/body/feed/updated")[0].text
+            ret['author'] = tree.xpath("/html/body/feed/author/name")[0].text
+            ret['uri'] = tree.xpath("/html/body/feed/author/uri")[0].text
+            key = 0
+            for element in tree.xpath("/html/body/feed/entry"):
+                el = dict()
+                el['link'] = element.find('link').attrib['href']
+                el['id'] = element.find('id').text
+                el['title'] = element.find('title').text
+                ele =  element.find('language')
+                if ele is not None and ele.text:
+                    el['language'] = ele
+                ele = element.findall('link')
+                if ele is not None:
+                    el['cover'] = ele[0].attrib['href']
+                    if len(ele) >=2:
+                        el['download'] = ele[2].attrib['href']
+                        el['filesize'] = ele[2].attrib['length']
+                        el['filetype'] = ele[2].attrib['type']
+                        el['time'] = ele[2].attrib['mtime']
+                ele = element.find('author')
+                if ele is not None:
+                    author_list = list()
+                    for aut in ele.getchildren():
+                        author_list.append(aut.text)
+                    el['author']=author_list
+                    el['author_len'] = len(el['author'])
+
+                ret[key] = el
+                key += 1
+        except:
+            pass
+        ret['len'] = key
+        return ret
+
+
+    @classmethod
+    def get_opds_search(cls, text):
+        parser = lxml.etree.HTMLParser()
+        tree = lxml.etree.parse(StringIO(text), parser)
+
+        pass
 
     @classmethod
     def get_user_list(cls):

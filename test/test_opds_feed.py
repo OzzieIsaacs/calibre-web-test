@@ -12,6 +12,7 @@ import shutil
 from ui_helper import ui_class
 from subproc_wrapper import process_open
 from testconfig import CALIBRE_WEB_PATH, TEST_DB
+import requests
 
 '''
 opds feed tests
@@ -25,6 +26,7 @@ class test_opds_feed(unittest.TestCase, ui_class):
 
     @classmethod
     def setUpClass(cls):
+
         try:
             os.remove(os.path.join(CALIBRE_WEB_PATH,'app.db'))
         except:
@@ -35,7 +37,7 @@ class test_opds_feed(unittest.TestCase, ui_class):
 
         # create a new Firefox session
         cls.driver = webdriver.Firefox()
-        # time.sleep(15)
+
         cls.driver.implicitly_wait(5)
         print('Calibre-web started')
 
@@ -56,7 +58,7 @@ class test_opds_feed(unittest.TestCase, ui_class):
         login_button.click()
 
         # login
-        cls.login("admin", "admin123")
+        # cls.login("admin", "admin123")
 
 
     @classmethod
@@ -65,13 +67,68 @@ class test_opds_feed(unittest.TestCase, ui_class):
         cls.driver.quit()
         cls.p.terminate()
 
-    @unittest.skip("Not Implemented")
     def test_opds(self):
-        self.assertIsNone('Not Implemented')
+        r = requests.get('http://127.0.0.1:8083/opds')
+        self.assertEqual(401,r.status_code)
+        r = requests.get('http://127.0.0.1:8083/opds', auth=('admin', '123'))
+        self.assertEqual(401,r.status_code)
+        r = requests.get('http://127.0.0.1:8083/opds', auth=('admin', 'admin123'))
+        self.assertEqual(200, r.status_code)
+        elements = self.get_opds_index(r.text)
+        r = requests.get('http://127.0.0.1:8083'+elements['Authors']['link'], auth=('admin', 'admin123'))
+        self.assertEqual(200, r.status_code)
+        r = requests.get('http://127.0.0.1:8083'+elements['Best rated Books']['link'], auth=('admin', 'admin123'))
+        self.assertEqual(200, r.status_code)
+        r = requests.get('http://127.0.0.1:8083'+elements['Category list']['link'], auth=('admin', 'admin123'))
+        self.assertEqual(200, r.status_code)
+        r = requests.get('http://127.0.0.1:8083'+elements['Hot Books']['link'], auth=('admin', 'admin123'))
+        self.assertEqual(200, r.status_code)
+        r = requests.get('http://127.0.0.1:8083'+elements['New Books']['link'], auth=('admin', 'admin123'))
+        self.assertEqual(200, r.status_code)
+        r = requests.get('http://127.0.0.1:8083'+elements['Public Shelves']['link'], auth=('admin', 'admin123'))
+        self.assertEqual(200, r.status_code)
+        r = requests.get('http://127.0.0.1:8083'+elements['Publishers']['link'], auth=('admin', 'admin123'))
+        self.assertEqual(200, r.status_code)
+        r = requests.get('http://127.0.0.1:8083'+elements['Random Books']['link'], auth=('admin', 'admin123'))
+        self.assertEqual(200, r.status_code)
+        r = requests.get('http://127.0.0.1:8083'+elements['Series list']['link'], auth=('admin', 'admin123'))
+        self.assertEqual(200, r.status_code)
+        r = requests.get('http://127.0.0.1:8083'+elements['Unread Books']['link'], auth=('admin', 'admin123'))
+        self.assertEqual(200, r.status_code)
+        r = requests.get('http://127.0.0.1:8083'+elements['Read Books']['link'], auth=('admin', 'admin123'))
+        self.assertEqual(200, r.status_code)
+        r = requests.get('http://127.0.0.1:8083'+elements['Your Shelves']['link'], auth=('admin', 'admin123'))
+        self.assertEqual(200, r.status_code)
 
-    @unittest.skip("Not Implemented")
+
     def test_opds_guest_user(self):
-        self.assertIsNone('Not Implemented')
+        self.login("admin", "admin123")
+        self.fill_basic_config({'config_anonbrowse': 1})
+        r = requests.get('http://127.0.0.1:8083/opds')
+        self.assertEqual(200, r.status_code)
+        elements = self.get_opds_index(r.text)
+        r = requests.get('http://127.0.0.1:8083'+elements['Authors']['link'])
+        self.assertEqual(200, r.status_code)
+        r = requests.get('http://127.0.0.1:8083'+elements['Best rated Books']['link'])
+        self.assertEqual(200, r.status_code)
+        r = requests.get('http://127.0.0.1:8083'+elements['Category list']['link'])
+        self.assertEqual(200, r.status_code)
+        r = requests.get('http://127.0.0.1:8083'+elements['Hot Books']['link'])
+        self.assertEqual(200, r.status_code)
+        r = requests.get('http://127.0.0.1:8083'+elements['New Books']['link'])
+        self.assertEqual(200, r.status_code)
+        r = requests.get('http://127.0.0.1:8083'+elements['Public Shelves']['link'])
+        self.assertEqual(200, r.status_code)
+        r = requests.get('http://127.0.0.1:8083'+elements['Publishers']['link'])
+        self.assertEqual(200, r.status_code)
+        r = requests.get('http://127.0.0.1:8083'+elements['Random Books']['link'])
+        self.assertEqual(200, r.status_code)
+        r = requests.get('http://127.0.0.1:8083'+elements['Series list']['link'])
+        self.assertEqual(200, r.status_code)
+        self.assertFalse('Your Shelves' in elements)
+        self.assertFalse('Read Books' in elements)
+        self.assertFalse('Unread Books' in elements)
+        self.fill_basic_config({'config_anonbrowse': 0})
 
     @unittest.skip("Not Implemented")
     def test_opds_search(self):
