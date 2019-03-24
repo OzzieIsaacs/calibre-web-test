@@ -5,8 +5,23 @@ import subprocess
 import sys
 import glob, os
 import shutil
-import cPickle
+try:
+    import cPickle
+except ImportError:
+    import pickle as cPickle
+import msgpack
 import babel.messages.pofile as pofile
+
+decoders = (
+    None,
+    lambda x, fj: set(x),
+)
+
+def msgpack_decoder(code, data):
+    return decoders[code](msgpack_loads(data), False)
+
+def msgpack_loads(dump):
+    return msgpack.unpackb(dump, ext_hook=msgpack_decoder, raw=False)
 
 # Path to calibre-web location with -> location of mo files
 if os.name == 'nt':
@@ -14,8 +29,7 @@ if os.name == 'nt':
 else:
     FILEPATH=os.path.abspath("./../../calibre-web/") + '/'
 
-with open('iso639.pickle', 'rb') as f:
-    need_iso = cPickle.load(f)
+need_iso = msgpack_loads(open('iso639.pickle', 'rb').read())
 
 workdir = os.getcwd()
 os.chdir(FILEPATH) # .encode(sys.getfilesystemencoding()
