@@ -20,7 +20,7 @@ from parameterized import parameterized_class
 
 @parameterized_class([
    { "py_version": u'python','LOG_LEVEL':'DEBUG'},
-   { "py_version": u'python3','LOG_LEVEL':'INFO'},
+   { "py_version": u'python3','LOG_LEVEL':'DEBUG'},
 ],names=('Python27','Python36'))
 @unittest.skipIf(email_convert_helper.is_calibre_not_present(),"Skipping convert, calibre not found")
 class test_SSL(unittest.TestCase, ui_class):

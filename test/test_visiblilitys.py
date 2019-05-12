@@ -40,33 +40,37 @@ class calibre_web_visibilitys(unittest.TestCase, ui_class):
             pass
         shutil.rmtree(TEST_DB,ignore_errors=True)
         shutil.copytree('./Calibre_db', TEST_DB)
-        cls.p = process_open([cls.py_version, os.path.join(CALIBRE_WEB_PATH,u'cps.py')],(1))
+        try:
+            cls.p = process_open([cls.py_version, os.path.join(CALIBRE_WEB_PATH,u'cps.py')],(1))
 
-        # create a new Firefox session
-        cls.driver = webdriver.Firefox()
-        # time.sleep(15)
-        cls.driver.implicitly_wait(5)
-        print('Calibre-web started')
+            # create a new Firefox session
+            cls.driver = webdriver.Firefox()
+            # time.sleep(15)
+            cls.driver.implicitly_wait(5)
+            print('Calibre-web started')
 
-        cls.driver.maximize_window()
+            cls.driver.maximize_window()
 
-        # navigate to the application home page
-        cls.driver.get("http://127.0.0.1:8083")
+            # navigate to the application home page
+            cls.driver.get("http://127.0.0.1:8083")
 
-        # Wait for config screen to show up
-        cls.fill_initial_config({'config_calibre_dir':TEST_DB})
+            # Wait for config screen to show up
+            cls.fill_initial_config({'config_calibre_dir':TEST_DB})
 
-        # wait for cw to reboot
-        time.sleep(5)
+            # wait for cw to reboot
+            time.sleep(5)
 
-        # Wait for config screen with login button to show up
-        WebDriverWait(cls.driver, 5).until(EC.presence_of_element_located((By.NAME, "login")))
-        login_button = cls.driver.find_element_by_name("login")
-        login_button.click()
+            # Wait for config screen with login button to show up
+            WebDriverWait(cls.driver, 5).until(EC.presence_of_element_located((By.NAME, "login")))
+            login_button = cls.driver.find_element_by_name("login")
+            login_button.click()
 
-        # login
-        cls.login("admin", "admin123")
-        time.sleep(3)
+            # login
+            cls.login("admin", "admin123")
+            time.sleep(3)
+        except:
+            cls.driver.quit()
+            cls.p.terminate()
 
     @classmethod
     def tearDownClass(cls):
@@ -141,16 +145,16 @@ class calibre_web_visibilitys(unittest.TestCase, ui_class):
         submit.click()
         WebDriverWait(self.driver, 5).until(EC.presence_of_element_located((By.ID, "flash_success")))
         self.assertIsNotNone(self.driver.find_element_by_id("flash_success"))
-        self.assertIsNotNone(self.driver.find_element_by_name("show_random"))
-        self.assertIsNotNone(self.driver.find_element_by_name("show_hot"))
-        self.assertIsNotNone(self.driver.find_element_by_name("show_language"))
-        self.assertIsNotNone(self.driver.find_element_by_name("show_series"))
-        self.assertIsNotNone(self.driver.find_element_by_name("show_category"))
+        self.assertIsNotNone(self.driver.find_element_by_name("show_32"))
+        self.assertIsNotNone(self.driver.find_element_by_name("show_16"))
+        self.assertIsNotNone(self.driver.find_element_by_name("show_2"))
+        self.assertIsNotNone(self.driver.find_element_by_name("show_4"))
+        self.assertIsNotNone(self.driver.find_element_by_name("show_8"))
 
     # checks if admin can configure sidebar for random view
     def test_user_visibility_sidebar(self):
         self.goto_page('user_setup')
-        self.change_user({'show_random':0})
+        self.change_user({'show_32':0})
         self.assertTrue(self.check_element_on_page((By.ID, "flash_success")))
         self.assertFalse(self.check_element_on_page((By.ID, "nav_rand")))
         self.goto_page("nav_new")
@@ -197,7 +201,7 @@ class calibre_web_visibilitys(unittest.TestCase, ui_class):
         self.assertTrue(self.check_element_on_page((By.ID, "books_rand")))
         self.assertFalse(self.check_element_on_page((By.ID, "nav_rand")))
         # check random books not shown in sorted section
-        self.driver.find_element_by_id("nav_sort").click()
+        '''self.driver.find_element_by_id("nav_sort").click()
         self.goto_page("nav_sort_old")
         self.assertTrue(self.check_element_on_page((By.ID, "books_rand")))
         self.assertFalse(self.check_element_on_page((By.ID, "nav_rand")))
@@ -209,41 +213,41 @@ class calibre_web_visibilitys(unittest.TestCase, ui_class):
         self.assertFalse(self.check_element_on_page((By.ID, "nav_rand")))
         self.goto_page("nav_sort_desc")
         self.assertTrue(self.check_element_on_page((By.ID, "books_rand")))
-        self.assertFalse(self.check_element_on_page((By.ID, "nav_rand")))
+        self.assertFalse(self.check_element_on_page((By.ID, "nav_rand")))'''
         # Go to admin section and reenable show random view
         self.goto_page('user_setup')
-        self.change_user({'show_random':1})
+        self.change_user({'show_32':1})
         self.assertTrue(self.check_element_on_page((By.ID, "nav_rand")))
         self.assertTrue(self.check_element_on_page((By.ID, "flash_success")))
 
     # Test if user can change visibility of sidebar view sorted
-    def test_admin_change_visibility_sorted(self):
+    '''def test_admin_change_visibility_sorted(self):
         self.goto_page('user_setup')
         self.change_user({'show_sorted':0})
         self.assertTrue(self.check_element_on_page((By.ID, "flash_success")))
         self.assertFalse(self.check_element_on_page((By.ID, "nav_sort")))
         self.change_user({'show_sorted': 1})
         self.assertTrue(self.check_element_on_page((By.ID, "flash_success")))
-        self.assertTrue(self.check_element_on_page((By.ID, "nav_sort")))
+        self.assertTrue(self.check_element_on_page((By.ID, "nav_sort")))'''
 
     # Test if user can change visibility of sidebar view best rated books
     def test_admin_change_visibility_rated(self):
         self.goto_page('user_setup')
-        self.change_user({'show_best_rated':0})
+        self.change_user({'show_128':0})
         self.assertTrue(self.check_element_on_page((By.ID, "flash_success")))
         self.assertFalse(self.check_element_on_page((By.ID, "nav_rated")))
-        self.change_user({'show_best_rated': 1})
+        self.change_user({'show_128': 1})
         self.assertTrue(self.check_element_on_page((By.ID, "flash_success")))
         self.assertTrue(self.check_element_on_page((By.ID, "nav_rated")))
 
     # Test if user can change visibility of sidebar view read and unread books
     def test_admin_change_visibility_read(self):
         self.goto_page('user_setup')
-        self.change_user({'show_read_and_unread':0})
+        self.change_user({'show_256':0})
         self.assertTrue(self.check_element_on_page((By.ID, "flash_success")))
         self.assertFalse(self.check_element_on_page((By.ID, "nav_read")))
         self.assertFalse(self.check_element_on_page((By.ID, "nav_unread")))
-        self.change_user({'show_read_and_unread': 1})
+        self.change_user({'show_256': 1})
         self.assertTrue(self.check_element_on_page((By.ID, "flash_success")))
         self.assertTrue(self.check_element_on_page((By.ID, "nav_read")))
         self.assertTrue(self.check_element_on_page((By.ID, "nav_unread")))
@@ -251,40 +255,40 @@ class calibre_web_visibilitys(unittest.TestCase, ui_class):
     # checks if admin can change user language
     def test_admin_change_visibility_language(self):
         self.goto_page('user_setup')
-        self.change_user({'show_language':0})
+        self.change_user({'show_2':0})
         self.assertTrue(self.check_element_on_page((By.ID, "flash_success")))
         self.assertFalse(self.check_element_on_page((By.ID, "nav_lang")))
-        self.change_user({'show_language': 1})
+        self.change_user({'show_2': 1})
         self.assertTrue(self.check_element_on_page((By.ID, "flash_success")))
         self.assertTrue(self.check_element_on_page((By.ID, "nav_lang")))
 
     # checks if admin can change hot books
     def test_admin_change_visibility_hot(self):
         self.goto_page('user_setup')
-        self.change_user({'show_hot':0})
+        self.change_user({'show_16':0})
         self.assertTrue(self.check_element_on_page((By.ID, "flash_success")))
         self.assertFalse(self.check_element_on_page((By.ID, "nav_hot")))
-        self.change_user({'show_hot': 1})
+        self.change_user({'show_16': 1})
         self.assertTrue(self.check_element_on_page((By.ID, "flash_success")))
         self.assertTrue(self.check_element_on_page((By.ID, "nav_hot")))
 
     # checks if admin can change series
     def test_admin_change_visibility_series(self):
         self.goto_page('user_setup')
-        self.change_user({'show_series':0})
+        self.change_user({'show_4':0})
         self.assertTrue(self.check_element_on_page((By.ID, "flash_success")))
         self.assertFalse(self.check_element_on_page((By.ID, "nav_serie")))
-        self.change_user({'show_series': 1})
+        self.change_user({'show_4': 1})
         self.assertTrue(self.check_element_on_page((By.ID, "flash_success")))
         self.assertTrue(self.check_element_on_page((By.ID, "nav_serie")))
 
     # checks if admin can change publisher
     def test_admin_change_visibility_publisher(self):
         self.goto_page('user_setup')
-        self.change_user({'show_publisher':0})
+        self.change_user({'show_4096':0})
         self.assertTrue(self.check_element_on_page((By.ID, "flash_success")))
         self.assertFalse(self.check_element_on_page((By.ID, "nav_publisher")))
-        self.change_user({'show_publisher': 1})
+        self.change_user({'show_4096': 1})
         self.assertTrue(self.check_element_on_page((By.ID, "flash_success")))
         self.assertTrue(self.check_element_on_page((By.ID, "nav_publisher")))
 
@@ -296,24 +300,24 @@ class calibre_web_visibilitys(unittest.TestCase, ui_class):
         time.sleep(5)
         self.goto_page('user_setup')
         time.sleep(5)
-        self.change_user({'show_author':0,'email':'a@f.de'})
+        self.change_user({'show_64':0,'email':'a@f.de'})
         time.sleep(5)
-        self.change_user({'show_author': 0, 'email': 'a@f.de'})
+        self.change_user({'show_64': 0, 'email': 'a@f.de'})
         time.sleep(5)
         self.assertTrue(self.check_element_on_page((By.ID, "flash_success")))
         self.assertFalse(self.check_element_on_page((By.ID, "nav_author")))
-        self.change_user({'show_author': 1})
+        self.change_user({'show_64': 1})
         self.assertTrue(self.check_element_on_page((By.ID, "flash_success")))
         self.assertTrue(self.check_element_on_page((By.ID, "nav_author")))
 
     # checks if admin can change categories
     def test_admin_change_visibility_category(self):
         self.goto_page('user_setup')
-        self.change_user({'show_category':0})
+        self.change_user({'show_8':0})
         self.assertTrue(self.check_element_on_page((By.ID, "flash_success")))
         # Category not visible
         self.assertFalse(self.check_element_on_page((By.ID, "nav_cat"))) # self.driver.find_elements_by_id("nav_author").__len__())
-        self.change_user({'show_category': 1})
+        self.change_user({'show_8': 1})
         self.assertTrue(self.check_element_on_page((By.ID, "flash_success")))
         self.assertTrue(self.check_element_on_page((By.ID, "nav_cat")))
 

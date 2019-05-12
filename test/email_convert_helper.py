@@ -8,6 +8,7 @@ from gsmtpd.server import SMTPServer
 
 monkey.patch_all()
 
+
 def is_calibre_not_present():
     if calibre_path():
         return False

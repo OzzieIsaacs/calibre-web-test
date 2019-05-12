@@ -17,16 +17,16 @@ from email_convert_helper import Gevent_SMPTPServer, CredentialValidator
 import email_convert_helper
 from parameterized import parameterized_class
 
-'''@parameterized_class([
+@parameterized_class([
    { "py_version": u'python'},
    { "py_version": u'python3'},
-],names=('Python27','Python36'))'''
+],names=('Python27','Python36'))
 @unittest.skipIf(email_convert_helper.is_calibre_not_present(),"Skipping convert, calibre not found")
 class test_ebook_convert(unittest.TestCase, ui_class):
     p=None
     driver = None
     email_server = None
-    py_version = 'python'
+    # py_version = 'python'
 
     @classmethod
     def setUpClass(cls):
@@ -46,39 +46,42 @@ class test_ebook_convert(unittest.TestCase, ui_class):
             pass
         shutil.rmtree(TEST_DB,ignore_errors=True)
         shutil.copytree('./Calibre_db', TEST_DB)
-        cls.p = process_open([cls.py_version, os.path.join(CALIBRE_WEB_PATH,u'cps.py')],(1),sout=None)
+        try:
+            cls.p = process_open([cls.py_version, os.path.join(CALIBRE_WEB_PATH,u'cps.py')],(1),sout=None)
 
-        # create a new Firefox session
-        cls.driver = webdriver.Firefox()
-        # time.sleep(15)
-        cls.driver.implicitly_wait(5)
-        print('Calibre-web started')
+            # create a new Firefox session
+            cls.driver = webdriver.Firefox()
+            # time.sleep(15)
+            cls.driver.implicitly_wait(5)
+            print('Calibre-web started')
 
-        cls.driver.maximize_window()
+            cls.driver.maximize_window()
 
-        # navigate to the application home page
-        cls.driver.get("http://127.0.0.1:8083")
+            # navigate to the application home page
+            cls.driver.get("http://127.0.0.1:8083")
 
-        # Wait for config screen to show up
-        cls.fill_initial_config({'config_calibre_dir':TEST_DB, 'config_converterpath':email_convert_helper.calibre_path(),
-                                 'config_ebookconverter':'converter2'})
+            # Wait for config screen to show up
+            cls.fill_initial_config({'config_calibre_dir':TEST_DB, 'config_converterpath':email_convert_helper.calibre_path(),
+                                     'config_ebookconverter':'converter2'})
 
-        # wait for cw to reboot
-        time.sleep(5)
+            # wait for cw to reboot
+            time.sleep(5)
 
-        # Wait for config screen with login button to show up
-        WebDriverWait(cls.driver, 5).until(EC.presence_of_element_located((By.NAME, "login")))
-        login_button = cls.driver.find_element_by_name("login")
-        login_button.click()
+            # Wait for config screen with login button to show up
+            WebDriverWait(cls.driver, 5).until(EC.presence_of_element_located((By.NAME, "login")))
+            login_button = cls.driver.find_element_by_name("login")
+            login_button.click()
 
-        # login
-        cls.login("admin", "admin123")
-        cls.edit_user('admin', {'email': 'a5@b.com','kindle_mail': 'a1@b.com'})
-        cls.setup_server(True, {'mail_server':'127.0.0.1', 'mail_port':'1025',
-                            'mail_use_ssl':'None','mail_login':'name@host.com','mail_password':'1234',
-                            'mail_from':'name@host.com'})
-
-
+            # login
+            cls.login("admin", "admin123")
+            cls.edit_user('admin', {'email': 'a5@b.com','kindle_mail': 'a1@b.com'})
+            cls.setup_server(True, {'mail_server':'127.0.0.1', 'mail_port':'1025',
+                                'mail_use_ssl':'None','mail_login':'name@host.com','mail_password':'1234',
+                                'mail_from':'name@host.com'})
+            time.sleep(2)
+        except:
+            cls.driver.quit()
+            cls.p.terminate()
     @classmethod
     def tearDownClass(cls):
         # close the browser window and stop calibre-web
@@ -115,18 +118,18 @@ class test_ebook_convert(unittest.TestCase, ui_class):
         element = self.check_element_on_page((By.XPATH,"//tr/th[text()='Calibre converter']/following::td[1]"))
         self.assertEqual(element.text,'not installed')
         details = self.get_book_details(5)
-        self.assertEqual(len(details['kindle']),2)
+        self.assertEqual(len(details['kindle']),1)
         # ToDo: check convert function
         vals = self.get_convert_book(5)
 
         # ToDo: change behavior convert should only be visible if ebookconverter has valid entry
         self.fill_basic_config({'config_converterpath':'/opt/calibre/kuku'})
         details = self.get_book_details(5)
-        self.assertEqual(len(details['kindle']),2)
+        self.assertEqual(len(details['kindle']),1)
         details['kindlebtn'].click()
-        conv = self.check_element_on_page((By.LINK_TEXT, details['kindle'][0].text))
-        self.assertTrue(conv)
-        conv.click()
+        # conv = self.check_element_on_page((By.LINK_TEXT, details['kindle'][0].text))
+        # self.assertTrue(conv)
+        # conv.click()
         self.assertTrue(self.check_element_on_page((By.ID, "flash_success")))
         self.goto_page('nav_about')
         element = self.check_element_on_page((By.XPATH, "//tr/th[text()='Calibre converter']/following::td[1]"))
@@ -142,11 +145,11 @@ class test_ebook_convert(unittest.TestCase, ui_class):
         element = self.check_element_on_page((By.XPATH, "//tr/th[text()='Calibre converter']/following::td[1]"))
         self.assertEqual(element.text, 'Excecution permissions missing')
         details = self.get_book_details(5)
-        self.assertEqual(len(details['kindle']),2)
+        self.assertEqual(len(details['kindle']),1)
         details['kindlebtn'].click()
-        conv = self.check_element_on_page((By.LINK_TEXT, details['kindle'][0].text))
-        self.assertTrue(conv)
-        conv.click()
+        # conv = self.check_element_on_page((By.LINK_TEXT, details['kindle'][0].text))
+        # self.assertTrue(conv)
+        # conv.click()
         # ToDo: check convert function
         vals = self.get_convert_book(5)
         i = 0
@@ -202,11 +205,11 @@ class test_ebook_convert(unittest.TestCase, ui_class):
         self.setup_server(True, {'mail_password': '10234', 'mail_use_ssl':'None'})
         task_len = len(self.check_tasks())
         details = self.get_book_details(9)
-        self.assertEqual(len(details['kindle']),2)
+        self.assertEqual(len(details['kindle']),1)
         details['kindlebtn'].click()
-        conv = self.check_element_on_page((By.LINK_TEXT, details['kindle'][1].text))
-        self.assertTrue(conv)
-        conv.click()
+        # conv = self.check_element_on_page((By.LINK_TEXT, details['kindle'][0].getchildren()[0].tail))
+        # self.assertTrue(conv)
+        # conv.click()
         i = 0
         while i < 10:
             time.sleep(2)
@@ -249,11 +252,11 @@ class test_ebook_convert(unittest.TestCase, ui_class):
         self.setup_server(True, {'mail_password': '10234'})
         task_len = len(self.check_tasks())
         details = self.get_book_details(8)
-        self.assertEqual(len(details['kindle']),2)
+        self.assertEqual(len(details['kindle']),1)
         details['kindlebtn'].click()
-        conv = self.check_element_on_page((By.LINK_TEXT, details['kindle'][1].text))
-        self.assertTrue(conv)
-        conv.click()
+        # conv = self.check_element_on_page((By.LINK_TEXT, details['kindle'][1].text))
+        # self.assertTrue(conv)
+        # conv.click()
         i = 0
         while i < 10:
             time.sleep(2)
@@ -399,9 +402,9 @@ class test_ebook_convert(unittest.TestCase, ui_class):
         self.assertEqual(ret[-1]['result'], 'Finished')
         details = self.get_book_details(5)
         details['kindlebtn'].click()
-        conv = self.check_element_on_page((By.LINK_TEXT, details['kindle'][0].text))
-        self.assertTrue(conv)
-        conv.click()
+        # conv = self.check_element_on_page((By.LINK_TEXT, details['kindle'][0].text))
+        # self.assertTrue(conv)
+        # conv.click()
         self.assertTrue(self.check_element_on_page((By.ID, "flash_success")))
         i = 0
         while i < 10:
@@ -425,9 +428,9 @@ class test_ebook_convert(unittest.TestCase, ui_class):
         self.email_server.set_return_value(552)
         # = '552 Requested mail action aborted: exceeded storage allocation'
         details['kindlebtn'].click()
-        conv = self.check_element_on_page((By.LINK_TEXT, details['kindle'][1].text))
-        self.assertTrue(conv)
-        conv.click()
+        # conv = self.check_element_on_page((By.LINK_TEXT, details['kindle'][1].text))
+        # self.assertTrue(conv)
+        # conv.click()
         self.assertTrue(self.check_element_on_page((By.ID, "flash_success")))
         i = 0
         while i < 10:

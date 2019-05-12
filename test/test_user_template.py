@@ -22,6 +22,7 @@ from parameterized import parameterized_class
 class test_user_template(unittest.TestCase, ui_class):
     p=None
     driver = None
+    # py_version = "python"
 
     @classmethod
     def setUpClass(cls):
@@ -31,32 +32,36 @@ class test_user_template(unittest.TestCase, ui_class):
             pass
         shutil.rmtree(TEST_DB,ignore_errors=True)
         shutil.copytree('./Calibre_db', TEST_DB)
-        cls.p = process_open([cls.py_version, os.path.join(CALIBRE_WEB_PATH,u'cps.py')],(1))
+        try:
+            cls.p = process_open([cls.py_version, os.path.join(CALIBRE_WEB_PATH,u'cps.py')],(1))
 
-        # create a new Firefox session
-        cls.driver = webdriver.Firefox()
-        # time.sleep(15)
-        cls.driver.implicitly_wait(5)
-        print('Calibre-web started')
+            # create a new Firefox session
+            cls.driver = webdriver.Firefox()
+            # time.sleep(15)
+            cls.driver.implicitly_wait(5)
+            print('Calibre-web started')
 
-        cls.driver.maximize_window()
+            cls.driver.maximize_window()
 
-        # navigate to the application home page
-        cls.driver.get("http://127.0.0.1:8083")
+            # navigate to the application home page
+            cls.driver.get("http://127.0.0.1:8083")
 
-        # Wait for config screen to show up
-        cls.fill_initial_config({'config_calibre_dir':TEST_DB})
+            # Wait for config screen to show up
+            cls.fill_initial_config({'config_calibre_dir':TEST_DB})
 
-        # wait for cw to reboot
-        time.sleep(5)
+            # wait for cw to reboot
+            time.sleep(5)
 
-        # Wait for config screen with login button to show up
-        WebDriverWait(cls.driver, 5).until(EC.presence_of_element_located((By.NAME, "login")))
-        login_button = cls.driver.find_element_by_name("login")
-        login_button.click()
+            # Wait for config screen with login button to show up
+            WebDriverWait(cls.driver, 5).until(EC.presence_of_element_located((By.NAME, "login")))
+            login_button = cls.driver.find_element_by_name("login")
+            login_button.click()
 
-        # login
-        cls.login("admin", "admin123")
+            # login
+            cls.login("admin", "admin123")
+        except:
+            cls.driver.quit()
+            cls.p.terminate()
 
 
     @classmethod
@@ -71,15 +76,15 @@ class test_user_template(unittest.TestCase, ui_class):
             self.login('admin','admin123')
 
     def test_random_user_template(self):
-        self.fill_view_config({'show_random':0})
+        self.fill_view_config({'show_32':0})
         self.goto_page('create_user')
         self.create_user('random',{'password':'1234','email':'a5@b.com'})
         self.assertTrue(self.check_element_on_page((By.ID, "flash_success")))
-        self.fill_view_config({'show_random':1})
+        self.fill_view_config({'show_32':1})
         self.logout()
         self.login('random','1234')
         self.assertTrue(self.check_element_on_page((By.ID, "nav_new")))
-        self.assertTrue(self.check_element_on_page((By.ID, "nav_sort")))
+        # self.assertTrue(self.check_element_on_page((By.ID, "nav_sort")))
         self.assertTrue(self.check_element_on_page((By.ID, "nav_hot")))
         self.assertTrue(self.check_element_on_page((By.ID, "nav_rated")))
         self.assertTrue(self.check_element_on_page((By.ID, "nav_read")))
@@ -96,15 +101,15 @@ class test_user_template(unittest.TestCase, ui_class):
         self.edit_user('random',{'delete':1})
 
     def test_recent_user_template(self):
-        self.fill_view_config({'show_recent':0})
+        self.fill_view_config({'show_512':0})
         self.goto_page('create_user')
         self.create_user('recent',{'password':'1234','email':'a4@b.com'})
         self.assertTrue(self.check_element_on_page((By.ID, "flash_success")))
-        self.fill_view_config({'show_recent':1})
+        self.fill_view_config({'show_512':1})
         self.logout()
         self.login('recent','1234')
         self.assertFalse(self.check_element_on_page((By.ID, "nav_new")))
-        self.assertTrue(self.check_element_on_page((By.ID, "nav_sort")))
+        # self.assertTrue(self.check_element_on_page((By.ID, "nav_sort")))
         self.assertTrue(self.check_element_on_page((By.ID, "nav_hot")))
         self.assertTrue(self.check_element_on_page((By.ID, "nav_rated")))
         self.assertTrue(self.check_element_on_page((By.ID, "nav_read")))
@@ -120,7 +125,7 @@ class test_user_template(unittest.TestCase, ui_class):
         # delete user
         self.edit_user('recent',{'delete':1})
 
-    def test_sorted_user_template(self):
+    '''def test_sorted_user_template(self):
         self.fill_view_config({'show_sorted':0})
         self.goto_page('create_user')
         self.create_user('sorted',{'password':'1234','email':'a3@b.com'})
@@ -143,18 +148,18 @@ class test_user_template(unittest.TestCase, ui_class):
         self.logout()
         self.login('admin','admin123')
         # delete user
-        self.edit_user('sorted',{'delete':1})
+        self.edit_user('sorted',{'delete':1})'''
 
     def test_hot_user_template(self):
-        self.fill_view_config({'show_hot':0})
+        self.fill_view_config({'show_16':0})
         self.goto_page('create_user')
         self.create_user('hot',{'password':'1234','email':'a2@b.com'})
         self.assertTrue(self.check_element_on_page((By.ID, "flash_success")))
-        self.fill_view_config({'show_hot':1})
+        self.fill_view_config({'show_16':1})
         self.logout()
         self.login('hot','1234')
         self.assertTrue(self.check_element_on_page((By.ID, "nav_new")))
-        self.assertTrue(self.check_element_on_page((By.ID, "nav_sort")))
+        # self.assertTrue(self.check_element_on_page((By.ID, "nav_sort")))
         self.assertFalse(self.check_element_on_page((By.ID, "nav_hot")))
         self.assertTrue(self.check_element_on_page((By.ID, "nav_rated")))
         self.assertTrue(self.check_element_on_page((By.ID, "nav_read")))
@@ -171,15 +176,15 @@ class test_user_template(unittest.TestCase, ui_class):
         self.edit_user('hot',{'delete':1})
 
     def test_best_user_template(self):
-        self.fill_view_config({'show_best_rated':0})
+        self.fill_view_config({'show_128':0})
         self.goto_page('create_user')
         self.create_user('best',{'password':'1234','email':'a1@b.com'})
         self.assertTrue(self.check_element_on_page((By.ID, "flash_success")))
-        self.fill_view_config({'show_best_rated': 1})
+        self.fill_view_config({'show_128': 1})
         self.logout()
         self.login('best','1234')
         self.assertTrue(self.check_element_on_page((By.ID, "nav_new")))
-        self.assertTrue(self.check_element_on_page((By.ID, "nav_sort")))
+        # self.assertTrue(self.check_element_on_page((By.ID, "nav_sort")))
         self.assertTrue(self.check_element_on_page((By.ID, "nav_hot")))
         self.assertFalse(self.check_element_on_page((By.ID, "nav_rated")))
         self.assertTrue(self.check_element_on_page((By.ID, "nav_read")))
@@ -196,15 +201,15 @@ class test_user_template(unittest.TestCase, ui_class):
         self.edit_user('best',{'delete':1})
 
     def test_language_user_template(self):
-        self.fill_view_config({'show_language':0})
+        self.fill_view_config({'show_2':0})
         self.goto_page('create_user')
         self.create_user('lang',{'password':'1234','email':'a6@b.com'})
         self.assertTrue(self.check_element_on_page((By.ID, "flash_success")))
-        self.fill_view_config({'show_language': 1})
+        self.fill_view_config({'show_2': 1})
         self.logout()
         self.login('lang','1234')
         self.assertTrue(self.check_element_on_page((By.ID, "nav_new")))
-        self.assertTrue(self.check_element_on_page((By.ID, "nav_sort")))
+        # self.assertTrue(self.check_element_on_page((By.ID, "nav_sort")))
         self.assertTrue(self.check_element_on_page((By.ID, "nav_hot")))
         self.assertTrue(self.check_element_on_page((By.ID, "nav_rated")))
         self.assertTrue(self.check_element_on_page((By.ID, "nav_read")))
@@ -221,15 +226,15 @@ class test_user_template(unittest.TestCase, ui_class):
         self.edit_user('lang',{'delete':1})
 
     def test_series_user_template(self):
-        self.fill_view_config({'show_series':0})
+        self.fill_view_config({'show_4':0})
         self.goto_page('create_user')
         self.create_user('series',{'password':'1234','email':'a7@b.com'})
         self.assertTrue(self.check_element_on_page((By.ID, "flash_success")))
-        self.fill_view_config({'show_series': 1})
+        self.fill_view_config({'show_4': 1})
         self.logout()
         self.login('series','1234')
         self.assertTrue(self.check_element_on_page((By.ID, "nav_new")))
-        self.assertTrue(self.check_element_on_page((By.ID, "nav_sort")))
+        # self.assertTrue(self.check_element_on_page((By.ID, "nav_sort")))
         self.assertTrue(self.check_element_on_page((By.ID, "nav_hot")))
         self.assertTrue(self.check_element_on_page((By.ID, "nav_rated")))
         self.assertTrue(self.check_element_on_page((By.ID, "nav_read")))
@@ -246,15 +251,15 @@ class test_user_template(unittest.TestCase, ui_class):
         self.edit_user('series',{'delete':1})
 
     def test_category_user_template(self):
-        self.fill_view_config({'show_category':0})
+        self.fill_view_config({'show_8':0})
         self.goto_page('create_user')
         self.create_user('cat',{'password':'1234','email':'a8@b.com'})
         self.assertTrue(self.check_element_on_page((By.ID, "flash_success")))
-        self.fill_view_config({'show_category':1})
+        self.fill_view_config({'show_8':1})
         self.logout()
         self.login('cat','1234')
         self.assertTrue(self.check_element_on_page((By.ID, "nav_new")))
-        self.assertTrue(self.check_element_on_page((By.ID, "nav_sort")))
+        # self.assertTrue(self.check_element_on_page((By.ID, "nav_sort")))
         self.assertTrue(self.check_element_on_page((By.ID, "nav_hot")))
         self.assertTrue(self.check_element_on_page((By.ID, "nav_rated")))
         self.assertTrue(self.check_element_on_page((By.ID, "nav_read")))
@@ -271,15 +276,15 @@ class test_user_template(unittest.TestCase, ui_class):
         self.edit_user('cat',{'delete':1})
 
     def test_publisher_user_template(self):
-        self.fill_view_config({'show_publisher':0})
+        self.fill_view_config({'show_4096':0})
         self.goto_page('create_user')
         self.create_user('pub',{'password':'1234','email':'a9@b.com'})
         self.assertTrue(self.check_element_on_page((By.ID, "flash_success")))
-        self.fill_view_config({'show_publisher':1})
+        self.fill_view_config({'show_4096':1})
         self.logout()
         self.login('pub','1234')
         self.assertTrue(self.check_element_on_page((By.ID, "nav_new")))
-        self.assertTrue(self.check_element_on_page((By.ID, "nav_sort")))
+        # self.assertTrue(self.check_element_on_page((By.ID, "nav_sort")))
         self.assertTrue(self.check_element_on_page((By.ID, "nav_hot")))
         self.assertTrue(self.check_element_on_page((By.ID, "nav_rated")))
         self.assertTrue(self.check_element_on_page((By.ID, "nav_read")))
@@ -296,15 +301,15 @@ class test_user_template(unittest.TestCase, ui_class):
         self.edit_user('pub',{'delete':1})
 
     def test_author_user_template(self):
-        self.fill_view_config({'show_author':0})
+        self.fill_view_config({'show_64':0})
         self.goto_page('create_user')
         self.create_user('author',{'password':'1234','email':'a9@b.com'})
         self.assertTrue(self.check_element_on_page((By.ID, "flash_success")))
-        self.fill_view_config({'show_author':1})
+        self.fill_view_config({'show_64':1})
         self.logout()
         self.login('author','1234')
         self.assertTrue(self.check_element_on_page((By.ID, "nav_new")))
-        self.assertTrue(self.check_element_on_page((By.ID, "nav_sort")))
+        # self.assertTrue(self.check_element_on_page((By.ID, "nav_sort")))
         self.assertTrue(self.check_element_on_page((By.ID, "nav_hot")))
         self.assertTrue(self.check_element_on_page((By.ID, "nav_rated")))
         self.assertTrue(self.check_element_on_page((By.ID, "nav_read")))
@@ -321,15 +326,15 @@ class test_user_template(unittest.TestCase, ui_class):
         self.edit_user('author',{'delete':1})
 
     def test_read_user_template(self):
-        self.fill_view_config({'show_read_and_unread':0})
+        self.fill_view_config({'show_256': 0 })
         self.goto_page('create_user')
         self.create_user('read',{'password':'1234','email':'aa@b.com'})
         self.assertTrue(self.check_element_on_page((By.ID, "flash_success")))
-        self.fill_view_config({'show_read_and_unread':1})
+        self.fill_view_config({'show_256' : 1})
         self.logout()
         self.login('read','1234')
         self.assertTrue(self.check_element_on_page((By.ID, "nav_new")))
-        self.assertTrue(self.check_element_on_page((By.ID, "nav_sort")))
+        # self.assertTrue(self.check_element_on_page((By.ID, "nav_sort")))
         self.assertTrue(self.check_element_on_page((By.ID, "nav_hot")))
         self.assertTrue(self.check_element_on_page((By.ID, "nav_rated")))
         self.assertFalse(self.check_element_on_page((By.ID, "nav_read")))
@@ -346,15 +351,15 @@ class test_user_template(unittest.TestCase, ui_class):
         self.edit_user('read',{'delete':1})
 
     def test_detail_random_user_template(self):
-        self.fill_view_config({'show_detail_random':0})
+        self.fill_view_config({'Show_detail_random':0})
         self.goto_page('create_user')
         self.create_user('drand',{'password':'1234','email':'ab@b.com'})
         self.assertTrue(self.check_element_on_page((By.ID, "flash_success")))
-        self.fill_view_config({'show_detail_random':1})
+        self.fill_view_config({'Show_detail_random':1})
         self.logout()
         self.login('drand','1234')
         self.assertTrue(self.check_element_on_page((By.ID, "nav_new")))
-        self.assertTrue(self.check_element_on_page((By.ID, "nav_sort")))
+        # self.assertTrue(self.check_element_on_page((By.ID, "nav_sort")))
         self.assertTrue(self.check_element_on_page((By.ID, "nav_hot")))
         self.assertTrue(self.check_element_on_page((By.ID, "nav_rated")))
         self.assertTrue(self.check_element_on_page((By.ID, "nav_read")))
@@ -405,14 +410,14 @@ class test_user_template(unittest.TestCase, ui_class):
         self.goto_page("nav_unread")
         self.assertFalse(self.check_element_on_page((By.ID, "books_rand")))
         # check random books not shown in sorted section
-        self.goto_page("nav_sort_old")
+        '''self.goto_page("nav_sort_old")
         self.assertFalse(self.check_element_on_page((By.ID, "books_rand")))
         self.goto_page("nav_sort_new")
         self.assertFalse(self.check_element_on_page((By.ID, "books_rand")))
         self.goto_page("nav_sort_asc")
         self.assertFalse(self.check_element_on_page((By.ID, "books_rand")))
         self.goto_page("nav_sort_desc")
-        self.assertFalse(self.check_element_on_page((By.ID, "books_rand")))
+        self.assertFalse(self.check_element_on_page((By.ID, "books_rand")))'''
         self.logout()
         self.login('admin','admin123')
         # delete user

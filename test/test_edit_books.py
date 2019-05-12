@@ -32,33 +32,37 @@ class test_edit_books(TestCase, ui_class):
             pass
         shutil.rmtree(TEST_DB,ignore_errors=True)
         shutil.copytree('./Calibre_db', TEST_DB)
-        cls.p = process_open([cls.py_version, os.path.join(CALIBRE_WEB_PATH,u'cps.py')],(1))
+        try:
+            cls.p = process_open([cls.py_version, os.path.join(CALIBRE_WEB_PATH,u'cps.py')],(1))
 
-        # create a new Firefox session
-        cls.driver = webdriver.Firefox()
-        # time.sleep(15)
-        cls.driver.implicitly_wait(5)
-        print('Calibre-web started')
+            # create a new Firefox session
+            cls.driver = webdriver.Firefox()
+            # time.sleep(15)
+            cls.driver.implicitly_wait(5)
+            print('Calibre-web started')
 
-        cls.driver.maximize_window()
+            cls.driver.maximize_window()
 
-        # navigate to the application home page
-        cls.driver.get("http://127.0.0.1:8083")
+            # navigate to the application home page
+            cls.driver.get("http://127.0.0.1:8083")
 
-        # Wait for config screen to show up
-        cls.fill_initial_config({'config_calibre_dir':TEST_DB})
+            # Wait for config screen to show up
+            cls.fill_initial_config({'config_calibre_dir':TEST_DB})
 
-        # wait for cw to reboot
-        time.sleep(5)
+            # wait for cw to reboot
+            time.sleep(5)
 
-        # Wait for config screen with login button to show up
-        WebDriverWait(cls.driver, 5).until(EC.presence_of_element_located((By.NAME, "login")))
-        login_button = cls.driver.find_element_by_name("login")
-        login_button.click()
+            # Wait for config screen with login button to show up
+            WebDriverWait(cls.driver, 5).until(EC.presence_of_element_located((By.NAME, "login")))
+            login_button = cls.driver.find_element_by_name("login")
+            login_button.click()
 
-        # login
-        cls.login("admin", "admin123")
-        time.sleep(3)
+            # login
+            cls.login("admin", "admin123")
+            time.sleep(3)
+        except:
+            cls.driver.quit()
+            cls.p.terminate()
 
 
     @classmethod
@@ -123,7 +127,7 @@ class test_edit_books(TestCase, ui_class):
         values=self.get_book_details()
         os.path.join(TEST_DB,values['author'][0],'The camicdemo')
         self.assertEqual('The camicdemo',values['title'])
-        self.goto_page('nav_sort_asc')
+        self.goto_page('nav_new')
         books = self.get_books_displayed()
         self.assertEqual('The camicdemo', books[1][8]['title'])
         file_path=os.path.join(TEST_DB, values['author'][0], 'The camicdemo (4)')

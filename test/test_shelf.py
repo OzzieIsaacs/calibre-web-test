@@ -12,7 +12,7 @@ import shutil
 from ui_helper import ui_class
 from subproc_wrapper import process_open
 from testconfig import CALIBRE_WEB_PATH, TEST_DB
-
+from func_helper import is_port_in_use
 from parameterized import parameterized_class
 
 @parameterized_class([
@@ -22,6 +22,7 @@ from parameterized import parameterized_class
 class test_shelf(unittest.TestCase, ui_class):
     p=None
     driver = None
+    # py_version = 'python3'
 
     @classmethod
     def setUpClass(cls):
@@ -31,36 +32,41 @@ class test_shelf(unittest.TestCase, ui_class):
             pass
         shutil.rmtree(TEST_DB,ignore_errors=True)
         shutil.copytree('./Calibre_db', TEST_DB)
-        cls.p = process_open([cls.py_version, os.path.join(CALIBRE_WEB_PATH,u'cps.py')],(1))
+        try:
+            cls.p = process_open([cls.py_version, os.path.join(CALIBRE_WEB_PATH,u'cps.py')],(1))
 
-        # create a new Firefox session
-        cls.driver = webdriver.Firefox()
-        # time.sleep(15)
-        cls.driver.implicitly_wait(5)
-        print('Calibre-web started')
+            # create a new Firefox session
+            cls.driver = webdriver.Firefox()
+            # time.sleep(15)
+            cls.driver.implicitly_wait(5)
+            print('Calibre-web started')
 
-        cls.driver.maximize_window()
+            cls.driver.maximize_window()
 
-        # navigate to the application home page
-        cls.driver.get("http://127.0.0.1:8083")
+            # navigate to the application home page
+            cls.driver.get("http://127.0.0.1:8083")
 
-        # Wait for config screen to show up
-        cls.fill_initial_config({'config_calibre_dir':TEST_DB})
+            # Wait for config screen to show up
+            cls.fill_initial_config({'config_calibre_dir':TEST_DB})
 
-        # wait for cw to reboot
-        time.sleep(5)
+            # wait for cw to reboot
+            time.sleep(5)
 
-        # Wait for config screen with login button to show up
-        WebDriverWait(cls.driver, 5).until(EC.presence_of_element_located((By.NAME, "login")))
-        login_button = cls.driver.find_element_by_name("login")
-        login_button.click()
+            # Wait for config screen with login button to show up
+            WebDriverWait(cls.driver, 5).until(EC.presence_of_element_located((By.NAME, "login")))
+            login_button = cls.driver.find_element_by_name("login")
+            login_button.click()
 
-        # login and create 2nd user
-        cls.login("admin", "admin123")
-        # time.sleep(3)
-        cls.create_user('shelf', {'edit_shelf_role':1, 'password':'123', 'email':'a@b.com'})
-        cls.edit_user('admin',{'edit_shelf_role':1, 'email':'e@fe.de'})
-
+            # login and create 2nd user
+            cls.login("admin", "admin123")
+            # time.sleep(3)
+            cls.create_user('shelf', {'edit_shelf_role':1, 'password':'123', 'email':'a@b.com'})
+            cls.edit_user('admin',{'edit_shelf_role':1, 'email':'e@fe.de'})
+        except:
+            if is_port_in_use(8083):
+                print('port in use')
+            cls.driver.quit()
+            cls.p.terminate()
 
     @classmethod
     def tearDownClass(cls):
@@ -176,7 +182,7 @@ class test_shelf(unittest.TestCase, ui_class):
         self.create_shelf('Lolo', False)
         self.assertTrue(self.check_element_on_page((By.ID, "flash_success")))
         # add book to shelf
-        self.goto_page('nav_sort_new')
+        self.goto_page('nav_new')
         books = self.get_books_displayed()
         self.get_book_details(books[1][0]['id'])
         self.check_element_on_page((By.ID, "add-to-shelf")).click()
@@ -233,7 +239,7 @@ class test_shelf(unittest.TestCase, ui_class):
         self.create_shelf('Delete', False)
         self.assertTrue(self.check_element_on_page((By.ID, "flash_success")))
         # add book to shelf
-        self.goto_page('nav_sort_new')
+        self.goto_page('nav_new')
         books = self.get_books_displayed()
         self.get_book_details(books[1][7]['id'])
         self.check_element_on_page((By.ID, "add-to-shelf")).click()
@@ -247,17 +253,17 @@ class test_shelf(unittest.TestCase, ui_class):
     def test_arrange_shelf(self):
         self.create_shelf('order', True)
         self.assertTrue(self.check_element_on_page((By.ID, "flash_success")))
-        self.goto_page('nav_sort_new')
+        self.goto_page('nav_new')
         books = self.get_books_displayed()
         self.get_book_details(books[1][0]['id'])
         self.check_element_on_page((By.ID, "add-to-shelf")).click()
         self.check_element_on_page((By.XPATH, "//ul[@id='add-to-shelves']/li/a[contains(.,'order')]")).click()
-        self.goto_page('nav_sort_new')
+        self.goto_page('nav_new')
         books = self.get_books_displayed()
         self.get_book_details(books[1][2]['id'])
         self.check_element_on_page((By.ID, "add-to-shelf")).click()
         self.check_element_on_page((By.XPATH, "//ul[@id='add-to-shelves']/li/a[contains(.,'order')]")).click()
-        self.goto_page('nav_sort_new')
+        self.goto_page('nav_new')
         books = self.get_books_displayed()
         self.get_book_details(books[1][4]['id'])
         self.check_element_on_page((By.ID, "add-to-shelf")).click()
@@ -280,7 +286,7 @@ class test_shelf(unittest.TestCase, ui_class):
         public.click()
         self.check_element_on_page((By.ID, "submit")).click()
         self.assertTrue(self.check_element_on_page((By.ID, "flash_success")))
-        self.goto_page('nav_sort_new')
+        self.goto_page('nav_new')
         # change public to private
         self.list_shelfs('shelf_public')[0]['ele'].click()
         edit_shelf = self.check_element_on_page((By.ID, "edit_shelf"))

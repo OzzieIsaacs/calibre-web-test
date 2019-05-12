@@ -47,38 +47,41 @@ class test_STARTTLS(unittest.TestCase, ui_class):
             pass
         shutil.rmtree(TEST_DB,ignore_errors=True)
         shutil.copytree('./Calibre_db', TEST_DB)
-        cls.p = process_open([cls.py_version, os.path.join(CALIBRE_WEB_PATH,u'cps.py')],(1),sout=None)
+        try:
+            cls.p = process_open([cls.py_version, os.path.join(CALIBRE_WEB_PATH,u'cps.py')],(1),sout=None)
 
-        # create a new Firefox session
-        cls.driver = webdriver.Firefox()
-        # time.sleep(15)
-        cls.driver.implicitly_wait(5)
-        print('Calibre-web started')
+            # create a new Firefox session
+            cls.driver = webdriver.Firefox()
+            # time.sleep(15)
+            cls.driver.implicitly_wait(5)
+            print('Calibre-web started')
 
-        cls.driver.maximize_window()
+            cls.driver.maximize_window()
 
-        # navigate to the application home page
-        cls.driver.get("http://127.0.0.1:8083")
+            # navigate to the application home page
+            cls.driver.get("http://127.0.0.1:8083")
 
-        # Wait for config screen to show up
-        cls.fill_initial_config({'config_calibre_dir':TEST_DB, 'config_converterpath':email_convert_helper.calibre_path(),
-                                 'config_ebookconverter':'converter2'})
+            # Wait for config screen to show up
+            cls.fill_initial_config({'config_calibre_dir':TEST_DB, 'config_converterpath':email_convert_helper.calibre_path(),
+                                     'config_ebookconverter':'converter2'})
 
-        # wait for cw to reboot
-        time.sleep(5)
+            # wait for cw to reboot
+            time.sleep(5)
 
-        # Wait for config screen with login button to show up
-        WebDriverWait(cls.driver, 5).until(EC.presence_of_element_located((By.NAME, "login")))
-        login_button = cls.driver.find_element_by_name("login")
-        login_button.click()
+            # Wait for config screen with login button to show up
+            WebDriverWait(cls.driver, 5).until(EC.presence_of_element_located((By.NAME, "login")))
+            login_button = cls.driver.find_element_by_name("login")
+            login_button.click()
 
-        # login
-        cls.login("admin", "admin123")
-        cls.edit_user('admin', {'email': 'a5@b.com','kindle_mail': 'a1@b.com'})
-        cls.setup_server(True, {'mail_server':'127.0.0.1', 'mail_port':'1026',
-                            'mail_use_ssl':'SSL/TLS','mail_login':'name@host.com','mail_password':'10234',
-                            'mail_from':'name@host.com'})
-
+            # login
+            cls.login("admin", "admin123")
+            cls.edit_user('admin', {'email': 'a5@b.com','kindle_mail': 'a1@b.com'})
+            cls.setup_server(True, {'mail_server':'127.0.0.1', 'mail_port':'1026',
+                                'mail_use_ssl':'SSL/TLS','mail_login':'name@host.com','mail_password':'10234',
+                                'mail_from':'name@host.com'})
+        except:
+            cls.driver.quit()
+            cls.p.terminate()
 
     @classmethod
     def tearDownClass(cls):

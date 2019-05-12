@@ -247,9 +247,9 @@ class ui_class():
         process_selects = dict()
         # special handling for checkboxes
         checkboxes = ['admin_role', 'download_role', 'upload_role', 'edit_role', 'delete_role', 'passwd_role',
-                        'edit_shelf_role', 'show_random', 'show_recent', 'show_sorted', 'show_hot', 'show_best_rated',
-                        'show_language', 'show_series', 'show_category', 'show_author', 'show_read_and_unread',
-                        'show_detail_random', 'show_mature_content', 'show_publisher']
+                        'edit_shelf_role', 'show_32', 'show_512', 'show_16', 'show_128',
+                        'show_2', 'show_4', 'show_8', 'show_64', 'show_256',
+                        'Show_detail_random', 'Show_mature_content', 'show_4096']
         options = ['config_read_column']
         selects = ['config_theme']
         # depending on elements open accordions or not
@@ -260,10 +260,10 @@ class ui_class():
         if any(key in elements for key in ['admin_role', 'download_role', 'upload_role', 'edit_role',
                                            'delete_role', 'passwd_role', 'edit_shelf_role']):
             opener.append(1)
-        if any(key in elements for key in ['show_random', 'show_recent', 'show_sorted', 'show_hot', 'show_best_rated',
-                                           'show_language', 'show_series', 'show_category', 'show_author',
-                                           'show_read_and_unread', 'show_detail_random', 'show_mature_content',
-                                           'show_publisher']):
+        if any(key in elements for key in ['show_32', 'show_512', 'show_16', 'show_128',
+                                           'show_2', 'show_4', 'show_8', 'show_64',
+                                           'show_256', 'Show_detail_random', 'Show_mature_content',
+                                           'show_4096']):
             opener.append(2)
 
         # open all necessary accordions
@@ -369,8 +369,8 @@ class ui_class():
     @classmethod
     def change_visibility_me(cls, nav_element):
         ''' All Checkboses are:
-            'show_random','show_recent', 'show_hot', 'show_best_rated', 'show_language', 'show_series',
-            'show_category', 'show_author', 'show_read_and_unread', 'show_detail_random' '''
+            'show_32','show_512', 'show_16', 'show_128', 'show_2', 'show_4',
+            'show_8', 'show_64', 'show_256', 'Show_detail_random' '''
         selects = ['locale', 'default_language']
         cls.goto_page('user_setup')
         process_selects = dict()
@@ -442,8 +442,8 @@ class ui_class():
     @classmethod
     def change_user(cls, config):
         ''' All Checkboses are:
-            'show_random','show_recent', 'show_hot', 'show_best_rated', 'show_language', 'show_series',
-            'show_category', 'show_author', 'show_read_and_unread', 'show_detail_random' '''
+            'show_32','show_512', 'show_16', 'show_128', 'show_2', 'show_4',
+            'show_8', 'show_64', 'show_256', 'Show_detail_random' '''
         selects = ['locale', 'default_language']
         text_inputs = ['kindle_mail','email', 'password', 'nickname']
         process_selects = dict()
@@ -688,9 +688,9 @@ class ui_class():
                     ret['kindle'] = all
                 else:
                     ret['kindlebtn'] = cls.driver.find_element_by_id("sendbtn")
-                    ele = dict()
-                    ele['ele'] = ele
-                    ele['link'] = ele.get_attribute('href')
+                    # ele = dict()
+                    #ele['ele'] = ele
+                    #ele['link'] = ele[0].attrib['href']
                     ret['kindle'] = list(ele)
             else:
                 ret['kindle'] = None
