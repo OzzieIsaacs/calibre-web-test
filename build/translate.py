@@ -5,6 +5,7 @@ import subprocess
 import sys
 import glob, os
 import shutil
+from config import FILEPATH
 try:
     import cPickle
 except ImportError:
@@ -24,10 +25,10 @@ def msgpack_loads(dump):
     return msgpack.unpackb(dump, ext_hook=msgpack_decoder, raw=False)
 
 # Path to calibre-web location with -> location of mo files
-if os.name == 'nt':
+'''if os.name == 'nt':
     FILEPATH="D:\\Desktop\\calibre-web\\"
 else:
-    FILEPATH=os.path.abspath("./../../calibre-web/") + '/'
+    FILEPATH=os.path.abspath("./../../calibre-web/") + '/'''
 
 need_iso = msgpack_loads(open('iso639.pickle', 'rb').read())
 
