@@ -21,7 +21,8 @@ def process_open(command, quotes=[], env=None, sout=subprocess.PIPE):
             exc_command = exc_command.encode(sys.getfilesystemencoding())
     else:
         if sys.version_info < (3, 0):
-            exc_command = [x.encode(sys.getfilesystemencoding()) for x in command]
+            exc_command = [x for x in command]
+            # exc_command = [x.encode(sys.getfilesystemencoding()) for x in command]
         else:
             exc_command = [x for x in command]
 

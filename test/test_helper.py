@@ -1,14 +1,14 @@
 #!/usr/bin/env python
 # -*- coding: utf-8 -*-
 
-import testconfig
+# import testconfig
 import os
 import sys
 import unittest
 from testconfig import CALIBRE_WEB_PATH
 
 # Insert local directories into path
-sys.path.insert(0, os.path.join(CALIBRE_WEB_PATH, 'cps'))
+# sys.path.insert(0, os.path.join(CALIBRE_WEB_PATH, 'cps'))
 sys.path.append(CALIBRE_WEB_PATH)
 # sys.path.insert(0, os.path.join(CALIBRE_WEB_PATH, 'vendor'))
 
@@ -18,7 +18,7 @@ class calibre_helper(unittest.TestCase):
     @classmethod
     def setUpClass(cls):
         global helper
-        import helper
+        from cps import helper
 
     def test_check_high23(self):
         self.assertEqual(helper.get_valid_filename(u'²³'), u'23')
@@ -73,6 +73,6 @@ class calibre_helper(unittest.TestCase):
     def tearDownClass(cls):
         global helper
         helper.global_WorkerThread.stop()
-        del sys.modules["helper"]
+        del sys.modules["cps.helper"]
         del helper
 

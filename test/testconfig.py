@@ -2,9 +2,16 @@
 # -*- coding: utf-8 -*-
 
 import os
+import sys
 
 base_path = os.path.dirname(os.path.abspath(__file__))
 
-SELENIUM_SERVER = os.path.join(base_path, '..', 'selenium', 'selenium-server-standalone-3.14.0.jar')
+SELENIUM_SERVER = os.path.join(base_path, '..', 'selenium', 'selenium-server-standalone-3.141.59.jar')
 CALIBRE_WEB_PATH = os.path.abspath(os.path.join(base_path, '..', '..', 'calibre-web'))
-TEST_DB = os.path.abspath(os.path.join(base_path, '..', '..', 'Dokumente', 'tüst db')).decode('UTF-8')
+if sys.version_info < (3, 0):
+    TEST_DB = os.path.abspath(os.path.join(base_path, '..', '..', 'Dokumente', 'tüst db')).decode('UTF-8')
+else:
+    TEST_DB = os.path.abspath(os.path.join(base_path, '..', '..', 'Dokumente', 'tüst db'))
+
+# Boottime in seconds
+BOOT_TIME = 7

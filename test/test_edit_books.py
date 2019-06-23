@@ -12,17 +12,17 @@ import time
 import shutil
 from ui_helper import ui_class
 from subproc_wrapper import process_open
-from testconfig import CALIBRE_WEB_PATH, TEST_DB
+from testconfig import CALIBRE_WEB_PATH, TEST_DB, BOOT_TIME
 from parameterized import parameterized_class
 
-@parameterized_class([
+'''@parameterized_class([
    { "py_version": u'python'},
    { "py_version": u'python3'},
-],names=('Python27','Python36'))
+],names=('Python27','Python36'))'''
 class test_edit_books(TestCase, ui_class):
     p=None
     driver = None
-    # py_version = 'python'
+    py_version = 'python'
 
     @classmethod
     def setUpClass(cls):
@@ -38,7 +38,7 @@ class test_edit_books(TestCase, ui_class):
             # create a new Firefox session
             cls.driver = webdriver.Firefox()
             # time.sleep(15)
-            cls.driver.implicitly_wait(5)
+            cls.driver.implicitly_wait(BOOT_TIME)
             print('Calibre-web started')
 
             cls.driver.maximize_window()
@@ -50,7 +50,7 @@ class test_edit_books(TestCase, ui_class):
             cls.fill_initial_config({'config_calibre_dir':TEST_DB})
 
             # wait for cw to reboot
-            time.sleep(5)
+            time.sleep(BOOT_TIME)
 
             # Wait for config screen with login button to show up
             WebDriverWait(cls.driver, 5).until(EC.presence_of_element_located((By.NAME, "login")))
@@ -70,6 +70,7 @@ class test_edit_books(TestCase, ui_class):
         # close the browser window and stop calibre-web
         cls.driver.quit()
         cls.p.terminate()
+        cls.p.kill()
 
     # goto Book 1
     # Change Title with unicode chars

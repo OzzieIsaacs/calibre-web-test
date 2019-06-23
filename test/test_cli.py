@@ -10,8 +10,9 @@ import time
 import shutil
 from ui_helper import ui_class
 from subproc_wrapper import process_open
-from testconfig import CALIBRE_WEB_PATH, TEST_DB
+from testconfig import CALIBRE_WEB_PATH, TEST_DB, BOOT_TIME
 import re
+import sys
 
 from parameterized import parameterized_class
 
@@ -41,7 +42,10 @@ class test_cli(unittest.TestCase, ui_class):
     def tearDownClass(cls):
         # close the browser window
         cls.driver.quit()
-        os.remove(os.path.join(CALIBRE_WEB_PATH, 'app.db'))
+        try:
+            os.remove(os.path.join(CALIBRE_WEB_PATH, 'app.db'))
+        except:
+            pass
 
     def test_cli_different_folder(self):
         os.chdir(CALIBRE_WEB_PATH)
@@ -57,7 +61,7 @@ class test_cli(unittest.TestCase, ui_class):
             self.fill_initial_config({'config_calibre_dir':TEST_DB})
 
             # wait for cw to reboot
-            time.sleep(5)
+            time.sleep(BOOT_TIME)
 
             # Wait for config screen with login button to show up
             login_button = self.check_element_on_page((By.NAME, "login"))
@@ -74,9 +78,11 @@ class test_cli(unittest.TestCase, ui_class):
 
 
     def test_cli_different_settings_database(self):
-        new_db = os.path.join(CALIBRE_WEB_PATH,"hü go.app")
+        new_db = os.path.join(CALIBRE_WEB_PATH, 'hü go.app')  # .decode('UTF-8')
+        if sys.version_info < (3, 0):
+            new_db.decode('UTF-8')
         self.p = process_open([self.py_version, os.path.join(CALIBRE_WEB_PATH,u'cps.py'),
-                        '-p', new_db.decode('UTF-8')],(1,3))
+                        '-p', new_db], (1,3))
 
         time.sleep(15)
         # navigate to the application home page
@@ -86,7 +92,7 @@ class test_cli(unittest.TestCase, ui_class):
         self.fill_initial_config({'config_calibre_dir':TEST_DB})
 
         # wait for cw to reboot
-        time.sleep(5)
+        time.sleep(BOOT_TIME)
 
         # Wait for config screen with login button to show up
         login_button = self.check_element_on_page((By.NAME, "login"))
@@ -101,8 +107,11 @@ class test_cli(unittest.TestCase, ui_class):
         shutil.rmtree(os.path.join(CALIBRE_WEB_PATH, 'hü lo'), ignore_errors=True)
         path_like_file = CALIBRE_WEB_PATH
         only_path = CALIBRE_WEB_PATH + os.sep
-        real_key_file = os.path.join(CALIBRE_WEB_PATH, 'hü lo', 'lö g.key').decode('UTF-8')
-        real_crt_file = os.path.join(CALIBRE_WEB_PATH, 'hü lo', 'lö g.crt').decode('UTF-8')
+        real_key_file = os.path.join(CALIBRE_WEB_PATH, 'hü lo', 'lö g.key') # .decode('UTF-8')
+        real_crt_file = os.path.join(CALIBRE_WEB_PATH, 'hü lo', 'lö g.crt') # .decode('UTF-8')
+        if sys.version_info < (3, 0):
+            real_key_file = real_key_file.decode('UTF-8')
+            real_crt_file = real_crt_file.decode('UTF-8')
 
         p = process_open([self.py_version, os.path.join(CALIBRE_WEB_PATH,u'cps.py'),
                         '-c', path_like_file],(1,3))
@@ -189,8 +198,11 @@ class test_cli(unittest.TestCase, ui_class):
         p.kill()
         shutil.rmtree(os.path.join(CALIBRE_WEB_PATH, 'hü lo'), ignore_errors=True)
         shutil.copytree('./SSL', os.path.join(CALIBRE_WEB_PATH, 'hü lo'))
-        real_crt_file = os.path.join(CALIBRE_WEB_PATH, 'hü lo', 'ssl.crt').decode('UTF-8')
-        real_key_file = os.path.join(CALIBRE_WEB_PATH, 'hü lo', 'ssl.key').decode('UTF-8')
+        real_crt_file = os.path.join(CALIBRE_WEB_PATH, 'hü lo', 'ssl.crt') # .decode('UTF-8')
+        real_key_file = os.path.join(CALIBRE_WEB_PATH, 'hü lo', 'ssl.key') # .decode('UTF-8')
+        if sys.version_info < (3, 0):
+            real_crt_file = real_crt_file.decode('UTF-8')
+            real_key_file = real_key_file.decode('UTF-8')
         p = process_open([self.py_version, os.path.join(CALIBRE_WEB_PATH,u'cps.py'),
                         '-c', real_crt_file, '-k', real_key_file],(1,3,5))
         if p.poll() is not None:
@@ -234,9 +246,9 @@ class test_cli(unittest.TestCase, ui_class):
     def test_already_started(self):
         os.chdir(CALIBRE_WEB_PATH)
         p1 = process_open([self.py_version, u'cps.py'], (1))
-        time.sleep(5)
+        time.sleep(BOOT_TIME)
         p2 = process_open([self.py_version, u'cps.py'], (1))
-        time.sleep(5)
+        time.sleep(BOOT_TIME)
         result = p2.poll()
         if result is None:
             p2.kill()

@@ -51,6 +51,8 @@ shutil.move('./src/calibreweb/__init__.py','./cps.py')
 shutil.move('./src/calibreweb/cps','.')
 print('Deleting "src" directory')
 shutil.rmtree('src', ignore_errors=True)
+print('Deleting "build" directory')
+shutil.rmtree('build', ignore_errors=True)
 os.chdir(workdir)
 
 # twine upload --repository-url https://test.pypi.org/legacy/ dist/*

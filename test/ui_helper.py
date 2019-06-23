@@ -677,7 +677,7 @@ class ui_class():
             del_shelf = tree.findall("//*[@id='remove-from-shelves']//a")
             ret['del_shelf'] = [sh.text.strip().lstrip() for sh in del_shelf]
 
-            ret['edit_enable'] = bool(tree.find("//*[@class='glyphicon glyphicon-edit']"))
+            ret['edit_enable'] = tree.find("//*[@class='glyphicon glyphicon-edit']") is not None
 
             ele = tree.xpath("//*[starts-with(@id,'sendbtn')]")
             # bk['ele'] = cls.check_element_on_page((By.XPATH, "//a[@href='" + bk['link'] + "']/img"))
@@ -706,7 +706,7 @@ class ui_class():
             else:
                 ret['download'] = [d.text for d in download1]
 
-            ret['read']= bool(tree.find("//*[@id='have_read_cb']"))
+            ret['read']= tree.find("//*[@id='have_read_cb']") is not None
 
             series = tree.xpath("//*[contains(@href,'series')]/ancestor::p")
             if series:
@@ -716,15 +716,29 @@ class ui_class():
                     ret['series_all'] += ele.text
                     ret['series'] = ele.text
 
-            cust_columns = tree.xpath("//div[@class='custom_columns']")
-            if len(cust_columns) == 2:      # we have custom columns
+            cust_columns = tree.xpath("//div[@class='real_custom_columns']")
+            if len(cust_columns) :      # we have custom columns
                 ret['cust_columns']=list()
+                for col in cust_columns: # .getchildren()[0].getchildren()[1:]:
+                    element = dict()
+                    if len(col.text.strip()):
+                        if len(col.getchildren()):
+                            element['Text'] = col.text.lstrip().split(':')[0]
+                            element['value'] = col.getchildren()[0].attrib['class'][20:]
+                            ret['cust_columns'].append(element)
+                        elif ':' in col.text:
+                            element['Text'] = col.text.lstrip().split(':')[0]
+                            element['value'] = col.text.split(':')[1].strip()
+                            ret['cust_columns'].append(element)
+                        else:
+                            pass
 
-                if len(cust_columns[0].getchildren()[0].getchildren()):
+
+                '''if len(cust_columns[0].getchildren()): # [0].getchildren()):
                     first_element = dict()
-                    if cust_columns[0].getchildren()[0].getchildren()[0].tag == 'span':
-                        first_element['Text'] = cust_columns[0].getchildren()[0].getchildren()[0].getparent().text.lstrip().split(':')[0]
-                        first_element['value'] = cust_columns[0].getchildren()[0].getchildren()[0].attrib['class'][20:]
+                    if cust_columns[0].getchildren()[0].tag == 'span':
+                        first_element['Text'] = cust_columns[0].getchildren()[0].getparent().text.lstrip().split(':')[0]
+                        first_element['value'] = cust_columns[0].getchildren()[0].attrib['class'][20:]
                         ret['cust_columns'].append(first_element)
                     elif ':' in cust_columns[0].getchildren()[0].text:
                         first_element['Text'] = cust_columns[0].getchildren()[0].text.lstrip().split(':')[0]
@@ -743,7 +757,7 @@ class ui_class():
                             element['value'] = col.tail.split(':')[1].strip()
                             ret['cust_columns'].append(element)
                         else:
-                            pass
+                            pass'''
 
             # cover type
 

@@ -12,7 +12,7 @@ import time
 import shutil
 from ui_helper import ui_class
 from subproc_wrapper import process_open
-from testconfig import CALIBRE_WEB_PATH, TEST_DB
+from testconfig import CALIBRE_WEB_PATH, TEST_DB, BOOT_TIME
 from email_convert_helper import Gevent_SMPTPServer, CredentialValidator
 import email_convert_helper
 from parameterized import parameterized_class
@@ -52,7 +52,7 @@ class test_ebook_convert(unittest.TestCase, ui_class):
             # create a new Firefox session
             cls.driver = webdriver.Firefox()
             # time.sleep(15)
-            cls.driver.implicitly_wait(5)
+            cls.driver.implicitly_wait(BOOT_TIME)
             print('Calibre-web started')
 
             cls.driver.maximize_window()
@@ -65,7 +65,7 @@ class test_ebook_convert(unittest.TestCase, ui_class):
                                      'config_ebookconverter':'converter2'})
 
             # wait for cw to reboot
-            time.sleep(5)
+            time.sleep(BOOT_TIME)
 
             # Wait for config screen with login button to show up
             WebDriverWait(cls.driver, 5).until(EC.presence_of_element_located((By.NAME, "login")))
@@ -89,6 +89,7 @@ class test_ebook_convert(unittest.TestCase, ui_class):
         cls.p.terminate()
         cls.email_server.stop()
         time.sleep(2)
+        cls.p.kill()
 
     def tearDown(self):
         if not self.check_user_logged_in('admin'):
@@ -160,8 +161,9 @@ class test_ebook_convert(unittest.TestCase, ui_class):
                 if ret[-1]['result'] ==  'Finished' or ret[-1]['result'] ==  'Failed':
                     break
             i += 1
-        self.assertEqual(len(ret)-2,task_len)
-        self.assertEqual(ret[-2]['result'], 'Failed')
+        self.assertEqual(len(ret),(task_len+2) % 20)
+        if ret > 1:
+            self.assertEqual(ret[-2]['result'], 'Failed')
         self.assertEqual(ret[-1]['result'], 'Failed')
         self.fill_basic_config({'config_converterpath': email_convert_helper.calibre_path()})
 
