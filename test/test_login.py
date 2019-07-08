@@ -242,7 +242,7 @@ class test_login(unittest.TestCase, ui_class):
         self.logout()
         self.assertTrue(self.login('kapital',u'Kß ü执'))
         self.logout()
-        self.assertFalse(self.login('KaPiTaL',u'kß ü执'))
+        self.assertFalse(self.login('KaPiTaL', u'kß ü执'))
 
     # login with admin
     # create new user (unicode characters), passwort with spaces at begining

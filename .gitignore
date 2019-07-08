@@ -27,6 +27,5 @@ build/translations/*.po
 build/example_tasks.txt
 build/hints.txt
 build/iso639.pickle
-test/Calibre_db/
 selenium
 

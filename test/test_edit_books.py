@@ -15,14 +15,14 @@ from subproc_wrapper import process_open
 from testconfig import CALIBRE_WEB_PATH, TEST_DB, BOOT_TIME
 from parameterized import parameterized_class
 
-'''@parameterized_class([
+@parameterized_class([
    { "py_version": u'python'},
    { "py_version": u'python3'},
-],names=('Python27','Python36'))'''
+],names=('Python27','Python36'))
 class test_edit_books(TestCase, ui_class):
     p=None
     driver = None
-    py_version = 'python'
+    # py_version = 'python'
 
     @classmethod
     def setUpClass(cls):
