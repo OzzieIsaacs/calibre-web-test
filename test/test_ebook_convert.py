@@ -17,16 +17,16 @@ from email_convert_helper import Gevent_SMPTPServer, CredentialValidator
 import email_convert_helper
 from parameterized import parameterized_class
 
-'''@parameterized_class([
+@parameterized_class([
    { "py_version": u'python'},
    { "py_version": u'python3'},
-],names=('Python27','Python36'))'''
+],names=('Python27','Python36'))
 @unittest.skipIf(email_convert_helper.is_calibre_not_present(),"Skipping convert, calibre not found")
 class test_ebook_convert(unittest.TestCase, ui_class):
     p=None
     driver = None
     email_server = None
-    py_version = 'python'
+    # py_version = 'python'
 
     @classmethod
     def setUpClass(cls):
