@@ -38,7 +38,7 @@ if __name__ == '__main__':
     # open the report file
     outfile = open(os.path.join(CALIBRE_WEB_PATH,'test',"Calibre-Web TestSummary.html"), "w")
     # configure HTMLTestRunner options
-    runner = HTMLTestRunner.HTMLTestRunner(stream=outfile, title='Test Report', description='All Calibre-Web tests')
+    runner = HTMLTestRunner.HTMLTestRunner(stream=outfile, title='Test Report', description='All Calibre-Web tests', verbosity=2)
     # run the suite using HTMLTestRunner
     runner.run(all_tests)
     print("\nAll tests finished, please check testresults")

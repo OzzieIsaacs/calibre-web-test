@@ -12,10 +12,14 @@ import shutil
 from ui_helper import ui_class
 from subproc_wrapper import process_open
 from testconfig import CALIBRE_WEB_PATH, TEST_DB, BOOT_TIME
-
+from parameterized import parameterized_class
 # test editing books on gdrive
 
 
+@parameterized_class([
+   { "py_version": u'python'},
+   { "py_version": u'python3'},
+],names=('Python27','Python36'))
 class test_edit_books_gdrive(unittest.TestCase, ui_class):
     p=None
     driver = None

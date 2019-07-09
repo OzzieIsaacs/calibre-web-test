@@ -16,6 +16,7 @@ from testconfig import CALIBRE_WEB_PATH, TEST_DB, BOOT_TIME
 from email_convert_helper import Gevent_SMPTPServer, CredentialValidator
 import email_convert_helper
 from parameterized import parameterized_class
+from func_helper import startup
 
 @parameterized_class([
    { "py_version": u'python'},
@@ -40,41 +41,11 @@ class test_STARTTLS(unittest.TestCase, ui_class):
             timeout=10
         )
         cls.email_server.start()
-
         try:
-            os.remove(os.path.join(CALIBRE_WEB_PATH,'app.db'))
-        except:
-            pass
-        shutil.rmtree(TEST_DB,ignore_errors=True)
-        shutil.copytree('./Calibre_db', TEST_DB)
-        try:
-            cls.p = process_open([cls.py_version, os.path.join(CALIBRE_WEB_PATH,u'cps.py')],(1),sout=None)
+            startup(cls, cls.py_version, {'config_calibre_dir':TEST_DB,
+                                          'config_converterpath':email_convert_helper.calibre_path(),
+                                          'config_ebookconverter':'converter2'})
 
-            # create a new Firefox session
-            cls.driver = webdriver.Firefox()
-            # time.sleep(15)
-            cls.driver.implicitly_wait(BOOT_TIME)
-            print('Calibre-web started')
-
-            cls.driver.maximize_window()
-
-            # navigate to the application home page
-            cls.driver.get("http://127.0.0.1:8083")
-
-            # Wait for config screen to show up
-            cls.fill_initial_config({'config_calibre_dir':TEST_DB, 'config_converterpath':email_convert_helper.calibre_path(),
-                                     'config_ebookconverter':'converter2'})
-
-            # wait for cw to reboot
-            time.sleep(BOOT_TIME)
-
-            # Wait for config screen with login button to show up
-            WebDriverWait(cls.driver, 5).until(EC.presence_of_element_located((By.NAME, "login")))
-            login_button = cls.driver.find_element_by_name("login")
-            login_button.click()
-
-            # login
-            cls.login("admin", "admin123")
             cls.edit_user('admin', {'email': 'a5@b.com','kindle_mail': 'a1@b.com'})
             cls.setup_server(True, {'mail_server':'127.0.0.1', 'mail_port':'1026',
                                 'mail_use_ssl':'SSL/TLS','mail_login':'name@host.com','mail_password':'10234',
@@ -90,7 +61,6 @@ class test_STARTTLS(unittest.TestCase, ui_class):
         cls.p.terminate()
         cls.email_server.stop()
         time.sleep(2)
-
 
     # start sending e-mail
     # check email received

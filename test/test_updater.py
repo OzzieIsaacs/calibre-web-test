@@ -12,6 +12,7 @@ import shutil
 from ui_helper import ui_class
 from subproc_wrapper import process_open
 from testconfig import CALIBRE_WEB_PATH, TEST_DB, BOOT_TIME
+from func_helper import startup
 
 '''
 use mitmproxy
@@ -24,39 +25,7 @@ class test_updater(unittest.TestCase, ui_class):
 
     @classmethod
     def setUpClass(cls):
-        try:
-            os.remove(os.path.join(CALIBRE_WEB_PATH,'app.db'))
-        except:
-            pass
-        shutil.rmtree(TEST_DB,ignore_errors=True)
-        shutil.copytree('./Calibre_db', TEST_DB)
-        cls.p = process_open([u"python", os.path.join(CALIBRE_WEB_PATH,u'cps.py')],(1))
-
-        # create a new Firefox session
-        cls.driver = webdriver.Firefox()
-        # time.sleep(15)
-        cls.driver.implicitly_wait(BOOT_TIME)
-        print('Calibre-web started')
-
-        cls.driver.maximize_window()
-
-        # navigate to the application home page
-        cls.driver.get("http://127.0.0.1:8083")
-
-        # Wait for config screen to show up
-        cls.fill_initial_config({'config_calibre_dir':TEST_DB})
-
-        # wait for cw to reboot
-        time.sleep(BOOT_TIME)
-
-        # Wait for config screen with login button to show up
-        WebDriverWait(cls.driver, 5).until(EC.presence_of_element_located((By.NAME, "login")))
-        login_button = cls.driver.find_element_by_name("login")
-        login_button.click()
-
-        # login
-        cls.login("admin", "admin123")
-
+        startup(cls, cls.py_version,{'config_calibre_dir':TEST_DB})
 
     @classmethod
     def tearDownClass(cls):
