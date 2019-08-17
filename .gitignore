@@ -26,6 +26,7 @@ tags
 build/translations/*.po
 build/example_tasks.txt
 build/hints.txt
+build/iso639.calibre_msgpack
 build/iso639.pickle
 selenium
 

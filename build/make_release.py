@@ -87,4 +87,5 @@ shutil.rmtree('build', ignore_errors=True)
 os.chdir(workdir)
 
 # twine upload --repository-url https://test.pypi.org/legacy/ dist/*
-# pip install --user --index-url https://test.pypi.org/simple/ --extra-index-url https://pypi.org/simple calibre-web
+# works with pip 19.1.1:
+# pip install --user --index-url https://test.pypi.org/simple/ --extra-index-url https://pypi.org/simple calibreweb
