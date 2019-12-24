@@ -572,7 +572,7 @@ class ui_class():
 
         tree = lxml.etree.parse(StringIO(html), parser)
         books_rand = list()
-        br = tree.xpath("//*[@class='discover']/div/div")
+        br = tree.xpath("//*[@class='discover random-books']/div/div")
         for book_rand in br:
             ele = book_rand.getchildren()
             meta=ele[1].getchildren()
@@ -580,7 +580,7 @@ class ui_class():
             book_r['link'] = ele[0].getchildren()[0].attrib['href']
             book_r['ele'] = cls.check_element_on_page((By.XPATH,"//a[@href='"+book_r['link']+"']/img"))
             book_r['id'] = book_r['link'][6:]
-            book_r['title']= meta[0].text
+            book_r['title']= meta[0].getchildren()[0].text
             authors = meta[1].getchildren()
             book_r['author'] = [a.text for a in authors]
             if len(meta) == 3:
@@ -601,7 +601,7 @@ class ui_class():
             bk['link'] = ele[0].getchildren()[0].attrib['href']
             bk['id'] = bk['link'][6:]
             bk['ele'] = cls.check_element_on_page((By.XPATH,"//a[@href='"+bk['link']+"']/img"))
-            bk['title']= meta[0].text
+            bk['title']= meta[0].getchildren()[0].text
             authors = meta[1].getchildren()
             bk['author'] = [a.text for a in authors]
             if len(meta) == 3:

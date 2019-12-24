@@ -33,7 +33,7 @@ An RFC 2821 smtp proxy server port from Python Standrad Library for Gevent usage
 # - handle error codes from the backend smtpd
 
 import logging
-import log
+from . import log
 import ssl
 from ssl import CERT_NONE
 from .channel import SMTPChannel
@@ -70,7 +70,7 @@ class SSLSettings(UserDict):
         :param keyfile: SSL key file path usally end with ".key"
         :param certfile: SSL cert file path usally end with ".crt"
         """
-        UserDict.__init__(self) 
+        UserDict.__init__(self)
         self.data.update( dict(keyfile = keyfile,
                                 certfile = certfile,
                                 server_side = True,
@@ -86,7 +86,7 @@ class SMTPServer(StreamServer):
     """Abstrcted SMTP server
     """
 
-    def __init__(self, localaddr=None, remoteaddr=None, 
+    def __init__(self, localaddr=None, remoteaddr=None,
                  timeout=60, data_size_limit=10240000, only_ssl = False, credential_validator=None, **kwargs):
         """Initialize SMTP Server
 
@@ -126,7 +126,7 @@ class SMTPServer(StreamServer):
 
         if self.relay and not addr[0] in self.remoteaddr:
             logger.debug('Not in remoteaddr', *addr[:2])
-            return 
+            return
         try:
             with Timeout(self.timeout, ConnectionTimeout):
                 sc = SMTPChannel(self, sock, addr, self.data_size_limit, self.credential_validator, self.only_ssl)
@@ -162,7 +162,7 @@ class SMTPServer(StreamServer):
 
         """
         raise NotImplementedError
-    
+
     # API that handle rcpt
     def process_rcpt(self, address):
         """Override this abstract method to handle rcpt from the client

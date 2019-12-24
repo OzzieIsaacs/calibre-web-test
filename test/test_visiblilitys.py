@@ -24,8 +24,8 @@ ergebnis zu shelf hinzufügen (kein ergebnis vorhanden, public shelf, private sh
 
 
 @parameterized_class([
-   { "py_version": u'python'},
-   { "py_version": u'python3'},
+   { "py_version": u'/usr/bin/python'},
+   { "py_version": u'/usr/bin/python3'},
 ],names=('Python27','Python36'))
 class calibre_web_visibilitys(unittest.TestCase, ui_class):
 
@@ -39,13 +39,13 @@ class calibre_web_visibilitys(unittest.TestCase, ui_class):
             time.sleep(3)
         except:
             cls.driver.quit()
-            cls.p.terminate()
+            cls.p.kill()
 
     @classmethod
     def tearDownClass(cls):
         # close the browser window and stop calibre-web
         cls.driver.quit()
-        cls.p.terminate()
+        cls.p.kill()
 
     def setUp(self):
         print('alfa')

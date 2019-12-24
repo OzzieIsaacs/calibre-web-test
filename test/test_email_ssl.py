@@ -20,8 +20,8 @@ from parameterized import parameterized_class
 from func_helper import startup
 
 @parameterized_class([
-   { "py_version": u'python','LOG_LEVEL':'DEBUG'},
-   { "py_version": u'python3','LOG_LEVEL':'DEBUG'},
+   { "py_version": u'/usr/bin/python','LOG_LEVEL':'DEBUG'},
+   { "py_version": u'/usr/bin/python3','LOG_LEVEL':'DEBUG'},
 ],names=('Python27','Python36'))
 @unittest.skipIf(email_convert_helper.is_calibre_not_present(),"Skipping convert, calibre not found")
 class test_SSL(unittest.TestCase, ui_class):
@@ -67,7 +67,7 @@ class test_SSL(unittest.TestCase, ui_class):
     def tearDownClass(cls):
         # close the browser window and stop calibre-web
         cls.driver.quit()
-        cls.p.terminate()
+        cls.p.kill()
         cls.email_server.stop()
         time.sleep(2)
 

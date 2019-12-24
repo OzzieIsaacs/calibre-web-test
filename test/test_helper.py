@@ -72,7 +72,7 @@ class calibre_helper(unittest.TestCase):
     @classmethod
     def tearDownClass(cls):
         global helper
-        helper.global_WorkerThread.stop()
+        # helper.global_WorkerThread.stop()
         del sys.modules["cps.helper"]
         del helper
 

@@ -16,13 +16,12 @@ from testconfig import CALIBRE_WEB_PATH, TEST_DB, BOOT_TIME
 from parameterized import parameterized_class
 
 @parameterized_class([
-   { "py_version": u'python'},
-   { "py_version": u'python3'},
+   { "py_version": u'/usr/bin/python'},
+   { "py_version": u'/usr/bin/python3'},
 ],names=('Python27','Python36'))
 class test_user_template(unittest.TestCase, ui_class):
     p=None
     driver = None
-    # py_version = "python"
 
     @classmethod
     def setUpClass(cls):
@@ -61,7 +60,7 @@ class test_user_template(unittest.TestCase, ui_class):
             cls.login("admin", "admin123")
         except:
             cls.driver.quit()
-            cls.p.terminate()
+            cls.p.kill()
 
 
     @classmethod

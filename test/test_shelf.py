@@ -17,8 +17,8 @@ from parameterized import parameterized_class
 from func_helper import startup
 
 @parameterized_class([
-   { "py_version": u'python'},
-   { "py_version": u'python3'},
+   { "py_version": u'/usr/bin/python'},
+   { "py_version": u'/usr/bin/python3'},
 ],names=('Python27','Python36'))
 class test_shelf(unittest.TestCase, ui_class):
     p=None
@@ -35,13 +35,13 @@ class test_shelf(unittest.TestCase, ui_class):
             if is_port_in_use(8083):
                 print('port in use')
             cls.driver.quit()
-            cls.p.terminate()
+            cls.p.kill()
 
     @classmethod
     def tearDownClass(cls):
         # close the browser window and stop calibre-web
         cls.driver.quit()
-        cls.p.terminate()
+        cls.p.kill()
 
     def tearDown(self):
         if not self.check_user_logged_in('admin'):

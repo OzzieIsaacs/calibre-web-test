@@ -19,8 +19,8 @@ from parameterized import parameterized_class
 from func_helper import startup
 
 @parameterized_class([
-   { "py_version": u'python'},
-   { "py_version": u'python3'},
+   { "py_version": u'/usr/bin/python'},
+   { "py_version": u'/usr/bin/python3'},
 ],names=('Python27','Python36'))
 @unittest.skipIf(email_convert_helper.is_calibre_not_present(),"Skipping convert, calibre not found")
 class test_STARTTLS(unittest.TestCase, ui_class):
@@ -52,13 +52,13 @@ class test_STARTTLS(unittest.TestCase, ui_class):
                                 'mail_from':'name@host.com'})
         except:
             cls.driver.quit()
-            cls.p.terminate()
+            cls.p.kill()
 
     @classmethod
     def tearDownClass(cls):
         # close the browser window and stop calibre-web
         cls.driver.quit()
-        cls.p.terminate()
+        cls.p.kill()
         cls.email_server.stop()
         time.sleep(2)
 

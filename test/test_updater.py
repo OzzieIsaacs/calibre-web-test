@@ -13,12 +13,16 @@ from ui_helper import ui_class
 from subproc_wrapper import process_open
 from testconfig import CALIBRE_WEB_PATH, TEST_DB, BOOT_TIME
 from func_helper import startup
+from parameterized import parameterized_class
 
 '''
 use mitmproxy
 Test update add updateerrors
 '''
-
+@parameterized_class([
+   { "py_version": u'/usr/bin/python'},
+   { "py_version": u'/usr/bin/python3'}]
+    ,names=('Python27','Python36'))
 class test_updater(unittest.TestCase, ui_class):
     p=None
     driver = None

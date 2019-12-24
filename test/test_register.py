@@ -20,8 +20,8 @@ use secure smtp
 '''
 
 @parameterized_class([
-   { "py_version": u'python'},
-   { "py_version": u'python3'},
+   { "py_version": u'/usr/bin/python'},
+   { "py_version": u'/usr/bin/python3'},
 ],names=('Python27','Python36'))
 class test_register(unittest.TestCase, ui_class):
     p=None
@@ -35,7 +35,7 @@ class test_register(unittest.TestCase, ui_class):
     def tearDownClass(cls):
         # close the browser window and stop calibre-web
         cls.driver.quit()
-        cls.p.terminate()
+        cls.p.kill()
 
     def tearDown(self):
         if not self.check_user_logged_in('admin'):

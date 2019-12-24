@@ -375,7 +375,7 @@ class _TestResult(TestResult):
         if self.verbosity > 1:
             sys.stdout.write('failed  ')
             if hasattr(test, 'py_version'):
-                sys.stdout.write("%s - %s: %s (%s)" % (test.py_version, test._testMethodName, test.__module__))
+                sys.stdout.write("%s - %s (%s)" % (test.py_version, test._testMethodName, test.__module__))
             else:
                 sys.stdout.write(str(test))
             sys.stdout.write('\n')

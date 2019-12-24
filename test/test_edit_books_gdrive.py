@@ -17,8 +17,8 @@ from parameterized import parameterized_class
 
 
 @parameterized_class([
-   { "py_version": u'python'},
-   { "py_version": u'python3'},
+   { "py_version": u'/usr/bin/python'},
+   { "py_version": u'/usr/bin/python3'}
 ],names=('Python27','Python36'))
 class test_edit_books_gdrive(unittest.TestCase, ui_class):
     p=None

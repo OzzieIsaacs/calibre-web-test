@@ -19,13 +19,13 @@ from parameterized import parameterized_class
 
 
 @parameterized_class([
-   { "py_version": u'python'},
-   { "py_version": u'python3'},
+   { "py_version": u'/usr/bin/python'},
+   { "py_version": u'/usr/bin/python3'},
 ],names=('Python27','Python36'))
 class test_login(unittest.TestCase, ui_class):
     p=None
     driver = None
-    # py_version = 'python'
+    #py_version = u'/usr/bin/python'
 
     @classmethod
     def setUpClass(cls):
@@ -33,14 +33,14 @@ class test_login(unittest.TestCase, ui_class):
             startup(cls, cls.py_version, {'config_calibre_dir':TEST_DB}, login=False)
         except:
             cls.driver.quit()
-            cls.p.terminate()
+            cls.p.kill()
 
 
     @classmethod
     def tearDownClass(cls):
         # close the browser window and stop calibre-web
         cls.driver.quit()
-        cls.p.terminate()
+        cls.p.kill()
 
     def tearDown(self):
         if self.check_user_logged_in('', True):
@@ -53,11 +53,11 @@ class test_login(unittest.TestCase, ui_class):
             return re.findall('Reached error page: about:neterror?e=connectionFailure', e.msg)
         if self.driver.title == u'500 Internal server error':
             return 2
-        elif self.driver.title == u'Calibre-Web | HTTP Error (403)':
+        elif self.driver.title == u'Calibre-Web | HTTP Error (Error 403)':
             return 2
-        elif self.driver.title == u'Calibre-Web | HTTP Error (404)':
+        elif self.driver.title == u'Calibre-Web | HTTP Error (Error 404)':
             return 2
-        elif self.driver.title == u'Calibre-Web | HTTP Error (405)':
+        elif self.driver.title == u'Calibre-Web | HTTP Error (Error 405)':
             return 2
         elif self.driver.title == u'Calibre-Web | login':
             return 1
@@ -156,7 +156,7 @@ class test_login(unittest.TestCase, ui_class):
         self.assertEqual(self.fail_access_page("http://127.0.0.1:8083/show/1/epub"),1)
         self.assertEqual(self.fail_access_page("http://127.0.0.1:8083/read/1/epub"),1)
         self.assertEqual(self.fail_access_page("http://127.0.0.1:8083/download/1/epub"),1)
-        self.assertEqual(self.fail_access_page("http://127.0.0.1:8083/download/1/epub/name"),1)
+        self.assertEqual(self.fail_access_page("http://127.0.0.1:8083/download/1/epub/name"),2)
         self.assertEqual(self.fail_access_page("http://127.0.0.1:8083/register"),2)
         self.assertEqual(self.fail_access_page("http://127.0.0.1:8083/logout"),1)
         self.assertEqual(self.fail_access_page("http://127.0.0.1:8083/remote_login"),2)
