@@ -60,5 +60,13 @@ def startup(inst, pyVersion, config, login=True):
     if login:
         inst.login("admin", "admin123")
 
+def wait_Email_received(func):
+    i = 0
+    while i < 10:
+        if func():
+            return True
+        time.sleep(2)
+        i += 1
+    return False
 
 

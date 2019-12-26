@@ -1,8 +1,6 @@
 #!/usr/bin/env python
 # -*- coding: utf-8 -*-
 
-# import testconfig
-import os
 import sys
 import unittest
 from testconfig import CALIBRE_WEB_PATH

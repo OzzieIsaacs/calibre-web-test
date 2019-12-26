@@ -39,8 +39,14 @@ page['create_shelf']={'check':(By.ID, "title"),'click':[(By.ID, "nav_createshelf
 page['create_user']={'check':(By.ID, "nickname"),'click':[(By.ID, "top_admin"),(By.ID, "admin_new_user")]}
 page['register']={'check':(By.ID, "nickname"),'click':[(By.ID, "register")]}
 page['tasks']={'check':(By.TAG_NAME, "h2"),'click':[(By.ID, "top_tasks")]}
+page['register']={'check':(By.ID, "nickname"),'click':[(By.ID, "register")]}
+page['login']={'check':(By.NAME, "username"),'click':[(By.ID, "logout")]}
+page['unlogged_login']={'check':(By.NAME, "username"),'click':[(By.CLASS_NAME, "glyphicon-log-in")]}
+
+
 
 class ui_class():
+    py_version = u'/usr/bin/python3'
 
     @classmethod
     def login(cls,user, passwd):
@@ -74,6 +80,33 @@ class ui_class():
             if user_element.text.lower() == user.lower():
                 return True
         return False
+
+    @classmethod
+    def register(cls,user, email):
+        cls.goto_page('register')
+        username = cls.driver.find_element_by_name("nickname")
+        emailfield = cls.driver.find_element_by_name("email")
+        submit = cls.driver.find_element_by_id("submit")
+        username.send_keys(user)
+        emailfield.send_keys(email)
+        submit.click()
+        flash = cls.check_element_on_page((By.CLASS_NAME, "alert"))
+        if flash:
+            id = flash.get_attribute('id')
+            # text = flash.get_attribute('text')
+            return id
+        else:
+            return False
+
+    @classmethod
+    def forgot_password(cls, user):
+        cls.goto_page('login')
+        username = cls.driver.find_element_by_name("username")
+        submit = cls.driver.find_element_by_name("forgot")
+        username.send_keys(user)
+        submit.click()
+        return cls.check_element_on_page((By.ID, "flash_info"))
+
 
     @classmethod
     def list_shelfs(cls, search_name=None):
@@ -131,6 +164,8 @@ class ui_class():
                         cls.driver.find_element_by_id(element[1]).click()
                     if element[0] == By.NAME:
                         cls.driver.find_element_by_name(element[1]).click()
+                    if element[0] == By.CLASS_NAME:
+                        cls.driver.find_element_by_class_name(element[1]).click()
 
                 # check if got to page
                 if page[page_target]['check'][0] == By.TAG_NAME:
@@ -450,6 +485,13 @@ class ui_class():
         process_checkboxes = dict()
         process_text = dict()
         # check if checkboxes are in list and seperate lists
+        if 'resend_password' in config:
+            ele = cls.driver.find_element_by_id('resend_password')
+            if ele:
+                ele.click()
+                return cls.driver.find_element_by_id('flash_success')
+            return ele
+
         for element,key in enumerate(config):
             if key in selects:
                 process_selects[key] = config[key]

@@ -41,8 +41,7 @@ try:
     from UserDict import UserDict
 except ImportError:
     from collections import UserDict
-from gevent import socket, monkey, Timeout
-
+from gevent import monkey, Timeout
 monkey.patch_all()
 
 from gevent.server import StreamServer
@@ -134,13 +133,14 @@ class SMTPServer(StreamServer):
                     sc.handle_read()
 
         except ConnectionTimeout:
-            logger.warn('%s:%s Timeouted', *addr[:2])
+            logger.warning('%s:%s Timeouted', *addr[:2])
             print('%s:%s Timeouted' % (addr[0],addr[1]))
             try:
                 sc.smtp_TIMEOUT()
             except Exception as err:
                 logger.debug(err)
         except Exception as err:
+            logger.exception(err)
             logger.error(err)
 
     # API for "doing something useful with the message"

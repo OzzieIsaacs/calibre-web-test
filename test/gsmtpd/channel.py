@@ -9,9 +9,9 @@ import errno
 import base64
 from asynchat import find_prefix_at_end
 
-NEWLINE = '\n'
-EMPTYSTRING = ''
-COMMASPACE = ', '
+NEWLINE = '\n'.encode('utf-8')
+EMPTYSTRING = ''.encode('utf-8')
+COMMASPACE = ', '.encode('utf-8')
 
 monkey.patch_all()
 
@@ -50,7 +50,7 @@ class SMTPChannel(object):
         self.fqdn = socket.getfqdn()
         self.ac_in_buffer_size = 4096
 
-        self.ac_in_buffer = ''
+        self.ac_in_buffer = u''.encode('utf-8')
         self.closed = False
         self.data_size_limit = data_size_limit # in byte
         self.current_size = 0
@@ -89,14 +89,14 @@ class SMTPChannel(object):
         else:
             self.tls = False
 
-        self.push('220 %s GSMTPD at your service' % self.fqdn)
-        self.terminator = '\r\n'
-        logger.debug('SMTP channel initialized')
+        self.push(u'220 %s GSMTPD at your service' % self.fqdn)
+        self.terminator = u'\r\n'
+        logger.debug(u'SMTP channel initialized')
 
     # Overrides base class for convenience
     def push(self, msg):
-        logger.debug('PUSH %s' % msg)
-        self.conn.send(msg + '\r\n')
+        logger.debug(u'PUSH %s' % msg)
+        self.conn.send((msg + u'\r\n').encode('utf-8')) # python2
 
     # Implementation of base class abstract method
     def collect_incoming_data(self, data):
@@ -115,17 +115,17 @@ class SMTPChannel(object):
                 self.push('500 Error: bad syntax')
                 return
             method = None
-            i = line.find(' ')
+            i = line.find(' '.encode('utf-8'))
             if self.authenticating:
                 # If we are in an authenticating state, call the
                 # method smtp_AUTH.
                 arg = line.strip()
                 command = 'AUTH'
             elif i < 0:
-                command = line.upper().strip()
+                command = line.upper().strip().decode('UTF-8')
                 arg = None
             else:
-                command = line[:i].upper()
+                command = line[:i].upper().decode('UTF-8')
                 arg = line[i+1:].strip()
 
             print('Received: ' + command)
@@ -139,6 +139,8 @@ class SMTPChannel(object):
             if not method:
                 self.push('502 Error: command "%s" not implemented' % command)
                 return
+            if arg:
+                arg = arg.decode('utf-8')
             method(arg)
             return
         else:
@@ -148,7 +150,7 @@ class SMTPChannel(object):
             # Remove extraneous carriage returns and de-transparency according
             # to RFC 821, Section 4.5.2.
             data = []
-            for text in line.split('\r\n'):
+            for text in line.split('\r\n'.encode('utf-8')):
                 if text and text[0] == '.':
                     data.append(text[1:])
                 else:
@@ -230,6 +232,7 @@ class SMTPChannel(object):
         if self.starttls and not self.tls:
             self.push('530 Must issue a STARTTLS command first')
             return
+        # arg = arg.decode('utf-8')
         if 'PLAIN' in arg or self.auth_type=='PLAIN':
             if arg == 'PLAIN':
                 self.authenticating = True
@@ -310,7 +313,7 @@ class SMTPChannel(object):
         if not address:
             self.push('501 Syntax: RCPT TO: <address>')
             return
-        
+
         result = self.server.process_rcpt(address)
         if not result:
             self.rcpttos.append(address)
@@ -365,7 +368,7 @@ class SMTPChannel(object):
             logger.error(err, exc_info=True)
             self.push('503 certificate is FAILED')
             self.close_when_done()
-    
+
     def smtp_HELP(self, arg):
 
         if arg:
@@ -386,7 +389,7 @@ class SMTPChannel(object):
             self.handle_error()
             return
 
-        self.ac_in_buffer = self.ac_in_buffer + data
+        self.ac_in_buffer = self.ac_in_buffer + data # .decode('utf-8') # python2
 
         # Continue to search for self.terminator in self.ac_in_buffer,
         # while calling self.collect_incoming_data.  The while loop
@@ -400,7 +403,7 @@ class SMTPChannel(object):
                 # no terminator, collect it all
                 self.collect_incoming_data(self.ac_in_buffer)
                 self.ac_in_buffer = ''
-            elif isinstance(self.terminator, int) or isinstance(self.terminator, long):
+            elif isinstance(self.terminator, int): # or isinstance(self.terminator, long): python2
                 # numeric terminator
                 n = self.terminator
                 if lb < n:
@@ -421,7 +424,7 @@ class SMTPChannel(object):
                 # 3) end of buffer does not match any prefix:
                 #    collect data
                 terminator_len = len(self.terminator)
-                index = self.ac_in_buffer.find(self.terminator)
+                index = self.ac_in_buffer.find(self.terminator.encode('utf-8'))
                 if index != -1:
                     # we found the terminator
                     if index > 0:
@@ -432,7 +435,7 @@ class SMTPChannel(object):
                     self.found_terminator()
                 else:
                     # check for a prefix of the terminator
-                    index = find_prefix_at_end(self.ac_in_buffer, self.terminator)
+                    index = find_prefix_at_end(self.ac_in_buffer, self.terminator.encode('utf-8'))
                     if index:
                         if index != lb:
                             # we found a prefix, collect up to the prefix
@@ -442,8 +445,8 @@ class SMTPChannel(object):
                     else:
                         # no prefix, collect it all
                         self.collect_incoming_data(self.ac_in_buffer)
-                        self.ac_in_buffer = ''
-        
+                        self.ac_in_buffer = ''.encode('utf-8')
+
     def handle_error(self):
         self.close_when_done()
 
