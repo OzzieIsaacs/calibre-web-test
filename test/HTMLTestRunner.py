@@ -119,7 +119,9 @@ import copy
 
 def to_unicode(s):
     try:
-        return unicode(s)
+        if PY3K:
+            return unicode(s)
+        return s
     except UnicodeDecodeError:
         # s is non ascii byte string
         return s.decode('unicode_escape')
@@ -205,47 +207,47 @@ class Template_mixin(object):
     # ------------------------------------------------------------------- #
 
     # variables: (title, generator, stylesheet, heading, report, ending)
-    HTML_TEMPLATE = open('templates/report.html', 'r').read().encode('utf-8')
+    HTML_TEMPLATE = open('templates/report.html', 'r').read()#.encode('utf-8')
 
     # ------------------------------------------------------------------- #
     # Stylesheet
     # ------------------------------------------------------------------- #
     # alternatively use a <link> for external style sheet, e.g.
     #   <link rel="stylesheet" href="$url" type="text/css">
-    STYLESHEET_TEMPLATE = open('templates/head_inserts.html', 'r').read() \
-        .encode('utf-8')
+    STYLESHEET_TEMPLATE = open('templates/head_inserts.html', 'r').read() #\
+        #.encode('utf-8')
 
     # ------------------------------------------------------------------- #
     # Heading
     # ------------------------------------------------------------------- #
     # variables: (title, parameters, description)
-    HEADING_TEMPLATE = open('templates/header.html', 'r').read() \
-        .encode('utf-8')
+    HEADING_TEMPLATE = open('templates/header.html', 'r').read() #\
+        #.encode('utf-8')
 
     # variables: (name, value)
     HEADING_ATTRIBUTE_TEMPLATE = open('templates/header_parameters.html', 'r')\
-        .read().encode('utf-8')
+        .read()#.encode('utf-8')
 
     # ------------------------------------------------------------------- #
     # Report
     # ------------------------------------------------------------------- #
     # variables: (test_list, count, Pass, fail, error, skip)
-    REPORT__TABLE_TEMPLATE = open('templates/result_table.html', 'r') \
-        .read().encode('utf-8')
+    REPORT__TABLE_TEMPLATE = open('templates/result_table.html', 'r')\
+       .read()#.encode('utf-8')
 
     # variables: (style, desc, count, Pass, fail, error, cid)
-    REPORT_CLASS_TEMPLATE = open('templates/test_class.html', 'r').read()\
-        .encode('utf-8')
+    REPORT_CLASS_TEMPLATE = open('templates/test_class.html', 'r').read()#\
+        #.encode('utf-8')
 
     # variables: (tid, Class, style, desc, status)
     REPORT_TEST_WITH_OUTPUT_TMPL = \
-        open('templates/report_test_with_output.html', 'r').read()\
-        .encode('utf-8')
+        open('templates/report_test_with_output.html', 'r').read()#\
+        #.encode('utf-8')
 
     # variables: (tid, Class, style, desc, status)
     REPORT_TEST_NO_OUTPUT_TEMPLATE = \
-        open('templates/report_test_no_output.html', 'r').read()\
-        .encode('utf-8')
+        open('templates/report_test_no_output.html', 'r').read()#\
+        #.encode('utf-8')
 
     # variables: (id, output)
     REPORT_TEST_OUTPUT_TEMPLATE = r"""%(id)s: %(output)s"""
@@ -253,8 +255,7 @@ class Template_mixin(object):
     # ------------------------------------------------------------------- #
     # ENDING
     # ------------------------------------------------------------------- #
-    ENDING_TEMPLATE = open('templates/footer.html', 'r').read()\
-        .encode('utf-8')
+    ENDING_TEMPLATE = open('templates/footer.html', 'r').read()#.encode('utf-8')
 
 
 # -------------------- The end of the Template class -------------------
@@ -426,7 +427,8 @@ class HTMLTestRunner(Template_mixin):
         self.stopTime = datetime.datetime.now()
         self.generate_report(result)
         total_time = self.stopTime - self.startTime
-        print >> sys.stderr, '\nTime Elapsed: %s' % total_time
+        print('\nTime Elapsed: %s' % total_time,file=sys.stderr)
+        #print >> sys.stderr, '\nTime Elapsed: %s' % total_time
         return result
 
     def get_report_attributes(self, result):
@@ -474,7 +476,7 @@ class HTMLTestRunner(Template_mixin):
             footer=ending,
         )
         if PY3K:
-            self.stream.write(output.encode())
+            self.stream.write(output)
         else:
             self.stream.write(output.encode('utf8'))
 
@@ -486,7 +488,7 @@ class HTMLTestRunner(Template_mixin):
         for attr_name, attr_value in group:
             attr_line = self.HEADING_ATTRIBUTE_TEMPLATE % dict(
                 name=saxutils.escape(attr_name),
-                value=saxutils.escape(attr_value),
+                value=saxutils.escape(attr_value)
             )
             attrs_list.append(attr_line)
         return attrs_list
@@ -598,14 +600,20 @@ class HTMLTestRunner(Template_mixin):
             # TODO: some problem with 'string_escape':
             # it escape \n and mess up formatting
             # uo = unicode(o.encode('string_escape'))
-            uo = output.decode('latin-1')
+            if not PY3K:
+                uo = output.decode('latin-1')
+            else:
+                uo = output
         else:
             uo = output
         if isinstance(e, str):
             # TODO: some problem with 'string_escape':
             # it escape \n and mess up formatting
             # ue = unicode(e.encode('string_escape'))
-            ue = e.decode('latin-1')
+            if not PY3K:
+                ue = e.decode('latin-1')
+            else:
+                ue = output
         else:
             ue = e
 

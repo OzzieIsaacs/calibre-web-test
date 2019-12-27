@@ -1,36 +1,17 @@
-# from secure_smtpd import SMTPServer
-#from gevent import monkey
-#monkey.patch_all()
+from gevent import monkey
+monkey.patch_all()
 
 from gsmtpd.server import SMTPServer
-import sys
-import os
 import re
 import email
-
-
-def is_calibre_not_present():
-    if calibre_path():
-        return False
-    else:
-        return True
-
-def calibre_path():
-    if sys.platform == "win32":
-        calibre_path = ["C:\\program files\calibre\calibre-convert.exe", "C:\\program files(x86)\calibre\calibre-convert.exe"]
-    else:
-        calibre_path = ["/opt/calibre/ebook-convert"]
-    for element in calibre_path:
-        if os.path.isfile(element):
-            return element
-    return None
+import time
 
 
 class CredentialValidator(object):
 
     def validate(self, username, password):
         print('User: %s, Password: %s' % (username,password))
-        if username == 'name@host.com' and password == '10234':
+        if username == 'user' and password == 'password':
             return True
         return False
 
@@ -82,4 +63,20 @@ class Gevent_SMPTPServer(SMTPServer):
 
     def reset_email_received(self):
         self.size = 0
+
+if __name__ == '__main__':
+    email_server = Gevent_SMPTPServer(
+        ('127.0.0.1', 8024),
+        only_ssl=False,
+        certfile='SSL/ssl.crt',
+        keyfile='SSL/ssl.key',
+        credential_validator=CredentialValidator(),
+        timeout=10
+    )
+    email_server.start()
+    try:
+        while True:
+            time.sleep()
+    except KeyboardInterrupt:
+        pass
 

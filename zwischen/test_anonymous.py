@@ -20,7 +20,7 @@ guest user support test
 class test_anonymous(unittest.TestCase, ui_class):
     p=None
     driver = None
-    # py_version = u'/usr/bin/python3'
+    py_version = u'/usr/bin/python3'
 
     @classmethod
     def setUpClass(cls):
@@ -43,7 +43,7 @@ class test_anonymous(unittest.TestCase, ui_class):
         self.assertFalse(self.goto_page('nav_about'))
 
     # Checks if random book section is available in all sidebar menus
-    '''def test_guest_random_books_available(self):
+    def test_guest_random_books_available(self):
         self.edit_user('Guest',{'show_512':1, 'show_128':1, 'show_2': 1, 'show_64':1,
                                 'show_16': 1, 'show_4': 1, 'show_4096': 1, 'show_8': 1, 'show_32':1})
         self.logout()
@@ -93,11 +93,11 @@ class test_anonymous(unittest.TestCase, ui_class):
         self.check_element_on_page((By.ID, "top_user")).click()
         self.login('admin', 'admin123')
         self.edit_user('Guest',{'show_32':0, 'show_512':0, 'show_128':0, 'show_2': 0,
-                                'show_16': 0, 'show_4': 0, 'show_4096': 0, 'show_8': 0, 'show_64':0})'''
+                                'show_16': 0, 'show_4': 0, 'show_4096': 0, 'show_8': 0, 'show_64':0})
 
 
     # checks if admin can configure sidebar for random view
-    '''def test_guest_visibility_sidebar(self):
+    def test_guest_visibility_sidebar(self):
         self.edit_user('Guest',{'show_32':0, 'show_512':1, 'show_128':1, 'show_2': 1,
                                 'show_16': 1, 'show_4': 1, 'show_4096': 1, 'show_8': 1, 'show_64':1})
         self.assertTrue(self.check_element_on_page((By.ID, "flash_success")))
@@ -138,6 +138,21 @@ class test_anonymous(unittest.TestCase, ui_class):
         self.goto_page("nav_rated")
         self.assertTrue(self.check_element_on_page((By.ID, "books_rand")))
         self.assertFalse(self.check_element_on_page((By.ID, "nav_rand")))
+        # check random books not shown in sorted section
+        '''self.driver.find_element_by_id("nav_sort").click()
+        self.goto_page("nav_sort_old")
+        self.assertTrue(self.check_element_on_page((By.ID, "books_rand")))
+        self.assertFalse(self.check_element_on_page((By.ID, "nav_rand")))
+        self.goto_page("nav_sort_new")
+        self.assertTrue(self.check_element_on_page((By.ID, "books_rand")))
+        self.assertFalse(self.check_element_on_page((By.ID, "nav_rand")))
+        self.goto_page("nav_sort_asc")
+        self.assertTrue(self.check_element_on_page((By.ID, "books_rand")))
+        self.assertFalse(self.check_element_on_page((By.ID, "nav_rand")))
+        self.goto_page("nav_sort_desc")
+        self.assertTrue(self.check_element_on_page((By.ID, "books_rand")))
+        self.assertFalse(self.check_element_on_page((By.ID, "nav_rand")))'''
+
         # Go to admin section and reenable show random view
         self.check_element_on_page((By.ID, "top_user")).click()
         self.login('admin', 'admin123')
@@ -176,10 +191,39 @@ class test_anonymous(unittest.TestCase, ui_class):
         self.goto_page("nav_rated")
         self.assertTrue(self.check_element_on_page((By.ID, "books_rand")))
         self.assertTrue(self.check_element_on_page((By.ID, "nav_rand")))
+        # check random books not shown in sorted section
+        '''self.driver.find_element_by_id("nav_sort").click()
+        self.goto_page("nav_sort_old")
+        self.assertTrue(self.check_element_on_page((By.ID, "books_rand")))
+        self.assertTrue(self.check_element_on_page((By.ID, "nav_rand")))
+        self.goto_page("nav_sort_new")
+        self.assertTrue(self.check_element_on_page((By.ID, "books_rand")))
+        self.assertTrue(self.check_element_on_page((By.ID, "nav_rand")))
+        self.goto_page("nav_sort_asc")
+        self.assertTrue(self.check_element_on_page((By.ID, "books_rand")))
+        self.assertTrue(self.check_element_on_page((By.ID, "nav_rand")))
+        self.goto_page("nav_sort_desc")
+        self.assertTrue(self.check_element_on_page((By.ID, "books_rand")))
+        self.assertTrue(self.check_element_on_page((By.ID, "nav_rand")))'''
         self.check_element_on_page((By.ID, "top_user")).click()
         self.login('admin', 'admin123')
         self.edit_user('Guest',{'show_32':0, 'show_512':0, 'show_128':0, 'show_2': 0,
                                 'show_16': 0, 'show_4': 0, 'show_4096': 0, 'show_8': 0, 'show_64':0})
+
+
+    # Test if user can change visibility of sidebar view sorted
+    '''def test_guest_change_visibility_sorted(self):
+        self.edit_user('Guest',{'show_sorted':1})
+        self.assertTrue(self.check_element_on_page((By.ID, "flash_success")))
+        self.logout()
+        self.assertTrue(self.check_element_on_page((By.ID, "nav_sort")))
+        self.check_element_on_page((By.ID, "top_user")).click()
+        self.login('admin', 'admin123')
+        self.edit_user('Guest',{'show_sorted': 0})
+        self.assertTrue(self.check_element_on_page((By.ID, "flash_success")))
+        self.logout()
+        self.assertFalse(self.check_element_on_page((By.ID, "nav_sort")))'''
+
 
     # Test if user can change visibility of sidebar view best rated books
     def test_guest_change_visibility_rated(self):
@@ -267,5 +311,5 @@ class test_anonymous(unittest.TestCase, ui_class):
         self.assertTrue(self.check_element_on_page((By.ID, "flash_success")))
         # Category not visible
         self.logout()
-        self.assertFalse(self.check_element_on_page((By.ID, "nav_cat")))'''
+        self.assertFalse(self.check_element_on_page((By.ID, "nav_cat")))
 
