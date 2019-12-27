@@ -2,70 +2,32 @@
 # -*- coding: utf-8 -*-
 
 import unittest
-from selenium import webdriver
-import os
-from selenium.webdriver.common.by import By
-from selenium.webdriver.support.ui import WebDriverWait
-from selenium.webdriver.support import expected_conditions as EC
-import time
-import shutil
 from ui_helper import ui_class
-from subproc_wrapper import process_open
-from testconfig import CALIBRE_WEB_PATH, TEST_DB
+from testconfig import CALIBRE_WEB_PATH, TEST_DB, BOOT_TIME
 import requests
-
+from func_helper import startup
+from parameterized import parameterized_class
 '''
 opds feed tests
-
 '''
 
-
+'''@parameterized_class([
+   { "py_version": u'/usr/bin/python'},
+   { "py_version": u'/usr/bin/python3'},
+],names=('Python27','Python36'))'''
 class test_opds_feed(unittest.TestCase, ui_class):
     p=None
     driver = None
 
     @classmethod
     def setUpClass(cls):
-
-        try:
-            os.remove(os.path.join(CALIBRE_WEB_PATH,'app.db'))
-        except:
-            pass
-        shutil.rmtree(TEST_DB,ignore_errors=True)
-        shutil.copytree('./Calibre_db', TEST_DB)
-        cls.p = process_open([u"python", os.path.join(CALIBRE_WEB_PATH,u'cps.py')],(1))
-
-        # create a new Firefox session
-        cls.driver = webdriver.Firefox()
-
-        cls.driver.implicitly_wait(5)
-        print('Calibre-web started')
-
-        cls.driver.maximize_window()
-
-        # navigate to the application home page
-        cls.driver.get("http://127.0.0.1:8083")
-
-        # Wait for config screen to show up
-        cls.fill_initial_config({'config_calibre_dir':TEST_DB})
-
-        # wait for cw to reboot
-        time.sleep(5)
-
-        # Wait for config screen with login button to show up
-        WebDriverWait(cls.driver, 5).until(EC.presence_of_element_located((By.NAME, "login")))
-        login_button = cls.driver.find_element_by_name("login")
-        login_button.click()
-
-        # login
-        # cls.login("admin", "admin123")
-
+        startup(cls, cls.py_version, {'config_calibre_dir':TEST_DB}, login=False)
 
     @classmethod
     def tearDownClass(cls):
         # close the browser window and stop calibre-web
         cls.driver.quit()
-        cls.p.terminate()
+        cls.p.kill()
 
     def test_opds(self):
         r = requests.get('http://127.0.0.1:8083/opds')
@@ -79,11 +41,11 @@ class test_opds_feed(unittest.TestCase, ui_class):
         self.assertEqual(200, r.status_code)
         r = requests.get('http://127.0.0.1:8083'+elements['Best rated Books']['link'], auth=('admin', 'admin123'))
         self.assertEqual(200, r.status_code)
-        r = requests.get('http://127.0.0.1:8083'+elements['Category list']['link'], auth=('admin', 'admin123'))
+        r = requests.get('http://127.0.0.1:8083'+elements['Categories']['link'], auth=('admin', 'admin123'))
         self.assertEqual(200, r.status_code)
         r = requests.get('http://127.0.0.1:8083'+elements['Hot Books']['link'], auth=('admin', 'admin123'))
         self.assertEqual(200, r.status_code)
-        r = requests.get('http://127.0.0.1:8083'+elements['New Books']['link'], auth=('admin', 'admin123'))
+        r = requests.get('http://127.0.0.1:8083'+elements['Recently added Books']['link'], auth=('admin', 'admin123'))
         self.assertEqual(200, r.status_code)
         r = requests.get('http://127.0.0.1:8083'+elements['Public Shelves']['link'], auth=('admin', 'admin123'))
         self.assertEqual(200, r.status_code)
@@ -91,7 +53,7 @@ class test_opds_feed(unittest.TestCase, ui_class):
         self.assertEqual(200, r.status_code)
         r = requests.get('http://127.0.0.1:8083'+elements['Random Books']['link'], auth=('admin', 'admin123'))
         self.assertEqual(200, r.status_code)
-        r = requests.get('http://127.0.0.1:8083'+elements['Series list']['link'], auth=('admin', 'admin123'))
+        r = requests.get('http://127.0.0.1:8083'+elements['Series']['link'], auth=('admin', 'admin123'))
         self.assertEqual(200, r.status_code)
         r = requests.get('http://127.0.0.1:8083'+elements['Unread Books']['link'], auth=('admin', 'admin123'))
         self.assertEqual(200, r.status_code)
@@ -99,7 +61,10 @@ class test_opds_feed(unittest.TestCase, ui_class):
         self.assertEqual(200, r.status_code)
         r = requests.get('http://127.0.0.1:8083'+elements['Your Shelves']['link'], auth=('admin', 'admin123'))
         self.assertEqual(200, r.status_code)
-
+        r = requests.get('http://127.0.0.1:8083'+elements['Languages']['link'], auth=('admin', 'admin123'))
+        self.assertEqual(200, r.status_code)
+        r = requests.get('http://127.0.0.1:8083'+elements['File formats']['link'], auth=('admin', 'admin123'))
+        self.assertEqual(200, r.status_code)
 
     def test_opds_guest_user(self):
         self.login("admin", "admin123")
@@ -111,11 +76,11 @@ class test_opds_feed(unittest.TestCase, ui_class):
         self.assertEqual(200, r.status_code)
         r = requests.get('http://127.0.0.1:8083'+elements['Best rated Books']['link'])
         self.assertEqual(200, r.status_code)
-        r = requests.get('http://127.0.0.1:8083'+elements['Category list']['link'])
+        r = requests.get('http://127.0.0.1:8083'+elements['Categories']['link'])
         self.assertEqual(200, r.status_code)
         r = requests.get('http://127.0.0.1:8083'+elements['Hot Books']['link'])
         self.assertEqual(200, r.status_code)
-        r = requests.get('http://127.0.0.1:8083'+elements['New Books']['link'])
+        r = requests.get('http://127.0.0.1:8083'+elements['Recently added Books']['link'])
         self.assertEqual(200, r.status_code)
         r = requests.get('http://127.0.0.1:8083'+elements['Public Shelves']['link'])
         self.assertEqual(200, r.status_code)
@@ -123,7 +88,11 @@ class test_opds_feed(unittest.TestCase, ui_class):
         self.assertEqual(200, r.status_code)
         r = requests.get('http://127.0.0.1:8083'+elements['Random Books']['link'])
         self.assertEqual(200, r.status_code)
-        r = requests.get('http://127.0.0.1:8083'+elements['Series list']['link'])
+        r = requests.get('http://127.0.0.1:8083'+elements['Series']['link'])
+        self.assertEqual(200, r.status_code)
+        r = requests.get('http://127.0.0.1:8083'+elements['Languages']['link'])
+        self.assertEqual(200, r.status_code)
+        r = requests.get('http://127.0.0.1:8083'+elements['File formats']['link'])
         self.assertEqual(200, r.status_code)
         self.assertFalse('Your Shelves' in elements)
         self.assertFalse('Read Books' in elements)

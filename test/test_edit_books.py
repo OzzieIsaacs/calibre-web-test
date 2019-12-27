@@ -3,62 +3,31 @@
 
 
 from unittest import TestCase, skip
-from selenium import webdriver
 import os
 from selenium.webdriver.common.by import By
-from selenium.webdriver.support.ui import WebDriverWait
-from selenium.webdriver.support import expected_conditions as EC
 import time
-import shutil
 from ui_helper import ui_class
-from subproc_wrapper import process_open
-from testconfig import CALIBRE_WEB_PATH, TEST_DB
+from testconfig import TEST_DB
 from parameterized import parameterized_class
+from func_helper import startup
 
-@parameterized_class([
-   { "py_version": u'python'},
-   { "py_version": u'python3'},
-],names=('Python27','Python36'))
+'''@parameterized_class([
+   { "py_version": u'/usr/bin/python'},
+   { "py_version": u'/usr/bin/python3'}
+],names=('Python27','Python36'))'''
 class test_edit_books(TestCase, ui_class):
     p=None
     driver = None
-    # py_version = 'python'
+    py_version = u'/usr/bin/python3'
 
     @classmethod
     def setUpClass(cls):
         try:
-            os.remove(os.path.join(CALIBRE_WEB_PATH,'app.db'))
+            startup(cls, cls.py_version, {'config_calibre_dir':TEST_DB})
+            time.sleep(3)
         except:
-            pass
-        shutil.rmtree(TEST_DB,ignore_errors=True)
-        shutil.copytree('./Calibre_db', TEST_DB)
-        cls.p = process_open([cls.py_version, os.path.join(CALIBRE_WEB_PATH,u'cps.py')],(1))
-
-        # create a new Firefox session
-        cls.driver = webdriver.Firefox()
-        # time.sleep(15)
-        cls.driver.implicitly_wait(5)
-        print('Calibre-web started')
-
-        cls.driver.maximize_window()
-
-        # navigate to the application home page
-        cls.driver.get("http://127.0.0.1:8083")
-
-        # Wait for config screen to show up
-        cls.fill_initial_config({'config_calibre_dir':TEST_DB})
-
-        # wait for cw to reboot
-        time.sleep(5)
-
-        # Wait for config screen with login button to show up
-        WebDriverWait(cls.driver, 5).until(EC.presence_of_element_located((By.NAME, "login")))
-        login_button = cls.driver.find_element_by_name("login")
-        login_button.click()
-
-        # login
-        cls.login("admin", "admin123")
-        time.sleep(3)
+            cls.driver.quit()
+            cls.p.kill()
 
 
     @classmethod
@@ -66,6 +35,7 @@ class test_edit_books(TestCase, ui_class):
         # close the browser window and stop calibre-web
         cls.driver.quit()
         cls.p.terminate()
+        cls.p.kill()
 
     # goto Book 1
     # Change Title with unicode chars
@@ -76,7 +46,7 @@ class test_edit_books(TestCase, ui_class):
     # check title correct, check folder name correct, old folder deleted
     # edit title remove title
     # save title
-    # check title correct (unknown)
+    # check title correct (Unknown)
     # change title to something where the title regex matches
     # check title correct, check if book correct in order of a-z books
     # add files to folder of book
@@ -115,15 +85,15 @@ class test_edit_books(TestCase, ui_class):
         self.assertFalse(os.path.isdir(os.path.join(TEST_DB, values['author'][0], 'O0u Zhi (4)')))
         self.edit_book(content={'book_title':''})
         values=self.get_book_details()
-        os.path.join(TEST_DB,values['author'][0],'unknown')
-        self.assertEqual('unknown', values['title'])
-        self.assertTrue(os.path.isdir(os.path.join(TEST_DB,values['author'][0],'unknown (4)')))
+        os.path.join(TEST_DB,values['author'][0],'Unknown')
+        self.assertEqual('Unknown', values['title'])
+        self.assertTrue(os.path.isdir(os.path.join(TEST_DB,values['author'][0],'Unknown (4)')))
         self.check_element_on_page((By.ID, "edit_book")).click()
         self.edit_book(content={'book_title':'The camicdemo'})
         values=self.get_book_details()
         os.path.join(TEST_DB,values['author'][0],'The camicdemo')
         self.assertEqual('The camicdemo',values['title'])
-        self.goto_page('nav_sort_asc')
+        self.goto_page('nav_new')
         books = self.get_books_displayed()
         self.assertEqual('The camicdemo', books[1][8]['title'])
         file_path=os.path.join(TEST_DB, values['author'][0], 'The camicdemo (4)')
@@ -167,7 +137,7 @@ class test_edit_books(TestCase, ui_class):
     # check Author correct, check folder name correct, old folder still existing (not last book of author)
     # edit Author remove Author
     # save book, stay on page
-    # check Author correct (unknown)
+    # check Author correct (Unknown)
     # edit Author, add 2nd not existing author
     # save book, stay on page
     # check Authors correct
@@ -206,8 +176,8 @@ class test_edit_books(TestCase, ui_class):
         self.assertTrue(os.path.isdir(os.path.join(TEST_DB,'O0u name','book8 (8)')))
         self.edit_book(content={'bookAuthor':''})
         values=self.get_book_details()
-        os.path.join(TEST_DB,'unknown','book8 (8)')
-        self.assertEqual('unknown', values['author'][0])
+        os.path.join(TEST_DB,'Unknown','book8 (8)')
+        self.assertEqual('Unknown', values['author'][0])
         self.assertTrue(os.path.isdir(os.path.join(TEST_DB,values['author'][0],'book8 (8)')))
         self.check_element_on_page((By.ID, "edit_book")).click()
         # Check authorsort

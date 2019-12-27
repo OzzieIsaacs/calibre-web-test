@@ -5,10 +5,12 @@ import subprocess
 import sys
 import glob, os
 import shutil
-try:
-    import cPickle
-except ImportError:
-    import pickle as cPickle
+import json
+from config import FILEPATH
+#try:
+#    import cPickle
+#except ImportError:
+#    import pickle as cPickle
 import msgpack
 import babel.messages.pofile as pofile
 
@@ -23,13 +25,7 @@ def msgpack_decoder(code, data):
 def msgpack_loads(dump):
     return msgpack.unpackb(dump, ext_hook=msgpack_decoder, raw=False)
 
-# Path to calibre-web location with -> location of mo files
-if os.name == 'nt':
-    FILEPATH="D:\\Desktop\\calibre-web\\"
-else:
-    FILEPATH=os.path.abspath("./../../calibre-web/") + '/'
-
-need_iso = msgpack_loads(open('iso639.pickle', 'rb').read())
+need_iso = msgpack_loads(open('iso639.calibre_msgpack', 'rb').read())
 
 workdir = os.getcwd()
 os.chdir(FILEPATH) # .encode(sys.getfilesystemencoding()
@@ -42,7 +38,9 @@ p.wait()
 # update all translation files with the new content of the template file
 # adding --ignore-obsolete will delete all obsolete translations
 pot_path = os.path.join(FILEPATH,"messages.pot")
-translation_path = os.path.join(FILEPATH,'cps','translations').encode(sys.getfilesystemencoding())
+translation_path = os.path.join(FILEPATH,'cps','translations')
+if sys.version_info < (3, 0):
+    translation_path = translation_path.encode(sys.getfilesystemencoding())
 p = subprocess.Popen("pybabel update --no-wrap -i "+ pot_path + " -d " + translation_path,
                      shell=True, stdout=subprocess.PIPE, stdin=subprocess.PIPE)
 p.wait()
@@ -80,7 +78,7 @@ for file in glob.glob1("./translations", "*.po"):
     allmessage_path = os.path.join(FILEPATH, "cps","translations" , langcode, "LC_MESSAGES","messages_all.po")
     shutil.move(message_path, allmessage_path) # os.path.join(FILEPATH,"cps\\translations\\"+langcode+"\\LC_MESSAGES\\messages_all.po"))
     target_path = os.path.join(FILEPATH , "cps","translations" , langcode , "LC_MESSAGES","messages.po") # FILEPATH + "cps\\translations\\" + langcode + "\\LC_MESSAGES\\messages.po"
-    targetFile = open(target_path,'w')
+    targetFile = open(target_path,'wb')
     pofile.write_po(targetFile,mergedTranslation,ignore_obsolete=True)
     targetFile.close()
     out_iso[langcode]=iso_translations
@@ -94,11 +92,33 @@ for msg in LanguageTranslation:
 out_iso['en'] = iso_translations
 
 # write language name table
-with open(os.path.join(FILEPATH,'cps','translations','iso639.pickle'), 'wb') as f:
-    cPickle.dump(out_iso,f)
+#with open(os.path.join(FILEPATH,'cps','translations','iso639.pickle'), 'wb') as f:
+#    cPickle.dump(out_iso,f)
+header = '''# -*- coding: utf-8 -*-
+
+# This file is part of the Calibre-Web (https://github.com/janeczku/calibre-web)
+#   Copyright (C) 2019 OzzieIsaacs, pwr
+# Licensed under GLPv3. See the project's LICENSE file for details.
+
+# pylint: disable=too-many-lines,bad-continuation
+
+from __future__ import unicode_literals
+
+
+# map iso639 language codes to language names, translated
+
+'''
+
+with open(os.path.join(FILEPATH,'cps', 'iso_language_names.py'), 'w', encoding='utf8') as f:
+    f.write(header)
+    f.write('LANGUAGE_NAMES = ')
+    json.dump(out_iso, f, indent=4, ensure_ascii=False)
 
 # Generate .mo files
-p = subprocess.Popen("pybabel compile -d " + FILEPATH + "cps/translations".encode(sys.getfilesystemencoding()),
+trans_path = "cps/translations"
+if sys.version_info < (3, 0):
+    trans_path = trans_path.encode(sys.getfilesystemencoding())
+p = subprocess.Popen("pybabel compile -d " + FILEPATH + trans_path,
                      shell=True, stdout=subprocess.PIPE, stdin=subprocess.PIPE)
 p.wait()
 

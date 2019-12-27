@@ -325,9 +325,12 @@ class _TestResult(TestResult):
         output = self.complete_output()
         self.result.append((0, test, output, ''))
         if self.verbosity > 1:
-            sys.stderr.write('passed  ')
-            sys.stderr.write(str(test))
-            sys.stderr.write('\n')
+            sys.stdout.write('passed  ')
+            if hasattr(test, 'py_version'):
+                sys.stdout.write("%s - %s (%s)" % (test.py_version,test._testMethodName,test.__module__))
+            else:
+                sys.stdout.write(str(test))
+            sys.stdout.write('\n')
         else:
             sys.stderr.write('.')
 
@@ -337,10 +340,13 @@ class _TestResult(TestResult):
         output = self.complete_output()
         self.result.append((3, test, output, reason))
         if self.verbosity > 1:
-            sys.stderr.write('skipped ')
-            sys.stderr.write(str(test))
-            sys.stderr.write(' - ' + str(reason))
-            sys.stderr.write('\n')
+            sys.stdout.write('skipped ')
+            if hasattr(test, 'py_version'):
+                sys.stdout.write("%s - %s (%s)" % (test.py_version, test._testMethodName, test.__module__))
+            else:
+                sys.stdout.write(str(test))
+            sys.stdout.write(' - ' + str(reason))
+            sys.stdout.write('\n')
         else:
             sys.stderr.write('S')
 
@@ -351,9 +357,12 @@ class _TestResult(TestResult):
         output = self.complete_output()
         self.result.append((2, test, output, _exc_str))
         if self.verbosity > 1:
-            sys.stderr.write('error   ')
-            sys.stderr.write(str(test))
-            sys.stderr.write('\n')
+            sys.stdout.write('error   ')
+            if hasattr(test, 'py_version'):
+                sys.stdout.write("%s - %s (%s)" % (test.py_version, test._testMethodName, test.__module__))
+            else:
+                sys.stdout.write(str(test))
+            sys.stdout.write('\n')
         else:
             sys.stderr.write('E')
 
@@ -364,9 +373,12 @@ class _TestResult(TestResult):
         output = self.complete_output()
         self.result.append((1, test, output, _exc_str))
         if self.verbosity > 1:
-            sys.stderr.write('failed  ')
-            sys.stderr.write(str(test))
-            sys.stderr.write('\n')
+            sys.stdout.write('failed  ')
+            if hasattr(test, 'py_version'):
+                sys.stdout.write("%s - %s (%s)" % (test.py_version, test._testMethodName, test.__module__))
+            else:
+                sys.stdout.write(str(test))
+            sys.stdout.write('\n')
         else:
             sys.stderr.write('F')
 

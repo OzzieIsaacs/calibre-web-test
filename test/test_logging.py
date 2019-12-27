@@ -2,7 +2,6 @@
 # -*- coding: utf-8 -*-
 
 import unittest
-from selenium import webdriver
 import os
 from selenium.webdriver.common.by import By
 from selenium.webdriver.support.ui import WebDriverWait
@@ -11,61 +10,28 @@ from selenium.common.exceptions import TimeoutException
 import time
 import shutil
 from ui_helper import ui_class
-from subproc_wrapper import process_open
 from testconfig import CALIBRE_WEB_PATH, TEST_DB
 import re
-
+from func_helper import startup
 from parameterized import parameterized_class
 
-@parameterized_class([
-   { "py_version": u'python'},
-   { "py_version": u'python3'},
-],names=('Python27','Python36'))
-class test_logging(unittest.TestCase, ui_class):
 
+'''@parameterized_class([
+   { "py_version": u'/usr/bin/python'},
+   { "py_version": u'/usr/bin/python3'},
+],names=('Python27','Python36'))'''
+class test_logging(unittest.TestCase, ui_class):
     p=None
 
     @classmethod
     def setUpClass(cls):
-        try:
-            os.remove(os.path.join(CALIBRE_WEB_PATH,'app.db'))
-        except:
-            pass
         try:
             os.remove(os.path.join(CALIBRE_WEB_PATH, 'calibre-web.log'))
             os.remove(os.path.join(CALIBRE_WEB_PATH, 'calibre-web.log.1'))
             os.remove(os.path.join(CALIBRE_WEB_PATH, 'calibre-web.log.2'))
         except:
             pass
-        shutil.rmtree(os.path.join(CALIBRE_WEB_PATH, u'hü lo').encode('UTF-8'), ignore_errors=True)
-        shutil.rmtree(TEST_DB,ignore_errors=True)
-        shutil.copytree('./Calibre_db', TEST_DB)
-        cls.p = process_open([cls.py_version, os.path.join(CALIBRE_WEB_PATH,u'cps.py')],(1))
-
-        # create a new Firefox session
-        cls.driver = webdriver.Firefox()
-        time.sleep(10)
-        cls.driver.implicitly_wait(10)
-        print('Calibre-web started')
-
-        cls.driver.maximize_window()
-
-        # navigate to the application home page
-        cls.driver.get("http://127.0.0.1:8083")
-
-        # Wait for config screen to show up
-        cls.fill_initial_config({'config_calibre_dir':TEST_DB,'config_log_level':'DEBUG'})
-
-        # wait for cw to reboot
-        time.sleep(5)
-
-        # Wait for config screen with login button to show up
-        WebDriverWait(cls.driver, 5).until(EC.presence_of_element_located((By.NAME, "login")))
-        login_button = cls.driver.find_element_by_name("login")
-        login_button.click()
-
-        # login
-        cls.login("admin", "admin123")
+        startup(cls, cls.py_version, {'config_calibre_dir':TEST_DB,'config_log_level':'DEBUG'})
         time.sleep(3)
 
     @classmethod
@@ -73,6 +39,7 @@ class test_logging(unittest.TestCase, ui_class):
         # close the browser window and stop calibre-web
         cls.driver.quit()
         cls.p.terminate()
+        cls.p.kill()
 
     def test_failed_login(self):
         self.driver.find_element_by_id("logout").click()

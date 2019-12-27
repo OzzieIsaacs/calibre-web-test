@@ -16,7 +16,7 @@ from functools import wraps
 from pprint import pprint
 
 import click
-import link_header
+from . import link_header
 import requests
 from requests import request
 

@@ -1,51 +1,40 @@
 #!/usr/bin/env python
 # -*- coding: utf-8 -*-
 
-import unittest
-from selenium import webdriver
-import os
-import sys
-import re
-from selenium.webdriver.common.by import By
-from selenium.webdriver.support.ui import WebDriverWait, Select
-from selenium.webdriver.support import expected_conditions as EC
-import time
-import shutil
-from ui_helper import ui_class
-from subproc_wrapper import process_open
-from testconfig import CALIBRE_WEB_PATH, TEST_DB
 from email_convert_helper import Gevent_SMPTPServer, CredentialValidator
 import email_convert_helper
-from parameterized import parameterized_class
+import unittest
+import os
+import re
+from selenium.webdriver.common.by import By
+import time
+from ui_helper import ui_class
+from testconfig import CALIBRE_WEB_PATH, TEST_DB, BOOT_TIME
 
-@parameterized_class([
-   { "py_version": u'python','LOG_LEVEL':'DEBUG'},
-   { "py_version": u'python3','LOG_LEVEL':'INFO'},
-],names=('Python27','Python36'))
+from parameterized import parameterized_class
+from func_helper import startup
+
+'''@parameterized_class([
+   { "py_version": u'/usr/bin/python','LOG_LEVEL':'DEBUG'},
+   { "py_version": u'/usr/bin/python3','LOG_LEVEL':'DEBUG'},
+],names=('Python27','Python36'))'''
 @unittest.skipIf(email_convert_helper.is_calibre_not_present(),"Skipping convert, calibre not found")
 class test_SSL(unittest.TestCase, ui_class):
     p=None
     driver = None
     email_server = None
     # py_version = 'python3'
-    # LOG_LEVEL = 'DEBUG'
+    LOG_LEVEL = 'DEBUG'
 
     @classmethod
     def setUpClass(cls):
-        print('test_SSL')
-        try:
-            os.remove(os.path.join(CALIBRE_WEB_PATH,'app.db'))
-        except:
-            pass
+
         try:
             os.remove(os.path.join(CALIBRE_WEB_PATH, 'calibre-web.log'))
             os.remove(os.path.join(CALIBRE_WEB_PATH, 'calibre-web.log.1'))
             os.remove(os.path.join(CALIBRE_WEB_PATH, 'calibre-web.log.2'))
         except:
             pass
-        shutil.rmtree(TEST_DB,ignore_errors=True)
-        shutil.copytree('./Calibre_db', TEST_DB)
-        cls.p = process_open([cls.py_version, os.path.join(CALIBRE_WEB_PATH,u'cps.py')],(1), sout=None)
 
         # start email server
         cls.email_server = Gevent_SMPTPServer(
@@ -58,32 +47,11 @@ class test_SSL(unittest.TestCase, ui_class):
         )
         cls.email_server.start()
 
-        # create a new Firefox session
-        cls.driver = webdriver.Firefox()
-        # time.sleep(15)
-        cls.driver.implicitly_wait(5)
-        print('Calibre-web started')
+        startup(cls, cls.py_version, {'config_calibre_dir':TEST_DB,
+                                      'config_converterpath':email_convert_helper.calibre_path(),
+                                      'config_ebookconverter':'converter2',
+                                      'config_log_level':cls.LOG_LEVEL})
 
-        cls.driver.maximize_window()
-
-        # navigate to the application home page
-        cls.driver.get("http://127.0.0.1:8083")
-
-        # INFO: Crash on python3 and DEBUG output, where normal start works in python3
-        # Wait for config screen to show up
-        cls.fill_initial_config({'config_calibre_dir':TEST_DB, 'config_converterpath':email_convert_helper.calibre_path(),
-                                 'config_ebookconverter':'converter2', 'config_log_level':cls.LOG_LEVEL})
-
-        # wait for cw to reboot
-        time.sleep(5)
-
-        # Wait for config screen with login button to show up
-        WebDriverWait(cls.driver, 5).until(EC.presence_of_element_located((By.NAME, "login")))
-        login_button = cls.driver.find_element_by_name("login")
-        login_button.click()
-
-        # login
-        cls.login("admin", "admin123")
         cls.edit_user('admin', {'email': 'a5@b.com','kindle_mail': 'a1@b.com'})
         cls.setup_server(False, {'mail_server':'127.0.0.1', 'mail_port':'1027',
                             'mail_use_ssl':'SSL/TLS','mail_login':'name@host.com','mail_password':'10234',
@@ -94,10 +62,9 @@ class test_SSL(unittest.TestCase, ui_class):
     def tearDownClass(cls):
         # close the browser window and stop calibre-web
         cls.driver.quit()
-        cls.p.terminate()
+        cls.p.kill()
         cls.email_server.stop()
         time.sleep(2)
-
 
     # start sending e-mail
     # check email received

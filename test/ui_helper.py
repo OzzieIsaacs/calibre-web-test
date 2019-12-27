@@ -39,8 +39,14 @@ page['create_shelf']={'check':(By.ID, "title"),'click':[(By.ID, "nav_createshelf
 page['create_user']={'check':(By.ID, "nickname"),'click':[(By.ID, "top_admin"),(By.ID, "admin_new_user")]}
 page['register']={'check':(By.ID, "nickname"),'click':[(By.ID, "register")]}
 page['tasks']={'check':(By.TAG_NAME, "h2"),'click':[(By.ID, "top_tasks")]}
+page['register']={'check':(By.ID, "nickname"),'click':[(By.ID, "register")]}
+page['login']={'check':(By.NAME, "username"),'click':[(By.ID, "logout")]}
+page['unlogged_login']={'check':(By.NAME, "username"),'click':[(By.CLASS_NAME, "glyphicon-log-in")]}
+
+
 
 class ui_class():
+    py_version = u'/usr/bin/python3'
 
     @classmethod
     def login(cls,user, passwd):
@@ -74,6 +80,33 @@ class ui_class():
             if user_element.text.lower() == user.lower():
                 return True
         return False
+
+    @classmethod
+    def register(cls,user, email):
+        cls.goto_page('register')
+        username = cls.driver.find_element_by_name("nickname")
+        emailfield = cls.driver.find_element_by_name("email")
+        submit = cls.driver.find_element_by_id("submit")
+        username.send_keys(user)
+        emailfield.send_keys(email)
+        submit.click()
+        flash = cls.check_element_on_page((By.CLASS_NAME, "alert"))
+        if flash:
+            id = flash.get_attribute('id')
+            # text = flash.get_attribute('text')
+            return id
+        else:
+            return False
+
+    @classmethod
+    def forgot_password(cls, user):
+        cls.goto_page('login')
+        username = cls.driver.find_element_by_name("username")
+        submit = cls.driver.find_element_by_name("forgot")
+        username.send_keys(user)
+        submit.click()
+        return cls.check_element_on_page((By.ID, "flash_info"))
+
 
     @classmethod
     def list_shelfs(cls, search_name=None):
@@ -131,6 +164,8 @@ class ui_class():
                         cls.driver.find_element_by_id(element[1]).click()
                     if element[0] == By.NAME:
                         cls.driver.find_element_by_name(element[1]).click()
+                    if element[0] == By.CLASS_NAME:
+                        cls.driver.find_element_by_class_name(element[1]).click()
 
                 # check if got to page
                 if page[page_target]['check'][0] == By.TAG_NAME:
@@ -247,9 +282,9 @@ class ui_class():
         process_selects = dict()
         # special handling for checkboxes
         checkboxes = ['admin_role', 'download_role', 'upload_role', 'edit_role', 'delete_role', 'passwd_role',
-                        'edit_shelf_role', 'show_random', 'show_recent', 'show_sorted', 'show_hot', 'show_best_rated',
-                        'show_language', 'show_series', 'show_category', 'show_author', 'show_read_and_unread',
-                        'show_detail_random', 'show_mature_content', 'show_publisher']
+                        'edit_shelf_role', 'show_32', 'show_512', 'show_16', 'show_128',
+                        'show_2', 'show_4', 'show_8', 'show_64', 'show_256',
+                        'Show_detail_random', 'Show_mature_content', 'show_4096']
         options = ['config_read_column']
         selects = ['config_theme']
         # depending on elements open accordions or not
@@ -260,10 +295,10 @@ class ui_class():
         if any(key in elements for key in ['admin_role', 'download_role', 'upload_role', 'edit_role',
                                            'delete_role', 'passwd_role', 'edit_shelf_role']):
             opener.append(1)
-        if any(key in elements for key in ['show_random', 'show_recent', 'show_sorted', 'show_hot', 'show_best_rated',
-                                           'show_language', 'show_series', 'show_category', 'show_author',
-                                           'show_read_and_unread', 'show_detail_random', 'show_mature_content',
-                                           'show_publisher']):
+        if any(key in elements for key in ['show_32', 'show_512', 'show_16', 'show_128',
+                                           'show_2', 'show_4', 'show_8', 'show_64',
+                                           'show_256', 'Show_detail_random', 'Show_mature_content',
+                                           'show_4096']):
             opener.append(2)
 
         # open all necessary accordions
@@ -369,8 +404,8 @@ class ui_class():
     @classmethod
     def change_visibility_me(cls, nav_element):
         ''' All Checkboses are:
-            'show_random','show_recent', 'show_hot', 'show_best_rated', 'show_language', 'show_series',
-            'show_category', 'show_author', 'show_read_and_unread', 'show_detail_random' '''
+            'show_32','show_512', 'show_16', 'show_128', 'show_2', 'show_4',
+            'show_8', 'show_64', 'show_256', 'Show_detail_random' '''
         selects = ['locale', 'default_language']
         cls.goto_page('user_setup')
         process_selects = dict()
@@ -442,14 +477,21 @@ class ui_class():
     @classmethod
     def change_user(cls, config):
         ''' All Checkboses are:
-            'show_random','show_recent', 'show_hot', 'show_best_rated', 'show_language', 'show_series',
-            'show_category', 'show_author', 'show_read_and_unread', 'show_detail_random' '''
+            'show_32','show_512', 'show_16', 'show_128', 'show_2', 'show_4',
+            'show_8', 'show_64', 'show_256', 'Show_detail_random' '''
         selects = ['locale', 'default_language']
         text_inputs = ['kindle_mail','email', 'password', 'nickname']
         process_selects = dict()
         process_checkboxes = dict()
         process_text = dict()
         # check if checkboxes are in list and seperate lists
+        if 'resend_password' in config:
+            ele = cls.driver.find_element_by_id('resend_password')
+            if ele:
+                ele.click()
+                return cls.driver.find_element_by_id('flash_success')
+            return ele
+
         for element,key in enumerate(config):
             if key in selects:
                 process_selects[key] = config[key]
@@ -572,7 +614,7 @@ class ui_class():
 
         tree = lxml.etree.parse(StringIO(html), parser)
         books_rand = list()
-        br = tree.xpath("//*[@class='discover']/div/div")
+        br = tree.xpath("//*[@class='discover random-books']/div/div")
         for book_rand in br:
             ele = book_rand.getchildren()
             meta=ele[1].getchildren()
@@ -580,7 +622,7 @@ class ui_class():
             book_r['link'] = ele[0].getchildren()[0].attrib['href']
             book_r['ele'] = cls.check_element_on_page((By.XPATH,"//a[@href='"+book_r['link']+"']/img"))
             book_r['id'] = book_r['link'][6:]
-            book_r['title']= meta[0].text
+            book_r['title']= meta[0].getchildren()[0].text
             authors = meta[1].getchildren()
             book_r['author'] = [a.text for a in authors]
             if len(meta) == 3:
@@ -601,7 +643,7 @@ class ui_class():
             bk['link'] = ele[0].getchildren()[0].attrib['href']
             bk['id'] = bk['link'][6:]
             bk['ele'] = cls.check_element_on_page((By.XPATH,"//a[@href='"+bk['link']+"']/img"))
-            bk['title']= meta[0].text
+            bk['title']= meta[0].getchildren()[0].text
             authors = meta[1].getchildren()
             bk['author'] = [a.text for a in authors]
             if len(meta) == 3:
@@ -677,7 +719,7 @@ class ui_class():
             del_shelf = tree.findall("//*[@id='remove-from-shelves']//a")
             ret['del_shelf'] = [sh.text.strip().lstrip() for sh in del_shelf]
 
-            ret['edit_enable'] = bool(tree.find("//*[@class='glyphicon glyphicon-edit']"))
+            ret['edit_enable'] = tree.find("//*[@class='glyphicon glyphicon-edit']") is not None
 
             ele = tree.xpath("//*[starts-with(@id,'sendbtn')]")
             # bk['ele'] = cls.check_element_on_page((By.XPATH, "//a[@href='" + bk['link'] + "']/img"))
@@ -688,9 +730,9 @@ class ui_class():
                     ret['kindle'] = all
                 else:
                     ret['kindlebtn'] = cls.driver.find_element_by_id("sendbtn")
-                    ele = dict()
-                    ele['ele'] = ele
-                    ele['link'] = ele.get_attribute('href')
+                    # ele = dict()
+                    #ele['ele'] = ele
+                    #ele['link'] = ele[0].attrib['href']
                     ret['kindle'] = list(ele)
             else:
                 ret['kindle'] = None
@@ -706,7 +748,7 @@ class ui_class():
             else:
                 ret['download'] = [d.text for d in download1]
 
-            ret['read']= bool(tree.find("//*[@id='have_read_cb']"))
+            ret['read']= tree.find("//*[@id='have_read_cb']") is not None
 
             series = tree.xpath("//*[contains(@href,'series')]/ancestor::p")
             if series:
@@ -716,15 +758,29 @@ class ui_class():
                     ret['series_all'] += ele.text
                     ret['series'] = ele.text
 
-            cust_columns = tree.xpath("//div[@class='custom_columns']")
-            if len(cust_columns) == 2:      # we have custom columns
+            cust_columns = tree.xpath("//div[@class='real_custom_columns']")
+            if len(cust_columns) :      # we have custom columns
                 ret['cust_columns']=list()
+                for col in cust_columns: # .getchildren()[0].getchildren()[1:]:
+                    element = dict()
+                    if len(col.text.strip()):
+                        if len(col.getchildren()):
+                            element['Text'] = col.text.lstrip().split(':')[0]
+                            element['value'] = col.getchildren()[0].attrib['class'][20:]
+                            ret['cust_columns'].append(element)
+                        elif ':' in col.text:
+                            element['Text'] = col.text.lstrip().split(':')[0]
+                            element['value'] = col.text.split(':')[1].strip()
+                            ret['cust_columns'].append(element)
+                        else:
+                            pass
 
-                if len(cust_columns[0].getchildren()[0].getchildren()):
+
+                '''if len(cust_columns[0].getchildren()): # [0].getchildren()):
                     first_element = dict()
-                    if cust_columns[0].getchildren()[0].getchildren()[0].tag == 'span':
-                        first_element['Text'] = cust_columns[0].getchildren()[0].getchildren()[0].getparent().text.lstrip().split(':')[0]
-                        first_element['value'] = cust_columns[0].getchildren()[0].getchildren()[0].attrib['class'][20:]
+                    if cust_columns[0].getchildren()[0].tag == 'span':
+                        first_element['Text'] = cust_columns[0].getchildren()[0].getparent().text.lstrip().split(':')[0]
+                        first_element['value'] = cust_columns[0].getchildren()[0].attrib['class'][20:]
                         ret['cust_columns'].append(first_element)
                     elif ':' in cust_columns[0].getchildren()[0].text:
                         first_element['Text'] = cust_columns[0].getchildren()[0].text.lstrip().split(':')[0]
@@ -743,7 +799,7 @@ class ui_class():
                             element['value'] = col.tail.split(':')[1].strip()
                             ret['cust_columns'].append(element)
                         else:
-                            pass
+                            pass'''
 
             # cover type
 
