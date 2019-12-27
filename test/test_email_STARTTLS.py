@@ -1,27 +1,19 @@
 #!/usr/bin/env python
 # -*- coding: utf-8 -*-
-
-import unittest
-from selenium import webdriver
-import os
-import sys
-from selenium.webdriver.common.by import By
-from selenium.webdriver.support.ui import WebDriverWait, Select
-from selenium.webdriver.support import expected_conditions as EC
-import time
-import shutil
-from ui_helper import ui_class
-from subproc_wrapper import process_open
-from testconfig import CALIBRE_WEB_PATH, TEST_DB, BOOT_TIME
 from email_convert_helper import Gevent_SMPTPServer, CredentialValidator
 import email_convert_helper
+import unittest
+from selenium.webdriver.common.by import By
+import time
+from ui_helper import ui_class
+from testconfig import CALIBRE_WEB_PATH, TEST_DB, BOOT_TIME
 from parameterized import parameterized_class
 from func_helper import startup
 
-@parameterized_class([
+'''@parameterized_class([
    { "py_version": u'/usr/bin/python'},
    { "py_version": u'/usr/bin/python3'},
-],names=('Python27','Python36'))
+],names=('Python27','Python36'))'''
 @unittest.skipIf(email_convert_helper.is_calibre_not_present(),"Skipping convert, calibre not found")
 class test_STARTTLS(unittest.TestCase, ui_class):
     p=None

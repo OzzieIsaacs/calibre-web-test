@@ -1,14 +1,16 @@
 #!/usr/bin/env python
 # -*- coding: utf-8 -*-
+from gevent import monkey
+monkey.patch_all()
 
-import unittest
-from parameterized import parameterized_class
+# from parameterized import parameterized_class
 import HTMLTestRunner
 import os
 import time
 import requests
 from subproc_wrapper import process_open
 from testconfig import SELENIUM_SERVER, CALIBRE_WEB_PATH
+import unittest
 
 
 if __name__ == '__main__':

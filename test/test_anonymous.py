@@ -2,33 +2,25 @@
 # -*- coding: utf-8 -*-
 
 import unittest
-#from selenium import webdriver
-#import os
 from selenium.webdriver.common.by import By
-#from selenium.webdriver.support.ui import WebDriverWait
-#from selenium.webdriver.support import expected_conditions as EC
-#import time
-#import shutil
 from ui_helper import ui_class
-#from subproc_wrapper import process_open
 from testconfig import TEST_DB
 from func_helper import startup
 from parameterized import parameterized_class
-import sys
 
 '''
 guest user support test
 '''
 
 
-@parameterized_class([
+'''@parameterized_class([
    { "py_version": u'/usr/bin/python'},
    { "py_version": u'/usr/bin/python3'}]
-    ,names=('Python27','Python36'))
+    ,names=('Python27','Python36'))'''
 class test_anonymous(unittest.TestCase, ui_class):
     p=None
     driver = None
-    py_version = 'python'
+    py_version = u'/usr/bin/python3'
 
     @classmethod
     def setUpClass(cls):
