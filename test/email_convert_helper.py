@@ -1,12 +1,20 @@
 # from secure_smtpd import SMTPServer
 #from gevent import monkey
 #monkey.patch_all()
-
-from gsmtpd.server import SMTPServer
+import asyncio
+#from gsmtpd.server import SMTPServer
 import sys
 import os
 import re
 import email
+# import logging
+
+from aiosmtpd.controller import Controller
+from aiosmtpd.controller import get_server_context
+
+from email import message_from_bytes, message_from_string
+
+COMMASPACE = ', '
 
 
 def is_calibre_not_present():
@@ -25,41 +33,50 @@ def calibre_path():
             return element
     return None
 
+class MyMessage():
+    def __init__(self, message_class=None):
+        self.message_class = message_class
+        self.ret_value = 0
+        self.size = 0
 
-class CredentialValidator(object):
-
-    def validate(self, username, password):
+    async def handle_AUTH(self, server, session, envelope, username, password):
         print('User: %s, Password: %s' % (username,password))
         if username == 'name@host.com' and password == '10234':
-            return True
-        return False
+            return 235
+        return 454
 
+    async def handle_DATA(self, server, session, envelope):
+        envelope = self.prepare_message(session, envelope)
+        return self.handle_message(envelope)
 
-class Gevent_SMPTPServer(SMTPServer):
+    def prepare_message(self, session, envelope):
+        # If the server was created with decode_data True, then data will be a
+        # str, otherwise it will be bytes.
+        data = envelope.content
+        if isinstance(data, bytes):
+            message = message_from_bytes(data, self.message_class)
+        else:
+            assert isinstance(data, str), (
+              'Expected str or bytes, got {}'.format(type(data)))
+            message = message_from_string(data, self.message_class)
+        message['X-Peer'] = str(session.peer)
+        message['X-MailFrom'] = envelope.mail_from
+        message['X-RcptTo'] = COMMASPACE.join(envelope.rcpt_tos)
+        return message
 
-    def __init__(self, *args, **kwargs):
-        SMTPServer.__init__(self, *args, **kwargs)
-        self.status = 1
-        self.mailfrom = None
-        self.recipents = None
-        self.payload = None
-        self.error_c = None
-        self.size = 0
-        self.ret_value = 0
-        self.message = None
-
-    def process_message(self, peer, mailfrom, rcpttos, message_data):
-        print('Receiving message from:', peer)
-        print('Message addressed from:', mailfrom)
-        print('Message addressed to  :', rcpttos)
-        print('Message length        :', len(message_data))
+    def handle_message(self, message):
+        message_data = message.get_payload()
+        print('Receiving message from:', message.get('X-Peer'))
+        print('Message addressed from:', message.get('From'))
+        print('Message addressed to:', message.get('To'))
+        print('Message length        :', len(message_data)) # len(message_data))
         self.size = len(message_data)
         if self.size < 1000:
             self.message = message_data
         if self.ret_value == 552:
             return '552 Requested mail action aborted: exceeded storage allocation'
         else:
-            return
+            return '250 OK'
 
     @property
     def message_size(self):
@@ -82,4 +99,18 @@ class Gevent_SMPTPServer(SMTPServer):
 
     def reset_email_received(self):
         self.size = 0
+
+def AIOSMTPServer(hostname='', port=1025, authenticate=True, startSSL=False, only_ssl=None,
+                       certfile=None, keyfile=None, timeout=300):
+    # logging.basicConfig(level=logging.INFO)
+    loop = asyncio.get_event_loop()
+    # SSL
+    # controller= amain(authenticate=True, startSSL=False, ssl_only=True)
+    if only_ssl:
+        only_ssl = get_server_context()
+    if only_ssl == False:
+        only_ssl = None
+    controller= Controller(MyMessage(), hostname=hostname, port=port, startSSL=startSSL, authenticate=authenticate,
+               ssl_context=only_ssl, certfile=certfile, keyfile=keyfile, timeout=timeout)
+    return controller
 

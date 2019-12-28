@@ -1,13 +1,13 @@
 #!/usr/bin/env python
 # -*- coding: utf-8 -*-
-from email_convert_helper import Gevent_SMPTPServer, CredentialValidator
+from email_convert_helper import AIOSMTPServer
 import email_convert_helper
 import unittest
 from selenium.webdriver.common.by import By
 import time
 from ui_helper import ui_class
 from testconfig import CALIBRE_WEB_PATH, TEST_DB, BOOT_TIME
-from parameterized import parameterized_class
+# from parameterized import parameterized_class
 from func_helper import startup
 
 '''@parameterized_class([
@@ -24,12 +24,13 @@ class test_STARTTLS(unittest.TestCase, ui_class):
     def setUpClass(cls):
         print('test_STARTTLS')
         # start email server
-        cls.email_server = Gevent_SMPTPServer(
-            ('127.0.0.1', 1026),
+        cls.email_server = AIOSMTPServer(
+            hostname='127.0.0.1',port=1026,
             only_ssl=False,
+            startSSL=True,
             certfile='SSL/ssl.crt',
             keyfile='SSL/ssl.key',
-            credential_validator=CredentialValidator(),
+            # credential_validator=CredentialValidator(),
             timeout=10
         )
         cls.email_server.start()

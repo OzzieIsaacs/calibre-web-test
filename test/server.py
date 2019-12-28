@@ -3,7 +3,6 @@ import logging
 import re
 import email
 import time
-import threading
 
 from aiosmtpd.controller import Controller
 from aiosmtpd.controller import get_server_context
@@ -115,7 +114,7 @@ def amain(authenticate, startSSL=False, ssl_only=None):
 
 if __name__ == '__main__':
     logging.basicConfig(level=logging.DEBUG)
-    loop = asyncio.get_event_loop()
+    # loop = asyncio.get_event_loop()
     # SSL
     controller= amain(authenticate=True, startSSL=False, ssl_only=True)
     controller.start()
@@ -168,26 +167,4 @@ if __name__ == '__main__':
     except KeyboardInterrupt:
         pass'''
 
-
-
-#>>> import asyncio
-#>>>
-#>>> @asyncio.coroutine
-#... def greet_every_two_seconds():
-#...     while True:
-#...         print('Hello World')
-#...         yield from asyncio.sleep(2)
-#...
-#>>> def loop_in_thread(loop):
-#...     asyncio.set_event_loop(loop)
-#...     loop.run_until_complete(greet_every_two_seconds())
-#...
-#>>>
-#>>> loop = asyncio.get_event_loop()
-#>>> import threading
-#>>> t = threading.Thread(target=loop_in_thread, args=(loop,))
-#>>> t.start()
-#Hello World
-#>>>
-#>>> Hello World
 

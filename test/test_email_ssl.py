@@ -1,7 +1,7 @@
 #!/usr/bin/env python
 # -*- coding: utf-8 -*-
 
-from email_convert_helper import Gevent_SMPTPServer, CredentialValidator
+from email_convert_helper import AIOSMTPServer
 import email_convert_helper
 import unittest
 import os
@@ -37,14 +37,14 @@ class test_SSL(unittest.TestCase, ui_class):
             pass
 
         # start email server
-        cls.email_server = Gevent_SMPTPServer(
-            ('127.0.0.1', 1027),
+        cls.email_server = AIOSMTPServer(
+            hostname='127.0.0.1',port=1027,
             only_ssl=True,
             certfile='SSL/ssl.crt',
             keyfile='SSL/ssl.key',
-            credential_validator=CredentialValidator(),
             timeout = 10
         )
+
         cls.email_server.start()
 
         startup(cls, cls.py_version, {'config_calibre_dir':TEST_DB,

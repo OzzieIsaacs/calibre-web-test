@@ -11,6 +11,7 @@ import requests
 from subproc_wrapper import process_open
 from testconfig import SELENIUM_SERVER, CALIBRE_WEB_PATH
 import unittest
+import sys
 
 
 if __name__ == '__main__':
@@ -44,3 +45,4 @@ if __name__ == '__main__':
     # run the suite using HTMLTestRunner
     runner.run(all_tests)
     print("\nAll tests finished, please check testresults")
+    sys.exit(0)

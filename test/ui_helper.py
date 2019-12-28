@@ -454,7 +454,7 @@ class ui_class():
         ele = self.check_element_on_page((By.ID,'title'))
         if ele:
             ele.clear()
-            ele.send_keys(name.decode('utf-8'))
+            ele.send_keys(name)
             if public:
                 public_shelf = self.check_element_on_page((By.NAME,'is_public'))
                 if public_shelf:
@@ -531,7 +531,8 @@ class ui_class():
         ret = dict()
         parser = lxml.etree.HTMLParser()
         try:
-            tree = lxml.etree.parse(StringIO(text.encode('utf-8')), parser)
+            tree = lxml.etree.fromstring(text.encode('utf-8'), parser)
+            # tree = lxml.etree.parse(StringIO(text), parser)
             ret['title'] = tree.xpath("/html/body/feed/title")[0].text
             ret['id'] = tree.xpath("/html/body/feed/id")[0].text
             ret['links'] = tree.xpath("/html/body/feed/link")
@@ -555,7 +556,8 @@ class ui_class():
         ret = dict()
         parser = lxml.etree.HTMLParser()
         try:
-            tree = lxml.etree.parse(StringIO(text.encode('utf-8')), parser)
+            tree = lxml.etree.fromstring(text.encode('utf-8'), parser)
+            # tree = lxml.etree.parse(StringIO(text.encode('utf-8')), parser)
             ret['title'] = tree.xpath("/html/body/feed/title")[0].text
             ret['id'] = tree.xpath("/html/body/feed/id")[0].text
             ret['links'] = tree.xpath("/html/body/feed/link")
@@ -598,7 +600,7 @@ class ui_class():
     @classmethod
     def get_opds_search(cls, text):
         parser = lxml.etree.HTMLParser()
-        tree = lxml.etree.parse(StringIO(text), parser)
+        tree = lxml.etree.fromstring(text.encode('utf-8'), parser)
 
         pass
 

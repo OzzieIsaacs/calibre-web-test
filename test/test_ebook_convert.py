@@ -1,7 +1,7 @@
 #!/usr/bin/env python
 # -*- coding: utf-8 -*-
 
-from email_convert_helper import Gevent_SMPTPServer, CredentialValidator
+from email_convert_helper import AIOSMTPServer
 import unittest
 import os
 from selenium.webdriver.common.by import By
@@ -28,12 +28,12 @@ class test_ebook_convert(unittest.TestCase, ui_class):
     @classmethod
     def setUpClass(cls):
         # start email server
-        cls.email_server = Gevent_SMPTPServer(
-            ('127.0.0.1', 1025),
+        cls.email_server = AIOSMTPServer(
+            hostname='127.0.0.1',port=1025,
             only_ssl=False,
-            credential_validator=CredentialValidator(),
             timeout=10
         )
+
         cls.email_server.start()
 
         try:
@@ -394,7 +394,7 @@ class test_ebook_convert(unittest.TestCase, ui_class):
                     break
             i += 1
         self.assertEqual(ret[-1]['result'], 'Finished')
-        self.assertGreaterEqual(self.email_server.message_size,24256)
+        self.assertGreaterEqual(self.email_server.handler.message_size,24256)
         self.setup_server(False, {'mail_password':'1234'})
 
 
@@ -404,7 +404,7 @@ class test_ebook_convert(unittest.TestCase, ui_class):
         self.setup_server(False, {'mail_password': '10234'})
         task_len = len(self.check_tasks())
         details = self.get_book_details(5)
-        self.email_server.set_return_value(552)
+        self.email_server.handler.set_return_value(552)
         # = '552 Requested mail action aborted: exceeded storage allocation'
         details['kindlebtn'].click()
         # conv = self.check_element_on_page((By.LINK_TEXT, details['kindle'][1].text))
@@ -420,7 +420,7 @@ class test_ebook_convert(unittest.TestCase, ui_class):
                     break
             i += 1
         self.assertEqual(ret[-1]['result'], 'Failed')
-        self.email_server.set_return_value(0)
+        self.email_server.handler.set_return_value(0)
         self.setup_server(False, {'mail_password':'1234'})
 
 

@@ -6,9 +6,9 @@ import ssl
 from aiosmtpd.smtp import SMTP
 from public import public
 
-def get_server_context():
+def get_server_context(certfile='SSL/ssl.crt', keyfile='SSL/ssl.key'):
     tls_context = ssl.create_default_context(ssl.Purpose.CLIENT_AUTH)
-    tls_context.load_cert_chain('SSL/ssl.crt','SSL/ssl.key')
+    tls_context.load_cert_chain(certfile,keyfile)
         #pkg_resources.resource_filename('aiosmtpd.tests.certs', 'server.crt'),
         #pkg_resources.resource_filename('aiosmtpd.tests.certs', 'server.key'))
     return tls_context
@@ -16,7 +16,8 @@ def get_server_context():
 @public
 class Controller:
     def __init__(self, handler, loop=None, hostname=None, port=8025, *,
-                 ready_timeout=1.0, enable_SMTPUTF8=True, ssl_context=None, authenticate=False, startSSL=False):
+                 ready_timeout=1.0, enable_SMTPUTF8=True, ssl_context=None, authenticate=False,
+                 startSSL=False, certfile=None, keyfile=None, timeout=300):
         """
         `Documentation can be found here
         <http://aiosmtpd.readthedocs.io/en/latest/aiosmtpd\
@@ -35,15 +36,18 @@ class Controller:
             'AIOSMTPD_CONTROLLER_TIMEOUT', ready_timeout)
         self.authenticate = authenticate
         self.startSSL = startSSL
+        self.certfile = certfile
+        self.keyfile = keyfile
         self.ssl = ssl
+        self.timeout = timeout
 
     def factory(self):
         """Allow subclasses to customize the handler/server creation."""
         ssl = self.ssl_context
         if self.startSSL:
-            ssl = get_server_context()
+            ssl = get_server_context(self.certfile, self.keyfile)
         return SMTP(self.handler, enable_SMTPUTF8=self.enable_SMTPUTF8, require_starttls=self.startSSL,
-                    authenticate=self.authenticate, tls_context=ssl, decode_data=True)
+                    authenticate=self.authenticate, tls_context=ssl, decode_data=True, timeout=self.timeout)
 
     def _run(self, ready_event):
         asyncio.set_event_loop(self.loop)

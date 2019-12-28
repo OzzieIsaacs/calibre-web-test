@@ -28,7 +28,7 @@ class test_anonymous(unittest.TestCase, ui_class):
 
     @classmethod
     def tearDownClass(cls):
-        # close the browser window and stop calibre-web
+        #close the browser window and stop calibre-web
         cls.driver.quit()
         cls.p.kill()
 
@@ -43,7 +43,7 @@ class test_anonymous(unittest.TestCase, ui_class):
         self.assertFalse(self.goto_page('nav_about'))
 
     # Checks if random book section is available in all sidebar menus
-    '''def test_guest_random_books_available(self):
+    def test_guest_random_books_available(self):
         self.edit_user('Guest',{'show_512':1, 'show_128':1, 'show_2': 1, 'show_64':1,
                                 'show_16': 1, 'show_4': 1, 'show_4096': 1, 'show_8': 1, 'show_32':1})
         self.logout()
@@ -93,11 +93,11 @@ class test_anonymous(unittest.TestCase, ui_class):
         self.check_element_on_page((By.ID, "top_user")).click()
         self.login('admin', 'admin123')
         self.edit_user('Guest',{'show_32':0, 'show_512':0, 'show_128':0, 'show_2': 0,
-                                'show_16': 0, 'show_4': 0, 'show_4096': 0, 'show_8': 0, 'show_64':0})'''
+                                'show_16': 0, 'show_4': 0, 'show_4096': 0, 'show_8': 0, 'show_64':0})
 
 
     # checks if admin can configure sidebar for random view
-    '''def test_guest_visibility_sidebar(self):
+    def test_guest_visibility_sidebar(self):
         self.edit_user('Guest',{'show_32':0, 'show_512':1, 'show_128':1, 'show_2': 1,
                                 'show_16': 1, 'show_4': 1, 'show_4096': 1, 'show_8': 1, 'show_64':1})
         self.assertTrue(self.check_element_on_page((By.ID, "flash_success")))
@@ -267,5 +267,5 @@ class test_anonymous(unittest.TestCase, ui_class):
         self.assertTrue(self.check_element_on_page((By.ID, "flash_success")))
         # Category not visible
         self.logout()
-        self.assertFalse(self.check_element_on_page((By.ID, "nav_cat")))'''
+        self.assertFalse(self.check_element_on_page((By.ID, "nav_cat")))
 

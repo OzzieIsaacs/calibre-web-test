@@ -1,7 +1,7 @@
 #!/usr/bin/env python
 # -*- coding: utf-8 -*-
 
-from email_convert_helper import Gevent_SMPTPServer, CredentialValidator
+from email_convert_helper import AIOSMTPServer
 # import email_convert_helper
 from testconfig import TEST_DB
 from func_helper import startup, wait_Email_received
@@ -21,10 +21,9 @@ class test_register(unittest.TestCase, ui_class):
 
     @classmethod
     def setUpClass(cls):
-        cls.email_server = Gevent_SMPTPServer(
-            ('127.0.0.1', 1025),
+        cls.email_server = AIOSMTPServer(
+            hostname='127.0.0.1',port=1025,
             only_ssl=False,
-            credential_validator=CredentialValidator(),
             timeout=10
         )
         cls.email_server.start()
@@ -49,7 +48,7 @@ class test_register(unittest.TestCase, ui_class):
         cls.email_server.stop()
 
     def tearDown(self):
-        self.email_server.reset_email_received()
+        self.email_server.handler.reset_email_received()
         if self.check_user_logged_in('admin'):
             self.logout()
 
@@ -77,14 +76,14 @@ class test_register(unittest.TestCase, ui_class):
         if self.check_user_logged_in('admin',True):
             self.logout()
         self.assertEqual(u'flash_success',self.register(u'u1','huj@de.de'))
-        self.assertTrue(wait_Email_received(self.email_server.check_email_received))
-        user, passw = self.email_server.extract_register_info()
-        self.email_server.reset_email_received()
+        self.assertTrue(wait_Email_received(self.email_server.handler.check_email_received))
+        user, passw = self.email_server.handler.extract_register_info()
+        self.email_server.handler.reset_email_received()
         self.assertTrue(self.login(user, passw))
         self.logout()
         self.assertEqual(u'flash_success',self.register(u'ü执1',u'huij@de.de'))
-        self.assertTrue(wait_Email_received(self.email_server.check_email_received))
-        user, passw = self.email_server.extract_register_info()
+        self.assertTrue(wait_Email_received(self.email_server.handler.check_email_received))
+        user, passw = self.email_server.handler.extract_register_info()
         self.assertTrue(self.login(user, passw))
         self.logout()
 
@@ -92,18 +91,18 @@ class test_register(unittest.TestCase, ui_class):
     def test_registering_user_fail(self):
         if self.check_user_logged_in('admin',True):
             self.logout()
-        self.email_server.reset_email_received()
+        self.email_server.handler.reset_email_received()
         self.assertEqual(u'flash_success',self.register(u'udouble','huj@de.com'))
-        self.assertTrue(wait_Email_received(self.email_server.check_email_received))
-        self.email_server.reset_email_received()
+        self.assertTrue(wait_Email_received(self.email_server.handler.check_email_received))
+        self.email_server.handler.reset_email_received()
         self.assertEqual(u'flash_alert',self.register(u'udouble','huj@de.cem'))
-        self.email_server.reset_email_received()
+        self.email_server.handler.reset_email_received()
         self.assertEqual(u'flash_alert',self.register(u'udoubl','huj@de.com'))
-        self.email_server.reset_email_received()
+        self.email_server.handler.reset_email_received()
         self.assertEqual(u'flash_alert',self.register(u'UdoUble','huo@de.com'))
-        self.email_server.reset_email_received()
+        self.email_server.handler.reset_email_received()
         self.assertEqual(u'flash_alert',self.register(u'UdoUble','huJ@dE.com'))
-        self.email_server.reset_email_received()
+        self.email_server.handler.reset_email_received()
         self.assertEqual(u'flash_alert',self.register(u'UdoUble','huJ@de'))
 
     # user registers, user changes password, user forgets password, admin resents password for user
@@ -115,26 +114,26 @@ class test_register(unittest.TestCase, ui_class):
         self.fill_view_config({'passwd_role': 1})
         self.logout()
         self.assertEqual(u'flash_success',self.register(u'upasswd','passwd@de.com'))
-        self.assertTrue(wait_Email_received(self.email_server.check_email_received))
-        user, passw = self.email_server.extract_register_info()
-        self.email_server.reset_email_received()
+        self.assertTrue(wait_Email_received(self.email_server.handler.check_email_received))
+        user, passw = self.email_server.handler.extract_register_info()
+        self.email_server.handler.reset_email_received()
         self.assertTrue(self.login(user, passw))
         self.assertTrue(self.change_current_user_password('new_passwd'))
         self.logout()
         self.assertTrue(self.login(user, 'new_passwd'))
         self.logout()
         self.assertTrue(self.forgot_password(u'upasswd'))
-        self.assertTrue(wait_Email_received(self.email_server.check_email_received))
-        user, passw = self.email_server.extract_register_info()
-        self.email_server.reset_email_received()
+        self.assertTrue(wait_Email_received(self.email_server.handler.check_email_received))
+        user, passw = self.email_server.handler.extract_register_info()
+        self.email_server.handler.reset_email_received()
         self.assertTrue(self.login(user, passw))
         self.logout()
         # admin resents password
         self.login('admin', 'admin123')
         self.assertTrue(self.edit_user(u'upasswd', { 'resend_password':1}))
         self.logout()
-        self.assertTrue(wait_Email_received(self.email_server.check_email_received))
-        user, passw = self.email_server.extract_register_info()
-        self.email_server.reset_email_received()
+        self.assertTrue(wait_Email_received(self.email_server.handler.check_email_received))
+        user, passw = self.email_server.handler.extract_register_info()
+        self.email_server.handler.reset_email_received()
         self.assertTrue(self.login(user, passw))
         self.logout()

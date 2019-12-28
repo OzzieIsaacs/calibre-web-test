@@ -3,6 +3,8 @@ import socket
 import asyncio
 import logging
 import collections
+from . import log
+# logger = logging.getLogger(log.LOG_NAME)
 
 from asyncio import sslproto
 from email._header_value_parser import get_addr_spec, get_angle_addr
@@ -13,7 +15,7 @@ import base64
 
 __version__ = '1.2+'
 __ident__ = 'Python SMTP {}'.format(__version__)
-log = logging.getLogger('mail.log')
+log = logging.getLogger(log.LOG_NAME)
 
 
 DATA_SIZE_DEFAULT = 33554432
@@ -748,7 +750,7 @@ class SMTP(asyncio.StreamReaderProtocol):
         while self.transport is not None:           # pragma: nobranch
             try:
                 line = await self._reader.readline()
-                log.debug('DATA readline: %s', line)
+                # log.debug('DATA readline: %s', line)
             except asyncio.CancelledError:
                 # The connection got reset during the DATA command.
                 log.info('Connection lost during DATA')

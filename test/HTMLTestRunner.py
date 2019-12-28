@@ -93,7 +93,6 @@ Version in 0.7.1
 
 import datetime
 import sys
-import time
 import unittest
 from xml.sax import saxutils
 
@@ -102,7 +101,6 @@ if PY3K:
     import io as StringIO
 else:
     import StringIO
-import copy
 
 # ------------------------------------------------------------------------
 # The redirectors below are used to capture output during testing. Output
@@ -119,7 +117,7 @@ import copy
 
 def to_unicode(s):
     try:
-        if PY3K:
+        if not PY3K:
             return unicode(s)
         return s
     except UnicodeDecodeError:
@@ -613,7 +611,7 @@ class HTMLTestRunner(Template_mixin):
             if not PY3K:
                 ue = e.decode('latin-1')
             else:
-                ue = output
+                ue = e
         else:
             ue = e
 
