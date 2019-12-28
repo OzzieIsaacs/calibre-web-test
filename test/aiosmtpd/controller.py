@@ -1,10 +1,17 @@
 import os
 import asyncio
 import threading
+import ssl
 
 from aiosmtpd.smtp import SMTP
 from public import public
 
+def get_server_context():
+    tls_context = ssl.create_default_context(ssl.Purpose.CLIENT_AUTH)
+    tls_context.load_cert_chain('SSL/ssl.crt','SSL/ssl.key')
+        #pkg_resources.resource_filename('aiosmtpd.tests.certs', 'server.crt'),
+        #pkg_resources.resource_filename('aiosmtpd.tests.certs', 'server.key'))
+    return tls_context
 
 @public
 class Controller:
@@ -28,11 +35,15 @@ class Controller:
             'AIOSMTPD_CONTROLLER_TIMEOUT', ready_timeout)
         self.authenticate = authenticate
         self.startSSL = startSSL
+        self.ssl = ssl
 
     def factory(self):
         """Allow subclasses to customize the handler/server creation."""
+        ssl = self.ssl_context
+        if self.startSSL:
+            ssl = get_server_context()
         return SMTP(self.handler, enable_SMTPUTF8=self.enable_SMTPUTF8, require_starttls=self.startSSL,
-                    authenticate=self.authenticate, tls_context=self.ssl_context, decode_data=True)
+                    authenticate=self.authenticate, tls_context=ssl, decode_data=True)
 
     def _run(self, ready_event):
         asyncio.set_event_loop(self.loop)

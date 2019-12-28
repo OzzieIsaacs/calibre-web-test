@@ -2,58 +2,22 @@ import asyncio
 import logging
 import re
 import email
-import ssl
-import os
+import time
+import threading
 
 from aiosmtpd.controller import Controller
-from aiosmtpd.controller import Controller as BaseController
-from aiosmtpd.handlers import Sink
-from aiosmtpd.smtp import SMTP as SMTPProtocol
-from email.mime.text import MIMEText
-from smtplib import SMTP
+from aiosmtpd.controller import get_server_context
 
 from email import message_from_bytes, message_from_string
-from public import public
 
 COMMASPACE = ', '
 
-def get_server_context():
-    tls_context = ssl.create_default_context(ssl.Purpose.CLIENT_AUTH)
-    tls_context.load_cert_chain('SSL/ssl.crt','SSL/ssl.key')
-        #pkg_resources.resource_filename('aiosmtpd.tests.certs', 'server.crt'),
-        #pkg_resources.resource_filename('aiosmtpd.tests.certs', 'server.key'))
-    return tls_context
 
-class ReceivingHandler:
-    def __init__(self):
-        self.box = []
-
-    async def handle_DATA(self, server, session, envelope):
-        self.box.append(envelope)
-        return '250 OK'
-
-
-class Controller(BaseController):
-    def factory(self):
-        return SMTPProtocol(self.handler)
-
-
-
-class TLSRequiredController(Controller):
-    def factory(self):
-        return SMTPProtocol(
-            self.handler,
-            decode_data=True,
-            require_starttls=True,
-            tls_context=get_server_context())
-
-
-class Message:
+class MyMessage():
     def __init__(self, message_class=None):
         self.message_class = message_class
         self.ret_value = 0
         self.size = 0
-
 
     async def handle_AUTH(self, server, session, envelope, username, password):
         print('User: %s, Password: %s' % (username,password))
@@ -118,29 +82,112 @@ class Message:
 
 
 
-async def amain(loop, authenticate, startSSL= False, ssl_only=None):
-    #if startSSL:
-    #controller = TLSRequiredController(Sink)
-    #controller.start()
+'''async def amain(loop, authenticate, startSSL= False, ssl_only=None):
+    if ssl_only:
+        ssl_only = get_server_context()
+    controller = Controller(MyMessage(), hostname='', startSSL=startSSL, authenticate=authenticate, ssl_context = ssl_only)
+    controller.start()    
 
-    cont = Controller(Message(), hostname='', port=8025, startSSL=startSSL, authenticate=authenticate, ssl_context = ssl_only) # require_starttls=True)
-    #else:
-    #    cont = Controller(Message(), hostname='', port=8024, authenticate=authenticate, ssl_context = ssl_only)
-    cont.start()
 
 
 if __name__ == '__main__':
     logging.basicConfig(level=logging.DEBUG)
     loop = asyncio.get_event_loop()
-    # loop.create_task(amain(loop=loop, authenticate=True, startSSL= True))
-    # loop.create_task(amain(loop=loop, authenticate=True))  # , ssl_only=get_server_context()))
-    loop.create_task(amain(loop=loop, authenticate=True, startSSL=False, ssl_only=None))
+    # SSL
+    loop.create_task(amain(loop=loop, authenticate=True, startSSL=False, ssl_only=True))
+    # STARTSSL
+    #loop.create_task(amain(loop=loop, authenticate=True, startSSL=True, ssl_only=None))
+    # No SSL
+    #loop.create_task(amain(loop=loop, authenticate=True, startSSL=False, ssl_only=None))
     try:
         loop.run_forever()
+    except KeyboardInterrupt:
+        pass'''
+
+
+def amain(authenticate, startSSL=False, ssl_only=None):
+    if ssl_only:
+        ssl_only = get_server_context()
+    return Controller(MyMessage(), hostname='', startSSL=startSSL, authenticate=authenticate,
+                            ssl_context=ssl_only)
+
+
+
+if __name__ == '__main__':
+    logging.basicConfig(level=logging.DEBUG)
+    loop = asyncio.get_event_loop()
+    # SSL
+    controller= amain(authenticate=True, startSSL=False, ssl_only=True)
+    controller.start()
+    # STARTSSL
+    # loop.create_task(amain(loop=loop, authenticate=True, startSSL=True, ssl_only=None))
+    # No SSL
+    # loop.create_task(amain(loop=loop, authenticate=True, startSSL=False, ssl_only=None))
+    try:
+        # loop.run_forever()
+        while True:
+            time.sleep(1)
+            if controller.handler.message_size:
+                print(controller.handler.message_size)
+                controller.handler.reset_email_received()
+                print('reset')
     except KeyboardInterrupt:
         pass
 
 
+'''def amain(loop, authenticate, startSSL= False, ssl_only=None):
+    asyncio.set_event_loop(loop)
+    if ssl_only:
+        ssl_only = get_server_context()
+    controller= Controller(MyMessage(), hostname='', startSSL=startSSL, authenticate=authenticate, ssl_context = ssl_only)
+    controller.start()
+    loop.run_forever()
 
 
+
+if __name__ == '__main__':
+    logging.basicConfig(level=logging.DEBUG)
+    loop = asyncio.get_event_loop()
+    # SSL
+    #controller = amain(loop, authenticate=True, startSSL=False, ssl_only=True)
+    #controller.start()
+    authenticate = True
+    startSSL = False
+    ssl_only = True
+    t = threading.Thread(target=amain, args=(loop, authenticate, startSSL, ssl_only))
+    t.start()
+    #loop.create_task(amain(loop=loop, authenticate=True, startSSL=False, ssl_only=True))
+    # STARTSSL
+    #loop.create_task(amain(loop=loop, authenticate=True, startSSL=True, ssl_only=None))
+    # No SSL
+    #loop.create_task(amain(loop=loop, authenticate=True, startSSL=False, ssl_only=None))
+    try:
+        while True:
+            # loop.run_forever()
+            time.sleep(1)
+    except KeyboardInterrupt:
+        pass'''
+
+
+
+#>>> import asyncio
+#>>>
+#>>> @asyncio.coroutine
+#... def greet_every_two_seconds():
+#...     while True:
+#...         print('Hello World')
+#...         yield from asyncio.sleep(2)
+#...
+#>>> def loop_in_thread(loop):
+#...     asyncio.set_event_loop(loop)
+#...     loop.run_until_complete(greet_every_two_seconds())
+#...
+#>>>
+#>>> loop = asyncio.get_event_loop()
+#>>> import threading
+#>>> t = threading.Thread(target=loop_in_thread, args=(loop,))
+#>>> t.start()
+#Hello World
+#>>>
+#>>> Hello World
 

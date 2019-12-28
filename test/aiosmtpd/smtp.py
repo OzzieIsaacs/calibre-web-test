@@ -388,7 +388,7 @@ class SMTP(asyncio.StreamReaderProtocol):
         if self.enable_SMTPUTF8:
             await self.push('250-SMTPUTF8')
             self.command_size_limits['MAIL'] += 10
-        if self.tls_context and not self._tls_protocol:
+        if self.require_starttls: # self.tls_context and not self._tls_protocol:
             await self.push('250-STARTTLS')
         if self.enable_Auth:
             await self.push('250-AUTH LOGIN PLAIN')
@@ -429,7 +429,7 @@ class SMTP(asyncio.StreamReaderProtocol):
             await self.push('502 Error: command AUTH is not supported by server')
             return
         # if starttls is required and done, or not required give answer
-        if self.tls_context and not self._tls_protocol:
+        if self.require_starttls and self.tls_context and not self._tls_protocol:
             await self.push('530 Must issue a STARTTLS command first')
             return
         if 'PLAIN' in arg or self.auth_type=='PLAIN':
