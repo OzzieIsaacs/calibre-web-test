@@ -20,7 +20,7 @@ class MyMessage():
 
     async def handle_AUTH(self, server, session, envelope, username, password):
         print('User: %s, Password: %s' % (username,password))
-        if username == 'user' and password == 'password':
+        if username == 'name@host.com' and password == '10234':
             return 235
         return 454
 
@@ -107,8 +107,8 @@ if __name__ == '__main__':
 def amain(authenticate, startSSL=False, ssl_only=None):
     if ssl_only:
         ssl_only = get_server_context()
-    return Controller(MyMessage(), hostname='', startSSL=startSSL, authenticate=authenticate,
-                            ssl_context=ssl_only)
+    return Controller(MyMessage(), port=1027, hostname='', startSSL=startSSL, authenticate=authenticate,
+                            ssl_context=ssl_only, timeout=10)
 
 
 

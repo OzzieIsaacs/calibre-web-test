@@ -394,7 +394,7 @@ class test_ebook_convert(unittest.TestCase, ui_class):
                     break
             i += 1
         self.assertEqual(ret[-1]['result'], 'Finished')
-        self.assertGreaterEqual(self.email_server.handler.message_size,24256)
+        self.assertGreaterEqual(self.email_server.handler.message_size,17477)
         self.setup_server(False, {'mail_password':'1234'})
 
 

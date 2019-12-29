@@ -66,8 +66,8 @@ class Gevent_SMPTPServer(SMTPServer):
 
 if __name__ == '__main__':
     email_server = Gevent_SMPTPServer(
-        ('127.0.0.1', 8024),
-        only_ssl=False,
+        ('127.0.0.1', 1027),
+        only_ssl=True,
         certfile='SSL/ssl.crt',
         keyfile='SSL/ssl.key',
         credential_validator=CredentialValidator(),

@@ -6,6 +6,7 @@ import email_convert_helper
 import unittest
 import os
 import re
+import sys
 from selenium.webdriver.common.by import By
 import time
 from ui_helper import ui_class
@@ -89,6 +90,7 @@ class test_SSL(unittest.TestCase, ui_class):
 
 
     # check behavior for failed server setup (STARTTLS)
+    @unittest.skipIf(sys.version_info < (3, 7), "AsyncIO has no ssl handshake timeout")
     def test_SSL_STARTTLS_setup_error(self):
         task_len = len(self.check_tasks())
         self.setup_server(False, {'mail_use_ssl':'STARTTLS'})
@@ -109,6 +111,7 @@ class test_SSL(unittest.TestCase, ui_class):
         self.assertEqual(ret[-1]['result'], 'Failed')
 
     # check behavior for failed server setup (NonSSL)
+    @unittest.skipIf(sys.version_info < (3, 7), "AsyncIO has no ssl handshake timeout")
     def test_SSL_None_setup_error(self):
         task_len = len(self.check_tasks())
         self.setup_server(False, {'mail_use_ssl':'None'})
@@ -131,7 +134,7 @@ class test_SSL(unittest.TestCase, ui_class):
     # check if email traffic is logged to logfile
     def test_SSL_logging_email(self):
         self.setup_server(True, {'mail_use_ssl': 'SSL/TLS'})
-        time.sleep(2)
+        time.sleep(5)
         with open(os.path.join(CALIBRE_WEB_PATH,'calibre-web.log'),'r') as logfile:
             data = logfile.read()
         self.assertTrue(len(re.findall('Subject: Calibre-Web test e-mail',data)),"Email logging not working")

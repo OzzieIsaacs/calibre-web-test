@@ -38,6 +38,7 @@ class MyMessage():
         self.message_class = message_class
         self.ret_value = 0
         self.size = 0
+        self.message = None
 
     async def handle_AUTH(self, server, session, envelope, username, password):
         print('User: %s, Password: %s' % (username,password))
@@ -66,6 +67,11 @@ class MyMessage():
 
     def handle_message(self, message):
         message_data = message.get_payload()
+        if isinstance(message_data, list):
+            if len(message_data) == 1:
+                message_data = message_data[0].get_payload(decode=True)
+            else:
+                message_data = message_data[0].get_payload(decode=True) + message_data[1].get_payload(decode=True)
         print('Receiving message from:', message.get('X-Peer'))
         print('Message addressed from:', message.get('From'))
         print('Message addressed to:', message.get('To'))
@@ -87,9 +93,9 @@ class MyMessage():
 
     def extract_register_info(self):
         if self.message:
-            self.message = email.message_from_string(self.message).get_payload(0).get_payload(decode=True).decode('utf-8')
-            username = re.findall('User name:\s(.*)\r',self.message)
-            password = re.findall('Password:\s(.*)\r',self.message)
+            # self.message = email.message_from_string(self.message).get_payload(0).get_payload(decode=True).decode('utf-8')
+            username = re.findall('User name:\s(.*)\r',self.message.decode('utf-8'))
+            password = re.findall('Password:\s(.*)\r',self.message.decode('utf-8'))
             if len(username) and len(password):
                 return (username[0], password[0])
         return (False, False)
@@ -107,7 +113,7 @@ def AIOSMTPServer(hostname='', port=1025, authenticate=True, startSSL=False, onl
     # SSL
     # controller= amain(authenticate=True, startSSL=False, ssl_only=True)
     if only_ssl:
-        only_ssl = get_server_context()
+        only_ssl = get_server_context(certfile, keyfile)
     if only_ssl == False:
         only_ssl = None
     controller= Controller(MyMessage(), hostname=hostname, port=port, startSSL=startSSL, authenticate=authenticate,
