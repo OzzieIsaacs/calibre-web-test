@@ -14,4 +14,4 @@ else:
     TEST_DB = os.path.abspath(os.path.join(base_path, '..', '..', 'Dokumente', 'tüst db'))
 
 # Boottime in seconds
-BOOT_TIME = 7
+BOOT_TIME = 5

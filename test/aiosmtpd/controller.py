@@ -61,10 +61,11 @@ class Controller:
                         self.factory, host=self.hostname, port=self.port,
                         ssl=self.ssl_context))
             else:
+                timeout = 10 if self.ssl_context else None
                 self.server = self.loop.run_until_complete(
                     self.loop.create_server(
                         self.factory, host=self.hostname, port=self.port,
-                        ssl=self.ssl_context, ssl_handshake_timeout=10))
+                        ssl=self.ssl_context, ssl_handshake_timeout=timeout))
         except Exception as error:
             self._thread_exception = error
             return

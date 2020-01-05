@@ -580,7 +580,11 @@ class HTMLTestRunner(Template_mixin):
         else:
             test_id = (n == 0 and 'p' or 'f') + 't%s.%s' \
                                             % (class_id + 1, test_id + 1)
-        name = t.id().split('.')[-1]
+        namelist = t.id().split('.')
+        if len(namelist) == 3:
+            name = namelist[-1]
+        else:
+            name = ''.join(namelist[:-1])+')'
         doc = t.shortDescription() or ""
         desc = doc and ('%s: %s' % (name, doc)) or name
         # tmpl = has_output and self.REPORT_TEST_WITH_OUTPUT_TMPL or \
