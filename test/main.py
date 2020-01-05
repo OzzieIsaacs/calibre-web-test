@@ -1,7 +1,7 @@
 #!/usr/bin/env python
 # -*- coding: utf-8 -*-
-from gevent import monkey
-monkey.patch_all()
+#from gevent import monkey
+#monkey.patch_all()
 
 # from parameterized import parameterized_class
 import HTMLTestRunner
