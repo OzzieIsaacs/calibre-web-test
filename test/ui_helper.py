@@ -63,6 +63,29 @@ class ui_class():
         except:
             return False
 
+    '''
+    return values: 
+    - alert-info, alert-danger, alert-success, alert-warning if flash message occours
+    - '-1' if resend button is not presend
+    - '0' if no flash message occurs after submit button is pushed    
+    '''
+    @classmethod
+    def resend_password(cls,user):
+        cls.logout()
+        cls.check_element_on_page((By.NAME, "username"))
+        username = cls.driver.find_element_by_name("username")
+        resend = cls.driver.find_element_by_name("forgot")
+        if resend:
+            username.send_keys(user)
+            resend.click()
+            flash = cls.check_element_on_page((By.CLASS_NAME, "alert"))
+            if flash:
+                id = flash.get_attribute('id')
+                return id
+            else:
+                return 0
+        return -1
+
     @classmethod
     def logout(cls):
         logout = cls.check_element_on_page((By.ID, "logout"))
@@ -347,6 +370,72 @@ class ui_class():
         self.driver.find_element_by_id('admin_stop').click()
         element = self.check_element_on_page((By.ID, "shutdown"))
         element.click()
+
+    def list_domains(self, allow=True):
+        if self.goto_page('mail_server'):
+            if allow:
+                table_id='domain-allow-table'
+            else:
+                table_id = 'domain-deny-table'
+            if not self.check_element_on_page((By.ID, table_id)):
+                return False
+            parser = lxml.etree.HTMLParser()
+            html = self.driver.page_source
+
+            tree = lxml.etree.parse(StringIO(html), parser)
+            vals = tree.xpath("//table[@id='"+table_id+"']/tbody/tr")
+            val = list()
+            for va in vals:
+                try:
+                    go = va.getchildren()[0].getchildren()[0]
+                    id = go.attrib['data-pk']
+                    delButton = self.driver.find_element_by_css_selector("a[data-pk='"+id+"']")
+                    editButton = self.driver.find_element_by_css_selector("a[data-domain-id='"+id+"']")
+                    val.append({'domain':go.text, 'delete': delButton, 'edit':editButton, 'id':id})
+                except IndexError:
+                    pass
+            return val
+        else:
+            return False
+
+    def edit_domains(self, id,  new_value, accept, allow=True):
+        if allow:
+            table_id = 'domain-allow-table'
+        else:
+            table_id = 'domain-deny-table'
+        if not self.check_element_on_page((By.ID, table_id)):
+            return False
+        editButton = self.check_element_on_page((By.CSS_SELECTOR, "a[data-pk='" + id + "']"))
+        if not editButton:
+            return False
+        editButton.click()
+        editor=self.check_element_on_page((By.CLASS_NAME, "input-sm"))
+        if not editor:
+            return False
+        editor.clear()
+        editor.send_keys(new_value)
+        if accept:
+            submit = self.check_element_on_page((By.CLASS_NAME, "editable-submit"))
+        else:
+            submit = self.check_element_on_page((By.CLASS_NAME, "editable-cancel"))
+        submit.click()
+
+    def delete_domains(self, id, accept, allow=True):
+        if allow:
+            table_id = 'domain-allow-table'
+        else:
+            table_id = 'domain-deny-table'
+        if not self.check_element_on_page((By.ID, table_id)):
+            return False
+        deleteButton = self.check_element_on_page((By.CSS_SELECTOR, "a[data-domain-id='" + id + "']"))
+        if not deleteButton:
+            return False
+        deleteButton.click()
+        if accept:
+            submit = self.check_element_on_page((By.ID, "btndeletedomain"))
+        else:
+            submit = self.check_element_on_page((By.ID, "btncancel"))
+        submit.click()
 
     @classmethod
     def setup_server(cls, test_on_return, elements):

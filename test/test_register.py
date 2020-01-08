@@ -63,13 +63,13 @@ class test_register(unittest.TestCase, ui_class):
         self.login('admin', 'admin123')
         self.setup_server(False, {'mail_server': '127.0.0.1'})
 
-    @unittest.skip("Not Implemented")
+    # ToDo: Implement
     def test_limit_domain(self):
-        pass
+        self.goto_page('mail_server')
+        a_domains = self.list_domains(allow=True)
+        self.delete_domains(a_domains[0]['id'], accept=False, allow=True)
+        print('fini')
 
-    @unittest.skip("Not Implemented")
-    def test_limit_domain(self):
-        pass
 
     # register user, extract password, login, check rights
     def test_registering_user(self):
