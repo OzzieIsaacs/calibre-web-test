@@ -437,6 +437,100 @@ class ui_class():
             submit = self.check_element_on_page((By.ID, "btncancel"))
         submit.click()
 
+    def add_domains(self, new_value, allow=True):
+        if allow:
+            edit = self.check_element_on_page((By.ID, "domainname_allow"))
+            add = self.check_element_on_page((By.ID, "domain_allow_submit"))
+        else:
+            edit = self.check_element_on_page((By.ID, "domainname_deny"))
+            add = self.check_element_on_page((By.ID, "domain_deny_submit"))
+        if not edit:
+            return False
+        edit.clear()
+        edit.send_keys(new_value)
+        if not add:
+            return False
+        add.click()
+
+    def list_restrictions(self, type):
+        if type == 0:
+            if not self.goto_page('mail_server'):  # ToDo check
+                return False
+        elif type == 1:
+            if not self.goto_page('mail_server'):  # ToDo check
+                return False
+        elif type == 2:
+            if not self.goto_page('mail_server'):  # ToDo check
+                return False
+        elif type == 3:
+            if not self.goto_page('mail_server'):  # ToDo check
+                return False
+        table_id='restrict-elements-table'
+        if not self.check_element_on_page((By.ID, table_id)):
+            return False
+        parser = lxml.etree.HTMLParser()
+        html = self.driver.page_source
+
+        tree = lxml.etree.parse(StringIO(html), parser)
+        vals = tree.xpath("//table[@id='"+table_id+"']/tbody/tr")
+        val = list()
+        for va in vals:
+            try:
+                go = va.getchildren()[0].getchildren()
+                id = go[0].attrib['data-pk']
+                delButton = self.driver.find_element_by_css_selector("a[data-pk='"+id+"']")
+                editButton = self.driver.find_element_by_css_selector("a[data-restriction-id='"+id+"']")
+                val.append({'restriction':go[0].text,
+                            'delete': delButton,
+                            'edit':editButton,
+                            'id':id,
+                            'type': go[1].text})
+            except IndexError:
+                pass
+        return val
+
+    def edit_restrictions(self, id,  new_value, accept):
+        table_id = 'restrict-elements-table'
+        if not self.check_element_on_page((By.ID, table_id)):
+            return False
+        editButton = self.check_element_on_page((By.CSS_SELECTOR, "a[data-pk='" + id + "']"))
+        if not editButton:
+            return False
+        editButton.click()
+        editor=self.check_element_on_page((By.CLASS_NAME, "input-sm"))
+        if not editor:
+            return False
+        editor.clear()
+        editor.send_keys(new_value)
+        if accept:
+            submit = self.check_element_on_page((By.CLASS_NAME, "editable-submit"))
+        else:
+            submit = self.check_element_on_page((By.CLASS_NAME, "editable-cancel"))
+        submit.click()
+
+    def delete_restrictions(self, id):
+        table_id = 'restrict-elements-table'
+        if not self.check_element_on_page((By.ID, table_id)):
+            return False
+        deleteButton = self.check_element_on_page((By.CSS_SELECTOR, "a[data-restriction-id='" + id + "']"))
+        if not deleteButton:
+            return False
+        deleteButton.click()
+
+    def add_restrictions(self, new_value, allow=True):
+        edit = self.check_element_on_page((By.ID, "add_element"))
+        if allow:
+            add = self.check_element_on_page((By.ID, "submit_allow"))
+        else:
+            add = self.check_element_on_page((By.ID, "submit_restrict"))
+        if not edit:
+            return False
+        edit.clear()
+        edit.send_keys(new_value)
+        if not add:
+            return False
+        add.click()
+
     @classmethod
     def setup_server(cls, test_on_return, elements):
         cls.goto_page('mail_server')
