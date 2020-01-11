@@ -125,31 +125,6 @@ class test_user_template(unittest.TestCase, ui_class):
         # delete user
         self.edit_user('recent',{'delete':1})
 
-    '''def test_sorted_user_template(self):
-        self.fill_view_config({'show_sorted':0})
-        self.goto_page('create_user')
-        self.create_user('sorted',{'password':'1234','email':'a3@b.com'})
-        self.assertTrue(self.check_element_on_page((By.ID, "flash_success")))
-        self.fill_view_config({'show_sorted':1})
-        self.logout()
-        self.login('sorted','1234')
-        self.assertTrue(self.check_element_on_page((By.ID, "nav_new")))
-        self.assertFalse(self.check_element_on_page((By.ID, "nav_sort")))
-        self.assertTrue(self.check_element_on_page((By.ID, "nav_hot")))
-        self.assertTrue(self.check_element_on_page((By.ID, "nav_rated")))
-        self.assertTrue(self.check_element_on_page((By.ID, "nav_read")))
-        self.assertTrue(self.check_element_on_page((By.ID, "nav_unread")))
-        self.assertTrue(self.check_element_on_page((By.ID, "nav_rand")))
-        self.assertTrue(self.check_element_on_page((By.ID, "nav_cat")))
-        self.assertTrue(self.check_element_on_page((By.ID, "nav_serie")))
-        self.assertTrue(self.check_element_on_page((By.ID, "nav_author")))
-        self.assertTrue(self.check_element_on_page((By.ID, "nav_lang")))
-        self.assertTrue(self.check_element_on_page((By.ID, "nav_publisher")))
-        self.logout()
-        self.login('admin','admin123')
-        # delete user
-        self.edit_user('sorted',{'delete':1})'''
-
     def test_hot_user_template(self):
         self.fill_view_config({'show_16':0})
         self.goto_page('create_user')
@@ -410,14 +385,6 @@ class test_user_template(unittest.TestCase, ui_class):
         self.goto_page("nav_unread")
         self.assertFalse(self.check_element_on_page((By.ID, "books_rand")))
         # check random books not shown in sorted section
-        '''self.goto_page("nav_sort_old")
-        self.assertFalse(self.check_element_on_page((By.ID, "books_rand")))
-        self.goto_page("nav_sort_new")
-        self.assertFalse(self.check_element_on_page((By.ID, "books_rand")))
-        self.goto_page("nav_sort_asc")
-        self.assertFalse(self.check_element_on_page((By.ID, "books_rand")))
-        self.goto_page("nav_sort_desc")
-        self.assertFalse(self.check_element_on_page((By.ID, "books_rand")))'''
         self.logout()
         self.login('admin','admin123')
         # delete user

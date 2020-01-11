@@ -14,4 +14,7 @@ else:
     TEST_DB = os.path.abspath(os.path.join(base_path, '..', '..', 'Dokumente', 'tüst db'))
 
 # Boottime in seconds
-BOOT_TIME = 5
+BOOT_TIME = 3
+
+# Python binary
+PY_BIN = u'/usr/bin/python3'

@@ -36,7 +36,8 @@ class test_register(unittest.TestCase, ui_class):
                                 'mail_use_ssl':'None','mail_login':'name@host.com','mail_password':'10234',
                                 'mail_from':'name@host.com'})
 
-        except:
+        except Exception as e:
+            print(e)
             cls.driver.quit()
             cls.p.kill()
 
@@ -67,9 +68,45 @@ class test_register(unittest.TestCase, ui_class):
     def test_limit_domain(self):
         self.goto_page('mail_server')
         a_domains = self.list_domains(allow=True)
+        self.assertEqual(a_domains[0]['domain'],'*.*')
         self.delete_domains(a_domains[0]['id'], accept=False, allow=True)
-        print('fini')
-
+        a_domains = self.list_domains(allow=True)
+        self.assertEqual(a_domains[0]['domain'], '*.*')
+        self.delete_domains(a_domains[0]['id'], accept=True, allow=True)
+        a_domains = self.list_domains(allow=True)
+        self.assertEqual(a_domains[0]['domain'], '*.*')
+        self.edit_domains(a_domains[0]['id'], '*.com', accept=False, allow=True)
+        a_domains = self.list_domains(allow=True)
+        self.assertEqual(a_domains[0]['domain'], '*.*')
+        self.edit_domains(a_domains[0]['id'], '*.com', accept=True, allow=True)
+        a_domains = self.list_domains(allow=True)
+        self.assertEqual(a_domains[0]['domain'], '*.com')
+        self.logout()
+        self.assertEqual(self.register('nocom','alfa@com.de'), 'flash_alert')
+        self.assertEqual(self.register('nocom', 'alfa@com.com'),'flash_success')
+        self.login('admin','admin123')
+        self.goto_page('mail_server')
+        d_domains = self.list_domains(allow=False)
+        self.assertEqual(len(d_domains), 0)
+        self.add_domains('dod@google.com', allow=False)
+        d_domains = self.list_domains(allow=False)
+        self.assertEqual(d_domains[0]['domain'], 'dod@google.com')
+        self.delete_domains(d_domains[0]['id'], accept=False, allow=True)
+        d_domains = self.list_domains(allow=False)
+        self.assertEqual(d_domains[0]['domain'], 'dod@google.com')
+        self.delete_domains(d_domains[0]['id'], accept=True, allow=True)
+        d_domains = self.list_domains(allow=False)
+        self.assertEqual(len(d_domains), 0)
+        self.add_domains('dod@g?ogle.com', allow=False)
+        d_domains = self.list_domains(allow=False)
+        self.assertEqual(d_domains[0]['domain'], 'dod@g?ogle.com')
+        self.edit_domains(d_domains[0]['id'], '*dod@g?ogle.c*', accept=True, allow=True)
+        d_domains = self.list_domains(allow=False)
+        self.assertEqual(d_domains[0]['domain'], '*dod@g?ogle.c*')
+        self.logout()
+        self.assertEqual(self.register('nocom1','a.dod@google.com'),'flash_alert')
+        self.assertEqual(self.register('nocom2', 'doda@google.cum'), 'flash_alert')
+        self.assertEqual(self.register('nocom3', 'dod@koogle.com'), 'flash_success')
 
     # register user, extract password, login, check rights
     def test_registering_user(self):
@@ -137,3 +174,16 @@ class test_register(unittest.TestCase, ui_class):
         self.email_server.handler.reset_email_received()
         self.assertTrue(self.login(user, passw))
         self.logout()
+
+    def test_forgot_password(self):
+        if not self.check_user_logged_in('admin',True):
+            self.login('admin','admin123')
+        self.email_server.handler.reset_email_received()
+        self.create_user('forget', {'passwd_role': 0, 'password': '123', 'email': 'alfa@b.com'})
+        self.logout()
+        self.assertTrue(self.forgot_password('forget'))
+        __, passw = self.email_server.handler.extract_register_info()
+        self.email_server.handler.reset_email_received()
+        self.login('forget', passw)
+        self.assertTrue(self.check_user_logged_in('forget',noCompare=True))
+        self.assertFalse(self.forgot_password('forgot'))

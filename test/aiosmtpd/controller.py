@@ -42,7 +42,7 @@ class Controller:
         self.ssl = ssl
         self.timeout = timeout
         self._global_timeout_duration = global_timeout
-        self._global_timeout_handle = None        
+        self._global_timeout_handle = None
 
     def factory(self):
         """Allow subclasses to customize the handler/server creation."""
@@ -89,8 +89,12 @@ class Controller:
 
     def _stop(self):
         self.loop.stop()
-        for task in asyncio.all_tasks(self.loop):
-            task.cancel()
+        if sys.version_info < (3, 7):
+            for task in asyncio.Task.all_tasks(self.loop):
+                task.cancel()
+        else:
+            for task in asyncio.all_tasks(self.loop):
+                task.cancel()
 
     def stop(self):
         assert self._thread is not None, 'SMTP daemon not running'

@@ -6,6 +6,7 @@ from selenium.webdriver.common.keys import Keys
 from selenium.webdriver.support.ui import WebDriverWait, Select
 from selenium.webdriver.support import expected_conditions as EC
 from selenium.common.exceptions import TimeoutException
+from testconfig import PY_BIN
 import time
 import lxml.etree
 try:
@@ -46,7 +47,7 @@ page['unlogged_login']={'check':(By.NAME, "username"),'click':[(By.CLASS_NAME, "
 
 
 class ui_class():
-    py_version = u'/usr/bin/python3'
+    py_version = PY_BIN
 
     @classmethod
     def login(cls,user, passwd):
@@ -70,7 +71,7 @@ class ui_class():
     - '0' if no flash message occurs after submit button is pushed    
     '''
     @classmethod
-    def resend_password(cls,user):
+    def forgot_password(cls,user):
         cls.logout()
         cls.check_element_on_page((By.NAME, "username"))
         username = cls.driver.find_element_by_name("username")
@@ -128,7 +129,7 @@ class ui_class():
         submit = cls.driver.find_element_by_name("forgot")
         username.send_keys(user)
         submit.click()
-        return cls.check_element_on_page((By.ID, "flash_info"))
+        return bool(cls.check_element_on_page((By.ID, "flash_info")))
 
 
     @classmethod
@@ -289,9 +290,10 @@ class ui_class():
         # finally submit settings
         cls.driver.find_element_by_name("submit").click()
 
-    def fill_basic_config(self,elements=None):
-        self.goto_page('basic_config')
-        self.fill_initial_config(elements)
+    @classmethod
+    def fill_basic_config(cls,elements=None):
+        cls.goto_page('basic_config')
+        cls.fill_initial_config(elements)
 
     @classmethod
     def fill_view_config(cls,elements=None):
@@ -372,31 +374,32 @@ class ui_class():
         element.click()
 
     def list_domains(self, allow=True):
-        if self.goto_page('mail_server'):
-            if allow:
-                table_id='domain-allow-table'
-            else:
-                table_id = 'domain-deny-table'
-            if not self.check_element_on_page((By.ID, table_id)):
+        if not self.check_element_on_page((By.ID, "mail_server")):
+            if not self.goto_page('mail_server'):
                 return False
-            parser = lxml.etree.HTMLParser()
-            html = self.driver.page_source
-
-            tree = lxml.etree.parse(StringIO(html), parser)
-            vals = tree.xpath("//table[@id='"+table_id+"']/tbody/tr")
-            val = list()
-            for va in vals:
-                try:
-                    go = va.getchildren()[0].getchildren()[0]
-                    id = go.attrib['data-pk']
-                    delButton = self.driver.find_element_by_css_selector("a[data-pk='"+id+"']")
-                    editButton = self.driver.find_element_by_css_selector("a[data-domain-id='"+id+"']")
-                    val.append({'domain':go.text, 'delete': delButton, 'edit':editButton, 'id':id})
-                except IndexError:
-                    pass
-            return val
+        if allow:
+            table_id='domain-allow-table'
         else:
+            table_id = 'domain-deny-table'
+        if not self.check_element_on_page((By.ID, table_id)):
             return False
+        time.sleep(1)
+        parser = lxml.etree.HTMLParser()
+        html = self.driver.page_source
+
+        tree = lxml.etree.parse(StringIO(html), parser)
+        vals = tree.xpath("//table[@id='"+table_id+"']/tbody/tr")
+        val = list()
+        for va in vals:
+            try:
+                go = va.getchildren()[0].getchildren()[0]
+                id = go.attrib['data-pk']
+                delButton = self.driver.find_element_by_css_selector("a[data-pk='"+id+"']")
+                editButton = self.driver.find_element_by_css_selector("a[data-domain-id='"+id+"']")
+                val.append({'domain':go.text, 'delete': delButton, 'edit':editButton, 'id':id})
+            except IndexError:
+                pass
+        return val
 
     def edit_domains(self, id,  new_value, accept, allow=True):
         if allow:

@@ -43,9 +43,6 @@ class calibre_web_visibilitys(unittest.TestCase, ui_class):
         cls.driver.quit()
         cls.p.kill()
 
-    def setUp(self):
-        print('alfa')
-
     def test_checked_logged_in(self):
         # get the search textbox
         self.assertTrue(self.check_element_on_page((By.NAME, 'query')))

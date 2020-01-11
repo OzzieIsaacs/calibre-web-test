@@ -46,7 +46,8 @@ def startup(inst, pyVersion, config, login=True):
     inst.driver.get("http://127.0.0.1:8083")
 
     # Wait for config screen to show up
-    inst.fill_initial_config(config)
+    inst.fill_initial_config(dict(config_calibre_dir=config['config_calibre_dir']))
+    del config['config_calibre_dir']
 
     # wait for cw to reboot
     time.sleep(BOOT_TIME)
@@ -55,10 +56,12 @@ def startup(inst, pyVersion, config, login=True):
     WebDriverWait(inst.driver, 5).until(EC.presence_of_element_located((By.NAME, "login")))
     login_button = inst.driver.find_element_by_name("login")
     login_button.click()
-
+    inst.login("admin", "admin123")
+    inst.fill_basic_config(config)
+    time.sleep(BOOT_TIME)
     # login
-    if login:
-        inst.login("admin", "admin123")
+    if not login:
+        inst.logout()
 
 def wait_Email_received(func):
     i = 0
