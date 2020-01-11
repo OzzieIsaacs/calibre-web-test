@@ -616,9 +616,9 @@ class ui_class():
         # check if checkboxes are in list and seperate lists
         for element,key in enumerate(nav_element):
             if key in selects:
-                process_checkboxes[key] = nav_element[key]
-            else:
                 process_selects[key] = nav_element[key]
+            else:
+                process_checkboxes[key] = nav_element[key]
 
         # process all checkboxes Todo: If status was wrong before is not included in response
         for checkbox in process_checkboxes:

@@ -390,9 +390,15 @@ class test_user_template(unittest.TestCase, ui_class):
         # delete user
         self.edit_user('drand',{'delete':1})
 
-    @unittest.skip("Not Implemented")
     def test_ui_language_settings(self):
-        pass
+        self.edit_user('admin', {'locale': 'Deutsch'})
+        self.goto_page('user_setup')
+        username = self.check_element_on_page((By.XPATH,'//label[@for="nickname"]'))
+        self.assertEqual(username.text,'Benutzername')
+        self.change_visibility_me({'locale': 'English'})
+        self.goto_page('user_setup')
+        username = self.check_element_on_page((By.XPATH,'//label[@for="nickname"]'))
+        self.assertEqual(username.text,'Username')
 
     @unittest.skip("Not Implemented")
     def test_limit_book_languages(self):
