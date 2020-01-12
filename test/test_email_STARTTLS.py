@@ -23,7 +23,6 @@ class test_STARTTLS(unittest.TestCase, ui_class):
     @classmethod
     def setUpClass(cls):
         print('test_STARTTLS')
-        syntax()
         # start email server
         cls.email_server = AIOSMTPServer(
             hostname='127.0.0.1',port=1026,

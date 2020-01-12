@@ -8,7 +8,7 @@ from func_helper import startup, wait_Email_received
 from parameterized import parameterized_class
 import unittest
 from ui_helper import ui_class
-
+import time
 
 '''@parameterized_class([
    { "py_version": u'/usr/bin/python'},
@@ -182,6 +182,7 @@ class test_register(unittest.TestCase, ui_class):
         self.create_user('forget', {'passwd_role': 0, 'password': '123', 'email': 'alfa@b.com'})
         self.logout()
         self.assertTrue(self.forgot_password('forget'))
+        time.sleep(3)
         __, passw = self.email_server.handler.extract_register_info()
         self.email_server.handler.reset_email_received()
         self.login('forget', passw)

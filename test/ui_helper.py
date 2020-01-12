@@ -376,19 +376,21 @@ class ui_class():
     def list_domains(self, allow=True):
         if not self.check_element_on_page((By.ID, "mail_server")):
             if not self.goto_page('mail_server'):
+                print('got page failed')
                 return False
         if allow:
-            table_id='domain-allow-table'
+            table_id = 'domain-allow-table'
         else:
             table_id = 'domain-deny-table'
         if not self.check_element_on_page((By.ID, table_id)):
+            print('table not found')
             return False
         time.sleep(1)
         parser = lxml.etree.HTMLParser()
         html = self.driver.page_source
 
         tree = lxml.etree.parse(StringIO(html), parser)
-        vals = tree.xpath("//table[@id='"+table_id+"']/tbody/tr")
+        vals = tree.xpath("//table[@id='" + table_id + "']/tbody/tr")
         val = list()
         for va in vals:
             try:
@@ -962,53 +964,13 @@ class ui_class():
                             ret['cust_columns'].append(element)
                         else:
                             pass
-
-
-                '''if len(cust_columns[0].getchildren()): # [0].getchildren()):
-                    first_element = dict()
-                    if cust_columns[0].getchildren()[0].tag == 'span':
-                        first_element['Text'] = cust_columns[0].getchildren()[0].getparent().text.lstrip().split(':')[0]
-                        first_element['value'] = cust_columns[0].getchildren()[0].attrib['class'][20:]
-                        ret['cust_columns'].append(first_element)
-                    elif ':' in cust_columns[0].getchildren()[0].text:
-                        first_element['Text'] = cust_columns[0].getchildren()[0].text.lstrip().split(':')[0]
-                        first_element['value'] = cust_columns[0].getchildren()[0].text.split(':')[1].strip()
-                        ret['cust_columns'].append(first_element)
-                    else:
-                        pass
-                    for col in cust_columns[0].getchildren()[0].getchildren()[1:]:
-                        element = dict()
-                        if col.tag == 'span':
-                            element['Text'] = col.getparent().text.lstrip().split(':')[0]
-                            element['value'] = col.attrib['class'][20:]
-                            ret['cust_columns'].append(element)
-                        elif ':' in col.tail:
-                            element['Text'] = col.tail.lstrip().split(':')[0]
-                            element['value'] = col.tail.split(':')[1].strip()
-                            ret['cust_columns'].append(element)
-                        else:
-                            pass'''
-
-            # cover type
-
         except Exception as e:
             print(e)
             pass
         return ret
 
-    @classmethod
-    def register_user(cls,user, email):
-        cls.logout()
-        if cls.goto_page('register'):
-            name = cls.check_element_on_page((By.ID, "nickname"))
-            em = cls.check_element_on_page((By.ID, "email"))
-            submit = cls.check_element_on_page((By.ID, "submit"))
-            name.send_keys(user)
-            em.send_keys(email)
-            submit.click()
-            return cls.check_element_on_page(((By.ID, "flash_success")))
-        else:
-            return False
+    def get_books_list(self):
+        pass
 
     @classmethod
     def check_tasks(cls):

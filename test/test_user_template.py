@@ -400,11 +400,28 @@ class test_user_template(unittest.TestCase, ui_class):
         username = self.check_element_on_page((By.XPATH,'//label[@for="nickname"]'))
         self.assertEqual(username.text,'Username')
 
-    @unittest.skip("Not Implemented")
     def test_limit_book_languages(self):
-        pass
+        self.edit_user('admin', {'default_language': 'Norwegian Bokmål' })
+        self.goto_page("nav_hot")
+        books = self.get_books_displayed()
+        self.assertEqual(len(books[1]), 0)
+        self.assertIn(int(books[0][0]['id']), (8, 12, 13))
+        self.assertIn(int(books[0][1]['id']), (8, 12, 13))
+        self.assertIn(int(books[0][2]['id']), (8, 12, 13))
+        self.assertFalse(self.check_element_on_page((By.ID, "nav_lang")))
+        self.goto_page("nav_unread")
+        books = self.get_books_displayed()
+        self.assertEqual(int(books[1][0]['id']), 13)
+        self.assertEqual(int(books[1][1]['id']), 12)
+        self.assertEqual(int(books[1][2]['id']), 8)
+        self.assertIn(int(books[0][0]['id']), (8, 12, 13))
+        self.assertIn(int(books[0][1]['id']), (8, 12, 13))
+        self.assertIn(int(books[0][2]['id']), (8, 12, 13))
+        tags = self.driver.find_elements_by_tag_name('h2')
+        self.assertEqual(len(tags),2)
+        self.assertEqual(tags[1].text,'Unread Books (3)')
+        # find 2 h2
 
-    @unittest.skip("Not Implemented")
-    def test_mature_content_settings(self):
+    def test_content_restriction_settings(self):
         pass
 

@@ -4,7 +4,7 @@
 #monkey.patch_all()
 
 # from parameterized import parameterized_class
-import HTMLTestRunner
+from HTMLTestRunner import HTMLTestRunner
 import os
 import time
 import requests
