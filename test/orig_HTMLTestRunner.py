@@ -93,7 +93,6 @@ Version in 0.7.1
 
 import datetime
 import sys
-import os
 import unittest
 from xml.sax import saxutils
 
@@ -200,52 +199,52 @@ class Template_mixin(object):
 
     DEFAULT_TITLE = 'Test Report'
     DEFAULT_DESCRIPTION = ''
-    FILEPATH = os.path.dirname(__file__)+ os.path.sep
+
     # ------------------------------------------------------------------- #
     # HTML Template
     # ------------------------------------------------------------------- #
 
     # variables: (title, generator, stylesheet, heading, report, ending)
-    HTML_TEMPLATE = open(FILEPATH+'templates/report.html', 'r').read()#.encode('utf-8')
+    HTML_TEMPLATE = open('templates/report.html', 'r').read()#.encode('utf-8')
 
     # ------------------------------------------------------------------- #
     # Stylesheet
     # ------------------------------------------------------------------- #
     # alternatively use a <link> for external style sheet, e.g.
     #   <link rel="stylesheet" href="$url" type="text/css">
-    STYLESHEET_TEMPLATE = open(FILEPATH+'templates/head_inserts.html', 'r').read() #\
+    STYLESHEET_TEMPLATE = open('templates/head_inserts.html', 'r').read() #\
         #.encode('utf-8')
 
     # ------------------------------------------------------------------- #
     # Heading
     # ------------------------------------------------------------------- #
     # variables: (title, parameters, description)
-    HEADING_TEMPLATE = open(FILEPATH+'templates/header.html', 'r').read() #\
+    HEADING_TEMPLATE = open('templates/header.html', 'r').read() #\
         #.encode('utf-8')
 
     # variables: (name, value)
-    HEADING_ATTRIBUTE_TEMPLATE = open(FILEPATH+'templates/header_parameters.html', 'r')\
+    HEADING_ATTRIBUTE_TEMPLATE = open('templates/header_parameters.html', 'r')\
         .read()#.encode('utf-8')
 
     # ------------------------------------------------------------------- #
     # Report
     # ------------------------------------------------------------------- #
     # variables: (test_list, count, Pass, fail, error, skip)
-    REPORT__TABLE_TEMPLATE = open(FILEPATH+'templates/result_table.html', 'r')\
+    REPORT__TABLE_TEMPLATE = open('templates/result_table.html', 'r')\
        .read()#.encode('utf-8')
 
     # variables: (style, desc, count, Pass, fail, error, cid)
-    REPORT_CLASS_TEMPLATE = open(FILEPATH+'templates/test_class.html', 'r').read()#\
+    REPORT_CLASS_TEMPLATE = open('templates/test_class.html', 'r').read()#\
         #.encode('utf-8')
 
     # variables: (tid, Class, style, desc, status)
     REPORT_TEST_WITH_OUTPUT_TMPL = \
-        open(FILEPATH+'templates/report_test_with_output.html', 'r').read()#\
+        open('templates/report_test_with_output.html', 'r').read()#\
         #.encode('utf-8')
 
     # variables: (tid, Class, style, desc, status)
     REPORT_TEST_NO_OUTPUT_TEMPLATE = \
-        open(FILEPATH+'templates/report_test_no_output.html', 'r').read()#\
+        open('templates/report_test_no_output.html', 'r').read()#\
         #.encode('utf-8')
 
     # variables: (id, output)
@@ -254,7 +253,7 @@ class Template_mixin(object):
     # ------------------------------------------------------------------- #
     # ENDING
     # ------------------------------------------------------------------- #
-    ENDING_TEMPLATE = open(FILEPATH+'templates/footer.html', 'r').read()#.encode('utf-8')
+    ENDING_TEMPLATE = open('templates/footer.html', 'r').read()#.encode('utf-8')
 
 
 # -------------------- The end of the Template class -------------------

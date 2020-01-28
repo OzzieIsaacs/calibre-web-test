@@ -1,0 +1,161 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>{{ title }}</title>
+    <meta name="generator" content="{{generator}}"/>
+    <meta name="version" content="{{version}}"/>
+    <meta http-equiv="Content-Type" content="text/html; charset=UTF-8"/>
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <!-- Bootstrap -->
+    <link href="./../cps/static/css/libs/bootstrap.min.css" rel="stylesheet">
+    <!-- jQuery (necessary for Bootstrap's JavaScript plugins) -->
+    <script src="./../cps/static/js/libs/jquery.min.js"></script>
+    <!-- Include all compiled plugins (below), or include individual files as needed -->
+    <script src="./../cps/static/js/libs/bootstrap.min.js"></script>
+    <!-- Project CSS -->
+    <link href="css/runner.css" rel="stylesheet">
+    <!-- Project JS -->
+    <script src="js/runner.js"></script>
+</head>
+
+<body>
+
+<div class="container-fluid">
+    <div class="row report-title">
+        <h1 id='report_title' class="text-center">{{ title }}</h1>
+    </div>
+
+    <div id='header_parameters' class='row text-center report-parameters'>
+        <div class="col-xs-6 col-md-4">
+            <p class='text-justify attribute'><strong>Start Time: </strong>{{ header_info.start_time.strftime("%Y-%m-%d %H:%M:%S") }}</p>
+        </div>
+        <!--div class="col-xs-6 col-md-4">
+            <p class='text-justify attribute'><strong>top Time: </strong>{{ header_info.start_time.strftime("%Y-%m-%d %H:%M:%S") }}</p>
+        </div-->
+        <div class="col-xs-6 col-md-4">
+           <p class='text-justify attribute'><strong>Duration: </strong>{{ header_info.status.duration }}</p>
+        </div>
+    </div>
+
+    <div class="piechart">
+        <div>
+            <canvas id="circle" width="350" height="168" ></canvas>
+        </div>
+    </div>
+
+    <div class='report-description'>
+        <div id='report_description' class='row text-center'>{{ description }}</div>
+    </div>
+<div class='text-center buttons'>
+<div id='show_detail_line' class="btn-group pagination-centered" role="group" aria-label="TESTE">
+    <button type="button" class="btn btn-success" data-toggle="button" aria-pressed="false" data-placement="top"
+            title="Show only the execution summary" onclick="showCase(0)">Summary
+    </button>
+    <button type="button" class="btn btn-info" data-toggle="button" aria-pressed="false" data-placement="top"
+            title="Show only the execution summary" onclick="showCase(5)">Summary Problems
+    </button>
+    <button type="button" class="btn btn-warning" data-toggle="button" aria-pressed="false" data-placement="top"
+            title="Show skipped test cases" onclick="showCase(3)">Skipped
+    </button>
+    <button type="button" class="btn btn-danger" data-toggle="button" aria-pressed="false" data-placement="top"
+            title="Show the filed test cases" onclick="showCase(1)">Failed
+    </button>
+        <button type="button" class="btn btn-info" data-toggle="button" aria-pressed="false" data-placement="top"
+            title="Show the filed test cases" onclick="showCase(4)">Error
+    </button>
+    <button type="button" class="btn btn-primary" data-toggle="tooltip" aria-pressed="false" data-placement="top"
+            title="Show all test cases" onclick="showCase(2)">All
+    </button>
+</div>
+</div>
+<table id='result_table' class='table table-bordered table-responsive table-curved'>
+    <colgroup>
+        <col/>
+        <col/>
+        <col/>
+        <col/>
+        <col/>
+        <col/>
+    </colgroup>
+    <tr id='header_row' class="text-center bg-grey">
+        <td>Test Group/Test case</td>
+        <td>Count</td>
+        <td>Pass</td>
+        <td>Fail</td>
+        <td>Error</td>
+        <td>Skip</td>
+        <td>View</td>
+    </tr>
+{% for result in results %}
+{% if result['header'] %}
+    <tr class="result['header']['style']">
+        <td>{{ result['header']['desc'] }}</td>
+        <td class="text-center">{{ result['header']['count'] }}</td>
+        <td class="text-center">{{ result['header']['Pass'] }}</td>
+        <td class="text-center">{{ result['header']['fail'] }}</td>
+        <td class="text-center">{{ result['header']['error'] }}</td>
+        <td class="text-center">{{ result['header']['skip'] }}</td>
+        <td class="text-center">
+            <a onclick="showClassDetail('{{ result['header']['cid'] }}', {{ result['header']['count'] }})">Detail</a>
+        </td>
+    </tr>
+{% endif %}
+    {% for row in result['tests'] %}
+    {% if row['script']['output'] != '' %}
+        <tr id='{{ row['tid'] }}' class='{{ row['Class'] }} {{ row['style'] }}'>
+            <td>
+                <div class='testcase'>{{row['desc']}}</div>
+            </td>
+            <td colspan='6'>
+                <div class="text-center">
+                    <a class="popup_link text-center" onfocus='blur()' onclick="showTestDetail('div_{{row['tid']}}')">{{row['status']}}</a>
+                </div>
+                <!--css div popup start-->
+                <div id='div_{{row['tid']}}' class="popup_window test_output" style="display:none;">
+                    <div class='close_button pull-right'>
+                        <button type="button" class="close" aria-label="Close" onfocus='this.blur();'
+                                onclick="document.getElementById('div_{{row['tid']}}').style.display='none'"><span
+                                aria-hidden="true">&times;</span></button>
+                    </div>
+                    <div class="text-left pull-left">
+                        <pre class="text-left">{{row['script']['output']}}</pre>
+                    </div>
+                    <div class="clearfix"></div>
+                </div>
+                <!--css div popup end-->
+            </td>
+        </tr>
+    {% else %}
+        <tr id='{{ row['tid'] }}' class='{{ row['Class'] }} {{ row['style'] }}'>
+            <td>
+                <div class='testcase'>{{row['desc']}}</div>
+            </td>
+            <td colspan='6' align='center'>{{row['status']}}</td>
+        </tr>
+    {% endif %}
+    {% endfor %}
+{% endfor %}
+    <tr id='total_row' class="text-center bg-grey">
+        <td>Total</td>
+        <td>{{ header_info.status.total }}</td>
+        <td>{{ header_info.status.success }}</td>
+        <td>{{ header_info.status.failure }}</td>
+        <td>{{ header_info.status.error }}</td>
+        <td>{{ header_info.status.skip }}</td>
+        <td>&nbsp;</td>
+    </tr>
+</table>
+<script>
+    drawCircle({{ header_info.status.success }}, {{ header_info.status.failure }}, {{ header_info.status.error }}, {{ header_info.status.skip }});
+</script>
+
+</div>
+
+<footer>
+<div id='foter' class="text-center">
+    <p>Made with HTMLTestRunner from https://github.com/oldani/HtmlTestRunner</p>
+</div>
+</footer>
+
+</body>
+</html>
