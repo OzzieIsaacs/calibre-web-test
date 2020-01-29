@@ -125,31 +125,6 @@ class test_user_template(unittest.TestCase, ui_class):
         # delete user
         self.edit_user('recent',{'delete':1})
 
-    '''def test_sorted_user_template(self):
-        self.fill_view_config({'show_sorted':0})
-        self.goto_page('create_user')
-        self.create_user('sorted',{'password':'1234','email':'a3@b.com'})
-        self.assertTrue(self.check_element_on_page((By.ID, "flash_success")))
-        self.fill_view_config({'show_sorted':1})
-        self.logout()
-        self.login('sorted','1234')
-        self.assertTrue(self.check_element_on_page((By.ID, "nav_new")))
-        self.assertFalse(self.check_element_on_page((By.ID, "nav_sort")))
-        self.assertTrue(self.check_element_on_page((By.ID, "nav_hot")))
-        self.assertTrue(self.check_element_on_page((By.ID, "nav_rated")))
-        self.assertTrue(self.check_element_on_page((By.ID, "nav_read")))
-        self.assertTrue(self.check_element_on_page((By.ID, "nav_unread")))
-        self.assertTrue(self.check_element_on_page((By.ID, "nav_rand")))
-        self.assertTrue(self.check_element_on_page((By.ID, "nav_cat")))
-        self.assertTrue(self.check_element_on_page((By.ID, "nav_serie")))
-        self.assertTrue(self.check_element_on_page((By.ID, "nav_author")))
-        self.assertTrue(self.check_element_on_page((By.ID, "nav_lang")))
-        self.assertTrue(self.check_element_on_page((By.ID, "nav_publisher")))
-        self.logout()
-        self.login('admin','admin123')
-        # delete user
-        self.edit_user('sorted',{'delete':1})'''
-
     def test_hot_user_template(self):
         self.fill_view_config({'show_16':0})
         self.goto_page('create_user')
@@ -410,28 +385,43 @@ class test_user_template(unittest.TestCase, ui_class):
         self.goto_page("nav_unread")
         self.assertFalse(self.check_element_on_page((By.ID, "books_rand")))
         # check random books not shown in sorted section
-        '''self.goto_page("nav_sort_old")
-        self.assertFalse(self.check_element_on_page((By.ID, "books_rand")))
-        self.goto_page("nav_sort_new")
-        self.assertFalse(self.check_element_on_page((By.ID, "books_rand")))
-        self.goto_page("nav_sort_asc")
-        self.assertFalse(self.check_element_on_page((By.ID, "books_rand")))
-        self.goto_page("nav_sort_desc")
-        self.assertFalse(self.check_element_on_page((By.ID, "books_rand")))'''
         self.logout()
         self.login('admin','admin123')
         # delete user
         self.edit_user('drand',{'delete':1})
 
-    @unittest.skip("Not Implemented")
     def test_ui_language_settings(self):
-        pass
+        self.edit_user('admin', {'locale': 'Deutsch'})
+        self.goto_page('user_setup')
+        username = self.check_element_on_page((By.XPATH,'//label[@for="nickname"]'))
+        self.assertEqual(username.text,'Benutzername')
+        self.change_visibility_me({'locale': 'English'})
+        self.goto_page('user_setup')
+        username = self.check_element_on_page((By.XPATH,'//label[@for="nickname"]'))
+        self.assertEqual(username.text,'Username')
 
-    @unittest.skip("Not Implemented")
     def test_limit_book_languages(self):
-        pass
+        self.edit_user('admin', {'default_language': 'Norwegian Bokmål' })
+        self.goto_page("nav_hot")
+        books = self.get_books_displayed()
+        self.assertEqual(len(books[1]), 0)
+        self.assertIn(int(books[0][0]['id']), (8, 12, 13))
+        self.assertIn(int(books[0][1]['id']), (8, 12, 13))
+        self.assertIn(int(books[0][2]['id']), (8, 12, 13))
+        self.assertFalse(self.check_element_on_page((By.ID, "nav_lang")))
+        self.goto_page("nav_unread")
+        books = self.get_books_displayed()
+        self.assertEqual(int(books[1][0]['id']), 13)
+        self.assertEqual(int(books[1][1]['id']), 12)
+        self.assertEqual(int(books[1][2]['id']), 8)
+        self.assertIn(int(books[0][0]['id']), (8, 12, 13))
+        self.assertIn(int(books[0][1]['id']), (8, 12, 13))
+        self.assertIn(int(books[0][2]['id']), (8, 12, 13))
+        tags = self.driver.find_elements_by_tag_name('h2')
+        self.assertEqual(len(tags),2)
+        self.assertEqual(tags[1].text,'Unread Books (3)')
+        # find 2 h2
 
-    @unittest.skip("Not Implemented")
-    def test_mature_content_settings(self):
+    def test_content_restriction_settings(self):
         pass
 

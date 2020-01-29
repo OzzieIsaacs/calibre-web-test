@@ -7,10 +7,6 @@ import glob, os
 import shutil
 import json
 from config import FILEPATH
-#try:
-#    import cPickle
-#except ImportError:
-#    import pickle as cPickle
 import msgpack
 import babel.messages.pofile as pofile
 
@@ -28,7 +24,7 @@ def msgpack_loads(dump):
 need_iso = msgpack_loads(open('iso639.calibre_msgpack', 'rb').read())
 
 workdir = os.getcwd()
-os.chdir(FILEPATH) # .encode(sys.getfilesystemencoding()
+os.chdir(FILEPATH)
 
 # Extract all messages from the source code and create a template file
 p = subprocess.Popen("pybabel extract --no-wrap -F babel.cfg -o messages.pot cps"
@@ -55,14 +51,18 @@ for file in glob.glob1("./translations", "*.po"):
     translateFile=open(message_path)
     mergedTranslation=pofile.read_po(translateFile,locale=langcode)
     translateFile.close()
+    count = 0
+    for msg in mergedTranslation:
+        if msg.string != '' and msg.id != "":
+            count += 1
+    allMsg = len(mergedTranslation._messages)
+    for x in mergedTranslation.check():
+        print(x)
     languageFile=open("./translations/"+file)
     LanguageTranslation=pofile.read_po(languageFile)
     languageFile.close()
-    print("Merging: " + langcode)
-    # for msg in LanguageTranslation._messages._keys:
+    print("Merging: {} {} of strings {} translated".format(langcode, count, allMsg))
     iso_translations = dict()
-    # code3t = need_iso['3bto3t'].values().index(need_iso['2to3'][langcode])
-    # iso_translations[invers_lang_table.index(code3t)] =
     for msg in LanguageTranslation:
         if msg.id:
             # msg=LanguageTranslation.__getitem__(msg)
@@ -73,11 +73,10 @@ for file in glob.glob1("./translations", "*.po"):
                     iso_translations[lCode] = msg.string
                 else:
                     iso_translations[lCode] = msg.id
-    # mergedTranslation.header_comment=mergedTranslation.header_comment+LanguageTranslation.header_comment
     message_path = os.path.join(FILEPATH, 'cps', 'translations', langcode, 'LC_MESSAGES', 'messages.po')
     allmessage_path = os.path.join(FILEPATH, "cps","translations" , langcode, "LC_MESSAGES","messages_all.po")
-    shutil.move(message_path, allmessage_path) # os.path.join(FILEPATH,"cps\\translations\\"+langcode+"\\LC_MESSAGES\\messages_all.po"))
-    target_path = os.path.join(FILEPATH , "cps","translations" , langcode , "LC_MESSAGES","messages.po") # FILEPATH + "cps\\translations\\" + langcode + "\\LC_MESSAGES\\messages.po"
+    shutil.move(message_path, allmessage_path)
+    target_path = os.path.join(FILEPATH , "cps","translations" , langcode , "LC_MESSAGES","messages.po")
     targetFile = open(target_path,'wb')
     pofile.write_po(targetFile,mergedTranslation,ignore_obsolete=True)
     targetFile.close()
@@ -91,9 +90,6 @@ for msg in LanguageTranslation:
             iso_translations[lCode] = msg.id
 out_iso['en'] = iso_translations
 
-# write language name table
-#with open(os.path.join(FILEPATH,'cps','translations','iso639.pickle'), 'wb') as f:
-#    cPickle.dump(out_iso,f)
 header = '''# -*- coding: utf-8 -*-
 
 # This file is part of the Calibre-Web (https://github.com/janeczku/calibre-web)

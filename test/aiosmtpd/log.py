@@ -2,7 +2,7 @@ import logging, sys
 from logging.handlers import RotatingFileHandler
 from logging import StreamHandler
 
-LOG_NAME = 'gsmtpd'
+LOG_NAME = 'aiosmtd'
 
 class Log(object):
 

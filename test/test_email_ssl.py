@@ -1,11 +1,12 @@
 #!/usr/bin/env python
 # -*- coding: utf-8 -*-
 
-from email_convert_helper import Gevent_SMPTPServer, CredentialValidator
+from email_convert_helper import AIOSMTPServer
 import email_convert_helper
 import unittest
 import os
 import re
+import sys
 from selenium.webdriver.common.by import By
 import time
 from ui_helper import ui_class
@@ -37,14 +38,14 @@ class test_SSL(unittest.TestCase, ui_class):
             pass
 
         # start email server
-        cls.email_server = Gevent_SMPTPServer(
-            ('127.0.0.1', 1027),
+        cls.email_server = AIOSMTPServer(
+            hostname='127.0.0.1',port=1027,
             only_ssl=True,
             certfile='SSL/ssl.crt',
             keyfile='SSL/ssl.key',
-            credential_validator=CredentialValidator(),
             timeout = 10
         )
+
         cls.email_server.start()
 
         startup(cls, cls.py_version, {'config_calibre_dir':TEST_DB,
@@ -89,6 +90,7 @@ class test_SSL(unittest.TestCase, ui_class):
 
 
     # check behavior for failed server setup (STARTTLS)
+    @unittest.skipIf(sys.version_info < (3, 7), "AsyncIO has no ssl handshake timeout")
     def test_SSL_STARTTLS_setup_error(self):
         task_len = len(self.check_tasks())
         self.setup_server(False, {'mail_use_ssl':'STARTTLS'})
@@ -109,6 +111,7 @@ class test_SSL(unittest.TestCase, ui_class):
         self.assertEqual(ret[-1]['result'], 'Failed')
 
     # check behavior for failed server setup (NonSSL)
+    @unittest.skipIf(sys.version_info < (3, 7), "AsyncIO has no ssl handshake timeout")
     def test_SSL_None_setup_error(self):
         task_len = len(self.check_tasks())
         self.setup_server(False, {'mail_use_ssl':'None'})
@@ -131,7 +134,7 @@ class test_SSL(unittest.TestCase, ui_class):
     # check if email traffic is logged to logfile
     def test_SSL_logging_email(self):
         self.setup_server(True, {'mail_use_ssl': 'SSL/TLS'})
-        time.sleep(2)
+        time.sleep(5)
         with open(os.path.join(CALIBRE_WEB_PATH,'calibre-web.log'),'r') as logfile:
             data = logfile.read()
         self.assertTrue(len(re.findall('Subject: Calibre-Web test e-mail',data)),"Email logging not working")

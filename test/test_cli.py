@@ -80,7 +80,7 @@ class test_cli(unittest.TestCase, ui_class):
     def test_cli_different_settings_database(self):
         new_db = os.path.join(CALIBRE_WEB_PATH, 'hü go.app')  # .decode('UTF-8')
         # if sys.version_info < (3, 0):
-        new_db = new_db.decode('UTF-8')
+        new_db = new_db # .decode('UTF-8')
         self.p = process_open([self.py_version, os.path.join(CALIBRE_WEB_PATH,u'cps.py'),
                         '-p', new_db], (1,3))
 

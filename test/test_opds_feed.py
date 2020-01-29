@@ -66,6 +66,8 @@ class test_opds_feed(unittest.TestCase, ui_class):
         r = requests.get('http://127.0.0.1:8083'+elements['File formats']['link'], auth=('admin', 'admin123'))
         self.assertEqual(200, r.status_code)
 
+
+
     def test_opds_guest_user(self):
         self.login("admin", "admin123")
         self.fill_basic_config({'config_anonbrowse': 1})

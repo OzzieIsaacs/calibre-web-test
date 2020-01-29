@@ -15,6 +15,7 @@ eggs/
 
 # Helper files
 *.db
+!test/Calibre_db/metadata.db
 *.log
 
 # IDE

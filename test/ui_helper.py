@@ -6,6 +6,7 @@ from selenium.webdriver.common.keys import Keys
 from selenium.webdriver.support.ui import WebDriverWait, Select
 from selenium.webdriver.support import expected_conditions as EC
 from selenium.common.exceptions import TimeoutException
+from testconfig import PY_BIN
 import time
 import lxml.etree
 try:
@@ -46,7 +47,7 @@ page['unlogged_login']={'check':(By.NAME, "username"),'click':[(By.CLASS_NAME, "
 
 
 class ui_class():
-    py_version = u'/usr/bin/python3'
+    py_version = PY_BIN
 
     @classmethod
     def login(cls,user, passwd):
@@ -62,6 +63,29 @@ class ui_class():
             return True
         except:
             return False
+
+    '''
+    return values: 
+    - alert-info, alert-danger, alert-success, alert-warning if flash message occours
+    - '-1' if resend button is not presend
+    - '0' if no flash message occurs after submit button is pushed    
+    '''
+    @classmethod
+    def forgot_password(cls,user):
+        cls.logout()
+        cls.check_element_on_page((By.NAME, "username"))
+        username = cls.driver.find_element_by_name("username")
+        resend = cls.driver.find_element_by_name("forgot")
+        if resend:
+            username.send_keys(user)
+            resend.click()
+            flash = cls.check_element_on_page((By.CLASS_NAME, "alert"))
+            if flash:
+                id = flash.get_attribute('id')
+                return id
+            else:
+                return 0
+        return -1
 
     @classmethod
     def logout(cls):
@@ -105,7 +129,7 @@ class ui_class():
         submit = cls.driver.find_element_by_name("forgot")
         username.send_keys(user)
         submit.click()
-        return cls.check_element_on_page((By.ID, "flash_info"))
+        return bool(cls.check_element_on_page((By.ID, "flash_info")))
 
 
     @classmethod
@@ -266,9 +290,10 @@ class ui_class():
         # finally submit settings
         cls.driver.find_element_by_name("submit").click()
 
-    def fill_basic_config(self,elements=None):
-        self.goto_page('basic_config')
-        self.fill_initial_config(elements)
+    @classmethod
+    def fill_basic_config(cls,elements=None):
+        cls.goto_page('basic_config')
+        cls.fill_initial_config(elements)
 
     @classmethod
     def fill_view_config(cls,elements=None):
@@ -347,6 +372,169 @@ class ui_class():
         self.driver.find_element_by_id('admin_stop').click()
         element = self.check_element_on_page((By.ID, "shutdown"))
         element.click()
+
+    def list_domains(self, allow=True):
+        if not self.check_element_on_page((By.ID, "mail_server")):
+            if not self.goto_page('mail_server'):
+                print('got page failed')
+                return False
+        if allow:
+            table_id = 'domain-allow-table'
+        else:
+            table_id = 'domain-deny-table'
+        if not self.check_element_on_page((By.ID, table_id)):
+            print('table not found')
+            return False
+        time.sleep(1)
+        parser = lxml.etree.HTMLParser()
+        html = self.driver.page_source
+
+        tree = lxml.etree.parse(StringIO(html), parser)
+        vals = tree.xpath("//table[@id='" + table_id + "']/tbody/tr")
+        val = list()
+        for va in vals:
+            try:
+                go = va.getchildren()[0].getchildren()[0]
+                id = go.attrib['data-pk']
+                delButton = self.driver.find_element_by_css_selector("a[data-pk='"+id+"']")
+                editButton = self.driver.find_element_by_css_selector("a[data-domain-id='"+id+"']")
+                val.append({'domain':go.text, 'delete': delButton, 'edit':editButton, 'id':id})
+            except IndexError:
+                pass
+        return val
+
+    def edit_domains(self, id,  new_value, accept, allow=True):
+        if allow:
+            table_id = 'domain-allow-table'
+        else:
+            table_id = 'domain-deny-table'
+        if not self.check_element_on_page((By.ID, table_id)):
+            return False
+        editButton = self.check_element_on_page((By.CSS_SELECTOR, "a[data-pk='" + id + "']"))
+        if not editButton:
+            return False
+        editButton.click()
+        editor=self.check_element_on_page((By.CLASS_NAME, "input-sm"))
+        if not editor:
+            return False
+        editor.clear()
+        editor.send_keys(new_value)
+        if accept:
+            submit = self.check_element_on_page((By.CLASS_NAME, "editable-submit"))
+        else:
+            submit = self.check_element_on_page((By.CLASS_NAME, "editable-cancel"))
+        submit.click()
+
+    def delete_domains(self, id, accept, allow=True):
+        if allow:
+            table_id = 'domain-allow-table'
+        else:
+            table_id = 'domain-deny-table'
+        if not self.check_element_on_page((By.ID, table_id)):
+            return False
+        deleteButton = self.check_element_on_page((By.CSS_SELECTOR, "a[data-domain-id='" + id + "']"))
+        if not deleteButton:
+            return False
+        deleteButton.click()
+        if accept:
+            submit = self.check_element_on_page((By.ID, "btndeletedomain"))
+        else:
+            submit = self.check_element_on_page((By.ID, "btncancel"))
+        submit.click()
+
+    def add_domains(self, new_value, allow=True):
+        if allow:
+            edit = self.check_element_on_page((By.ID, "domainname_allow"))
+            add = self.check_element_on_page((By.ID, "domain_allow_submit"))
+        else:
+            edit = self.check_element_on_page((By.ID, "domainname_deny"))
+            add = self.check_element_on_page((By.ID, "domain_deny_submit"))
+        if not edit:
+            return False
+        edit.clear()
+        edit.send_keys(new_value)
+        if not add:
+            return False
+        add.click()
+
+    def list_restrictions(self, type):
+        if type == 0:
+            if not self.goto_page('mail_server'):  # ToDo check
+                return False
+        elif type == 1:
+            if not self.goto_page('mail_server'):  # ToDo check
+                return False
+        elif type == 2:
+            if not self.goto_page('mail_server'):  # ToDo check
+                return False
+        elif type == 3:
+            if not self.goto_page('mail_server'):  # ToDo check
+                return False
+        table_id='restrict-elements-table'
+        if not self.check_element_on_page((By.ID, table_id)):
+            return False
+        parser = lxml.etree.HTMLParser()
+        html = self.driver.page_source
+
+        tree = lxml.etree.parse(StringIO(html), parser)
+        vals = tree.xpath("//table[@id='"+table_id+"']/tbody/tr")
+        val = list()
+        for va in vals:
+            try:
+                go = va.getchildren()[0].getchildren()
+                id = go[0].attrib['data-pk']
+                delButton = self.driver.find_element_by_css_selector("a[data-pk='"+id+"']")
+                editButton = self.driver.find_element_by_css_selector("a[data-restriction-id='"+id+"']")
+                val.append({'restriction':go[0].text,
+                            'delete': delButton,
+                            'edit':editButton,
+                            'id':id,
+                            'type': go[1].text})
+            except IndexError:
+                pass
+        return val
+
+    def edit_restrictions(self, id,  new_value, accept):
+        table_id = 'restrict-elements-table'
+        if not self.check_element_on_page((By.ID, table_id)):
+            return False
+        editButton = self.check_element_on_page((By.CSS_SELECTOR, "a[data-pk='" + id + "']"))
+        if not editButton:
+            return False
+        editButton.click()
+        editor=self.check_element_on_page((By.CLASS_NAME, "input-sm"))
+        if not editor:
+            return False
+        editor.clear()
+        editor.send_keys(new_value)
+        if accept:
+            submit = self.check_element_on_page((By.CLASS_NAME, "editable-submit"))
+        else:
+            submit = self.check_element_on_page((By.CLASS_NAME, "editable-cancel"))
+        submit.click()
+
+    def delete_restrictions(self, id):
+        table_id = 'restrict-elements-table'
+        if not self.check_element_on_page((By.ID, table_id)):
+            return False
+        deleteButton = self.check_element_on_page((By.CSS_SELECTOR, "a[data-restriction-id='" + id + "']"))
+        if not deleteButton:
+            return False
+        deleteButton.click()
+
+    def add_restrictions(self, new_value, allow=True):
+        edit = self.check_element_on_page((By.ID, "add_element"))
+        if allow:
+            add = self.check_element_on_page((By.ID, "submit_allow"))
+        else:
+            add = self.check_element_on_page((By.ID, "submit_restrict"))
+        if not edit:
+            return False
+        edit.clear()
+        edit.send_keys(new_value)
+        if not add:
+            return False
+        add.click()
 
     @classmethod
     def setup_server(cls, test_on_return, elements):
@@ -430,9 +618,9 @@ class ui_class():
         # check if checkboxes are in list and seperate lists
         for element,key in enumerate(nav_element):
             if key in selects:
-                process_checkboxes[key] = nav_element[key]
-            else:
                 process_selects[key] = nav_element[key]
+            else:
+                process_checkboxes[key] = nav_element[key]
 
         # process all checkboxes Todo: If status was wrong before is not included in response
         for checkbox in process_checkboxes:
@@ -454,7 +642,7 @@ class ui_class():
         ele = self.check_element_on_page((By.ID,'title'))
         if ele:
             ele.clear()
-            ele.send_keys(name.decode('utf-8'))
+            ele.send_keys(name)
             if public:
                 public_shelf = self.check_element_on_page((By.NAME,'is_public'))
                 if public_shelf:
@@ -531,7 +719,8 @@ class ui_class():
         ret = dict()
         parser = lxml.etree.HTMLParser()
         try:
-            tree = lxml.etree.parse(StringIO(text.encode('utf-8')), parser)
+            tree = lxml.etree.fromstring(text.encode('utf-8'), parser)
+            # tree = lxml.etree.parse(StringIO(text), parser)
             ret['title'] = tree.xpath("/html/body/feed/title")[0].text
             ret['id'] = tree.xpath("/html/body/feed/id")[0].text
             ret['links'] = tree.xpath("/html/body/feed/link")
@@ -555,7 +744,8 @@ class ui_class():
         ret = dict()
         parser = lxml.etree.HTMLParser()
         try:
-            tree = lxml.etree.parse(StringIO(text.encode('utf-8')), parser)
+            tree = lxml.etree.fromstring(text.encode('utf-8'), parser)
+            # tree = lxml.etree.parse(StringIO(text.encode('utf-8')), parser)
             ret['title'] = tree.xpath("/html/body/feed/title")[0].text
             ret['id'] = tree.xpath("/html/body/feed/id")[0].text
             ret['links'] = tree.xpath("/html/body/feed/link")
@@ -598,7 +788,7 @@ class ui_class():
     @classmethod
     def get_opds_search(cls, text):
         parser = lxml.etree.HTMLParser()
-        tree = lxml.etree.parse(StringIO(text), parser)
+        tree = lxml.etree.fromstring(text.encode('utf-8'), parser)
 
         pass
 
@@ -774,53 +964,13 @@ class ui_class():
                             ret['cust_columns'].append(element)
                         else:
                             pass
-
-
-                '''if len(cust_columns[0].getchildren()): # [0].getchildren()):
-                    first_element = dict()
-                    if cust_columns[0].getchildren()[0].tag == 'span':
-                        first_element['Text'] = cust_columns[0].getchildren()[0].getparent().text.lstrip().split(':')[0]
-                        first_element['value'] = cust_columns[0].getchildren()[0].attrib['class'][20:]
-                        ret['cust_columns'].append(first_element)
-                    elif ':' in cust_columns[0].getchildren()[0].text:
-                        first_element['Text'] = cust_columns[0].getchildren()[0].text.lstrip().split(':')[0]
-                        first_element['value'] = cust_columns[0].getchildren()[0].text.split(':')[1].strip()
-                        ret['cust_columns'].append(first_element)
-                    else:
-                        pass
-                    for col in cust_columns[0].getchildren()[0].getchildren()[1:]:
-                        element = dict()
-                        if col.tag == 'span':
-                            element['Text'] = col.getparent().text.lstrip().split(':')[0]
-                            element['value'] = col.attrib['class'][20:]
-                            ret['cust_columns'].append(element)
-                        elif ':' in col.tail:
-                            element['Text'] = col.tail.lstrip().split(':')[0]
-                            element['value'] = col.tail.split(':')[1].strip()
-                            ret['cust_columns'].append(element)
-                        else:
-                            pass'''
-
-            # cover type
-
         except Exception as e:
             print(e)
             pass
         return ret
 
-    @classmethod
-    def register_user(cls,user, email):
-        cls.logout()
-        if cls.goto_page('register'):
-            name = cls.check_element_on_page((By.ID, "nickname"))
-            em = cls.check_element_on_page((By.ID, "email"))
-            submit = cls.check_element_on_page((By.ID, "submit"))
-            name.send_keys(user)
-            em.send_keys(email)
-            submit.click()
-            return cls.check_element_on_page(((By.ID, "flash_success")))
-        else:
-            return False
+    def get_books_list(self):
+        pass
 
     @classmethod
     def check_tasks(cls):

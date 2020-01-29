@@ -20,7 +20,7 @@ guest user support test
 class test_anonymous(unittest.TestCase, ui_class):
     p=None
     driver = None
-    py_version = u'/usr/bin/python3'
+    # py_version = u'/usr/bin/python3'
 
     @classmethod
     def setUpClass(cls):
@@ -28,7 +28,7 @@ class test_anonymous(unittest.TestCase, ui_class):
 
     @classmethod
     def tearDownClass(cls):
-        # close the browser window and stop calibre-web
+        #close the browser window and stop calibre-web
         cls.driver.quit()
         cls.p.kill()
 
@@ -138,21 +138,6 @@ class test_anonymous(unittest.TestCase, ui_class):
         self.goto_page("nav_rated")
         self.assertTrue(self.check_element_on_page((By.ID, "books_rand")))
         self.assertFalse(self.check_element_on_page((By.ID, "nav_rand")))
-        # check random books not shown in sorted section
-        '''self.driver.find_element_by_id("nav_sort").click()
-        self.goto_page("nav_sort_old")
-        self.assertTrue(self.check_element_on_page((By.ID, "books_rand")))
-        self.assertFalse(self.check_element_on_page((By.ID, "nav_rand")))
-        self.goto_page("nav_sort_new")
-        self.assertTrue(self.check_element_on_page((By.ID, "books_rand")))
-        self.assertFalse(self.check_element_on_page((By.ID, "nav_rand")))
-        self.goto_page("nav_sort_asc")
-        self.assertTrue(self.check_element_on_page((By.ID, "books_rand")))
-        self.assertFalse(self.check_element_on_page((By.ID, "nav_rand")))
-        self.goto_page("nav_sort_desc")
-        self.assertTrue(self.check_element_on_page((By.ID, "books_rand")))
-        self.assertFalse(self.check_element_on_page((By.ID, "nav_rand")))'''
-
         # Go to admin section and reenable show random view
         self.check_element_on_page((By.ID, "top_user")).click()
         self.login('admin', 'admin123')
@@ -191,39 +176,10 @@ class test_anonymous(unittest.TestCase, ui_class):
         self.goto_page("nav_rated")
         self.assertTrue(self.check_element_on_page((By.ID, "books_rand")))
         self.assertTrue(self.check_element_on_page((By.ID, "nav_rand")))
-        # check random books not shown in sorted section
-        '''self.driver.find_element_by_id("nav_sort").click()
-        self.goto_page("nav_sort_old")
-        self.assertTrue(self.check_element_on_page((By.ID, "books_rand")))
-        self.assertTrue(self.check_element_on_page((By.ID, "nav_rand")))
-        self.goto_page("nav_sort_new")
-        self.assertTrue(self.check_element_on_page((By.ID, "books_rand")))
-        self.assertTrue(self.check_element_on_page((By.ID, "nav_rand")))
-        self.goto_page("nav_sort_asc")
-        self.assertTrue(self.check_element_on_page((By.ID, "books_rand")))
-        self.assertTrue(self.check_element_on_page((By.ID, "nav_rand")))
-        self.goto_page("nav_sort_desc")
-        self.assertTrue(self.check_element_on_page((By.ID, "books_rand")))
-        self.assertTrue(self.check_element_on_page((By.ID, "nav_rand")))'''
         self.check_element_on_page((By.ID, "top_user")).click()
         self.login('admin', 'admin123')
         self.edit_user('Guest',{'show_32':0, 'show_512':0, 'show_128':0, 'show_2': 0,
                                 'show_16': 0, 'show_4': 0, 'show_4096': 0, 'show_8': 0, 'show_64':0})
-
-
-    # Test if user can change visibility of sidebar view sorted
-    '''def test_guest_change_visibility_sorted(self):
-        self.edit_user('Guest',{'show_sorted':1})
-        self.assertTrue(self.check_element_on_page((By.ID, "flash_success")))
-        self.logout()
-        self.assertTrue(self.check_element_on_page((By.ID, "nav_sort")))
-        self.check_element_on_page((By.ID, "top_user")).click()
-        self.login('admin', 'admin123')
-        self.edit_user('Guest',{'show_sorted': 0})
-        self.assertTrue(self.check_element_on_page((By.ID, "flash_success")))
-        self.logout()
-        self.assertFalse(self.check_element_on_page((By.ID, "nav_sort")))'''
-
 
     # Test if user can change visibility of sidebar view best rated books
     def test_guest_change_visibility_rated(self):

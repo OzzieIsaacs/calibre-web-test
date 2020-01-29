@@ -93,18 +93,18 @@ class test_logging(unittest.TestCase, ui_class):
             self.fill_basic_config({'config_logfile': CALIBRE_WEB_PATH+os.sep})
             WebDriverWait(self.driver, 5).until(EC.presence_of_element_located((By.ID, "flash_alert")))
             # check if non exsiting path is accepted
-            self.fill_basic_config({'config_logfile': os.path.join(CALIBRE_WEB_PATH, 'hü lo', 'lö g.log').decode('UTF-8')})
+            self.fill_basic_config({'config_logfile': os.path.join(CALIBRE_WEB_PATH, 'hü lo', 'lö g.log')})
             WebDriverWait(self.driver, 5).until(EC.presence_of_element_located((By.ID, "flash_alert")))
             # check if path without extension is accepted
             os.makedirs(os.path.join(CALIBRE_WEB_PATH, 'hü lo'))
-            self.fill_basic_config({'config_logfile': os.path.join(CALIBRE_WEB_PATH, 'hü lo', 'lö g').decode('UTF-8')})
+            self.fill_basic_config({'config_logfile': os.path.join(CALIBRE_WEB_PATH, 'hü lo', 'lö g')})
             WebDriverWait(self.driver, 5).until(EC.presence_of_element_located((By.ID, "flash_success")))
             time.sleep(7)
             # wait for restart
             self.assertTrue(os.path.isfile(os.path.join(CALIBRE_WEB_PATH, 'hü lo','lö g')))
             shutil.rmtree(os.path.join(CALIBRE_WEB_PATH, u'hü lo').encode('UTF-8'), ignore_errors=True)
             #Reset Logfile to default
-            self.fill_basic_config({'config_logfile': ''.decode('UTF-8')})
+            self.fill_basic_config({'config_logfile': ''})
             WebDriverWait(self.driver, 5).until(EC.presence_of_element_located((By.ID, "flash_success")))
             time.sleep(7)
 
@@ -113,7 +113,7 @@ class test_logging(unittest.TestCase, ui_class):
 
     def test_logfile_recover(self):
         os.makedirs(os.path.join(CALIBRE_WEB_PATH, 'hü lo'))
-        self.fill_basic_config({'config_logfile': os.path.join(CALIBRE_WEB_PATH, 'hü lo', 'lö g').decode('UTF-8')})
+        self.fill_basic_config({'config_logfile': os.path.join(CALIBRE_WEB_PATH, 'hü lo', 'lö g')})
         self.check_element_on_page((By.ID, "flash_success"))
         time.sleep(7)
         # delete old logfile and check new logfile present

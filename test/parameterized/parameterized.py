@@ -596,7 +596,7 @@ def parameterized_class(attrs, input_values=None, names=None):
                 )
 
 
-            test_class_module[name] = type(name.encode('utf-8'), (base_class, ), test_class_dict)
+            test_class_module[name] = type(name, (base_class, ), test_class_dict)
 
         # We need to leave the base class in place (see issue #73), but if we
         # leave the test_ methods in place, the test runner will try to pick
