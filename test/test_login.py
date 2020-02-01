@@ -7,7 +7,7 @@ from selenium.common.exceptions import WebDriverException
 import re
 from ui_helper import ui_class
 from testconfig import TEST_DB
-from func_helper import startup
+from func_helper import startup, check_response_language_header, curl_available
 from parameterized import parameterized_class
 
 
@@ -266,9 +266,33 @@ class test_login(unittest.TestCase, ui_class):
         self.create_user('admin',{'password':'admin123', 'admin_role':1,'email':'a4@b.com'})
         self.logout()
 
+    @unittest.skipIf(not curl_available, "Skipping language detection, pycurl not available")
     def test_login_locale_select(self):
         # this one should work and throw not an error 500
-        #curl -H 'Accept-Language: fi;q=0.9,en;q=0.8,*;q=0.7' http://127.0.0.1:8083/login?next=%2Fbooks%2Ffiction%2F
-        pass
+        url = 'http://127.0.0.1:8083/login'
+        self.assertTrue(check_response_language_header(url,
+                                                       ['Accept-Language: de-de;q=0.9,en;q=0.7,*;q=0.8'],
+                                                       200,
+                                                       '<label for="username">Benutzername</label>'),
+                        'Locale detect with "-" failed')
+        self.assertTrue(check_response_language_header(url,
+                                                       ['Accept-Language: *;q=0.9,de;q=0.7,en;q=0.8'],
+                                                       200,
+                                                       '<label for="username">Username</label>'),
+                        'Locale detect with different q failed')
+        self.assertTrue(check_response_language_header(url,
+                                                       ['Accept-Language: zh_cn;q=0.9,de;q=0.8,en;q=0.7'],
+                                                       200,
+                                                       '<label for="username">用户名</label>'))
+        self.assertTrue(check_response_language_header(url,
+                                                       ['Accept-Language: xx'],
+                                                       200,
+                                                       '<label for="username">Username</label>'),
+                        'Locale detect with unknown locale failed')
+        self.assertTrue(check_response_language_header(url,
+                                                       ['Accept-Language: *'],
+                                                       200,
+                                                       '<label for="username">Username</label>'),
+                        'Locale detect with only "*" failed')
 
 

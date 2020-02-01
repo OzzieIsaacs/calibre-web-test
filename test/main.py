@@ -14,7 +14,6 @@ import unittest
 import sys
 from CalibreResult import CalibreResult
 
-
 if __name__ == '__main__':
     result=False
     retry=0

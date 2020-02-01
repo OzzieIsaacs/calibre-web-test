@@ -269,3 +269,13 @@ class test_anonymous(unittest.TestCase, ui_class):
         self.logout()
         self.assertFalse(self.check_element_on_page((By.ID, "nav_cat")))
 
+    def test_check_locale_guest(self):
+        self.goto_page('admin_setup')
+        user = self.driver.find_elements_by_xpath("//table[@id='table_user']/tbody/tr/td/a")
+        for ele in user:
+            if 'Guest' == ele.text:
+                ele.click()
+                self.assertTrue(self.check_element_on_page((By.ID, "email")))
+                self.assertFalse(self.check_element_on_page((By.ID, "locale")))
+                return
+        self.assertTrue(False,"User account not found")

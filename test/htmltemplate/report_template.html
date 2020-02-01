@@ -20,28 +20,38 @@
 
 <body>
 
-<div class="container-fluid">
+
     <div class="row report-title">
         <h1 id='report_title' class="text-center">{{ title }}</h1>
     </div>
-
-    <div id='header_parameters' class='row text-center report-parameters'>
-        <div class="col-xs-6 col-md-4">
+  <div class="row">
+    <div class="col">
+      <div class="col-xs-12 col-sm-6">
+        <div class="piechart">
+          <div>
+              <canvas id="circle" width="350" height="168" ></canvas>
+          </div>
+        </div>
+      </div>
+      <div class="col-xs-12 col-sm-6">
+      <div class="row">
+        <div class="col-xs-6 col-md-6 col-sm-offset-3" style="margin-top:50px;">
             <p class='text-justify attribute'><strong>Start Time: </strong>{{ header_info.start_time.strftime("%Y-%m-%d %H:%M:%S") }}</p>
         </div>
-        <!--div class="col-xs-6 col-md-4">
-            <p class='text-justify attribute'><strong>top Time: </strong>{{ header_info.start_time.strftime("%Y-%m-%d %H:%M:%S") }}</p>
-        </div-->
-        <div class="col-xs-6 col-md-4">
+      </div>
+      <div class="row">
+        <div class="col-xs-6 col-md-6 col-sm-offset-3">
+            <p class='text-justify attribute'><strong>Stop Time: </strong>{{ header_info.stop_time.strftime("%Y-%m-%d %H:%M:%S") }}</p>
+        </div>
+      </div>
+      <div class="row">
+        <div class="col-xs-6 col-md-6 col-sm-offset-3">
            <p class='text-justify attribute'><strong>Duration: </strong>{{ header_info.status.duration }}</p>
         </div>
+      </div>
+      </div>
     </div>
-
-    <div class="piechart">
-        <div>
-            <canvas id="circle" width="350" height="168" ></canvas>
-        </div>
-    </div>
+  </div>
 
     <div class='report-description'>
         <div id='report_description' class='row text-center'>{{ description }}</div>
@@ -145,6 +155,39 @@
         <td>&nbsp;</td>
     </tr>
 </table>
+<div class="panel-group">
+  <div class="panel panel-default">
+    <div class="panel-heading">
+      <h4 class="panel-title">
+        <a class="accordion-toggle" data-toggle="collapse" href="#collapseOne">
+          <span class="glyphicon glyphicon-plus"></span>
+          Tested environment
+        </a>
+      </h4>
+    </div>
+    <div id="collapseOne" class="panel-collapse collapse">
+      <div class="panel-body">
+        <table id="libs" class="table">
+          <thead>
+            <tr>
+              <th>Program library</th>
+              <th>Installed Version</th>
+            </tr>
+          </thead>
+          <tbody>
+          {% for row in environ %}
+            <tr>
+              <th>{{ row[0] }}</th>
+              <td>{{ row[1] }}</td>
+            </tr>
+          {% endfor %}
+          </tbody>
+        </table>
+      </div>
+    </div>
+  </div>
+</div>
+
 <script>
     drawCircle({{ header_info.status.success }}, {{ header_info.status.failure }}, {{ header_info.status.error }}, {{ header_info.status.skip }});
 </script>
