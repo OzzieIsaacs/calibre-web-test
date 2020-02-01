@@ -43,7 +43,7 @@ page['tasks']={'check':(By.TAG_NAME, "h2"),'click':[(By.ID, "top_tasks")]}
 page['register']={'check':(By.ID, "nickname"),'click':[(By.ID, "register")]}
 page['login']={'check':(By.NAME, "username"),'click':[(By.ID, "logout")]}
 page['unlogged_login']={'check':(By.NAME, "username"),'click':[(By.CLASS_NAME, "glyphicon-log-in")]}
-
+page['logviewer']={'check':(By.ID, "log_group"),'click':[(By.ID, "top_admin"),(By.ID, "logfile")]}
 
 
 class ui_class():
@@ -233,13 +233,15 @@ class ui_class():
         process_options =dict()
         process_select = dict()
         # special handling for checkboxes
-        checkboxes = ['config_uploading', 'config_anonbrowse', 'config_public_reg', 'config_remote_login']
+        checkboxes = ['config_uploading', 'config_anonbrowse', 'config_public_reg', 'config_remote_login',
+                      'config_access_log']
         options = ['config_log_level', 'config_google_drive_folder']
         selects = ['config_ebookconverter']
         # depending on elements open accordions or not
         if any(key in elements for key in ['config_port', 'config_certfile','config_keyfile']):
             opener.append(1)
-        if any(key in elements for key in ['config_log_level','config_logfile']):
+        if any(key in elements for key in ['config_log_level','config_logfile', 'config_access_logfile',
+                                           'config_access_log']):
             opener.append(2)
         if any(key in elements for key in ['config_uploading', 'config_anonbrowse', 'config_public_reg',
                                            'config_remote_login', 'config_use_goodreads', 'config_goodreads_api_key',
@@ -582,7 +584,7 @@ class ui_class():
             if name == ele.text:
                 ele.click()
                 if not cls.check_element_on_page((By.ID, "email")):
-                    print('Could user: %s not edit' % name)
+                    print('Could not edit user: %s' % name)
                     return False
                 return cls.change_user(element)
         print('User: %s not found' % name)

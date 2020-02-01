@@ -10,7 +10,7 @@ from selenium.common.exceptions import TimeoutException
 import time
 import shutil
 from ui_helper import ui_class
-from testconfig import CALIBRE_WEB_PATH, TEST_DB
+from testconfig import CALIBRE_WEB_PATH, TEST_DB, BOOT_TIME
 import re
 from func_helper import startup
 from parameterized import parameterized_class
@@ -131,4 +131,49 @@ class test_logging(unittest.TestCase, ui_class):
         logpath = self.driver.find_element_by_id("config_logfile").get_attribute("value")
         self.assertTrue(logpath=="", "logfile config value is not empty after reseting to default")
 
+    def test_logviewer(self):
+        self.fill_basic_config({'config_logfile': '/dev/stdout',
+                                'config_access_log': 1,
+                                'config_access_logfile':'access.log'})
+        self.check_element_on_page((By.ID, "flash_success"))
+        self.goto_page('logviewer')
+        # check stream test is there, no radiobox for calibre log, access logger ticked
+        self.assertTrue(self.check_element_on_page((By.XPATH, '//label[@for="log1"]')))
+        self.assertFalse(self.check_element_on_page((By.ID, 'log1')))
+        self.assertTrue(self.check_element_on_page((By.ID, 'log0')).is_selected())
+        # Just check if there is output in the field
+        self.assertGreater(len(self.check_element_on_page((By.ID, 'renderer')).text), 100)
+
+        self.fill_basic_config({'config_logfile': 'log.log',
+                                'config_access_log': 0,
+                                'config_access_logfile':''})
+        self.check_element_on_page((By.ID, "flash_success"))
+        time.sleep(BOOT_TIME)
+        self.goto_page('logviewer')
+        # check stream test is there, no radiobox for calibre log, access logger ticked
+        self.assertTrue(self.check_element_on_page((By.ID, 'log1')).is_selected())
+        self.assertFalse(self.check_element_on_page((By.ID, 'log0')))
+        # Just check if there is output in the field
+        self.assertGreater(len(self.check_element_on_page((By.ID, 'renderer')).text), 100)
+
+        self.fill_basic_config({'config_logfile': 'log.log',
+                                'config_access_log': 1,
+                                'config_access_logfile':'access.log'})
+        self.check_element_on_page((By.ID, "flash_success"))
+        time.sleep(BOOT_TIME)
+        self.goto_page('logviewer')
+        # check stream test is there, no radiobox for calibre log, access logger ticked
+        logger = self.check_element_on_page((By.ID, 'log1'))
+        access = self.check_element_on_page((By.ID, 'log0'))
+        self.assertTrue(access)
+        self.assertFalse(access.is_selected())
+        self.assertTrue(logger.is_selected())
+        text1=len(self.check_element_on_page((By.ID, 'renderer')).text)
+        access.click()
+        time.sleep(2)
+        self.assertTrue(access.is_selected())
+        self.assertFalse(logger.is_selected())
+        text2=len(self.check_element_on_page((By.ID, 'renderer')).text)
+        self.assertNotEqual(text1, text2)
+        # Just check if there is output in the field
 

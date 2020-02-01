@@ -77,8 +77,8 @@ class OutputRedirector(object):
     def flush(self):
         self.fp.flush()
 
-stdout_redirector = OutputRedirector(sys.stdout)
-stderr_redirector = OutputRedirector(sys.stderr)
+#stdout_redirector = OutputRedirector(sys.stdout)
+#stderr_redirector = OutputRedirector(sys.stderr)
 
 def load_template(template):
     """ Try to read a file from a given path, if file
@@ -244,7 +244,7 @@ class CalibreResult(TextTestResult):
 
             if self.showAll:
                 self.stream.writeln(
-                    "{} ({:3f})s".format(verbose_str, test_info.elapsed_time))
+                    "{} ({:1f})s".format(verbose_str, test_info.elapsed_time))
                 if reason:
                     self.stream.writeln(' - ' + str(reason))
             elif self.dots:
@@ -259,32 +259,33 @@ class CalibreResult(TextTestResult):
     def startTest(self, test):
         """ Called before execute each method. """
         self.start_time = time.time()
-        TextTestResult.startTest(self, test)
+        TestResult.startTest(self, test)
 
         if self.showAll:
             self.stream.write(" " + self.getDescription(test))
             self.stream.write(" ... ")
 
         # just one buffer for both stdout and stderr
-        self.outputBuffer = StringIO.StringIO()
+        '''self.outputBuffer = StringIO.StringIO()
         stdout_redirector.fp = self.outputBuffer
-        stderr_redirector.fp = self.outputBuffer
-        self.stdout0 = sys.stdout
+        stderr_redirector.fp = self.outputBuffer'''
+        '''self.stdout0 = sys.stdout
         self.stderr0 = sys.stderr
         sys.stdout = stdout_redirector
-        sys.stderr = stderr_redirector
+        sys.stderr = stderr_redirector'''
 
-    def complete_output(self):
+    #def complete_output(self):
         """
         Disconnect output redirection and return buffer.
         Safe to call multiple times.
         """
-        if self.stdout0:
+        '''if self.stdout0:
             sys.stdout = self.stdout0
             sys.stderr = self.stderr0
             self.stdout0 = None
             self.stderr0 = None
-        return self.outputBuffer.getvalue()
+        return self.outputBuffer.getvalue()'''
+        #return self._stdout_data
 
     def _save_output_data(self):
         try:
@@ -296,7 +297,7 @@ class CalibreResult(TextTestResult):
     def stopTest(self, test):
         """ Called after excute each test method. """
         self._save_output_data()
-        TextTestResult.stopTest(self, test)
+        TestResult.stopTest(self, test)
         self.stop_time = time.time()
 
         if self.callback and callable(self.callback):
@@ -307,14 +308,14 @@ class CalibreResult(TextTestResult):
         # But there are some path in unittest that would bypass this.
         # We must disconnect stdout in stopTest(),
         # which is guaranteed to be called.
-        self.complete_output()
+        # self.complete_output()
 
     def addSuccess(self, test):
         """ Called when a test executes successfully. """
         self._save_output_data()
         self._prepare_callback(self.infoclass(self, test), self.successes, "OK", ".")
-        output = self.complete_output()
-        self.result.append((0, test, output, ''))
+        # output = self.complete_output()
+        self.result.append((0, test, self._stdout_data, ''))
 
     @failfast
     def addFailure(self, test, err):
@@ -322,8 +323,8 @@ class CalibreResult(TextTestResult):
         self._save_output_data()
         testinfo = self.infoclass(self, test, self.infoclass.FAILURE, err)
         self._prepare_callback(testinfo, self.failures, "FAIL", "F")
-        output = self.complete_output()
-        self.result.append((1, test, output, testinfo.test_exception_info))
+        # output = self.complete_output()
+        self.result.append((1, test, self._stdout_data, testinfo.test_exception_info))
 
     @failfast
     def addError(self, test, err):
@@ -331,8 +332,8 @@ class CalibreResult(TextTestResult):
         self._save_output_data()
         testinfo = self.infoclass(self, test, self.infoclass.ERROR, err)
         self._prepare_callback(testinfo, self.errors, 'ERROR', 'E')
-        output = self.complete_output()
-        self.result.append((2, test, output, testinfo.test_exception_info))
+        # output = self.complete_output()
+        self.result.append((2, test, self._stdout_data, testinfo.test_exception_info))
 
     def addSubTest(self, testcase, test, err):
         """ Called when a subTest completes. """
@@ -356,8 +357,8 @@ class CalibreResult(TextTestResult):
         self._save_output_data()
         testinfo = self.infoclass(self, test, self.infoclass.SKIP, reason)
         self._prepare_callback(testinfo, self.skipped, "SKIP", "S")
-        output = self.complete_output()
-        self.result.append((3, test, output, reason))
+        # output = self.complete_output()
+        self.result.append((3, test, self._stdout_data, reason))
 
     def printErrorList(self, flavour, errors):
         """
