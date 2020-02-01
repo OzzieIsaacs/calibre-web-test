@@ -2,6 +2,7 @@
 # -*- coding: utf-8 -*-
 import os
 import shutil
+import re
 from testconfig import CALIBRE_WEB_PATH, TEST_DB, BOOT_TIME
 from selenium.webdriver.support.ui import WebDriverWait
 from subproc_wrapper import process_open
@@ -10,6 +11,12 @@ from selenium.webdriver.common.by import By
 from selenium.webdriver.support import expected_conditions as EC
 import time
 
+try:
+    import pycurl
+    from io import BytesIO
+    curl_available = True
+except ImportError:
+    curl_available = False
 
 def is_port_in_use(port):
     import socket, errno
@@ -72,4 +79,16 @@ def wait_Email_received(func):
         i += 1
     return False
 
+def check_response_language_header(url, header, expected_response,search_text):
+    buffer = BytesIO()
+    c = pycurl.Curl()
+    c.setopt(c.URL, url)
+    c.setopt(pycurl.HTTPHEADER, header)
+    c.setopt(c.WRITEDATA, buffer)
+    c.perform()
+    if c.getinfo(c.RESPONSE_CODE) != expected_response:
+        return False
+    c.close()
+    body = buffer.getvalue().decode('utf-8')
+    return bool(re.search(search_text, body))
 
