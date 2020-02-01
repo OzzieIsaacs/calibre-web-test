@@ -64,8 +64,9 @@ class test_register(unittest.TestCase, ui_class):
         self.login('admin', 'admin123')
         self.setup_server(False, {'mail_server': '127.0.0.1'})
 
-    # ToDo: Implement
     def test_limit_domain(self):
+        if not self.check_user_logged_in('admin', True):
+            self.login('admin', 'admin123')
         self.goto_page('mail_server')
         a_domains = self.list_domains(allow=True)
         self.assertEqual(a_domains[0]['domain'],'*.*')
