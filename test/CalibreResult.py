@@ -41,6 +41,8 @@ import traceback
 from unittest import TestResult, TextTestResult
 from unittest.result import failfast
 import pkg_resources
+from testconfig import CALIBRE_WEB_PATH
+import platform
 
 from jinja2 import Template
 
@@ -469,8 +471,26 @@ class CalibreResult(TextTestResult):
         return summaries
 
     def _get_environment(self):
+        dep=list()
+        result=list()
+        uname = platform.uname()
+        result.append(('Platform','{0.system} {0.release} {0.version} {0.processor} {0.machine}'.format(uname)))
+        result.append(('Python', sys.version))
+
         dists = [str(d).split(" ") for d in pkg_resources.working_set]
-        return dists
+        with open(os.path.join(CALIBRE_WEB_PATH,'requirements.txt'), 'r') as f:
+            for line in f:
+                if not line.startswith('#') and not line == '\n' and not line.startswith('git'):
+                    dep.append(line.split('=', 1)[0].strip('>'))
+        with open(os.path.join(CALIBRE_WEB_PATH,'optional-requirements.txt'), 'r') as f:
+            for line in f:
+                if not line.startswith('#') and not line == '\n' and not line.startswith('git'):
+                    dep.append(line.split('=', 1)[0].split('>', 1)[0])
+        for element in dists:
+            if element[0] in dep:
+                result.append(element)
+
+        return result
 
     def generate_reports(self, testRunner):
         """ Generate report(s) for all given test cases that have been run. """
