@@ -92,3 +92,15 @@ def check_response_language_header(url, header, expected_response,search_text):
     body = buffer.getvalue().decode('utf-8')
     return bool(re.search(search_text, body))
 
+def digest_login(url, expected_response):
+    buffer = BytesIO()
+    c = pycurl.Curl()
+    c.setopt(c.URL, url)
+    c.setopt(pycurl.HTTPHEADER, ["Authorization: Digest username=\"admin\", realm=\"calibre\", nonce=\"40f00b48437860f60066:9bcc076210c0bbc2ebc9278fbba05716bcc55e09daa59f53b9ebe864635cf254\", uri=\"/config\", algorithm=MD5, response=\"c3d1e34c67fd8b408a167ca61b108a30\", qop=auth, nc=000000c9, cnonce=\"2a216b9b9c1b1108\""])
+    c.setopt(c.WRITEDATA, buffer)
+    c.perform()
+    if c.getinfo(c.RESPONSE_CODE) != expected_response:
+        c.close()
+        return False
+    c.close()
+    return True

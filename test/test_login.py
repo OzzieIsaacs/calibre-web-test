@@ -7,7 +7,7 @@ from selenium.common.exceptions import WebDriverException
 import re
 from ui_helper import ui_class
 from testconfig import TEST_DB
-from func_helper import startup, check_response_language_header, curl_available
+from func_helper import startup, check_response_language_header, curl_available, digest_login
 from parameterized import parameterized_class
 
 
@@ -295,4 +295,9 @@ class test_login(unittest.TestCase, ui_class):
                                                        '<label for="username">Username</label>'),
                         'Locale detect with only "*" failed')
 
+    # CHek that digest Authentication header doesn't crash the aplication
+    @unittest.skipIf(not curl_available, "Skipping auth_login, pycurl not available")
+    def test_digest_login(self):
+        url = 'http://127.0.0.1:8083/login'
+        self.assertTrue(digest_login(url,200))
 
