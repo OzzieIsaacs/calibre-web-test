@@ -9,6 +9,7 @@ from subproc_wrapper import process_open
 from selenium import webdriver
 from selenium.webdriver.common.by import By
 from selenium.webdriver.support import expected_conditions as EC
+from seleniumrequests import Firefox
 import time
 
 try:
@@ -32,7 +33,7 @@ def is_port_in_use(port):
     return False
 
 
-def startup(inst, pyVersion, config, login=True):
+def startup(inst, pyVersion, config, login=True, request=False):
     print("\n%s - %s: " % (inst.py_version, inst.__name__))
     try:
         os.remove(os.path.join(CALIBRE_WEB_PATH, 'app.db'))
@@ -43,7 +44,10 @@ def startup(inst, pyVersion, config, login=True):
     inst.p = process_open([pyVersion, os.path.join(CALIBRE_WEB_PATH, u'cps.py')], (1), sout=None)
 
     # create a new Firefox session
-    inst.driver = webdriver.Firefox()
+    if request:
+        inst.driver = Firefox()
+    else:
+        inst.driver = webdriver.Firefox()
     # time.sleep(15)
     inst.driver.implicitly_wait(BOOT_TIME)
 

@@ -1,5 +1,6 @@
 requests>=2.11.1
 selenium>=3.14.0
+selenium-requests>=1.1.0
 lxml>=4.0.0
 public>=2018.11.20
 pycurl>=7.19.0

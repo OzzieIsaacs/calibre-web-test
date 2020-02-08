@@ -21,7 +21,7 @@ class test_shelf(unittest.TestCase, ui_class):
     @classmethod
     def setUpClass(cls):
         try:
-            startup(cls, cls.py_version,{'config_calibre_dir':TEST_DB})
+            startup(cls, cls.py_version,{'config_calibre_dir':TEST_DB}, request=True)
             cls.create_user('shelf', {'edit_shelf_role':1, 'password':'123', 'email':'a@b.com'})
             cls.edit_user('admin',{'edit_shelf_role':1, 'email':'e@fe.de'})
         except:
@@ -210,8 +210,9 @@ class test_shelf(unittest.TestCase, ui_class):
         shelf_books = self.get_books_displayed()
 
     # Add muliple books to shelf and arrange the order
-    @unittest.expectedFailure
+    # @unittest.expectedFailure
     def test_arrange_shelf(self):
+        # coding = utf-8
         self.create_shelf('order', True)
         self.assertTrue(self.check_element_on_page((By.ID, "flash_success")))
         self.goto_page('nav_new')
@@ -229,8 +230,23 @@ class test_shelf(unittest.TestCase, ui_class):
         self.get_book_details(int(books[1][4]['id']))
         self.check_element_on_page((By.ID, "add-to-shelf")).click()
         self.check_element_on_page((By.XPATH, "//ul[@id='add-to-shelves']/li/a[contains(.,'order')]")).click()
-        self.assertIsNone('Not Implemented', 'Drag and drop order test not implmented')
+        self.goto_page('nav_new')
+        test= self.list_shelfs('order')[0]['ele'].click()
+        shelf_books = self.get_shelf_books_displayed()
+        self.assertEqual(shelf_books[0]['id'], '13')
+        self.assertEqual(shelf_books[1]['id'], '11')
+        self.assertEqual(shelf_books[2]['id'], '9')
+        self.check_element_on_page((By.ID, "order_shelf")).click()
+        order = self.get_order_shelf_list()
+        self.driver.request('POST', 'http://127.0.0.1:8083/shelf/order/1',
+                                          data={"9": "1","11": "2","13": "3"})
+        self.driver.refresh() # reload page
 
+        self.check_element_on_page((By.ID, "shelf_back")).click()
+        shelf_books = self.get_shelf_books_displayed()
+        self.assertEqual(shelf_books[0]['id'], '9')
+        self.assertEqual(shelf_books[1]['id'], '11')
+        self.assertEqual(shelf_books[2]['id'], '13')
 
     # change shelf from public to private type
     def test_public_private_shelf(self):
@@ -280,5 +296,3 @@ class test_shelf(unittest.TestCase, ui_class):
     def test_shelf_database_change(self):
         self.create_shelf('order', False)
         self.assertTrue(self.check_element_on_page((By.ID, "flash_success")))
-
-

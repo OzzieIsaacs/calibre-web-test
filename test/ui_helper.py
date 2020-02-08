@@ -853,6 +853,59 @@ class ui_class():
             pagination = [p.text for p in pages]
         return [books_rand, books, pagination]
 
+    def get_shelf_books_displayed(self):
+        parser = lxml.etree.HTMLParser()
+        html = self.driver.page_source
+        tree = lxml.etree.parse(StringIO(html), parser)
+
+        books = list()
+        b = tree.xpath("//*[@class='row']/div")
+        for book in b:
+            ele = book.getchildren()
+            # ele[0] -> cover
+            meta=ele[1].getchildren()
+            bk = dict()
+            bk['link'] = ele[0].getchildren()[0].attrib['href']
+            bk['id'] = bk['link'][6:]
+            bk['ele'] = self.check_element_on_page((By.XPATH,"//a[@href='"+bk['link']+"']/img"))
+            bk['title']= meta[0].getchildren()[0].text
+            authors = meta[1].getchildren()
+            bk['author'] = [a.text for a in authors]
+            if len(meta) == 3:
+                ratings = meta[2].getchildren()
+                counter = 0
+                for rating in ratings:
+                    if rating.attrib['class'] == 'glyphicon glyphicon-star good':
+                        counter += 1
+                bk['rating'] = counter
+            books.append(bk)
+        return books
+
+    def get_order_shelf_list(self):
+        parser = lxml.etree.HTMLParser()
+        html = self.driver.page_source
+        tree = lxml.etree.parse(StringIO(html), parser)
+
+        books = list()
+        b = tree.xpath("//*[@id='sortTrue']/div")
+        for book in b:
+            #ele = book.getchildren()
+            # ele[0] -> cover
+            meta=book.getchildren()[0].getchildren()[1]
+            bk = dict()
+            bk['id'] = book.attrib['id']
+            #bk['link'] = ele[0].getchildren()[0].attrib['href']
+            #bk['id'] = bk['link'][6:]
+            bk['ele'] = self.check_element_on_page((By.ID,bk['id']))
+            bk['title']= meta.text.strip()
+            next = meta.getchildren()
+            if len(next) == 2:
+                bk['author'] = meta.getchildren()[1].tail.strip()
+                bk['series'] = meta.getchildren()[0].tail.strip()
+            else:
+                bk['author'] = meta.getchildren()[0].tail.strip()
+            books.append(bk)
+        return books
 
     @classmethod
     def get_book_details(cls,id=-1,root_url="http://127.0.0.1:8083"):
@@ -1024,22 +1077,11 @@ class ui_class():
                         if col.getnext().tag == 'select':
                             select = Select(cls.driver.find_element_by_id(element['index']))
                             select.select_by_visible_text(custom_content[element['label']])
-                            # element['options'] = [x.text for x in tree.findall("//select[@id='"+
-                            #                                                  col.attrib['for'] + "']/option")]
-                            # element['type'] = 'select'
                         elif col.getnext().tag == 'input':
                             edit = cls.check_element_on_page((By.ID, element['index']))
                             edit.send_keys(Keys.CONTROL, "a")
                             edit.send_keys(Keys.DELETE)
                             edit.send_keys(custom_content[element['label']])
-                            '''if 'min' in col.getnext().attrib:
-                                element['type'] = 'rating'
-                            elif 'text' in col.getnext().attrib:
-                                element['type'] = 'text'
-                            else:
-                                element['type'] = 'number'''
-                        # elif col.getnext().tag == 'input':
-                        # ret.append(element)
 
         if 'rating' in content:
             cls.driver.execute_script("arguments[0].setAttribute('value', arguments[1])",
@@ -1076,15 +1118,6 @@ class ui_class():
         submit = cls.check_element_on_page((By.ID, "submit"))
         submit.click()
         return
-
-
-        '''number
-        'upload-cover'
-        'pubdate'
-        'upload-format'
-        custom coloums
-        'detail_view'
-        'get_meta' '''
 
     @classmethod
     def get_convert_book(cls, id=-1, root_url='http://127.0.0.1:8083'):
