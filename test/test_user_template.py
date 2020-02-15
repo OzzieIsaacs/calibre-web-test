@@ -9,9 +9,10 @@ from selenium.webdriver.support.ui import WebDriverWait
 from selenium.webdriver.support import expected_conditions as EC
 import time
 import shutil
-from ui_helper import ui_class
+from ui_helper import ui_class, RESTRICT_TAG_TEMPLATE, RESTRICT_COL_TEMPLATE
 from subproc_wrapper import process_open
 from testconfig import CALIBRE_WEB_PATH, TEST_DB, BOOT_TIME
+from func_helper import startup
 
 from parameterized import parameterized_class
 
@@ -26,6 +27,12 @@ class test_user_template(unittest.TestCase, ui_class):
     @classmethod
     def setUpClass(cls):
         try:
+            startup(cls, cls.py_version, {'config_calibre_dir': TEST_DB})
+        except:
+            cls.driver.quit()
+            cls.p.kill()
+
+        '''try:
             os.remove(os.path.join(CALIBRE_WEB_PATH,'app.db'))
         except:
             pass
@@ -57,10 +64,7 @@ class test_user_template(unittest.TestCase, ui_class):
             login_button.click()
 
             # login
-            cls.login("admin", "admin123")
-        except:
-            cls.driver.quit()
-            cls.p.kill()
+            cls.login("admin", "admin123")'''
 
 
     @classmethod
@@ -422,6 +426,130 @@ class test_user_template(unittest.TestCase, ui_class):
         self.assertEqual(tags[1].text,'Unread Books (3)')
         # find 2 h2
 
-    def test_content_restriction_settings(self):
-        pass
+    def test_allow_tag_restriction(self):
+        restricts = self.list_restrictions(RESTRICT_TAG_TEMPLATE)
+        self.assertEqual(len(restricts), 0)
+        self.add_restrictions('Gênot', allow=True)
+        close = self.check_element_on_page((By.ID, "restrict_close"))
+        self.assertTrue(close)
+        close.click()
+        time.sleep(2)
+
+        self.goto_page('create_user')
+        self.create_user('allowtag',{'password':'1234','email':'abb@b.com'})
+        self.assertTrue(self.check_element_on_page((By.ID, "flash_success")))
+        self.goto_page('nav_new')
+        books = self.get_books_displayed()
+        self.assertEqual(len(books[1]), 11)
+        self.logout()
+        self.login('allowtag', '1234')
+        self.goto_page('nav_new')
+        books = self.get_books_displayed()
+        self.assertEqual(len(books[1]), 4)
+        self.logout()
+        self.login('admin','admin123')
+        # delete user
+        self.edit_user('allowtag',{'delete':1})
+
+
+    def test_deny_tag_restriction(self):
+        restricts = self.list_restrictions(RESTRICT_TAG_TEMPLATE)
+        self.assertEqual(len(restricts), 0)
+        self.add_restrictions('Gênot', allow=False)
+        close = self.check_element_on_page((By.ID, "restrict_close"))
+        self.assertTrue(close)
+        close.click()
+        time.sleep(2)
+
+        self.goto_page('create_user')
+        self.create_user('denytag',{'password':'1234','email':'aba@b.com'})
+        self.assertTrue(self.check_element_on_page((By.ID, "flash_success")))
+        self.goto_page('nav_new')
+        books = self.get_books_displayed()
+        self.assertEqual(len(books[1]), 11)
+        self.logout()
+        self.login('denytag', '1234')
+        self.goto_page('nav_new')
+        books = self.get_books_displayed()
+        self.assertEqual(len(books[1]), 7)
+
+        self.logout()
+        self.login('admin','admin123')
+        # delete user
+        self.edit_user('denytag',{'delete':1})
+
+
+    def test_allow_column_restriction(self):
+        self.fill_view_config({'config_restricted_column':"Custom Text 人物 *'()&"})
+        self.edit_book(10, custom_content={"Custom Text 人物 *'()&":'test'})
+        self.edit_book(11, custom_content={"Custom Text 人物 *'()&": 'test'})
+        self.edit_book(1, custom_content={"Custom Text 人物 *'()&": 'test'})
+        self.edit_book(9, custom_content={"Custom Text 人物 *'()&": 'test'})
+
+        restricts = self.list_restrictions(RESTRICT_COL_TEMPLATE)
+        self.assertEqual(len(restricts), 0)
+        self.add_restrictions('test', allow=True)
+        close = self.check_element_on_page((By.ID, "restrict_close"))
+        self.assertTrue(close)
+        close.click()
+        time.sleep(2)
+
+        self.goto_page('create_user')
+        self.create_user('allowcolum',{'password':'1234','email':'abc@b.com'})
+        self.assertTrue(self.check_element_on_page((By.ID, "flash_success")))
+
+        self.goto_page('nav_new')
+        books = self.get_books_displayed()
+        self.assertEqual(len(books[1]), 11)
+        self.logout()
+        self.login('allowcolum', '1234')
+        self.goto_page('nav_new')
+        books = self.get_books_displayed()
+        self.assertEqual(len(books[1]), 4)
+
+        self.logout()
+        self.login('admin','admin123')
+        # delete user
+        self.edit_user('allowcolum',{'delete':1})
+        self.edit_book(10, custom_content={"Custom Text 人物 *'()&": ''})
+        self.edit_book(11, custom_content={"Custom Text 人物 *'()&": ''})
+        self.edit_book(8, custom_content={"Custom Text 人物 *'()&": ''})
+        self.edit_book(3, custom_content={"Custom Text 人物 *'()&": ''})
+        self.fill_view_config({'config_restricted_column': "None"})
+
+
+    def test_deny_column_restriction(self):
+        self.fill_view_config({'config_restricted_column':"Custom Text 人物 *'()&"})
+        self.edit_book(10, custom_content={"Custom Text 人物 *'()&": 'deny'})
+        self.edit_book(11, custom_content={"Custom Text 人物 *'()&": 'deny'})
+        self.edit_book(1, custom_content={"Custom Text 人物 *'()&": 'deny'})
+        self.edit_book(9, custom_content={"Custom Text 人物 *'()&": 'deny'})
+        restricts = self.list_restrictions(RESTRICT_COL_TEMPLATE)
+        self.assertEqual(len(restricts), 0)
+        self.add_restrictions('deny', allow=False)
+        close = self.check_element_on_page((By.ID, "restrict_close"))
+        self.assertTrue(close)
+        close.click()
+        time.sleep(2)
+
+        self.goto_page('create_user')
+        self.create_user('denycolum',{'password':'1234','email':'abd@b.com'})
+        self.assertTrue(self.check_element_on_page((By.ID, "flash_success")))
+        self.goto_page('nav_new')
+        books = self.get_books_displayed()
+        self.assertEqual(len(books[1]), 11)
+        self.logout()
+        self.login('denycolum', '1234')
+        self.goto_page('nav_new')
+        books = self.get_books_displayed()
+        self.assertEqual(len(books[1]), 7)
+        self.logout()
+        self.login('admin','admin123')
+        # delete user
+        self.edit_user('denycolum',{'delete':1})
+        self.edit_book(10, custom_content={"Custom Text 人物 *'()&": ''})
+        self.edit_book(11, custom_content={"Custom Text 人物 *'()&": ''})
+        self.edit_book(8, custom_content={"Custom Text 人物 *'()&": ''})
+        self.edit_book(3, custom_content={"Custom Text 人物 *'()&": ''})
+        self.fill_view_config({'config_restricted_column': "None"})
 

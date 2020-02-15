@@ -33,7 +33,6 @@ class calibre_web_visibilitys(unittest.TestCase, ui_class):
     def setUpClass(cls):
         try:
             startup(cls, cls.py_version, {'config_calibre_dir':TEST_DB})
-            time.sleep(3)
         except:
             cls.driver.quit()
             cls.p.kill()
@@ -563,7 +562,7 @@ class calibre_web_visibilitys(unittest.TestCase, ui_class):
         self.assertEqual(len(self.search('Lulu de Marco')), 1)
         self.assertEqual(len(self.search('Loko')), 0)
         self.assertEqual(len(self.search('Gênot')), 2)
-        restricts = self.list_restrictions(RESTRICT_COL_USER, username="admin")
+        self.list_restrictions(RESTRICT_COL_USER, username="admin")
         self.delete_restrictions('d0')
         close = self.check_element_on_page((By.ID, "restrict_close"))
         close.click()

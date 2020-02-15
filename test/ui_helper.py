@@ -507,6 +507,27 @@ class ui_class():
             if not restrict:
                 return False
             restrict.click()
+        elif type == RESTRICT_TAG_TEMPLATE:
+            self.goto_page('view_config')
+            WebDriverWait(self.driver, 5).until(EC.presence_of_element_located((By.CLASS_NAME, "discover")))
+            accordions = self.driver.find_elements_by_class_name("accordion-toggle")
+            accordions[2].click()
+            restrict = self.check_element_on_page((By.ID, 'get_tags'))
+            if not restrict:
+                return False
+            restrict.click()
+        elif type == RESTRICT_COL_TEMPLATE:
+            self.goto_page('view_config')
+            WebDriverWait(self.driver, 5).until(EC.presence_of_element_located((By.CLASS_NAME, "discover")))
+            accordions = self.driver.find_elements_by_class_name("accordion-toggle")
+            accordions[2].click()
+            restrict = self.check_element_on_page((By.ID, 'get_column_values'))
+            if not restrict:
+                return False
+            restrict.click()
+        else:
+            print('unknown restriction type')
+            return False
         table_id='restrict-elements-table'
         if not self.check_element_on_page((By.ID, table_id)):
             return False
