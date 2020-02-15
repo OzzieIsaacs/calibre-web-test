@@ -33,6 +33,26 @@ def is_port_in_use(port):
     return False
 
 
+def debug_startup(inst, pyVersion, config, login=True, request=False):
+
+    # create a new Firefox session
+    if request:
+        inst.driver = Firefox()
+    else:
+        inst.driver = webdriver.Firefox()
+
+    inst.driver.implicitly_wait(BOOT_TIME)
+
+    inst.driver.maximize_window()
+
+    # navigate to the application home page
+    inst.driver.get("http://127.0.0.1:8083")
+
+    inst.login("admin", "admin123")
+    # login
+    if not login:
+        inst.logout()
+
 def startup(inst, pyVersion, config, login=True, request=False):
     print("\n%s - %s: " % (inst.py_version, inst.__name__))
     try:
@@ -48,7 +68,7 @@ def startup(inst, pyVersion, config, login=True, request=False):
         inst.driver = Firefox()
     else:
         inst.driver = webdriver.Firefox()
-    # time.sleep(15)
+
     inst.driver.implicitly_wait(BOOT_TIME)
 
     inst.driver.maximize_window()
@@ -68,7 +88,8 @@ def startup(inst, pyVersion, config, login=True, request=False):
     login_button = inst.driver.find_element_by_name("login")
     login_button.click()
     inst.login("admin", "admin123")
-    inst.fill_basic_config(config)
+    if config:
+        inst.fillbasic_config(config)
     time.sleep(BOOT_TIME)
     # login
     if not login:

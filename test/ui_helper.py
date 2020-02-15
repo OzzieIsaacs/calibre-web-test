@@ -1,4 +1,3 @@
-#!/usr/bin/env python
 # -*- coding: utf-8 -*-
 
 from selenium.webdriver.common.by import By
@@ -13,6 +12,13 @@ try:
     from StringIO import StringIO
 except ImportError:
     from io import StringIO
+
+RESTRICT_TAG_ME         = 0
+RESTRICT_COL_ME         = 1
+RESTRICT_TAG_USER       = 2
+RESTRICT_COL_USER       = 3
+RESTRICT_TAG_TEMPLATE   = 4
+RESTRICT_COL_TEMPLATE   = 5
 
 # Dict for pages and the way to reach them
 page = dict()
@@ -44,7 +50,7 @@ page['register']={'check':(By.ID, "nickname"),'click':[(By.ID, "register")]}
 page['login']={'check':(By.NAME, "username"),'click':[(By.ID, "logout")]}
 page['unlogged_login']={'check':(By.NAME, "username"),'click':[(By.CLASS_NAME, "glyphicon-log-in")]}
 page['logviewer']={'check':(By.ID, "log_group"),'click':[(By.ID, "top_admin"),(By.ID, "logfile")]}
-
+page['adv_search']={'check':(By.ID, "adv_submit"),'click':[(By.ID, "advanced_search")]}
 
 class ui_class():
     py_version = PY_BIN
@@ -310,22 +316,21 @@ class ui_class():
         # special handling for checkboxes
         checkboxes = ['admin_role', 'download_role', 'upload_role', 'edit_role', 'delete_role', 'passwd_role',
                         'edit_shelf_role', 'show_32', 'show_512', 'show_16', 'show_128',
-                        'show_2', 'show_4', 'show_8', 'show_64', 'show_256',
-                        'Show_detail_random', 'Show_mature_content', 'show_4096']
+                        'show_2', 'show_4', 'show_8', 'show_64', 'show_256', 'show_8192', 'show_16384',
+                        'Show_detail_random', 'show_4096']
         options = ['config_read_column']
-        selects = ['config_theme']
+        selects = ['config_theme', 'config_restricted_column']
         # depending on elements open accordions or not
         if any(key in elements for key in ['config_calibre_web_title', 'config_books_per_page', 'config_theme',
                                            'config_random_books', 'config_columns_to_ignore',
-                                           'config_read_column', 'config_title_regex', 'config_mature_content_tags']):
+                                           'config_restricted_column', 'config_read_column', 'config_title_regex']):
             opener.append(0)
         if any(key in elements for key in ['admin_role', 'download_role', 'upload_role', 'edit_role',
                                            'delete_role', 'passwd_role', 'edit_shelf_role']):
             opener.append(1)
         if any(key in elements for key in ['show_32', 'show_512', 'show_16', 'show_128',
-                                           'show_2', 'show_4', 'show_8', 'show_64',
-                                           'show_256', 'Show_detail_random', 'Show_mature_content',
-                                           'show_4096']):
+                                           'show_2', 'show_4', 'show_8', 'show_64', 'show_8192', 'show_16384',
+                                           'show_256', 'Show_detail_random', 'show_4096']):
             opener.append(2)
 
         # open all necessary accordions
@@ -459,19 +464,49 @@ class ui_class():
             return False
         add.click()
 
-    def list_restrictions(self, type):
-        if type == 0:
-            if not self.goto_page('mail_server'):  # ToDo check
+    def list_restrictions(self, type, username=""):
+        if type == RESTRICT_TAG_ME:
+            if not self.goto_page('user_setup'):
                 return False
-        elif type == 1:
-            if not self.goto_page('mail_server'):  # ToDo check
+            restrict = self.check_element_on_page((By.ID, 'get_user_tags'))
+            if not restrict:
                 return False
-        elif type == 2:
-            if not self.goto_page('mail_server'):  # ToDo check
+            restrict.click()
+        elif type == RESTRICT_COL_ME:
+            if not self.goto_page('user_setup'):
                 return False
-        elif type == 3:
-            if not self.goto_page('mail_server'):  # ToDo check
+            restrict = self.check_element_on_page((By.ID, 'get_user_column_values'))
+            if not restrict:
                 return False
+            restrict.click()
+        elif type == RESTRICT_TAG_USER:
+            if username:
+                self.goto_page('admin_setup')
+                user = self.driver.find_elements_by_xpath("//table[@id='table_user']/tbody/tr/td/a")
+                for ele in user:
+                    if username == ele.text:
+                        ele.click()
+                        if not self.check_element_on_page((By.ID, "email")):
+                            print('Could not edit user: %s' % username)
+                            return False
+            restrict = self.check_element_on_page((By.ID, 'get_user_tags'))
+            if not restrict:
+                return False
+            restrict.click()
+        elif type == RESTRICT_COL_USER:
+            if username:
+                self.goto_page('admin_setup')
+                user = self.driver.find_elements_by_xpath("//table[@id='table_user']/tbody/tr/td/a")
+                for ele in user:
+                    if username == ele.text:
+                        ele.click()
+                        if not self.check_element_on_page((By.ID, "email")):
+                            print('Could not edit user: %s' % username)
+                            return False
+            restrict = self.check_element_on_page((By.ID, 'get_user_column_values'))
+            if not restrict:
+                return False
+            restrict.click()
         table_id='restrict-elements-table'
         if not self.check_element_on_page((By.ID, table_id)):
             return False
@@ -485,13 +520,13 @@ class ui_class():
             try:
                 go = va.getchildren()[0].getchildren()
                 id = go[0].attrib['data-pk']
-                delButton = self.driver.find_element_by_css_selector("a[data-pk='"+id+"']")
-                editButton = self.driver.find_element_by_css_selector("a[data-restriction-id='"+id+"']")
+                editButton = self.driver.find_element_by_css_selector("a[data-pk='"+id+"']")
+                delButton = self.driver.find_element_by_css_selector("div[data-restriction-id='"+id+"']")
                 val.append({'restriction':go[0].text,
                             'delete': delButton,
                             'edit':editButton,
                             'id':id,
-                            'type': go[1].text})
+                            'type': va[1].text})
             except IndexError:
                 pass
         return val
@@ -519,7 +554,7 @@ class ui_class():
         table_id = 'restrict-elements-table'
         if not self.check_element_on_page((By.ID, table_id)):
             return False
-        deleteButton = self.check_element_on_page((By.CSS_SELECTOR, "a[data-restriction-id='" + id + "']"))
+        deleteButton = self.check_element_on_page((By.CSS_SELECTOR, "div[data-restriction-id='" + id + "']"))
         if not deleteButton:
             return False
         deleteButton.click()
@@ -1024,8 +1059,6 @@ class ui_class():
             pass
         return ret
 
-    def get_books_list(self):
-        pass
 
     @classmethod
     def check_tasks(cls):
@@ -1138,3 +1171,63 @@ class ui_class():
             ret['btn_from'] = cls.check_element_on_page((By.XPATH, "//select[@id='book_format_from']"))
             ret['btn_to'] = cls.check_element_on_page((By.XPATH, "//select[@id='book_format_to']"))
         return ret
+
+    def search(self, term):
+        field = self.check_element_on_page((By.ID, "query"))
+        if field:
+            field.clear()
+            field.send_keys(term)
+            send = self.check_element_on_page((By.ID, "query_submit"))
+            if send:
+                send.click()
+                return self.get_shelf_books_displayed()
+        return False
+
+    # currently only title, author, comment
+    def adv_search(self, term_dict, get=False):
+        if self.goto_page('adv_search'):
+            if get:
+                inc_tags = self.driver.find_elements_by_xpath("//label[starts-with(@id, 'tag_')]")
+                exc_tags = self.driver.find_elements_by_xpath("//label[starts-with(@id, 'exclude_tag')]")
+                inc_series = self.driver.find_elements_by_xpath("//label[starts-with(@id, 'serie_')]")
+                exc_series = self.driver.find_elements_by_xpath("//label[starts-with(@id, 'exclude_serie')]")
+                inc_languages = self.driver.find_elements_by_xpath("//label[starts-with(@id, 'language_')]")
+                exc_languages = self.driver.find_elements_by_xpath("//label[starts-with(@id, 'exclude_language')]")
+                inc_extensions = self.driver.find_elements_by_xpath("//label[starts-with(@id, 'extension_')]")
+                exc_extensions = self.driver.find_elements_by_xpath("//label[starts-with(@id, 'exclude_extension')]")
+
+                return {'include_tags':inc_tags,
+                        'exclude_tags':exc_tags,
+                        'include_serie': inc_series,
+                        'exclude_serie': exc_series,
+                        'include_language': inc_languages,
+                        'exclude_language': exc_languages,
+                        'include_extension': inc_extensions,
+                        'exclude_extension': exc_extensions
+                        }
+            else:
+                text_inputs = ['book_title', 'bookAuthor', 'publisher', 'comment']
+                process_text = dict()
+                process_checkboxes = dict()
+
+                # check if checkboxes are in list and seperate lists
+
+                for element, key in enumerate(term_dict):
+                    if key in text_inputs:
+                        process_text[key] = term_dict[key]
+                    else:
+                        process_checkboxes[key] = term_dict[key]
+
+                for element, key in enumerate(process_text):
+                    ele = self.driver.find_element_by_id(key)
+                    ele.clear()
+                    ele.send_keys(process_text[key])
+
+                for element, key in enumerate(process_checkboxes):
+                    ele = self.driver.find_element(By.XPATH,
+                                                   "//input[@value = '" + process_checkboxes[key] +
+                                                   "' and starts-with(@id, '" + key + "') ]/..")
+                    ele.click()
+                self.check_element_on_page((By.ID, "adv_submit")).click()
+                return self.get_shelf_books_displayed()
+        return False

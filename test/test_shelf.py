@@ -231,7 +231,7 @@ class test_shelf(unittest.TestCase, ui_class):
         self.check_element_on_page((By.ID, "add-to-shelf")).click()
         self.check_element_on_page((By.XPATH, "//ul[@id='add-to-shelves']/li/a[contains(.,'order')]")).click()
         self.goto_page('nav_new')
-        test= self.list_shelfs('order')[0]['ele'].click()
+        self.list_shelfs('order')[0]['ele'].click()
         shelf_books = self.get_shelf_books_displayed()
         self.assertEqual(shelf_books[0]['id'], '13')
         self.assertEqual(shelf_books[1]['id'], '11')
