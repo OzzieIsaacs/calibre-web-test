@@ -7,6 +7,7 @@ from testconfig import CALIBRE_WEB_PATH, TEST_DB, BOOT_TIME
 import requests
 from func_helper import startup
 from parameterized import parameterized_class
+import time
 '''
 opds feed tests
 '''
@@ -71,6 +72,7 @@ class test_opds_feed(unittest.TestCase, ui_class):
     def test_opds_guest_user(self):
         self.login("admin", "admin123")
         self.fill_basic_config({'config_anonbrowse': 1})
+        time.sleep(3)
         r = requests.get('http://127.0.0.1:8083/opds')
         self.assertEqual(200, r.status_code)
         elements = self.get_opds_index(r.text)

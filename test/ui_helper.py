@@ -489,6 +489,7 @@ class ui_class():
                         if not self.check_element_on_page((By.ID, "email")):
                             print('Could not edit user: %s' % username)
                             return False
+                        break
             restrict = self.check_element_on_page((By.ID, 'get_user_tags'))
             if not restrict:
                 return False
@@ -503,6 +504,7 @@ class ui_class():
                         if not self.check_element_on_page((By.ID, "email")):
                             print('Could not edit user: %s' % username)
                             return False
+                        break
             restrict = self.check_element_on_page((By.ID, 'get_user_column_values'))
             if not restrict:
                 return False

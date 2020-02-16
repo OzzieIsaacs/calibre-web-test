@@ -51,7 +51,7 @@ class test_login(unittest.TestCase, ui_class):
             return 2
         elif self.driver.title == u'Calibre-Web | HTTP Error (Error 405)':
             return 2
-        elif self.driver.title == u'Calibre-Web | login':
+        elif self.driver.title == u'Calibre-Web | Login' or self.driver.title == u'Calibre-Web | login':
             return 1
         else:
             return 0
