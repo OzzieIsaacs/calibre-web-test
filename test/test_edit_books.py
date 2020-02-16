@@ -18,7 +18,7 @@ from func_helper import startup
 class test_edit_books(TestCase, ui_class):
     p=None
     driver = None
-    py_version = u'/usr/bin/python3'
+    # py_version = u'/usr/bin/python3'
 
     @classmethod
     def setUpClass(cls):

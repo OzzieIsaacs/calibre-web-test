@@ -17,4 +17,4 @@ else:
 BOOT_TIME = 3
 
 # Python binary
-PY_BIN = u'/usr/bin/python3'
+PY_BIN = u'/usr/bin/python3.7'

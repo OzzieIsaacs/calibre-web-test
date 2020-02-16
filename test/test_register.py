@@ -108,6 +108,14 @@ class test_register(unittest.TestCase, ui_class):
         self.assertEqual(self.register('nocom1','a.dod@google.com'),'flash_alert')
         self.assertEqual(self.register('nocom2', 'doda@google.cum'), 'flash_alert')
         self.assertEqual(self.register('nocom3', 'dod@koogle.com'), 'flash_success')
+        #cleanup
+        self.login('admin','admin123')
+        self.goto_page('mail_server')
+        d_domains = self.list_domains(allow=False)
+        self.delete_domains(d_domains[0]['id'], accept=True, allow=False)
+        a_domains = self.list_domains(allow=True)
+        self.delete_domains(a_domains[0]['id'], accept=True, allow=True)
+
 
     # register user, extract password, login, check rights
     def test_registering_user(self):

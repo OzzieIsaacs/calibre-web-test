@@ -450,6 +450,11 @@ class test_user_template(unittest.TestCase, ui_class):
         self.login('admin','admin123')
         # delete user
         self.edit_user('allowtag',{'delete':1})
+        self.list_restrictions(RESTRICT_TAG_TEMPLATE)
+        self.delete_restrictions('a0')
+        close = self.check_element_on_page((By.ID, "restrict_close"))
+        close.click()
+        time.sleep(2)
 
 
     def test_deny_tag_restriction(self):
@@ -477,6 +482,12 @@ class test_user_template(unittest.TestCase, ui_class):
         self.login('admin','admin123')
         # delete user
         self.edit_user('denytag',{'delete':1})
+        self.list_restrictions(RESTRICT_TAG_TEMPLATE)
+        self.delete_restrictions('d0')
+        close = self.check_element_on_page((By.ID, "restrict_close"))
+        close.click()
+        time.sleep(2)
+
 
 
     def test_allow_column_restriction(self):
@@ -511,6 +522,11 @@ class test_user_template(unittest.TestCase, ui_class):
         self.login('admin','admin123')
         # delete user
         self.edit_user('allowcolum',{'delete':1})
+        self.list_restrictions(RESTRICT_COL_TEMPLATE)
+        self.delete_restrictions('a0')
+        close = self.check_element_on_page((By.ID, "restrict_close"))
+        close.click()
+        time.sleep(2)
         self.edit_book(10, custom_content={"Custom Text 人物 *'()&": ''})
         self.edit_book(11, custom_content={"Custom Text 人物 *'()&": ''})
         self.edit_book(8, custom_content={"Custom Text 人物 *'()&": ''})
@@ -547,6 +563,11 @@ class test_user_template(unittest.TestCase, ui_class):
         self.login('admin','admin123')
         # delete user
         self.edit_user('denycolum',{'delete':1})
+        self.list_restrictions(RESTRICT_COL_TEMPLATE)
+        self.delete_restrictions('d0')
+        close = self.check_element_on_page((By.ID, "restrict_close"))
+        close.click()
+        time.sleep(2)
         self.edit_book(10, custom_content={"Custom Text 人物 *'()&": ''})
         self.edit_book(11, custom_content={"Custom Text 人物 *'()&": ''})
         self.edit_book(8, custom_content={"Custom Text 人物 *'()&": ''})

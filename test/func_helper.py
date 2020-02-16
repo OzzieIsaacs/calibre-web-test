@@ -89,7 +89,7 @@ def startup(inst, pyVersion, config, login=True, request=False):
     login_button.click()
     inst.login("admin", "admin123")
     if config:
-        inst.fillbasic_config(config)
+        inst.fill_basic_config(config)
     time.sleep(BOOT_TIME)
     # login
     if not login:
