@@ -2,7 +2,6 @@
 
 ## Prerequisites
 
-- Installed python2 accessable with the command "python"
 - Installed python3 accessable with the command "python3"
 
 - Calibre-web-test has to be located on the same folder level as calibre-web
@@ -25,15 +24,17 @@ Calibre-web-test
 
 - I'm doing my tests with firefox, so geckodriver has to be installed and in path (https://github.com/mozilla/geckodriver/releases)
 
-- python package "selenium" has to be installed
+- All dependencies listed in requirements.txt have to be installed
 
-- tests are only running with gevent as wsgi server, tornado in newer versions has the problem that it can't be stopped (bug?)
+- tests are only running with tornado as wsgi server
+
+- install Calibre as conversion tool (if running from within pycharm debugger version 3.48 at most, as Calibre 4.x crash during conversion in this configuration)
 
 - configure folder names in file ./test/testconfig.py
 
 ## Start Testing
 
-Tests currently are only run with python 2.7 by starting ./test/main.py (tests run for ca. 45min), tested on Linux Mint 19.1. \
+Tests are running with python 3.6+ (better 3.7 as with 3.6 testing the e-mail startssl/ssl functionality will be skipped) by starting ./test/main.py (tests run for ca. 45min), tested on Linux Mint 19.1. \
 Calibre-web's app.db and logfiles will be overwritten.\
 The testresult is written to the file "calibre-web/test/Calibre-Web TestSummary.html"
 
