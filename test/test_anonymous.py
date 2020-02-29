@@ -8,10 +8,6 @@ from testconfig import TEST_DB
 from func_helper import startup
 from parameterized import parameterized_class
 
-'''
-guest user support test
-'''
-
 
 '''@parameterized_class([
    { "py_version": u'/usr/bin/python'},
@@ -20,7 +16,6 @@ guest user support test
 class test_anonymous(unittest.TestCase, ui_class):
     p=None
     driver = None
-    # py_version = u'/usr/bin/python3'
 
     @classmethod
     def setUpClass(cls):
