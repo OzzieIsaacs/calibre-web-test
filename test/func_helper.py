@@ -11,6 +11,10 @@ from selenium.webdriver.common.by import By
 from selenium.webdriver.support import expected_conditions as EC
 from seleniumrequests import Firefox
 import time
+import socket, errno
+import psutil
+import fcntl
+import struct
 
 try:
     import pycurl
@@ -20,7 +24,6 @@ except ImportError:
     curl_available = False
 
 def is_port_in_use(port):
-    import socket, errno
     s = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
     try:
         s.bind(("127.0.0.1", port))
@@ -33,7 +36,16 @@ def is_port_in_use(port):
     return False
 
 
-def debug_startup(inst, pyVersion, config, login=True, request=False):
+
+# Function to return IP address
+def get_Host_IP():
+    addrs = psutil.net_if_addrs()
+    for ele,key in enumerate(addrs):
+        if key != 'lo':
+            if addrs[key][0][2]:
+                return addrs[key][0][1]
+
+def debug_startup(inst, pyVersion, config, login=True, request=False, host="http://127.0.0.1:8083"):
 
     # create a new Firefox session
     if request:
@@ -46,14 +58,14 @@ def debug_startup(inst, pyVersion, config, login=True, request=False):
     inst.driver.maximize_window()
 
     # navigate to the application home page
-    inst.driver.get("http://127.0.0.1:8083")
+    inst.driver.get(host)
 
     inst.login("admin", "admin123")
     # login
     if not login:
         inst.logout()
 
-def startup(inst, pyVersion, config, login=True, request=False):
+def startup(inst, pyVersion, config, login=True, request=False, host="http://127.0.0.1:8083"):
     print("\n%s - %s: " % (inst.py_version, inst.__name__))
     try:
         os.remove(os.path.join(CALIBRE_WEB_PATH, 'app.db'))
@@ -74,7 +86,7 @@ def startup(inst, pyVersion, config, login=True, request=False):
     inst.driver.maximize_window()
 
     # navigate to the application home page
-    inst.driver.get("http://127.0.0.1:8083")
+    inst.driver.get(host)
 
     # Wait for config screen to show up
     inst.fill_initial_config(dict(config_calibre_dir=config['config_calibre_dir']))

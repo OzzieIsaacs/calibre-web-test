@@ -55,34 +55,6 @@ else:
 DEFAULT_TEMPLATE = os.path.join(os.path.dirname(__file__), "template", "report_template.html")
 
 
-def to_unicode(s):
-    try:
-        if not PY3K:
-            return unicode(s)
-        return s
-    except UnicodeDecodeError:
-        # s is non ascii byte string
-        return s.decode('unicode_escape')
-
-class OutputRedirector(object):
-    """ Wrapper to redirect stdout or stderr """
-
-    def __init__(self, fp):
-        self.fp = fp
-
-    def write(self, s):
-        self.fp.write(to_unicode(s))
-
-    def writelines(self, lines):
-        lines = map(to_unicode, lines)
-        self.fp.writelines(lines)
-
-    def flush(self):
-        self.fp.flush()
-
-#stdout_redirector = OutputRedirector(sys.stdout)
-#stderr_redirector = OutputRedirector(sys.stderr)
-
 def load_template(template):
     """ Try to read a file from a given path, if file
         does not exist, load default one. """

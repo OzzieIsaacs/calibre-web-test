@@ -240,7 +240,7 @@ class ui_class():
         process_select = dict()
         # special handling for checkboxes
         checkboxes = ['config_uploading', 'config_anonbrowse', 'config_public_reg', 'config_remote_login',
-                      'config_access_log']
+                      'config_access_log', 'config_kobo_sync', 'config_kobo_proxy']
         options = ['config_log_level', 'config_google_drive_folder']
         selects = ['config_ebookconverter']
         # depending on elements open accordions or not
@@ -251,7 +251,7 @@ class ui_class():
             opener.append(2)
         if any(key in elements for key in ['config_uploading', 'config_anonbrowse', 'config_public_reg',
                                            'config_remote_login', 'config_use_goodreads', 'config_goodreads_api_key',
-                                           'config_goodreads_api_secret']):
+                                           'config_goodreads_api_secret', 'config_kobo_sync', 'config_kobo_proxy']):
             opener.append(3)
         if any(key in elements for key in ['config_ebookconverter', 'config_calibre',
                                            'config_converterpath','config_rarfile_location']):
