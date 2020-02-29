@@ -18,7 +18,7 @@ class test_kobo_sync(unittest.TestCase, ui_class):
 
     @classmethod
     def setUpClass(cls):
-        '''json_line_version = cls.json_line
+        json_line_version = cls.json_line
         with open(os.path.join(CALIBRE_WEB_PATH,'optional-requirements.txt'), 'r') as f:
             for line in f:
                 if not line.startswith('#') and not line == '\n' and not line.startswith('git') and line.startswith('jsonschema'):
@@ -26,7 +26,7 @@ class test_kobo_sync(unittest.TestCase, ui_class):
                     break
 
         r = process_open([VENV_PYTHON, "-m", "pip", "install", json_line_version], (0, 5))
-        r.wait()'''
+        r.wait()
 
         try:
             host = 'http://' + get_Host_IP() + ':8083'

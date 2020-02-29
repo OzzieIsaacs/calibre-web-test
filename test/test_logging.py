@@ -137,6 +137,7 @@ class test_logging(unittest.TestCase, ui_class):
                                 'config_access_logfile':'access.log'})
         self.check_element_on_page((By.ID, "flash_success"))
         self.goto_page('logviewer')
+        time.sleep(2)
         # check stream test is there, no radiobox for calibre log, access logger ticked
         self.assertTrue(self.check_element_on_page((By.XPATH, '//label[@for="log1"]')))
         self.assertFalse(self.check_element_on_page((By.ID, 'log1')))
