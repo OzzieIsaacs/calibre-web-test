@@ -79,7 +79,6 @@ if __name__ == '__main__':
                                            open_in_browser=True,
                                            verbosity=2)
     # run the suite using HTMLTestRunner
-    all_tests.properties='hallo'
     runner.run(all_tests)
     print("\nAll tests finished, please check testresults")
     sys.exit(0)
