@@ -2,10 +2,11 @@
 
 import unittest
 import requests
-from ui_helper import ui_class
+from helper_ui import ui_class
 from testconfig import TEST_DB, VENV_PYTHON, CALIBRE_WEB_PATH
-from func_helper import startup, debug_startup, get_Host_IP, process_open
+from helper_func import startup, debug_startup, get_Host_IP, process_open
 from selenium.webdriver.common.by import By
+from helper_environment import environment
 import re
 import os
 
@@ -27,6 +28,8 @@ class test_kobo_sync(unittest.TestCase, ui_class):
 
         r = process_open([VENV_PYTHON, "-m", "pip", "install", json_line_version], (0, 5))
         r.wait()
+
+        environment.add_Environemnt(json_line_version,cls.__name__)
 
         try:
             host = 'http://' + get_Host_IP() + ':8083'

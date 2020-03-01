@@ -1,13 +1,11 @@
-# from secure_smtpd import SMTPServer
-#from gevent import monkey
-#monkey.patch_all()
+# -*- coding: utf-8 -*-
+
 import asyncio
-#from gsmtpd.server import SMTPServer
+
 import sys
 import os
 import re
 import email
-# import logging
 
 from aiosmtpd.controller import Controller
 from aiosmtpd.controller import get_server_context

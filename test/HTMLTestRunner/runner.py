@@ -49,7 +49,7 @@ class HTMLTestRunner(TextTestRunner):
 
         self.start_time = 0
         self.time_taken = 0
-        
+
         self.description =  description or ""
 
     def _make_result(self):

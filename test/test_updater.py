@@ -3,9 +3,9 @@
 
 import unittest
 import shutil
-from ui_helper import ui_class
+from helper_ui import ui_class
 from testconfig import TEST_DB
-from func_helper import startup
+from helper_func import startup
 from parameterized import parameterized_class
 
 '''

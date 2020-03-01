@@ -1,4 +1,3 @@
-#!/usr/bin/env python
 # -*- coding: utf-8 -*-
 
 import sys
@@ -73,4 +72,3 @@ class calibre_helper(unittest.TestCase):
         # helper.global_WorkerThread.stop()
         del sys.modules["cps.helper"]
         del helper
-

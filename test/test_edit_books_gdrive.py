@@ -9,7 +9,7 @@ from selenium.webdriver.support.ui import WebDriverWait
 from selenium.webdriver.support import expected_conditions as EC
 import time
 import shutil
-from ui_helper import ui_class
+from helper_ui import ui_class
 from subproc_wrapper import process_open
 from testconfig import CALIBRE_WEB_PATH, TEST_DB, BOOT_TIME
 from parameterized import parameterized_class

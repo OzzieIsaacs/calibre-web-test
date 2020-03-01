@@ -9,10 +9,10 @@ from selenium.webdriver.support import expected_conditions as EC
 from selenium.common.exceptions import TimeoutException
 import time
 import shutil
-from ui_helper import ui_class
+from helper_ui import ui_class
 from testconfig import CALIBRE_WEB_PATH, TEST_DB, BOOT_TIME
 import re
-from func_helper import startup
+from helper_func import startup
 from parameterized import parameterized_class
 
 

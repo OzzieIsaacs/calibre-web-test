@@ -5,11 +5,11 @@ from selenium.webdriver.common.by import By
 from selenium.webdriver.support.ui import WebDriverWait
 from selenium.webdriver.support import expected_conditions as EC
 import time
-from ui_helper import ui_class
-from ui_helper import RESTRICT_TAG_ME, RESTRICT_COL_ME, RESTRICT_TAG_USER, RESTRICT_COL_USER
+from helper_ui import ui_class
+from helper_ui import RESTRICT_TAG_ME, RESTRICT_COL_ME, RESTRICT_TAG_USER, RESTRICT_COL_USER
 from testconfig import TEST_DB
 from parameterized import parameterized_class
-from func_helper import startup, debug_startup
+from helper_func import startup, debug_startup
 
 '''
 ToDOs: suche:

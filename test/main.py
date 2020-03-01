@@ -13,6 +13,7 @@ import unittest
 import sys
 import venv
 from CalibreResult import CalibreResult
+from helper_environment import environment
 
 if __name__ == '__main__':
     result=False
@@ -37,7 +38,7 @@ if __name__ == '__main__':
             break
 
     # check pip ist installed
-    p = process_open(["python3.7", "-m", "pip", "-V"])
+    p = process_open(["python3", "-m", "pip", "-V"])
     p.wait()
     res = (p.stdout.readlines())
     pip = re.match(("pip\s(.*)\sfrom\s(.*)\s\((.*)\).*"),res[0])
@@ -59,7 +60,7 @@ if __name__ == '__main__':
         if isinstance(l, bytes):
             l = l.decode('utf-8')
         print(l)'''
-
+    environment.init_Environment(VENV_PYTHON)
     # all_tests = unittest.TestLoader().loadTestsFromName('test_email_ssl')
     all_tests = unittest.TestLoader().discover('.')
     # open the report file
@@ -78,6 +79,7 @@ if __name__ == '__main__':
                                            open_in_browser=True,
                                            verbosity=2)
     # run the suite using HTMLTestRunner
+    all_tests.properties='hallo'
     runner.run(all_tests)
     print("\nAll tests finished, please check testresults")
     sys.exit(0)

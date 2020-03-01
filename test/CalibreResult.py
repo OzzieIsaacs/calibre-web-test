@@ -43,7 +43,7 @@ from unittest.result import failfast
 import pkg_resources
 from testconfig import CALIBRE_WEB_PATH
 import platform
-
+from helper_environment import environment
 from jinja2 import Template
 
 PY3K = (sys.version_info[0] > 2)
@@ -240,27 +240,6 @@ class CalibreResult(TextTestResult):
             self.stream.write(" " + self.getDescription(test))
             self.stream.write(" ... ")
 
-        # just one buffer for both stdout and stderr
-        '''self.outputBuffer = StringIO.StringIO()
-        stdout_redirector.fp = self.outputBuffer
-        stderr_redirector.fp = self.outputBuffer'''
-        '''self.stdout0 = sys.stdout
-        self.stderr0 = sys.stderr
-        sys.stdout = stdout_redirector
-        sys.stderr = stderr_redirector'''
-
-    #def complete_output(self):
-        """
-        Disconnect output redirection and return buffer.
-        Safe to call multiple times.
-        """
-        '''if self.stdout0:
-            sys.stdout = self.stdout0
-            sys.stderr = self.stderr0
-            self.stdout0 = None
-            self.stderr0 = None
-        return self.outputBuffer.getvalue()'''
-        #return self._stdout_data
 
     def _save_output_data(self):
         try:
@@ -269,8 +248,9 @@ class CalibreResult(TextTestResult):
         except AttributeError:
             pass
 
+
     def stopTest(self, test):
-        """ Called after excute each test method. """
+        """ Called after execute each test method. """
         self._save_output_data()
         TestResult.stopTest(self, test)
         self.stop_time = time.time()
@@ -284,6 +264,7 @@ class CalibreResult(TextTestResult):
         # We must disconnect stdout in stopTest(),
         # which is guaranteed to be called.
         # self.complete_output()
+
 
     def addSuccess(self, test):
         """ Called when a test executes successfully. """
@@ -442,27 +423,6 @@ class CalibreResult(TextTestResult):
 
         return summaries
 
-    def _get_environment(self):
-        dep=list()
-        result=list()
-        uname = platform.uname()
-        result.append(('Platform','{0.system} {0.release} {0.version} {0.processor} {0.machine}'.format(uname)))
-        result.append(('Python', sys.version))
-
-        dists = [str(d).split(" ") for d in pkg_resources.working_set]
-        with open(os.path.join(CALIBRE_WEB_PATH,'requirements.txt'), 'r') as f:
-            for line in f:
-                if not line.startswith('#') and not line == '\n' and not line.startswith('git'):
-                    dep.append(line.split('=', 1)[0].strip('>'))
-        with open(os.path.join(CALIBRE_WEB_PATH,'optional-requirements.txt'), 'r') as f:
-            for line in f:
-                if not line.startswith('#') and not line == '\n' and not line.startswith('git'):
-                    dep.append(line.split('=', 1)[0].split('>', 1)[0])
-        for element in dists:
-            if element[0] in dep:
-                result.append(element)
-
-        return result
 
     def generate_reports(self, testRunner):
         """ Generate report(s) for all given test cases that have been run. """
@@ -470,7 +430,6 @@ class CalibreResult(TextTestResult):
         all_results = self._get_info_by_testcase()
         summaries = self._get_report_summaries(all_results, testRunner)
         report =self._generate_report(self.result)
-        environ = self._get_environment()
 
         if not testRunner.combine_reports:
             # # ToDo Implementent
@@ -484,7 +443,7 @@ class CalibreResult(TextTestResult):
                     all_results={test_case_class_name: test_case_tests},
                     status_tags=status_tags,
                     summaries=summaries,
-                    environ=environ,
+                    environ=environment.get_Environment(),
                     **testRunner.template_args
                 )
                 # append test case name if multiple reports to be generated
@@ -508,7 +467,7 @@ class CalibreResult(TextTestResult):
                 results = report,
                 status_tags=status_tags,
                 summaries=summaries,
-                environ=environ,
+                environ=environment.get_Environment(),
                 **testRunner.template_args
             )
             # if available, use user report name

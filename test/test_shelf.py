@@ -4,11 +4,11 @@
 import unittest
 from selenium.webdriver.common.by import By
 import time
-from ui_helper import ui_class
+from helper_ui import ui_class
 from testconfig import TEST_DB
-from func_helper import is_port_in_use
+from helper_func import is_port_in_use, startup
 from parameterized import parameterized_class
-from func_helper import startup
+
 
 '''@parameterized_class([
    { "py_version": u'/usr/bin/python'},

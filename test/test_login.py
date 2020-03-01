@@ -5,9 +5,9 @@ import unittest
 from selenium.webdriver.common.by import By
 from selenium.common.exceptions import WebDriverException
 import re
-from ui_helper import ui_class
+from helper_ui import ui_class
 from testconfig import TEST_DB
-from func_helper import startup, check_response_language_header, curl_available, digest_login
+from helper_func import startup, check_response_language_header, curl_available, digest_login
 from parameterized import parameterized_class
 
 

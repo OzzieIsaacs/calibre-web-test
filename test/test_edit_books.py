@@ -6,10 +6,10 @@ from unittest import TestCase, skip
 import os
 from selenium.webdriver.common.by import By
 import time
-from ui_helper import ui_class
+from helper_ui import ui_class
 from testconfig import TEST_DB
 from parameterized import parameterized_class
-from func_helper import startup
+from helper_func import startup
 
 '''@parameterized_class([
    { "py_version": u'/usr/bin/python'},

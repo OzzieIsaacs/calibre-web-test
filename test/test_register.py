@@ -1,13 +1,12 @@
 #!/usr/bin/env python
 # -*- coding: utf-8 -*-
 
-from email_convert_helper import AIOSMTPServer
-# import email_convert_helper
+from helper_email_convert import AIOSMTPServer
 from testconfig import TEST_DB
-from func_helper import startup, wait_Email_received
+from helper_func import startup, wait_Email_received
 from parameterized import parameterized_class
 import unittest
-from ui_helper import ui_class
+from helper_ui import ui_class
 import time
 
 '''@parameterized_class([

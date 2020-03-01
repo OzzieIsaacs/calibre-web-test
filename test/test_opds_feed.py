@@ -2,10 +2,10 @@
 # -*- coding: utf-8 -*-
 
 import unittest
-from ui_helper import ui_class
+from helper_ui import ui_class
 from testconfig import CALIBRE_WEB_PATH, TEST_DB, BOOT_TIME
 import requests
-from func_helper import startup
+from helper_func import startup
 from parameterized import parameterized_class
 import time
 '''

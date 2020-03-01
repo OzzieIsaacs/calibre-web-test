@@ -8,7 +8,7 @@ from selenium.webdriver.common.by import By
 from selenium.common.exceptions import WebDriverException
 import time
 import shutil
-from ui_helper import ui_class
+from helper_ui import ui_class
 from subproc_wrapper import process_open
 from testconfig import CALIBRE_WEB_PATH, TEST_DB, BOOT_TIME
 import re

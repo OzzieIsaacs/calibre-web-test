@@ -1,20 +1,20 @@
 #!/usr/bin/env python
 # -*- coding: utf-8 -*-
-from email_convert_helper import AIOSMTPServer
-import email_convert_helper
+from helper_email_convert import AIOSMTPServer
+import helper_email_convert
 import unittest
 from selenium.webdriver.common.by import By
 import time
-from ui_helper import ui_class
+from helper_ui import ui_class
 from testconfig import CALIBRE_WEB_PATH, TEST_DB, BOOT_TIME
 # from parameterized import parameterized_class
-from func_helper import startup
+from helper_func import startup
 
 '''@parameterized_class([
    { "py_version": u'/usr/bin/python'},
    { "py_version": u'/usr/bin/python3'},
 ],names=('Python27','Python36'))'''
-@unittest.skipIf(email_convert_helper.is_calibre_not_present(),"Skipping convert, calibre not found")
+@unittest.skipIf(helper_email_convert.is_calibre_not_present(),"Skipping convert, calibre not found")
 class test_STARTTLS(unittest.TestCase, ui_class):
     p=None
     driver = None
@@ -36,7 +36,7 @@ class test_STARTTLS(unittest.TestCase, ui_class):
         cls.email_server.start()
         try:
             startup(cls, cls.py_version, {'config_calibre_dir':TEST_DB,
-                                          'config_converterpath':email_convert_helper.calibre_path(),
+                                          'config_converterpath':helper_email_convert.calibre_path(),
                                           'config_ebookconverter':'converter2'})
 
             cls.edit_user('admin', {'email': 'a5@b.com','kindle_mail': 'a1@b.com'})

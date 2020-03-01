@@ -1,25 +1,25 @@
 #!/usr/bin/env python
 # -*- coding: utf-8 -*-
 
-from email_convert_helper import AIOSMTPServer
-import email_convert_helper
+from helper_email_convert import AIOSMTPServer
+import helper_email_convert
 import unittest
 import os
 import re
 import sys
 from selenium.webdriver.common.by import By
 import time
-from ui_helper import ui_class
+from helper_ui import ui_class
 from testconfig import CALIBRE_WEB_PATH, TEST_DB, BOOT_TIME
 
 from parameterized import parameterized_class
-from func_helper import startup
+from helper_func import startup
 
 '''@parameterized_class([
    { "py_version": u'/usr/bin/python','LOG_LEVEL':'DEBUG'},
    { "py_version": u'/usr/bin/python3','LOG_LEVEL':'DEBUG'},
 ],names=('Python27','Python36'))'''
-@unittest.skipIf(email_convert_helper.is_calibre_not_present(),"Skipping convert, calibre not found")
+@unittest.skipIf(helper_email_convert.is_calibre_not_present(),"Skipping convert, calibre not found")
 class test_SSL(unittest.TestCase, ui_class):
     p=None
     driver = None
@@ -49,7 +49,7 @@ class test_SSL(unittest.TestCase, ui_class):
         cls.email_server.start()
 
         startup(cls, cls.py_version, {'config_calibre_dir':TEST_DB,
-                                      'config_converterpath':email_convert_helper.calibre_path(),
+                                      'config_converterpath':helper_email_convert.calibre_path(),
                                       'config_ebookconverter':'converter2',
                                       'config_log_level':cls.LOG_LEVEL})
 
