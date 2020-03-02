@@ -787,12 +787,15 @@ class ui_class():
             ret['update'] = tree.xpath("/html/body/feed/updated")[0].text
             ret['author'] = tree.xpath("/html/body/feed/author/name")[0].text
             ret['uri'] = tree.xpath("/html/body/feed/author/uri")[0].text
+            # ret['entries'] = list()
             for element in tree.xpath("/html/body/feed/entry"):
                 el = dict()
                 el['link'] = element.find('link').attrib['href']
                 el['id'] = element.find('id').text
                 el['updated'] = element.find('updated').text
                 el['content'] = element.find('content').text
+                # el['title'] = element.find('title').text
+                # ret['entries'].append(el)
                 ret[element.find('title').text] = el
         except:
             pass
@@ -812,6 +815,7 @@ class ui_class():
             ret['update'] = tree.xpath("/html/body/feed/updated")[0].text
             ret['author'] = tree.xpath("/html/body/feed/author/name")[0].text
             ret['uri'] = tree.xpath("/html/body/feed/author/uri")[0].text
+            ret['elements'] = list()
             key = 0
             for element in tree.xpath("/html/body/feed/entry"):
                 el = dict()
@@ -836,8 +840,17 @@ class ui_class():
                         author_list.append(aut.text)
                     el['author']=author_list
                     el['author_len'] = len(el['author'])
-
-                ret[key] = el
+                ele = element.find('summary')
+                if ele is not None:
+                    el['comment'] = ele
+                ele = element.find('category')
+                if ele is not None:
+                    tag_list = list()
+                    for tag in ele:
+                        tag_list.append(tag.attrib['term'])
+                    el['tags'] = tag_list
+                    el['tag_len'] = len(el['tags'])
+                ret['elements'].append(el)
                 key += 1
         except:
             pass
@@ -847,10 +860,23 @@ class ui_class():
 
     @classmethod
     def get_opds_search(cls, text):
+        ret = dict()
         parser = lxml.etree.HTMLParser()
-        tree = lxml.etree.fromstring(text.encode('utf-8'), parser)
+        try:
+            tree = lxml.etree.fromstring(text.encode('utf-8'), parser)
+            ret['longname'] = tree.xpath("/html/body/opensearchdescription/longname")[0].text
+            ret['shortname'] = tree.xpath("/html/body/opensearchdescription/shortname")[0].text
+            ret['description'] = tree.xpath("/html/body/opensearchdescription/description")[0].text
+            ret['author'] = tree.xpath("/html/body/opensearchdescription/developer")[0].text
+            ret['uri'] = tree.xpath("/html/body/opensearchdescription/contact")[0].text
+            ret['search'] = tree.xpath("/html/body/opensearchdescription/url")
+            ret['language'] = tree.xpath("/html/body/opensearchdescription/language")[0].text
+            ret['out_encoding'] = tree.xpath("/html/body/opensearchdescription/outputencoding")[0].text
+            ret['in_encoding'] = tree.xpath("/html/body/opensearchdescription/inputencoding")[0].text
+        except Exception as e:
+            pass
+        return ret
 
-        pass
 
     @classmethod
     def get_user_list(cls):
