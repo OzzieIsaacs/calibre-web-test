@@ -1135,14 +1135,6 @@ class ui_class():
         else:
             return False
 
-    def upload_cover(self, id=-1, coverfile=None, root_url='http://127.0.0.1:8083'):
-        if id>0:
-            self.driver.get(root_url + "/admin/book/"+str(id))
-        self.check_element_on_page((By.ID,"book_edit_frm"))
-        if not coverfile:
-            return False
-
-
     @classmethod
     def edit_book(cls, id=-1, content=dict(), custom_content=dict(), detail_v=False, root_url='http://127.0.0.1:8083'):
         if id>0:

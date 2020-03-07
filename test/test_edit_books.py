@@ -25,10 +25,10 @@ class test_edit_books(TestCase, ui_class):
 
     @classmethod
     def setUpClass(cls):
-        add_dependency(cls.dependencys, cls.__name__)
+        #add_dependency(cls.dependencys, cls.__name__)
 
         try:
-            startup(cls, cls.py_version, {'config_calibre_dir':TEST_DB})
+            debug_startup(cls, cls.py_version, {'config_calibre_dir':TEST_DB})
             time.sleep(3)
         except:
             cls.driver.quit()
@@ -37,7 +37,7 @@ class test_edit_books(TestCase, ui_class):
 
     @classmethod
     def tearDownClass(cls):
-        remove_dependency(cls.dependencys)
+        #remove_dependency(cls.dependencys)
         # close the browser window and stop calibre-web
         cls.driver.quit()
         cls.p.terminate()
@@ -633,54 +633,105 @@ class test_edit_books(TestCase, ui_class):
         resp = requests.get( 'http://127.0.0.1:8083/cover/5', cookies=cook)
         self.assertEqual('17420',resp.headers['Content-Length'])
 
+    # check metadata rekognition
+    def test_upload_book_pdf(self):
+        self.fill_basic_config({'config_uploading':1})
+        self.goto_page('nav_new')
+        upload_file = os.path.join(base_path, 'files', 'book.pdf')
+        upload = self.check_element_on_page((By.ID, 'btn-upload'))
+        upload.send_keys(upload_file)
+        # check file contents
+        self.fill_basic_config({'config_uploading': 0})
 
-    @skip("Not Implemented")
-    def test_delete_format(self):
-        pass
 
     @skip("Not Implemented")
     def test_delete_book(self):
         pass
 
-    # check metadata_recocknition
-    @skip("Not Implemented")
-    def upload_book_pdf(self):
-        pass
+    # check metadata rekognition
+    def test_upload_book_fb2(self):
+        self.fill_basic_config({'config_uploading':1})
+        self.goto_page('nav_new')
+        upload_file = os.path.join(base_path, 'files', 'book.fb2')
+        upload = self.check_element_on_page((By.ID, 'btn-upload'))
+        upload.send_keys(upload_file)
+        # ToDo: check file contents
+        self.fill_basic_config({'config_uploading': 0})
 
-    # check metadata_recocknition
-    @skip("Not Implemented")
-    def upload_book_fb2(self):
-        pass
+    def test_upload_book_lit(self):
+        self.fill_basic_config({'config_uploading':1})
+        self.goto_page('nav_new')
+        upload_file = os.path.join(base_path, 'files', 'book.lit')
+        upload = self.check_element_on_page((By.ID, 'btn-upload'))
+        upload.send_keys(upload_file)
+        # ToDo: check file contents
+        self.fill_basic_config({'config_uploading': 0})
 
-    @skip("Not Implemented")
-    def upload_book_lit(self):
-        pass
+    def test_upload_book_mobi(self):
+        self.fill_basic_config({'config_uploading':1})
+        self.goto_page('nav_new')
+        upload_file = os.path.join(base_path, 'files', 'book.mobi')
+        upload = self.check_element_on_page((By.ID, 'btn-upload'))
+        upload.send_keys(upload_file)
+        # ToDo: check file contents
+        self.fill_basic_config({'config_uploading': 0})
 
-    # check metadata_recocknition
-    @skip("Not Implemented")
-    def upload_book_epub(self):
-        pass
+    # check metadata rekognition
+    def test_upload_book_epub(self):
+        self.fill_basic_config({'config_uploading':1})
+        self.goto_page('nav_new')
+        upload_file = os.path.join(base_path, 'files', 'book.epub')
+        upload = self.check_element_on_page((By.ID, 'btn-upload'))
+        upload.send_keys(upload_file)
+        # ToDo: check file contents
+        self.fill_basic_config({'config_uploading': 0})
 
-    #check cover recocknition
-    @skip("Not Implemented")
-    def upload_book_cbz(self):
-        pass
+    #check cover rekognition
+    def test_upload_book_cbz(self):
+        self.fill_basic_config({'config_uploading':1})
+        self.goto_page('nav_new')
+        upload_file = os.path.join(base_path, 'files', 'book.cbz')
+        upload = self.check_element_on_page((By.ID, 'btn-upload'))
+        upload.send_keys(upload_file)
+        # ToDo: check file contents
+        self.fill_basic_config({'config_uploading': 0})
 
-    #check cover recocknition
-    @skip("Not Implemented")
-    def upload_book_cbt(self):
-        pass
+    #check cover rekognition
+    def test_upload_book_cbt(self):
+        self.fill_basic_config({'config_uploading':1})
+        self.goto_page('nav_new')
+        upload_file = os.path.join(base_path, 'files', 'book.cbt')
+        upload = self.check_element_on_page((By.ID, 'btn-upload'))
+        upload.send_keys(upload_file)
+        # ToDo: check file contents
+        self.fill_basic_config({'config_uploading': 0})
 
-    #check cover recocknition
-    @skip("Not Implemented")
-    def upload_book_cbr(self):
-        pass
-
+    #check cover rekognition
+    def test_upload_book_cbr(self):
+        self.fill_basic_config({'config_uploading':1})
+        self.goto_page('nav_new')
+        upload_file = os.path.join(base_path, 'files', 'book.cbr')
+        upload = self.check_element_on_page((By.ID, 'btn-upload'))
+        upload.send_keys(upload_file)
+        # ToDo: check file contents
+        self.fill_basic_config({'config_uploading': 0})
 
     # download of books
-    @skip("Not Implemented")
     def test_download_book(self):
-        pass
+        self.get_book_details(5)
+        element=self.check_element_on_page((By.XPATH, "//*[starts-with(@id,'btnGroupDrop')]"))
+        cookie = self.driver.get_cookies()
+        cook = dict(session=cookie[1]['value'], remember_token=cookie[0]['value'])
+        download_link=element.get_attribute("href")
+        resp = requests.get(download_link, cookies=cook)
+        self.assertEqual(resp.headers['Content-Type'],'application/epub+zip')
+        self.assertEqual(resp.status_code, 200)
+        self.edit_user('admin',{'download_role':0})
+        resp = requests.get(download_link, cookies=cook)
+        self.assertEqual(resp.status_code, 403)
+        book = self.get_book_details(5)
+        self.assertNotIn('download',book)
+        self.edit_user('admin', {'download_role': 1})
 
     # If more than one book has the same: author, tag or series it should be possible to change uppercase
     # letters to lowercase and vice versa. Example:
