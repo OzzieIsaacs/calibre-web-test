@@ -20,17 +20,6 @@ class test_kobo_sync(unittest.TestCase, ui_class):
     @classmethod
     def setUpClass(cls):
         add_dependency(cls.json_line, cls.__name__)
-        '''json_line_version = cls.json_line
-        with open(os.path.join(CALIBRE_WEB_PATH,'optional-requirements.txt'), 'r') as f:
-            for line in f:
-                if not line.startswith('#') and not line == '\n' and not line.startswith('git') and line.startswith('jsonschema'):
-                    json_line_version = line.strip()
-                    break
-
-        r = process_open([VENV_PYTHON, "-m", "pip", "install", json_line_version], (0, 5))
-        r.wait()
-
-        environment.add_Environemnt(json_line_version,cls.__name__)'''
 
         try:
             host = 'http://' + get_Host_IP() + ':8083'
@@ -52,9 +41,6 @@ class test_kobo_sync(unittest.TestCase, ui_class):
         cls.driver.quit()
         # close the browser window and stop calibre-web
         remove_dependency(cls.json_line)
-        #q = process_open([VENV_PYTHON, "-m", "pip", "uninstall", "-y", cls.json_line], (0, 5))
-        #q.wait()
-
 
     def test_sync_invalid(self):
         payload={

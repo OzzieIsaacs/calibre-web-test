@@ -5,7 +5,6 @@ import asyncio
 import sys
 import os
 import re
-import email
 
 from aiosmtpd.controller import Controller
 from aiosmtpd.controller import get_server_context
@@ -39,7 +38,7 @@ class MyMessage():
         self.message = None
 
     async def handle_AUTH(self, server, session, envelope, username, password):
-        print('User: %s, Password: %s' % (username,password))
+        # print('User: %s, Password: %s' % (username,password))
         if username == 'name@host.com' and password == '10234':
             return 235
         return 454
@@ -70,10 +69,10 @@ class MyMessage():
                 message_data = message_data[0].get_payload(decode=True)
             else:
                 message_data = message_data[0].get_payload(decode=True) + message_data[1].get_payload(decode=True)
-        print('Receiving message from:', message.get('X-Peer'))
-        print('Message addressed from:', message.get('From'))
-        print('Message addressed to:', message.get('To'))
-        print('Message length        :', len(message_data)) # len(message_data))
+        #print('Receiving message from:', message.get('X-Peer'))
+        #print('Message addressed from:', message.get('From'))
+        #print('Message addressed to:', message.get('To'))
+        #print('Message length        :', len(message_data)) # len(message_data))
         self.size = len(message_data)
         if self.size < 1000:
             self.message = message_data
