@@ -34,6 +34,7 @@ class test_opds_feed(unittest.TestCase, ui_class):
     def tearDown(self):
         if self.check_user_logged_in('admin'):
             self.logout()
+            time.sleep(2)
 
     def test_opds(self):
         r = requests.get('http://127.0.0.1:8083/opds')

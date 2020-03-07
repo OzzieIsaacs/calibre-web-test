@@ -57,9 +57,9 @@ class ui_class():
 
     @classmethod
     def login(cls,user, passwd):
-        WebDriverWait(cls.driver, 5).until(EC.presence_of_element_located((By.NAME, "username")))
-        username = cls.driver.find_element_by_name("username")
-        password = cls.driver.find_element_by_name("password")
+        WebDriverWait(cls.driver, 5).until(EC.presence_of_element_located((By.ID, "username")))
+        username = cls.driver.find_element_by_id("username")
+        password = cls.driver.find_element_by_id("password")
         submit = cls.driver.find_element_by_name("submit")
         username.send_keys(user)
         password.send_keys(passwd)
@@ -79,9 +79,9 @@ class ui_class():
     @classmethod
     def forgot_password(cls,user):
         cls.logout()
-        cls.check_element_on_page((By.NAME, "username"))
-        username = cls.driver.find_element_by_name("username")
-        resend = cls.driver.find_element_by_name("forgot")
+        cls.check_element_on_page((By.ID, "username"))
+        username = cls.driver.find_element_by_id("username")
+        resend = cls.driver.find_element_by_id("forgot")
         if resend:
             username.send_keys(user)
             resend.click()

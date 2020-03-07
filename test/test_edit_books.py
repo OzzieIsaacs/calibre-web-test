@@ -30,7 +30,7 @@ class test_edit_books(TestCase, ui_class):
         try:
             debug_startup(cls, cls.py_version, {'config_calibre_dir':TEST_DB})
             time.sleep(3)
-        except:
+        except Exception as e:
             cls.driver.quit()
             cls.p.kill()
 
@@ -307,6 +307,9 @@ class test_edit_books(TestCase, ui_class):
         self.edit_book(content={'tags':u'gênot'})
         values = self.get_book_details()
         self.assertEqual(u'gênot',values['tag'][0])
+        self.get_book_details(12)
+        self.check_element_on_page((By.ID, "edit_book")).click()
+        self.edit_book(content={'tags':'Gênot'})
 
 
     def test_edit_publisher(self):
@@ -495,7 +498,7 @@ class test_edit_books(TestCase, ui_class):
         self.assertEqual(details['languages'][0], 'Gayo')
         self.get_book_details(5)
         self.check_element_on_page((By.ID, "edit_book")).click()
-        self.edit_book(content={u'Languages':u'English'})
+        self.edit_book(content={u'languages':u'English'})
 
     def test_typeahead_series(self):
         self.get_book_details(5)

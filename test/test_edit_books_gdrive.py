@@ -99,7 +99,7 @@ class test_edit_books_gdrive(unittest.TestCase, ui_class):
     # error metadata should occour
     # Test Capital letters and lowercase characters
     # booktitle with ,;|
-    def test_edit_title(self):
+    def edit_title(self):
         self.assertIsNone('Not Implemented')
 
     # goto Book 2
@@ -138,71 +138,71 @@ class test_edit_books_gdrive(unittest.TestCase, ui_class):
     # change author of book
     # error should occour
     # Test Capital letters and lowercase characters
-    def test_edit_author(self):
+    def edit_author(self):
         self.assertIsNone('Not Implemented')
 
     # series with unicode spaces, ,|,
-    def test_edit_series(self):
+    def edit_series(self):
         pass
 
-    def test_edit_category(self):
+    def edit_category(self):
         pass
 
     # choose language not part ob lib
-    def test_edit_language(self):
+    def edit_language(self):
         self.assertIsNone('Not Implemented')
 
-    def test_edit_publishing_date(self):
+    def edit_publishing_date(self):
         self.assertIsNone('Not Implemented')
 
-    def test_edit_publisher(self):
+    def edit_publisher(self):
         self.assertIsNone('Not Implemented')
 
     # change rating, delete rating
     # check if book with rating of 4 stars appears in list of hot books
-    def test_edit_rating(self):
+    def edit_rating(self):
         self.assertIsNone('Not Implemented')
 
     # change comments, add comments, delete comments
-    def test_edit_comments(self):
+    def edit_comments(self):
         self.assertIsNone('Not Implemented')
 
     # change comments, add comments, delete comments
-    def test_edit_custom_bool(self):
+    def edit_custom_bool(self):
         self.assertIsNone('Not Implemented')
 
     # change comments, add comments, delete comments
-    def test_edit_custom_rating(self):
+    def edit_custom_rating(self):
         self.assertIsNone('Not Implemented')
 
     # change comments, add comments, delete comments
-    def test_edit_custom_single_select(self):
+    def edit_custom_single_select(self):
         self.assertIsNone('Not Implemented')
 
     # change comments, add comments, delete comments
-    def test_edit_custom_text(self):
+    def edit_custom_text(self):
         self.assertIsNone('Not Implemented')
 
     # change comments, add comments, delete comments
-    def test_typeahead_language(self):
+    def typeahead_language(self):
         self.assertIsNone('Not Implemented')
 
-    def test_typeahead_series(self):
+    def typeahead_series(self):
         self.assertIsNone('Not Implemented')
 
-    def test_typeahead_author(self):
+    def typeahead_author(self):
         self.assertIsNone('Not Implemented')
 
-    def test_typeahead_tag(self):
+    def typeahead_tag(self):
         self.assertIsNone('Not Implemented')
 
-    def test_typeahead_publisher(self):
+    def typeahead_publisher(self):
         self.assertIsNone('Not Implemented')
 
-    def test_upload_cover_hdd(self):
+    def upload_cover_hdd(self):
         self.assertIsNone('Not Implemented')
 
-    def test_delete_format(self):
+    def delete_format(self):
         self.assertIsNone('Not Implemented')
 
     def test_delete_book(self):
@@ -240,6 +240,6 @@ class test_edit_books_gdrive(unittest.TestCase, ui_class):
         self.assertIsNone('Not Implemented')
 
     # download of books
-    def test_database_errors(self):
+    def database_errors(self):
         self.assertIsNone('Not Implemented')
 
