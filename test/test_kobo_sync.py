@@ -15,7 +15,7 @@ class test_kobo_sync(unittest.TestCase, ui_class):
     p=None
     driver = None
     kobo_adress = None
-    json_line = "jsonschema"
+    json_line = ["jsonschema"]
 
     @classmethod
     def setUpClass(cls):

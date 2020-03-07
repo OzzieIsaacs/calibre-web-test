@@ -20,7 +20,7 @@ import requests
 class test_edit_books(TestCase, ui_class):
     p=None
     driver = None
-    dependencys = ('Pillow','lxml')
+    dependencys = ['Pillow','lxml']
     # py_version = u'/usr/bin/python3'
 
     @classmethod

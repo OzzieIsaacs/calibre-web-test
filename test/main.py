@@ -38,7 +38,7 @@ if __name__ == '__main__':
             break
 
     # check pip ist installed
-    p = process_open(["python3", "-m", "pip", "-V"])
+    p = process_open(["python3.7", "-m", "pip", "-V"])
     p.wait()
     res = (p.stdout.readlines())
     pip = re.match(("pip\s(.*)\sfrom\s(.*)\s\((.*)\).*"),res[0])
