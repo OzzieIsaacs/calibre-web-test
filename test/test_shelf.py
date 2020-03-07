@@ -237,7 +237,7 @@ class test_shelf(unittest.TestCase, ui_class):
         self.assertEqual(shelf_books[1]['id'], '11')
         self.assertEqual(shelf_books[2]['id'], '9')
         self.check_element_on_page((By.ID, "order_shelf")).click()
-        order = self.get_order_shelf_list()
+        self.get_order_shelf_list()
         self.driver.request('POST', 'http://127.0.0.1:8083/shelf/order/1',
                                           data={"9": "1","11": "2","13": "3"})
         self.driver.refresh() # reload page

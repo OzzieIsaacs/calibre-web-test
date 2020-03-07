@@ -1135,6 +1135,14 @@ class ui_class():
         else:
             return False
 
+    def upload_cover(self, id=-1, coverfile=None, root_url='http://127.0.0.1:8083'):
+        if id>0:
+            self.driver.get(root_url + "/admin/book/"+str(id))
+        self.check_element_on_page((By.ID,"book_edit_frm"))
+        if not coverfile:
+            return False
+
+
     @classmethod
     def edit_book(cls, id=-1, content=dict(), custom_content=dict(), detail_v=False, root_url='http://127.0.0.1:8083'):
         if id>0:
@@ -1164,6 +1172,11 @@ class ui_class():
                             edit.send_keys(Keys.CONTROL, "a")
                             edit.send_keys(Keys.DELETE)
                             edit.send_keys(custom_content[element['label']])
+
+        if 'local_cover' in content:
+            local_cover = cls.check_element_on_page((By.ID, 'btn-upload-cover'))
+            local_cover.send_keys(content['local_cover'])
+            content.pop('local_cover')
 
         if 'rating' in content:
             cls.driver.execute_script("arguments[0].setAttribute('value', arguments[1])",

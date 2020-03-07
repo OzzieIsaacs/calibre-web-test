@@ -5,11 +5,13 @@
 from unittest import TestCase, skip
 import os
 from selenium.webdriver.common.by import By
+from selenium.webdriver.common.keys import Keys
 import time
 from helper_ui import ui_class
-from testconfig import TEST_DB
+from testconfig import TEST_DB, base_path
 from parameterized import parameterized_class
-from helper_func import startup
+from helper_func import startup, debug_startup, add_dependency, remove_dependency
+import requests
 
 '''@parameterized_class([
    { "py_version": u'/usr/bin/python'},
@@ -18,10 +20,13 @@ from helper_func import startup
 class test_edit_books(TestCase, ui_class):
     p=None
     driver = None
+    dependencys = ('Pillow','lxml')
     # py_version = u'/usr/bin/python3'
 
     @classmethod
     def setUpClass(cls):
+        add_dependency(cls.dependencys, cls.__name__)
+
         try:
             startup(cls, cls.py_version, {'config_calibre_dir':TEST_DB})
             time.sleep(3)
@@ -32,6 +37,7 @@ class test_edit_books(TestCase, ui_class):
 
     @classmethod
     def tearDownClass(cls):
+        remove_dependency(cls.dependencys)
         # close the browser window and stop calibre-web
         cls.driver.quit()
         cls.p.terminate()
@@ -437,7 +443,6 @@ class test_edit_books(TestCase, ui_class):
         vals = self.get_book_details(5)
         self.assertEqual(0, len(vals['cust_columns']))
 
-
     # change comments, add comments, delete comments
     def test_edit_custom_single_select(self):
         self.get_book_details(5)
@@ -467,29 +472,167 @@ class test_edit_books(TestCase, ui_class):
         self.assertIsNone('Not Implemented')
 
     # change comments, add comments, delete comments
-    @skip("Not Implemented")
     def test_typeahead_language(self):
-        pass
+        self.get_book_details(5)
+        self.check_element_on_page((By.ID, "edit_book")).click()
+        lang = self.check_element_on_page((By.ID, "languages"))
+        lang.send_keys(Keys.CONTROL, "a")
+        lang.send_keys(Keys.DELETE)
+        lang.send_keys('G')
+        time.sleep(1)
+        typeahead=self.check_element_on_page((By.CLASS_NAME, "tt-dataset-languages"))
+        self.assertEqual('German\nGreek; Modern (1453-)\nGa\nGayo\nGbaya (Central African Republic)',typeahead.text)
+        lang.send_keys('a')
+        time.sleep(1)
+        self.assertEqual('Ga\nGayo\nGaelic; Scottish\nGalician\nGanda', typeahead.text)
+        lang.send_keys('y')
+        time.sleep(1)
+        self.assertEqual('Gayo\nHiligaynon', typeahead.text)
+        lang.send_keys(Keys.DOWN)
+        lang.send_keys(Keys.RETURN)
+        self.check_element_on_page((By.ID, "submit")).click()
+        details = self.get_book_details(5)
+        self.assertEqual(details['languages'][0], 'Gayo')
+        self.get_book_details(5)
+        self.check_element_on_page((By.ID, "edit_book")).click()
+        self.edit_book(content={u'Languages':u'English'})
 
-    @skip("Not Implemented")
     def test_typeahead_series(self):
-        pass
+        self.get_book_details(5)
+        self.check_element_on_page((By.ID, "edit_book")).click()
+        lang = self.check_element_on_page((By.ID, "series"))
+        lang.send_keys(Keys.CONTROL, "a")
+        lang.send_keys(Keys.DELETE)
+        lang.send_keys('D')
+        time.sleep(1)
+        typeahead=self.check_element_on_page((By.CLASS_NAME, "tt-dataset-series"))
+        self.assertEqual('Djüngel',typeahead.text)
+        lang.send_keys('j')
+        time.sleep(1)
+        typeahead = self.check_element_on_page((By.CLASS_NAME, "tt-dataset-series"))
+        self.assertEqual('Djüngel', typeahead.text)
+        lang.send_keys(Keys.DOWN)
+        lang.send_keys(Keys.RETURN)
+        self.check_element_on_page((By.ID, "submit")).click()
+        details = self.get_book_details(5)
+        self.assertEqual(details['series'], 'Djüngel')
+        self.get_book_details(5)
+        self.check_element_on_page((By.ID, "edit_book")).click()
+        self.edit_book(content={u'series':u''})
 
-    @skip("Not Implemented")
     def test_typeahead_author(self):
-        pass
+        self.get_book_details(5)
+        self.check_element_on_page((By.ID, "edit_book")).click()
+        lang = self.check_element_on_page((By.ID, "bookAuthor"))
+        lang.send_keys('&')
+        time.sleep(1)
+        typeahead=self.check_element_on_page((By.CLASS_NAME, "tt-dataset-authors"))
+        self.assertEqual('John Döe & John Döe\nJohn Döe & Peter Parker\nJohn Döe & Asterix Lionherd\nJohn Döe & Frodo Beutlin\nJohn Döe & Norbert Halagal',typeahead.text)
+        lang.send_keys('ro')
+        time.sleep(1)
+        typeahead = self.check_element_on_page((By.CLASS_NAME, "tt-dataset-authors"))
+        self.assertEqual('John Döe & Frodo Beutlin', typeahead.text)
+        lang.send_keys(Keys.DOWN)
+        lang.send_keys(Keys.RETURN)
+        self.check_element_on_page((By.ID, "submit")).click()
+        details = self.get_book_details(5)
+        self.assertEqual(details['author'][1], 'Frodo Beutlin')
+        self.assertEqual(details['author'][0], 'John Döe')
+        self.get_book_details(5)
+        self.check_element_on_page((By.ID, "edit_book")).click()
+        self.edit_book(content={u'bookAuthor':u'John Döe'})
 
-    @skip("Not Implemented")
     def test_typeahead_tag(self):
-        pass
+        self.get_book_details(5)
+        self.check_element_on_page((By.ID, "edit_book")).click()
+        lang = self.check_element_on_page((By.ID, "tags"))
+        lang.send_keys(Keys.CONTROL, "a")
+        lang.send_keys(Keys.DELETE)
+        lang.send_keys('g')
+        time.sleep(1)
+        typeahead=self.check_element_on_page((By.CLASS_NAME, "tt-dataset-tags"))
+        self.assertEqual('Gênot',typeahead.text)
+        lang.send_keys('e')
+        time.sleep(1)
+        typeahead = self.check_element_on_page((By.CLASS_NAME, "tt-dataset-tags"))
+        self.assertEqual('Gênot', typeahead.text)
+        lang.send_keys(Keys.DOWN)
+        lang.send_keys(Keys.RETURN)
+        self.check_element_on_page((By.ID, "submit")).click()
+        details = self.get_book_details(5)
+        self.assertEqual(details['tag'][0], 'Gênot')
+        self.get_book_details(5)
+        self.check_element_on_page((By.ID, "edit_book")).click()
+        self.edit_book(content={u'tags':u''})
 
-    @skip("Not Implemented")
     def test_typeahead_publisher(self):
-        pass
+        self.get_book_details(10)
+        self.check_element_on_page((By.ID, "edit_book")).click()
+        lang = self.check_element_on_page((By.ID, "publisher"))
+        lang.send_keys(Keys.CONTROL, "a")
+        lang.send_keys(Keys.DELETE)
+        lang.send_keys('a')
+        time.sleep(1)
+        typeahead=self.check_element_on_page((By.CLASS_NAME, "tt-dataset-publishers"))
+        self.assertEqual('Randomhäus',typeahead.text)
+        lang.send_keys(Keys.DOWN)
+        lang.send_keys(Keys.RETURN)
+        self.check_element_on_page((By.ID, "submit")).click()
+        details = self.get_book_details(10)
+        self.assertEqual(details['publisher'][0], 'Randomhäus')
+        self.get_book_details(10)
+        self.check_element_on_page((By.ID, "edit_book")).click()
+        self.edit_book(content={u'publisher':u''})
 
-    @skip("Not Implemented")
     def test_upload_cover_hdd(self):
-        pass
+        self.get_book_details(5)
+        self.check_element_on_page((By.ID, "edit_book")).click()
+        jpegcover = os.path.join(base_path, 'files', 'cover.jpg')
+        self.edit_book(content={'local_cover': jpegcover})
+        self.driver.refresh()
+        time.sleep(2)
+        #selenium-request didn't work for unknown reason cookie only accespted if slowly stepped through
+        cookie = self.driver.get_cookies()
+        cook = dict(session=cookie[1]['value'], remember_token=cookie[0]['value'])
+        resp = requests.get( 'http://127.0.0.1:8083/cover/5', cookies=cook)
+        with open(jpegcover, 'rb') as reader:
+            self.assertEqual(reader.read(),resp.content)
+
+        self.get_book_details(5)
+        self.check_element_on_page((By.ID, "edit_book")).click()
+        bmpcover = os.path.join(base_path, 'files', 'cover.bmp')
+        self.edit_book(content={'local_cover': bmpcover})
+        self.assertTrue(self.check_element_on_page((By.CLASS_NAME, "alert")))
+        self.driver.refresh()
+        time.sleep(2)
+        cookie = self.driver.get_cookies()
+        cook = dict(session=cookie[1]['value'], remember_token=cookie[0]['value'])
+        resp = requests.get( 'http://127.0.0.1:8083/cover/5', cookies=cook)
+        with open(jpegcover, 'rb') as reader:
+            self.assertEqual(reader.read(), resp.content)
+
+        self.get_book_details(5)
+        self.check_element_on_page((By.ID, "edit_book")).click()
+        pngcover = os.path.join(base_path, 'files', 'cover.png')
+        self.edit_book(content={'local_cover': pngcover})
+        self.driver.refresh()
+        time.sleep(2)
+        cookie = self.driver.get_cookies()
+        cook = dict(session=cookie[1]['value'], remember_token=cookie[0]['value'])
+        resp = requests.get( 'http://127.0.0.1:8083/cover/5', cookies=cook)
+        self.assertEqual('20317',resp.headers['Content-Length'])
+
+        self.get_book_details(5)
+        self.check_element_on_page((By.ID, "edit_book")).click()
+        pngcover = os.path.join(base_path, 'files', 'cover.webp')
+        self.edit_book(content={'local_cover': pngcover})
+        self.driver.refresh()
+        time.sleep(2)
+        cookie = self.driver.get_cookies()
+        cook = dict(session=cookie[1]['value'], remember_token=cookie[0]['value'])
+        resp = requests.get( 'http://127.0.0.1:8083/cover/5', cookies=cook)
+        self.assertEqual('17420',resp.headers['Content-Length'])
+
 
     @skip("Not Implemented")
     def test_delete_format(self):
@@ -533,14 +676,10 @@ class test_edit_books(TestCase, ui_class):
     def upload_book_cbr(self):
         pass
 
-    # database errors
-    @skip("Not Implemented")
-    def test_database_errors(self):
-        pass
 
     # download of books
     @skip("Not Implemented")
-    def test_database_errors(self):
+    def test_download_book(self):
         pass
 
     # If more than one book has the same: author, tag or series it should be possible to change uppercase

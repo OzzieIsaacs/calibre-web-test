@@ -3,7 +3,7 @@
 import os
 import shutil
 import re
-from testconfig import CALIBRE_WEB_PATH, TEST_DB, BOOT_TIME
+from testconfig import CALIBRE_WEB_PATH, TEST_DB, BOOT_TIME, VENV_PYTHON
 from selenium.webdriver.support.ui import WebDriverWait
 from subproc_wrapper import process_open
 from selenium import webdriver
@@ -13,8 +13,7 @@ from seleniumrequests import Firefox
 import time
 import socket, errno
 import psutil
-import fcntl
-import struct
+from helper_environment import environment
 
 try:
     import pycurl
@@ -45,7 +44,7 @@ def get_Host_IP():
             if addrs[key][0][2]:
                 return addrs[key][0][1]
 
-def debug_startup(inst, pyVersion, config, login=True, request=False, host="http://127.0.0.1:8083"):
+def debug_startup(inst, pyVersion, config, login=True, request=False, host="http://127.0.0.1:8083", caps=None):
 
     # create a new Firefox session
     if request:
@@ -141,3 +140,27 @@ def digest_login(url, expected_response):
         return False
     c.close()
     return True
+
+def add_dependency(name, testclass_name):
+    # json_line_version = cls.json_line
+    element_version=list()
+    with open(os.path.join(CALIBRE_WEB_PATH, 'optional-requirements.txt'), 'r') as f:
+        requirements = f.readlines()
+    for element in name:
+        for line in requirements:
+            if not line.startswith('#') and not line == '\n' and not line.startswith('git') and line.startswith(
+                    element):
+                element_version.append(line.strip())
+                break
+
+    for element in element_version:
+        with process_open([VENV_PYTHON, "-m", "pip", "install", element], (0, 5)) as r:
+            r.wait()
+            # r.terminate()
+
+    environment.add_Environemnt(element_version, testclass_name)
+
+def remove_dependency(names):
+    for name in names:
+        with process_open([VENV_PYTHON, "-m", "pip", "uninstall", "-y", name], (0, 5)) as q:
+            q.wait()

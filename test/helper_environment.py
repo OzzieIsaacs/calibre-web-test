@@ -67,7 +67,8 @@ class Environment():
                     self.result.append((element[0],element[1],test))
 
         else:
-            self.result.append((extension, '', test))
+            for testdep in test:
+                self.result.append((extension, '', testdep))
 
     def get_Environment(self):
         return self.result
