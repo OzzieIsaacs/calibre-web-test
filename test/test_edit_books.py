@@ -25,10 +25,10 @@ class test_edit_books(TestCase, ui_class):
 
     @classmethod
     def setUpClass(cls):
-        #add_dependency(cls.dependencys, cls.__name__)
+        add_dependency(cls.dependencys, cls.__name__)
 
         try:
-            debug_startup(cls, cls.py_version, {'config_calibre_dir':TEST_DB})
+            startup(cls, cls.py_version, {'config_calibre_dir':TEST_DB})
             time.sleep(3)
         except Exception as e:
             cls.driver.quit()
@@ -37,7 +37,7 @@ class test_edit_books(TestCase, ui_class):
 
     @classmethod
     def tearDownClass(cls):
-        #remove_dependency(cls.dependencys)
+        remove_dependency(cls.dependencys)
         # close the browser window and stop calibre-web
         cls.driver.quit()
         cls.p.terminate()
@@ -484,13 +484,19 @@ class test_edit_books(TestCase, ui_class):
         lang.send_keys('G')
         time.sleep(1)
         typeahead=self.check_element_on_page((By.CLASS_NAME, "tt-dataset-languages"))
-        self.assertEqual('German\nGreek; Modern (1453-)\nGa\nGayo\nGbaya (Central African Republic)',typeahead.text)
+        typeahead_set = set(typeahead.text.split("\n"))
+        result = set(("German", "Greek; Modern (1453-)", "Ga", "Gayo", "Gbaya (Central African Republic)"))
+        self.assertEqual(typeahead_set, result)
         lang.send_keys('a')
         time.sleep(1)
-        self.assertEqual('Ga\nGayo\nGaelic; Scottish\nGalician\nGanda', typeahead.text)
+        typeahead_set = set(typeahead.text.split("\n"))
+        result = set(("Ga", "Gayo", "Gaelic; Scottish", "Galician", "Ganda"))
+        self.assertEqual(typeahead_set, result)
         lang.send_keys('y')
         time.sleep(1)
-        self.assertEqual('Gayo\nHiligaynon', typeahead.text)
+        typeahead_set= set(typeahead.text.split("\n"))
+        result = set(("Gayo","Hiligaynon"))
+        self.assertEqual(typeahead_set, result)
         lang.send_keys(Keys.DOWN)
         lang.send_keys(Keys.RETURN)
         self.check_element_on_page((By.ID, "submit")).click()
