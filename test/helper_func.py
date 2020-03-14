@@ -9,7 +9,6 @@ from subproc_wrapper import process_open
 from selenium import webdriver
 from selenium.webdriver.common.by import By
 from selenium.webdriver.support import expected_conditions as EC
-from seleniumrequests import Firefox
 import time
 import socket, errno
 import psutil
@@ -44,13 +43,10 @@ def get_Host_IP():
             if addrs[key][0][2]:
                 return addrs[key][0][1]
 
-def debug_startup(inst, pyVersion, config, login=True, request=False, host="http://127.0.0.1:8083", caps=None):
+def debug_startup(inst, pyVersion, config, login=True, host="http://127.0.0.1:8083", caps=None):
 
     # create a new Firefox session
-    if request:
-        inst.driver = Firefox()
-    else:
-        inst.driver = webdriver.Firefox()
+    inst.driver = webdriver.Firefox()
 
     inst.driver.implicitly_wait(BOOT_TIME)
 
@@ -64,7 +60,7 @@ def debug_startup(inst, pyVersion, config, login=True, request=False, host="http
     if not login:
         inst.logout()
 
-def startup(inst, pyVersion, config, login=True, request=False, host="http://127.0.0.1:8083"):
+def startup(inst, pyVersion, config, login=True, host="http://127.0.0.1:8083"):
     print("\n%s - %s: " % (inst.py_version, inst.__name__))
     try:
         os.remove(os.path.join(CALIBRE_WEB_PATH, 'app.db'))
@@ -75,10 +71,7 @@ def startup(inst, pyVersion, config, login=True, request=False, host="http://127
     inst.p = process_open([pyVersion, os.path.join(CALIBRE_WEB_PATH, u'cps.py')], (1), sout=None)
 
     # create a new Firefox session
-    if request:
-        inst.driver = Firefox()
-    else:
-        inst.driver = webdriver.Firefox()
+    inst.driver = webdriver.Firefox()
 
     inst.driver.implicitly_wait(BOOT_TIME)
 

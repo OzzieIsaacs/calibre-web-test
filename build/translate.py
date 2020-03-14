@@ -47,10 +47,17 @@ os.chdir(workdir)
 invers_lang_table = [x for x in need_iso['3bto3t'].values()]
 for file in glob.glob1("./translations", "*.po"):
     langcode=file[23:-3]
+    # Remove old content from po file
     message_path = os.path.join(FILEPATH,'cps','translations',langcode, 'LC_MESSAGES','messages.po')
     translateFile=open(message_path)
     mergedTranslation=pofile.read_po(translateFile,locale=langcode)
     translateFile.close()
+    target_path = os.path.join(FILEPATH , "cps","translations" , langcode , "LC_MESSAGES","messages.po")
+    targetFile = open(target_path,'wb')
+    pofile.write_po(targetFile, mergedTranslation, ignore_obsolete=True, width=0)
+    targetFile.close()
+
+    # transfer calibre language translation to
     count = 0
     for msg in mergedTranslation:
         if msg.string != '' and msg.id != "":
@@ -61,25 +68,21 @@ for file in glob.glob1("./translations", "*.po"):
     languageFile=open("./translations/"+file)
     LanguageTranslation=pofile.read_po(languageFile)
     languageFile.close()
-    print("Merging: {} {} of strings {} translated".format(langcode, count, allMsg))
+    print("Language: {} {} of strings {} translated".format(langcode, count, allMsg))
     iso_translations = dict()
     for msg in LanguageTranslation:
         if msg.id:
             # msg=LanguageTranslation.__getitem__(msg)
             lCode = msg.auto_comments[0][9:]
             if lCode in need_iso['codes3t']:
-                mergedTranslation.add(msg.id, msg.string, auto_comments=msg.auto_comments)
+                # mergedTranslation.add(msg.id, msg.string, auto_comments=msg.auto_comments)
                 if msg.string:
                     iso_translations[lCode] = msg.string
                 else:
                     iso_translations[lCode] = msg.id
-    message_path = os.path.join(FILEPATH, 'cps', 'translations', langcode, 'LC_MESSAGES', 'messages.po')
-    allmessage_path = os.path.join(FILEPATH, "cps","translations" , langcode, "LC_MESSAGES","messages_all.po")
-    shutil.move(message_path, allmessage_path)
-    target_path = os.path.join(FILEPATH , "cps","translations" , langcode , "LC_MESSAGES","messages.po")
-    targetFile = open(target_path,'wb')
-    pofile.write_po(targetFile,mergedTranslation,ignore_obsolete=True)
-    targetFile.close()
+    #message_path = os.path.join(FILEPATH, 'cps', 'translations', langcode, 'LC_MESSAGES', 'messages.po')
+    #allmessage_path = os.path.join(FILEPATH, "cps","translations" , langcode, "LC_MESSAGES","messages_all.po")
+    #shutil.move(message_path, allmessage_path)
     out_iso[langcode]=iso_translations
 
 # Add English to the translation table
@@ -119,9 +122,9 @@ p = subprocess.Popen("pybabel compile -d " + FILEPATH + trans_path,
 p.wait()
 
 # Rename messages_all.mo in messages.mo und delete messages_all.po
-for file in glob.glob1("./translations", "*.po"):
-    langcode=file[23:-3]
-    file_path = os.path.join(FILEPATH,"cps","translations",langcode,"LC_MESSAGES")
-    shutil.move(os.path.join(file_path, "messages_all.po"), os.path.join(file_path, "messages.po"))
+#for file in glob.glob1("./translations", "*.po"):
+#    langcode=file[23:-3]
+#    file_path = os.path.join(FILEPATH,"cps","translations",langcode,"LC_MESSAGES")
+#    shutil.move(os.path.join(file_path, "messages_all.po"), os.path.join(file_path, "messages.po"))
 
 

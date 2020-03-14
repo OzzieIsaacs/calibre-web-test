@@ -8,7 +8,7 @@ from helper_ui import ui_class
 from testconfig import TEST_DB
 from helper_func import is_port_in_use, startup
 from parameterized import parameterized_class
-
+import requests
 
 '''@parameterized_class([
    { "py_version": u'/usr/bin/python'},
@@ -21,7 +21,7 @@ class test_shelf(unittest.TestCase, ui_class):
     @classmethod
     def setUpClass(cls):
         try:
-            startup(cls, cls.py_version,{'config_calibre_dir':TEST_DB}, request=True)
+            startup(cls, cls.py_version,{'config_calibre_dir':TEST_DB})
             cls.create_user('shelf', {'edit_shelf_role':1, 'password':'123', 'email':'a@b.com'})
             cls.edit_user('admin',{'edit_shelf_role':1, 'email':'e@fe.de'})
         except:
@@ -59,14 +59,12 @@ class test_shelf(unittest.TestCase, ui_class):
         self.login('shelf','123')
         # other user can't see shelf
         self.assertFalse(len(self.list_shelfs()))
-        # self.assertFalse(self.driver.find_elements_by_xpath( "//a/span[@class='glyphicon glyphicon-list']//ancestor::a"))
         # other user is not able to add books
         self.driver.get("http://127.0.0.1:8083/shelf/add/1/1")
         self.assertTrue(self.check_element_on_page((By.ID, "flash_alert")))
         self.logout()
         self.login('admin','admin123')
         books = self.get_books_displayed()
-        # books[1][0].click()
         details = self.get_book_details(int(books[1][0]['id']))
         self.assertFalse(details['del_shelf'])
         self.assertTrue(details['add_shelf'])
@@ -82,6 +80,8 @@ class test_shelf(unittest.TestCase, ui_class):
         # other user is not able to add books
         self.driver.get("http://127.0.0.1:8083/shelf/add/1/1")
         self.assertTrue(self.check_element_on_page((By.ID, "flash_alert")))
+        self.create_shelf('Pü 执', False)
+        self.assertTrue(len(self.list_shelfs()))
         self.logout()
         self.login('admin','admin123')
         # go to shelf page
@@ -116,10 +116,18 @@ class test_shelf(unittest.TestCase, ui_class):
         self.list_shelfs(u'Gü 执')['ele'].click()
         # self.check_element_on_page((By.XPATH, "//a/span[@class='glyphicon glyphicon-list']")).click()
         self.check_element_on_page((By.ID, "delete_shelf"))
-        shelf_books = self.get_books_displayed()
+        shelf_books = self.get_shelf_books_displayed()
         # No random books displayed, 2 books in shelf
-        self.assertTrue(len(shelf_books[0]) == 2)
-        self.assertTrue(len(shelf_books[1]) == 0)
+        self.assertTrue(len(shelf_books) == 2)
+        self.create_shelf('Gü 执', True)
+        self.assertTrue(self.check_element_on_page((By.ID, "flash_alert")))
+        self.create_shelf('Gü 执', False)
+        self.assertTrue(self.check_element_on_page((By.ID, "flash_success")))
+        shelfs=self.list_shelfs()
+        self.assertEqual(shelfs[0]['name'],'Gü 执')   # Private shelf of shelf123
+        self.assertEqual(shelfs[0]['public'], False)
+        self.assertEqual(shelfs[1]['name'], 'Gü 执')  # Public shelf of admin
+        self.assertEqual(shelfs[1]['public'], True)
         self.logout()
         self.login('admin','admin123')
         books = self.get_books_displayed()
@@ -130,12 +138,11 @@ class test_shelf(unittest.TestCase, ui_class):
         self.check_element_on_page((By.XPATH, "//ul[@id='add-to-shelves']/li/a[contains(.,'G')]")).click()
         self.assertTrue(self.check_element_on_page((By.XPATH, "//*[@id='remove-from-shelves']//a")))
         # go to shelf page
-        self.list_shelfs(u'Gü 执')[0]['ele'].click()
+        self.list_shelfs(u'Gü 执')['ele'].click()
         self.check_element_on_page((By.ID, "delete_shelf"))
-        shelf_books = self.get_books_displayed()
+        shelf_books = self.get_shelf_books_displayed()
         # No random books displayed, 3 books in shelf
-        self.assertTrue(len(shelf_books[0]) == 3)
-        self.assertTrue(len(shelf_books[1]) == 0)
+        self.assertTrue(len(shelf_books) == 3)
 
     # rename shelfs, duplicate shelfs are prevented and books can be added and deleted to shelf
     # capital letters and lowercase letters
@@ -231,15 +238,16 @@ class test_shelf(unittest.TestCase, ui_class):
         self.check_element_on_page((By.ID, "add-to-shelf")).click()
         self.check_element_on_page((By.XPATH, "//ul[@id='add-to-shelves']/li/a[contains(.,'order')]")).click()
         self.goto_page('nav_new')
-        self.list_shelfs('order')[0]['ele'].click()
+        self.list_shelfs('order')['ele'].click()
         shelf_books = self.get_shelf_books_displayed()
         self.assertEqual(shelf_books[0]['id'], '13')
         self.assertEqual(shelf_books[1]['id'], '11')
         self.assertEqual(shelf_books[2]['id'], '9')
         self.check_element_on_page((By.ID, "order_shelf")).click()
         self.get_order_shelf_list()
-        self.driver.request('POST', 'http://127.0.0.1:8083/shelf/order/1',
-                                          data={"9": "1","11": "2","13": "3"})
+        cookie = self.driver.get_cookies()
+        cook = dict(session=cookie[1]['value'], remember_token=cookie[0]['value'])
+        requests.post('http://127.0.0.1:8083/shelf/order/1', cookies=cook, data={"9": "1","11": "2","13": "3"})
         self.driver.refresh() # reload page
 
         self.check_element_on_page((By.ID, "shelf_back")).click()
@@ -265,7 +273,7 @@ class test_shelf(unittest.TestCase, ui_class):
         self.assertTrue(self.check_element_on_page((By.ID, "flash_success")))
         self.goto_page('nav_new')
         # change public to private
-        self.list_shelfs('shelf_public')[0]['ele'].click()
+        self.list_shelfs('shelf_public')['ele'].click()
         edit_shelf = self.check_element_on_page((By.ID, "edit_shelf"))
         edit_shelf.click()
         public=self.check_element_on_page((By.NAME, "is_public"))

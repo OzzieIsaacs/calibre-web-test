@@ -1040,7 +1040,8 @@ class ui_class():
                         ret['comment'] += ele.text
                 except:
                     for ele in comment.getchildren()[1].getchildren():
-                        ret['comment'] += ele.text
+                        if ele.text:
+                            ret['comment'] += ele.text
 
             add_shelf = tree.findall("//*[@id='add-to-shelves']//a")
             ret['add_shelf'] = [sh.text.strip().lstrip() for sh in add_shelf]
@@ -1059,9 +1060,6 @@ class ui_class():
                     ret['kindle'] = all
                 else:
                     ret['kindlebtn'] = cls.driver.find_element_by_id("sendbtn")
-                    # ele = dict()
-                    #ele['ele'] = ele
-                    #ele['link'] = ele[0].attrib['href']
                     ret['kindle'] = list(ele)
             else:
                 ret['kindle'] = None

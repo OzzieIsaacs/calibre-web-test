@@ -14,6 +14,7 @@ import sys
 import venv
 from CalibreResult import CalibreResult
 from helper_environment import environment
+from subprocess import check_output
 
 if __name__ == '__main__':
     result=False
@@ -38,15 +39,27 @@ if __name__ == '__main__':
             break
 
     # check pip ist installed
-    p = process_open(["python3.7", "-m", "pip", "-V"])
-    p.wait()
-    res = (p.stdout.readlines())
-    pip = re.match(("pip\s(.*)\sfrom\s(.*)\s\((.*)\).*"),res[0])
-    if pip:
-        print("Found Pip for {} in {}".format(pip[3],pip[2]))
-    else:
-        print("Pip not found, can't setup test environment")
-        exit()
+    if os.name != 'nt':
+        pversion=list()
+        p = check_output("compgen -c python", shell=True, executable='bash')
+        out = p.splitlines()
+        for element in out:
+            if '-' not in element.decode('UTF-8'):
+                #p = process_open([element.decode('UTF-8'), "-version"])
+                #p.wait()
+                #res = p.stdout.readlines()[0]
+                p = check_output([element.decode('UTF-8'), "--version"], shell=False)
+                # res = p.splitlines()
+                pversion.append((element.decode('UTF-8'), re.match("Python\s(\d+)\.(\d+)\.(\d+)$", p)))
+        p = process_open(["python3.7", "-m", "pip", "-V"])
+        p.wait()
+        res = (p.stdout.readlines())
+        pip = re.match(("pip\s(.*)\sfrom\s(.*)\s\((.*)\).*"),res[0])
+        if pip:
+            print("Found Pip for {} in {}".format(pip[3],pip[2]))
+        else:
+            print("Pip not found, can't setup test environment")
+            exit()
 
     # generate virtual environment
     venv.create(VENV_PATH, clear=True, with_pip=True)
@@ -56,12 +69,8 @@ if __name__ == '__main__':
     requirements_file = os.path.join(CALIBRE_WEB_PATH,'requirements.txt')
     p = process_open([VENV_PYTHON, "-m", "pip", "install", "-r",requirements_file],(0,5))
     p.wait()
-    '''for l in p.stdout.readlines():
-        if isinstance(l, bytes):
-            l = l.decode('utf-8')
-        print(l)'''
     environment.init_Environment(VENV_PYTHON)
-    # all_tests = unittest.TestLoader().loadTestsFromName('test_email_ssl')
+
     all_tests = unittest.TestLoader().discover('.')
     # open the report file
     outfile = open(os.path.join(CALIBRE_WEB_PATH,'test',"Calibre-Web TestSummary1.html"), "w")
