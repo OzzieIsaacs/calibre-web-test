@@ -72,17 +72,12 @@ for file in glob.glob1("./translations", "*.po"):
     iso_translations = dict()
     for msg in LanguageTranslation:
         if msg.id:
-            # msg=LanguageTranslation.__getitem__(msg)
             lCode = msg.auto_comments[0][9:]
             if lCode in need_iso['codes3t']:
-                # mergedTranslation.add(msg.id, msg.string, auto_comments=msg.auto_comments)
                 if msg.string:
                     iso_translations[lCode] = msg.string
                 else:
                     iso_translations[lCode] = msg.id
-    #message_path = os.path.join(FILEPATH, 'cps', 'translations', langcode, 'LC_MESSAGES', 'messages.po')
-    #allmessage_path = os.path.join(FILEPATH, "cps","translations" , langcode, "LC_MESSAGES","messages_all.po")
-    #shutil.move(message_path, allmessage_path)
     out_iso[langcode]=iso_translations
 
 # Add English to the translation table
@@ -120,11 +115,5 @@ if sys.version_info < (3, 0):
 p = subprocess.Popen("pybabel compile -d " + FILEPATH + trans_path,
                      shell=True, stdout=subprocess.PIPE, stdin=subprocess.PIPE)
 p.wait()
-
-# Rename messages_all.mo in messages.mo und delete messages_all.po
-#for file in glob.glob1("./translations", "*.po"):
-#    langcode=file[23:-3]
-#    file_path = os.path.join(FILEPATH,"cps","translations",langcode,"LC_MESSAGES")
-#    shutil.move(os.path.join(file_path, "messages_all.po"), os.path.join(file_path, "messages.po"))
 
 

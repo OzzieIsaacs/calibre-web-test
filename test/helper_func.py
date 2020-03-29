@@ -43,7 +43,7 @@ def get_Host_IP():
             if addrs[key][0][2]:
                 return addrs[key][0][1]
 
-def debug_startup(inst, pyVersion, config, login=True, host="http://127.0.0.1:8083", caps=None):
+def debug_startup(inst, pyVersion, config, login=True, host="http://127.0.0.1:8083", env=None):
 
     # create a new Firefox session
     inst.driver = webdriver.Firefox()
@@ -60,7 +60,7 @@ def debug_startup(inst, pyVersion, config, login=True, host="http://127.0.0.1:80
     if not login:
         inst.logout()
 
-def startup(inst, pyVersion, config, login=True, host="http://127.0.0.1:8083"):
+def startup(inst, pyVersion, config, login=True, host="http://127.0.0.1:8083", env=None):
     print("\n%s - %s: " % (inst.py_version, inst.__name__))
     try:
         os.remove(os.path.join(CALIBRE_WEB_PATH, 'app.db'))
@@ -68,7 +68,7 @@ def startup(inst, pyVersion, config, login=True, host="http://127.0.0.1:8083"):
         pass
     shutil.rmtree(TEST_DB, ignore_errors=True)
     shutil.copytree('./Calibre_db', TEST_DB)
-    inst.p = process_open([pyVersion, os.path.join(CALIBRE_WEB_PATH, u'cps.py')], (1), sout=None)
+    inst.p = process_open([pyVersion, os.path.join(CALIBRE_WEB_PATH, u'cps.py')], (1), sout=None, env=env)
 
     # create a new Firefox session
     inst.driver = webdriver.Firefox()

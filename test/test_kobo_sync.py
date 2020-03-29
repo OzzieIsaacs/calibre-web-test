@@ -4,7 +4,7 @@ import unittest
 import requests
 from helper_ui import ui_class
 from testconfig import TEST_DB, VENV_PYTHON, CALIBRE_WEB_PATH
-from helper_func import startup, debug_startup, get_Host_IP, process_open, add_dependency, remove_dependency
+from helper_func import startup, debug_startup, get_Host_IP, add_dependency, remove_dependency
 from selenium.webdriver.common.by import By
 # from helper_environment import environment
 import re

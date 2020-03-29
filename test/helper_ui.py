@@ -241,10 +241,10 @@ class ui_class():
         # special handling for checkboxes
         checkboxes = ['config_uploading', 'config_anonbrowse', 'config_public_reg', 'config_remote_login',
                       'config_access_log', 'config_kobo_sync', 'config_kobo_proxy']
-        options = ['config_log_level', 'config_google_drive_folder']
+        options = ['config_log_level', 'config_google_drive_folder', 'config_updatechannel']
         selects = ['config_ebookconverter']
         # depending on elements open accordions or not
-        if any(key in elements for key in ['config_port', 'config_certfile','config_keyfile']):
+        if any(key in elements for key in ['config_port', 'config_certfile','config_keyfile', 'config_updatechannel']):
             opener.append(1)
         if any(key in elements for key in ['config_log_level','config_logfile', 'config_access_logfile',
                                            'config_access_log']):
