@@ -140,11 +140,11 @@ class ui_class():
 
     @classmethod
     def list_shelfs(cls, search_name=None):
-        public_shelfs = cls.driver.find_elements_by_xpath( "//a/span[@class='glyphicon glyphicon-list public_shelf']//ancestor::a")
-        private_shelfs = cls.driver.find_elements_by_xpath("//a/span[@class='glyphicon glyphicon-list private_shelf']//ancestor::a")
+        all_shelfs = cls.driver.find_elements_by_xpath( "//a/span[@class='glyphicon glyphicon-list shelf']//ancestor::a")
+        # private_shelfs = cls.driver.find_elements_by_xpath("//a/span[@class='glyphicon glyphicon-list private_shelf']//ancestor::a")
         ret_shelfs = list()
         ret_ele = None
-        for shelf in private_shelfs:
+        '''for shelf in private_shelfs:
             sh = dict()
             sh['id'] = shelf.get_attribute('href')[shelf.get_attribute('href').rfind('/')+1:]
             sh['name'] = shelf.text
@@ -153,25 +153,29 @@ class ui_class():
             if search_name == shelf.text:
                 ret_ele = sh
             else:
-                ret_shelfs.append(sh)
-        for shelf in public_shelfs:
-            no = next((index for (index, d) in enumerate(ret_shelfs) if d["name"] == shelf.text), None)
-            if no:
-                ret_shelfs[no]['public'] = True
-                ret_shelfs[no]['ele'] = shelf
-            else:
-                sh = dict()
-                sh['id'] = shelf.get_attribute('href')[shelf.get_attribute('href').rfind('/')+1:]
-                sh['name'] = shelf.text
+                ret_shelfs.append(sh)'''
+        for shelf in all_shelfs:
+            # no = next((index for (index, d) in enumerate(ret_shelfs) if d["name"] == shelf.text), None)
+            #if no:
+            #    ret_shelfs[no]['public'] = True
+            #    ret_shelfs[no]['ele'] = shelf
+            #else:
+            sh = dict()
+            sh['id'] = shelf.get_attribute('href')[shelf.get_attribute('href').rfind('/')+1:]
+            sh['name'] = shelf.text
+            if shelf.text.endswith('(Public)'):
                 sh['public'] = True
-                sh['ele'] = shelf
-                if search_name == shelf.text:
-                    if ret_ele:
-                        ret_ele = [sh, ret_ele]
-                    else:
-                        ret_ele = sh
+            else:
+                sh['public'] = False
+            # sh['public'] = True
+            sh['ele'] = shelf
+            if search_name == shelf.text:
+                if ret_ele:
+                    ret_ele = [sh, ret_ele]
                 else:
-                    ret_shelfs.append(sh)
+                    ret_ele = sh
+            else:
+                ret_shelfs.append(sh)
         if search_name:
             return ret_ele
         else:

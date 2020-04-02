@@ -45,9 +45,10 @@ class test_shelf(unittest.TestCase, ui_class):
             if not len(shelfs):
                 break
             try:
-                shelfs[0]['ele'].click()
-                self.check_element_on_page((By.ID, "delete_shelf")).click()
-                self.check_element_on_page((By.ID, "confirm")).click()
+                for shelf in shelfs:
+                    shelf['ele'].click()
+                    self.check_element_on_page((By.ID, "delete_shelf")).click()
+                    self.check_element_on_page((By.ID, "confirm")).click()
             except:
                 pass
 
@@ -98,10 +99,10 @@ class test_shelf(unittest.TestCase, ui_class):
         self.logout()
         self.login('shelf','123')
         # other user can see shelf
-        shelfs = self.list_shelfs(u'Gü 执')
+        shelfs = self.list_shelfs(u'Gü 执 (Public)')
         self.assertTrue(shelfs)
         # other user is able to add books
-        self.driver.get("http://127.0.0.1:8083/shelf/add/1/" + shelfs['id'])
+        self.driver.get("http://127.0.0.1:8083/shelf/add/" + shelfs['id'] + '/1')
         self.assertTrue(self.check_element_on_page((By.ID, "flash_success")))
         time.sleep(2)
         # 2nd way to add book
@@ -113,7 +114,7 @@ class test_shelf(unittest.TestCase, ui_class):
         self.check_element_on_page((By.XPATH, "//ul[@id='add-to-shelves']/li/a[contains(.,'G')]")).click()
         self.assertTrue(self.check_element_on_page((By.XPATH, "//*[@id='remove-from-shelves']//a")))
         # goto shelf
-        self.list_shelfs(u'Gü 执')['ele'].click()
+        self.list_shelfs(u'Gü 执 (Public)')['ele'].click()
         # self.check_element_on_page((By.XPATH, "//a/span[@class='glyphicon glyphicon-list']")).click()
         self.check_element_on_page((By.ID, "delete_shelf"))
         shelf_books = self.get_shelf_books_displayed()
@@ -124,10 +125,10 @@ class test_shelf(unittest.TestCase, ui_class):
         self.create_shelf('Gü 执', False)
         self.assertTrue(self.check_element_on_page((By.ID, "flash_success")))
         shelfs=self.list_shelfs()
-        self.assertEqual(shelfs[0]['name'],'Gü 执')   # Private shelf of shelf123
-        self.assertEqual(shelfs[0]['public'], False)
-        self.assertEqual(shelfs[1]['name'], 'Gü 执')  # Public shelf of admin
-        self.assertEqual(shelfs[1]['public'], True)
+        self.assertEqual(shelfs[0]['name'],'Gü 执 (Public)') # Public shelf of admin
+        self.assertEqual(shelfs[0]['public'], True)
+        self.assertEqual(shelfs[1]['name'], 'Gü 执')         # Private shelf of shelf123
+        self.assertEqual(shelfs[1]['public'], False)
         self.logout()
         self.login('admin','admin123')
         books = self.get_books_displayed()
@@ -138,7 +139,7 @@ class test_shelf(unittest.TestCase, ui_class):
         self.check_element_on_page((By.XPATH, "//ul[@id='add-to-shelves']/li/a[contains(.,'G')]")).click()
         self.assertTrue(self.check_element_on_page((By.XPATH, "//*[@id='remove-from-shelves']//a")))
         # go to shelf page
-        self.list_shelfs(u'Gü 执')['ele'].click()
+        self.list_shelfs(u'Gü 执 (Public)')['ele'].click()
         self.check_element_on_page((By.ID, "delete_shelf"))
         shelf_books = self.get_shelf_books_displayed()
         # No random books displayed, 3 books in shelf
@@ -238,7 +239,7 @@ class test_shelf(unittest.TestCase, ui_class):
         self.check_element_on_page((By.ID, "add-to-shelf")).click()
         self.check_element_on_page((By.XPATH, "//ul[@id='add-to-shelves']/li/a[contains(.,'order')]")).click()
         self.goto_page('nav_new')
-        self.list_shelfs('order')['ele'].click()
+        self.list_shelfs('order (Public)')['ele'].click()
         shelf_books = self.get_shelf_books_displayed()
         self.assertEqual(shelf_books[0]['id'], '13')
         self.assertEqual(shelf_books[1]['id'], '11')
@@ -273,7 +274,7 @@ class test_shelf(unittest.TestCase, ui_class):
         self.assertTrue(self.check_element_on_page((By.ID, "flash_success")))
         self.goto_page('nav_new')
         # change public to private
-        self.list_shelfs('shelf_public')['ele'].click()
+        self.list_shelfs('shelf_public (Public)')['ele'].click()
         edit_shelf = self.check_element_on_page((By.ID, "edit_shelf"))
         edit_shelf.click()
         public=self.check_element_on_page((By.NAME, "is_public"))
@@ -284,7 +285,7 @@ class test_shelf(unittest.TestCase, ui_class):
         self.logout()
         # logout and try to create another shelf with same name, even if user can't see shelfs name
         self.login('shelf','123')
-        self.list_shelfs('shelf_private')['ele'].click()
+        self.list_shelfs('shelf_private (Public)')['ele'].click()
         del_shelf = self.check_element_on_page((By.ID, "delete_shelf"))
         del_shelf.click()
         self.check_element_on_page((By.ID, "confirm")).click()
