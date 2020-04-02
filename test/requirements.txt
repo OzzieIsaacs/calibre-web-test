@@ -5,3 +5,4 @@ lxml>=4.0.0
 public>=2018.11.20
 pycurl>=7.19.0
 virtualenv>=12.0
+mitmproxy>=4.0.0

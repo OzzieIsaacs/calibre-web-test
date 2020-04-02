@@ -50,7 +50,7 @@ if __name__ == '__main__':
                 #res = p.stdout.readlines()[0]
                 p = check_output([element.decode('UTF-8'), "--version"], shell=False)
                 # res = p.splitlines()
-                pversion.append((element.decode('UTF-8'), re.match(u"Python\s(\d+)\.(\d+)\.(\d+)$", p.decode('utf-8'))))
+                pversion.append((element.decode('UTF-8'), re.match("Python\s(\d+)\.(\d+)\.(\d+)$", p.decode('utf-8'))))
         p = process_open(["python3.7", "-m", "pip", "-V"])
         p.wait()
         res = (p.stdout.readlines())

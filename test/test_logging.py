@@ -62,6 +62,7 @@ class test_logging(unittest.TestCase, ui_class):
 
         # Change setting to warning
         self.fill_basic_config({'config_log_level':'WARNING'})
+        time.sleep(BOOT_TIME)
         alf = WebDriverWait(self.driver, 5).until(EC.presence_of_element_located((By.ID, "flash_success")))
         # error entry by deleting book with subfolder
         self.driver.get("http://127.0.0.1:8083/delete/5")
@@ -78,6 +79,7 @@ class test_logging(unittest.TestCase, ui_class):
         # Change setting back to Info
         # Info entry by adding shelf
         self.fill_basic_config({'config_log_level':'INFO'})
+        time.sleep(BOOT_TIME)
         self.driver.get("http://127.0.0.1:8083/shelf/add/7/7")
         time.sleep(4)
         with open(os.path.join(CALIBRE_WEB_PATH,'calibre-web.log'),'r') as logfile:
@@ -98,6 +100,7 @@ class test_logging(unittest.TestCase, ui_class):
             # check if path without extension is accepted
             os.makedirs(os.path.join(CALIBRE_WEB_PATH, 'hü lo'))
             self.fill_basic_config({'config_logfile': os.path.join(CALIBRE_WEB_PATH, 'hü lo', 'lö g')})
+            time.sleep(BOOT_TIME)
             WebDriverWait(self.driver, 5).until(EC.presence_of_element_located((By.ID, "flash_success")))
             time.sleep(7)
             # wait for restart
@@ -105,6 +108,7 @@ class test_logging(unittest.TestCase, ui_class):
             shutil.rmtree(os.path.join(CALIBRE_WEB_PATH, u'hü lo').encode('UTF-8'), ignore_errors=True)
             #Reset Logfile to default
             self.fill_basic_config({'config_logfile': ''})
+            time.sleep(BOOT_TIME)
             WebDriverWait(self.driver, 5).until(EC.presence_of_element_located((By.ID, "flash_success")))
             time.sleep(7)
 
@@ -115,7 +119,7 @@ class test_logging(unittest.TestCase, ui_class):
         os.makedirs(os.path.join(CALIBRE_WEB_PATH, 'hü lo'))
         self.fill_basic_config({'config_logfile': os.path.join(CALIBRE_WEB_PATH, 'hü lo', 'lö g')})
         self.check_element_on_page((By.ID, "flash_success"))
-        time.sleep(7)
+        time.sleep(BOOT_TIME)
         # delete old logfile and check new logfile present
         os.remove(os.path.join(CALIBRE_WEB_PATH, 'calibre-web.log'))
         self.assertTrue(os.path.isfile(os.path.join(CALIBRE_WEB_PATH, 'hü lo', 'lö g')))
@@ -136,6 +140,7 @@ class test_logging(unittest.TestCase, ui_class):
                                 'config_access_log': 1,
                                 'config_access_logfile':'access.log'})
         self.check_element_on_page((By.ID, "flash_success"))
+        time.sleep(BOOT_TIME)
         self.goto_page('logviewer')
         time.sleep(2)
         # check stream test is there, no radiobox for calibre log, access logger ticked

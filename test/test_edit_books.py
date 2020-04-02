@@ -497,6 +497,8 @@ class test_edit_books(TestCase, ui_class):
         typeahead_set= set(typeahead.text.split("\n"))
         result = set(("Gayo","Hiligaynon"))
         self.assertEqual(typeahead_set, result)
+        lang.send_keys('o')
+        time.sleep(1)
         lang.send_keys(Keys.DOWN)
         lang.send_keys(Keys.RETURN)
         self.check_element_on_page((By.ID, "submit")).click()
@@ -645,11 +647,13 @@ class test_edit_books(TestCase, ui_class):
     # check metadata rekognition
     def test_upload_book_pdf(self):
         self.fill_basic_config({'config_uploading':1})
+        time.sleep(2)
         self.goto_page('nav_new')
         upload_file = os.path.join(base_path, 'files', 'book.pdf')
         upload = self.check_element_on_page((By.ID, 'btn-upload'))
         upload.send_keys(upload_file)
         # check file contents
+        time.sleep(2)
         self.fill_basic_config({'config_uploading': 0})
 
 
@@ -660,69 +664,83 @@ class test_edit_books(TestCase, ui_class):
     # check metadata rekognition
     def test_upload_book_fb2(self):
         self.fill_basic_config({'config_uploading':1})
+        time.sleep(2)
         self.goto_page('nav_new')
         upload_file = os.path.join(base_path, 'files', 'book.fb2')
         upload = self.check_element_on_page((By.ID, 'btn-upload'))
         upload.send_keys(upload_file)
         # ToDo: check file contents
+        time.sleep(2)
         self.fill_basic_config({'config_uploading': 0})
 
     def test_upload_book_lit(self):
         self.fill_basic_config({'config_uploading':1})
+        time.sleep(2)
         self.goto_page('nav_new')
         upload_file = os.path.join(base_path, 'files', 'book.lit')
         upload = self.check_element_on_page((By.ID, 'btn-upload'))
         upload.send_keys(upload_file)
         # ToDo: check file contents
+        time.sleep(2)
         self.fill_basic_config({'config_uploading': 0})
 
     def test_upload_book_mobi(self):
         self.fill_basic_config({'config_uploading':1})
+        time.sleep(2)
         self.goto_page('nav_new')
         upload_file = os.path.join(base_path, 'files', 'book.mobi')
         upload = self.check_element_on_page((By.ID, 'btn-upload'))
         upload.send_keys(upload_file)
         # ToDo: check file contents
+        time.sleep(2)
         self.fill_basic_config({'config_uploading': 0})
 
     # check metadata rekognition
     def test_upload_book_epub(self):
         self.fill_basic_config({'config_uploading':1})
+        time.sleep(2)
         self.goto_page('nav_new')
         upload_file = os.path.join(base_path, 'files', 'book.epub')
         upload = self.check_element_on_page((By.ID, 'btn-upload'))
         upload.send_keys(upload_file)
         # ToDo: check file contents
+        time.sleep(2)
         self.fill_basic_config({'config_uploading': 0})
 
     #check cover rekognition
     def test_upload_book_cbz(self):
         self.fill_basic_config({'config_uploading':1})
+        time.sleep(2)
         self.goto_page('nav_new')
         upload_file = os.path.join(base_path, 'files', 'book.cbz')
         upload = self.check_element_on_page((By.ID, 'btn-upload'))
         upload.send_keys(upload_file)
         # ToDo: check file contents
+        time.sleep(2)
         self.fill_basic_config({'config_uploading': 0})
 
     #check cover rekognition
     def test_upload_book_cbt(self):
         self.fill_basic_config({'config_uploading':1})
+        time.sleep(2)
         self.goto_page('nav_new')
         upload_file = os.path.join(base_path, 'files', 'book.cbt')
         upload = self.check_element_on_page((By.ID, 'btn-upload'))
         upload.send_keys(upload_file)
         # ToDo: check file contents
+        time.sleep(2)
         self.fill_basic_config({'config_uploading': 0})
 
     #check cover rekognition
     def test_upload_book_cbr(self):
         self.fill_basic_config({'config_uploading':1})
+        time.sleep(2)
         self.goto_page('nav_new')
         upload_file = os.path.join(base_path, 'files', 'book.cbr')
         upload = self.check_element_on_page((By.ID, 'btn-upload'))
         upload.send_keys(upload_file)
         # ToDo: check file contents
+        time.sleep(2)
         self.fill_basic_config({'config_uploading': 0})
 
     # download of books

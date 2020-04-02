@@ -27,7 +27,7 @@ class test_updater(unittest.TestCase, ui_class):
         cls.copy_cw()
         cls.proxy = Proxy()
         cls.proxy.start()
-        pem_file = os.path.join(os.path.expanduser('~'),'mitmproxy','mitmproxy-ca-cert.pem')
+        pem_file = os.path.join(os.path.expanduser('~'),'.mitmproxy','mitmproxy-ca-cert.pem')
         startup(cls, cls.py_version,{'config_calibre_dir':TEST_DB},
                 env={'http_proxy':'http://127.0.0.1:8080',
                      'https_proxy':'https://127.0.0.1:8080',
@@ -122,8 +122,11 @@ class test_updater(unittest.TestCase, ui_class):
 
 
     def test_check_update_stable_versions(self):
+        self.fill_basic_config({'config_updatechannel':'Stable'})
+        time.sleep(BOOT_TIME)
+        self.goto_page('admin_setup')
         update_table = self.check_element_on_page((By.ID, "current_version")).find_elements_by_tag_name('td')
-        # self.assertEqual(update_table[0].text,'')  # ToDo Check current version correct
+        # ToDo Check current version correct
         self.assertEqual(update_table[1].text, 'Current version')
         version = [int(x) for x in ((update_table[0].text).rstrip(' Beta')).split('.')]
         beta = 'Beta' in update_table[0].text
@@ -131,17 +134,9 @@ class test_updater(unittest.TestCase, ui_class):
         version2 = [version[0], version[1], version[2]+1]
         version1 = [version[0], version[1], version[2]]
         val.set_Version([version3,version2,version1])
-        self.goto_page('admin_setup')
-        val.set_type(None)
-        self.check_updater('{}.{}.{}'.format(*version3),  "alert-warning")
+        val.set_type([None])
+        self.check_updater('{}.{}.{}'.format(*version3), "alert-warning")
         self.assertTrue(self.check_element_on_page((By.ID, "perform_update")))
-        self.goto_page('admin_setup')
-        # We are ahead of all releases, should only happen on Beta releases
-        version3 = [version[0], version[1], version[2]-1]
-        version2 = [version[0], version[1], version[2]-2]
-        version1 = [version[0], version[1], version[2]-3]
-        val.set_Version([version3,version2,version1])
-        self.check_updater('latest stable version',  "alert-warning")
         self.goto_page('admin_setup')
 
         # We are equal to newest release
@@ -303,6 +298,7 @@ class test_updater(unittest.TestCase, ui_class):
         time.sleep(3)
         self.assertTrue('Connection' in self.check_element_on_page((By.ID, "Updatecontent")).text)
         self.check_element_on_page((By.ID, "updateFinished")).click()
+        time.sleep(3)
 
         val.set_type([None])
         updater = self.check_element_on_page((By.ID, "check_for_update"))
@@ -314,6 +310,7 @@ class test_updater(unittest.TestCase, ui_class):
         time.sleep(3)
         self.assertTrue('General' in self.check_element_on_page((By.ID, "Updatecontent")).text)
         self.check_element_on_page((By.ID, "updateFinished")).click()
+        time.sleep(3)
 
     def test_perform_update(self):
         self.fill_basic_config({'config_updatechannel':'Stable'})
@@ -332,9 +329,9 @@ class test_updater(unittest.TestCase, ui_class):
         updater.click()
         performUpdate = self.check_element_on_page((By.ID, "perform_update"))
         performUpdate.click()
-        time.sleep(20)
-        pass
-
+        time.sleep(10)
+        self.check_element_on_page((By.ID, "updateFinished")).click()
+        time.sleep(3)
         # cps files not writebale
         # Additional folders, additional files
         # check all relevant files are kept, venv folder

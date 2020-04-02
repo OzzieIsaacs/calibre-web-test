@@ -251,7 +251,7 @@ class test_cli(unittest.TestCase, ui_class):
         time.sleep(BOOT_TIME)
         result = p2.poll()
         if result is None:
-            p2.kill()
+            p2.terminate()
             self.assert_('2nd process not terminated, port is already in use')
         self.assertEqual(result, 1)
         p1.kill()

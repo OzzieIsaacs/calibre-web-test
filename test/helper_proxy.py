@@ -16,7 +16,7 @@ import os
 class ResponseType:
     def __init__(self):
         self.type =  []
-        self.Version = None    # [[0,7,7],[0,7,8],[0,7,9]]
+        self.Version = None # [[0,7,7],[0,7,8],[0,7,9]]
         self.parent = None
 
     def set_type(self,new):
@@ -224,7 +224,6 @@ class Github_Proxy:
         self.num = 0
 
     def request(self, flow: http.HTTPFlow) -> None:
-        # print('ping ' + val.get_type())
         # redirects all requests to api.github.com to local server (flask instance)
         if flow.request.host == "api.github.com":
             if val.get_type() != 'ConnectionError':
@@ -232,6 +231,13 @@ class Github_Proxy:
             else:
                 val.pop_type()
                 flow.kill()
+
+    def responseheaders(flow):
+        def modify(chunks):
+            time.sleep(0)
+            # continue to stream original response
+            yield from chunks
+        flow.response.stream = modify
 
 
 class Proxy(threading.Thread):

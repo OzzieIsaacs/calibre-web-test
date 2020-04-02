@@ -148,7 +148,7 @@ class test_login(unittest.TestCase, ui_class):
         self.assertEqual(self.fail_access_page("http://127.0.0.1:8083/show/1/epub"),1)
         self.assertEqual(self.fail_access_page("http://127.0.0.1:8083/read/1/epub"),1)
         self.assertEqual(self.fail_access_page("http://127.0.0.1:8083/download/1/epub"),1)
-        self.assertEqual(self.fail_access_page("http://127.0.0.1:8083/download/1/epub/name"),2)
+        self.assertEqual(self.fail_access_page("http://127.0.0.1:8083/download/1/epub/name"),1) # important this endpoint has to exist, otherwise Kobo download will fail
         self.assertEqual(self.fail_access_page("http://127.0.0.1:8083/register"),2)
         self.assertEqual(self.fail_access_page("http://127.0.0.1:8083/logout"),1)
         self.assertEqual(self.fail_access_page("http://127.0.0.1:8083/remote_login"),2)

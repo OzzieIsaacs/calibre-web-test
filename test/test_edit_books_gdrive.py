@@ -205,41 +205,41 @@ class test_edit_books_gdrive(unittest.TestCase, ui_class):
     def delete_format(self):
         self.assertIsNone('Not Implemented')
 
-    def test_delete_book(self):
+    def delete_book(self):
         self.assertIsNone('Not Implemented')
 
-    # check metadata_recocknition
+    # check metadata_recognition
     def upload_book_pdf(self):
         self.assertIsNone('Not Implemented')
 
-    # check metadata_recocknition
+    # check metadata_recognition
     def upload_book_fb2(self):
         self.assertIsNone('Not Implemented')
 
     def upload_book_lit(self):
         self.assertIsNone('Not Implemented')
 
-    # check metadata_recocknition
+    # check metadata_recognition
     def upload_book_epub(self):
         self.assertIsNone('Not Implemented')
 
-    # check cover recocknition
+    # check cover recognition
     def upload_book_cbz(self):
         self.assertIsNone('Not Implemented')
 
-    # check cover recocknition
+    # check cover recognition
     def upload_book_cbt(self):
         self.assertIsNone('Not Implemented')
 
-    # check cover recocknition
+    # check cover recognition
     def upload_book_cbr(self):
         self.assertIsNone('Not Implemented')
 
     # database errors
-    def test_database_errors(self):
+    def database_errors(self):
         self.assertIsNone('Not Implemented')
 
     # download of books
-    def database_errors(self):
+    def download_books(self):
         self.assertIsNone('Not Implemented')
 
