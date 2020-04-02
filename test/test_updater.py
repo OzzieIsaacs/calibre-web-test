@@ -3,10 +3,12 @@
 import unittest
 import shutil
 from helper_ui import ui_class
-from testconfig import TEST_DB, BOOT_TIME
+from testconfig import TEST_DB, BOOT_TIME, CALIBRE_WEB_PATH
 from helper_func import startup, debug_startup
 from helper_proxy import Proxy, val
 from selenium.webdriver.common.by import By
+from zipfile import ZipFile, ZipInfo
+import os
 # from parameterized import parameterized_class
 import time
 
@@ -22,12 +24,14 @@ class test_updater(unittest.TestCase, ui_class):
 
     @classmethod
     def setUpClass(cls):
+        cls.copy_cw()
         cls.proxy = Proxy()
         cls.proxy.start()
+        pem_file = os.path.join(os.path.expanduser('~'),'mitmproxy','mitmproxy-ca-cert.pem')
         startup(cls, cls.py_version,{'config_calibre_dir':TEST_DB},
                 env={'http_proxy':'http://127.0.0.1:8080',
                      'https_proxy':'https://127.0.0.1:8080',
-                     'REQUESTS_CA_BUNDLE':'/home/matthias/.mitmproxy/mitmproxy-ca-cert.pem',
+                     'REQUESTS_CA_BUNDLE': pem_file,
                      'LANG':'de_DE.UTF-8'
                      })
 
@@ -38,7 +42,7 @@ class test_updater(unittest.TestCase, ui_class):
         cls.p.terminate()
         cls.p.kill()
         cls.proxy.stop_proxy()
-        print('stop')
+        cls.return_cw()
 
 
     def tearDown(self):
@@ -54,6 +58,38 @@ class test_updater(unittest.TestCase, ui_class):
         self.assertTrue(Responsetext in self.check_element_on_page((By.ID, "message")).text)
         self.assertTrue(self.check_element_on_page((By.CLASS_NAME, className)))
         self.check_element_on_page((By.CLASS_NAME, "close")).click()
+
+    @classmethod
+    def copy_cw(cls):
+        if not os.path.isdir(CALIBRE_WEB_PATH + '_2'):
+            shutil.copytree(CALIBRE_WEB_PATH, CALIBRE_WEB_PATH + '_2')
+            with ZipFile('cps_copy.zip', 'w') as zipObj:
+                zipfolder = ZipInfo(os.path.join('calibre-web-0.6.6' + "/"))
+                zipObj.writestr(zipfolder, "")
+                # Add customized readmie file to check if files are going to be replaces ToDo
+                # zipObj.write(os.path.join(CALIBRE_WEB_PATH + '_2', 'cps.py'), arcname='README.md')
+                # Iterate over all the files in directory, add everything except .pyc files from cps folder as
+                # relative paths
+                for folderName, subfolders, filenames in os.walk(os.path.join(CALIBRE_WEB_PATH + '_2','cps')):
+                    for filename in filenames:
+                        if os.path.splitext(filename)[1] != '.pyc':
+                            filePath = os.path.join(folderName, filename)
+                            zipObj.write(filePath, os.path.join('calibre-web-0.6.6',os.path.relpath(filePath,CALIBRE_WEB_PATH + '_2')))
+                zipObj.write(os.path.join(CALIBRE_WEB_PATH + '_2', 'cps.py'), arcname='calibre-web-0.6.6/cps.py')
+        else:
+            print('target directory already existing')
+            raise()
+
+    @classmethod
+    def return_cw(cls):
+        if os.path.isdir(CALIBRE_WEB_PATH + '_2'):
+            shutil.rmtree(CALIBRE_WEB_PATH)
+            shutil.move(CALIBRE_WEB_PATH + '_2', CALIBRE_WEB_PATH)
+            # shutil.rmtree(CALIBRE_WEB_PATH + '_2')
+        try:
+            os.remove(os.path.join('cps_copy.zip'))
+        except:
+            pass
 
 
     def test_check_update_stable_errors(self):
@@ -279,8 +315,27 @@ class test_updater(unittest.TestCase, ui_class):
         self.assertTrue('General' in self.check_element_on_page((By.ID, "Updatecontent")).text)
         self.check_element_on_page((By.ID, "updateFinished")).click()
 
+    def test_perform_update(self):
+        self.fill_basic_config({'config_updatechannel':'Stable'})
+        time.sleep(BOOT_TIME)
+        self.goto_page('admin_setup')
+        update_table = self.check_element_on_page((By.ID, "current_version")).find_elements_by_tag_name('td')
+        version = [int(x) for x in ((update_table[0].text).rstrip(' Beta')).split('.')]
+        version3 = [version[0], version[1], version[2] + 2]
+        version2 = [version[0], version[1], version[2] + 1]
+        version1 = [version[0], version[1], version[2]]
+        val.set_Version([version3, version2, version1])
 
-        # tempfolder not writeable, cps files not writebale
+        val.set_type([None])
+        time.sleep(0.5)
+        updater = self.check_element_on_page((By.ID, "check_for_update"))
+        updater.click()
+        performUpdate = self.check_element_on_page((By.ID, "perform_update"))
+        performUpdate.click()
+        time.sleep(20)
+        pass
+
+        # cps files not writebale
         # Additional folders, additional files
         # check all relevant files are kept, venv folder
 

@@ -2,7 +2,7 @@ from mitmproxy import proxy, options
 from mitmproxy.tools.dump import DumpMaster
 from mitmproxy import http
 
-from flask import Flask, Blueprint, request
+from flask import Flask, Blueprint, request, Response, stream_with_context, send_from_directory
 from mitmproxy.addons import wsgiapp
 import threading
 import asyncio
@@ -11,7 +11,7 @@ import time
 import hashlib
 import uuid
 from datetime import datetime, timedelta
-
+import os
 
 class ResponseType:
     def __init__(self):
@@ -21,9 +21,6 @@ class ResponseType:
 
     def set_type(self,new):
         self.type = new
-
-    def set_maxVersion(self, max):
-        self.maxVersion = max
 
     def set_Version(self, version):
         self.Version = version
@@ -37,8 +34,8 @@ class ResponseType:
             return self.type[0]
         return None
 
-    def get_maxVersion(self):
-        return self.maxVersion
+    def get_Version(self):
+        return self.Version
 
     def get_release(self):
         resp1 = []
@@ -201,7 +198,13 @@ def zipball(version) -> str:
             if type == 'GeneralError':
                 return "Lulu"
             else:
-                return "zipfile"
+                # version='{}.{}.{}'.format(*val.get_Version()[0])
+                result = send_from_directory(os.getcwd(),'cps_copy.zip',
+                                           as_attachment=True,
+                                           mimetype='application/zip',
+                                           attachment_filename='calibre-web-0.6.6.zip')
+                result.headers['Accept-Ranges'] = 'bytes'
+                return result
         else:
             return '{}', 404
     except Exception:
@@ -229,14 +232,6 @@ class Github_Proxy:
             else:
                 val.pop_type()
                 flow.kill()
-
-    def responseheaders(flow):
-        print("stream")
-        def modify(chunks):
-            time.sleep(0)
-            # continue to stream original response
-            yield from chunks
-        flow.response.stream = modify
 
 
 class Proxy(threading.Thread):
