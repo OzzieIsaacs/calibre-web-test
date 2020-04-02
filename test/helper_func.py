@@ -134,6 +134,7 @@ def digest_login(url, expected_response):
     c.close()
     return True
 
+
 def add_dependency(name, testclass_name):
     # json_line_version = cls.json_line
     element_version=list()
@@ -143,7 +144,7 @@ def add_dependency(name, testclass_name):
         for line in requirements:
             if not line.startswith('#') and not line == '\n' and not line.startswith('git') and line.startswith(
                     element):
-                element_version.append(line.strip())
+                element_version.append(line.split('=', 1)[0].strip('>'))
                 break
 
     for element in element_version:
@@ -151,7 +152,7 @@ def add_dependency(name, testclass_name):
             r.wait()
             # r.terminate()
 
-    environment.add_Environemnt(element_version, testclass_name)
+    environment.add_Environemnt(testclass_name, element_version)
 
 def remove_dependency(names):
     for name in names:

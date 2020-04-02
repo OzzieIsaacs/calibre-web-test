@@ -58,9 +58,9 @@ class Environment():
                 self.result.append((element[0],element[1],'basic'))
 
     def add_Environemnt(self, test, extension):
-        if not self.initial:
+        if self.initial:
             try:
-                p = process_open([extension, "-m", "pip", "freeze"], (0))
+                p = process_open([self.initial, "-m", "pip", "freeze"], (0))
                 p.wait()
                 dists = [str(d).strip().split("==") for d in p.stdout.readlines()]
                 for element in dists:
@@ -69,7 +69,7 @@ class Environment():
             except:
                 pass
         else:
-            for testdep in test:
+            for testdep in extension:
                 self.result.append((extension, '', testdep))
 
     def get_Environment(self):
