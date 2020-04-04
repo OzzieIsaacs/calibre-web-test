@@ -66,7 +66,7 @@ class test_edit_books(TestCase, ui_class):
     # metadata error does not occour
     # Test Capital letters and lowercase characters
     # booktitle with ,;|
-    '''def test_edit_title(self):
+    def test_edit_title(self):
         self.get_book_details(4)
         self.check_element_on_page((By.ID, "edit_book")).click()
         self.edit_book(content={'book_title':u'O0ü 执'})
@@ -654,14 +654,14 @@ class test_edit_books(TestCase, ui_class):
         upload.send_keys(upload_file)
         # check file contents
         time.sleep(2)
-        self.fill_basic_config({'config_uploading': 0})'''
+        self.fill_basic_config({'config_uploading': 0})
 
 
     @skip("Not Implemented")
     def test_delete_book(self):
         pass
 
-    '''# check metadata recognition
+    # check metadata recognition
     def test_upload_book_fb2(self):
         self.fill_basic_config({'config_uploading':1})
         time.sleep(2)
@@ -750,6 +750,7 @@ class test_edit_books(TestCase, ui_class):
         cookie = self.driver.get_cookies()
         cook = dict(session=cookie[1]['value'], remember_token=cookie[0]['value'])
         download_link=element.get_attribute("href")
+        self.assertTrue(download_link.endswith('/5.epub'),'Download Link has invalid format for kobo browser, has to end with filename')
         resp = requests.get(download_link, cookies=cook)
         self.assertEqual(resp.headers['Content-Type'],'application/epub+zip')
         self.assertEqual(resp.status_code, 200)
@@ -758,7 +759,7 @@ class test_edit_books(TestCase, ui_class):
         self.assertEqual(resp.status_code, 403)
         book = self.get_book_details(5)
         self.assertNotIn('download',book)
-        self.edit_user('admin', {'download_role': 1})'''
+        self.edit_user('admin', {'download_role': 1})
 
     # If more than one book has the same: author, tag or series it should be possible to change uppercase
     # letters to lowercase and vice versa. Example:

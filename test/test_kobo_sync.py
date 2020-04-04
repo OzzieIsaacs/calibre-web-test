@@ -23,7 +23,7 @@ class test_kobo_sync(unittest.TestCase, ui_class):
 
         try:
             host = 'http://' + get_Host_IP() + ':8083'
-            startup(cls, cls.py_version, {'config_calibre_dir':TEST_DB,'config_kobo_sync':1,
+            debug_startup(cls, cls.py_version, {'config_calibre_dir':TEST_DB,'config_kobo_sync':1,
                                                 'config_kobo_proxy':0}, host= host)
             cls.goto_page('user_setup')
             cls.check_element_on_page((By.ID, "config_create_kobo_token")).click()
@@ -82,9 +82,9 @@ class test_kobo_sync(unittest.TestCase, ui_class):
         r = session.get(self.kobo_adress+'/v1/initialization', headers=header)
         self.assertEqual(r.status_code,200)
         self.assertEqual(len(r.json()),1)
-        self.assertEqual(r.json()['Resources']['image_host'],expectUrl)
-        self.assertEqual(r.json()['Resources']['image_url_quality_template'], self.kobo_adress+"/{ImageId}/image.jpg")
-        self.assertEqual(r.json()['Resources']['image_url_template'], self.kobo_adress + "/{ImageId}/image.jpg")
+        self.assertEqual(r.json()['Resources']['image_host'], expectUrl)
+        self.assertEqual(r.json()['Resources']['image_url_quality_template'], self.kobo_adress+"/{ImageId}/{width}/{height}/image.jpg")
+        self.assertEqual(r.json()['Resources']['image_url_template'], self.kobo_adress + "/{ImageId}/{width}/{height}/image.jpg")
         r = session.get(self.kobo_adress+'/v1/user/profile', headers=header)
         self.assertEqual(r.status_code,200)
         self.assertEqual(r.json(), {})
