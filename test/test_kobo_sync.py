@@ -23,7 +23,7 @@ class test_kobo_sync(unittest.TestCase, ui_class):
 
         try:
             host = 'http://' + get_Host_IP() + ':8083'
-            debug_startup(cls, cls.py_version, {'config_calibre_dir':TEST_DB,'config_kobo_sync':1,
+            startup(cls, cls.py_version, {'config_calibre_dir':TEST_DB,'config_kobo_sync':1,
                                                 'config_kobo_proxy':0}, host= host)
             cls.goto_page('user_setup')
             cls.check_element_on_page((By.ID, "config_create_kobo_token")).click()

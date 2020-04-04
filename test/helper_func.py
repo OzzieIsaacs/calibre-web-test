@@ -136,7 +136,6 @@ def digest_login(url, expected_response):
 
 
 def add_dependency(name, testclass_name):
-    # json_line_version = cls.json_line
     element_version=list()
     with open(os.path.join(CALIBRE_WEB_PATH, 'optional-requirements.txt'), 'r') as f:
         requirements = f.readlines()

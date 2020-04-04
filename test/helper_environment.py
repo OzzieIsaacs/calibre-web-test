@@ -27,7 +27,7 @@ class Environment():
                     dep.append(line.split('=', 1)[0].split('>', 1)[0])
         for element in dists:
             if element[0] in dep:
-                self.result.append((element[0],element[1],'basic'))
+                self.result.append((element[0],element[1],'Basic'))
 
 
     def init_Environment(self, initial):
@@ -55,7 +55,7 @@ class Environment():
                     dep.append(line.split('=', 1)[0].split('>', 1)[0])
         for element in dists:
             if element[0] in dep:
-                self.result.append((element[0],element[1],'basic'))
+                self.result.append((element[0],element[1],'Basic'))
 
     def add_Environemnt(self, test, extension):
         if self.initial:
