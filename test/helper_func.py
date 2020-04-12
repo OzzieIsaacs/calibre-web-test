@@ -13,6 +13,8 @@ import time
 import socket, errno
 import psutil
 from helper_environment import environment
+from psutil import process_iter
+from signal import SIGKILL
 
 try:
     import pycurl
@@ -72,8 +74,12 @@ def startup(inst, pyVersion, config, login=True, host="http://127.0.0.1:8083", e
 
     # create a new Firefox session
     inst.driver = webdriver.Firefox()
-
     inst.driver.implicitly_wait(BOOT_TIME)
+    if inst.p.poll():
+        kill_old_cps()
+        inst.p = process_open([pyVersion, os.path.join(CALIBRE_WEB_PATH, u'cps.py')], (1), sout=None, env=env)
+        print('Calibre-Web restarted...')
+        time.sleep(BOOT_TIME)
 
     inst.driver.maximize_window()
 
@@ -157,3 +163,16 @@ def remove_dependency(names):
     for name in names:
         with process_open([VENV_PYTHON, "-m", "pip", "uninstall", "-y", name], (0, 5)) as q:
             q.wait()
+
+
+
+def kill_old_cps(port=8083):
+    for proc in process_iter():
+        try:
+            for conns in proc.connections(kind='inet'):
+                if conns.laddr.port == port:
+                    proc.send_signal(SIGKILL) # or SIGKILL
+                    print('Killed old Calibre-Web instance')
+                    break
+        except (PermissionError, psutil.AccessDenied):
+            pass

@@ -244,8 +244,9 @@ class ui_class():
         process_select = dict()
         # special handling for checkboxes
         checkboxes = ['config_uploading', 'config_anonbrowse', 'config_public_reg', 'config_remote_login',
-                      'config_access_log', 'config_kobo_sync', 'config_kobo_proxy']
-        options = ['config_log_level', 'config_google_drive_folder', 'config_updatechannel']
+                      'config_access_log', 'config_kobo_sync', 'config_kobo_proxy', 'config_ldap_openldap']
+        options = ['config_log_level', 'config_google_drive_folder', 'config_updatechannel', 'config_login_type',
+                   'config_ldap_encryption']
         selects = ['config_ebookconverter']
         # depending on elements open accordions or not
         if any(key in elements for key in ['config_port', 'config_certfile','config_keyfile', 'config_updatechannel']):
@@ -255,7 +256,12 @@ class ui_class():
             opener.append(2)
         if any(key in elements for key in ['config_uploading', 'config_anonbrowse', 'config_public_reg',
                                            'config_remote_login', 'config_use_goodreads', 'config_goodreads_api_key',
-                                           'config_goodreads_api_secret', 'config_kobo_sync', 'config_kobo_proxy']):
+                                           'config_goodreads_api_secret', 'config_kobo_sync', 'config_kobo_proxy',
+                                           'config_login_type', 'config_ldap_provider_url', 'config_ldap_port',
+                                           'config_ldap_encryption', 'ldap-cert-settings', 'config_ldap_serv_username',
+                                           'config_ldap_serv_password', 'config_ldap_dn', 'config_ldap_user_object',
+                                           'config_ldap_group_object_filter', 'config_ldap_group_name',
+                                           'config_ldap_group_members_field', 'config_ldap_openldap']):
             opener.append(3)
         if any(key in elements for key in ['config_ebookconverter', 'config_calibre',
                                            'config_converterpath','config_rarfile_location']):
@@ -277,7 +283,7 @@ class ui_class():
         # process all checkboxes Todo: If status was wrong before is not included in response
         for checkbox in process_checkboxes:
             ele = cls.driver.find_element_by_id(checkbox)
-            if (elements[checkbox] == 1 and not ele.is_selected() )or elements[checkbox] == 0 and ele.is_selected():
+            if (elements[checkbox] == 1 and not ele.is_selected() ) or elements[checkbox] == 0 and ele.is_selected():
                 ele.click()
 
         for select in process_select:
