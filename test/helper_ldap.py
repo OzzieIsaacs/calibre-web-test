@@ -8,7 +8,7 @@ except ImportError:
 from twisted.application import service
 from twisted.internet.endpoints import serverFromString
 from twisted.internet.protocol import ServerFactory
-from twisted.python.components import registerAdapter
+from twisted.python.components import registerAdapter, getAdapterFactory
 from twisted.python import log
 from ldaptor.inmemory import fromLDIFFile
 from ldaptor.interfaces import IConnectedLDAPEntry
@@ -17,7 +17,7 @@ from ldaptor.protocols.ldap.ldapserver import LDAPServer
 from ldaptor.protocols import pureldap
 from twisted.internet import defer, ssl
 from twisted.internet import reactor
-
+import time
 
 config1 = b"""\
 dn: dc=com
@@ -65,7 +65,7 @@ userPassword: eekretsay
 
 """
 
-config2 = b"""\
+config2 = """\
 dn: dc=com
 dc: com
 objectClass: dcObject
@@ -89,25 +89,39 @@ objectClass: inetOrgPerson
 sn: admin
 userPassword: secret
 
-dn: uid=user0,ou=people,dc=calibreweb,dc=com
+dn: uid=Mümmy,ou=people,dc=calibreweb,dc=com
 objectClass: person
 objectClass: organizationalPerson
 objectClass: inetOrgPerson
-uid: user0
-gn: John
-sn: Doe
+uid: Mümmy
+mail: muemmy@alfa.com
+gn: Mu
+sn: my
 userPassword: terces
 
-dn: uid=user1,ou=people, dc=calibreweb,dc=com
+dn: uid=执一,ou=people, dc=calibreweb,dc=com
 objectClass: person
 objectClass: organizationalPerson
 objectClass: inetOrgPerson
-uid: user1
-gn: John
-sn: Smith
+uid: 执一
+mail: onny@beta.org
+gn: Chinese
+sn: Character
 userPassword: eekretsay
 
-"""
+#Generic groups
+dn: ou=groups,dc=calibreweb,dc=com
+objectclass:organizationalunit
+ou: groups
+
+# create the cps entry
+dn: cn=cps,ou=groups,dc=calibreweb,dc=com
+objectclass: groupofnames
+cn: cps
+member: uid=Mümmy,ou=People,dc=calibreweb,dc=com
+member: uid=执一,ou=People,dc=calibreweb,dc=com
+
+""".encode('utf-8')
 
 config3 = b"""\
 dn: dc=com
@@ -133,26 +147,99 @@ objectClass: inetOrgPerson
 sn: admin
 userPassword: secret
 
-dn: uid=user0,ou=people,dc=calibreweb,dc=com
+dn: uid=user01,ou=people,dc=calibreweb,dc=com
 objectClass: person
 objectClass: organizationalPerson
 objectClass: inetOrgPerson
-uid: user0
+mail: user01@gamma.org
+mail: user01@beta.com
+uid: user01
 gn: John
 sn: Doe
 userPassword: terces
 
-dn: uid=user1,ou=people, dc=calibreweb,dc=com
+dn: uid=user12,ou=people, dc=calibreweb,dc=com
 objectClass: person
 objectClass: organizationalPerson
 objectClass: inetOrgPerson
-uid: user1
+uid: user12
 gn: John
 sn: Smith
 userPassword: eekretsay
 
+#Generic groups
+dn: ou=groups,dc=calibreweb,dc=com
+objectclass:organizationalunit
+ou: groups
+
+# create the cps entry
+dn: cn=cps,ou=groups,dc=calibreweb,dc=com
+objectclass: posixGroup
+cn: cps
+gidNumber: 5001
+memberUid: user01
+memberUid: user12
+
 """
 
+config4 = b"""\
+dn: dc=com
+dc: com
+objectClass: dcObject
+
+dn: dc=calibreweb,dc=com
+dc: calibreweb
+objectClass: dcObject
+objectClass: organization
+
+dn: ou=people,dc=calibreweb,dc=com
+objectClass: organizationalUnit
+ou: people
+
+dn: cn=root,dc=calibreweb,dc=com
+cn: root
+gn: root
+mail: admin@calibreweb.com
+objectclass: top
+objectclass: person
+objectClass: inetOrgPerson
+sn: admin
+userPassword: secret
+
+dn: uid=user11,ou=people,dc=calibreweb,dc=com
+objectClass: person
+objectClass: organizationalPerson
+objectClass: inetOrgPerson
+mail: user11@gamma.or
+mail: user11@beta.com
+uid: user11
+gn: John1
+sn: Doe1
+userPassword: terces
+
+dn: uid=user122,ou=people, dc=calibreweb,dc=com
+objectClass: person
+objectClass: organizationalPerson
+objectClass: inetOrgPerson
+uid: user122
+gn: John1
+sn: Smith1
+userPassword: eekretsay
+
+#Generic groups
+dn: ou=groups,dc=calibreweb,dc=com
+objectclass:organizationalunit
+ou: groups
+
+# create the cps entry
+dn: cn=cps,ou=groups,dc=calibreweb,dc=com
+objectclass: groupofnames
+cn: cps
+member: uid=user122,ou=People,dc=calibreb,dc=com
+member: cn=user124,ou=People,dc=calibreweb,dc=com
+member: uid=user13,ou=People,dc=calibreweb,dc=com
+
+"""
 class Tree(object):
 
     def __init__(self, config=0):
@@ -163,6 +250,8 @@ class Tree(object):
             LDIF = config2
         if config == 3:
             LDIF = config3
+        if config == 4:
+            LDIF = config4
         self.f = BytesIO(LDIF)
         d = fromLDIFFile(self.f)
         d.addCallback(self.ldifRead)
@@ -275,27 +364,79 @@ class TestLDApServer(threading.Thread):
             LDAPServerFactory,
             IConnectedLDAPEntry)
 
-        if encrypt == 'SSL':
-            serverEndpointStr = "ssl:{0}:privateKey=./SSL/ssl.key:certKey=./SSL/ssl.crt".format(port)
-        else:
-            if encrypt == 'TLS':
-                tls = True
-                cert = ssl.DefaultOpenSSLContextFactory('./SSL/ssl.key', './SSL/ssl.crt')
-            serverEndpointStr = "tcp:{0}".format(port)
+        if encrypt != None:
+            cert = ssl.DefaultOpenSSLContextFactory('./SSL/ssl.key', './SSL/ssl.crt')
+            #serverEndpointStr = "ssl:{0}:privateKey=./SSL/ssl.key:certKey=./SSL/ssl.crt".format(port)
+            #else:
+        if encrypt == 'TLS':
+            tls = True
+                #cert = ssl.DefaultOpenSSLContextFactory('./SSL/ssl.key', './SSL/ssl.crt')
+                # serverEndpointStr = "tcp:{0}".format(port)
         factory = LDAPServerFactory(tree.db, tls)
         if cert:
             factory.options = cert
-        factory.debug = True
-        e = serverFromString(reactor, serverEndpointStr)
-        e.listen(factory)
-        self.serv = reactor
+        factory.debug = False
+        if encrypt == 'SSL':
+            self.serv = reactor.listenSSL(port, factory, cert)
+        else:
+            self.serv = reactor.listenTCP(port, factory)
+        # self.serv = reactor.listenSSL(port, factory)
+        self.is_running = True
+
+    def stopListen(self):
+        if self.is_running:
+            def cbStopListening(result):
+                #print('Stopped: ' + result)
+                self.is_running = False
+            def errStop(failure):
+                #print('failure: ' + str(failure))
+                self.is_running = False
+            try:
+                self.serv.loseConnection()
+            except Exception:
+                print('except1')
+            try:
+                self.serv.connectionLost(reason=None)
+            except Exception:
+                print('except2')
+            d = defer.maybeDeferred(self.serv.stopListening)
+            d.addCallback(cbStopListening)
+            d.addErrback(errStop)
+            self.is_running = False
+            time.sleep(2)
+
+    def relisten(self, port=8080, encrypt=None, config=0):
+        tls = False
+        cert = None
+        self.stopListen()
+
+        if encrypt != None:
+            cert = ssl.DefaultOpenSSLContextFactory('./SSL/ssl.key', './SSL/ssl.crt')
+            #serverEndpointStr = "ssl:{0}:privateKey=./SSL/ssl.key:certKey=./SSL/ssl.crt".format(port)
+            #else:
+        if encrypt == 'TLS':
+            tls = True
+                #cert = ssl.DefaultOpenSSLContextFactory('./SSL/ssl.key', './SSL/ssl.crt')
+                # serverEndpointStr = "tcp:{0}".format(port)
+
+        tree = Tree(config)
+        factory = LDAPServerFactory(tree.db, tls)
+        if cert:
+            factory.options = cert
+        factory.debug = False
+
+        if encrypt == 'SSL':
+            self.serv = reactor.listenSSL(port, factory, contextFactory=cert)
+        else:
+            self.serv = reactor.listenTCP(port, factory)
+        self.is_running = True
 
     def is_running(self):
         return self.is_running
 
     def run(self):
         self.is_running = True
-        self.serv.run(installSignalHandlers=False)
+        reactor.run(installSignalHandlers=False)
 
     def stop_LdapServer(self):
         self.is_running = False

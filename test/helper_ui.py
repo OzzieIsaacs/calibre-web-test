@@ -258,7 +258,7 @@ class ui_class():
                                            'config_remote_login', 'config_use_goodreads', 'config_goodreads_api_key',
                                            'config_goodreads_api_secret', 'config_kobo_sync', 'config_kobo_proxy',
                                            'config_login_type', 'config_ldap_provider_url', 'config_ldap_port',
-                                           'config_ldap_encryption', 'ldap-cert-settings', 'config_ldap_serv_username',
+                                           'config_ldap_encryption', 'config_ldap_cert_path', 'config_ldap_serv_username',
                                            'config_ldap_serv_password', 'config_ldap_dn', 'config_ldap_user_object',
                                            'config_ldap_group_object_filter', 'config_ldap_group_name',
                                            'config_ldap_group_members_field', 'config_ldap_openldap']):
@@ -325,7 +325,7 @@ class ui_class():
         process_selects = dict()
         # special handling for checkboxes
         checkboxes = ['admin_role', 'download_role', 'upload_role', 'edit_role', 'delete_role', 'passwd_role',
-                        'edit_shelf_role', 'show_32', 'show_512', 'show_16', 'show_128',
+                      'viewer_role', 'edit_shelf_role', 'show_32', 'show_512', 'show_16', 'show_128',
                         'show_2', 'show_4', 'show_8', 'show_64', 'show_256', 'show_8192', 'show_16384',
                         'Show_detail_random', 'show_4096']
         options = ['config_read_column']
@@ -335,7 +335,7 @@ class ui_class():
                                            'config_random_books', 'config_columns_to_ignore',
                                            'config_restricted_column', 'config_read_column', 'config_title_regex']):
             opener.append(0)
-        if any(key in elements for key in ['admin_role', 'download_role', 'upload_role', 'edit_role',
+        if any(key in elements for key in ['admin_role', 'download_role', 'upload_role', 'edit_role', 'viewer_role',
                                            'delete_role', 'passwd_role', 'edit_shelf_role']):
             opener.append(1)
         if any(key in elements for key in ['show_32', 'show_512', 'show_16', 'show_128',
@@ -658,6 +658,46 @@ class ui_class():
         print('User: %s not found' % name)
         return False
 
+    def get_user_settings(self,name):
+        self.goto_page('admin_setup')
+        user = self.driver.find_elements_by_xpath("//table[@id='table_user']/tbody/tr/td/a")
+        for ele in user:
+            if name == ele.text:
+                ele.click()
+                if not self.check_element_on_page((By.ID, "email")):
+                    print('Could not find user: %s' % name)
+                    return False
+                else:
+                    user_settings=dict()
+                    user_settings['nickname']=self.check_element_on_page((By.ID, "nickname")).get_attribute('value')
+                    user_settings['email'] = self.check_element_on_page((By.ID, "email")).get_attribute('value')
+                    user_settings['kindle_mail'] = self.check_element_on_page((By.ID, "kindle_mail")).get_attribute('value')
+                    user_settings['locale'] = Select(self.check_element_on_page((By.ID, "locale"))).first_selected_option.text
+                    user_settings['default_language'] = Select(self.check_element_on_page((By.ID, "default_language"))).first_selected_option.text
+                    user_settings['show_2'] = int(self.check_element_on_page((By.ID, "show_2")).is_selected())
+                    user_settings['show_4'] = int(self.check_element_on_page((By.ID, "show_4")).is_selected())
+                    user_settings['show_8'] = int(self.check_element_on_page((By.ID, "show_8")).is_selected())
+                    user_settings['show_16'] = int(self.check_element_on_page((By.ID, "show_16")).is_selected())
+                    user_settings['show_32'] = int(self.check_element_on_page((By.ID, "show_32")).is_selected())
+                    user_settings['show_64'] = int(self.check_element_on_page((By.ID, "show_64")).is_selected())
+                    user_settings['show_128'] = int(self.check_element_on_page((By.ID, "show_128")).is_selected())
+                    user_settings['show_256'] = int(self.check_element_on_page((By.ID, "show_256")).is_selected())
+                    user_settings['show_512'] = int(self.check_element_on_page((By.ID, "show_512")).is_selected())
+                    # user_settings['show_1024'] = int(self.check_element_on_page((By.ID, "show_1024")).is_selected())
+                    # user_settings['show_2048'] = int(self.check_element_on_page((By.ID, "show_2048")).is_selected())
+                    user_settings['show_4096'] = int(self.check_element_on_page((By.ID, "show_4096")).is_selected())
+                    user_settings['show_8192'] = int(self.check_element_on_page((By.ID, "show_8192")).is_selected())
+                    user_settings['show_16384'] = int(self.check_element_on_page((By.ID, "show_16384")).is_selected())
+                    user_settings['Show_detail_random'] = int(self.check_element_on_page((By.ID, "Show_detail_random")).is_selected())
+                    user_settings['admin_role'] = int(self.check_element_on_page((By.ID, "admin_role")).is_selected())
+                    user_settings['download_role'] = int(self.check_element_on_page((By.ID, "download_role")).is_selected())
+                    user_settings['upload_role'] = int(self.check_element_on_page((By.ID, "upload_role")).is_selected())
+                    user_settings['edit_role'] = int(self.check_element_on_page((By.ID, "edit_role")).is_selected())
+                    user_settings['delete_role'] = int(self.check_element_on_page((By.ID, "delete_role")).is_selected())
+                    user_settings['passwd_role'] = int(self.check_element_on_page((By.ID, "passwd_role")).is_selected())
+                    user_settings['edit_shelf_role'] = int(self.check_element_on_page((By.ID, "edit_shelf_role")).is_selected())
+                    user_settings['viewer_role'] = int(self.check_element_on_page((By.ID, "viewer_role")).is_selected())
+                    return user_settings
 
     @classmethod
     def change_visibility_me(cls, nav_element):
@@ -731,6 +771,15 @@ class ui_class():
             config['nickname'] = name
         cls.goto_page('create_user')
         return cls.change_user(config)
+
+    @classmethod
+    def get_user_list(cls):
+        cls.goto_page('admin_setup')
+        userlist = cls.driver.find_elements_by_xpath("//table[@id='table_user']/tbody/tr")[1:]
+        users = list()
+        for element in userlist:
+            users.append(element.text.split(' ')[0])
+        return users
 
     @classmethod
     def change_user(cls, config):
@@ -886,12 +935,6 @@ class ui_class():
         except Exception as e:
             pass
         return ret
-
-
-    @classmethod
-    def get_user_list(cls):
-        cls.goto_page('admin_setup')
-        return cls.driver.find_elements_by_xpath("//table[@id='table_user']/tbody/tr")
 
     @classmethod
     def get_books_displayed(cls):

@@ -261,8 +261,8 @@ class test_updater(unittest.TestCase, ui_class):
         performUpdate = self.check_element_on_page((By.ID, "perform_update"))
         performUpdate.click()
         time.sleep(11)
-        self.assertTrue('Timeout' in self.check_element_on_page((By.ID, "UpdateContent")).text)
-        self.check_element_on_page((By.ID, "updateFinished")).click()
+        self.assertTrue('Timeout' in self.check_element_on_page((By.ID, "DialogContent")).text)
+        self.check_element_on_page((By.ID, "DialogFinished")).click()
 
 
     def test_perform_update_stable_errors(self):
@@ -285,8 +285,8 @@ class test_updater(unittest.TestCase, ui_class):
         performUpdate = self.check_element_on_page((By.ID, "perform_update"))
         performUpdate.click()
         time.sleep(3)
-        self.assertTrue('HTTP Error' in self.check_element_on_page((By.ID, "Updatecontent")).text)
-        self.check_element_on_page((By.ID, "updateFinished")).click()
+        self.assertTrue('HTTP Error' in self.check_element_on_page((By.ID, "DialogContent")).text)
+        self.check_element_on_page((By.ID, "DialogFinished")).click()
         time.sleep(0.5)
         val.set_type([None])
         updater = self.check_element_on_page((By.ID, "check_for_update"))
@@ -296,8 +296,8 @@ class test_updater(unittest.TestCase, ui_class):
         performUpdate = self.check_element_on_page((By.ID, "perform_update"))
         performUpdate.click()
         time.sleep(3)
-        self.assertTrue('Connection' in self.check_element_on_page((By.ID, "Updatecontent")).text)
-        self.check_element_on_page((By.ID, "updateFinished")).click()
+        self.assertTrue('Connection' in self.check_element_on_page((By.ID, "DialogContent")).text)
+        self.check_element_on_page((By.ID, "DialogFinished")).click()
         time.sleep(3)
 
         val.set_type([None])
@@ -308,8 +308,8 @@ class test_updater(unittest.TestCase, ui_class):
         performUpdate = self.check_element_on_page((By.ID, "perform_update"))
         performUpdate.click()
         time.sleep(3)
-        self.assertTrue('General' in self.check_element_on_page((By.ID, "Updatecontent")).text)
-        self.check_element_on_page((By.ID, "updateFinished")).click()
+        self.assertTrue('General' in self.check_element_on_page((By.ID, "DialogContent")).text)
+        self.check_element_on_page((By.ID, "DialogFinished")).click()
         time.sleep(3)
 
     def test_perform_update(self):
@@ -330,7 +330,7 @@ class test_updater(unittest.TestCase, ui_class):
         performUpdate = self.check_element_on_page((By.ID, "perform_update"))
         performUpdate.click()
         time.sleep(10)
-        self.check_element_on_page((By.ID, "updateFinished")).click()
+        self.check_element_on_page((By.ID, "DialogFinished")).click()
         time.sleep(3)
         # cps files not writebale
         # Additional folders, additional files

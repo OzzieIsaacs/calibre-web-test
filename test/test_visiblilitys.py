@@ -339,7 +339,7 @@ class calibre_web_visibilitys(unittest.TestCase, ui_class):
         new_user = self.check_element_on_page((By.ID, "admin_new_user"))
         if new_user:
             row_count = len(self.get_user_list())
-            self.assertEqual(row_count,2)
+            self.assertEqual(row_count,1)
             # goto add user page
             self.create_user(None, {'email': 'alfa@web.com'})
             self.assertTrue(self.check_element_on_page((By.ID, "flash_alert")))
@@ -350,7 +350,7 @@ class calibre_web_visibilitys(unittest.TestCase, ui_class):
             # check if on admin page
             if self.check_element_on_page((By.ID, "admin_new_user")):
                 row_count = len(self.get_user_list())
-                self.assertEqual(row_count,3)
+                self.assertEqual(row_count,2)
                 return
         self.assertIsNone("Error creating new users")
 
