@@ -7,9 +7,7 @@ from testconfig import TEST_DB, VENV_PYTHON, CALIBRE_WEB_PATH, BOOT_TIME
 from helper_func import startup, debug_startup, get_Host_IP, add_dependency, remove_dependency, kill_old_cps
 from selenium.webdriver.common.by import By
 from helper_ldap import TestLDApServer
-import re
-import sys
-import os
+
 
 class test_ldap_login(unittest.TestCase, ui_class):
 
@@ -20,7 +18,7 @@ class test_ldap_login(unittest.TestCase, ui_class):
 
     @classmethod
     def setUpClass(cls):
-        add_dependency(cls.dep_line, cls.__name__)
+        # add_dependency(cls.dep_line, cls.__name__)
 
         try:
             cls.server = TestLDApServer(config=1, port=3268, encrypt=None)
@@ -38,7 +36,7 @@ class test_ldap_login(unittest.TestCase, ui_class):
         cls.p.terminate()
         cls.driver.quit()
         # close the browser window and stop calibre-web
-        remove_dependency(cls.dep_line)
+        # remove_dependency(cls.dep_line)
 
     @classmethod
     def tearDown(cls):
@@ -48,6 +46,21 @@ class test_ldap_login(unittest.TestCase, ui_class):
             print(e)
 
     def test_invalid_LDAP(self):
+        # set to default
+        self.fill_basic_config({'config_ldap_provider_url': 'example.org',
+                                'config_ldap_port': '389',
+                                'config_ldap_dn': 'dc=example,dc=org',
+                                'config_ldap_serv_username': 'cn=admin,dc=example,dc=org',
+                                'config_ldap_serv_password': '1',
+                                'config_ldap_user_object': 'uid=%s',
+                                'config_ldap_group_object_filter': '(&(objectclass=posixGroup)(cn=%s))',
+                                'config_ldap_openldap': 1,
+                                'config_ldap_encryption': 'None',
+                                'config_ldap_group_name': 'calibreweb',
+                                'config_ldap_group_members_field': 'memberUid'
+                                })
+        self.assertTrue(self.check_element_on_page((By.ID, "flash_success")))
+        time.sleep(BOOT_TIME)
         # leave hostname empty and password empty
         self.fill_basic_config({'config_ldap_provider_url':''})
         message= self.check_element_on_page((By.ID, "flash_alert"))
@@ -59,9 +72,11 @@ class test_ldap_login(unittest.TestCase, ui_class):
         self.assertTrue(message)
         self.assertTrue('Service Account' in message.text)
         self.fill_basic_config({'config_ldap_serv_username': 'cn=root,dc=calibreweb,dc=com'})
-        message= self.check_element_on_page((By.ID, "flash_alert"))
-        self.assertTrue(message)
-        self.assertTrue('Service Account' in message.text)
+        # it can't be assured that password is empty if other tests run before
+        time.sleep(BOOT_TIME)
+        #message= self.check_element_on_page((By.ID, "flash_alert"))
+        #self.assertTrue(message)
+        #self.assertTrue('Service Account' in message.text)
         # leave DN empty
         self.fill_basic_config({'config_ldap_serv_password': 'secret', 'config_ldap_dn': ''})
         message= self.check_element_on_page((By.ID, "flash_alert"))
@@ -165,8 +180,10 @@ class test_ldap_login(unittest.TestCase, ui_class):
         # try login LDAP password -> fail
         self.login('user0', 'terces')
         self.assertTrue(self.check_element_on_page((By.ID, "flash_alert")))
-        # stop ldap
         self.server.stopListen()
+        self.login('admin','admin123')
+        self.assertTrue(self.check_element_on_page((By.ID, "flash_warning")))
+        # stop ldap
 
     def test_LDAP_import(self):
         # configure LDAP
