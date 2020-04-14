@@ -5,6 +5,7 @@ from selenium.webdriver.common.by import By
 from selenium.webdriver.support.ui import WebDriverWait
 from selenium.webdriver.support import expected_conditions as EC
 import time
+import requests
 from helper_ui import ui_class
 from helper_ui import RESTRICT_TAG_ME, RESTRICT_COL_ME, RESTRICT_TAG_USER, RESTRICT_COL_USER
 from testconfig import TEST_DB
@@ -357,6 +358,14 @@ class calibre_web_visibilitys(unittest.TestCase, ui_class):
     # checks if admin can change user language
     '''def test_admin_alter_user(self):
         pass'''
+
+    def test_search_functions(self):
+        cookie = self.driver.get_cookies()
+        cook = dict(session=cookie[1]['value'], remember_token=cookie[0]['value'])
+        r=requests.get('http://127.0.0.1:8083/search', cookies=cook)
+        self.assertEqual(200,r.status_code)
+        r = requests.get('http://127.0.0.1:8083/advanced_search', cookies=cook)
+        self.assertEqual(200, r.status_code)
 
     def test_restrict_tags(self):
         # create shelf with Genot content

@@ -474,6 +474,22 @@ class test_edit_books(TestCase, ui_class):
     def test_edit_publishing_date(self):
         self.assertIsNone('Not Implemented')
 
+    def test_typeahead_functions(self):
+        cookie = self.driver.get_cookies()
+        cook = dict(session=cookie[1]['value'], remember_token=cookie[0]['value'])
+        r=requests.get('http://127.0.0.1:8083/get_languages_json', cookies=cook)
+        self.assertEqual(200,r.status_code)
+        r = requests.get('http://127.0.0.1:8083/get_matching_tags', cookies=cook)
+        self.assertEqual(200, r.status_code)
+        r = requests.get('http://127.0.0.1:8083/get_series_json', cookies=cook)
+        self.assertEqual(200, r.status_code)
+        r = requests.get('http://127.0.0.1:8083/get_tags_json', cookies=cook)
+        self.assertEqual(200, r.status_code)
+        r = requests.get('http://127.0.0.1:8083/get_publishers_json', cookies=cook)
+        self.assertEqual(200, r.status_code)
+        r = requests.get('http://127.0.0.1:8083/get_authors_json', cookies=cook)
+        self.assertEqual(200, r.status_code)
+
     # change comments, add comments, delete comments
     def test_typeahead_language(self):
         self.get_book_details(5)

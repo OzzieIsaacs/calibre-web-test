@@ -38,4 +38,6 @@ Tests are running with python 3.6+ (better 3.7 as with 3.6 testing the e-mail st
 Calibre-web's app.db and logfiles will be overwritten.\
 The testresult is written to the file "calibre-web/test/Calibre-Web TestSummary.html"
 
+Hints for using pyCharm: Flask-Dance is not allowed to be installed, otherwise the calibre-web process can't be started (why?). 
+It's recommended to have gevent compatible debugging set to no and also do not attach to subprocess (created trouble in combination with email sending)
 
