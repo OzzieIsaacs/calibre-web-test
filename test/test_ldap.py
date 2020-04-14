@@ -18,7 +18,7 @@ class test_ldap_login(unittest.TestCase, ui_class):
 
     @classmethod
     def setUpClass(cls):
-        # add_dependency(cls.dep_line, cls.__name__)
+        add_dependency(cls.dep_line, cls.__name__)
 
         try:
             cls.server = TestLDApServer(config=1, port=3268, encrypt=None)
@@ -36,7 +36,7 @@ class test_ldap_login(unittest.TestCase, ui_class):
         cls.p.terminate()
         cls.driver.quit()
         # close the browser window and stop calibre-web
-        # remove_dependency(cls.dep_line)
+        remove_dependency(cls.dep_line)
 
     @classmethod
     def tearDown(cls):
