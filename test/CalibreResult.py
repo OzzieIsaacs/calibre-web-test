@@ -365,7 +365,11 @@ class CalibreResult(TextTestResult):
     @staticmethod
     def _format_duration(elapsed_time):
         """Format the elapsed time in seconds, or milliseconds if the duration is less than 1 second."""
-        if elapsed_time > 1:
+        if elapsed_time > 3600:
+            duration = '{}h {} min'.format(int(elapsed_time / 3600), int(elapsed_time % 3600))
+        elif elapsed_time > 60:
+            duration = '{}:{} min'.format(int(elapsed_time/60), int(elapsed_time%60))
+        elif elapsed_time > 1:
             duration = '{:2.2f} s'.format(elapsed_time)
         else:
             duration = '{:d} ms'.format(int(elapsed_time * 1000))
