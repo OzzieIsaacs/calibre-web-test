@@ -538,3 +538,6 @@ class test_ldap_login(unittest.TestCase, ui_class):
         self.assertTrue(self.check_element_on_page((By.ID, "flash_success")))
         # stop ldap
         self.server.stopListen()
+
+    def test_ldap_about(self):
+        self.assertTrue(self.goto_page('nav_about'))

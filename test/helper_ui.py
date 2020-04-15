@@ -261,7 +261,10 @@ class ui_class():
                                            'config_ldap_encryption', 'config_ldap_cert_path', 'config_ldap_serv_username',
                                            'config_ldap_serv_password', 'config_ldap_dn', 'config_ldap_user_object',
                                            'config_ldap_group_object_filter', 'config_ldap_group_name',
-                                           'config_ldap_group_members_field', 'config_ldap_openldap']):
+                                           'config_ldap_group_members_field', 'config_ldap_openldap',
+                                           'config_1_oauth_client_id', 'config_1_oauth_client_secret',
+                                           'config_2_oauth_client_id', 'config_2_oauth_client_secret'
+                                           ]):
             opener.append(3)
         if any(key in elements for key in ['config_ebookconverter', 'config_calibre',
                                            'config_converterpath','config_rarfile_location']):

@@ -116,3 +116,6 @@ class test_kobo_sync(unittest.TestCase, ui_class):
         self.assertEqual(r.status_code,200)
         self.assertEqual(r.json(), {})
         session.close()
+
+    def test_kobo_about(self):
+        self.assertTrue(self.goto_page('nav_about'))
