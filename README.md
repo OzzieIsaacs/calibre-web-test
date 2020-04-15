@@ -2,8 +2,9 @@
 
 ## Prerequisites
 
-- Installed python3 accessable with the command "python3"
-
+- Installed python3 accessible with the command "python3"
+- installed calibre desktop program 3.48
+- for instlling ldap requirements libsasl2-dev and libldap2-dev have to be installed (debian distro lib-names)
 - Calibre-web-test has to be located on the same folder level as calibre-web
 e.g.
 ```
@@ -34,10 +35,10 @@ Calibre-web-test
 
 ## Start Testing
 
-Tests are running with python 3.6+ (better 3.7 as with 3.6 testing the e-mail startssl/ssl functionality will be skipped) by starting ./test/main.py (tests run for ca. 45min), tested on Linux Mint 19.1. \
+Tests are running with python 3.6+ (better 3.7 as with 3.6 testing the e-mail startssl/ssl functionality will be skipped) by starting ./test/main.py (tests run for ca. 45min), tested on Linux Mint 19.3. \
 Calibre-web's app.db and logfiles will be overwritten.\
 The testresult is written to the file "calibre-web/test/Calibre-Web TestSummary.html"
 
-Hints for using pyCharm: Flask-Dance is not allowed to be installed, otherwise the calibre-web process can't be started (why?). 
-It's recommended to have gevent compatible debugging set to no and also do not attach to subprocess (created trouble in combination with email sending)
+Hints for using pyCharm: 
+It's recommended to have gevent compatible debugging set to **no** and also **do not attach to subprocess** (created trouble in combination with email sending)
 

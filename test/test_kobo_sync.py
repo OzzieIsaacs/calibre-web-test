@@ -8,7 +8,7 @@ from helper_func import startup, debug_startup, get_Host_IP, add_dependency, rem
 from selenium.webdriver.common.by import By
 # from helper_environment import environment
 import re
-import os
+import time
 
 class test_kobo_sync(unittest.TestCase, ui_class):
 
@@ -29,7 +29,9 @@ class test_kobo_sync(unittest.TestCase, ui_class):
             cls.check_element_on_page((By.ID, "config_create_kobo_token")).click()
             link = cls.check_element_on_page((By.CLASS_NAME, "well"))
             cls.kobo_adress = host + '/kobo/' + re.findall(".*/kobo/(.*)",link.text)[0]
-            print(cls.kobo_adress)
+            cls.check_element_on_page((By.ID, "kobo_close")).click()
+            time.sleep(2)
+            # print(cls.kobo_adress)
 
         except:
             cls.driver.quit()
