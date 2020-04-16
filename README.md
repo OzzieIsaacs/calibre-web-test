@@ -3,8 +3,8 @@
 ## Prerequisites
 
 - Installed python3 accessible with the command "python3"
-- installed calibre desktop program 3.48
-- for instlling ldap requirements libsasl2-dev and libldap2-dev have to be installed (debian distro lib-names)
+- installed calibre desktop program v3.48
+- for installing ldap requirements libsasl2-dev and libldap2-dev have to be installed (debian distro lib-names)
 - Calibre-web-test has to be located on the same folder level as calibre-web
 e.g.
 ```

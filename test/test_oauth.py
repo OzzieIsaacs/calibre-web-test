@@ -7,7 +7,7 @@ from testconfig import TEST_DB, BOOT_TIME
 from helper_func import startup, debug_startup, add_dependency, remove_dependency
 from selenium.webdriver.common.by import By
 
-class test_outh_login(unittest.TestCase, ui_class):
+class test_oauth_login(unittest.TestCase, ui_class):
 
     p=None
     driver = None
