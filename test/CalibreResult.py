@@ -487,8 +487,8 @@ class CalibreResult(TextTestResult):
         if not os.path.exists(dir_to):
             os.makedirs(dir_to)
 
-        if testRunner.timestamp:
-            report_name += "_" + testRunner.timestamp
+        #if testRunner.timestamp:
+        #    report_name += "_" + testRunner.timestamp
         report_name += ".html"
 
         path_file = os.path.abspath(os.path.join(dir_to, report_name))

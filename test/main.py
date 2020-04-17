@@ -72,10 +72,7 @@ if __name__ == '__main__':
     environment.init_Environment(VENV_PYTHON)
 
     all_tests = unittest.TestLoader().discover('.')
-    # open the report file
-    outfile = open(os.path.join(CALIBRE_WEB_PATH,'test',"Calibre-Web TestSummary1.html"), "w")
     # configure HTMLTestRunner options
-    #runner = HTMLTestRunner.HTMLTestRunner(stream=outfile, report_title='Test Report', report_name='All Calibre-Web tests', verbosity=2)
     outfile = os.path.join(CALIBRE_WEB_PATH, 'test')
     template = os.path.join(os.path.dirname(__file__), 'htmltemplate', 'report_template.html')
     runner = HTMLTestRunner.HTMLTestRunner(output=outfile,report_name="Calibre-Web TestSummary",
