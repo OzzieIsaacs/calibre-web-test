@@ -38,10 +38,11 @@ class test_updater(unittest.TestCase, ui_class):
     @classmethod
     def tearDownClass(cls):
         # close the browser window and stop calibre-web
+        cls.stop_calibre_web()
         cls.driver.quit()
-        cls.p.terminate()
-        cls.p.kill()
         cls.proxy.stop_proxy()
+        cls.p.terminate()
+        # Move original image back in place
         cls.return_cw()
 
 
@@ -85,7 +86,6 @@ class test_updater(unittest.TestCase, ui_class):
         if os.path.isdir(CALIBRE_WEB_PATH + '_2'):
             shutil.rmtree(CALIBRE_WEB_PATH)
             shutil.move(CALIBRE_WEB_PATH + '_2', CALIBRE_WEB_PATH)
-            # shutil.rmtree(CALIBRE_WEB_PATH + '_2')
         try:
             os.remove(os.path.join('cps_copy.zip'))
         except:

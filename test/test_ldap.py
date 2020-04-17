@@ -14,7 +14,7 @@ class test_ldap_login(unittest.TestCase, ui_class):
     p=None
     driver = None
     kobo_adress = None
-    dep_line = ["flask-simpleldap"]
+    dep_line = ["Flask-SimpleLDAP", "python-ldap"]
 
     @classmethod
     def setUpClass(cls):

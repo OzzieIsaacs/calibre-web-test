@@ -12,7 +12,7 @@ class test_oauth_login(unittest.TestCase, ui_class):
     p=None
     driver = None
     kobo_adress = None
-    dep_line = ["flask-dance", "sqlalchemy_utils"]
+    dep_line = ["flask-dance", "sqlalchemy-utils"]
 
     @classmethod
     def setUpClass(cls):

@@ -26,7 +26,7 @@ class Environment():
                 if not line.startswith('#') and not line == '\n' and not line.startswith('git'):
                     dep.append(line.split('=', 1)[0].split('>', 1)[0])
         for element in dists:
-            if element[0] in dep:
+            if element[0].replace('_','-').upper() in (name.replace('_','-').upper() for name in dep):
                 self.result.append((element[0],element[1],'Basic'))
 
 
@@ -64,7 +64,7 @@ class Environment():
                 p.wait()
                 dists = [str(d).strip().split("==") for d in p.stdout.readlines()]
                 for element in dists:
-                    if element[0] in extension:
+                    if element[0].replace('_','-').upper() in (name.replace('_','-').upper() for name in extension):
                         self.result.append((element[0],element[1],test))
             except:
                 pass

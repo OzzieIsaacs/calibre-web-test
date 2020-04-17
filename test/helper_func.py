@@ -147,8 +147,8 @@ def add_dependency(name, testclass_name):
         requirements = f.readlines()
     for element in name:
         for line in requirements:
-            if not line.startswith('#') and not line == '\n' and not line.startswith('git') and line.startswith(
-                    element):
+            if not line.startswith('#') and not line == '\n' and not line.startswith('git') and line.upper().startswith(
+                    element.upper()):
                 element_version.append(line.split('=', 1)[0].strip('>'))
                 break
 
