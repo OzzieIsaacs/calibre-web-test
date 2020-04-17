@@ -387,10 +387,11 @@ class ui_class():
         element.click()
         time.sleep (10)
 
-    def stop_calibre_web(self):
-        self.goto_page('admin_setup')
-        self.driver.find_element_by_id('admin_stop').click()
-        element = self.check_element_on_page((By.ID, "shutdown"))
+    @classmethod
+    def stop_calibre_web(cls):
+        cls.goto_page('admin_setup')
+        cls.driver.find_element_by_id('admin_stop').click()
+        element = cls.check_element_on_page((By.ID, "shutdown"))
         element.click()
 
     def list_domains(self, allow=True):

@@ -41,17 +41,14 @@ if __name__ == '__main__':
     # check pip ist installed
     if os.name != 'nt':
         pversion=list()
-        p = check_output("compgen -c python", shell=True, executable='bash')
-        out = p.splitlines()
-        for element in out:
-            if '-' not in element.decode('UTF-8'):
-                #p = process_open([element.decode('UTF-8'), "-version"])
-                #p.wait()
-                #res = p.stdout.readlines()[0]
-                p = check_output([element.decode('UTF-8'), "--version"], shell=False)
-                # res = p.splitlines()
-                pversion.append((element.decode('UTF-8'), re.match("Python\s(\d+)\.(\d+)\.(\d+)$", p.decode('utf-8'))))
-        p = process_open(["python3.6", "-m", "pip", "-V"])
+        #p = check_output("compgen -c python", shell=True, executable='bash')
+        #out = p.splitlines()
+        #for element in out:
+        #    if '-' not in element.decode('UTF-8'):
+        #        p = check_output([element.decode('UTF-8'), "--version"], shell=False)
+        #        # res = p.splitlines()
+        #        pversion.append((element.decode('UTF-8'), re.match("Python\s(\d+)\.(\d+)\.(\d+)$", p.decode('utf-8'))))
+        p = process_open(["python3.7", "-m", "pip", "-V"])
         p.wait()
         res = (p.stdout.readlines())
         pip = re.match(("pip\s(.*)\sfrom\s(.*)\s\((.*)\).*"),res[0])
