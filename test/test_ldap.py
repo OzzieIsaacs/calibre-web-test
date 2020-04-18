@@ -6,7 +6,7 @@ from helper_ui import ui_class
 from testconfig import TEST_DB, VENV_PYTHON, CALIBRE_WEB_PATH, BOOT_TIME
 from helper_func import startup, debug_startup, get_Host_IP, add_dependency, remove_dependency, kill_old_cps
 from selenium.webdriver.common.by import By
-from helper_ldap import TestLDApServer
+from helper_ldap import TestLDAPServer
 
 
 class test_ldap_login(unittest.TestCase, ui_class):
@@ -21,10 +21,10 @@ class test_ldap_login(unittest.TestCase, ui_class):
         add_dependency(cls.dep_line, cls.__name__)
 
         try:
-            cls.server = TestLDApServer(config=1, port=3268, encrypt=None)
+            cls.server = TestLDAPServer(config=1, port=3268, encrypt=None)
             cls.server.start()
             startup(cls, cls.py_version, {'config_calibre_dir':TEST_DB,'config_login_type':'Use LDAP Authentication'})
-            print('stop in setup')
+            # print('stop in setup')
             cls.server.stopListen()
         except Exception as e:
             cls.driver.quit()
@@ -50,6 +50,7 @@ class test_ldap_login(unittest.TestCase, ui_class):
         self.fill_basic_config({'config_ldap_provider_url': 'example.org',
                                 'config_ldap_port': '389',
                                 'config_ldap_dn': 'dc=example,dc=org',
+                                'config_ldap_authentication' : 'Simple',
                                 'config_ldap_serv_username': 'cn=admin,dc=example,dc=org',
                                 'config_ldap_serv_password': '1',
                                 'config_ldap_user_object': 'uid=%s',
@@ -70,8 +71,18 @@ class test_ldap_login(unittest.TestCase, ui_class):
         self.fill_basic_config({'config_ldap_provider_url': '127.0.0.1', 'config_ldap_serv_username': ''})
         message= self.check_element_on_page((By.ID, "flash_alert"))
         self.assertTrue(message)
+        self.assertTrue('Password' in message.text)
+        # leave administrator empty and change to Unauthenticated
+        self.fill_basic_config({'config_ldap_authentication': 'Unauthenticated'})
+        message= self.check_element_on_page((By.ID, "flash_alert"))
+        self.assertTrue(message)
         self.assertTrue('Service Account' in message.text)
-        self.fill_basic_config({'config_ldap_serv_username': 'cn=root,dc=calibreweb,dc=com'})
+        # leave administrator empty and change to Unauthenticated
+        self.fill_basic_config({'config_ldap_authentication': 'Anonymous'})
+        message= self.check_element_on_page((By.ID, "flash_success"))
+        time.sleep(BOOT_TIME)
+        self.fill_basic_config({'config_ldap_authentication': 'Simple',
+                                'config_ldap_serv_username': 'cn=root,dc=calibreweb,dc=com'})
         # it can't be assured that password is empty if other tests run before
         time.sleep(BOOT_TIME)
         #message= self.check_element_on_page((By.ID, "flash_alert"))
@@ -135,6 +146,7 @@ class test_ldap_login(unittest.TestCase, ui_class):
         # configure ldap correct
         self.fill_basic_config({'config_ldap_provider_url': '127.0.0.1',
                                 'config_ldap_port': '3268',
+                                'config_ldap_authentication': 'Simple',
                                 'config_ldap_dn': 'ou=people,dc=calibreweb,dc=com',
                                 'config_ldap_serv_username': 'cn=root,dc=calibreweb,dc=com',
                                 'config_ldap_serv_password': 'secret',
@@ -170,6 +182,17 @@ class test_ldap_login(unittest.TestCase, ui_class):
         self.login('user0', '1234')
         self.assertTrue(self.check_element_on_page((By.ID, "flash_alert")))
         # login as admin
+        '''self.login('admin','admin123')
+        # configure wrong setting
+        self.fill_basic_config({'config_ldap_user_object': '(uid=)'})
+        self.assertTrue(self.check_element_on_page((By.ID, "flash_alert")))
+        #logout
+        self.logout()
+        # try login
+        self.login('user0', 'terces')
+        self.assertTrue(self.check_element_on_page((By.ID, "flash_alert")))'''
+
+        #login as admin
         self.login('admin','admin123')
         self.assertTrue(self.check_element_on_page((By.ID, "flash_warning")))
         # delete user
@@ -180,15 +203,18 @@ class test_ldap_login(unittest.TestCase, ui_class):
         # try login LDAP password -> fail
         self.login('user0', 'terces')
         self.assertTrue(self.check_element_on_page((By.ID, "flash_alert")))
+
+        # stop ldap
         self.server.stopListen()
         self.login('admin','admin123')
         self.assertTrue(self.check_element_on_page((By.ID, "flash_warning")))
-        # stop ldap
 
     def test_LDAP_import(self):
         # configure LDAP
+        # ToDo: configuration of different authentication settings
         self.fill_basic_config({'config_ldap_provider_url': '127.0.0.1',
                                 'config_ldap_port': '3268',
+                                'config_ldap_authentication': 'Simple',
                                 'config_ldap_dn': 'dc=calibreweb,dc=com',
                                 'config_ldap_serv_username': 'cn=root,dc=calibreweb,dc=com',
                                 'config_ldap_serv_password': 'secret',
@@ -392,6 +418,7 @@ class test_ldap_login(unittest.TestCase, ui_class):
         # configure ssl LDAP
         self.fill_basic_config({'config_ldap_provider_url': '127.0.0.1',
                                 'config_ldap_port': '3268',
+                                'config_ldap_authentication': 'Simple',
                                 'config_ldap_dn': 'ou=people,dc=calibreweb,dc=com',
                                 'config_ldap_serv_username': 'cn=root,dc=calibreweb,dc=com',
                                 'config_ldap_serv_password': 'secret',
@@ -438,6 +465,7 @@ class test_ldap_login(unittest.TestCase, ui_class):
         # configure LDAP STARTTLS
         self.fill_basic_config({'config_ldap_provider_url': '127.0.0.1',
                                 'config_ldap_port': '3268',
+                                'config_ldap_authentication': 'Simple',
                                 'config_ldap_dn': 'ou=people,dc=calibreweb,dc=com',
                                 'config_ldap_serv_username': 'cn=root,dc=calibreweb,dc=com',
                                 'config_ldap_serv_password': 'secret',
@@ -541,3 +569,82 @@ class test_ldap_login(unittest.TestCase, ui_class):
 
     def test_ldap_about(self):
         self.assertTrue(self.goto_page('nav_about'))
+
+    def test_ldap_authentication(self):
+        self.fill_basic_config({'config_ldap_provider_url': '127.0.0.1',
+                                'config_ldap_port': '3268',
+                                'config_ldap_authentication': 'Anonymous',
+                                'config_ldap_dn': 'ou=people,dc=calibreweb,dc=com',
+                                'config_ldap_user_object': 'uid=%s',
+                                'config_ldap_group_object_filter': '',
+                                'config_ldap_openldap': 1,
+                                'config_ldap_encryption': 'None'
+                                })
+        self.assertTrue(self.check_element_on_page((By.ID, "flash_success")))
+        time.sleep(BOOT_TIME)
+        # create user
+        self.create_user('user0',{'email':'user0@exi.com','password':'1236'})
+        self.assertTrue(self.check_element_on_page((By.ID, "flash_success")))
+
+        self.server.relisten(config=1, port=3268, encrypt=None, auth=0)
+        # logout
+        self.logout()
+        # login as LDAP user
+        self.login('user0', 'terces')
+        self.assertTrue(self.check_element_on_page((By.ID, "flash_success")))
+        # logout
+        self.logout()
+
+        # Change server to min unauthenticated
+        self.server.relisten(config=1, port=3268, encrypt=None, auth=1)
+        # login as LDAP user
+        self.login('user0', 'terces')
+        message=self.check_element_on_page((By.ID, "flash_alert"))
+        self.assertTrue(message)
+        self.assertTrue('admin login' in message.text)
+        # login as admin
+        self.login('admin', 'admin123')
+        self.assertTrue(self.check_element_on_page((By.ID, "flash_warning")))
+        # change config to Unauthenticated
+        self.fill_basic_config({'config_ldap_authentication': 'Unauthenticated',
+                                'config_ldap_serv_username': 'cn=root,dc=calibreweb,dc=com'})
+        self.assertTrue(self.check_element_on_page((By.ID, "flash_success")))
+        time.sleep(BOOT_TIME)
+        # logout
+        self.logout()
+        # login as LDAP user
+        self.login('user0', 'terces')
+        self.assertTrue(self.check_element_on_page((By.ID, "flash_success")))
+        # logout
+        self.logout()
+        # Change server to min authenticate
+        self.server.relisten(config=1, port=3268, encrypt=None, auth=2)
+
+        # login as LDAP user
+        self.login('user0', 'terces')
+        message = self.check_element_on_page((By.ID, "flash_alert"))
+        self.assertTrue(message)
+        self.assertTrue('admin login' in message.text)
+        # login as admin
+
+        # login as admin
+        self.login('admin', 'admin123')
+        self.assertTrue(self.check_element_on_page((By.ID, "flash_warning")))
+        # change config to Unauthenticated
+        self.fill_basic_config({'config_ldap_authentication': 'Simple',
+                                'config_ldap_serv_password': 'secret'})
+        self.assertTrue(self.check_element_on_page((By.ID, "flash_success")))
+        time.sleep(BOOT_TIME)
+
+        self.logout()
+        # login as LDAP user
+        self.login('user0', 'terces')
+        self.assertTrue(self.check_element_on_page((By.ID, "flash_success")))
+        self.logout()
+        # login as admin
+        self.login('admin', 'admin123')
+        self.assertTrue(self.check_element_on_page((By.ID, "flash_warning")))
+        self.edit_user('user0', {'delete': 1})
+        self.assertTrue(self.check_element_on_page((By.ID, "flash_success")))
+        # stop ldap
+        self.server.stopListen()

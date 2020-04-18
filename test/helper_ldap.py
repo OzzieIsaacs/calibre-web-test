@@ -5,10 +5,8 @@ try:
 except ImportError:
     from io import BytesIO
 
-from twisted.application import service
-from twisted.internet.endpoints import serverFromString
 from twisted.internet.protocol import ServerFactory
-from twisted.python.components import registerAdapter, getAdapterFactory
+from twisted.python.components import registerAdapter
 from twisted.python import log
 from ldaptor.inmemory import fromLDIFFile
 from ldaptor.interfaces import IConnectedLDAPEntry
@@ -17,7 +15,13 @@ from ldaptor.protocols.ldap.ldapserver import LDAPServer
 from ldaptor.protocols import pureldap
 from twisted.internet import defer, ssl
 from twisted.internet import reactor
+from ldaptor.protocols.ldap import distinguishedname
+# from ldaptor import interfaces
 import time
+
+LDAP_AUTH_ANON   = 0
+LDAP_AUTH_UNAUTH = 1
+LDAP_AUTH_SIMPLE = 2
 
 config1 = b"""\
 dn: dc=com
@@ -271,14 +275,60 @@ class LDAPSTARTTLSServer(LDAPServer):
     def __init__(self):
         LDAPServer.__init__(self)
         self.startTLS_initiated = False
+        self.authentication = LDAP_AUTH_SIMPLE
+
+    def _handle_Bind(self, request, controls, reply):
+        if request.version != 3:
+            raise ldaperrors.LDAPProtocolError(
+                'Version %u not supported' % request.version)
+
+        self.checkControls(controls)
+
+        if request.dn == b'' and self.authentication == LDAP_AUTH_ANON:
+            # anonymous bind
+            self.boundUser = None
+            return pureldap.LDAPBindResponse(resultCode=0)
+        else:
+            dn = distinguishedname.DistinguishedName(request.dn)
+            root = IConnectedLDAPEntry(self.factory)
+            d = root.lookup(dn)
+
+            def _noEntry(fail):
+                fail.trap(ldaperrors.LDAPNoSuchObject)
+                return None
+            d.addErrback(_noEntry)
+
+            def _gotEntry(entry, auth):
+                if entry is None:
+                    raise ldaperrors.LDAPInvalidCredentials()
+                # hack for unauth request
+                if self.authentication == LDAP_AUTH_UNAUTH and auth == b'':
+                    self.boundUser = entry
+                    msg = pureldap.LDAPBindResponse(
+                        resultCode=ldaperrors.Success.resultCode,
+                        matchedDN=entry.dn.getText())
+                    return msg
+                else:
+                    d = entry.bind(auth)
+
+                    def _cb(entry):
+                        self.boundUser = entry
+                        msg = pureldap.LDAPBindResponse(
+                            resultCode=ldaperrors.Success.resultCode,
+                            matchedDN=entry.dn.getText())
+                        return msg
+                    d.addCallback(_cb)
+                    return d
+            d.addCallback(_gotEntry, request.auth)
+
+            return d
 
     def handle_LDAPBindRequest(self, request, controls, reply):
         if not self.startTLS_initiated and self.use_tls:
-            # raise ldaperrors.LDAPStrongAuthRequired()
-            # log.msg('Wrong binding')
             raise ldaperrors.LDAPConfidentialityRequired()
         else:
-            return LDAPServer.handle_LDAPBindRequest(self, request, controls, reply)
+            return self._handle_Bind(request, controls, reply)
+            # return LDAPServer.handle_LDAPBindRequest(self, request, controls, reply)
 
     def handle_LDAPUnBindRequest(self, request, controls, reply):
         self.startTLS_initiated = False
@@ -337,42 +387,41 @@ class LDAPSTARTTLSServer(LDAPServer):
 class LDAPServerFactory(ServerFactory):
     protocol = LDAPServer
 
-    def __init__(self, root, tls):
+    def __init__(self, root, tls, auth):
         self.root = root
         self.use_TLS = tls
+        self.authentication = auth
 
     def buildProtocol(self, addr):
         proto = LDAPSTARTTLSServer()
         proto.debug = self.debug
         proto.use_tls = self.use_TLS
+        proto.authentication = self.authentication
         proto.factory = self
         return proto
 
-class TestLDApServer(threading.Thread):
-    def __init__(self, port=8080, encrypt=None, config=0):
+
+class TestLDAPServer(threading.Thread):
+    def __init__(self, port=8080, encrypt=None, config=0, auth=LDAP_AUTH_SIMPLE):
         threading.Thread.__init__(self)
         self.is_running=False
-        tls = False
-        cert = None
-        # First of all, to show logging info in stdout :
-        # log.startLogging(sys.stderr)
-        # We initialize our tree
-        tree = Tree(config)
 
         registerAdapter(
             lambda x: x.root,
             LDAPServerFactory,
             IConnectedLDAPEntry)
 
+        self._createListner(port, encrypt, config, auth)
+
+    def _createListner(self, port, encrypt, config, auth):
+        tls = False
+        cert = None
+        tree = Tree(config)
         if encrypt != None:
             cert = ssl.DefaultOpenSSLContextFactory('./SSL/ssl.key', './SSL/ssl.crt')
-            #serverEndpointStr = "ssl:{0}:privateKey=./SSL/ssl.key:certKey=./SSL/ssl.crt".format(port)
-            #else:
         if encrypt == 'TLS':
             tls = True
-                #cert = ssl.DefaultOpenSSLContextFactory('./SSL/ssl.key', './SSL/ssl.crt')
-                # serverEndpointStr = "tcp:{0}".format(port)
-        factory = LDAPServerFactory(tree.db, tls)
+        factory = LDAPServerFactory(tree.db, tls, auth)
         if cert:
             factory.options = cert
         factory.debug = False
@@ -383,53 +432,48 @@ class TestLDApServer(threading.Thread):
         # self.serv = reactor.listenSSL(port, factory)
         self.is_running = True
 
+
     def stopListen(self):
         if self.is_running:
-            def cbStopListening(result):
-                #print('Stopped: ' + result)
-                self.is_running = False
-            def errStop(failure):
-                #print('failure: ' + str(failure))
-                self.is_running = False
-            try:
+            def cbloseConnection(result):
+                return
+                #print('Connection: ' + result)
+                # self.is_running = False
+            def cberrloseConnection(failure):#
+                return
+                #print('failure Connect: ' + str(failure))
+                #self.is_running = False
+
+            # e = self.serv.loseConnection()
+            e = defer.maybeDeferred(self.serv.loseConnection)
+            e.addCallback(cbloseConnection)
+            e.addErrback(cberrloseConnection)
+            time.sleep(2)
+            '''try:
                 self.serv.loseConnection()
             except Exception:
-                print('except1')
+                print('except1')'''
             try:
                 self.serv.connectionLost(reason=None)
             except Exception:
-                print('except2')
+                pass
+
+            def cbStopListening(result):
+                # print('Stopped: ' + result)
+                self.is_running = False
+            def cberrStop(failure):
+                # print('failure: ' + str(failure))
+                self.is_running = False
+
             d = defer.maybeDeferred(self.serv.stopListening)
             d.addCallback(cbStopListening)
-            d.addErrback(errStop)
+            d.addErrback(cberrStop)
             self.is_running = False
             time.sleep(2)
 
-    def relisten(self, port=8080, encrypt=None, config=0):
-        tls = False
-        cert = None
+    def relisten(self, port=8080, encrypt=None, config=0, auth = LDAP_AUTH_SIMPLE):
         self.stopListen()
-
-        if encrypt != None:
-            cert = ssl.DefaultOpenSSLContextFactory('./SSL/ssl.key', './SSL/ssl.crt')
-            #serverEndpointStr = "ssl:{0}:privateKey=./SSL/ssl.key:certKey=./SSL/ssl.crt".format(port)
-            #else:
-        if encrypt == 'TLS':
-            tls = True
-                #cert = ssl.DefaultOpenSSLContextFactory('./SSL/ssl.key', './SSL/ssl.crt')
-                # serverEndpointStr = "tcp:{0}".format(port)
-
-        tree = Tree(config)
-        factory = LDAPServerFactory(tree.db, tls)
-        if cert:
-            factory.options = cert
-        factory.debug = False
-
-        if encrypt == 'SSL':
-            self.serv = reactor.listenSSL(port, factory, contextFactory=cert)
-        else:
-            self.serv = reactor.listenTCP(port, factory)
-        self.is_running = True
+        self._createListner(port, encrypt, config, auth)
 
     def is_running(self):
         return self.is_running
