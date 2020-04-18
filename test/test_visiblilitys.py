@@ -40,9 +40,10 @@ class calibre_web_visibilitys(unittest.TestCase, ui_class):
 
     @classmethod
     def tearDownClass(cls):
+        cls.stop_calibre_web()
         # close the browser window and stop calibre-web
         cls.driver.quit()
-        cls.p.kill()
+        cls.p.terminate()
 
     def test_checked_logged_in(self):
         # get the search textbox

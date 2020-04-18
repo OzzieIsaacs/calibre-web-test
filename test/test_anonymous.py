@@ -7,7 +7,7 @@ from helper_ui import ui_class
 from testconfig import TEST_DB
 from helper_func import startup
 from parameterized import parameterized_class
-
+import time
 
 '''@parameterized_class([
    { "py_version": u'/usr/bin/python'},
@@ -23,9 +23,10 @@ class test_anonymous(unittest.TestCase, ui_class):
 
     @classmethod
     def tearDownClass(cls):
+        cls.stop_calibre_web()
         #close the browser window and stop calibre-web
         cls.driver.quit()
-        cls.p.kill()
+        cls.p.terminate()
 
     def tearDown(self):
         if not self.check_user_logged_in('admin'):
@@ -38,7 +39,7 @@ class test_anonymous(unittest.TestCase, ui_class):
         self.assertFalse(self.goto_page('nav_about'))
 
     # Checks if random book section is available in all sidebar menus
-    def test_guest_random_books_available(self):
+    def ntest_guest_random_books_available(self):
         self.edit_user('Guest',{'show_512':1, 'show_128':1, 'show_2': 1, 'show_64':1,
                                 'show_16': 1, 'show_4': 1, 'show_4096': 1, 'show_8': 1, 'show_32':1})
         self.logout()
@@ -92,7 +93,7 @@ class test_anonymous(unittest.TestCase, ui_class):
 
 
     # checks if admin can configure sidebar for random view
-    def test_guest_visibility_sidebar(self):
+    def ntest_guest_visibility_sidebar(self):
         self.edit_user('Guest',{'show_32':0, 'show_512':1, 'show_128':1, 'show_2': 1,
                                 'show_16': 1, 'show_4': 1, 'show_4096': 1, 'show_8': 1, 'show_64':1})
         self.assertTrue(self.check_element_on_page((By.ID, "flash_success")))
@@ -177,7 +178,7 @@ class test_anonymous(unittest.TestCase, ui_class):
                                 'show_16': 0, 'show_4': 0, 'show_4096': 0, 'show_8': 0, 'show_64':0})
 
     # Test if user can change visibility of sidebar view best rated books
-    def test_guest_change_visibility_rated(self):
+    def ntest_guest_change_visibility_rated(self):
         self.edit_user('Guest',{'show_128':1})
         self.assertTrue(self.check_element_on_page((By.ID, "flash_success")))
         self.logout()
@@ -190,7 +191,7 @@ class test_anonymous(unittest.TestCase, ui_class):
         self.assertFalse(self.check_element_on_page((By.ID, "nav_rated")))
 
     # Test if user can change visibility of sidebar view read and unread books
-    def test_guest_visibility_read(self):
+    def ntest_guest_visibility_read(self):
         self.goto_page('admin_setup')
         user = self.driver.find_elements_by_xpath("//table[@id='table_user']/tbody/tr/td/a")
         for ele in user:
@@ -199,7 +200,7 @@ class test_anonymous(unittest.TestCase, ui_class):
                 self.assertFalse(self.check_element_on_page((By.ID, "show_256")))
 
     # checks if admin can change user language
-    def test_guest_change_visibility_language(self):
+    def ntest_guest_change_visibility_language(self):
         self.edit_user('Guest', {'show_2': 1})
         self.assertTrue(self.check_element_on_page((By.ID, "flash_success")))
         self.logout()
@@ -212,7 +213,7 @@ class test_anonymous(unittest.TestCase, ui_class):
         self.assertFalse(self.check_element_on_page((By.ID, "nav_lang")))
 
     # checks if admin can change hot books
-    def test_guest_change_visibility_hot(self):
+    def ntest_guest_change_visibility_hot(self):
         self.edit_user('Guest', {'show_16': 1})
         self.assertTrue(self.check_element_on_page((By.ID, "flash_success")))
         self.logout()
@@ -225,7 +226,7 @@ class test_anonymous(unittest.TestCase, ui_class):
         self.assertFalse(self.check_element_on_page((By.ID, "nav_hot")))
 
     # checks if admin can change series
-    def test_guest_change_visibility_series(self):
+    def ntest_guest_change_visibility_series(self):
         self.edit_user('Guest', {'show_4': 1})
         self.assertTrue(self.check_element_on_page((By.ID, "flash_success")))
         self.logout()
@@ -238,7 +239,7 @@ class test_anonymous(unittest.TestCase, ui_class):
         self.assertFalse(self.check_element_on_page((By.ID, "nav_serie")))
 
     # checks if admin can change publisher
-    def test_guest_change_visibility_publisher(self):
+    def ntest_guest_change_visibility_publisher(self):
         self.edit_user('Guest', {'show_4096': 1})
         self.assertTrue(self.check_element_on_page((By.ID, "flash_success")))
         self.logout()
@@ -251,7 +252,7 @@ class test_anonymous(unittest.TestCase, ui_class):
         self.assertFalse(self.check_element_on_page((By.ID, "nav_publisher")))
 
     # checks if admin can change categories
-    def test_guest_change_visibility_category(self):
+    def ntest_guest_change_visibility_category(self):
         self.edit_user('Guest', {'show_8': 1})
         self.assertTrue(self.check_element_on_page((By.ID, "flash_success")))
         self.logout()
@@ -264,7 +265,7 @@ class test_anonymous(unittest.TestCase, ui_class):
         self.logout()
         self.assertFalse(self.check_element_on_page((By.ID, "nav_cat")))
 
-    def test_check_locale_guest(self):
+    def ntest_check_locale_guest(self):
         self.goto_page('admin_setup')
         user = self.driver.find_elements_by_xpath("//table[@id='table_user']/tbody/tr/td/a")
         for ele in user:

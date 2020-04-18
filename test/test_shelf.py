@@ -32,9 +32,10 @@ class test_shelf(unittest.TestCase, ui_class):
 
     @classmethod
     def tearDownClass(cls):
+        cls.stop_calibre_web()
         # close the browser window and stop calibre-web
         cls.driver.quit()
-        cls.p.kill()
+        cls.p.terminate()
 
     def tearDown(self):
         if not self.check_user_logged_in('admin'):

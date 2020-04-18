@@ -26,6 +26,7 @@ class test_OAuth_login(unittest.TestCase, ui_class):
 
     @classmethod
     def tearDownClass(cls):
+        cls.stop_calibre_web()
         cls.p.terminate()
         cls.driver.quit()
         # close the browser window and stop calibre-web

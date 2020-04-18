@@ -36,10 +36,11 @@ class test_logging(unittest.TestCase, ui_class):
 
     @classmethod
     def tearDownClass(cls):
+        cls.stop_calibre_web()
         # close the browser window and stop calibre-web
         cls.driver.quit()
         cls.p.terminate()
-        cls.p.kill()
+        # cls.p.kill()
 
     def test_failed_login(self):
         self.driver.find_element_by_id("logout").click()

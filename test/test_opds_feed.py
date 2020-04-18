@@ -27,6 +27,8 @@ class test_opds_feed(unittest.TestCase, ui_class):
 
     @classmethod
     def tearDownClass(cls):
+        cls.login('admin','admin123')
+        cls.stop_calibre_web()
         # close the browser window and stop calibre-web
         cls.driver.quit()
         cls.p.terminate()

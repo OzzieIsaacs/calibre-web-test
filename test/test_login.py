@@ -30,9 +30,11 @@ class test_login(unittest.TestCase, ui_class):
 
     @classmethod
     def tearDownClass(cls):
+        cls.login('admin','admin123')
+        cls.stop_calibre_web()
         # close the browser window and stop calibre-web
         cls.driver.quit()
-        cls.p.kill()
+        cls.p.terminate()
 
     def tearDown(self):
         if self.check_user_logged_in('', True):

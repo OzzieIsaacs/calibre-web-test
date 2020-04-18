@@ -38,10 +38,11 @@ class test_edit_books(TestCase, ui_class):
     @classmethod
     def tearDownClass(cls):
         remove_dependency(cls.dependencys)
+        cls.stop_calibre_web()
         # close the browser window and stop calibre-web
         cls.driver.quit()
         cls.p.terminate()
-        cls.p.kill()
+        # cls.p.kill()
 
     # goto Book 1
     # Change Title with unicode chars

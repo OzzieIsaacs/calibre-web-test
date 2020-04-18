@@ -69,10 +69,11 @@ class test_user_template(unittest.TestCase, ui_class):
 
     @classmethod
     def tearDownClass(cls):
+        cls.stop_calibre_web()
         # close the browser window and stop calibre-web
         cls.driver.quit()
         cls.p.terminate()
-        cls.p.kill()
+        # cls.p.kill()
 
     def tearDown(self):
         if not self.check_user_logged_in('admin'):

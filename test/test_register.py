@@ -42,9 +42,11 @@ class test_register(unittest.TestCase, ui_class):
 
     @classmethod
     def tearDownClass(cls):
+        cls.login('admin', 'admin123')
+        cls.stop_calibre_web()
         # close the browser window and stop calibre-web
         cls.driver.quit()
-        cls.p.kill()
+        cls.p.terminate()
         cls.email_server.stop()
 
     def tearDown(self):

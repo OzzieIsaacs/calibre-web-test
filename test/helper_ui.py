@@ -389,11 +389,20 @@ class ui_class():
         time.sleep (10)
 
     @classmethod
-    def stop_calibre_web(cls):
+    def stop_calibre_web(cls, proc=None):
         cls.goto_page('admin_setup')
         cls.driver.find_element_by_id('admin_stop').click()
         element = cls.check_element_on_page((By.ID, "shutdown"))
         element.click()
+        try:
+            if cls.p:
+                time.sleep(3)
+                cls.p.poll()
+        except Exception as e:
+            pass
+        if proc:
+            time.sleep(3)
+            proc.poll()
 
     def list_domains(self, allow=True):
         if not self.check_element_on_page((By.ID, "mail_server")):
@@ -463,6 +472,7 @@ class ui_class():
         else:
             submit = self.check_element_on_page((By.ID, "btncancel"))
         submit.click()
+        time.sleep(2)
 
     def add_domains(self, new_value, allow=True):
         if allow:
