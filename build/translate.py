@@ -4,11 +4,11 @@
 import subprocess
 import sys
 import glob, os
-import shutil
 import json
-from config import FILEPATH
+from config import FILEPATH, WIKIPATH
 import msgpack
 import babel.messages.pofile as pofile
+from babel import Locale as LC
 
 decoders = (
     None,
@@ -45,6 +45,8 @@ p.wait()
 out_iso = dict()
 os.chdir(workdir)
 invers_lang_table = [x for x in need_iso['3bto3t'].values()]
+translation_list = list()
+
 for file in glob.glob1("./translations", "*.po"):
     langcode=file[23:-3]
     # Remove old content from po file
@@ -68,7 +70,8 @@ for file in glob.glob1("./translations", "*.po"):
     languageFile=open("./translations/"+file)
     LanguageTranslation=pofile.read_po(languageFile)
     languageFile.close()
-    print("Language: {} {} of strings {} translated".format(langcode, count, allMsg))
+    lang_name = LC.parse(langcode).get_language_name('en')
+    translation_list.append("| {} | {} of strings {} translated |".format(lang_name, count, allMsg))
     iso_translations = dict()
     for msg in LanguageTranslation:
         if msg.id:
@@ -103,10 +106,22 @@ from __future__ import unicode_literals
 
 '''
 
+headline = '''## Translation status
+
+The following user languages are available:
+
+| Language  | Translations  |
+| ---------- |:---------:|
+'''
+
 with open(os.path.join(FILEPATH,'cps', 'iso_language_names.py'), 'w', encoding='utf8') as f:
     f.write(header)
     f.write('LANGUAGE_NAMES = ')
     json.dump(out_iso, f, indent=4, ensure_ascii=False)
+
+with open(os.path.join(WIKIPATH, 'Translation-Status.md'), 'w', encoding='utf8') as f:
+    f.write(headline)
+    f.write("\r\n".join(translation_list))
 
 # Generate .mo files
 trans_path = "cps/translations"

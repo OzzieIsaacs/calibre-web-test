@@ -1242,11 +1242,11 @@ class ui_class():
             content.pop('rating')
 
         if 'description' in content:
-            cls.driver.switch_to_frame("description_ifr")
+            cls.driver.switch_to.frame("description_ifr")
             ele = cls.check_element_on_page((By.ID, 'tinymce'))
             ele.clear()
             ele.send_keys(content['description'])
-            cls.driver.switch_to_default_content()
+            cls.driver.switch_to.default_content()
             content.pop('description')
 
 
@@ -1271,6 +1271,14 @@ class ui_class():
         submit = cls.check_element_on_page((By.ID, "submit"))
         submit.click()
         return
+
+    def delete_book(self, id):
+        self.get_book_details(id)
+        self.check_element_on_page((By.ID, "edit_book")).click()
+        self.check_element_on_page((By.ID, "delete")).click()
+        self.check_element_on_page((By.ID, "delete_confirm")).click()
+        time.sleep(2)
+
 
     @classmethod
     def get_convert_book(cls, id=-1, root_url='http://127.0.0.1:8083'):

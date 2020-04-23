@@ -661,7 +661,7 @@ class test_edit_books(TestCase, ui_class):
         resp = requests.get( 'http://127.0.0.1:8083/cover/5', cookies=cook)
         self.assertEqual('17420',resp.headers['Content-Length'])
 
-    # check metadata rekognition
+    # check metadata recognition
     def test_upload_book_pdf(self):
         self.fill_basic_config({'config_uploading':1})
         time.sleep(2)
