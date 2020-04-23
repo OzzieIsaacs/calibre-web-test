@@ -17,6 +17,7 @@ from helper_environment import environment
 from subprocess import check_output
 
 if __name__ == '__main__':
+    sub_dependencys = ["Werkzeug", "Jinja2", "singledispatch"]
     result=False
     retry=0
     while True:
@@ -41,13 +42,6 @@ if __name__ == '__main__':
     # check pip ist installed
     if os.name != 'nt':
         pversion=list()
-        #p = check_output("compgen -c python", shell=True, executable='bash')
-        #out = p.splitlines()
-        #for element in out:
-        #    if '-' not in element.decode('UTF-8'):
-        #        p = check_output([element.decode('UTF-8'), "--version"], shell=False)
-        #        # res = p.splitlines()
-        #        pversion.append((element.decode('UTF-8'), re.match("Python\s(\d+)\.(\d+)\.(\d+)$", p.decode('utf-8'))))
         p = process_open(["python3.7", "-m", "pip", "-V"])
         p.wait()
         res = (p.stdout.readlines())
@@ -63,10 +57,10 @@ if __name__ == '__main__':
     print("Creating virtual environment for testing")
 
 
-    requirements_file = os.path.join(CALIBRE_WEB_PATH,'requirements.txt')
+    requirements_file = os.path.join(CALIBRE_WEB_PATH, 'requirements.txt')
     p = process_open([VENV_PYTHON, "-m", "pip", "install", "-r",requirements_file],(0,5))
     p.wait()
-    environment.init_Environment(VENV_PYTHON)
+    environment.init_Environment(VENV_PYTHON, sub_dependencys)
 
     all_tests = unittest.TestLoader().discover('.')
     # configure HTMLTestRunner options

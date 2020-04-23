@@ -157,7 +157,7 @@ def add_dependency(name, testclass_name):
             r.wait()
             # r.terminate()
 
-    environment.add_Environemnt(testclass_name, element_version)
+    environment.add_Environment(testclass_name, element_version)
 
 def remove_dependency(names):
     for name in names:

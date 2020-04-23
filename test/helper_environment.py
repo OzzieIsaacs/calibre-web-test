@@ -10,7 +10,7 @@ import pkg_resources
 class Environment():
     def __init__(self):
         self.initial = None
-        dep=list()
+        dep = list()
         self.result=list()
         uname = platform.uname()
         self.result.append(('Platform','{0.system} {0.release} {0.version} {0.processor} {0.machine}'.format(uname)))
@@ -25,17 +25,19 @@ class Environment():
             for line in f:
                 if not line.startswith('#') and not line == '\n' and not line.startswith('git'):
                     dep.append(line.split('=', 1)[0].split('>', 1)[0])
+        normalized_dep = [name.replace('_', '-').upper() for name in dep]
         for element in dists:
-            if element[0].replace('_','-').upper() in (name.replace('_','-').upper() for name in dep):
-                self.result.append((element[0],element[1],'Basic'))
+            if element[0].replace('_','-').upper() in normalized_dep:
+                self.result.append((element[0],element[1], 'Basic'))
 
 
-    def init_Environment(self, initial):
+    def init_Environment(self, initial, sub_dependencys=list()):
         self.initial = initial
-        dep = list()
+        dep = sub_dependencys
         self.result = list()
         uname = platform.uname()
-        self.result.append(('Platform', '{0.system} {0.release} {0.version} {0.processor} {0.machine}'.format(uname),'Basic'))
+        self.result.append(('Platform', '{0.system} {0.release} {0.version} {0.processor} {0.machine}'.format(uname),
+                            'Basic'))
         p = process_open([initial, "-V"], (0))
         p.wait()
         lines = ''.join(p.stdout.readlines())
@@ -53,18 +55,20 @@ class Environment():
             for line in f:
                 if not line.startswith('#') and not line == '\n' and not line.startswith('git'):
                     dep.append(line.split('=', 1)[0].split('>', 1)[0])
+        normalized_dep = [name.replace('_','-').upper() for name in dep]
         for element in dists:
-            if element[0] in dep:
-                self.result.append((element[0],element[1],'Basic'))
+            if element[0].replace('_','-').upper() in normalized_dep:
+                self.result.append((element[0],element[1], 'Basic'))
 
-    def add_Environemnt(self, test, extension):
+    def add_Environment(self, test, extension):
         if self.initial:
             try:
                 p = process_open([self.initial, "-m", "pip", "freeze"], (0))
                 p.wait()
                 dists = [str(d).strip().split("==") for d in p.stdout.readlines()]
+                normalized_Ext = [name.replace('_', '-').upper() for name in extension]
                 for element in dists:
-                    if element[0].replace('_','-').upper() in (name.replace('_','-').upper() for name in extension):
+                    if element[0].replace('_','-').upper() in normalized_Ext:
                         self.result.append((element[0],element[1],test))
             except:
                 pass
