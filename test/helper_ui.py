@@ -780,6 +780,48 @@ class ui_class():
                 return True
         return False
 
+    def change_shelf(self, name, new_name=None, public=None):
+        shelf = self.list_shelfs(name)
+        if shelf:
+            shelf['ele'].click()
+            edit = self.check_element_on_page((By.ID, "edit_shelf"))
+            self.assertTrue(edit)
+            edit.click()
+            if new_name:
+                title = self.check_element_on_page((By.ID, "title"))
+                self.assertTrue(title)
+                title.clear()
+                title.send_keys(new_name)
+            if public != None:
+                access = self.check_element_on_page((By.NAME, "is_public"))
+                self.assertTrue(access)
+                if (public == 1 and not access.is_selected()) or public == 0 and access.is_selected():
+                    access.click()
+            if new_name or public:
+                submit = self.check_element_on_page((By.ID, "submit"))
+                submit.click()
+                self.assertTrue(self.check_element_on_page((By.ID, "flash_success")))
+
+
+        else:
+            return False
+        ele = self.check_element_on_page((By.ID,'title'))
+        if ele:
+            ele.clear()
+            ele.send_keys(name)
+            if public:
+                public_shelf = self.check_element_on_page((By.NAME,'is_public'))
+                if public_shelf:
+                    public_shelf.click()
+                else:
+                    return False
+            submit = self.check_element_on_page((By.ID, 'submit'))
+            if submit:
+                submit.click()
+                return True
+        return False
+
+
     @classmethod
     def create_user(cls, name, config):
         if name:

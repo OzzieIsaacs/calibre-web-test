@@ -168,7 +168,7 @@ class test_kobo_sync(unittest.TestCase, ui_class):
         self.assertEqual(r.json(), {})
 
         # perform nextread request
-        r = session.get(self.kobo_adress + '/11fb0e29-aa28-4ab8-83be-19b161cd6a2d,2fe593b7-1389-4478-b66f-f07bf4c4d5b0/nextread',
+        r = session.get(self.kobo_adress + '/v1/products/2fe593b7-1389-4478-b66f-f07bf4c4d5b0/nextread',
                         headers=self.header)
         self.assertEqual(r.status_code, 200)
         self.assertEqual(r.json(), {})
@@ -290,28 +290,131 @@ class test_kobo_sync(unittest.TestCase, ui_class):
         self.list_shelfs(u'adminShelf')['ele'].click()
         self.check_element_on_page((By.ID, "delete_shelf")).click()
         self.check_element_on_page((By.ID, "confirm")).click()
+        data = self.sync_kobo()
+        self.assertEqual(1, len(data))
+        self.assertTrue('Id' in data[0]['DeletedTag']['Tag'])
+
+
         books = self.get_books_displayed()
         self.get_book_details(int(books[1][0]['id']))   # book no. 13
         self.check_element_on_page((By.ID, "add-to-shelf")).click()
         self.check_element_on_page((By.XPATH, "//ul[@id='add-to-shelves']/li/a[contains(.,'adminShelf')]")).click()
-        # sync, check public shelf is synced -> 1 entry
+        # sync, check public shelf is not synced -> 0 entry
+        time.sleep(2)
+        data = self.sync_kobo()
+        self.assertEqual(0, len(data))
+        # create new private shelf, add book, sync and check if book is in shelf
+        self.create_shelf('privateShelf', False)
+        self.goto_page('nav_new')
+        data = self.sync_kobo()
+        self.assertEqual(1, len(data))  # check new Tag is synced
+        books = self.get_books_displayed()
+        self.get_book_details(int(books[1][0]['id']))   # book no. 13
+        self.check_element_on_page((By.ID, "add-to-shelf")).click()
+        self.check_element_on_page((By.XPATH, "//ul[@id='add-to-shelves']/li/a[contains(.,'privateShelf')]")).click()
+        # ToDo works by change, because old entry is first one, click is independent of text
+        self.check_element_on_page((By.XPATH, "//*[@id='remove-from-shelves']//a")).click()
+        time.sleep(2)
         data = self.sync_kobo()
         self.assertEqual(1, len(data))
+        self.assertEqual('privateShelf', data[0]['ChangedTag']['Tag']['Name'])
+        self.assertEqual(1, len(data[0]['ChangedTag']['Tag']['Items']))
+        tagId = data[0]['ChangedTag']['Tag']['Id']
+        # Try to change name of shelf with wrong Id
+        newSession = requests.session()
+        r = newSession.get(self.kobo_adress+'/v1/initialization', headers=self.header)
 
-        # request delete shelf from kobo -> Shelf is deleted in UI, references are removed
-        # request wrong named shelf -> error
-        # create user,
+        r = newSession.put(self.kobo_adress+'/v1/library/tags/'+tagId + '1', headers=self.syncToken, data={'Name':'test'})
+        self.assertEqual(404, r.status_code)
+
+        # Try to change name of shelf with wrong Payload
+        r = newSession.put(self.kobo_adress+'/v1/library/tags/'+tagId, json={'Nam':'test'})
+        self.assertEqual(400, r.status_code)
+
+        # Change name of shelf and check afterwards
+        r = newSession.put(self.kobo_adress+'/v1/library/tags/'+tagId, json={'Name':'test'})
+        self.assertEqual(200, r.status_code)
+        self.goto_page('nav_new')
+        shelfnames = self.list_shelfs()
+        self.assertEqual('adminShelf (Public)', shelfnames[0]['name'])
+        self.assertEqual('test', shelfnames[1]['name'])
+        # Try to delete name of shelf with wrong Id
+        r = newSession.delete(self.kobo_adress+'/v1/library/tags/'+tagId + '1')
+        self.assertEqual(404, r.status_code)
+
+        # Delete name of shelf
+        r = newSession.delete(self.kobo_adress+'/v1/library/tags/'+  tagId)
+        self.assertEqual(200, r.status_code)
+        self.goto_page('nav_new')
+        shelfnames = self.list_shelfs()
+        self.assertEqual('adminShelf (Public)', shelfnames[0]['name'])
+        self.assertEqual(1, len(shelfnames))
+
+        # create shelf with empty payload
+        r = newSession.post(self.kobo_adress + '/v1/library/tags')
+        self.assertEqual(400, r.status_code)
+
+        # create shelf with empty name and Items
+        r = newSession.post(self.kobo_adress + '/v1/library/tags', json={'Name':'', 'Items': []})
+        self.assertEqual(400, r.status_code)
+
+        # create shelf with empty name and Items
+        Item1 = {'Type': 'ProductRevisionTagItem', 'RevisionId':'8f1b72c1-e9a4-4212-b538-8e4f4837d201'}
+        ItemDefect= {'Typ': 'ProductRevisionTagItem', 'RevisionId': '1'}
+        r = newSession.post(self.kobo_adress + '/v1/library/tags', json={'Name':'执', 'Items':[ItemDefect]})
+        self.assertEqual(201, r.status_code)    # malformed Items are silently denied
+        r = newSession.post(self.kobo_adress + '/v1/library/tags', json={'Name': 'Success', 'Items': [Item1]})
+        self.assertEqual(201, r.status_code)
+        self.goto_page('nav_new')
+        self.list_shelfs(u'Success')['ele'].click()
+        books = self.get_shelf_books_displayed()
+        self.assertEqual(1, len(books))
+        self.assertEqual('5', books[0]['id'])
+
+        #create 2 shelfs with identical names
+        r = newSession.post(self.kobo_adress + '/v1/library/tags', json={'Name': 'Dup1', 'Items': []})
+        self.assertEqual(201, r.status_code)
+        r = newSession.post(self.kobo_adress + '/v1/library/tags', json={'Name': 'Dup1', 'Items': [Item1]})
+        self.assertEqual(201, r.status_code)
+        self.goto_page('nav_new')
+        self.list_shelfs(u'Dup1')['ele'].click()
+        books = self.get_shelf_books_displayed()
+        self.assertEqual(1, len(books))
+        self.assertEqual('5', books[0]['id'])
+
+        '''
         # logout, login new user, create shelf for new user
         self.logout()
         self.login('user0','1234')
-        self.create_shelf('new_user', False)
+        self.create_shelf('new_user', True)
+        data = self.sync_kobo() # sync to get id of shelf
+        self.change_shelf('new_user', public=0)
+
+        # ToDo:
         # request new user shelf -> error
         # request delete of new user shelf via kobo-> error
+        # r = requests.put(self.kobo_adress+'/v1/library/tags/'+tagId, headers=self.syncToken, data={'Name':'test'})
+        # self.assertEqual(401, r.status_code)
+
         # logout
         self.logout()
-        self.login('admin','admin123')
-        # delete all shelfs
+        self.login('admin','admin123')'''
         # delete user
+        self.edit_user('user0', {'delete': 1})
+        shelfs = self.list_shelfs()
+        for shelf in shelfs:
+            self.list_shelfs(shelf['name'])['ele'].click()
+            self.check_element_on_page((By.ID, "delete_shelf")).click()
+            self.check_element_on_page((By.ID, "confirm")).click()
+
+        # final sync
+        self.sync_kobo()
+
+
+    def test_shelves_add_remove_books(self):
+        # add books to shelf
+        # remove books from shelf
+        pass
 
     def test_sync_reading_state(self):
         self.inital_sync()
