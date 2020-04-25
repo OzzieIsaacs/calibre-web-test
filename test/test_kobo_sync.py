@@ -49,7 +49,7 @@ class test_kobo_sync(unittest.TestCase, ui_class):
         remove_dependency(cls.json_line)
 
     def inital_sync(self):
-        if self.syncToken:
+        if test_kobo_sync.syncToken:
             return
         # change book 5 to have unicode char in title author, description
         self.get_book_details(5)
@@ -76,13 +76,13 @@ class test_kobo_sync(unittest.TestCase, ui_class):
         r = requests.post(self.kobo_adress+'/v1/auth/device', json=payload)
         self.assertEqual(r.status_code,200)
         # request init request to get metadata format
-        self.header ={
+        test_kobo_sync.header ={
             'Authorization': 'Bearer ' + r.json()['AccessToken'],
             'Content-Type': 'application/json'
          }
         expectUrl = '/'.join(self.kobo_adress.split('/')[0:-2])
         session = requests.session()
-        r = session.get(self.kobo_adress+'/v1/initialization', headers=self.header)
+        r = session.get(self.kobo_adress+'/v1/initialization', headers=test_kobo_sync.header)
         self.assertEqual(r.status_code,200)
         # Check cover links
         self.assertEqual(len(r.json()),1)
@@ -92,15 +92,15 @@ class test_kobo_sync(unittest.TestCase, ui_class):
         self.assertEqual(self.kobo_adress + "/{ImageId}/{width}/{height}/false/image.jpg",
                          r.json()['Resources']['image_url_template'])
         # perform user profile request
-        r = session.get(self.kobo_adress+'/v1/user/profile', headers=self.header)
+        r = session.get(self.kobo_adress+'/v1/user/profile', headers=test_kobo_sync.header)
         self.assertEqual(r.status_code,200)
         self.assertEqual(r.json(), {})
         # perform benefits request
-        r = session.get(self.kobo_adress+'/v1/user/loyalty/benefits', headers=self.header)
+        r = session.get(self.kobo_adress+'/v1/user/loyalty/benefits', headers=test_kobo_sync.header)
         self.assertEqual(r.status_code,200)
         self.assertEqual(r.json(), {})
         # perform analytics request
-        r = session.get(self.kobo_adress+'/v1/analytics/gettests', headers=self.header)
+        r = session.get(self.kobo_adress+'/v1/analytics/gettests', headers=test_kobo_sync.header)
         self.assertEqual(r.status_code,200)
         self.assertEqual(r.json(), {})
 
@@ -110,7 +110,7 @@ class test_kobo_sync(unittest.TestCase, ui_class):
         r = session.get(self.kobo_adress+'/v1/library/sync', params=params)
         self.assertEqual(r.status_code,200)
         data=r.json()
-        self.syncToken = {'x-kobo-synctoken': r.headers['x-kobo-synctoken']}
+        test_kobo_sync.syncToken = {'x-kobo-synctoken': r.headers['x-kobo-synctoken']}
         self.assertEqual(len(data), 4, "4 Books should have valid kobo formats (epub, epub3, kebub)")
         self.assertEqual(data[0]['NewEntitlement']['BookMetadata']['DownloadUrls'][1]['Format'], 'EPUB')
         self.assertEqual(data[0]['NewEntitlement']['BookMetadata']['DownloadUrls'][1]['Size'], 6720)
@@ -143,11 +143,11 @@ class test_kobo_sync(unittest.TestCase, ui_class):
         # ToDo Check Reading state
         # self.assertEqual(data[0]['NewEntitlement']['ReadingState'], '')
         # perform image request of first book
-        r = session.get(self.kobo_adress+'/' + bood_uuid + '/100/100/false/image.jpg', headers=self.header)
+        r = session.get(self.kobo_adress+'/' + bood_uuid + '/100/100/false/image.jpg', headers=test_kobo_sync.header)
         self.assertEqual(r.status_code,200)
         self.assertEqual(16790, len(r.content))
         # perform image request of unknown book
-        r = session.get(self.kobo_adress+'/100129102/100/100/false/image.jpg', headers=self.header)
+        r = session.get(self.kobo_adress+'/100129102/100/100/false/image.jpg', headers=test_kobo_sync.header)
         self.assertEqual(r.status_code,200)
         self.assertEqual(r.json(), {})
 
@@ -163,25 +163,25 @@ class test_kobo_sync(unittest.TestCase, ui_class):
         self.assertEqual(r.status_code,200)
         self.assertEqual(r.json(), {})
         # perform analytics request
-        r = session.get(self.kobo_adress+'/v1/analytics/get', headers=self.header)
+        r = session.get(self.kobo_adress+'/v1/analytics/get', headers=test_kobo_sync.header)
         self.assertEqual(r.status_code,200)
         self.assertEqual(r.json(), {})
 
         # perform nextread request
         r = session.get(self.kobo_adress + '/v1/products/2fe593b7-1389-4478-b66f-f07bf4c4d5b0/nextread',
-                        headers=self.header)
+                        headers=test_kobo_sync.header)
         self.assertEqual(r.status_code, 200)
         self.assertEqual(r.json(), {})
         session.close()
 
     def sync_kobo(self):
         changeSession = requests.session()
-        r = changeSession.get(self.kobo_adress+'/v1/initialization', headers=self.header)
+        r = changeSession.get(self.kobo_adress+'/v1/initialization', headers=test_kobo_sync.header)
         self.assertEqual(r.status_code,200)
         params = {'Filter': 'All', 'DownloadUrlFilter': 'Generic,Android', 'PrioritizeRecentReads':'true'}
-        r = changeSession.get(self.kobo_adress+'/v1/library/sync', params=params, headers=self.syncToken)
+        r = changeSession.get(self.kobo_adress+'/v1/library/sync', params=params, headers=test_kobo_sync.syncToken)
         self.assertEqual(r.status_code,200)
-        self.syncToken = {'x-kobo-synctoken': r.headers['x-kobo-synctoken']}
+        test_kobo_sync.syncToken = {'x-kobo-synctoken': r.headers['x-kobo-synctoken']}
         data = r.json()
         changeSession.close()
         return data
@@ -205,7 +205,7 @@ class test_kobo_sync(unittest.TestCase, ui_class):
         session = requests.session()
         r = session.get(self.kobo_adress+'x/v1/initialization', headers=header)
         self.assertEqual(r.status_code, 401)
-        self.syncToken = None
+        session.close()
 
 
     def test_sync_unchanged(self):
@@ -213,14 +213,14 @@ class test_kobo_sync(unittest.TestCase, ui_class):
 
         # append synctoken to headers and start over again
         newSession = requests.session()
-        r = newSession.get(self.kobo_adress+'/v1/initialization', headers=self.header)
+        r = newSession.get(self.kobo_adress+'/v1/initialization', headers=test_kobo_sync.header)
         self.assertEqual(r.status_code,200)
         params = {'Filter': 'All', 'DownloadUrlFilter': 'Generic,Android', 'PrioritizeRecentReads':'true'}
-        r = newSession.get(self.kobo_adress+'/v1/library/sync', params=params, headers=self.syncToken)
+        r = newSession.get(self.kobo_adress+'/v1/library/sync', params=params, headers=test_kobo_sync.syncToken)
         self.assertEqual(r.status_code,200)
         self.assertEqual(r.json(), [])
         newSession.close()
-        self.syncToken = {'x-kobo-synctoken': r.headers['x-kobo-synctoken']}
+        test_kobo_sync.syncToken = {'x-kobo-synctoken': r.headers['x-kobo-synctoken']}
 
     def test_sync_upload(self):
         self.inital_sync()
@@ -322,9 +322,9 @@ class test_kobo_sync(unittest.TestCase, ui_class):
         tagId = data[0]['ChangedTag']['Tag']['Id']
         # Try to change name of shelf with wrong Id
         newSession = requests.session()
-        r = newSession.get(self.kobo_adress+'/v1/initialization', headers=self.header)
+        r = newSession.get(self.kobo_adress+'/v1/initialization', headers=test_kobo_sync.header)
 
-        r = newSession.put(self.kobo_adress+'/v1/library/tags/'+tagId + '1', headers=self.syncToken, data={'Name':'test'})
+        r = newSession.put(self.kobo_adress+'/v1/library/tags/'+tagId + '1', headers=test_kobo_sync.syncToken, data={'Name':'test'})
         self.assertEqual(404, r.status_code)
 
         # Try to change name of shelf with wrong Payload
@@ -399,6 +399,7 @@ class test_kobo_sync(unittest.TestCase, ui_class):
         # logout
         self.logout()
         self.login('admin','admin123')'''
+        newSession.close()
         # delete user
         self.edit_user('user0', {'delete': 1})
         shelfs = self.list_shelfs()
@@ -408,20 +409,147 @@ class test_kobo_sync(unittest.TestCase, ui_class):
             self.check_element_on_page((By.ID, "confirm")).click()
 
         # final sync
+        time.sleep(2)
         self.sync_kobo()
 
 
     def test_shelves_add_remove_books(self):
-        # add books to shelf
-        # remove books from shelf
-        pass
+        self.inital_sync()
+        # create private shelf
+        newSession = requests.session()
+        r = newSession.get(self.kobo_adress+'/v1/initialization', headers=test_kobo_sync.header)
+
+        r = newSession.post(self.kobo_adress + '/v1/library/tags', json={'Name': 'BooksAdd', 'Items': []})
+        self.assertEqual(201, r.status_code)
+        tagId = r.json()
+        # sync, check shelf is synced-> empty
+        data = self.sync_kobo()
+
+        Item1 = {'Type': 'ProductRevisionTagItem', 'RevisionId':'8f1b72c1-e9a4-4212-b538-8e4f4837d201'}
+        ItemDefect= {'Typ': 'ProductRevisionTagItem', 'RevisionId': '1'}
+
+        # post empty request
+        r = newSession.post(self.kobo_adress + '/v1/library/tags/' + tagId + '/items')
+        self.assertEqual(400, r.status_code)
+        r = newSession.post(self.kobo_adress + '/v1/library/tags/' + tagId + '/items', json={'Item': []})
+        self.assertEqual(400, r.status_code)
+        r = newSession.post(self.kobo_adress + '/v1/library/tags/1234/items', json={'Items': [ItemDefect]})
+        self.assertEqual(404, r.status_code)
+        r = newSession.post(self.kobo_adress + '/v1/library/tags/' + tagId + '/items', json={'Items': [ItemDefect]})
+        self.assertEqual(201, r.status_code)
+        self.goto_page('nav_new')
+        self.list_shelfs(u'BooksAdd')['ele'].click()
+        books = self.get_shelf_books_displayed()
+        self.assertEqual(0, len(books))
+
+        r = newSession.post(self.kobo_adress + '/v1/library/tags/' + tagId + '/items', json={'Items': [Item1]})
+        self.assertEqual(201, r.status_code)
+        self.goto_page('nav_new')
+        self.list_shelfs(u'BooksAdd')['ele'].click()
+        books = self.get_shelf_books_displayed()
+        self.assertEqual(1, len(books))
+        self.assertEqual('5', books[0]['id'])
+
+        # Delete books from shelf
+        r = newSession.post(self.kobo_adress + '/v1/library/tags/' + tagId + '/items/delete')
+        self.assertEqual(400, r.status_code)
+        r = newSession.post(self.kobo_adress + '/v1/library/tags/' + tagId + '/items/delete', json={'Item': []})
+        self.assertEqual(400, r.status_code)
+        r = newSession.post(self.kobo_adress + '/v1/library/tags/1234/items/delete', json={'Items': [ItemDefect]})
+        self.assertEqual(404, r.status_code)
+        r = newSession.post(self.kobo_adress + '/v1/library/tags/' + tagId + '/items/delete', json={'Items': [ItemDefect]})
+        self.assertEqual(200, r.status_code)
+        self.goto_page('nav_new')
+        self.list_shelfs(u'BooksAdd')['ele'].click()
+        books = self.get_shelf_books_displayed()
+        self.assertEqual(1, len(books))
+
+        r = newSession.post(self.kobo_adress + '/v1/library/tags/' + tagId + '/items/delete', json={'Items': [Item1]})
+        self.assertEqual(200, r.status_code)
+        self.goto_page('nav_new')
+        self.list_shelfs(u'BooksAdd')['ele'].click()
+        books = self.get_shelf_books_displayed()
+        self.assertEqual(0, len(books))
+        newSession.close()
+
+        shelfs = self.list_shelfs()
+        for shelf in shelfs:
+            self.list_shelfs(shelf['name'])['ele'].click()
+            self.check_element_on_page((By.ID, "delete_shelf")).click()
+            self.check_element_on_page((By.ID, "confirm")).click()
+        time.sleep(2)
+        # final sync
+        self.sync_kobo()
+
 
     def test_sync_reading_state(self):
         self.inital_sync()
         # reading state
+        newSession = requests.session()
+        r = newSession.get(self.kobo_adress+'/v1/initialization', headers=test_kobo_sync.header)
+
+        r = newSession.get(self.kobo_adress + '/v1/library/77/state')
+        self.assertEqual(200, r.status_code)
+        self.assertEqual({}, r.json())
+
+        # book no 5
+        r = newSession.get(self.kobo_adress + '/v1/library/8f1b72c1-e9a4-4212-b538-8e4f4837d201/state')
+        self.assertEqual(200, r.status_code)
+        data = r.json()
+        self.assertEqual('8f1b72c1-e9a4-4212-b538-8e4f4837d201', data[0]['EntitlementId'])
+        self.assertEqual('ReadyToRead', data[0]['StatusInfo']['Status'])
+
+        r = newSession.put(self.kobo_adress + '/v1/library/8f1b72c1-e9a4-4212-b538-8e4f4837d201/state')
+        self.assertEqual(400, r.status_code)
+        postData = {
+            "ReadingStates":[{
+                "CurrentBookmark": {
+                    "ProgressPercent":'40',
+                    "ContentSourceProgressPercent": '20',
+                    "Location": {
+                        "Value":'10',
+                        "Type": 'Unknown',
+                        "Source": 'Unknown'
+                    }
+                },
+                "Statistics": {
+                    "SpentReadingMinutes": '100',
+                    "RemainingTimeMinutes": '20'
+                },
+                "StatusInfo": {
+                    "Status":'Reading'
+                }
+            }]
+        }
+        r = newSession.put(self.kobo_adress + '/v1/library/8f1b72c1-e9a4-4212-b538-8e4f4837d201/state',
+                        json=postData)
+        self.assertEqual(200, r.status_code)
+        data = r.json()
+        self.assertEqual('Success', data['RequestResult'])
+        self.assertEqual('Success', data['UpdateResults'][0]['StatisticsResult']['Result'])
+
+        postData['ReadingStates'][0]['CurrentBookmark']['ProgressPercent'] = 'Nijik'
+        r = newSession.put(self.kobo_adress + '/v1/library/8f1b72c1-e9a4-4212-b538-8e4f4837d201/state',
+                        json=postData)
+        self.assertEqual(400, r.status_code)
+        postData['ReadingStates'][0]['CurrentBookmark']['ProgressPercent'] = '30'
+        postData['ReadingStates'][0]['Statistics']['SpentReadingMinutes'] = 'gigj'
+        r = newSession.put(self.kobo_adress + '/v1/library/8f1b72c1-e9a4-4212-b538-8e4f4837d201/state',
+                        json=postData)
+        self.assertEqual(400, r.status_code)
 
 
+        newSession.close()
 
+        shelfs = self.list_shelfs()
+        for shelf in shelfs:
+            self.list_shelfs(shelf['name'])['ele'].click()
+            self.check_element_on_page((By.ID, "delete_shelf")).click()
+            self.check_element_on_page((By.ID, "confirm")).click()
+
+        # final sync
+        time.sleep(2)
+        self.sync_kobo()
 
 
 
