@@ -7,7 +7,7 @@ from testconfig import TEST_DB, VENV_PYTHON, CALIBRE_WEB_PATH, BOOT_TIME
 from helper_func import startup, debug_startup, get_Host_IP, add_dependency, remove_dependency, kill_old_cps
 from selenium.webdriver.common.by import By
 from helper_ldap import TestLDAPServer
-
+import requests
 
 class test_ldap_login(unittest.TestCase, ui_class):
 
@@ -649,3 +649,60 @@ class test_ldap_login(unittest.TestCase, ui_class):
         self.assertTrue(self.check_element_on_page((By.ID, "flash_success")))
         # stop ldap
         self.server.stopListen()
+
+    def test_ldap_opds_download_book(self):
+        self.fill_basic_config({'config_ldap_provider_url': '127.0.0.1',
+                                'config_ldap_port': '3268',
+                                'config_ldap_authentication': 'Simple',
+                                'config_ldap_dn': 'ou=people,dc=calibreweb,dc=com',
+                                'config_ldap_serv_username': 'cn=root,dc=calibreweb,dc=com',
+                                'config_ldap_serv_password': 'secret',
+                                'config_ldap_user_object': '(uid=%s)',
+                                'config_ldap_group_object_filter': '',
+                                'config_ldap_openldap': 1
+                                })
+        self.assertTrue(self.check_element_on_page((By.ID, "flash_success")))
+        time.sleep(BOOT_TIME)
+        # start ldap
+        self.server.relisten(config=2, port=3268, encrypt=None)
+        # create new user
+        self.create_user('执一',{'email':'user0@exi.com','password':'1234', 'download_role': 1})
+        self.assertTrue(self.check_element_on_page((By.ID, "flash_success")))
+        self.logout()
+
+        r = requests.get('http://127.0.0.1:8083/opds', auth=('admin', 'admin123'))
+        self.assertEqual(401, r.status_code)
+        # try to login with wron password for user
+        r = requests.get('http://127.0.0.1:8083/opds', auth=('执一'.encode('utf-8'), 'wrong'))
+        self.assertEqual(401, r.status_code)
+        # login user and check content
+        r = requests.get('http://127.0.0.1:8083/opds', auth=('执一'.encode('utf-8'), 'eekretsay'))
+        self.assertEqual(200, r.status_code)
+        elements = self.get_opds_index(r.text)
+        r = requests.get('http://127.0.0.1:8083'+elements['Recently added Books']['link'], auth=('执一'.encode('utf-8'), 'eekretsay'))
+        entries = self.get_opds_feed(r.text)
+        # check download book
+        r = requests.get('http://127.0.0.1:8083'+ entries['elements'][0]['download'], auth=('执一'.encode('utf-8'), 'eekretsay'))
+        self.assertEqual(len(r.content), 28590)
+        self.assertEqual(r.headers['Content-Type'], 'application/pdf')
+        # login admin and remove download role from 执一
+        self.login("admin", "admin123")
+        self.assertTrue(self.check_element_on_page((By.ID, "flash_warning")))
+        self.edit_user('执一', {'download_role': 0})
+        self.assertTrue(self.check_element_on_page((By.ID, "flash_success")))
+        self.logout()
+        # try to download book without download rights
+        r = requests.get('http://127.0.0.1:8083'+ entries['elements'][0]['download'], auth=('执一'.encode('utf-8'), 'terces'))
+        self.assertEqual(401, r.status_code)
+        # stop ldap
+        self.server.stopListen()
+        time.sleep(3)
+        # try to login without ldap reachable
+        r = requests.get('http://127.0.0.1:8083/opds', auth=('执一'.encode('utf-8'), 'eekretsay'))
+        self.assertEqual(424, r.status_code)
+
+        # login admin and delete user0
+        self.login("admin", "admin123")
+        self.edit_user('执一', {'delete': 1})
+        self.assertTrue(self.check_element_on_page((By.ID, "flash_success")))
+
