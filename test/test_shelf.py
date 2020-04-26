@@ -25,10 +25,8 @@ class test_shelf(unittest.TestCase, ui_class):
             cls.create_user('shelf', {'edit_shelf_role':1, 'password':'123', 'email':'a@b.com'})
             cls.edit_user('admin',{'edit_shelf_role':1, 'email':'e@fe.de'})
         except:
-            if is_port_in_use(8083):
-                print('port in use')
             cls.driver.quit()
-            cls.p.kill()
+            cls.p.terminate()
 
     @classmethod
     def tearDownClass(cls):
@@ -47,7 +45,8 @@ class test_shelf(unittest.TestCase, ui_class):
                 break
             try:
                 for shelf in shelfs:
-                    shelf['ele'].click()
+                    sl = self.list_shelfs(shelf['name']) #.rstrip(' (Public)'))
+                    sl['ele'].click()
                     self.check_element_on_page((By.ID, "delete_shelf")).click()
                     self.check_element_on_page((By.ID, "confirm")).click()
             except:
@@ -299,6 +298,50 @@ class test_shelf(unittest.TestCase, ui_class):
         self.create_shelf('Halllalalalal1l1ll2332434llsfllsdfglsdflglfdglfdlgldfsglsdlgrtfgsdfvxccbbsgtsvxv', False)
         self.assertTrue(self.check_element_on_page((By.ID, "flash_success")))
         self.assertTrue(self.list_shelfs('Halllalalalal1l1ll2332434llsfllsdfgls[..]'))
+
+    #
+    def test_shelf_action_non_shelf_edit_role(self):
+        # remove edit role from admin account
+        self.edit_user('admin', {'edit_shelf_role': 0, 'email': 'e@fe.de'})
+        self.assertTrue(self.check_element_on_page((By.ID, "flash_success")))
+        # create user with edit_shlefs role
+        self.create_user('user0', {'edit_shelf_role': 1, 'password': '1234', 'email': 'a1@b.com'})
+        self.assertTrue(self.check_element_on_page((By.ID, "flash_success")))
+        self.logout()
+        self.login('user0','1234')
+        self.create_shelf('noright', True)
+        self.goto_page('nav_new')
+        books = self.get_books_displayed()
+        self.get_book_details(int(books[1][2]['id']))
+        # Add book to shelf
+        self.check_element_on_page((By.ID, "add-to-shelf")).click()
+        shelf_list = self.driver.find_elements_by_xpath("//ul[@id='add-to-shelves']/li")
+        self.assertEqual(1, len(shelf_list))
+        self.check_element_on_page((By.XPATH, "//ul[@id='add-to-shelves']/li/a[contains(.,'noright')]")).click()
+        self.assertFalse(self.check_element_on_page((By.XPATH, "//ul[@id='add-to-shelves']/li/a[contains(.,'noright')]")))
+        # Remove book from shelf
+        remove = self.check_element_on_page((By.XPATH, "//*[@id='remove-from-shelves']//a"))
+        self.assertTrue(remove)
+        remove.click()
+        # Add book to shelf again
+        self.assertFalse(self.check_element_on_page((By.XPATH, "//*[@id='remove-from-shelves']//a")))
+        self.check_element_on_page((By.ID, "add-to-shelf")).click()
+        self.check_element_on_page((By.XPATH, "//ul[@id='add-to-shelves']/li/a[contains(.,'noright')]")).click()
+        #logout and login admin again
+        self.logout()
+        self.login('admin', 'admin123')
+        books = self.get_books_displayed()
+        self.get_book_details(int(books[1][2]['id']))
+        self.check_element_on_page((By.ID, "add-to-shelf")).click()
+        self.assertFalse(self.check_element_on_page((By.XPATH, "//ul[@id='add-to-shelves']/li/a[contains(.,'noright')]")))
+        remove = self.check_element_on_page((By.XPATH, "//*[@id='remove-from-shelves']//a"))
+        self.assertTrue(remove)
+        remove.click()
+        self.assertTrue(self.check_element_on_page((By.XPATH, "//*[@id='remove-from-shelves']//a")))
+        self.edit_user('user0', {'delete': 1})
+        self.assertTrue(self.check_element_on_page((By.ID, "flash_success")))
+        self.edit_user('admin', {'edit_shelf_role': 1})
+        self.assertTrue(self.check_element_on_page((By.ID, "flash_success")))
 
 
     # Change database
