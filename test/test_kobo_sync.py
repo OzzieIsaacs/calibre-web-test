@@ -44,7 +44,7 @@ class test_kobo_sync(unittest.TestCase, ui_class):
     def tearDownClass(cls):
         cls.stop_calibre_web()
         cls.driver.quit()
-        # cls.p.terminate()
+        cls.p.terminate()
         # close the browser window and stop calibre-web
         remove_dependency(cls.json_line)
 
