@@ -218,6 +218,23 @@ class calibre_web_visibilitys(unittest.TestCase, ui_class):
         self.assertTrue(self.check_element_on_page((By.ID, "flash_success")))
         self.assertTrue(self.check_element_on_page((By.ID, "nav_read")))
         self.assertTrue(self.check_element_on_page((By.ID, "nav_unread")))
+        values = self.get_book_details(8)
+        self.assertFalse(values['read'])
+        read = self.check_element_on_page((By.XPATH,"//*[@id='have_read_cb']"))
+        self.assertTrue(read)
+        read.click()
+        values = self.get_book_details()
+        self.assertTrue(values['read'])
+        self.goto_page('nav_read')
+        books = self.get_books_displayed()
+        self.assertEqual(1, len(books[1]))
+        self.assertEqual('Read Books (1)', self.check_element_on_page((By.XPATH, "//*[@class='discover load-more']/H2")).text)
+        self.goto_page('nav_unread')
+        books = self.get_books_displayed()
+        self.assertEqual(10, len(books[1]))
+        self.assertEqual('Unread Books (10)', self.check_element_on_page((By.XPATH, "//*[@class='discover load-more']/H2")).text)
+        self.get_book_details(8)
+        self.check_element_on_page((By.XPATH, "//*[@id='have_read_cb']")).click()
 
     # checks if admin can change user language
     def test_admin_change_visibility_language(self):
@@ -270,7 +287,6 @@ class calibre_web_visibilitys(unittest.TestCase, ui_class):
         self.assertTrue(self.check_element_on_page((By.ID, "flash_success")))
         self.assertTrue(self.check_element_on_page((By.ID, "nav_rate")))
 
-
     # checks if admin can change fileformats
     def test_admin_change_visibility_file_formats(self):
         self.goto_page('user_setup')
@@ -280,6 +296,16 @@ class calibre_web_visibilitys(unittest.TestCase, ui_class):
         self.change_user({'show_16384': 1})
         self.assertTrue(self.check_element_on_page((By.ID, "flash_success")))
         self.assertTrue(self.check_element_on_page((By.ID, "nav_format")))
+
+    # checks if admin can change fileformats
+    def test_admin_change_visibility_archived(self):
+        self.goto_page('user_setup')
+        self.change_user({'show_32768':0})
+        self.assertTrue(self.check_element_on_page((By.ID, "flash_success")))
+        self.assertFalse(self.check_element_on_page((By.ID, "nav_archived")))
+        self.change_user({'show_32768': 1})
+        self.assertTrue(self.check_element_on_page((By.ID, "flash_success")))
+        self.assertTrue(self.check_element_on_page((By.ID, "nav_archived")))
 
     # checks if admin can change author
     # testcase always failed for unknown reason, therefor sleep calls ToDo: Why failed??

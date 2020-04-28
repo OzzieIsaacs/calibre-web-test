@@ -1186,7 +1186,15 @@ class ui_class():
             else:
                 ret['download'] = [d.text for d in download1]
 
-            ret['read']= tree.find("//*[@id='have_read_cb']") is not None
+            # element = tree.find("//*[@id='have_read_cb']")
+            ret['read']= cls.check_element_on_page((By.XPATH, "//*[@id='have_read_cb']")).is_selected()
+
+            archive = cls.check_element_on_page((By.XPATH, "//*[@id='have_read_cb']"))
+            if archive:
+                ret['archived'] = archive.is_selected()
+            else:
+                ret['archived'] = None
+
 
             series = tree.xpath("//*[contains(@href,'series')]/ancestor::p")
             if series:
