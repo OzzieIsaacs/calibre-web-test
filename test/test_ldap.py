@@ -311,7 +311,7 @@ class test_ldap_login(unittest.TestCase, ui_class):
         self.assertEqual(rights['upload_role'], 0)
         self.assertEqual(rights['edit_shelf_role'], 0)
         self.assertEqual(rights['show_4'], 1)
-        self.assertEqual(rights['show_512'], 1)
+        self.assertEqual(rights['show_1024'], 1)
         self.assertEqual(rights['email'], 'onny@beta.org')
         self.assertEqual(rights['kindle_mail'], '')
 
@@ -324,7 +324,7 @@ class test_ldap_login(unittest.TestCase, ui_class):
         self.assertTrue(self.check_element_on_page((By.ID, "flash_warning")))
 
         # change one user visibility and do reimport of users
-        self.edit_user('执一', {'show_512':0,'show_16':1,'passwd_role':0,'upload_role':1})
+        self.edit_user('执一', {'show_256':0,'show_16':1,'passwd_role':0,'upload_role':1})
         self.goto_page('admin_setup')
         imprt = self.check_element_on_page((By.ID, "import_ldap_users"))
         self.assertTrue(imprt)
@@ -335,8 +335,9 @@ class test_ldap_login(unittest.TestCase, ui_class):
         time.sleep(2)
         # check access right of user still match changed rights
         rights = self.get_user_settings('执一')
-        self.assertEqual(rights['show_512'],0)
+        self.assertEqual(rights['show_256'],0)
         self.assertEqual(rights['show_16'], 1)
+        self.assertEqual(rights['show_1024'], 1)
         self.assertEqual(rights['passwd_role'], 0)
         self.assertEqual(rights['upload_role'], 1)
 

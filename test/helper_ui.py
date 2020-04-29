@@ -330,7 +330,7 @@ class ui_class():
         process_selects = dict()
         # special handling for checkboxes
         checkboxes = ['admin_role', 'download_role', 'upload_role', 'edit_role', 'delete_role', 'passwd_role',
-                      'viewer_role', 'edit_shelf_role', 'show_32', 'show_512', 'show_16', 'show_128',
+                      'viewer_role', 'edit_shelf_role', 'show_32', 'show_16', 'show_128',
                         'show_2', 'show_4', 'show_8', 'show_64', 'show_256', 'show_8192', 'show_16384',
                         'Show_detail_random', 'show_4096']
         options = ['config_read_column']
@@ -343,7 +343,7 @@ class ui_class():
         if any(key in elements for key in ['admin_role', 'download_role', 'upload_role', 'edit_role', 'viewer_role',
                                            'delete_role', 'passwd_role', 'edit_shelf_role']):
             opener.append(1)
-        if any(key in elements for key in ['show_32', 'show_512', 'show_16', 'show_128',
+        if any(key in elements for key in ['show_32', 'show_16', 'show_128',
                                            'show_2', 'show_4', 'show_8', 'show_64', 'show_8192', 'show_16384',
                                            'show_256', 'Show_detail_random', 'show_4096']):
             opener.append(2)
@@ -685,10 +685,19 @@ class ui_class():
                     return False
                 else:
                     user_settings=dict()
-                    user_settings['nickname']=self.check_element_on_page((By.ID, "nickname")).get_attribute('value')
+                    element = self.check_element_on_page((By.ID, "nickname"))
+                    if element:
+                        user_settings['nickname'] = element.get_attribute('value')
+                    else:
+                        user_settings['nickname'] = None
                     user_settings['email'] = self.check_element_on_page((By.ID, "email")).get_attribute('value')
                     user_settings['kindle_mail'] = self.check_element_on_page((By.ID, "kindle_mail")).get_attribute('value')
-                    user_settings['locale'] = Select(self.check_element_on_page((By.ID, "locale"))).first_selected_option.text
+                    element = self.check_element_on_page((By.ID, "locale"))
+                    if element:
+                        user_settings['locale'] = element.get_attribute('value')
+                    else:
+                        user_settings['locale'] = None
+                    # user_settings['locale'] = Select(self.check_element_on_page((By.ID, "locale"))).first_selected_option.text
                     user_settings['default_language'] = Select(self.check_element_on_page((By.ID, "default_language"))).first_selected_option.text
                     user_settings['show_2'] = int(self.check_element_on_page((By.ID, "show_2")).is_selected())
                     user_settings['show_4'] = int(self.check_element_on_page((By.ID, "show_4")).is_selected())
@@ -697,21 +706,47 @@ class ui_class():
                     user_settings['show_32'] = int(self.check_element_on_page((By.ID, "show_32")).is_selected())
                     user_settings['show_64'] = int(self.check_element_on_page((By.ID, "show_64")).is_selected())
                     user_settings['show_128'] = int(self.check_element_on_page((By.ID, "show_128")).is_selected())
-                    user_settings['show_256'] = int(self.check_element_on_page((By.ID, "show_256")).is_selected())
-                    user_settings['show_512'] = int(self.check_element_on_page((By.ID, "show_512")).is_selected())
-                    # user_settings['show_1024'] = int(self.check_element_on_page((By.ID, "show_1024")).is_selected())
-                    # user_settings['show_2048'] = int(self.check_element_on_page((By.ID, "show_2048")).is_selected())
+                    element = self.check_element_on_page((By.ID, "show_256"))
+                    if element:
+                        user_settings['show_256'] = element.is_selected()
+                    else:
+                        user_settings['show_256'] = None
+                    '''element = self.check_element_on_page((By.ID, "show_512"))
+                    if element:
+                        user_settings['show_512'] = element.is_selected()
+                    else:'''
+                    user_settings['show_512'] = None
+                    user_settings['show_1024'] = None   # was sorted
+                    user_settings['show_2048'] = None  # was mature content
                     user_settings['show_4096'] = int(self.check_element_on_page((By.ID, "show_4096")).is_selected())
                     user_settings['show_8192'] = int(self.check_element_on_page((By.ID, "show_8192")).is_selected())
                     user_settings['show_16384'] = int(self.check_element_on_page((By.ID, "show_16384")).is_selected())
+                    element = self.check_element_on_page((By.ID, "show_32768"))
+                    if element:
+                        user_settings['show_32768'] = element.is_selected()
+                    else:
+                        user_settings['show_32768'] = None
                     user_settings['Show_detail_random'] = int(self.check_element_on_page((By.ID, "Show_detail_random")).is_selected())
-                    user_settings['admin_role'] = int(self.check_element_on_page((By.ID, "admin_role")).is_selected())
+                    element = self.check_element_on_page((By.ID, "admin_role"))
+                    if element:
+                        user_settings['admin_role'] = element.is_selected()
+                    else:
+                        user_settings['admin_role'] = None
+
                     user_settings['download_role'] = int(self.check_element_on_page((By.ID, "download_role")).is_selected())
                     user_settings['upload_role'] = int(self.check_element_on_page((By.ID, "upload_role")).is_selected())
                     user_settings['edit_role'] = int(self.check_element_on_page((By.ID, "edit_role")).is_selected())
                     user_settings['delete_role'] = int(self.check_element_on_page((By.ID, "delete_role")).is_selected())
-                    user_settings['passwd_role'] = int(self.check_element_on_page((By.ID, "passwd_role")).is_selected())
-                    user_settings['edit_shelf_role'] = int(self.check_element_on_page((By.ID, "edit_shelf_role")).is_selected())
+                    element = self.check_element_on_page((By.ID, "passwd_role"))
+                    if element:
+                        user_settings['passwd_role'] = element.is_selected()
+                    else:
+                        user_settings['passwd_role'] = None
+                    element = self.check_element_on_page((By.ID, "edit_shelf_role"))
+                    if element:
+                        user_settings['edit_shelf_role'] = element.is_selected()
+                    else:
+                        user_settings['edit_shelf_role'] = None
                     user_settings['viewer_role'] = int(self.check_element_on_page((By.ID, "viewer_role")).is_selected())
                     return user_settings
 
