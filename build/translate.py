@@ -44,7 +44,6 @@ p.wait()
 # Include calibre iso639 translations of language names
 out_iso = dict()
 os.chdir(workdir)
-invers_lang_table = [x for x in need_iso['3bto3t'].values()]
 translation_list = list()
 
 lang_keys = need_iso['name_map'].keys()
