@@ -385,6 +385,14 @@ class calibre_web_visibilitys(unittest.TestCase, ui_class):
     # checks if admin can change user language
     '''def test_admin_alter_user(self):
         pass'''
+    def test_search_string(self):
+        self.adv_search({'book_title':'Hallo'}, get=False)
+        field = self.check_element_on_page((By.ID, "query"))
+        self.assertEqual('', field.get_attribute('value'))
+        self.search('Hallo')
+        field = self.check_element_on_page((By.ID, "query"))
+        self.assertEqual('Hallo',field.get_attribute('value'))
+
 
     def test_search_functions(self):
         cookie = self.driver.get_cookies()
