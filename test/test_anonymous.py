@@ -40,7 +40,7 @@ class test_anonymous(unittest.TestCase, ui_class):
 
     # Checks if random book section is available in all sidebar menus
     def test_guest_random_books_available(self):
-        self.edit_user('Guest',{'show_128':1, 'show_2': 1, 'show_64':1, 'show_8192': 1,
+        self.edit_user('Guest',{'show_128':1, 'show_2': 1, 'show_64':1, 'show_8192': 1, 'show_16384': 1,
                                 'show_16': 1, 'show_4': 1, 'show_4096': 1, 'show_8': 1, 'show_32':1})
         self.logout()
         # check random books shown in new section
@@ -48,7 +48,7 @@ class test_anonymous(unittest.TestCase, ui_class):
         self.assertTrue(self.check_element_on_page((By.ID, "books_rand")))
 
         # check random books shown in category section
-        list_element = self.goto_page('nav_cat')
+        '''list_element = self.goto_page('nav_cat')
         self.assertIsNotNone(list_element)
         list_element[0].click()
         self.assertTrue(self.check_element_on_page((By.ID, "books_rand")))
@@ -82,9 +82,15 @@ class test_anonymous(unittest.TestCase, ui_class):
         list_element = self.goto_page('nav_publisher')
         self.assertIsNotNone(list_element)
         list_element[0].click()
+        self.assertTrue(self.check_element_on_page((By.ID, "books_rand")))'''
+
+        # check random books shown in ratingd section
+        list_element = self.goto_page('nav_rate')
+        self.assertIsNotNone(list_element)
+        list_element[0].find_element_by_xpath('..').click()
         self.assertTrue(self.check_element_on_page((By.ID, "books_rand")))
 
-        # check random books shown in publisher section
+        # check random books shown in format section
         list_element = self.goto_page('nav_format')
         self.assertIsNotNone(list_element)
         list_element[0].click()
@@ -94,12 +100,15 @@ class test_anonymous(unittest.TestCase, ui_class):
         self.assertTrue(self.check_element_on_page((By.ID, "nav_rand")))
         self.check_element_on_page((By.ID, "top_user")).click()
         self.login('admin', 'admin123')
-        self.edit_user('Guest',{'show_32':0, 'show_128':0, 'show_2': 0,
+        self.edit_user('Guest',{'show_32':0, 'show_128':0, 'show_2': 0, 'show_8192': 0, 'show_16384': 0,
                                 'show_16': 0, 'show_4': 0, 'show_4096': 0, 'show_8': 0, 'show_64':0})
         self.logout()
         self.assertFalse(self.check_element_on_page((By.ID, "nav_read")))
         self.assertFalse(self.check_element_on_page((By.ID, "nav_unread")))
         self.assertFalse(self.check_element_on_page((By.ID, "nav_archived")))
+        self.assertFalse(self.check_element_on_page((By.ID, "nav_rate")))
+        self.assertFalse(self.check_element_on_page((By.ID, "nav_format")))
+        self.assertFalse(self.check_element_on_page((By.ID, "nav_publisher")))
         self.assertTrue(self.check_element_on_page((By.ID, "nav_new")))
         #login as admin again
         self.login('admin', 'admin123')
@@ -258,16 +267,30 @@ class test_anonymous(unittest.TestCase, ui_class):
 
     # checks if admin can change format
     def test_guest_change_visibility_format(self):
-        self.edit_user('Guest', {'show_8192': 1})
+        self.edit_user('Guest', {'show_16384': 1})
         self.assertTrue(self.check_element_on_page((By.ID, "flash_success")))
         self.logout()
         self.assertTrue(self.check_element_on_page((By.ID, "nav_format")))
         self.check_element_on_page((By.ID, "top_user")).click()
         self.login('admin', 'admin123')
-        self.edit_user('Guest',{'show_8192': 0})
+        self.edit_user('Guest',{'show_16384': 0})
         self.assertTrue(self.check_element_on_page((By.ID, "flash_success")))
         self.logout()
         self.assertFalse(self.check_element_on_page((By.ID, "nav_format")))
+
+    # checks if admin can change ratings
+    def test_guest_change_visibility_rating(self):
+        self.edit_user('Guest', {'show_8192': 1})
+        self.assertTrue(self.check_element_on_page((By.ID, "flash_success")))
+        self.logout()
+        self.assertTrue(self.check_element_on_page((By.ID, "nav_rate")))
+        self.check_element_on_page((By.ID, "top_user")).click()
+        self.login('admin', 'admin123')
+        self.edit_user('Guest',{'show_8192': 0})
+        self.assertTrue(self.check_element_on_page((By.ID, "flash_success")))
+        self.logout()
+        self.assertFalse(self.check_element_on_page((By.ID, "nav_rate")))
+
 
     # checks if admin can't change read and archive visibility, name, locale can't be changed and isn't visible
     def test_guest_restricted_settings_visibility(self):
