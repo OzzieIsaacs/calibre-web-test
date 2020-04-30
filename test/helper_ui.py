@@ -333,7 +333,7 @@ class ui_class():
         process_selects = dict()
         # special handling for checkboxes
         checkboxes = ['admin_role', 'download_role', 'upload_role', 'edit_role', 'delete_role', 'passwd_role',
-                      'viewer_role', 'edit_shelf_role', 'show_32', 'show_16', 'show_128',
+                      'viewer_role', 'edit_shelf_role', 'show_32', 'show_16', 'show_128', 'show_32768',
                         'show_2', 'show_4', 'show_8', 'show_64', 'show_256', 'show_8192', 'show_16384',
                         'Show_detail_random', 'show_4096']
         options = ['config_read_column']
@@ -346,7 +346,7 @@ class ui_class():
         if any(key in elements for key in ['admin_role', 'download_role', 'upload_role', 'edit_role', 'viewer_role',
                                            'delete_role', 'passwd_role', 'edit_shelf_role']):
             opener.append(1)
-        if any(key in elements for key in ['show_32', 'show_16', 'show_128',
+        if any(key in elements for key in ['show_32', 'show_16', 'show_128', 'show_32768',
                                            'show_2', 'show_4', 'show_8', 'show_64', 'show_8192', 'show_16384',
                                            'show_256', 'Show_detail_random', 'show_4096']):
             opener.append(2)

@@ -311,7 +311,7 @@ class test_ldap_login(unittest.TestCase, ui_class):
         self.assertEqual(rights['upload_role'], 0)
         self.assertEqual(rights['edit_shelf_role'], 0)
         self.assertEqual(rights['show_4'], 1)
-        self.assertEqual(rights['show_1024'], 1)
+        self.assertEqual(rights['show_4096'], 1)
         self.assertEqual(rights['email'], 'onny@beta.org')
         self.assertEqual(rights['kindle_mail'], '')
 
@@ -337,7 +337,7 @@ class test_ldap_login(unittest.TestCase, ui_class):
         rights = self.get_user_settings('执一')
         self.assertEqual(rights['show_256'],0)
         self.assertEqual(rights['show_16'], 1)
-        self.assertEqual(rights['show_1024'], 1)
+        self.assertEqual(rights['show_4096'], 1)
         self.assertEqual(rights['passwd_role'], 0)
         self.assertEqual(rights['upload_role'], 1)
 
@@ -667,7 +667,7 @@ class test_ldap_login(unittest.TestCase, ui_class):
         # start ldap
         self.server.relisten(config=2, port=3268, encrypt=None)
         # create new user
-        self.create_user('执一',{'email':'user0@exi.com','password':'1234', 'download_role': 1})
+        self.create_user('执一',{'email':'use10@oxi.com','password':'1234', 'download_role': 1})
         self.assertTrue(self.check_element_on_page((By.ID, "flash_success")))
         self.logout()
 

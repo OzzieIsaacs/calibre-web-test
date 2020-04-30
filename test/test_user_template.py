@@ -73,8 +73,8 @@ class test_user_template(unittest.TestCase, ui_class):
 
     def test_recent_user_template(self):
         self.fill_view_config({'show_4':0,'show_8':0, 'show_16':0, 'show_32':0, 'show_64':0, 'show_128':0,
-                               'show_256': 0, 'show_1024': 0, 'show_4096': 0, 'show_8192': 0,
-                               'show_16384': 0, 'show_32678': 0, 'show_2':0
+                               'show_256': 0, 'show_4096': 0, 'show_8192': 0,
+                               'show_16384': 0, 'show_32768': 0, 'show_2':0
                                })
         self.goto_page('create_user')
         self.create_user('recent',{'password':'1234','email':'a4@b.com'})
@@ -82,7 +82,6 @@ class test_user_template(unittest.TestCase, ui_class):
         self.logout()
         self.login('recent','1234')
         self.assertTrue(self.check_element_on_page((By.ID, "nav_new")))
-        # self.assertTrue(self.check_element_on_page((By.ID, "nav_sort")))
         self.assertFalse(self.check_element_on_page((By.ID, "nav_hot")))
         self.assertFalse(self.check_element_on_page((By.ID, "nav_rated")))
         self.assertFalse(self.check_element_on_page((By.ID, "nav_read")))
