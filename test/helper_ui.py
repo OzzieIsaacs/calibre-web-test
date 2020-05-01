@@ -1170,6 +1170,9 @@ class ui_class():
             ids = tree.findall("//*[@class='identifiers']//a")
             ret['Identifier'] = [id.text for id in ids]
 
+            # find cover
+            ret['cover'] = tree.find("//*[@class='cover']//img").attrib['src']
+
             tags = tree.findall("//*[@class='tags']//a")
             ret['tag'] = [tag.text for tag in tags]
 

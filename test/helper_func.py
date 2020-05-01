@@ -15,6 +15,7 @@ import psutil
 from helper_environment import environment
 from psutil import process_iter
 from signal import SIGKILL
+import sys
 
 try:
     import pycurl
@@ -124,6 +125,7 @@ def check_response_language_header(url, header, expected_response,search_text):
     if c.getinfo(c.RESPONSE_CODE) != expected_response:
         return False
     c.close()
+
     body = buffer.getvalue().decode('utf-8')
     return bool(re.search(search_text, body))
 
@@ -147,8 +149,16 @@ def add_dependency(name, testclass_name):
         requirements = f.readlines()
     for element in name:
         for line in requirements:
-            if not line.startswith('#') and not line == '\n' and not line.startswith('git') and line.upper().startswith(
-                    element.upper()):
+            if element.lower().startswith('git|') \
+                    and not line.startswith('#') \
+                    and not line == '\n' \
+                    and line.lower().startswith('git') \
+                    and line.lower().endswith('#egg=' + element.lower().lstrip('git|')+'\n'):
+                element_version.append(line.strip('\n'))
+            elif not line.startswith('#') \
+                    and not line == '\n' \
+                    and not line.startswith('git') \
+                    and line.upper().startswith(element.upper()):
                 element_version.append(line.split('=', 1)[0].strip('>'))
                 break
 
@@ -176,3 +186,17 @@ def kill_old_cps(port=8083):
                     break
         except (PermissionError, psutil.AccessDenied):
             pass
+
+
+def unrar_path():
+    if sys.platform == "win32":
+        unrar_path = ["C:\\program files\\WinRar\\unrar.exe", "C:\\program files(x86)\\WinRar\\unrar.exe"]
+    else:
+        unrar_path = ["/usr/bin/unrar"]
+    for element in unrar_path:
+        if os.path.isfile(element):
+            return element
+    return None
+
+def is_unrar_not_present():
+    return unrar_path() is None

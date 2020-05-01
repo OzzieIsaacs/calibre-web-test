@@ -15,10 +15,7 @@ COMMASPACE = ', '
 
 
 def is_calibre_not_present():
-    if calibre_path():
-        return False
-    else:
-        return True
+    return calibre_path() is None
 
 def calibre_path():
     if sys.platform == "win32":

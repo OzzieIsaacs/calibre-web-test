@@ -664,100 +664,157 @@ class test_edit_books(TestCase, ui_class):
     # check metadata recognition
     def test_upload_book_pdf(self):
         self.fill_basic_config({'config_uploading':1})
-        time.sleep(2)
+        time.sleep(3)
         self.goto_page('nav_new')
         upload_file = os.path.join(base_path, 'files', 'book.pdf')
         upload = self.check_element_on_page((By.ID, 'btn-upload'))
         upload.send_keys(upload_file)
-        # check file contents
         time.sleep(2)
+        self.check_element_on_page((By.ID, 'edit_cancel')).click()
+        details = self.get_book_details()
+        self.assertEqual('book', details['title'])
+        self.assertEqual('Unknown', details['author'][0])
+        cookie = self.driver.get_cookies()
+        cook = dict(session=cookie[1]['value'], remember_token=cookie[0]['value'])
+        resp = requests.get( 'http://127.0.0.1:8083' + details['cover'], cookies=cook)
+        self.assertEqual('23390',resp.headers['Content-Length'])
         self.fill_basic_config({'config_uploading': 0})
-
-
-    @skip("Not Implemented")
-    def test_delete_book(self):
-        pass
 
     # check metadata recognition
     def test_upload_book_fb2(self):
         self.fill_basic_config({'config_uploading':1})
-        time.sleep(2)
+        time.sleep(3)
         self.goto_page('nav_new')
         upload_file = os.path.join(base_path, 'files', 'book.fb2')
         upload = self.check_element_on_page((By.ID, 'btn-upload'))
         upload.send_keys(upload_file)
         # ToDo: check file contents
         time.sleep(2)
+        self.check_element_on_page((By.ID, 'edit_cancel')).click()
+        details = self.get_book_details()
+        self.assertEqual('book', details['title'])
+        self.assertEqual('Unknown', details['author'][0])
+        cookie = self.driver.get_cookies()
+        cook = dict(session=cookie[1]['value'], remember_token=cookie[0]['value'])
+        resp = requests.get( 'http://127.0.0.1:8083' + details['cover'], cookies=cook)
+        self.assertEqual('182574',resp.headers['Content-Length'])
         self.fill_basic_config({'config_uploading': 0})
 
     def test_upload_book_lit(self):
         self.fill_basic_config({'config_uploading':1})
-        time.sleep(2)
+        time.sleep(3)
         self.goto_page('nav_new')
         upload_file = os.path.join(base_path, 'files', 'book.lit')
         upload = self.check_element_on_page((By.ID, 'btn-upload'))
         upload.send_keys(upload_file)
         # ToDo: check file contents
         time.sleep(2)
+        self.check_element_on_page((By.ID, 'edit_cancel')).click()
+        details = self.get_book_details()
+        self.assertEqual('book', details['title'])
+        self.assertEqual('Unknown', details['author'][0])
+        cookie = self.driver.get_cookies()
+        cook = dict(session=cookie[1]['value'], remember_token=cookie[0]['value'])
+        resp = requests.get( 'http://127.0.0.1:8083' + details['cover'], cookies=cook)
+        self.assertEqual('182574',resp.headers['Content-Length'])
         self.fill_basic_config({'config_uploading': 0})
 
     def test_upload_book_mobi(self):
         self.fill_basic_config({'config_uploading':1})
-        time.sleep(2)
+        time.sleep(3)
         self.goto_page('nav_new')
         upload_file = os.path.join(base_path, 'files', 'book.mobi')
         upload = self.check_element_on_page((By.ID, 'btn-upload'))
         upload.send_keys(upload_file)
-        # ToDo: check file contents
         time.sleep(2)
+        self.check_element_on_page((By.ID, 'edit_cancel')).click()
+        details = self.get_book_details()
+        self.assertEqual('book', details['title'])
+        self.assertEqual('Unknown', details['author'][0])
+        cookie = self.driver.get_cookies()
+        cook = dict(session=cookie[1]['value'], remember_token=cookie[0]['value'])
+        resp = requests.get( 'http://127.0.0.1:8083' + details['cover'], cookies=cook)
+        self.assertEqual('182574',resp.headers['Content-Length'])
         self.fill_basic_config({'config_uploading': 0})
 
-    # check metadata rekognition
+
     def test_upload_book_epub(self):
         self.fill_basic_config({'config_uploading':1})
-        time.sleep(2)
+        time.sleep(3)
         self.goto_page('nav_new')
         upload_file = os.path.join(base_path, 'files', 'book.epub')
         upload = self.check_element_on_page((By.ID, 'btn-upload'))
         upload.send_keys(upload_file)
-        # ToDo: check file contents
+
         time.sleep(2)
+        self.check_element_on_page((By.ID, 'edit_cancel')).click()
+        details = self.get_book_details()
+        self.assertEqual('book9', details['title'])
+        self.assertEqual('Noname 23', details['author'][0])
+        cookie = self.driver.get_cookies()
+        cook = dict(session=cookie[1]['value'], remember_token=cookie[0]['value'])
+        resp = requests.get( 'http://127.0.0.1:8083' + details['cover'], cookies=cook)
+        self.assertEqual('8936',resp.headers['Content-Length'])
         self.fill_basic_config({'config_uploading': 0})
 
-    #check cover rekognition
+
     def test_upload_book_cbz(self):
         self.fill_basic_config({'config_uploading':1})
-        time.sleep(2)
+        time.sleep(3)
         self.goto_page('nav_new')
         upload_file = os.path.join(base_path, 'files', 'book.cbz')
         upload = self.check_element_on_page((By.ID, 'btn-upload'))
         upload.send_keys(upload_file)
-        # ToDo: check file contents
+
         time.sleep(2)
+        self.check_element_on_page((By.ID, 'edit_cancel')).click()
+        details = self.get_book_details()
+        self.assertEqual('book', details['title'])
+        self.assertEqual('Unknown', details['author'][0])
+        cookie = self.driver.get_cookies()
+        cook = dict(session=cookie[1]['value'], remember_token=cookie[0]['value'])
+        resp = requests.get( 'http://127.0.0.1:8083' + details['cover'], cookies=cook)
+        self.assertEqual('8936',resp.headers['Content-Length'])
         self.fill_basic_config({'config_uploading': 0})
 
-    #check cover rekognition
+
     def test_upload_book_cbt(self):
         self.fill_basic_config({'config_uploading':1})
-        time.sleep(2)
+        time.sleep(3)
         self.goto_page('nav_new')
         upload_file = os.path.join(base_path, 'files', 'book.cbt')
         upload = self.check_element_on_page((By.ID, 'btn-upload'))
         upload.send_keys(upload_file)
-        # ToDo: check file contents
+
         time.sleep(2)
+        self.check_element_on_page((By.ID, 'edit_cancel')).click()
+        details = self.get_book_details()
+        self.assertEqual('book', details['title'])
+        self.assertEqual('Unknown', details['author'][0])
+        cookie = self.driver.get_cookies()
+        cook = dict(session=cookie[1]['value'], remember_token=cookie[0]['value'])
+        resp = requests.get( 'http://127.0.0.1:8083' + details['cover'], cookies=cook)
+        self.assertEqual('8936',resp.headers['Content-Length'])
         self.fill_basic_config({'config_uploading': 0})
 
-    #check cover rekognition
+
     def test_upload_book_cbr(self):
         self.fill_basic_config({'config_uploading':1})
-        time.sleep(2)
+        time.sleep(3)
         self.goto_page('nav_new')
         upload_file = os.path.join(base_path, 'files', 'book.cbr')
         upload = self.check_element_on_page((By.ID, 'btn-upload'))
         upload.send_keys(upload_file)
-        # ToDo: check file contents
+
         time.sleep(2)
+        self.check_element_on_page((By.ID, 'edit_cancel')).click()
+        details = self.get_book_details()
+        self.assertEqual('book', details['title'])
+        self.assertEqual('Unknown', details['author'])
+        cookie = self.driver.get_cookies()
+        cook = dict(session=cookie[1]['value'], remember_token=cookie[0]['value'])
+        resp = requests.get( 'http://127.0.0.1:8083' + details['cover'], cookies=cook)
+        self.assertEqual('182574',resp.headers['Content-Length'])
         self.fill_basic_config({'config_uploading': 0})
 
     # download of books
