@@ -677,7 +677,7 @@ class test_edit_books(TestCase, ui_class):
         cookie = self.driver.get_cookies()
         cook = dict(session=cookie[1]['value'], remember_token=cookie[0]['value'])
         resp = requests.get( 'http://127.0.0.1:8083' + details['cover'], cookies=cook)
-        self.assertEqual('23390',resp.headers['Content-Length'])
+        self.assertEqual('182574',resp.headers['Content-Length'])
         self.fill_basic_config({'config_uploading': 0})
 
     # check metadata recognition
@@ -794,7 +794,7 @@ class test_edit_books(TestCase, ui_class):
         cookie = self.driver.get_cookies()
         cook = dict(session=cookie[1]['value'], remember_token=cookie[0]['value'])
         resp = requests.get( 'http://127.0.0.1:8083' + details['cover'], cookies=cook)
-        self.assertEqual('8936',resp.headers['Content-Length'])
+        self.assertEqual('182574',resp.headers['Content-Length'])
         self.fill_basic_config({'config_uploading': 0})
 
 
@@ -810,7 +810,7 @@ class test_edit_books(TestCase, ui_class):
         self.check_element_on_page((By.ID, 'edit_cancel')).click()
         details = self.get_book_details()
         self.assertEqual('book', details['title'])
-        self.assertEqual('Unknown', details['author'])
+        self.assertEqual('Unknown', details['author'][0])
         cookie = self.driver.get_cookies()
         cook = dict(session=cookie[1]['value'], remember_token=cookie[0]['value'])
         resp = requests.get( 'http://127.0.0.1:8083' + details['cover'], cookies=cook)

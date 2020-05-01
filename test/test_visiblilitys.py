@@ -167,35 +167,11 @@ class calibre_web_visibilitys(unittest.TestCase, ui_class):
         self.goto_page("nav_unread")
         self.assertTrue(self.check_element_on_page((By.ID, "books_rand")))
         self.assertFalse(self.check_element_on_page((By.ID, "nav_rand")))
-        # check random books not shown in sorted section
-        '''self.driver.find_element_by_id("nav_sort").click()
-        self.goto_page("nav_sort_old")
-        self.assertTrue(self.check_element_on_page((By.ID, "books_rand")))
-        self.assertFalse(self.check_element_on_page((By.ID, "nav_rand")))
-        self.goto_page("nav_sort_new")
-        self.assertTrue(self.check_element_on_page((By.ID, "books_rand")))
-        self.assertFalse(self.check_element_on_page((By.ID, "nav_rand")))
-        self.goto_page("nav_sort_asc")
-        self.assertTrue(self.check_element_on_page((By.ID, "books_rand")))
-        self.assertFalse(self.check_element_on_page((By.ID, "nav_rand")))
-        self.goto_page("nav_sort_desc")
-        self.assertTrue(self.check_element_on_page((By.ID, "books_rand")))
-        self.assertFalse(self.check_element_on_page((By.ID, "nav_rand")))'''
         # Go to admin section and reenable show random view
         self.goto_page('user_setup')
         self.change_user({'show_32':1})
         self.assertTrue(self.check_element_on_page((By.ID, "nav_rand")))
         self.assertTrue(self.check_element_on_page((By.ID, "flash_success")))
-
-    # Test if user can change visibility of sidebar view sorted
-    '''def test_admin_change_visibility_sorted(self):
-        self.goto_page('user_setup')
-        self.change_user({'show_sorted':0})
-        self.assertTrue(self.check_element_on_page((By.ID, "flash_success")))
-        self.assertFalse(self.check_element_on_page((By.ID, "nav_sort")))
-        self.change_user({'show_sorted': 1})
-        self.assertTrue(self.check_element_on_page((By.ID, "flash_success")))
-        self.assertTrue(self.check_element_on_page((By.ID, "nav_sort")))'''
 
     # Test if user can change visibility of sidebar view best rated books
     def test_admin_change_visibility_rated(self):

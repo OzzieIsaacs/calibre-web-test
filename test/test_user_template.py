@@ -78,6 +78,10 @@ class test_user_template(unittest.TestCase, ui_class):
                                })
         self.goto_page('create_user')
         self.create_user('recent',{'password':'1234','email':'a4@b.com'})
+        self.fill_view_config({'show_4':1,'show_8':1, 'show_16':1, 'show_32':1, 'show_64':1, 'show_128':1,
+                               'show_256': 1, 'show_4096': 1, 'show_8192': 1,
+                               'show_16384': 1, 'show_32768': 1, 'show_2': 1
+                               })
         self.assertTrue(self.check_element_on_page((By.ID, "flash_success")))
         self.logout()
         self.login('recent','1234')
@@ -189,7 +193,6 @@ class test_user_template(unittest.TestCase, ui_class):
         self.logout()
         self.login('series','1234')
         self.assertTrue(self.check_element_on_page((By.ID, "nav_new")))
-        # self.assertTrue(self.check_element_on_page((By.ID, "nav_sort")))
         self.assertTrue(self.check_element_on_page((By.ID, "nav_hot")))
         self.assertTrue(self.check_element_on_page((By.ID, "nav_rated")))
         self.assertTrue(self.check_element_on_page((By.ID, "nav_read")))

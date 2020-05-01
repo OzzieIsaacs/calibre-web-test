@@ -66,7 +66,7 @@ class Environment():
                 p = process_open([self.initial, "-m", "pip", "freeze"], (0))
                 p.wait()
                 dists = [str(d).strip().split("==") for d in p.stdout.readlines()]
-                normalized_Ext = [name.replace('_', '-').upper() for name in extension]
+                normalized_Ext = [name.replace('_', '-').upper().lstrip('GIT|') for name in extension]
                 for element in dists:
                     if element[0].replace('_','-').upper() in normalized_Ext:
                         self.result.append((element[0],element[1],test))

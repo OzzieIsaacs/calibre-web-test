@@ -201,7 +201,7 @@ class test_ebook_convert(unittest.TestCase, ui_class):
     # logout, login new user
     # check button send to kindle not visible
     def test_kindle_send_not_configured(self):
-        self.create_user('kindle', {'password': '123', 'email': 'a@b.com', 'edit_role':1})
+        self.create_user('kindle', {'password': '123', 'email': 'da@b.com', 'edit_role':1})
         self.logout()
         self.login('kindle', '123')
         details = self.get_book_details(5)
