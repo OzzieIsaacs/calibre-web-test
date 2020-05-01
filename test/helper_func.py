@@ -162,10 +162,11 @@ def add_dependency(name, testclass_name):
                 element_version.append(line.split('=', 1)[0].strip('>'))
                 break
 
-    for element in element_version:
+    for indx, element in enumerate(element_version):
         with process_open([VENV_PYTHON, "-m", "pip", "install", element], (0, 5)) as r:
             r.wait()
-            # r.terminate()
+        if element.lower().startswith('git'):
+            element_version[indx] = element[element.rfind('#egg=')+5:]
 
     environment.add_Environment(testclass_name, element_version)
 
