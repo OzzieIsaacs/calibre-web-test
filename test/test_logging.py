@@ -48,11 +48,11 @@ class test_logging(unittest.TestCase, ui_class):
         self.assertTrue(self.login("admin", "admin123"))
         with open(os.path.join(CALIBRE_WEB_PATH,'calibre-web.log'),'r') as logfile:
             data = logfile.read()
-        self.assertIsNotNone(re.findall('Login failed for user "admin" IP-adress:',data),"Login failed message not in Logfile")
+        self.assertIsNotNone(re.findall('Login failed for user "admin" IP-adress:',data), "Login failed message not in Logfile")
 
     @unittest.skip("Not Implemented")
     def test_failed_register(self):
-        self.assertIsNone('not Implemented','Registering user with wrong domain is not in Logfile')
+        self.assertIsNone('not Implemented', 'Registering user with wrong domain is not in Logfile')
 
 
     def test_debug_log(self):

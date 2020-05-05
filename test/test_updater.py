@@ -79,7 +79,7 @@ class test_updater(unittest.TestCase, ui_class):
                 zipObj.write(os.path.join(CALIBRE_WEB_PATH + '_2', 'cps.py'), arcname='calibre-web-0.6.6/cps.py')
         else:
             print('target directory already existing')
-            raise()
+            raise BaseException()
 
     @classmethod
     def return_cw(cls):
@@ -147,7 +147,7 @@ class test_updater(unittest.TestCase, ui_class):
         if beta:
             self.check_updater('{}.{}.{}'.format(*version3), "alert-warning")
         else:
-            self.check_updater('latest version installed', "alert-warning")
+            self.check_updater('latest version installed', "alert-success")
         self.goto_page('admin_setup')
 
         # We are last release before new minor release -> update to newest version
