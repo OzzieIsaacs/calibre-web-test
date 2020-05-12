@@ -9,9 +9,9 @@ from selenium.webdriver.support.ui import WebDriverWait
 from selenium.webdriver.support import expected_conditions as EC
 import time
 import shutil
-from ui_helper import ui_class
+from helper_ui import ui_class
 from subproc_wrapper import process_open
-from testconfig import CALIBRE_WEB_PATH, TEST_DB, BOOT_TIME
+from config_test import CALIBRE_WEB_PATH, TEST_DB, BOOT_TIME
 from parameterized import parameterized_class
 # test editing books on gdrive
 
@@ -20,6 +20,7 @@ from parameterized import parameterized_class
    { "py_version": u'/usr/bin/python'},
    { "py_version": u'/usr/bin/python3'}
 ],names=('Python27','Python36'))'''
+@unittest.skip("Not Implemented")
 class test_edit_books_gdrive(unittest.TestCase, ui_class):
     p=None
     driver = None
@@ -98,8 +99,7 @@ class test_edit_books_gdrive(unittest.TestCase, ui_class):
     # error metadata should occour
     # Test Capital letters and lowercase characters
     # booktitle with ,;|
-    @unittest.skip("Not Implemented")
-    def test_edit_title(self):
+    def edit_title(self):
         self.assertIsNone('Not Implemented')
 
     # goto Book 2
@@ -138,137 +138,108 @@ class test_edit_books_gdrive(unittest.TestCase, ui_class):
     # change author of book
     # error should occour
     # Test Capital letters and lowercase characters
-    @unittest.skip("Not Implemented")
-    def test_edit_author(self):
+    def edit_author(self):
         self.assertIsNone('Not Implemented')
 
     # series with unicode spaces, ,|,
-    @unittest.skip("Not Implemented")
-    def test_edit_series(self):
+    def edit_series(self):
         pass
 
-    @unittest.skip("Not Implemented")
-    def test_edit_category(self):
+    def edit_category(self):
         pass
 
     # choose language not part ob lib
-    @unittest.skip("Not Implemented")
-    def test_edit_language(self):
+    def edit_language(self):
         self.assertIsNone('Not Implemented')
 
-    @unittest.skip("Not Implemented")
-    def test_edit_publishing_date(self):
+    def edit_publishing_date(self):
         self.assertIsNone('Not Implemented')
 
-    @unittest.skip("Not Implemented")
-    def test_edit_publisher(self):
+    def edit_publisher(self):
         self.assertIsNone('Not Implemented')
 
     # change rating, delete rating
     # check if book with rating of 4 stars appears in list of hot books
-    @unittest.skip("Not Implemented")
-    def test_edit_rating(self):
+    def edit_rating(self):
         self.assertIsNone('Not Implemented')
 
     # change comments, add comments, delete comments
-    @unittest.skip("Not Implemented")
-    def test_edit_comments(self):
+    def edit_comments(self):
         self.assertIsNone('Not Implemented')
 
     # change comments, add comments, delete comments
-    @unittest.skip("Not Implemented")
-    def test_edit_custom_bool(self):
+    def edit_custom_bool(self):
         self.assertIsNone('Not Implemented')
 
     # change comments, add comments, delete comments
-    @unittest.skip("Not Implemented")
-    def test_edit_custom_rating(self):
+    def edit_custom_rating(self):
         self.assertIsNone('Not Implemented')
 
     # change comments, add comments, delete comments
-    @unittest.skip("Not Implemented")
-    def test_edit_custom_single_select(self):
+    def edit_custom_single_select(self):
         self.assertIsNone('Not Implemented')
 
     # change comments, add comments, delete comments
-    @unittest.skip("Not Implemented")
-    def test_edit_custom_text(self):
+    def edit_custom_text(self):
         self.assertIsNone('Not Implemented')
 
     # change comments, add comments, delete comments
-    @unittest.skip("Not Implemented")
-    def test_typeahead_language(self):
+    def typeahead_language(self):
         self.assertIsNone('Not Implemented')
 
-    @unittest.skip("Not Implemented")
-    def test_typeahead_series(self):
+    def typeahead_series(self):
         self.assertIsNone('Not Implemented')
 
-    @unittest.skip("Not Implemented")
-    def test_typeahead_author(self):
+    def typeahead_author(self):
         self.assertIsNone('Not Implemented')
 
-    @unittest.skip("Not Implemented")
-    def test_typeahead_tag(self):
+    def typeahead_tag(self):
         self.assertIsNone('Not Implemented')
 
-    @unittest.skip("Not Implemented")
-    def test_typeahead_publisher(self):
+    def typeahead_publisher(self):
         self.assertIsNone('Not Implemented')
 
-    @unittest.skip("Not Implemented")
-    def test_upload_cover_hdd(self):
+    def upload_cover_hdd(self):
         self.assertIsNone('Not Implemented')
 
-    @unittest.skip("Not Implemented")
-    def test_delete_format(self):
+    def delete_format(self):
         self.assertIsNone('Not Implemented')
 
-    @unittest.skip("Not Implemented")
-    def test_delete_book(self):
+    def delete_book(self):
         self.assertIsNone('Not Implemented')
 
-    # check metadata_recocknition
-    @unittest.skip("Not Implemented")
+    # check metadata_recognition
     def upload_book_pdf(self):
         self.assertIsNone('Not Implemented')
 
-    # check metadata_recocknition
-    @unittest.skip("Not Implemented")
+    # check metadata_recognition
     def upload_book_fb2(self):
         self.assertIsNone('Not Implemented')
 
-    @unittest.skip("Not Implemented")
     def upload_book_lit(self):
         self.assertIsNone('Not Implemented')
 
-    # check metadata_recocknition
-    @unittest.skip("Not Implemented")
+    # check metadata_recognition
     def upload_book_epub(self):
         self.assertIsNone('Not Implemented')
 
-    # check cover recocknition
-    @unittest.skip("Not Implemented")
+    # check cover recognition
     def upload_book_cbz(self):
         self.assertIsNone('Not Implemented')
 
-    # check cover recocknition
-    @unittest.skip("Not Implemented")
+    # check cover recognition
     def upload_book_cbt(self):
         self.assertIsNone('Not Implemented')
 
-    # check cover recocknition
-    @unittest.skip("Not Implemented")
+    # check cover recognition
     def upload_book_cbr(self):
         self.assertIsNone('Not Implemented')
 
     # database errors
-    @unittest.skip("Not Implemented")
-    def test_database_errors(self):
+    def database_errors(self):
         self.assertIsNone('Not Implemented')
 
     # download of books
-    @unittest.skip("Not Implemented")
-    def test_database_errors(self):
+    def download_books(self):
         self.assertIsNone('Not Implemented')
 

@@ -40,7 +40,10 @@ import copy
 import traceback
 from unittest import TestResult, TextTestResult
 from unittest.result import failfast
-
+import pkg_resources
+from config_test import CALIBRE_WEB_PATH
+import platform
+from helper_environment import environment
 from jinja2 import Template
 
 PY3K = (sys.version_info[0] > 2)
@@ -294,8 +297,9 @@ class CalibreResult(TextTestResult):
         except AttributeError:
             pass
 
+
     def stopTest(self, test):
-        """ Called after excute each test method. """
+        """ Called after execute each test method. """
         self._save_output_data()
         TestResult.stopTest(self, test)
         self.stop_time = time.time()
@@ -309,6 +313,7 @@ class CalibreResult(TextTestResult):
         # We must disconnect stdout in stopTest(),
         # which is guaranteed to be called.
         # self.complete_output()
+
 
     def addSuccess(self, test):
         """ Called when a test executes successfully. """
@@ -409,7 +414,11 @@ class CalibreResult(TextTestResult):
     @staticmethod
     def _format_duration(elapsed_time):
         """Format the elapsed time in seconds, or milliseconds if the duration is less than 1 second."""
-        if elapsed_time > 1:
+        if elapsed_time > 3600:
+            duration = '{}h {} min'.format(int(elapsed_time / 3600), int(elapsed_time % 3600))
+        elif elapsed_time > 60:
+            duration = '{}:{} min'.format(int(elapsed_time/60), int(elapsed_time%60))
+        elif elapsed_time > 1:
             duration = '{:2.2f} s'.format(elapsed_time)
         else:
             duration = '{:d} ms'.format(int(elapsed_time * 1000))
@@ -449,12 +458,13 @@ class CalibreResult(TextTestResult):
 
         return results_summary
 
-    def _get_header_info(self, tests, start_time):
+    def _get_header_info(self, tests, start_time, stop_time):
         results_summary = self.get_results_summary(tests)
 
         header_info = {
             "start_time": start_time,
-            "status": results_summary
+            "status": results_summary,
+            "stop_time": stop_time
         }
         return header_info
 
@@ -466,6 +476,7 @@ class CalibreResult(TextTestResult):
 
         return summaries
 
+
     def generate_reports(self, testRunner):
         """ Generate report(s) for all given test cases that have been run. """
         status_tags = ('success', 'danger', 'warning', 'info')
@@ -476,7 +487,8 @@ class CalibreResult(TextTestResult):
         if not testRunner.combine_reports:
             # # ToDo Implementent
             for test_case_class_name, test_case_tests in all_results.items():
-                header_info = self._get_header_info(test_case_tests, testRunner.start_time)
+                header_info = self._get_header_info(test_case_tests, testRunner.start_time,
+                                                    testRunner.start_time+ testRunner.time_taken)
                 html_file = render_html(
                     testRunner.template,
                     title=testRunner.report_title,
@@ -484,6 +496,7 @@ class CalibreResult(TextTestResult):
                     all_results={test_case_class_name: test_case_tests},
                     status_tags=status_tags,
                     summaries=summaries,
+                    environ=environment.get_Environment(),
                     **testRunner.template_args
                 )
                 # append test case name if multiple reports to be generated
@@ -496,7 +509,8 @@ class CalibreResult(TextTestResult):
         else:
             header_info = self._get_header_info(
                 [item for sublist in all_results.values() for item in sublist],
-                testRunner.start_time
+                testRunner.start_time,
+                testRunner.start_time + testRunner.time_taken
             )
             html_file = render_html(
                 testRunner.template,
@@ -506,6 +520,7 @@ class CalibreResult(TextTestResult):
                 results = report,
                 status_tags=status_tags,
                 summaries=summaries,
+                environ=environment.get_Environment(),
                 **testRunner.template_args
             )
             # if available, use user report name
@@ -521,8 +536,8 @@ class CalibreResult(TextTestResult):
         if not os.path.exists(dir_to):
             os.makedirs(dir_to)
 
-        if testRunner.timestamp:
-            report_name += "_" + testRunner.timestamp
+        #if testRunner.timestamp:
+        #    report_name += "_" + testRunner.timestamp
         report_name += ".html"
 
         path_file = os.path.abspath(os.path.join(dir_to, report_name))
@@ -533,15 +548,6 @@ class CalibreResult(TextTestResult):
 
     def _exc_info_to_string(self, err, test):
         """ Converts a sys.exc_info()-style tuple of values into a string."""
-        # if six.PY3:
-        #     # It works fine in python 3
-        #     try:
-        #         return super(_HTMLTestResult, self)._exc_info_to_string(
-        #             err, test)
-        #     except AttributeError:
-        #         # We keep going using the legacy python <= 2 way
-        #         pass
-
         # This comes directly from python2 unittest
         exctype, value, tb = err
         # Skip test runner traceback levels
@@ -576,83 +582,6 @@ class CalibreResult(TextTestResult):
             lines.append(line)
 
         return ''.join(lines)
-
-    def get_report_attributes(self, result):
-        """
-        Return report attributes as a list of tuples with (name, value).
-        Override this to add custom attributes.
-        """
-        start_time = str(self.startTime)
-        duration = str(self.stopTime - self.startTime)
-        statuses = []
-        if result.success_count:
-            statuses.append('Passed %s' % result.success_count)
-        if result.skip_count:
-            statuses.append('Skipped %s' % result.skip_count)
-        if result.failure_count:
-            statuses.append('Failed %s' % result.failure_count)
-        if result.error_count:
-            statuses.append('Errors %s' % result.error_count)
-        if statuses:
-            statuses = ', '.join(statuses)
-        else:
-            statuses = 'None'
-        group1 = [
-            ('Start Time', start_time),
-            ('Stop Time', str(self.stopTime)),
-            ('Duration', duration),
-            ('Status', statuses),
-        ]
-
-        return group1
-
-    # old entry point
-    def generate_report(self, result):
-        #generator = 'HTMLTestRunner %s' % __version__
-        #stylesheet = self._generate_stylesheet()
-        #heading = self._generate_heading(result)
-        return self._generate_report(result)
-        #ending = self._generate_ending()
-        '''output = self.HTML_TEMPLATE % dict(
-            title=saxutils.escape(self.title),
-            generator=generator,
-            version=__version__,
-            head_inserts=stylesheet,
-            header=heading,
-            result_table=report,
-            footer=ending,
-        )
-        if PY3K:
-            self.stream.write(output)
-        else:
-            self.stream.write(output.encode('utf8'))'''
-
-    '''def _generate_stylesheet(self):
-        return self.STYLESHEET_TEMPLATE
-
-    def _parse_attributes_group(self, group):
-        attrs_list = []
-        for attr_name, attr_value in group:
-            attr_line = self.HEADING_ATTRIBUTE_TEMPLATE % dict(
-                name=saxutils.escape(attr_name),
-                value=saxutils.escape(attr_value)
-            )
-            attrs_list.append(attr_line)
-        return attrs_list
-
-    def _generate_heading(self, result):
-        g1 = self.get_report_attributes(result)
-
-        pg1 = self._parse_attributes_group(g1)
-
-        heading = self.HEADING_TEMPLATE % dict(
-            title=saxutils.escape(self.title),
-            parameters_1=pg1[0],
-            parameters_2=pg1[1],
-            parameters_3=pg1[2],
-            description=saxutils.escape(self.description),
-        )
-        return heading'''
 
     def _generate_report(self, result):
         report = []
@@ -744,6 +673,8 @@ class CalibreResult(TextTestResult):
             tmpl = self.REPORT_TEST_NO_OUTPUT_TEMPLATE'''
         # o and e should be byte string because
         # they are collected from stdout and stderr?
+        if output is None:
+            output = ""
         if isinstance(output, str):
             # TODO: some problem with 'string_escape':
             # it escape \n and mess up formatting

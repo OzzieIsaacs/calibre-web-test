@@ -5,11 +5,13 @@
 from unittest import TestCase, skip
 import os
 from selenium.webdriver.common.by import By
+from selenium.webdriver.common.keys import Keys
 import time
-from ui_helper import ui_class
-from testconfig import TEST_DB
+from helper_ui import ui_class
+from config_test import TEST_DB, base_path
 from parameterized import parameterized_class
-from func_helper import startup
+from helper_func import startup, debug_startup, add_dependency, remove_dependency
+import requests
 
 '''@parameterized_class([
    { "py_version": u'/usr/bin/python'},
@@ -18,24 +20,29 @@ from func_helper import startup
 class test_edit_books(TestCase, ui_class):
     p=None
     driver = None
-    py_version = u'/usr/bin/python3'
+    dependencys = ['Pillow','lxml']
+    # py_version = u'/usr/bin/python3'
 
     @classmethod
     def setUpClass(cls):
+        add_dependency(cls.dependencys, cls.__name__)
+
         try:
             startup(cls, cls.py_version, {'config_calibre_dir':TEST_DB})
             time.sleep(3)
-        except:
+        except Exception as e:
             cls.driver.quit()
             cls.p.kill()
 
 
     @classmethod
     def tearDownClass(cls):
+        remove_dependency(cls.dependencys)
+        cls.stop_calibre_web()
         # close the browser window and stop calibre-web
         cls.driver.quit()
         cls.p.terminate()
-        cls.p.kill()
+        # cls.p.kill()
 
     # goto Book 1
     # Change Title with unicode chars
@@ -301,6 +308,9 @@ class test_edit_books(TestCase, ui_class):
         self.edit_book(content={'tags':u'gênot'})
         values = self.get_book_details()
         self.assertEqual(u'gênot',values['tag'][0])
+        self.get_book_details(12)
+        self.check_element_on_page((By.ID, "edit_book")).click()
+        self.edit_book(content={'tags':'Gênot'})
 
 
     def test_edit_publisher(self):
@@ -437,7 +447,6 @@ class test_edit_books(TestCase, ui_class):
         vals = self.get_book_details(5)
         self.assertEqual(0, len(vals['cust_columns']))
 
-
     # change comments, add comments, delete comments
     def test_edit_custom_single_select(self):
         self.get_book_details(5)
@@ -466,82 +475,365 @@ class test_edit_books(TestCase, ui_class):
     def test_edit_publishing_date(self):
         self.assertIsNone('Not Implemented')
 
+    def test_typeahead_functions(self):
+        cookie = self.driver.get_cookies()
+        cook = dict(session=cookie[1]['value'], remember_token=cookie[0]['value'])
+        r=requests.get('http://127.0.0.1:8083/get_languages_json', cookies=cook)
+        self.assertEqual(200,r.status_code)
+        r = requests.get('http://127.0.0.1:8083/get_matching_tags', cookies=cook)
+        self.assertEqual(200, r.status_code)
+        r = requests.get('http://127.0.0.1:8083/get_series_json', cookies=cook)
+        self.assertEqual(200, r.status_code)
+        r = requests.get('http://127.0.0.1:8083/get_tags_json', cookies=cook)
+        self.assertEqual(200, r.status_code)
+        r = requests.get('http://127.0.0.1:8083/get_publishers_json', cookies=cook)
+        self.assertEqual(200, r.status_code)
+        r = requests.get('http://127.0.0.1:8083/get_authors_json', cookies=cook)
+        self.assertEqual(200, r.status_code)
+
     # change comments, add comments, delete comments
-    @skip("Not Implemented")
     def test_typeahead_language(self):
-        pass
+        self.get_book_details(5)
+        self.check_element_on_page((By.ID, "edit_book")).click()
+        lang = self.check_element_on_page((By.ID, "languages"))
+        lang.send_keys(Keys.CONTROL, "a")
+        lang.send_keys(Keys.DELETE)
+        lang.send_keys('G')
+        time.sleep(1)
+        typeahead=self.check_element_on_page((By.CLASS_NAME, "tt-dataset-languages"))
+        typeahead_set = set(typeahead.text.split("\n"))
+        result = set(("German", "Greek; Modern (1453-)", "Ga", "Gayo", "Gbaya (Central African Republic)"))
+        self.assertEqual(typeahead_set, result)
+        lang.send_keys('a')
+        time.sleep(1)
+        typeahead_set = set(typeahead.text.split("\n"))
+        result = set(("Ga", "Gayo", "Gaelic; Scottish", "Galician", "Ganda"))
+        self.assertEqual(typeahead_set, result)
+        lang.send_keys('y')
+        time.sleep(1)
+        typeahead_set= set(typeahead.text.split("\n"))
+        result = set(("Gayo","Hiligaynon"))
+        self.assertEqual(typeahead_set, result)
+        lang.send_keys('o')
+        time.sleep(1)
+        lang.send_keys(Keys.DOWN)
+        lang.send_keys(Keys.RETURN)
+        self.check_element_on_page((By.ID, "submit")).click()
+        details = self.get_book_details(5)
+        self.assertEqual(details['languages'][0], 'Gayo')
+        self.get_book_details(5)
+        self.check_element_on_page((By.ID, "edit_book")).click()
+        self.edit_book(content={u'languages':u'English'})
 
-    @skip("Not Implemented")
     def test_typeahead_series(self):
-        pass
+        self.get_book_details(5)
+        self.check_element_on_page((By.ID, "edit_book")).click()
+        lang = self.check_element_on_page((By.ID, "series"))
+        lang.send_keys(Keys.CONTROL, "a")
+        lang.send_keys(Keys.DELETE)
+        lang.send_keys('D')
+        time.sleep(1)
+        typeahead=self.check_element_on_page((By.CLASS_NAME, "tt-dataset-series"))
+        self.assertEqual('Djüngel',typeahead.text)
+        lang.send_keys('j')
+        time.sleep(1)
+        typeahead = self.check_element_on_page((By.CLASS_NAME, "tt-dataset-series"))
+        self.assertEqual('Djüngel', typeahead.text)
+        lang.send_keys(Keys.DOWN)
+        lang.send_keys(Keys.RETURN)
+        self.check_element_on_page((By.ID, "submit")).click()
+        details = self.get_book_details(5)
+        self.assertEqual(details['series'], 'Djüngel')
+        self.get_book_details(5)
+        self.check_element_on_page((By.ID, "edit_book")).click()
+        self.edit_book(content={u'series':u''})
 
-    @skip("Not Implemented")
     def test_typeahead_author(self):
-        pass
+        self.get_book_details(5)
+        self.check_element_on_page((By.ID, "edit_book")).click()
+        lang = self.check_element_on_page((By.ID, "bookAuthor"))
+        lang.send_keys('&')
+        time.sleep(1)
+        typeahead=self.check_element_on_page((By.CLASS_NAME, "tt-dataset-authors"))
+        self.assertEqual('John Döe & John Döe\nJohn Döe & Peter Parker\nJohn Döe & Asterix Lionherd\nJohn Döe & Frodo Beutlin\nJohn Döe & Norbert Halagal',typeahead.text)
+        lang.send_keys('ro')
+        time.sleep(1)
+        typeahead = self.check_element_on_page((By.CLASS_NAME, "tt-dataset-authors"))
+        self.assertEqual('John Döe & Frodo Beutlin', typeahead.text)
+        lang.send_keys(Keys.DOWN)
+        lang.send_keys(Keys.RETURN)
+        self.check_element_on_page((By.ID, "submit")).click()
+        details = self.get_book_details(5)
+        self.assertEqual(details['author'][1], 'Frodo Beutlin')
+        self.assertEqual(details['author'][0], 'John Döe')
+        self.get_book_details(5)
+        self.check_element_on_page((By.ID, "edit_book")).click()
+        self.edit_book(content={u'bookAuthor':u'John Döe'})
 
-    @skip("Not Implemented")
     def test_typeahead_tag(self):
-        pass
+        self.get_book_details(5)
+        self.check_element_on_page((By.ID, "edit_book")).click()
+        lang = self.check_element_on_page((By.ID, "tags"))
+        lang.send_keys(Keys.CONTROL, "a")
+        lang.send_keys(Keys.DELETE)
+        lang.send_keys('g')
+        time.sleep(1)
+        typeahead=self.check_element_on_page((By.CLASS_NAME, "tt-dataset-tags"))
+        self.assertEqual('Gênot',typeahead.text)
+        lang.send_keys('e')
+        time.sleep(1)
+        typeahead = self.check_element_on_page((By.CLASS_NAME, "tt-dataset-tags"))
+        self.assertEqual('Gênot', typeahead.text)
+        lang.send_keys(Keys.DOWN)
+        lang.send_keys(Keys.RETURN)
+        self.check_element_on_page((By.ID, "submit")).click()
+        details = self.get_book_details(5)
+        self.assertEqual(details['tag'][0], 'Gênot')
+        self.get_book_details(5)
+        self.check_element_on_page((By.ID, "edit_book")).click()
+        self.edit_book(content={u'tags':u''})
 
-    @skip("Not Implemented")
     def test_typeahead_publisher(self):
-        pass
+        self.get_book_details(10)
+        self.check_element_on_page((By.ID, "edit_book")).click()
+        lang = self.check_element_on_page((By.ID, "publisher"))
+        lang.send_keys(Keys.CONTROL, "a")
+        lang.send_keys(Keys.DELETE)
+        lang.send_keys('a')
+        time.sleep(1)
+        typeahead=self.check_element_on_page((By.CLASS_NAME, "tt-dataset-publishers"))
+        self.assertEqual('Randomhäus',typeahead.text)
+        lang.send_keys(Keys.DOWN)
+        lang.send_keys(Keys.RETURN)
+        self.check_element_on_page((By.ID, "submit")).click()
+        details = self.get_book_details(10)
+        self.assertEqual(details['publisher'][0], 'Randomhäus')
+        self.get_book_details(10)
+        self.check_element_on_page((By.ID, "edit_book")).click()
+        self.edit_book(content={u'publisher':u''})
 
-    @skip("Not Implemented")
     def test_upload_cover_hdd(self):
-        pass
+        self.get_book_details(5)
+        self.check_element_on_page((By.ID, "edit_book")).click()
+        jpegcover = os.path.join(base_path, 'files', 'cover.jpg')
+        self.edit_book(content={'local_cover': jpegcover})
+        self.driver.refresh()
+        time.sleep(2)
+        #selenium-request didn't work for unknown reason cookie only accespted if slowly stepped through
+        cookie = self.driver.get_cookies()
+        cook = dict(session=cookie[1]['value'], remember_token=cookie[0]['value'])
+        resp = requests.get( 'http://127.0.0.1:8083/cover/5', cookies=cook)
+        with open(jpegcover, 'rb') as reader:
+            self.assertEqual(reader.read(),resp.content)
 
-    @skip("Not Implemented")
-    def test_delete_format(self):
-        pass
+        self.get_book_details(5)
+        self.check_element_on_page((By.ID, "edit_book")).click()
+        bmpcover = os.path.join(base_path, 'files', 'cover.bmp')
+        self.edit_book(content={'local_cover': bmpcover})
+        self.assertTrue(self.check_element_on_page((By.CLASS_NAME, "alert")))
+        self.driver.refresh()
+        time.sleep(2)
+        cookie = self.driver.get_cookies()
+        cook = dict(session=cookie[1]['value'], remember_token=cookie[0]['value'])
+        resp = requests.get( 'http://127.0.0.1:8083/cover/5', cookies=cook)
+        with open(jpegcover, 'rb') as reader:
+            self.assertEqual(reader.read(), resp.content)
 
-    @skip("Not Implemented")
-    def test_delete_book(self):
-        pass
+        self.get_book_details(5)
+        self.check_element_on_page((By.ID, "edit_book")).click()
+        pngcover = os.path.join(base_path, 'files', 'cover.png')
+        self.edit_book(content={'local_cover': pngcover})
+        self.driver.refresh()
+        time.sleep(2)
+        cookie = self.driver.get_cookies()
+        cook = dict(session=cookie[1]['value'], remember_token=cookie[0]['value'])
+        resp = requests.get( 'http://127.0.0.1:8083/cover/5', cookies=cook)
+        self.assertEqual('20317',resp.headers['Content-Length'])
 
-    # check metadata_recocknition
-    @skip("Not Implemented")
-    def upload_book_pdf(self):
-        pass
+        self.get_book_details(5)
+        self.check_element_on_page((By.ID, "edit_book")).click()
+        pngcover = os.path.join(base_path, 'files', 'cover.webp')
+        self.edit_book(content={'local_cover': pngcover})
+        self.driver.refresh()
+        time.sleep(2)
+        cookie = self.driver.get_cookies()
+        cook = dict(session=cookie[1]['value'], remember_token=cookie[0]['value'])
+        resp = requests.get( 'http://127.0.0.1:8083/cover/5', cookies=cook)
+        self.assertEqual('17420',resp.headers['Content-Length'])
 
-    # check metadata_recocknition
-    @skip("Not Implemented")
-    def upload_book_fb2(self):
-        pass
+    # check metadata recognition
+    def test_upload_book_pdf(self):
+        self.fill_basic_config({'config_uploading':1})
+        time.sleep(3)
+        self.goto_page('nav_new')
+        upload_file = os.path.join(base_path, 'files', 'book.pdf')
+        upload = self.check_element_on_page((By.ID, 'btn-upload'))
+        upload.send_keys(upload_file)
+        time.sleep(2)
+        self.check_element_on_page((By.ID, 'edit_cancel')).click()
+        details = self.get_book_details()
+        self.assertEqual('book', details['title'])
+        self.assertEqual('Unknown', details['author'][0])
+        cookie = self.driver.get_cookies()
+        cook = dict(session=cookie[1]['value'], remember_token=cookie[0]['value'])
+        resp = requests.get( 'http://127.0.0.1:8083' + details['cover'], cookies=cook)
+        self.assertEqual('182574',resp.headers['Content-Length'])
+        self.fill_basic_config({'config_uploading': 0})
 
-    @skip("Not Implemented")
-    def upload_book_lit(self):
-        pass
+    # check metadata recognition
+    def test_upload_book_fb2(self):
+        self.fill_basic_config({'config_uploading':1})
+        time.sleep(3)
+        self.goto_page('nav_new')
+        upload_file = os.path.join(base_path, 'files', 'book.fb2')
+        upload = self.check_element_on_page((By.ID, 'btn-upload'))
+        upload.send_keys(upload_file)
+        # ToDo: check file contents
+        time.sleep(2)
+        self.check_element_on_page((By.ID, 'edit_cancel')).click()
+        details = self.get_book_details()
+        self.assertEqual('book', details['title'])
+        self.assertEqual('Unknown', details['author'][0])
+        cookie = self.driver.get_cookies()
+        cook = dict(session=cookie[1]['value'], remember_token=cookie[0]['value'])
+        resp = requests.get( 'http://127.0.0.1:8083' + details['cover'], cookies=cook)
+        self.assertEqual('182574',resp.headers['Content-Length'])
+        self.fill_basic_config({'config_uploading': 0})
 
-    # check metadata_recocknition
-    @skip("Not Implemented")
-    def upload_book_epub(self):
-        pass
+    def test_upload_book_lit(self):
+        self.fill_basic_config({'config_uploading':1})
+        time.sleep(3)
+        self.goto_page('nav_new')
+        upload_file = os.path.join(base_path, 'files', 'book.lit')
+        upload = self.check_element_on_page((By.ID, 'btn-upload'))
+        upload.send_keys(upload_file)
+        # ToDo: check file contents
+        time.sleep(2)
+        self.check_element_on_page((By.ID, 'edit_cancel')).click()
+        details = self.get_book_details()
+        self.assertEqual('book', details['title'])
+        self.assertEqual('Unknown', details['author'][0])
+        cookie = self.driver.get_cookies()
+        cook = dict(session=cookie[1]['value'], remember_token=cookie[0]['value'])
+        resp = requests.get( 'http://127.0.0.1:8083' + details['cover'], cookies=cook)
+        self.assertEqual('182574',resp.headers['Content-Length'])
+        self.fill_basic_config({'config_uploading': 0})
 
-    #check cover recocknition
-    @skip("Not Implemented")
-    def upload_book_cbz(self):
-        pass
+    def test_upload_book_mobi(self):
+        self.fill_basic_config({'config_uploading':1})
+        time.sleep(3)
+        self.goto_page('nav_new')
+        upload_file = os.path.join(base_path, 'files', 'book.mobi')
+        upload = self.check_element_on_page((By.ID, 'btn-upload'))
+        upload.send_keys(upload_file)
+        time.sleep(2)
+        self.check_element_on_page((By.ID, 'edit_cancel')).click()
+        details = self.get_book_details()
+        self.assertEqual('book', details['title'])
+        self.assertEqual('Unknown', details['author'][0])
+        cookie = self.driver.get_cookies()
+        cook = dict(session=cookie[1]['value'], remember_token=cookie[0]['value'])
+        resp = requests.get( 'http://127.0.0.1:8083' + details['cover'], cookies=cook)
+        self.assertEqual('182574',resp.headers['Content-Length'])
+        self.fill_basic_config({'config_uploading': 0})
 
-    #check cover recocknition
-    @skip("Not Implemented")
-    def upload_book_cbt(self):
-        pass
 
-    #check cover recocknition
-    @skip("Not Implemented")
-    def upload_book_cbr(self):
-        pass
+    def test_upload_book_epub(self):
+        self.fill_basic_config({'config_uploading':1})
+        time.sleep(3)
+        self.goto_page('nav_new')
+        upload_file = os.path.join(base_path, 'files', 'book.epub')
+        upload = self.check_element_on_page((By.ID, 'btn-upload'))
+        upload.send_keys(upload_file)
 
-    # database errors
-    @skip("Not Implemented")
-    def test_database_errors(self):
-        pass
+        time.sleep(2)
+        self.check_element_on_page((By.ID, 'edit_cancel')).click()
+        details = self.get_book_details()
+        self.assertEqual('book9', details['title'])
+        self.assertEqual('Noname 23', details['author'][0])
+        cookie = self.driver.get_cookies()
+        cook = dict(session=cookie[1]['value'], remember_token=cookie[0]['value'])
+        resp = requests.get( 'http://127.0.0.1:8083' + details['cover'], cookies=cook)
+        self.assertEqual('8936',resp.headers['Content-Length'])
+        self.fill_basic_config({'config_uploading': 0})
+
+
+    def test_upload_book_cbz(self):
+        self.fill_basic_config({'config_uploading':1})
+        time.sleep(3)
+        self.goto_page('nav_new')
+        upload_file = os.path.join(base_path, 'files', 'book.cbz')
+        upload = self.check_element_on_page((By.ID, 'btn-upload'))
+        upload.send_keys(upload_file)
+
+        time.sleep(2)
+        self.check_element_on_page((By.ID, 'edit_cancel')).click()
+        details = self.get_book_details()
+        self.assertEqual('book', details['title'])
+        self.assertEqual('Unknown', details['author'][0])
+        cookie = self.driver.get_cookies()
+        cook = dict(session=cookie[1]['value'], remember_token=cookie[0]['value'])
+        resp = requests.get( 'http://127.0.0.1:8083' + details['cover'], cookies=cook)
+        self.assertEqual('8936',resp.headers['Content-Length'])
+        self.fill_basic_config({'config_uploading': 0})
+
+
+    def test_upload_book_cbt(self):
+        self.fill_basic_config({'config_uploading':1})
+        time.sleep(3)
+        self.goto_page('nav_new')
+        upload_file = os.path.join(base_path, 'files', 'book.cbt')
+        upload = self.check_element_on_page((By.ID, 'btn-upload'))
+        upload.send_keys(upload_file)
+
+        time.sleep(2)
+        self.check_element_on_page((By.ID, 'edit_cancel')).click()
+        details = self.get_book_details()
+        self.assertEqual('book', details['title'])
+        self.assertEqual('Unknown', details['author'][0])
+        cookie = self.driver.get_cookies()
+        cook = dict(session=cookie[1]['value'], remember_token=cookie[0]['value'])
+        resp = requests.get( 'http://127.0.0.1:8083' + details['cover'], cookies=cook)
+        self.assertEqual('8936',resp.headers['Content-Length'])
+        self.fill_basic_config({'config_uploading': 0})
+
+
+    def test_upload_book_cbr(self):
+        self.fill_basic_config({'config_uploading':1})
+        time.sleep(3)
+        self.goto_page('nav_new')
+        upload_file = os.path.join(base_path, 'files', 'book.cbr')
+        upload = self.check_element_on_page((By.ID, 'btn-upload'))
+        upload.send_keys(upload_file)
+
+        time.sleep(2)
+        self.check_element_on_page((By.ID, 'edit_cancel')).click()
+        details = self.get_book_details()
+        self.assertEqual('book', details['title'])
+        self.assertEqual('Unknown', details['author'][0])
+        cookie = self.driver.get_cookies()
+        cook = dict(session=cookie[1]['value'], remember_token=cookie[0]['value'])
+        resp = requests.get( 'http://127.0.0.1:8083' + details['cover'], cookies=cook)
+        self.assertEqual('182574',resp.headers['Content-Length'])
+        self.fill_basic_config({'config_uploading': 0})
 
     # download of books
-    @skip("Not Implemented")
-    def test_database_errors(self):
-        pass
+    def test_download_book(self):
+        self.get_book_details(5)
+        element=self.check_element_on_page((By.XPATH, "//*[starts-with(@id,'btnGroupDrop')]"))
+        cookie = self.driver.get_cookies()
+        cook = dict(session=cookie[1]['value'], remember_token=cookie[0]['value'])
+        download_link=element.get_attribute("href")
+        self.assertTrue(download_link.endswith('/5.epub'),'Download Link has invalid format for kobo browser, has to end with filename')
+        resp = requests.get(download_link, cookies=cook)
+        self.assertEqual(resp.headers['Content-Type'],'application/epub+zip')
+        self.assertEqual(resp.status_code, 200)
+        self.edit_user('admin',{'download_role':0})
+        resp = requests.get(download_link, cookies=cook)
+        self.assertEqual(resp.status_code, 403)
+        book = self.get_book_details(5)
+        self.assertNotIn('download',book)
+        self.edit_user('admin', {'download_role': 1})
 
     # If more than one book has the same: author, tag or series it should be possible to change uppercase
     # letters to lowercase and vice versa. Example:

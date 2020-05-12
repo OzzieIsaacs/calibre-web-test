@@ -1,21 +1,23 @@
-#!/usr/bin/env python
+#!/usr/bin/env python3
 # -*- coding: utf-8 -*-
-#from gevent import monkey
-#monkey.patch_all()
 
 # from parameterized import parameterized_class
 from HTMLTestRunner import runner as HTMLTestRunner
 import os
+import re
 import time
 import requests
 from subproc_wrapper import process_open
-from testconfig import SELENIUM_SERVER, CALIBRE_WEB_PATH
+from config_test import SELENIUM_SERVER, CALIBRE_WEB_PATH, VENV_PATH, VENV_PYTHON
 import unittest
 import sys
+import venv
 from CalibreResult import CalibreResult
-
+from helper_environment import environment
+from subprocess import check_output
 
 if __name__ == '__main__':
+    sub_dependencys = ["Werkzeug", "Jinja2", "singledispatch"]
     result=False
     retry=0
     while True:
@@ -25,24 +27,43 @@ if __name__ == '__main__':
         except:
             my_env = os.environ.copy()
             my_env["PATH"] = SELENIUM_SERVER + ":" + my_env["PATH"]
-            print ('Selenium not running')
+            print ('Selenium server not running, trying to start')
             p = process_open(["java", "-jar", SELENIUM_SERVER], (2), my_env)
             time.sleep(5)
             result= False
             retry +=1
             if retry >3:
-                print ("Can't start selenium server")
+                print ("Couldn't start Selenium server")
                 exit()
         if result:
+            print("Selenium server successfully started")
             break
 
+    # check pip ist installed
+    if os.name != 'nt':
+        pversion=list()
+        p = process_open(["python3.6", "-m", "pip", "-V"])
+        p.wait()
+        res = (p.stdout.readlines())
+        pip = re.match(("pip\s(.*)\sfrom\s(.*)\s\((.*)\).*"),res[0])
+        if pip:
+            print("Found Pip for {} in {}".format(pip[3],pip[2]))
+        else:
+            print("Pip not found, can't setup test environment")
+            exit()
 
-    # all_tests = unittest.TestLoader().loadTestsFromName('test_email_ssl')
+    # generate virtual environment
+    venv.create(VENV_PATH, clear=True, with_pip=True)
+    print("Creating virtual environment for testing")
+
+
+    requirements_file = os.path.join(CALIBRE_WEB_PATH, 'requirements.txt')
+    p = process_open([VENV_PYTHON, "-m", "pip", "install", "-r",requirements_file],(0,5))
+    p.wait()
+    environment.init_Environment(VENV_PYTHON, sub_dependencys)
+
     all_tests = unittest.TestLoader().discover('.')
-    # open the report file
-    outfile = open(os.path.join(CALIBRE_WEB_PATH,'test',"Calibre-Web TestSummary1.html"), "w")
     # configure HTMLTestRunner options
-    #runner = HTMLTestRunner.HTMLTestRunner(stream=outfile, report_title='Test Report', report_name='All Calibre-Web tests', verbosity=2)
     outfile = os.path.join(CALIBRE_WEB_PATH, 'test')
     template = os.path.join(os.path.dirname(__file__), 'htmltemplate', 'report_template.html')
     runner = HTMLTestRunner.HTMLTestRunner(output=outfile,report_name="Calibre-Web TestSummary",

@@ -8,9 +8,9 @@ from selenium.webdriver.common.by import By
 from selenium.common.exceptions import WebDriverException
 import time
 import shutil
-from ui_helper import ui_class
+from helper_ui import ui_class
 from subproc_wrapper import process_open
-from testconfig import CALIBRE_WEB_PATH, TEST_DB, BOOT_TIME
+from config_test import CALIBRE_WEB_PATH, TEST_DB, BOOT_TIME
 import re
 import sys
 
@@ -72,9 +72,11 @@ class test_cli(unittest.TestCase, ui_class):
             self.login("admin", "admin123")
             time.sleep(3)
             self.assertTrue(self.check_element_on_page((By.NAME, "query")))
+            self.stop_calibre_web(self.p)
+
         except:
             pass
-        self.p.kill()
+        self.p.terminate()
 
 
     def test_cli_different_settings_database(self):
@@ -86,6 +88,11 @@ class test_cli(unittest.TestCase, ui_class):
 
         time.sleep(15)
         # navigate to the application home page
+        try:
+            self.driver.switch_to.alert.accept()
+        except Exception:
+            pass
+        self.driver.refresh()
         self.driver.get("http://127.0.0.1:8083")
 
         # Wait for config screen to show up
@@ -97,7 +104,11 @@ class test_cli(unittest.TestCase, ui_class):
         # Wait for config screen with login button to show up
         login_button = self.check_element_on_page((By.NAME, "login"))
         self.assertTrue(login_button)
-        self.p.kill()
+        login_button.click()
+        self.login('admin','admin123')
+        self.stop_calibre_web(self.p)
+        self.p.terminate()
+        time.sleep(3)
         self.assertTrue(os.path.isfile(new_db), "New settingsfile location not accepted")
         os.remove(new_db)
 
@@ -185,9 +196,13 @@ class test_cli(unittest.TestCase, ui_class):
 
         p = process_open([self.py_version, os.path.join(CALIBRE_WEB_PATH,u'cps.py'),
                         '-c', real_crt_file, '-k', real_key_file],(1,3,5))
+
         if p.poll() is not None:
             self.assertIsNone('Fail','Unexpected error')
+            p.kill()
+        p.terminate()
         time.sleep(10)
+        p.poll()
 
         # navigate to the application home page
         try:
@@ -217,7 +232,10 @@ class test_cli(unittest.TestCase, ui_class):
 
         shutil.rmtree(os.path.join(CALIBRE_WEB_PATH, 'hü lo'), ignore_errors=True)
         self.assertTrue(self.check_element_on_page((By.ID, "config_calibre_dir")))
-        p.kill()
+        p.terminate()
+        time.sleep(3)
+        p.poll()
+
 
     # @unittest.expectedFailure
     @unittest.skip("Not Implemented")
@@ -231,11 +249,17 @@ class test_cli(unittest.TestCase, ui_class):
         time.sleep(15)
         # navigate to the application home page
         try:
+            self.driver.switch_to.alert.accept()
+        except Exception:
+            pass
+        try:
             self.driver.get("http://127.0.0.1:8082")
         except WebDriverException as e:
             self.assertIsNotNone(re.findall('Reached error page: about:neterror?e=connectionFailure', e.msg))
         self.assertTrue(self.check_element_on_page((By.ID, "config_calibre_dir")))
-        p.kill()
+        p.terminate()
+        time.sleep(3)
+        p.poll()
 
     # @unittest.expectedFailure
     # @unittest.skip("Not Implemented")
@@ -251,9 +275,11 @@ class test_cli(unittest.TestCase, ui_class):
         time.sleep(BOOT_TIME)
         result = p2.poll()
         if result is None:
-            p2.kill()
+            p2.terminate()
             self.assert_('2nd process not terminated, port is already in use')
         self.assertEqual(result, 1)
-        p1.kill()
+        p1.terminate()
+        time.sleep(3)
+        p1.poll()
 
 

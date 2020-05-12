@@ -1,20 +1,22 @@
 #!/usr/bin/env python
 # -*- coding: utf-8 -*-
-from email_convert_helper import AIOSMTPServer
-import email_convert_helper
+from helper_email_convert import AIOSMTPServer
+import helper_email_convert
 import unittest
 from selenium.webdriver.common.by import By
 import time
-from ui_helper import ui_class
-from testconfig import CALIBRE_WEB_PATH, TEST_DB, BOOT_TIME
+from helper_ui import ui_class
+from config_test import CALIBRE_WEB_PATH, TEST_DB, BOOT_TIME
 # from parameterized import parameterized_class
-from func_helper import startup
+from helper_func import startup, wait_Email_received
+import requests
+import re
 
 '''@parameterized_class([
    { "py_version": u'/usr/bin/python'},
    { "py_version": u'/usr/bin/python3'},
 ],names=('Python27','Python36'))'''
-@unittest.skipIf(email_convert_helper.is_calibre_not_present(),"Skipping convert, calibre not found")
+@unittest.skipIf(helper_email_convert.is_calibre_not_present(),"Skipping convert, calibre not found")
 class test_STARTTLS(unittest.TestCase, ui_class):
     p=None
     driver = None
@@ -36,7 +38,7 @@ class test_STARTTLS(unittest.TestCase, ui_class):
         cls.email_server.start()
         try:
             startup(cls, cls.py_version, {'config_calibre_dir':TEST_DB,
-                                          'config_converterpath':email_convert_helper.calibre_path(),
+                                          'config_converterpath':helper_email_convert.calibre_path(),
                                           'config_ebookconverter':'converter2'})
 
             cls.edit_user('admin', {'email': 'a5@b.com','kindle_mail': 'a1@b.com'})
@@ -49,9 +51,10 @@ class test_STARTTLS(unittest.TestCase, ui_class):
 
     @classmethod
     def tearDownClass(cls):
+        cls.stop_calibre_web()
         # close the browser window and stop calibre-web
         cls.driver.quit()
-        cls.p.kill()
+        cls.p.terminate()
         cls.email_server.stop()
         time.sleep(2)
 
@@ -96,3 +99,47 @@ class test_STARTTLS(unittest.TestCase, ui_class):
                     break
             i += 1
         self.assertEqual(ret[-1]['result'], 'Failed')
+
+
+    def test_STARTTLS_resend_password(self):
+        self.create_user('paswd_resend', {'password': '123', 'email': 'a@b.com', 'edit_role': 1})
+        self.setup_server(False, {'mail_use_ssl': 'STARTTLS'})
+        self.assertTrue(self.edit_user(u'paswd_resend', { 'resend_password':1}))
+        self.edit_user('paswd_resend', element={})
+        password_link = self.check_element_on_page((By.ID, "resend_password")).find_elements_by_tag_name("a")[0].get_attribute('href')
+        user_id = password_link[password_link.rfind("/")+1:]
+        self.logout()
+        self.assertTrue(wait_Email_received(self.email_server.handler.check_email_received))
+        user, passw = self.email_server.handler.extract_register_info()
+        self.email_server.handler.reset_email_received()
+        self.assertTrue(self.login(user, passw))
+        self.assertTrue(self.check_element_on_page((By.ID, "flash_success")))
+        self.logout()
+        self.login('admin','admin123')
+        self.assertTrue(self.check_element_on_page((By.ID, "flash_success")))
+        self.setup_server(False, {'mail_server': 'mail.example.org'})
+        # check button disappears
+        self.edit_user('paswd_resend', element={})
+        self.assertFalse(self.check_element_on_page((By.ID, "resend_password")))
+        self.driver.get('http://127.0.0.1:8083/admin/user/99')
+        self.assertTrue(self.check_element_on_page((By.ID, "flash_alert")))
+        self.driver.get(password_link)
+        self.assertTrue(self.check_element_on_page((By.ID, "flash_alert")))
+        self.driver.get(password_link[:password_link.rfind("/")] + '/99')
+        self.assertTrue(self.check_element_on_page((By.ID, "flash_alert")))
+        '''cookie = self.driver.get_cookies()
+        cook = dict(session=cookie[1]['value'], remember_token=cookie[0]['value'])
+        req_session = requests.session()
+        req_session.get('http://127.0.0.1:8083/admin/user/' + user_id, cookies=cook)
+        resp = req_session.get(password_link)
+        alert = re.search('(id="flash_alert")', resp.text)
+        self.assertTrue(alert[1])
+        # check route isn't reachable
+        # check route does nothing with invalid id
+        resp = req_session.get( password_link[:password_link.rfind("/")] + '/99')
+        alert = re.search('(id="flash_alert")', resp.text)
+        self.assertTrue(alert[1])
+        req_session.close()'''
+
+        self.edit_user('paswd_resend',{'delete':1})
+        self.setup_server(False, {'mail_server': '127.0.0.1'})

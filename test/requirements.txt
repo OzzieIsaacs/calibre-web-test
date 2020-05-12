@@ -3,3 +3,7 @@ selenium>=3.14.0
 lxml>=4.0.0
 public>=2018.11.20
 pycurl>=7.19.0
+virtualenv>=12.0
+mitmproxy>=4.0.0
+ldaptor>=16.0
+psutil>=3.0.0

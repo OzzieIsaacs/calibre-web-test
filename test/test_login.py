@@ -5,9 +5,9 @@ import unittest
 from selenium.webdriver.common.by import By
 from selenium.common.exceptions import WebDriverException
 import re
-from ui_helper import ui_class
-from testconfig import TEST_DB
-from func_helper import startup, check_response_language_header, curl_available
+from helper_ui import ui_class
+from config_test import TEST_DB
+from helper_func import startup, check_response_language_header, curl_available, digest_login
 from parameterized import parameterized_class
 
 
@@ -30,9 +30,11 @@ class test_login(unittest.TestCase, ui_class):
 
     @classmethod
     def tearDownClass(cls):
+        cls.login('admin','admin123')
+        cls.stop_calibre_web()
         # close the browser window and stop calibre-web
         cls.driver.quit()
-        cls.p.kill()
+        cls.p.terminate()
 
     def tearDown(self):
         if self.check_user_logged_in('', True):
@@ -51,7 +53,7 @@ class test_login(unittest.TestCase, ui_class):
             return 2
         elif self.driver.title == u'Calibre-Web | HTTP Error (Error 405)':
             return 2
-        elif self.driver.title == u'Calibre-Web | login':
+        elif self.driver.title == u'Calibre-Web | Login' or self.driver.title == u'Calibre-Web | login':
             return 1
         else:
             return 0
@@ -148,7 +150,7 @@ class test_login(unittest.TestCase, ui_class):
         self.assertEqual(self.fail_access_page("http://127.0.0.1:8083/show/1/epub"),1)
         self.assertEqual(self.fail_access_page("http://127.0.0.1:8083/read/1/epub"),1)
         self.assertEqual(self.fail_access_page("http://127.0.0.1:8083/download/1/epub"),1)
-        self.assertEqual(self.fail_access_page("http://127.0.0.1:8083/download/1/epub/name"),2)
+        self.assertEqual(self.fail_access_page("http://127.0.0.1:8083/download/1/epub/name"),1) # important this endpoint has to exist, otherwise Kobo download will fail
         self.assertEqual(self.fail_access_page("http://127.0.0.1:8083/register"),2)
         self.assertEqual(self.fail_access_page("http://127.0.0.1:8083/logout"),1)
         self.assertEqual(self.fail_access_page("http://127.0.0.1:8083/remote_login"),2)
@@ -256,15 +258,30 @@ class test_login(unittest.TestCase, ui_class):
     def test_login_delete_admin(self):
         self.driver.get("http://127.0.0.1:8083/login")
         self.login('admin','admin123')
+        self.assertTrue(self.check_element_on_page((By.ID, "flash_success")))
         self.create_user('admin2',{'password':'admin2', 'admin_role':1 ,'email':'a3@b.com'})
+        self.assertTrue(self.check_element_on_page((By.ID, "flash_success")))
         self.logout()
         self.assertTrue(self.login('admin2','admin2'))
+        self.assertTrue(self.check_element_on_page((By.ID, "flash_success")))
         self.edit_user('admin',{'delete':1})
+        self.assertTrue(self.check_element_on_page((By.ID, "flash_success")))
         self.logout()
         self.assertFalse(self.login('admin','admin123'))
         self.login('admin2','admin2')
+        self.assertTrue(self.check_element_on_page((By.ID, "flash_success")))
         self.create_user('admin',{'password':'admin123', 'admin_role':1,'email':'a4@b.com'})
+        self.assertTrue(self.check_element_on_page((By.ID, "flash_success")))
         self.logout()
+        self.login('admin', 'admin123')
+        self.edit_user('admin2',{'delete':1})
+        self.assertTrue(self.check_element_on_page((By.ID, "flash_success")))
+        self.edit_user('admin', {'admin_role': 0})
+        self.assertTrue(self.check_element_on_page((By.ID, "flash_alert")))
+        self.edit_user('admin', {'delete': 1})
+        self.assertTrue(self.check_element_on_page((By.ID, "flash_alert")))
+        self.logout()
+
 
     @unittest.skipIf(not curl_available, "Skipping language detection, pycurl not available")
     def test_login_locale_select(self):
@@ -283,7 +300,7 @@ class test_login(unittest.TestCase, ui_class):
         self.assertTrue(check_response_language_header(url,
                                                        ['Accept-Language: zh_cn;q=0.9,de;q=0.8,en;q=0.7'],
                                                        200,
-                                                       '<label for="username">用户名</label>'))
+                                                       '<label for="username">昵称</label>'))
         self.assertTrue(check_response_language_header(url,
                                                        ['Accept-Language: xx'],
                                                        200,
@@ -295,4 +312,9 @@ class test_login(unittest.TestCase, ui_class):
                                                        '<label for="username">Username</label>'),
                         'Locale detect with only "*" failed')
 
+    # CHek that digest Authentication header doesn't crash the aplication
+    @unittest.skipIf(not curl_available, "Skipping auth_login, pycurl not available")
+    def test_digest_login(self):
+        url = 'http://127.0.0.1:8083/login'
+        self.assertTrue(digest_login(url,200))
 

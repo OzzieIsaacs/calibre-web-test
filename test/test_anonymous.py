@@ -3,15 +3,11 @@
 
 import unittest
 from selenium.webdriver.common.by import By
-from ui_helper import ui_class
-from testconfig import TEST_DB
-from func_helper import startup
+from helper_ui import ui_class
+from config_test import TEST_DB
+from helper_func import startup
 from parameterized import parameterized_class
-
-'''
-guest user support test
-'''
-
+import time
 
 '''@parameterized_class([
    { "py_version": u'/usr/bin/python'},
@@ -20,7 +16,6 @@ guest user support test
 class test_anonymous(unittest.TestCase, ui_class):
     p=None
     driver = None
-    # py_version = u'/usr/bin/python3'
 
     @classmethod
     def setUpClass(cls):
@@ -28,9 +23,10 @@ class test_anonymous(unittest.TestCase, ui_class):
 
     @classmethod
     def tearDownClass(cls):
+        cls.stop_calibre_web()
         #close the browser window and stop calibre-web
         cls.driver.quit()
-        cls.p.kill()
+        cls.p.terminate()
 
     def tearDown(self):
         if not self.check_user_logged_in('admin'):
@@ -44,7 +40,7 @@ class test_anonymous(unittest.TestCase, ui_class):
 
     # Checks if random book section is available in all sidebar menus
     def test_guest_random_books_available(self):
-        self.edit_user('Guest',{'show_512':1, 'show_128':1, 'show_2': 1, 'show_64':1,
+        self.edit_user('Guest',{'show_128':1, 'show_2': 1, 'show_64':1, 'show_8192': 1, 'show_16384': 1,
                                 'show_16': 1, 'show_4': 1, 'show_4096': 1, 'show_8': 1, 'show_32':1})
         self.logout()
         # check random books shown in new section
@@ -52,7 +48,7 @@ class test_anonymous(unittest.TestCase, ui_class):
         self.assertTrue(self.check_element_on_page((By.ID, "books_rand")))
 
         # check random books shown in category section
-        list_element = self.goto_page('nav_cat')
+        '''list_element = self.goto_page('nav_cat')
         self.assertIsNotNone(list_element)
         list_element[0].click()
         self.assertTrue(self.check_element_on_page((By.ID, "books_rand")))
@@ -86,19 +82,42 @@ class test_anonymous(unittest.TestCase, ui_class):
         list_element = self.goto_page('nav_publisher')
         self.assertIsNotNone(list_element)
         list_element[0].click()
+        self.assertTrue(self.check_element_on_page((By.ID, "books_rand")))'''
+
+        # check random books shown in ratingd section
+        list_element = self.goto_page('nav_rate')
+        self.assertIsNotNone(list_element)
+        list_element[0].find_element_by_xpath('..').click()
+        self.assertTrue(self.check_element_on_page((By.ID, "books_rand")))
+
+        # check random books shown in format section
+        list_element = self.goto_page('nav_format')
+        self.assertIsNotNone(list_element)
+        list_element[0].click()
         self.assertTrue(self.check_element_on_page((By.ID, "books_rand")))
 
         # Check random menu is in sidebar
         self.assertTrue(self.check_element_on_page((By.ID, "nav_rand")))
         self.check_element_on_page((By.ID, "top_user")).click()
         self.login('admin', 'admin123')
-        self.edit_user('Guest',{'show_32':0, 'show_512':0, 'show_128':0, 'show_2': 0,
+        self.edit_user('Guest',{'show_32':0, 'show_128':0, 'show_2': 0, 'show_8192': 0, 'show_16384': 0,
                                 'show_16': 0, 'show_4': 0, 'show_4096': 0, 'show_8': 0, 'show_64':0})
+        self.logout()
+        self.assertFalse(self.check_element_on_page((By.ID, "nav_read")))
+        self.assertFalse(self.check_element_on_page((By.ID, "nav_unread")))
+        self.assertFalse(self.check_element_on_page((By.ID, "nav_archived")))
+        self.assertFalse(self.check_element_on_page((By.ID, "nav_rate")))
+        self.assertFalse(self.check_element_on_page((By.ID, "nav_format")))
+        self.assertFalse(self.check_element_on_page((By.ID, "nav_publisher")))
+        self.assertTrue(self.check_element_on_page((By.ID, "nav_new")))
+        #login as admin again
+        self.login('admin', 'admin123')
+
 
 
     # checks if admin can configure sidebar for random view
     def test_guest_visibility_sidebar(self):
-        self.edit_user('Guest',{'show_32':0, 'show_512':1, 'show_128':1, 'show_2': 1,
+        self.edit_user('Guest',{'show_32':0, 'show_128':1, 'show_2': 1,
                                 'show_16': 1, 'show_4': 1, 'show_4096': 1, 'show_8': 1, 'show_64':1})
         self.assertTrue(self.check_element_on_page((By.ID, "flash_success")))
         self.logout()
@@ -178,7 +197,7 @@ class test_anonymous(unittest.TestCase, ui_class):
         self.assertTrue(self.check_element_on_page((By.ID, "nav_rand")))
         self.check_element_on_page((By.ID, "top_user")).click()
         self.login('admin', 'admin123')
-        self.edit_user('Guest',{'show_32':0, 'show_512':0, 'show_128':0, 'show_2': 0,
+        self.edit_user('Guest',{'show_32':0, 'show_128':0, 'show_2': 0,
                                 'show_16': 0, 'show_4': 0, 'show_4096': 0, 'show_8': 0, 'show_64':0})
 
     # Test if user can change visibility of sidebar view best rated books
@@ -193,15 +212,6 @@ class test_anonymous(unittest.TestCase, ui_class):
         self.assertTrue(self.check_element_on_page((By.ID, "flash_success")))
         self.logout()
         self.assertFalse(self.check_element_on_page((By.ID, "nav_rated")))
-
-    # Test if user can change visibility of sidebar view read and unread books
-    def test_guest_visibility_read(self):
-        self.goto_page('admin_setup')
-        user = self.driver.find_elements_by_xpath("//table[@id='table_user']/tbody/tr/td/a")
-        for ele in user:
-            if ele.text == 'Guest':
-                ele.click()
-                self.assertFalse(self.check_element_on_page((By.ID, "show_256")))
 
     # checks if admin can change user language
     def test_guest_change_visibility_language(self):
@@ -254,6 +264,45 @@ class test_anonymous(unittest.TestCase, ui_class):
         self.assertTrue(self.check_element_on_page((By.ID, "flash_success")))
         self.logout()
         self.assertFalse(self.check_element_on_page((By.ID, "nav_publisher")))
+
+    # checks if admin can change format
+    def test_guest_change_visibility_format(self):
+        self.edit_user('Guest', {'show_16384': 1})
+        self.assertTrue(self.check_element_on_page((By.ID, "flash_success")))
+        self.logout()
+        self.assertTrue(self.check_element_on_page((By.ID, "nav_format")))
+        self.check_element_on_page((By.ID, "top_user")).click()
+        self.login('admin', 'admin123')
+        self.edit_user('Guest',{'show_16384': 0})
+        self.assertTrue(self.check_element_on_page((By.ID, "flash_success")))
+        self.logout()
+        self.assertFalse(self.check_element_on_page((By.ID, "nav_format")))
+
+    # checks if admin can change ratings
+    def test_guest_change_visibility_rating(self):
+        self.edit_user('Guest', {'show_8192': 1})
+        self.assertTrue(self.check_element_on_page((By.ID, "flash_success")))
+        self.logout()
+        self.assertTrue(self.check_element_on_page((By.ID, "nav_rate")))
+        self.check_element_on_page((By.ID, "top_user")).click()
+        self.login('admin', 'admin123')
+        self.edit_user('Guest',{'show_8192': 0})
+        self.assertTrue(self.check_element_on_page((By.ID, "flash_success")))
+        self.logout()
+        self.assertFalse(self.check_element_on_page((By.ID, "nav_rate")))
+
+
+    # checks if admin can't change read and archive visibility, name, locale can't be changed and isn't visible
+    def test_guest_restricted_settings_visibility(self):
+        rights = self.get_user_settings('Guest')
+        self.assertIsNone(rights['show_512'])
+        self.assertIsNone(rights['nickname'])
+        self.assertIsNone(rights['show_256'])
+        self.assertIsNone(rights['show_32768'])
+        self.assertIsNone(rights['locale'])
+        self.assertIsNone(rights['edit_shelf_role'])
+        self.assertIsNone(rights['admin_role'])
+
 
     # checks if admin can change categories
     def test_guest_change_visibility_category(self):

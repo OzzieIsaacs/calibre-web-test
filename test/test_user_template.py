@@ -9,9 +9,10 @@ from selenium.webdriver.support.ui import WebDriverWait
 from selenium.webdriver.support import expected_conditions as EC
 import time
 import shutil
-from ui_helper import ui_class
+from helper_ui import ui_class, RESTRICT_TAG_TEMPLATE, RESTRICT_COL_TEMPLATE
 from subproc_wrapper import process_open
-from testconfig import CALIBRE_WEB_PATH, TEST_DB, BOOT_TIME
+from config_test import CALIBRE_WEB_PATH, TEST_DB, BOOT_TIME
+from helper_func import startup
 
 from parameterized import parameterized_class
 
@@ -26,49 +27,18 @@ class test_user_template(unittest.TestCase, ui_class):
     @classmethod
     def setUpClass(cls):
         try:
-            os.remove(os.path.join(CALIBRE_WEB_PATH,'app.db'))
-        except:
-            pass
-        shutil.rmtree(TEST_DB,ignore_errors=True)
-        shutil.copytree('./Calibre_db', TEST_DB)
-        try:
-            cls.p = process_open([cls.py_version, os.path.join(CALIBRE_WEB_PATH,u'cps.py')],(1))
-
-            # create a new Firefox session
-            cls.driver = webdriver.Firefox()
-            # time.sleep(15)
-            cls.driver.implicitly_wait(BOOT_TIME)
-            print('Calibre-web started')
-
-            cls.driver.maximize_window()
-
-            # navigate to the application home page
-            cls.driver.get("http://127.0.0.1:8083")
-
-            # Wait for config screen to show up
-            cls.fill_initial_config({'config_calibre_dir':TEST_DB})
-
-            # wait for cw to reboot
-            time.sleep(BOOT_TIME)
-
-            # Wait for config screen with login button to show up
-            WebDriverWait(cls.driver, 5).until(EC.presence_of_element_located((By.NAME, "login")))
-            login_button = cls.driver.find_element_by_name("login")
-            login_button.click()
-
-            # login
-            cls.login("admin", "admin123")
+            startup(cls, cls.py_version, {'config_calibre_dir': TEST_DB})
         except:
             cls.driver.quit()
             cls.p.kill()
 
-
     @classmethod
     def tearDownClass(cls):
+        cls.stop_calibre_web()
         # close the browser window and stop calibre-web
         cls.driver.quit()
         cls.p.terminate()
-        cls.p.kill()
+        # cls.p.kill()
 
     def tearDown(self):
         if not self.check_user_logged_in('admin'):
@@ -84,7 +54,6 @@ class test_user_template(unittest.TestCase, ui_class):
         self.logout()
         self.login('random','1234')
         self.assertTrue(self.check_element_on_page((By.ID, "nav_new")))
-        # self.assertTrue(self.check_element_on_page((By.ID, "nav_sort")))
         self.assertTrue(self.check_element_on_page((By.ID, "nav_hot")))
         self.assertTrue(self.check_element_on_page((By.ID, "nav_rated")))
         self.assertTrue(self.check_element_on_page((By.ID, "nav_read")))
@@ -95,31 +64,40 @@ class test_user_template(unittest.TestCase, ui_class):
         self.assertTrue(self.check_element_on_page((By.ID, "nav_author")))
         self.assertTrue(self.check_element_on_page((By.ID, "nav_lang")))
         self.assertTrue(self.check_element_on_page((By.ID, "nav_publisher")))
+        self.assertTrue(self.check_element_on_page((By.ID, "nav_format")))
+        self.assertTrue(self.check_element_on_page((By.ID, "nav_archived")))
         self.logout()
         self.login('admin','admin123')
         # delete user
         self.edit_user('random',{'delete':1})
 
     def test_recent_user_template(self):
-        self.fill_view_config({'show_512':0})
+        self.fill_view_config({'show_4':0,'show_8':0, 'show_16':0, 'show_32':0, 'show_64':0, 'show_128':0,
+                               'show_256': 0, 'show_4096': 0, 'show_8192': 0,
+                               'show_16384': 0, 'show_32768': 0, 'show_2':0
+                               })
         self.goto_page('create_user')
         self.create_user('recent',{'password':'1234','email':'a4@b.com'})
+        self.fill_view_config({'show_4':1,'show_8':1, 'show_16':1, 'show_32':1, 'show_64':1, 'show_128':1,
+                               'show_256': 1, 'show_4096': 1, 'show_8192': 1,
+                               'show_16384': 1, 'show_32768': 1, 'show_2': 1
+                               })
         self.assertTrue(self.check_element_on_page((By.ID, "flash_success")))
-        self.fill_view_config({'show_512':1})
         self.logout()
         self.login('recent','1234')
-        self.assertFalse(self.check_element_on_page((By.ID, "nav_new")))
-        # self.assertTrue(self.check_element_on_page((By.ID, "nav_sort")))
-        self.assertTrue(self.check_element_on_page((By.ID, "nav_hot")))
-        self.assertTrue(self.check_element_on_page((By.ID, "nav_rated")))
-        self.assertTrue(self.check_element_on_page((By.ID, "nav_read")))
-        self.assertTrue(self.check_element_on_page((By.ID, "nav_unread")))
-        self.assertTrue(self.check_element_on_page((By.ID, "nav_rand")))
-        self.assertTrue(self.check_element_on_page((By.ID, "nav_cat")))
-        self.assertTrue(self.check_element_on_page((By.ID, "nav_serie")))
-        self.assertTrue(self.check_element_on_page((By.ID, "nav_author")))
-        self.assertTrue(self.check_element_on_page((By.ID, "nav_lang")))
-        self.assertTrue(self.check_element_on_page((By.ID, "nav_publisher")))
+        self.assertTrue(self.check_element_on_page((By.ID, "nav_new")))
+        self.assertFalse(self.check_element_on_page((By.ID, "nav_hot")))
+        self.assertFalse(self.check_element_on_page((By.ID, "nav_rated")))
+        self.assertFalse(self.check_element_on_page((By.ID, "nav_read")))
+        self.assertFalse(self.check_element_on_page((By.ID, "nav_unread")))
+        self.assertFalse(self.check_element_on_page((By.ID, "nav_rand")))
+        self.assertFalse(self.check_element_on_page((By.ID, "nav_cat")))
+        self.assertFalse(self.check_element_on_page((By.ID, "nav_serie")))
+        self.assertFalse(self.check_element_on_page((By.ID, "nav_author")))
+        self.assertFalse(self.check_element_on_page((By.ID, "nav_lang")))
+        self.assertFalse(self.check_element_on_page((By.ID, "nav_publisher")))
+        self.assertFalse(self.check_element_on_page((By.ID, "nav_format")))
+        self.assertFalse(self.check_element_on_page((By.ID, "nav_archived")))
         self.logout()
         self.login('admin','admin123')
         # delete user
@@ -145,6 +123,8 @@ class test_user_template(unittest.TestCase, ui_class):
         self.assertTrue(self.check_element_on_page((By.ID, "nav_author")))
         self.assertTrue(self.check_element_on_page((By.ID, "nav_lang")))
         self.assertTrue(self.check_element_on_page((By.ID, "nav_publisher")))
+        self.assertTrue(self.check_element_on_page((By.ID, "nav_format")))
+        self.assertTrue(self.check_element_on_page((By.ID, "nav_archived")))
         self.logout()
         self.login('admin','admin123')
         # delete user
@@ -170,6 +150,8 @@ class test_user_template(unittest.TestCase, ui_class):
         self.assertTrue(self.check_element_on_page((By.ID, "nav_author")))
         self.assertTrue(self.check_element_on_page((By.ID, "nav_lang")))
         self.assertTrue(self.check_element_on_page((By.ID, "nav_publisher")))
+        self.assertTrue(self.check_element_on_page((By.ID, "nav_format")))
+        self.assertTrue(self.check_element_on_page((By.ID, "nav_archived")))
         self.logout()
         self.login('admin','admin123')
         # delete user
@@ -195,6 +177,8 @@ class test_user_template(unittest.TestCase, ui_class):
         self.assertTrue(self.check_element_on_page((By.ID, "nav_author")))
         self.assertFalse(self.check_element_on_page((By.ID, "nav_lang")))
         self.assertTrue(self.check_element_on_page((By.ID, "nav_publisher")))
+        self.assertTrue(self.check_element_on_page((By.ID, "nav_format")))
+        self.assertTrue(self.check_element_on_page((By.ID, "nav_archived")))
         self.logout()
         self.login('admin','admin123')
         # delete user
@@ -209,7 +193,6 @@ class test_user_template(unittest.TestCase, ui_class):
         self.logout()
         self.login('series','1234')
         self.assertTrue(self.check_element_on_page((By.ID, "nav_new")))
-        # self.assertTrue(self.check_element_on_page((By.ID, "nav_sort")))
         self.assertTrue(self.check_element_on_page((By.ID, "nav_hot")))
         self.assertTrue(self.check_element_on_page((By.ID, "nav_rated")))
         self.assertTrue(self.check_element_on_page((By.ID, "nav_read")))
@@ -220,6 +203,8 @@ class test_user_template(unittest.TestCase, ui_class):
         self.assertTrue(self.check_element_on_page((By.ID, "nav_author")))
         self.assertTrue(self.check_element_on_page((By.ID, "nav_lang")))
         self.assertTrue(self.check_element_on_page((By.ID, "nav_publisher")))
+        self.assertTrue(self.check_element_on_page((By.ID, "nav_format")))
+        self.assertTrue(self.check_element_on_page((By.ID, "nav_archived")))
         self.logout()
         self.login('admin','admin123')
         # delete user
@@ -245,6 +230,8 @@ class test_user_template(unittest.TestCase, ui_class):
         self.assertTrue(self.check_element_on_page((By.ID, "nav_author")))
         self.assertTrue(self.check_element_on_page((By.ID, "nav_lang")))
         self.assertTrue(self.check_element_on_page((By.ID, "nav_publisher")))
+        self.assertTrue(self.check_element_on_page((By.ID, "nav_format")))
+        self.assertTrue(self.check_element_on_page((By.ID, "nav_archived")))
         self.logout()
         self.login('admin','admin123')
         # delete user
@@ -270,10 +257,66 @@ class test_user_template(unittest.TestCase, ui_class):
         self.assertTrue(self.check_element_on_page((By.ID, "nav_author")))
         self.assertTrue(self.check_element_on_page((By.ID, "nav_lang")))
         self.assertFalse(self.check_element_on_page((By.ID, "nav_publisher")))
+        self.assertTrue(self.check_element_on_page((By.ID, "nav_format")))
+        self.assertTrue(self.check_element_on_page((By.ID, "nav_archived")))
         self.logout()
         self.login('admin','admin123')
         # delete user
         self.edit_user('pub',{'delete':1})
+
+    def test_format_user_template(self):
+        self.fill_view_config({'show_16384':0})
+        self.goto_page('create_user')
+        self.create_user('format',{'password':'1234','email':'a10@b.com'})
+        self.assertTrue(self.check_element_on_page((By.ID, "flash_success")))
+        self.fill_view_config({'show_16384':1})
+        self.logout()
+        self.login('format','1234')
+        self.assertTrue(self.check_element_on_page((By.ID, "nav_new")))
+        # self.assertTrue(self.check_element_on_page((By.ID, "nav_sort")))
+        self.assertTrue(self.check_element_on_page((By.ID, "nav_hot")))
+        self.assertTrue(self.check_element_on_page((By.ID, "nav_rated")))
+        self.assertTrue(self.check_element_on_page((By.ID, "nav_read")))
+        self.assertTrue(self.check_element_on_page((By.ID, "nav_unread")))
+        self.assertTrue(self.check_element_on_page((By.ID, "nav_rand")))
+        self.assertTrue(self.check_element_on_page((By.ID, "nav_cat")))
+        self.assertTrue(self.check_element_on_page((By.ID, "nav_serie")))
+        self.assertTrue(self.check_element_on_page((By.ID, "nav_author")))
+        self.assertTrue(self.check_element_on_page((By.ID, "nav_lang")))
+        self.assertTrue(self.check_element_on_page((By.ID, "nav_publisher")))
+        self.assertFalse(self.check_element_on_page((By.ID, "nav_format")))
+        self.assertTrue(self.check_element_on_page((By.ID, "nav_archived")))
+        self.logout()
+        self.login('admin','admin123')
+        # delete user
+        self.edit_user('format',{'delete':1})
+
+    def test_archived_format_template(self):
+        self.fill_view_config({'show_32768':0})
+        self.goto_page('create_user')
+        self.create_user('format',{'password':'1234','email':'a10@b.com'})
+        self.assertTrue(self.check_element_on_page((By.ID, "flash_success")))
+        self.fill_view_config({'show_32768':1})
+        self.logout()
+        self.login('format','1234')
+        self.assertTrue(self.check_element_on_page((By.ID, "nav_new")))
+        self.assertTrue(self.check_element_on_page((By.ID, "nav_hot")))
+        self.assertTrue(self.check_element_on_page((By.ID, "nav_rated")))
+        self.assertTrue(self.check_element_on_page((By.ID, "nav_read")))
+        self.assertTrue(self.check_element_on_page((By.ID, "nav_unread")))
+        self.assertTrue(self.check_element_on_page((By.ID, "nav_rand")))
+        self.assertTrue(self.check_element_on_page((By.ID, "nav_cat")))
+        self.assertTrue(self.check_element_on_page((By.ID, "nav_serie")))
+        self.assertTrue(self.check_element_on_page((By.ID, "nav_author")))
+        self.assertTrue(self.check_element_on_page((By.ID, "nav_lang")))
+        self.assertTrue(self.check_element_on_page((By.ID, "nav_publisher")))
+        self.assertTrue(self.check_element_on_page((By.ID, "nav_format")))
+        self.assertFalse(self.check_element_on_page((By.ID, "nav_archived")))
+        self.logout()
+        self.login('admin','admin123')
+        # delete user
+        self.edit_user('format',{'delete':1})
+
 
     def test_author_user_template(self):
         self.fill_view_config({'show_64':0})
@@ -295,6 +338,8 @@ class test_user_template(unittest.TestCase, ui_class):
         self.assertFalse(self.check_element_on_page((By.ID, "nav_author")))
         self.assertTrue(self.check_element_on_page((By.ID, "nav_lang")))
         self.assertTrue(self.check_element_on_page((By.ID, "nav_publisher")))
+        self.assertTrue(self.check_element_on_page((By.ID, "nav_format")))
+        self.assertTrue(self.check_element_on_page((By.ID, "nav_archived")))
         self.logout()
         self.login('admin','admin123')
         # delete user
@@ -320,6 +365,8 @@ class test_user_template(unittest.TestCase, ui_class):
         self.assertTrue(self.check_element_on_page((By.ID, "nav_author")))
         self.assertTrue(self.check_element_on_page((By.ID, "nav_lang")))
         self.assertTrue(self.check_element_on_page((By.ID, "nav_publisher")))
+        self.assertTrue(self.check_element_on_page((By.ID, "nav_format")))
+        self.assertTrue(self.check_element_on_page((By.ID, "nav_archived")))
         self.logout()
         self.login('admin','admin123')
         # delete user
@@ -345,6 +392,8 @@ class test_user_template(unittest.TestCase, ui_class):
         self.assertTrue(self.check_element_on_page((By.ID, "nav_author")))
         self.assertTrue(self.check_element_on_page((By.ID, "nav_lang")))
         self.assertTrue(self.check_element_on_page((By.ID, "nav_publisher")))
+        self.assertTrue(self.check_element_on_page((By.ID, "nav_format")))
+        self.assertTrue(self.check_element_on_page((By.ID, "nav_archived")))
         self.goto_page("nav_new")
         self.assertFalse(self.check_element_on_page((By.ID, "books_rand")))
         # check random books not shown in category section
@@ -384,7 +433,14 @@ class test_user_template(unittest.TestCase, ui_class):
         # check random books not shown in unread section
         self.goto_page("nav_unread")
         self.assertFalse(self.check_element_on_page((By.ID, "books_rand")))
-        # check random books not shown in sorted section
+        # check random books shown in format section
+        list_element = self.goto_page("nav_format")
+        list_element[0].click()
+        self.assertTrue(self.check_element_on_page((By.ID, "books")))
+        self.assertFalse(self.check_element_on_page((By.ID, "books_rand")))
+        # check random books shown in archived section
+        list_element = self.goto_page("nav_archived")
+        self.assertFalse(self.check_element_on_page((By.ID, "books_rand")))
         self.logout()
         self.login('admin','admin123')
         # delete user
@@ -422,6 +478,151 @@ class test_user_template(unittest.TestCase, ui_class):
         self.assertEqual(tags[1].text,'Unread Books (3)')
         # find 2 h2
 
-    def test_content_restriction_settings(self):
-        pass
+    def test_allow_tag_restriction(self):
+        restricts = self.list_restrictions(RESTRICT_TAG_TEMPLATE)
+        self.assertEqual(len(restricts), 0)
+        self.add_restrictions('Gênot', allow=True)
+        close = self.check_element_on_page((By.ID, "restrict_close"))
+        self.assertTrue(close)
+        close.click()
+        time.sleep(2)
+
+        self.goto_page('create_user')
+        self.create_user('allowtag',{'password':'1234','email':'abb@b.com'})
+        self.assertTrue(self.check_element_on_page((By.ID, "flash_success")))
+        self.goto_page('nav_new')
+        books = self.get_books_displayed()
+        self.assertEqual(len(books[1]), 11)
+        self.logout()
+        self.login('allowtag', '1234')
+        self.goto_page('nav_new')
+        books = self.get_books_displayed()
+        self.assertEqual(len(books[1]), 4)
+        self.logout()
+        self.login('admin','admin123')
+        # delete user
+        self.edit_user('allowtag',{'delete':1})
+        self.list_restrictions(RESTRICT_TAG_TEMPLATE)
+        self.delete_restrictions('a0')
+        close = self.check_element_on_page((By.ID, "restrict_close"))
+        close.click()
+        time.sleep(2)
+
+
+    def test_deny_tag_restriction(self):
+        restricts = self.list_restrictions(RESTRICT_TAG_TEMPLATE)
+        self.assertEqual(len(restricts), 0)
+        self.add_restrictions('Gênot', allow=False)
+        close = self.check_element_on_page((By.ID, "restrict_close"))
+        self.assertTrue(close)
+        close.click()
+        time.sleep(2)
+
+        self.goto_page('create_user')
+        self.create_user('denytag',{'password':'1234','email':'aba@b.com'})
+        self.assertTrue(self.check_element_on_page((By.ID, "flash_success")))
+        self.goto_page('nav_new')
+        books = self.get_books_displayed()
+        self.assertEqual(len(books[1]), 11)
+        self.logout()
+        self.login('denytag', '1234')
+        self.goto_page('nav_new')
+        books = self.get_books_displayed()
+        self.assertEqual(len(books[1]), 7)
+
+        self.logout()
+        self.login('admin','admin123')
+        # delete user
+        self.edit_user('denytag',{'delete':1})
+        self.list_restrictions(RESTRICT_TAG_TEMPLATE)
+        self.delete_restrictions('d0')
+        close = self.check_element_on_page((By.ID, "restrict_close"))
+        close.click()
+        time.sleep(2)
+
+
+
+    def test_allow_column_restriction(self):
+        self.fill_view_config({'config_restricted_column':"Custom Text 人物 *'()&"})
+        self.edit_book(10, custom_content={"Custom Text 人物 *'()&":'test'})
+        self.edit_book(11, custom_content={"Custom Text 人物 *'()&": 'test'})
+        self.edit_book(1, custom_content={"Custom Text 人物 *'()&": 'test'})
+        self.edit_book(9, custom_content={"Custom Text 人物 *'()&": 'test'})
+
+        restricts = self.list_restrictions(RESTRICT_COL_TEMPLATE)
+        self.assertEqual(len(restricts), 0)
+        self.add_restrictions('test', allow=True)
+        close = self.check_element_on_page((By.ID, "restrict_close"))
+        self.assertTrue(close)
+        close.click()
+        time.sleep(2)
+
+        self.goto_page('create_user')
+        self.create_user('allowcolum',{'password':'1234','email':'abc@b.com'})
+        self.assertTrue(self.check_element_on_page((By.ID, "flash_success")))
+
+        self.goto_page('nav_new')
+        books = self.get_books_displayed()
+        self.assertEqual(len(books[1]), 11)
+        self.logout()
+        self.login('allowcolum', '1234')
+        self.goto_page('nav_new')
+        books = self.get_books_displayed()
+        self.assertEqual(len(books[1]), 4)
+
+        self.logout()
+        self.login('admin','admin123')
+        # delete user
+        self.edit_user('allowcolum',{'delete':1})
+        self.list_restrictions(RESTRICT_COL_TEMPLATE)
+        self.delete_restrictions('a0')
+        close = self.check_element_on_page((By.ID, "restrict_close"))
+        close.click()
+        time.sleep(2)
+        self.edit_book(10, custom_content={"Custom Text 人物 *'()&": ''})
+        self.edit_book(11, custom_content={"Custom Text 人物 *'()&": ''})
+        self.edit_book(8, custom_content={"Custom Text 人物 *'()&": ''})
+        self.edit_book(3, custom_content={"Custom Text 人物 *'()&": ''})
+        self.fill_view_config({'config_restricted_column': "None"})
+
+
+    def test_deny_column_restriction(self):
+        self.fill_view_config({'config_restricted_column':"Custom Text 人物 *'()&"})
+        self.edit_book(10, custom_content={"Custom Text 人物 *'()&": 'deny'})
+        self.edit_book(11, custom_content={"Custom Text 人物 *'()&": 'deny'})
+        self.edit_book(1, custom_content={"Custom Text 人物 *'()&": 'deny'})
+        self.edit_book(9, custom_content={"Custom Text 人物 *'()&": 'deny'})
+        restricts = self.list_restrictions(RESTRICT_COL_TEMPLATE)
+        self.assertEqual(len(restricts), 0)
+        self.add_restrictions('deny', allow=False)
+        close = self.check_element_on_page((By.ID, "restrict_close"))
+        self.assertTrue(close)
+        close.click()
+        time.sleep(2)
+
+        self.goto_page('create_user')
+        self.create_user('denycolum',{'password':'1234','email':'abd@b.com'})
+        self.assertTrue(self.check_element_on_page((By.ID, "flash_success")))
+        self.goto_page('nav_new')
+        books = self.get_books_displayed()
+        self.assertEqual(len(books[1]), 11)
+        self.logout()
+        self.login('denycolum', '1234')
+        self.goto_page('nav_new')
+        books = self.get_books_displayed()
+        self.assertEqual(len(books[1]), 7)
+        self.logout()
+        self.login('admin','admin123')
+        # delete user
+        self.edit_user('denycolum',{'delete':1})
+        self.list_restrictions(RESTRICT_COL_TEMPLATE)
+        self.delete_restrictions('d0')
+        close = self.check_element_on_page((By.ID, "restrict_close"))
+        close.click()
+        time.sleep(2)
+        self.edit_book(10, custom_content={"Custom Text 人物 *'()&": ''})
+        self.edit_book(11, custom_content={"Custom Text 人物 *'()&": ''})
+        self.edit_book(8, custom_content={"Custom Text 人物 *'()&": ''})
+        self.edit_book(3, custom_content={"Custom Text 人物 *'()&": ''})
+        self.fill_view_config({'config_restricted_column': "None"})
 

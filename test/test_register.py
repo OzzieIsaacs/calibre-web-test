@@ -1,13 +1,12 @@
 #!/usr/bin/env python
 # -*- coding: utf-8 -*-
 
-from email_convert_helper import AIOSMTPServer
-# import email_convert_helper
-from testconfig import TEST_DB
-from func_helper import startup, wait_Email_received
+from helper_email_convert import AIOSMTPServer
+from config_test import TEST_DB
+from helper_func import startup, wait_Email_received
 from parameterized import parameterized_class
 import unittest
-from ui_helper import ui_class
+from helper_ui import ui_class
 import time
 
 '''@parameterized_class([
@@ -43,9 +42,11 @@ class test_register(unittest.TestCase, ui_class):
 
     @classmethod
     def tearDownClass(cls):
+        cls.login('admin', 'admin123')
+        cls.stop_calibre_web()
         # close the browser window and stop calibre-web
         cls.driver.quit()
-        cls.p.kill()
+        cls.p.terminate()
         cls.email_server.stop()
 
     def tearDown(self):
@@ -108,6 +109,14 @@ class test_register(unittest.TestCase, ui_class):
         self.assertEqual(self.register('nocom1','a.dod@google.com'),'flash_alert')
         self.assertEqual(self.register('nocom2', 'doda@google.cum'), 'flash_alert')
         self.assertEqual(self.register('nocom3', 'dod@koogle.com'), 'flash_success')
+        #cleanup
+        self.login('admin','admin123')
+        self.goto_page('mail_server')
+        d_domains = self.list_domains(allow=False)
+        self.delete_domains(d_domains[0]['id'], accept=True, allow=False)
+        a_domains = self.list_domains(allow=True)
+        self.delete_domains(a_domains[0]['id'], accept=True, allow=True)
+
 
     # register user, extract password, login, check rights
     def test_registering_user(self):

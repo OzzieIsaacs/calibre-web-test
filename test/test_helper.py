@@ -1,9 +1,8 @@
-#!/usr/bin/env python
 # -*- coding: utf-8 -*-
 
 import sys
 import unittest
-from testconfig import CALIBRE_WEB_PATH
+from config_test import CALIBRE_WEB_PATH
 
 # Insert local directories into path
 # sys.path.insert(0, os.path.join(CALIBRE_WEB_PATH, 'cps'))
@@ -73,4 +72,3 @@ class calibre_helper(unittest.TestCase):
         # helper.global_WorkerThread.stop()
         del sys.modules["cps.helper"]
         del helper
-

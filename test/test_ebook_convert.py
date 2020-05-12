@@ -1,24 +1,24 @@
 #!/usr/bin/env python
 # -*- coding: utf-8 -*-
 
-from email_convert_helper import AIOSMTPServer
+from helper_email_convert import AIOSMTPServer
 import unittest
 import os
 from selenium.webdriver.common.by import By
 from selenium.webdriver.support.ui import Select
 import time
-from ui_helper import ui_class
-from testconfig import CALIBRE_WEB_PATH, TEST_DB
-import email_convert_helper
+from helper_ui import ui_class
+from config_test import CALIBRE_WEB_PATH, TEST_DB
+import helper_email_convert
 from parameterized import parameterized_class
-from func_helper import startup
+from helper_func import startup
 
 
 '''@parameterized_class([
    { "py_version": u'/usr/bin/python'},
    { "py_version": u'/usr/bin/python3'},
 ],names=('Python27','Python36'))'''
-@unittest.skipIf(email_convert_helper.is_calibre_not_present(),"Skipping convert, calibre not found")
+@unittest.skipIf(helper_email_convert.is_calibre_not_present(),"Skipping convert, calibre not found")
 class test_ebook_convert(unittest.TestCase, ui_class):
     p=None
     driver = None
@@ -38,7 +38,7 @@ class test_ebook_convert(unittest.TestCase, ui_class):
 
         try:
             startup(cls, cls.py_version, {'config_calibre_dir':TEST_DB,
-                                          'config_converterpath':email_convert_helper.calibre_path(),
+                                          'config_converterpath':helper_email_convert.calibre_path(),
                                           'config_ebookconverter':'converter2'})
 
             cls.edit_user('admin', {'email': 'a5@b.com','kindle_mail': 'a1@b.com'})
@@ -52,12 +52,13 @@ class test_ebook_convert(unittest.TestCase, ui_class):
 
     @classmethod
     def tearDownClass(cls):
+        cls.stop_calibre_web()
         # close the browser window and stop calibre-web
         cls.driver.quit()
-        cls.p.kill()
+        cls.p.terminate()
         cls.email_server.stop()
         time.sleep(2)
-        cls.p.kill()
+        # cls.p.kill()
 
 
     def tearDown(self):
@@ -135,7 +136,7 @@ class test_ebook_convert(unittest.TestCase, ui_class):
         if len(ret) > 1:
             self.assertEqual(ret[-2]['result'], 'Failed')
         self.assertEqual(ret[-1]['result'], 'Failed')
-        self.fill_basic_config({'config_converterpath': email_convert_helper.calibre_path()})
+        self.fill_basic_config({'config_converterpath': helper_email_convert.calibre_path()})
 
 
     # set parameters for convert ( --margin-right 11.9) and start conversion -> conversion okay
@@ -200,7 +201,7 @@ class test_ebook_convert(unittest.TestCase, ui_class):
     # logout, login new user
     # check button send to kindle not visible
     def test_kindle_send_not_configured(self):
-        self.create_user('kindle', {'password': '123', 'email': 'a@b.com', 'edit_role':1})
+        self.create_user('kindle', {'password': '123', 'email': 'da@b.com', 'edit_role':1})
         self.logout()
         self.login('kindle', '123')
         details = self.get_book_details(5)

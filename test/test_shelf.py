@@ -4,11 +4,11 @@
 import unittest
 from selenium.webdriver.common.by import By
 import time
-from ui_helper import ui_class
-from testconfig import TEST_DB
-from func_helper import is_port_in_use
+from helper_ui import ui_class
+from config_test import TEST_DB
+from helper_func import is_port_in_use, startup
 from parameterized import parameterized_class
-from func_helper import startup
+import requests
 
 '''@parameterized_class([
    { "py_version": u'/usr/bin/python'},
@@ -25,16 +25,15 @@ class test_shelf(unittest.TestCase, ui_class):
             cls.create_user('shelf', {'edit_shelf_role':1, 'password':'123', 'email':'a@b.com'})
             cls.edit_user('admin',{'edit_shelf_role':1, 'email':'e@fe.de'})
         except:
-            if is_port_in_use(8083):
-                print('port in use')
             cls.driver.quit()
-            cls.p.kill()
+            cls.p.terminate()
 
     @classmethod
     def tearDownClass(cls):
+        cls.stop_calibre_web()
         # close the browser window and stop calibre-web
         cls.driver.quit()
-        cls.p.kill()
+        cls.p.terminate()
 
     def tearDown(self):
         if not self.check_user_logged_in('admin'):
@@ -45,9 +44,11 @@ class test_shelf(unittest.TestCase, ui_class):
             if not len(shelfs):
                 break
             try:
-                shelfs[0]['ele'].click()
-                self.check_element_on_page((By.ID, "delete_shelf")).click()
-                self.check_element_on_page((By.ID, "confirm")).click()
+                for shelf in shelfs:
+                    sl = self.list_shelfs(shelf['name']) #.rstrip(' (Public)'))
+                    sl['ele'].click()
+                    self.check_element_on_page((By.ID, "delete_shelf")).click()
+                    self.check_element_on_page((By.ID, "confirm")).click()
             except:
                 pass
 
@@ -59,14 +60,12 @@ class test_shelf(unittest.TestCase, ui_class):
         self.login('shelf','123')
         # other user can't see shelf
         self.assertFalse(len(self.list_shelfs()))
-        # self.assertFalse(self.driver.find_elements_by_xpath( "//a/span[@class='glyphicon glyphicon-list']//ancestor::a"))
         # other user is not able to add books
         self.driver.get("http://127.0.0.1:8083/shelf/add/1/1")
         self.assertTrue(self.check_element_on_page((By.ID, "flash_alert")))
         self.logout()
         self.login('admin','admin123')
         books = self.get_books_displayed()
-        # books[1][0].click()
         details = self.get_book_details(int(books[1][0]['id']))
         self.assertFalse(details['del_shelf'])
         self.assertTrue(details['add_shelf'])
@@ -82,6 +81,8 @@ class test_shelf(unittest.TestCase, ui_class):
         # other user is not able to add books
         self.driver.get("http://127.0.0.1:8083/shelf/add/1/1")
         self.assertTrue(self.check_element_on_page((By.ID, "flash_alert")))
+        self.create_shelf('Pü 执', False)
+        self.assertTrue(len(self.list_shelfs()))
         self.logout()
         self.login('admin','admin123')
         # go to shelf page
@@ -98,10 +99,10 @@ class test_shelf(unittest.TestCase, ui_class):
         self.logout()
         self.login('shelf','123')
         # other user can see shelf
-        shelfs = self.list_shelfs(u'Gü 执')
+        shelfs = self.list_shelfs(u'Gü 执 (Public)')
         self.assertTrue(shelfs)
         # other user is able to add books
-        self.driver.get("http://127.0.0.1:8083/shelf/add/1/" + shelfs['id'])
+        self.driver.get("http://127.0.0.1:8083/shelf/add/" + shelfs['id'] + '/1')
         self.assertTrue(self.check_element_on_page((By.ID, "flash_success")))
         time.sleep(2)
         # 2nd way to add book
@@ -113,13 +114,21 @@ class test_shelf(unittest.TestCase, ui_class):
         self.check_element_on_page((By.XPATH, "//ul[@id='add-to-shelves']/li/a[contains(.,'G')]")).click()
         self.assertTrue(self.check_element_on_page((By.XPATH, "//*[@id='remove-from-shelves']//a")))
         # goto shelf
-        self.list_shelfs(u'Gü 执')['ele'].click()
+        self.list_shelfs(u'Gü 执 (Public)')['ele'].click()
         # self.check_element_on_page((By.XPATH, "//a/span[@class='glyphicon glyphicon-list']")).click()
         self.check_element_on_page((By.ID, "delete_shelf"))
-        shelf_books = self.get_books_displayed()
+        shelf_books = self.get_shelf_books_displayed()
         # No random books displayed, 2 books in shelf
-        self.assertTrue(len(shelf_books[0]) == 2)
-        self.assertTrue(len(shelf_books[1]) == 0)
+        self.assertTrue(len(shelf_books) == 2)
+        self.create_shelf('Gü 执', True)
+        self.assertTrue(self.check_element_on_page((By.ID, "flash_alert")))
+        self.create_shelf('Gü 执', False)
+        self.assertTrue(self.check_element_on_page((By.ID, "flash_success")))
+        shelfs=self.list_shelfs()
+        self.assertEqual(shelfs[0]['name'],'Gü 执 (Public)') # Public shelf of admin
+        self.assertEqual(shelfs[0]['public'], True)
+        self.assertEqual(shelfs[1]['name'], 'Gü 执')         # Private shelf of shelf123
+        self.assertEqual(shelfs[1]['public'], False)
         self.logout()
         self.login('admin','admin123')
         books = self.get_books_displayed()
@@ -130,12 +139,11 @@ class test_shelf(unittest.TestCase, ui_class):
         self.check_element_on_page((By.XPATH, "//ul[@id='add-to-shelves']/li/a[contains(.,'G')]")).click()
         self.assertTrue(self.check_element_on_page((By.XPATH, "//*[@id='remove-from-shelves']//a")))
         # go to shelf page
-        self.list_shelfs(u'Gü 执')[0]['ele'].click()
+        self.list_shelfs(u'Gü 执 (Public)')['ele'].click()
         self.check_element_on_page((By.ID, "delete_shelf"))
-        shelf_books = self.get_books_displayed()
+        shelf_books = self.get_shelf_books_displayed()
         # No random books displayed, 3 books in shelf
-        self.assertTrue(len(shelf_books[0]) == 3)
-        self.assertTrue(len(shelf_books[1]) == 0)
+        self.assertTrue(len(shelf_books) == 3)
 
     # rename shelfs, duplicate shelfs are prevented and books can be added and deleted to shelf
     # capital letters and lowercase letters
@@ -210,8 +218,9 @@ class test_shelf(unittest.TestCase, ui_class):
         shelf_books = self.get_books_displayed()
 
     # Add muliple books to shelf and arrange the order
-    @unittest.expectedFailure
+    # @unittest.expectedFailure
     def test_arrange_shelf(self):
+        # coding = utf-8
         self.create_shelf('order', True)
         self.assertTrue(self.check_element_on_page((By.ID, "flash_success")))
         self.goto_page('nav_new')
@@ -229,8 +238,24 @@ class test_shelf(unittest.TestCase, ui_class):
         self.get_book_details(int(books[1][4]['id']))
         self.check_element_on_page((By.ID, "add-to-shelf")).click()
         self.check_element_on_page((By.XPATH, "//ul[@id='add-to-shelves']/li/a[contains(.,'order')]")).click()
-        self.assertIsNone('Not Implemented', 'Drag and drop order test not implmented')
+        self.goto_page('nav_new')
+        self.list_shelfs('order (Public)')['ele'].click()
+        shelf_books = self.get_shelf_books_displayed()
+        self.assertEqual(shelf_books[0]['id'], '13')
+        self.assertEqual(shelf_books[1]['id'], '11')
+        self.assertEqual(shelf_books[2]['id'], '9')
+        self.check_element_on_page((By.ID, "order_shelf")).click()
+        self.get_order_shelf_list()
+        cookie = self.driver.get_cookies()
+        cook = dict(session=cookie[1]['value'], remember_token=cookie[0]['value'])
+        requests.post('http://127.0.0.1:8083/shelf/order/1', cookies=cook, data={"9": "1","11": "2","13": "3"})
+        self.driver.refresh() # reload page
 
+        self.check_element_on_page((By.ID, "shelf_back")).click()
+        shelf_books = self.get_shelf_books_displayed()
+        self.assertEqual(shelf_books[0]['id'], '9')
+        self.assertEqual(shelf_books[1]['id'], '11')
+        self.assertEqual(shelf_books[2]['id'], '13')
 
     # change shelf from public to private type
     def test_public_private_shelf(self):
@@ -249,7 +274,7 @@ class test_shelf(unittest.TestCase, ui_class):
         self.assertTrue(self.check_element_on_page((By.ID, "flash_success")))
         self.goto_page('nav_new')
         # change public to private
-        self.list_shelfs('shelf_public')[0]['ele'].click()
+        self.list_shelfs('shelf_public (Public)')['ele'].click()
         edit_shelf = self.check_element_on_page((By.ID, "edit_shelf"))
         edit_shelf.click()
         public=self.check_element_on_page((By.NAME, "is_public"))
@@ -260,7 +285,7 @@ class test_shelf(unittest.TestCase, ui_class):
         self.logout()
         # logout and try to create another shelf with same name, even if user can't see shelfs name
         self.login('shelf','123')
-        self.list_shelfs('shelf_private')['ele'].click()
+        self.list_shelfs('shelf_private (Public)')['ele'].click()
         del_shelf = self.check_element_on_page((By.ID, "delete_shelf"))
         del_shelf.click()
         self.check_element_on_page((By.ID, "confirm")).click()
@@ -274,11 +299,53 @@ class test_shelf(unittest.TestCase, ui_class):
         self.assertTrue(self.check_element_on_page((By.ID, "flash_success")))
         self.assertTrue(self.list_shelfs('Halllalalalal1l1ll2332434llsfllsdfgls[..]'))
 
+    #
+    def test_shelf_action_non_shelf_edit_role(self):
+        # remove edit role from admin account
+        self.edit_user('admin', {'edit_shelf_role': 0, 'email': 'e@fe.de'})
+        self.assertTrue(self.check_element_on_page((By.ID, "flash_success")))
+        # create user with edit_shlefs role
+        self.create_user('user0', {'edit_shelf_role': 1, 'password': '1234', 'email': 'a1@b.com'})
+        self.assertTrue(self.check_element_on_page((By.ID, "flash_success")))
+        self.logout()
+        self.login('user0','1234')
+        self.create_shelf('noright', True)
+        self.goto_page('nav_new')
+        books = self.get_books_displayed()
+        self.get_book_details(int(books[1][2]['id']))
+        # Add book to shelf
+        self.check_element_on_page((By.ID, "add-to-shelf")).click()
+        shelf_list = self.driver.find_elements_by_xpath("//ul[@id='add-to-shelves']/li")
+        self.assertEqual(1, len(shelf_list))
+        self.check_element_on_page((By.XPATH, "//ul[@id='add-to-shelves']/li/a[contains(.,'noright')]")).click()
+        self.assertFalse(self.check_element_on_page((By.XPATH, "//ul[@id='add-to-shelves']/li/a[contains(.,'noright')]")))
+        # Remove book from shelf
+        remove = self.check_element_on_page((By.XPATH, "//*[@id='remove-from-shelves']//a"))
+        self.assertTrue(remove)
+        remove.click()
+        # Add book to shelf again
+        self.assertFalse(self.check_element_on_page((By.XPATH, "//*[@id='remove-from-shelves']//a")))
+        self.check_element_on_page((By.ID, "add-to-shelf")).click()
+        self.check_element_on_page((By.XPATH, "//ul[@id='add-to-shelves']/li/a[contains(.,'noright')]")).click()
+        #logout and login admin again
+        self.logout()
+        self.login('admin', 'admin123')
+        books = self.get_books_displayed()
+        self.get_book_details(int(books[1][2]['id']))
+        self.check_element_on_page((By.ID, "add-to-shelf")).click()
+        self.assertFalse(self.check_element_on_page((By.XPATH, "//ul[@id='add-to-shelves']/li/a[contains(.,'noright')]")))
+        remove = self.check_element_on_page((By.XPATH, "//*[@id='remove-from-shelves']//a"))
+        self.assertTrue(remove)
+        remove.click()
+        self.assertTrue(self.check_element_on_page((By.XPATH, "//*[@id='remove-from-shelves']//a")))
+        self.edit_user('user0', {'delete': 1})
+        self.assertTrue(self.check_element_on_page((By.ID, "flash_success")))
+        self.edit_user('admin', {'edit_shelf_role': 1})
+        self.assertTrue(self.check_element_on_page((By.ID, "flash_success")))
+
 
     # Change database
     @unittest.skip("Change Database Not Implemented")
     def test_shelf_database_change(self):
         self.create_shelf('order', False)
         self.assertTrue(self.check_element_on_page((By.ID, "flash_success")))
-
-
