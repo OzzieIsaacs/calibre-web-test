@@ -3,7 +3,7 @@
 import unittest
 import requests
 from helper_ui import ui_class
-from testconfig import TEST_DB, VENV_PYTHON, CALIBRE_WEB_PATH, base_path
+from config_test import TEST_DB, VENV_PYTHON, CALIBRE_WEB_PATH, base_path
 from helper_func import startup, debug_startup, get_Host_IP, add_dependency, remove_dependency, kill_old_cps
 from selenium.webdriver.common.by import By
 import os

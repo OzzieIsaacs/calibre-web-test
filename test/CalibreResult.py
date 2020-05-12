@@ -41,7 +41,7 @@ import traceback
 from unittest import TestResult, TextTestResult
 from unittest.result import failfast
 import pkg_resources
-from testconfig import CALIBRE_WEB_PATH
+from config_test import CALIBRE_WEB_PATH
 import platform
 from helper_environment import environment
 from jinja2 import Template

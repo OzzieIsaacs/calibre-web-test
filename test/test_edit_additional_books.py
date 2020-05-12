@@ -2,16 +2,16 @@
 # -*- coding: utf-8 -*-
 
 
-from unittest import TestCase, skip
+from unittest import TestCase
 import os
 import unittest
 from selenium.webdriver.common.by import By
 import time
 from helper_ui import ui_class
-from testconfig import TEST_DB, base_path
+from config_test import TEST_DB, base_path
 from parameterized import parameterized_class
 from helper_func import startup, debug_startup, add_dependency, remove_dependency, unrar_path, is_unrar_not_present
-
+import requests
 
 '''@parameterized_class([
    { "py_version": u'/usr/bin/python'},
@@ -43,16 +43,55 @@ class test_edit_additional_books(TestCase, ui_class):
         cls.driver.quit()
         cls.p.terminate()
 
-    #check cover recognition
-    def test_upload_book_cbr(self):
+    def test_upload_metadate_cbr(self):
         self.fill_basic_config({'config_uploading':1})
-        time.sleep(2)
+        time.sleep(3)
+        self.assertTrue(self.check_element_on_page((By.ID, "flash_success")))
+        self.fill_basic_config({'config_rarfile_location': '/bin/ur'})
+        self.assertTrue(self.check_element_on_page((By.ID, "flash_alert")))
+        self.fill_basic_config({'config_rarfile_location': base_path})
+        self.assertTrue(self.check_element_on_page((By.ID, "flash_alert")))
+        self.fill_basic_config({'config_rarfile_location': unrar_path()})
+        self.assertTrue(self.check_element_on_page((By.ID, "flash_success")))
+        time.sleep(3)
         self.goto_page('nav_new')
         upload_file = os.path.join(base_path, 'files', 'book.cbr')
         upload = self.check_element_on_page((By.ID, 'btn-upload'))
         upload.send_keys(upload_file)
-        # ToDo: check file contents
         time.sleep(2)
+        self.check_element_on_page((By.ID, 'edit_cancel')).click()
+        details = self.get_book_details()
+        self.assertEqual('Test 执book', details['title'])
+        self.assertEqual('Author Name', details['author'][0])
+        self.assertEqual('3.0', details['series_index'])
+        self.assertEqual('No Series', details['series'])
+        cookie = self.driver.get_cookies()
+        cook = dict(session=cookie[1]['value'], remember_token=cookie[0]['value'])
+        resp = requests.get( 'http://127.0.0.1:8083' + details['cover'], cookies=cook)
+        self.assertEqual('8936',resp.headers['Content-Length'])
+        self.fill_basic_config({'config_rarfile_location': ''})
+        self.assertTrue(self.check_element_on_page((By.ID, "flash_success")))
+        self.fill_basic_config({'config_uploading': 0})
+
+    def test_upload_metadata_cbt(self):
+        self.fill_basic_config({'config_uploading':1})
+        time.sleep(3)
+        self.goto_page('nav_new')
+        upload_file = os.path.join(base_path, 'files', 'book.cbt')
+        upload = self.check_element_on_page((By.ID, 'btn-upload'))
+        upload.send_keys(upload_file)
+        time.sleep(2)
+        self.check_element_on_page((By.ID, 'edit_cancel')).click()
+        details = self.get_book_details()
+        self.assertEqual('Test 执book', details['title'])
+        self.assertEqual('Author Name', details['author'][0])
+        self.assertEqual('3.0', details['series_index'])
+        self.assertEqual('No Series', details['series'])
+
+        cookie = self.driver.get_cookies()
+        cook = dict(session=cookie[1]['value'], remember_token=cookie[0]['value'])
+        resp = requests.get( 'http://127.0.0.1:8083' + details['cover'], cookies=cook)
+        self.assertEqual('8936',resp.headers['Content-Length'])
         self.fill_basic_config({'config_uploading': 0})
 
 

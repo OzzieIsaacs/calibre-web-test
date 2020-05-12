@@ -3,7 +3,7 @@
 import unittest
 import shutil
 from helper_ui import ui_class
-from testconfig import TEST_DB, BOOT_TIME, CALIBRE_WEB_PATH
+from config_test import TEST_DB, BOOT_TIME, CALIBRE_WEB_PATH
 from helper_func import startup, debug_startup
 from helper_proxy import Proxy, val
 from selenium.webdriver.common.by import By

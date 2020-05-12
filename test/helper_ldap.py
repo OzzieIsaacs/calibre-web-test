@@ -93,11 +93,11 @@ objectClass: inetOrgPerson
 sn: admin
 userPassword: secret
 
-dn: uid=Mümmy,ou=people,dc=calibreweb,dc=com
+dn: uid=Mümmy 7,ou=people,dc=calibreweb,dc=com
 objectClass: person
 objectClass: organizationalPerson
 objectClass: inetOrgPerson
-uid: Mümmy
+uid: Mümmy 7
 mail: muemmy@alfa.com
 gn: Mu
 sn: my
@@ -122,7 +122,7 @@ ou: groups
 dn: cn=cps,ou=groups,dc=calibreweb,dc=com
 objectclass: groupofnames
 cn: cps
-member: uid=Mümmy,ou=People,dc=calibreweb,dc=com
+member: uid=Mümmy 7,ou=People,dc=calibreweb,dc=com
 member: uid=执一,ou=People,dc=calibreweb,dc=com
 
 """.encode('utf-8')

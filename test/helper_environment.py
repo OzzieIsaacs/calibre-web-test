@@ -1,7 +1,7 @@
 # -*- coding: utf-8 -*-
 import platform
 from subproc_wrapper import process_open
-from testconfig import CALIBRE_WEB_PATH
+from config_test import CALIBRE_WEB_PATH
 import re
 import os
 import sys

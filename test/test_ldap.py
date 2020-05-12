@@ -3,7 +3,7 @@
 import unittest
 import time
 from helper_ui import ui_class
-from testconfig import TEST_DB, VENV_PYTHON, CALIBRE_WEB_PATH, BOOT_TIME
+from config_test import TEST_DB, VENV_PYTHON, CALIBRE_WEB_PATH, BOOT_TIME
 from helper_func import startup, debug_startup, get_Host_IP, add_dependency, remove_dependency, kill_old_cps
 from selenium.webdriver.common.by import By
 from helper_ldap import TestLDAPServer
@@ -21,7 +21,7 @@ class test_ldap_login(unittest.TestCase, ui_class):
         add_dependency(cls.dep_line, cls.__name__)
 
         try:
-            cls.server = TestLDAPServer(config=1, port=3268, encrypt=None)
+            cls.server = TestLDAPServer(config=4, port=3268, encrypt=None)
             cls.server.start()
             startup(cls, cls.py_version, {'config_calibre_dir':TEST_DB,'config_login_type':'Use LDAP Authentication'})
             # print('stop in setup')
@@ -295,7 +295,7 @@ class test_ldap_login(unittest.TestCase, ui_class):
 
         userlist = self.get_user_list()
         self.assertEqual(len(userlist),3)
-        users = ['执一','Mümmy']
+        users = ['执一','Mümmy 7']
         self.assertTrue(all(elem in userlist for elem in users))
 
         # check access right of user match template access rights
@@ -341,7 +341,7 @@ class test_ldap_login(unittest.TestCase, ui_class):
         self.assertEqual(rights['passwd_role'], 0)
         self.assertEqual(rights['upload_role'], 1)
 
-        self.edit_user('Mümmy', {'delete': 1})
+        self.edit_user('Mümmy 7', {'delete': 1})
         self.edit_user('执一', {'delete': 1})
         # stop/start ldap with poxixusergroup, no email, 2 email adresses
         # print('new setup config 3')

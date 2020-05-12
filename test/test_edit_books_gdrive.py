@@ -11,7 +11,7 @@ import time
 import shutil
 from helper_ui import ui_class
 from subproc_wrapper import process_open
-from testconfig import CALIBRE_WEB_PATH, TEST_DB, BOOT_TIME
+from config_test import CALIBRE_WEB_PATH, TEST_DB, BOOT_TIME
 from parameterized import parameterized_class
 # test editing books on gdrive
 

@@ -3,7 +3,7 @@
 import os
 import shutil
 import re
-from testconfig import CALIBRE_WEB_PATH, TEST_DB, BOOT_TIME, VENV_PYTHON
+from config_test import CALIBRE_WEB_PATH, TEST_DB, BOOT_TIME, VENV_PYTHON
 from selenium.webdriver.support.ui import WebDriverWait
 from subproc_wrapper import process_open
 from selenium import webdriver

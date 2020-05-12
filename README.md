@@ -31,7 +31,7 @@ Calibre-web-test
 
 - install Calibre as conversion tool (if running from within pycharm debugger version 3.48 at most, as Calibre 4.x crash during conversion in this configuration)
 
-- configure folder names in file ./test/testconfig.py
+- configure folder names in file ./test/config_test.py
 
 ## Start Testing
 

@@ -6,7 +6,7 @@ from selenium.webdriver.common.by import By
 from selenium.common.exceptions import WebDriverException
 import re
 from helper_ui import ui_class
-from testconfig import TEST_DB
+from config_test import TEST_DB
 from helper_func import startup, check_response_language_header, curl_available, digest_login
 from parameterized import parameterized_class
 

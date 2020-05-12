@@ -6,7 +6,7 @@ import unittest
 from selenium.webdriver.common.by import By
 import time
 from helper_ui import ui_class
-from testconfig import CALIBRE_WEB_PATH, TEST_DB, BOOT_TIME
+from config_test import CALIBRE_WEB_PATH, TEST_DB, BOOT_TIME
 # from parameterized import parameterized_class
 from helper_func import startup, wait_Email_received
 import requests
@@ -99,6 +99,7 @@ class test_STARTTLS(unittest.TestCase, ui_class):
                     break
             i += 1
         self.assertEqual(ret[-1]['result'], 'Failed')
+
 
     def test_STARTTLS_resend_password(self):
         self.create_user('paswd_resend', {'password': '123', 'email': 'a@b.com', 'edit_role': 1})

@@ -4,7 +4,7 @@
 import unittest
 from selenium.webdriver.common.by import By
 from helper_ui import ui_class, RESTRICT_TAG_ME
-from testconfig import CALIBRE_WEB_PATH, TEST_DB, BOOT_TIME
+from config_test import CALIBRE_WEB_PATH, TEST_DB, BOOT_TIME
 import requests
 from helper_func import startup, debug_startup
 from parameterized import parameterized_class

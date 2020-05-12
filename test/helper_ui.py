@@ -5,7 +5,7 @@ from selenium.webdriver.common.keys import Keys
 from selenium.webdriver.support.ui import WebDriverWait, Select
 from selenium.webdriver.support import expected_conditions as EC
 from selenium.common.exceptions import TimeoutException
-from testconfig import PY_BIN
+from config_test import PY_BIN
 import time
 import lxml.etree
 try:
@@ -1240,7 +1240,7 @@ class ui_class():
             series = tree.xpath("//*[contains(@href,'series')]/ancestor::p")
             if series:
                 ret['series_all'] = ""
-                ret['series_index'] = series[0].text[5:-3]
+                ret['series_index'] = series[0].text[5:-3].strip()
                 for ele in series[0].iter():
                     ret['series_all'] += ele.text
                     ret['series'] = ele.text

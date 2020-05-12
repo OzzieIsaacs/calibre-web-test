@@ -10,7 +10,7 @@ import sys
 from selenium.webdriver.common.by import By
 import time
 from helper_ui import ui_class
-from testconfig import CALIBRE_WEB_PATH, TEST_DB, BOOT_TIME
+from config_test import CALIBRE_WEB_PATH, TEST_DB, BOOT_TIME
 
 from parameterized import parameterized_class
 from helper_func import startup

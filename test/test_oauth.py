@@ -3,7 +3,7 @@
 import unittest
 import time
 from helper_ui import ui_class
-from testconfig import TEST_DB, BOOT_TIME
+from config_test import TEST_DB, BOOT_TIME
 from helper_func import startup, debug_startup, add_dependency, remove_dependency
 from selenium.webdriver.common.by import By
 

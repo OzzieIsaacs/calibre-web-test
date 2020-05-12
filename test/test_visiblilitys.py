@@ -8,7 +8,7 @@ import time
 import requests
 from helper_ui import ui_class
 from helper_ui import RESTRICT_TAG_ME, RESTRICT_COL_ME, RESTRICT_TAG_USER, RESTRICT_COL_USER
-from testconfig import TEST_DB
+from config_test import TEST_DB
 from parameterized import parameterized_class
 from helper_func import startup, debug_startup
 

@@ -4,7 +4,7 @@
 import unittest
 from selenium.webdriver.common.by import By
 from helper_ui import ui_class
-from testconfig import TEST_DB
+from config_test import TEST_DB
 from helper_func import startup
 from parameterized import parameterized_class
 import time

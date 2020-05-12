@@ -8,7 +8,7 @@ import re
 import time
 import requests
 from subproc_wrapper import process_open
-from testconfig import SELENIUM_SERVER, CALIBRE_WEB_PATH, VENV_PATH, VENV_PYTHON
+from config_test import SELENIUM_SERVER, CALIBRE_WEB_PATH, VENV_PATH, VENV_PYTHON
 import unittest
 import sys
 import venv
@@ -42,7 +42,7 @@ if __name__ == '__main__':
     # check pip ist installed
     if os.name != 'nt':
         pversion=list()
-        p = process_open(["python3.7", "-m", "pip", "-V"])
+        p = process_open(["python3.6", "-m", "pip", "-V"])
         p.wait()
         res = (p.stdout.readlines())
         pip = re.match(("pip\s(.*)\sfrom\s(.*)\s\((.*)\).*"),res[0])

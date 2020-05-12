@@ -8,7 +8,7 @@ from selenium.webdriver.common.by import By
 from selenium.webdriver.common.keys import Keys
 import time
 from helper_ui import ui_class
-from testconfig import TEST_DB, base_path
+from config_test import TEST_DB, base_path
 from parameterized import parameterized_class
 from helper_func import startup, debug_startup, add_dependency, remove_dependency
 import requests
@@ -794,7 +794,7 @@ class test_edit_books(TestCase, ui_class):
         cookie = self.driver.get_cookies()
         cook = dict(session=cookie[1]['value'], remember_token=cookie[0]['value'])
         resp = requests.get( 'http://127.0.0.1:8083' + details['cover'], cookies=cook)
-        self.assertEqual('182574',resp.headers['Content-Length'])
+        self.assertEqual('8936',resp.headers['Content-Length'])
         self.fill_basic_config({'config_uploading': 0})
 
 

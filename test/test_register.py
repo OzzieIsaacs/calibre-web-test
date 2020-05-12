@@ -2,7 +2,7 @@
 # -*- coding: utf-8 -*-
 
 from helper_email_convert import AIOSMTPServer
-from testconfig import TEST_DB
+from config_test import TEST_DB
 from helper_func import startup, wait_Email_received
 from parameterized import parameterized_class
 import unittest
