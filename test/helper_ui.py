@@ -329,15 +329,14 @@ class ui_class():
         opener = list()
         process_checkboxes = dict()
         process_elements = dict()
-        process_options = dict()
+        # process_options = dict()
         process_selects = dict()
         # special handling for checkboxes
         checkboxes = ['admin_role', 'download_role', 'upload_role', 'edit_role', 'delete_role', 'passwd_role',
                       'viewer_role', 'edit_shelf_role', 'show_32', 'show_16', 'show_128', 'show_32768',
                         'show_2', 'show_4', 'show_8', 'show_64', 'show_256', 'show_8192', 'show_16384',
                         'Show_detail_random', 'show_4096']
-        options = ['config_read_column']
-        selects = ['config_theme', 'config_restricted_column']
+        selects = ['config_theme', 'config_restricted_column', 'config_read_column']
         # depending on elements open accordions or not
         if any(key in elements for key in ['config_calibre_web_title', 'config_books_per_page', 'config_theme',
                                            'config_random_books', 'config_columns_to_ignore',
@@ -358,8 +357,8 @@ class ui_class():
         for element,key in enumerate(elements):
             if key in checkboxes:
                 process_checkboxes[key] = elements[key]
-            elif key in options:
-                process_options[key] = elements[key]
+            #elif key in options:
+            #    process_options[key] = elements[key]
             elif key in selects:
                 process_selects[key] = elements[key]
             else:
@@ -1313,7 +1312,6 @@ class ui_class():
                     element['label'] = col.text
                     element['index'] = col.attrib['for']
                     if element['label'] in custom_content:
-                        # element['element'] = cls.check_element_on_page((By.ID, element['index']))
                         if col.getnext().tag == 'select':
                             select = Select(cls.driver.find_element_by_id(element['index']))
                             select.select_by_visible_text(custom_content[element['label']])
@@ -1416,6 +1414,16 @@ class ui_class():
                 inc_extensions = self.driver.find_elements_by_xpath("//label[starts-with(@id, 'extension_')]")
                 exc_extensions = self.driver.find_elements_by_xpath("//label[starts-with(@id, 'exclude_extension')]")
 
+                cust_columns = self.driver.find_elements_by_xpath("//label[starts-with(@for, 'custom_')]")
+                if len(cust_columns):  # we have custom columns
+                    ret = dict()
+                    for col in cust_columns:  # .getchildren()[0].getchildren()[1:]:
+                        # inp = cust_columns[0].find_element_by_xpath(".//following-sibling::*")
+                        #element = dict()
+                        #element['Text'] = col.text
+                        #element['element'] = inp
+                        ret[col.text]= cust_columns[0].find_element_by_xpath(".//following-sibling::*")
+
                 return {'include_tags':inc_tags,
                         'exclude_tags':exc_tags,
                         'include_serie': inc_series,
@@ -1423,7 +1431,8 @@ class ui_class():
                         'include_language': inc_languages,
                         'exclude_language': exc_languages,
                         'include_extension': inc_extensions,
-                        'exclude_extension': exc_extensions
+                        'exclude_extension': exc_extensions,
+                        'cust_columns': ret
                         }
             else:
                 text_inputs = ['book_title', 'bookAuthor', 'publisher', 'comment']
