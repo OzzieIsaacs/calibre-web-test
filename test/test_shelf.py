@@ -249,8 +249,6 @@ class test_shelf(unittest.TestCase, ui_class):
         r = requests.session()
         payload = {'username': 'admin', 'password': 'admin123', 'submit':"", 'next':"/", "remember_me":"on"}
         r.post('http://127.0.0.1:8083/login',data=payload)
-        #cookie = self.driver.get_cookies()
-        #cook = dict(session=cookie[1]['value'], remember_token=cookie[0]['value'])
         r.post('http://127.0.0.1:8083/shelf/order/1', data={"9": "1","11": "2","13": "3"})
         self.driver.refresh() # reload page
         self.check_element_on_page((By.ID, "shelf_back")).click()

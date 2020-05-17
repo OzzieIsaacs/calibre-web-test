@@ -476,20 +476,22 @@ class test_edit_books(TestCase, ui_class):
         self.assertIsNone('Not Implemented')
 
     def test_typeahead_functions(self):
-        cookie = self.driver.get_cookies()
-        cook = dict(session=cookie[1]['value'], remember_token=cookie[0]['value'])
-        r=requests.get('http://127.0.0.1:8083/get_languages_json', cookies=cook)
+        req = requests.session()
+        payload = {'username': 'admin', 'password': 'admin123', 'submit':"", 'next':"/", "remember_me":"on"}
+        req.post('http://127.0.0.1:8083/login',data=payload)
+        r=req.get('http://127.0.0.1:8083/get_languages_json')
         self.assertEqual(200,r.status_code)
-        r = requests.get('http://127.0.0.1:8083/get_matching_tags', cookies=cook)
+        r = req.get('http://127.0.0.1:8083/get_matching_tags')
         self.assertEqual(200, r.status_code)
-        r = requests.get('http://127.0.0.1:8083/get_series_json', cookies=cook)
+        r = req.get('http://127.0.0.1:8083/get_series_json')
         self.assertEqual(200, r.status_code)
-        r = requests.get('http://127.0.0.1:8083/get_tags_json', cookies=cook)
+        r = req.get('http://127.0.0.1:8083/get_tags_json')
         self.assertEqual(200, r.status_code)
-        r = requests.get('http://127.0.0.1:8083/get_publishers_json', cookies=cook)
+        r = req.get('http://127.0.0.1:8083/get_publishers_json')
         self.assertEqual(200, r.status_code)
-        r = requests.get('http://127.0.0.1:8083/get_authors_json', cookies=cook)
+        r = req.get('http://127.0.0.1:8083/get_authors_json')
         self.assertEqual(200, r.status_code)
+        req.close()
 
     # change comments, add comments, delete comments
     def test_typeahead_language(self):
@@ -645,8 +647,6 @@ class test_edit_books(TestCase, ui_class):
         self.edit_book(content={'local_cover': pngcover})
         self.driver.refresh()
         time.sleep(2)
-        #cookie = self.driver.get_cookies()
-        #cook = dict(session=cookie[1]['value'], remember_token=cookie[0]['value'])
         resp = r.get( 'http://127.0.0.1:8083/cover/5')
         self.assertEqual('20317',resp.headers['Content-Length'])
 
@@ -835,7 +835,6 @@ class test_edit_books(TestCase, ui_class):
     def test_download_book(self):
         self.get_book_details(5)
         element=self.check_element_on_page((By.XPATH, "//*[starts-with(@id,'btnGroupDrop')]"))
-        cookie = self.driver.get_cookies()
         download_link=element.get_attribute("href")
         self.assertTrue(download_link.endswith('/5.epub'),'Download Link has invalid format for kobo browser, has to end with filename')
         r = requests.session()

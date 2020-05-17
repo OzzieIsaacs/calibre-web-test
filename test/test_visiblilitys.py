@@ -358,9 +358,7 @@ class calibre_web_visibilitys(unittest.TestCase, ui_class):
                 return
         self.assertIsNone("Error creating new users")
 
-    # checks if admin can change user language
-    '''def test_admin_alter_user(self):
-        pass'''
+
     def test_search_string(self):
         self.adv_search({'book_title':'Hallo'}, get=False)
         field = self.check_element_on_page((By.ID, "query"))
@@ -371,12 +369,14 @@ class calibre_web_visibilitys(unittest.TestCase, ui_class):
 
 
     def test_search_functions(self):
-        cookie = self.driver.get_cookies()
-        cook = dict(session=cookie[1]['value'], remember_token=cookie[0]['value'])
-        r=requests.get('http://127.0.0.1:8083/search', cookies=cook)
-        self.assertEqual(200,r.status_code)
-        r = requests.get('http://127.0.0.1:8083/advanced_search', cookies=cook)
-        self.assertEqual(200, r.status_code)
+        r = requests.session()
+        payload = {'username': 'admin', 'password': 'admin123', 'submit':"", 'next':"/", "remember_me":"on"}
+        r.post('http://127.0.0.1:8083/login',data=payload)
+        resp = r.get('http://127.0.0.1:8083/search')
+        self.assertEqual(200,resp.status_code)
+        resp = r.get('http://127.0.0.1:8083/advanced_search')
+        self.assertEqual(200, resp.status_code)
+        r.close()
 
     def test_restrict_tags(self):
         # create shelf with Genot content
