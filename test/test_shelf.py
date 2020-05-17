@@ -246,16 +246,19 @@ class test_shelf(unittest.TestCase, ui_class):
         self.assertEqual(shelf_books[2]['id'], '9')
         self.check_element_on_page((By.ID, "order_shelf")).click()
         self.get_order_shelf_list()
-        cookie = self.driver.get_cookies()
-        cook = dict(session=cookie[1]['value'], remember_token=cookie[0]['value'])
-        requests.post('http://127.0.0.1:8083/shelf/order/1', cookies=cook, data={"9": "1","11": "2","13": "3"})
+        r = requests.session()
+        payload = {'username': 'admin', 'password': 'admin123', 'submit':"", 'next':"/", "remember_me":"on"}
+        r.post('http://127.0.0.1:8083/login',data=payload)
+        #cookie = self.driver.get_cookies()
+        #cook = dict(session=cookie[1]['value'], remember_token=cookie[0]['value'])
+        r.post('http://127.0.0.1:8083/shelf/order/1', data={"9": "1","11": "2","13": "3"})
         self.driver.refresh() # reload page
-
         self.check_element_on_page((By.ID, "shelf_back")).click()
         shelf_books = self.get_shelf_books_displayed()
         self.assertEqual(shelf_books[0]['id'], '9')
         self.assertEqual(shelf_books[1]['id'], '11')
         self.assertEqual(shelf_books[2]['id'], '13')
+        r.close()
 
     # change shelf from public to private type
     def test_public_private_shelf(self):

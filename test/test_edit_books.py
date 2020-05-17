@@ -325,7 +325,7 @@ class test_edit_books(TestCase, ui_class):
         values=self.get_book_details()
         self.assertEqual(u'Beta|,Bet',values['publisher'][0])
         list_element = self.goto_page('nav_publisher')
-        self.assertEqual(list_element[1].text, u'Beta|,Bet')
+        self.assertEqual(list_element[0].text, u'Beta|,Bet', "Publisher Sorted according to name, B before R")
 
         self.get_book_details(7)
         self.check_element_on_page((By.ID, "edit_book")).click()
@@ -554,8 +554,10 @@ class test_edit_books(TestCase, ui_class):
         lang = self.check_element_on_page((By.ID, "bookAuthor"))
         lang.send_keys('&')
         time.sleep(1)
-        typeahead=self.check_element_on_page((By.CLASS_NAME, "tt-dataset-authors"))
-        self.assertEqual('John Döe & John Döe\nJohn Döe & Peter Parker\nJohn Döe & Asterix Lionherd\nJohn Döe & Frodo Beutlin\nJohn Döe & Norbert Halagal',typeahead.text)
+        typeahead = self.check_element_on_page((By.CLASS_NAME, "tt-dataset-authors"))
+        typeahead_set = set(typeahead.text.split("\n"))
+        result = set(("John Döe & John Döe", "John Döe & Peter Parker", "John Döe & Asterix Lionherd", "John Döe & Frodo Beutlin", "John Döe & Norbert Halagal"))
+        self.assertEqual(typeahead_set, result)
         lang.send_keys('ro')
         time.sleep(1)
         typeahead = self.check_element_on_page((By.CLASS_NAME, "tt-dataset-authors"))
@@ -619,10 +621,10 @@ class test_edit_books(TestCase, ui_class):
         self.edit_book(content={'local_cover': jpegcover})
         self.driver.refresh()
         time.sleep(2)
-        #selenium-request didn't work for unknown reason cookie only accespted if slowly stepped through
-        cookie = self.driver.get_cookies()
-        cook = dict(session=cookie[1]['value'], remember_token=cookie[0]['value'])
-        resp = requests.get( 'http://127.0.0.1:8083/cover/5', cookies=cook)
+        r = requests.session()
+        payload = {'username': 'admin', 'password': 'admin123', 'submit':"", 'next':"/", "remember_me":"on"}
+        r.post('http://127.0.0.1:8083/login',data=payload)
+        resp = r.get( 'http://127.0.0.1:8083/cover/5')
         with open(jpegcover, 'rb') as reader:
             self.assertEqual(reader.read(),resp.content)
 
@@ -633,9 +635,7 @@ class test_edit_books(TestCase, ui_class):
         self.assertTrue(self.check_element_on_page((By.CLASS_NAME, "alert")))
         self.driver.refresh()
         time.sleep(2)
-        cookie = self.driver.get_cookies()
-        cook = dict(session=cookie[1]['value'], remember_token=cookie[0]['value'])
-        resp = requests.get( 'http://127.0.0.1:8083/cover/5', cookies=cook)
+        resp = r.get( 'http://127.0.0.1:8083/cover/5')
         with open(jpegcover, 'rb') as reader:
             self.assertEqual(reader.read(), resp.content)
 
@@ -645,9 +645,9 @@ class test_edit_books(TestCase, ui_class):
         self.edit_book(content={'local_cover': pngcover})
         self.driver.refresh()
         time.sleep(2)
-        cookie = self.driver.get_cookies()
-        cook = dict(session=cookie[1]['value'], remember_token=cookie[0]['value'])
-        resp = requests.get( 'http://127.0.0.1:8083/cover/5', cookies=cook)
+        #cookie = self.driver.get_cookies()
+        #cook = dict(session=cookie[1]['value'], remember_token=cookie[0]['value'])
+        resp = r.get( 'http://127.0.0.1:8083/cover/5')
         self.assertEqual('20317',resp.headers['Content-Length'])
 
         self.get_book_details(5)
@@ -656,10 +656,10 @@ class test_edit_books(TestCase, ui_class):
         self.edit_book(content={'local_cover': pngcover})
         self.driver.refresh()
         time.sleep(2)
-        cookie = self.driver.get_cookies()
-        cook = dict(session=cookie[1]['value'], remember_token=cookie[0]['value'])
-        resp = requests.get( 'http://127.0.0.1:8083/cover/5', cookies=cook)
+        resp = r.get( 'http://127.0.0.1:8083/cover/5')
         self.assertEqual('17420',resp.headers['Content-Length'])
+        r.close()
+        self.assertTrue(False,"Browser-Cache Problem: Old Cover is displayed instead of New Cover")
 
     # check metadata recognition
     def test_upload_book_pdf(self):
@@ -674,11 +674,13 @@ class test_edit_books(TestCase, ui_class):
         details = self.get_book_details()
         self.assertEqual('book', details['title'])
         self.assertEqual('Unknown', details['author'][0])
-        cookie = self.driver.get_cookies()
-        cook = dict(session=cookie[1]['value'], remember_token=cookie[0]['value'])
-        resp = requests.get( 'http://127.0.0.1:8083' + details['cover'], cookies=cook)
+        r = requests.session()
+        payload = {'username': 'admin', 'password': 'admin123', 'submit':"", 'next':"/", "remember_me":"on"}
+        r.post('http://127.0.0.1:8083/login',data=payload)
+        resp = r.get( 'http://127.0.0.1:8083' + details['cover'])
         self.assertEqual('182574',resp.headers['Content-Length'])
         self.fill_basic_config({'config_uploading': 0})
+        r.close()
 
     # check metadata recognition
     def test_upload_book_fb2(self):
@@ -694,11 +696,13 @@ class test_edit_books(TestCase, ui_class):
         details = self.get_book_details()
         self.assertEqual('book', details['title'])
         self.assertEqual('Unknown', details['author'][0])
-        cookie = self.driver.get_cookies()
-        cook = dict(session=cookie[1]['value'], remember_token=cookie[0]['value'])
-        resp = requests.get( 'http://127.0.0.1:8083' + details['cover'], cookies=cook)
+        r = requests.session()
+        payload = {'username': 'admin', 'password': 'admin123', 'submit':"", 'next':"/", "remember_me":"on"}
+        r.post('http://127.0.0.1:8083/login',data=payload)
+        resp = r.get( 'http://127.0.0.1:8083' + details['cover'])
         self.assertEqual('182574',resp.headers['Content-Length'])
         self.fill_basic_config({'config_uploading': 0})
+        r.close()
 
     def test_upload_book_lit(self):
         self.fill_basic_config({'config_uploading':1})
@@ -713,11 +717,13 @@ class test_edit_books(TestCase, ui_class):
         details = self.get_book_details()
         self.assertEqual('book', details['title'])
         self.assertEqual('Unknown', details['author'][0])
-        cookie = self.driver.get_cookies()
-        cook = dict(session=cookie[1]['value'], remember_token=cookie[0]['value'])
-        resp = requests.get( 'http://127.0.0.1:8083' + details['cover'], cookies=cook)
+        r = requests.session()
+        payload = {'username': 'admin', 'password': 'admin123', 'submit':"", 'next':"/", "remember_me":"on"}
+        r.post('http://127.0.0.1:8083/login',data=payload)
+        resp = r.get( 'http://127.0.0.1:8083' + details['cover'])
         self.assertEqual('182574',resp.headers['Content-Length'])
         self.fill_basic_config({'config_uploading': 0})
+        r.close()
 
     def test_upload_book_mobi(self):
         self.fill_basic_config({'config_uploading':1})
@@ -731,11 +737,13 @@ class test_edit_books(TestCase, ui_class):
         details = self.get_book_details()
         self.assertEqual('book', details['title'])
         self.assertEqual('Unknown', details['author'][0])
-        cookie = self.driver.get_cookies()
-        cook = dict(session=cookie[1]['value'], remember_token=cookie[0]['value'])
-        resp = requests.get( 'http://127.0.0.1:8083' + details['cover'], cookies=cook)
+        r = requests.session()
+        payload = {'username': 'admin', 'password': 'admin123', 'submit':"", 'next':"/", "remember_me":"on"}
+        r.post('http://127.0.0.1:8083/login',data=payload)
+        resp = r.get( 'http://127.0.0.1:8083' + details['cover'])
         self.assertEqual('182574',resp.headers['Content-Length'])
         self.fill_basic_config({'config_uploading': 0})
+        r.close()
 
 
     def test_upload_book_epub(self):
@@ -751,12 +759,13 @@ class test_edit_books(TestCase, ui_class):
         details = self.get_book_details()
         self.assertEqual('book9', details['title'])
         self.assertEqual('Noname 23', details['author'][0])
-        cookie = self.driver.get_cookies()
-        cook = dict(session=cookie[1]['value'], remember_token=cookie[0]['value'])
-        resp = requests.get( 'http://127.0.0.1:8083' + details['cover'], cookies=cook)
+        r = requests.session()
+        payload = {'username': 'admin', 'password': 'admin123', 'submit':"", 'next':"/", "remember_me":"on"}
+        r.post('http://127.0.0.1:8083/login',data=payload)
+        resp = r.get( 'http://127.0.0.1:8083' + details['cover'])
         self.assertEqual('8936',resp.headers['Content-Length'])
         self.fill_basic_config({'config_uploading': 0})
-
+        r.close()
 
     def test_upload_book_cbz(self):
         self.fill_basic_config({'config_uploading':1})
@@ -771,12 +780,13 @@ class test_edit_books(TestCase, ui_class):
         details = self.get_book_details()
         self.assertEqual('book', details['title'])
         self.assertEqual('Unknown', details['author'][0])
-        cookie = self.driver.get_cookies()
-        cook = dict(session=cookie[1]['value'], remember_token=cookie[0]['value'])
-        resp = requests.get( 'http://127.0.0.1:8083' + details['cover'], cookies=cook)
+        r = requests.session()
+        payload = {'username': 'admin', 'password': 'admin123', 'submit':"", 'next':"/", "remember_me":"on"}
+        r.post('http://127.0.0.1:8083/login',data=payload)
+        resp = r.get( 'http://127.0.0.1:8083' + details['cover'])
         self.assertEqual('8936',resp.headers['Content-Length'])
         self.fill_basic_config({'config_uploading': 0})
-
+        r.close()
 
     def test_upload_book_cbt(self):
         self.fill_basic_config({'config_uploading':1})
@@ -791,11 +801,13 @@ class test_edit_books(TestCase, ui_class):
         details = self.get_book_details()
         self.assertEqual('book', details['title'])
         self.assertEqual('Unknown', details['author'][0])
-        cookie = self.driver.get_cookies()
-        cook = dict(session=cookie[1]['value'], remember_token=cookie[0]['value'])
-        resp = requests.get( 'http://127.0.0.1:8083' + details['cover'], cookies=cook)
-        self.assertEqual('8936',resp.headers['Content-Length'])
+        r = requests.session()
+        payload = {'username': 'admin', 'password': 'admin123', 'submit':"", 'next':"/", "remember_me":"on"}
+        r.post('http://127.0.0.1:8083/login',data=payload)
+        resp = r.get( 'http://127.0.0.1:8083' + details['cover'])
+        self.assertEqual('182574',resp.headers['Content-Length'])
         self.fill_basic_config({'config_uploading': 0})
+        r.close()
 
 
     def test_upload_book_cbr(self):
@@ -811,29 +823,34 @@ class test_edit_books(TestCase, ui_class):
         details = self.get_book_details()
         self.assertEqual('book', details['title'])
         self.assertEqual('Unknown', details['author'][0])
-        cookie = self.driver.get_cookies()
-        cook = dict(session=cookie[1]['value'], remember_token=cookie[0]['value'])
-        resp = requests.get( 'http://127.0.0.1:8083' + details['cover'], cookies=cook)
+        r = requests.session()
+        payload = {'username': 'admin', 'password': 'admin123', 'submit':"", 'next':"/", "remember_me":"on"}
+        r.post('http://127.0.0.1:8083/login',data=payload)
+        resp = r.get( 'http://127.0.0.1:8083' + details['cover'])
         self.assertEqual('182574',resp.headers['Content-Length'])
         self.fill_basic_config({'config_uploading': 0})
+        r.close()
 
     # download of books
     def test_download_book(self):
         self.get_book_details(5)
         element=self.check_element_on_page((By.XPATH, "//*[starts-with(@id,'btnGroupDrop')]"))
         cookie = self.driver.get_cookies()
-        cook = dict(session=cookie[1]['value'], remember_token=cookie[0]['value'])
         download_link=element.get_attribute("href")
         self.assertTrue(download_link.endswith('/5.epub'),'Download Link has invalid format for kobo browser, has to end with filename')
-        resp = requests.get(download_link, cookies=cook)
+        r = requests.session()
+        payload = {'username': 'admin', 'password': 'admin123', 'submit':"", 'next':"/", "remember_me":"on"}
+        r.post('http://127.0.0.1:8083/login',data=payload)
+        resp = r.get(download_link)
         self.assertEqual(resp.headers['Content-Type'],'application/epub+zip')
         self.assertEqual(resp.status_code, 200)
         self.edit_user('admin',{'download_role':0})
-        resp = requests.get(download_link, cookies=cook)
+        resp = r.get(download_link)
         self.assertEqual(resp.status_code, 403)
         book = self.get_book_details(5)
         self.assertNotIn('download',book)
         self.edit_user('admin', {'download_role': 1})
+        r.close()
 
     # If more than one book has the same: author, tag or series it should be possible to change uppercase
     # letters to lowercase and vice versa. Example:
