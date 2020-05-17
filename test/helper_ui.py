@@ -871,10 +871,10 @@ class ui_class():
     @classmethod
     def get_user_list(cls):
         cls.goto_page('admin_setup')
-        userlist = cls.driver.find_elements_by_xpath("//table[@id='table_user']/tbody/tr")[1:]
+        userlist = cls.driver.find_elements_by_xpath("//table[@id='table_user']/tbody/tr/td[1]")
         users = list()
         for element in userlist:
-            users.append(element.text.split(' ')[0])
+            users.append(element.text)
         return users
 
     @classmethod
