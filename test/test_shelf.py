@@ -344,6 +344,23 @@ class test_shelf(unittest.TestCase, ui_class):
         self.edit_user('admin', {'edit_shelf_role': 1})
         self.assertTrue(self.check_element_on_page((By.ID, "flash_success")))
 
+    def test_add_shelf_from_search(self):
+        self.create_shelf('search', False)
+        self.assertTrue(self.check_element_on_page((By.ID, "flash_success")))
+        self.search('Döe')
+        self.check_element_on_page((By.ID, "add-to-shelf")).click()
+        shelf_list = self.driver.find_elements_by_xpath("//ul[@id='add-to-shelves']/li")
+        self.assertEqual(1, len(shelf_list))
+        self.check_element_on_page((By.XPATH, "//ul[@id='add-to-shelves']/li/a[contains(.,'search')]")).click()
+        self.assertTrue(self.check_element_on_page((By.ID, "flash_success")))
+        # self.assertFalse(self.check_element_on_page((By.XPATH, "//ul[@id='add-to-shelves']/li/a[contains(.,'search')]")))
+        self.list_shelfs('search')['ele'].click()
+        shelf_books = self.get_shelf_books_displayed()
+        self.assertEqual(len(shelf_books), 2)
+        del_shelf = self.check_element_on_page((By.ID, "delete_shelf"))
+        del_shelf.click()
+        self.check_element_on_page((By.ID, "confirm")).click()
+
 
     # Change database
     @unittest.skip("Change Database Not Implemented")
