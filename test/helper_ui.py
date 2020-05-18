@@ -339,7 +339,7 @@ class ui_class():
         selects = ['config_theme', 'config_restricted_column', 'config_read_column']
         # depending on elements open accordions or not
         if any(key in elements for key in ['config_calibre_web_title', 'config_books_per_page', 'config_theme',
-                                           'config_random_books', 'config_columns_to_ignore',
+                                           'config_random_books', 'config_columns_to_ignore', 'config_authors_max',
                                            'config_restricted_column', 'config_read_column', 'config_title_regex']):
             opener.append(0)
         if any(key in elements for key in ['admin_role', 'download_role', 'upload_role', 'edit_role', 'viewer_role',
@@ -1048,7 +1048,7 @@ class ui_class():
             book_r['id'] = book_r['link'][6:]
             book_r['title']= meta[0].getchildren()[0].text
             authors = meta[1].getchildren()
-            book_r['author'] = [a.text for a in authors]
+            book_r['author'] = [a.text for a in authors if a.text is not '&' and a.attrib.get('class') != 'author-name author-hidden']
             if len(meta) == 3:
                 ratings = meta[2].getchildren()
                 counter = 0
@@ -1069,7 +1069,7 @@ class ui_class():
             bk['ele'] = cls.check_element_on_page((By.XPATH,"//a[@href='"+bk['link']+"']/img"))
             bk['title']= meta[0].getchildren()[0].text
             authors = meta[1].getchildren()
-            bk['author'] = [a.text for a in authors]
+            bk['author'] = [a.text for a in authors if a.text is not '&' and a.attrib.get('class') != 'author-name author-hidden']
             if len(meta) == 3:
                 ratings = meta[2].getchildren()
                 counter = 0
@@ -1102,7 +1102,7 @@ class ui_class():
             bk['ele'] = self.check_element_on_page((By.XPATH,"//a[@href='"+bk['link']+"']/img"))
             bk['title']= meta[0].getchildren()[0].text
             authors = meta[1].getchildren()
-            bk['author'] = [a.text for a in authors]
+            bk['author'] = [a.text for a in authors if a.text is not '&' and a.attrib.get('class') != 'author-name author-hidden']
             if len(meta) == 3:
                 ratings = meta[2].getchildren()
                 counter = 0
@@ -1415,8 +1415,8 @@ class ui_class():
                 exc_extensions = self.driver.find_elements_by_xpath("//label[starts-with(@id, 'exclude_extension')]")
 
                 cust_columns = self.driver.find_elements_by_xpath("//label[starts-with(@for, 'custom_')]")
+                ret = dict()
                 if len(cust_columns):  # we have custom columns
-                    ret = dict()
                     for col in cust_columns:  # .getchildren()[0].getchildren()[1:]:
                         # inp = cust_columns[0].find_element_by_xpath(".//following-sibling::*")
                         #element = dict()

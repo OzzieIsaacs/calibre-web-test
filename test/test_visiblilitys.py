@@ -692,3 +692,97 @@ class calibre_web_visibilitys(unittest.TestCase, ui_class):
         self.check_element_on_page((By.ID, "edit_book")).click()
         self.edit_book(custom_content={u'Custom Bool 1 Ä':u''})
 
+    def test_hide_custom_column(self):
+        self.get_book_details(5)
+        self.check_element_on_page((By.ID, "edit_book")).click()
+        self.edit_book(custom_content={u'Custom Bool 1 Ä':u'No',
+                                       'Custom Rating 人物': 5,
+                                       'Custom Integer 人物': 1,
+                                       'Custom categories\|, 人物': 'Test',
+                                       'Custom Float 人物': '3.5',
+                                       'Custom 人物 Enum': 'Alfa',
+                                       'Custom Text 人物 *\'()&': 'Tedo'
+                                       })
+        details = self.get_book_details(5)
+        self.assertEqual(details['cust_columns'][0]['value'], '5')
+        self.assertEqual(details['cust_columns'][1]['value'], 'remove')
+        self.assertEqual(details['cust_columns'][2]['value'], '1')
+        self.assertEqual(details['cust_columns'][3]['value'], 'Test')
+        self.assertEqual(details['cust_columns'][4]['value'], '3.5')
+        self.assertEqual(details['cust_columns'][5]['value'], 'Alfa')
+        self.assertEqual(details['cust_columns'][6]['value'], 'Tedo')
+        search = self.adv_search('', get=True)
+        self.assertTrue(search['cust_columns']['Custom Rating 人物'])
+        self.assertTrue(search['cust_columns']['Custom Bool 1 Ä'])
+        self.assertTrue(search['cust_columns']['Custom Integer 人物'])
+        self.assertTrue(search['cust_columns']['Custom categories\|, 人物'])
+        self.assertTrue(search['cust_columns']['Custom Float 人物'])
+        self.assertTrue(search['cust_columns']['Custom 人物 Enum'])
+        self.assertTrue(search['cust_columns']['Custom Text 人物 *\'()&'])
+        self.fill_view_config({'config_columns_to_ignore': "^Custom"})
+        self.assertTrue(self.check_element_on_page((By.ID, "flash_success")))
+        search = self.adv_search('', get=True)
+        self.assertFalse(search['cust_columns'].get('Custom Rating 人物'))
+        self.assertFalse(search['cust_columns'].get('Custom Bool 1 Ä'))
+        self.assertFalse(search['cust_columns'].get('Custom Integer 人物'))
+        self.assertFalse(search['cust_columns'].get('Custom categories\|, 人物'))
+        self.assertFalse(search['cust_columns'].get('Custom Float 人物'))
+        self.assertFalse(search['cust_columns'].get('Custom 人物 Enum'))
+        self.assertFalse(search['cust_columns'].get('Custom Text 人物 *\'()&'))
+        details = self.get_book_details(5)
+        self.assertFalse(details.get('cust_columns'))
+        self.check_element_on_page((By.ID, "edit_book")).click()
+        self.edit_book(custom_content={u'Custom Bool 1 Ä':u'',
+                                       'Custom Rating 人物': '',
+                                       'Custom Integer 人物': '',
+                                       'Custom categories\|, 人物': '',
+                                       'Custom Float 人物': '',
+                                       'Custom 人物 Enum': '',
+                                       'Custom Text 人物 *\'()&': ''
+                                       })
+        self.fill_view_config({'config_columns_to_ignore': ""})
+
+    def test_authors_max_settings(self):
+        self.create_shelf('Author',False)
+        self.assertTrue(self.check_element_on_page((By.ID, "flash_success")))
+        details = self.get_book_details(1)
+        self.assertEqual(len(details['author']), 4)
+        self.check_element_on_page((By.ID, "add-to-shelf")).click()
+        shelf_list = self.driver.find_elements_by_xpath("//ul[@id='add-to-shelves']/li")
+        self.assertEqual(1, len(shelf_list))
+        self.check_element_on_page((By.XPATH, "//ul[@id='add-to-shelves']/li/a[contains(.,'Author')]")).click()
+        self.goto_page('nav_new')
+        list_element = self.get_books_displayed()
+        self.assertEqual(len(list_element[1][10]['author']), 4)
+        self.list_shelfs('Author')['ele'].click()
+        shelf_books = self.get_shelf_books_displayed()
+        self.assertEqual(len(shelf_books[0]['author']), 4)
+        result = self.search('Yang')
+        self.assertEqual(len(result[0]['author']), 4)
+        self.fill_view_config({'config_authors_max': "2"})
+
+        details = self.get_book_details(1)
+        self.assertEqual(len(details['author']), 4)
+        self.goto_page('nav_new')
+        list_element = self.get_books_displayed()
+        self.assertEqual(len(list_element[1][10]['author']), 3)
+        self.assertEqual(list_element[1][10]['author'][2], '(...)')
+
+        self.list_shelfs('Author')['ele'].click()
+        shelf_books = self.get_shelf_books_displayed()
+        self.assertEqual(len(shelf_books[0]['author']), 3)
+
+        result = self.search('Yang')
+        self.assertEqual(len(result[0]['author']), 3)
+        self.assertEqual(result[0]['author'][2], '(...)')
+
+        # delete Shelf
+        self.list_shelfs(u'Author')['ele'].click()
+        self.check_element_on_page((By.ID, "delete_shelf")).click()
+        self.check_element_on_page((By.ID, "confirm")).click()
+        self.fill_view_config({'config_authors_max': "0"})
+        result = self.search('Yang')
+        self.assertEqual(len(result[0]['author']), 4)
+
+
+
