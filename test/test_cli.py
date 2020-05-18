@@ -9,6 +9,7 @@ from selenium.common.exceptions import WebDriverException
 import time
 import shutil
 from helper_ui import ui_class
+from helper_func import get_Host_IP
 from subproc_wrapper import process_open
 from config_test import CALIBRE_WEB_PATH, TEST_DB, BOOT_TIME
 import re
@@ -24,7 +25,6 @@ class test_cli(unittest.TestCase, ui_class):
 
     @classmethod
     def setUpClass(cls):
-        print('test_cli')
         cls.driver = webdriver.Firefox()
         cls.driver.implicitly_wait(10)
         cls.driver.maximize_window()
@@ -243,19 +243,53 @@ class test_cli(unittest.TestCase, ui_class):
         # ToDo: implement
         self.assertIsNone('not Implemented', 'Check if moving gdrive db on commandline works')
 
-    def test_environ_port_setting(self):
-        p = process_open([self.py_version, os.path.join(CALIBRE_WEB_PATH,u'cps.py')],(1), env={'CALIBRE_PORT':'8082'})
+    def test_bind_to_single_interface(self):
+        address = get_Host_IP()
+        p = process_open([self.py_version, os.path.join(CALIBRE_WEB_PATH, u'cps.py'), '-i', 'http://'+address], (1))
+        time.sleep(2)
+        if p.poll() is None:
+            p.kill()
+        nextline = p.communicate()[0]
+        self.assertIsNotNone(re.findall('Illegal IP address string', nextline))
+        p = process_open([self.py_version, os.path.join(CALIBRE_WEB_PATH, u'cps.py'), '-i', address], (1))
 
-        time.sleep(15)
+        time.sleep(BOOT_TIME)
         # navigate to the application home page
         try:
             self.driver.switch_to.alert.accept()
         except Exception:
             pass
         try:
+            error = ""
+            self.driver.get("http://127.0.0.1:8083")
+        except WebDriverException as e:
+            error = e.msg
+        self.assertTrue(re.findall('Reached error page:\sabout:neterror\?e=connectionFailure', error))
+        try:
+            self.driver.get("http://"+ address +":8083")
+        except WebDriverException as e:
+            self.assertIsNone('Limit listening address not working')
+        self.assertTrue(self.check_element_on_page((By.ID, "config_calibre_dir")))
+        p.terminate()
+        time.sleep(3)
+        p.poll()
+
+
+    def test_environ_port_setting(self):
+        p = process_open([self.py_version, os.path.join(CALIBRE_WEB_PATH,u'cps.py')],(1), env={'CALIBRE_PORT':'8082'})
+
+        time.sleep(BOOT_TIME)
+        # navigate to the application home page
+        try:
+            self.driver.switch_to.alert.accept()
+        except Exception:
+            pass
+        try:
+            error = ""
             self.driver.get("http://127.0.0.1:8082")
         except WebDriverException as e:
-            self.assertIsNotNone(re.findall('Reached error page: about:neterror?e=connectionFailure', e.msg))
+            error = e.msg
+        self.assertFalse(re.findall('Reached error page:\sabout:neterror\?e=connectionFailure', error))
         self.assertTrue(self.check_element_on_page((By.ID, "config_calibre_dir")))
         p.terminate()
         time.sleep(3)
