@@ -351,6 +351,7 @@ class calibre_web_visibilitys(unittest.TestCase, ui_class):
             self.create_user('User', {'password':u"Guêst",'email': 'alfa@web.com'})
             self.assertTrue(self.check_element_on_page((By.ID, "flash_success")))
             # check if on admin page
+            self.goto_page("admin_setup")
             if self.check_element_on_page((By.ID, "admin_new_user")):
                 row_count = len(self.get_user_list())
                 self.assertEqual(row_count,2)

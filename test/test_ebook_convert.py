@@ -38,8 +38,7 @@ class test_ebook_convert(unittest.TestCase, ui_class):
 
         try:
             startup(cls, cls.py_version, {'config_calibre_dir':TEST_DB,
-                                          'config_converterpath':helper_email_convert.calibre_path(),
-                                          'config_ebookconverter':'converter2'})
+                                          'config_converterpath':helper_email_convert.calibre_path()})
 
             cls.edit_user('admin', {'email': 'a5@b.com','kindle_mail': 'a1@b.com'})
             cls.setup_server(True, {'mail_server':'127.0.0.1', 'mail_port':'1025',
@@ -70,7 +69,7 @@ class test_ebook_convert(unittest.TestCase, ui_class):
 
     # deactivate converter and check send to kindle and convert are not visible anymore
     def test_convert_deactivate(self):
-        self.fill_basic_config({'config_ebookconverter': 'converter0'})
+        self.fill_basic_config({'config_converterpath': ""})
         self.goto_page('nav_about')
         self.assertFalse(self.check_element_on_page((By.XPATH,"//tr/th[text()='Calibre converter']/following::td[1]")))
         details = self.get_book_details(5)
@@ -78,7 +77,8 @@ class test_ebook_convert(unittest.TestCase, ui_class):
         vals = self.get_convert_book(5)
         self.assertFalse(vals['btn_from'])
         self.assertFalse(vals['btn_to'])
-        self.fill_basic_config({'config_ebookconverter': 'converter2'})
+        self.fill_basic_config({'config_converterpath': ""})
+        self.fill_basic_config({'config_converterpath':helper_email_convert.calibre_path()})
 
     # Set excecutable to wrong exe and start convert
     # set excecutable not existing and start convert
