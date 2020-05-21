@@ -246,16 +246,17 @@ class test_shelf(unittest.TestCase, ui_class):
         self.assertEqual(shelf_books[2]['id'], '9')
         self.check_element_on_page((By.ID, "order_shelf")).click()
         self.get_order_shelf_list()
-        cookie = self.driver.get_cookies()
-        cook = dict(session=cookie[1]['value'], remember_token=cookie[0]['value'])
-        requests.post('http://127.0.0.1:8083/shelf/order/1', cookies=cook, data={"9": "1","11": "2","13": "3"})
+        r = requests.session()
+        payload = {'username': 'admin', 'password': 'admin123', 'submit':"", 'next':"/", "remember_me":"on"}
+        r.post('http://127.0.0.1:8083/login',data=payload)
+        r.post('http://127.0.0.1:8083/shelf/order/1', data={"9": "1","11": "2","13": "3"})
         self.driver.refresh() # reload page
-
         self.check_element_on_page((By.ID, "shelf_back")).click()
         shelf_books = self.get_shelf_books_displayed()
         self.assertEqual(shelf_books[0]['id'], '9')
         self.assertEqual(shelf_books[1]['id'], '11')
         self.assertEqual(shelf_books[2]['id'], '13')
+        r.close()
 
     # change shelf from public to private type
     def test_public_private_shelf(self):
@@ -342,6 +343,23 @@ class test_shelf(unittest.TestCase, ui_class):
         self.assertTrue(self.check_element_on_page((By.ID, "flash_success")))
         self.edit_user('admin', {'edit_shelf_role': 1})
         self.assertTrue(self.check_element_on_page((By.ID, "flash_success")))
+
+    def test_add_shelf_from_search(self):
+        self.create_shelf('search', False)
+        self.assertTrue(self.check_element_on_page((By.ID, "flash_success")))
+        self.search('Döe')
+        self.check_element_on_page((By.ID, "add-to-shelf")).click()
+        shelf_list = self.driver.find_elements_by_xpath("//ul[@id='add-to-shelves']/li")
+        self.assertEqual(1, len(shelf_list))
+        self.check_element_on_page((By.XPATH, "//ul[@id='add-to-shelves']/li/a[contains(.,'search')]")).click()
+        self.assertTrue(self.check_element_on_page((By.ID, "flash_success")))
+        # self.assertFalse(self.check_element_on_page((By.XPATH, "//ul[@id='add-to-shelves']/li/a[contains(.,'search')]")))
+        self.list_shelfs('search')['ele'].click()
+        shelf_books = self.get_shelf_books_displayed()
+        self.assertEqual(len(shelf_books), 2)
+        del_shelf = self.check_element_on_page((By.ID, "delete_shelf"))
+        del_shelf.click()
+        self.check_element_on_page((By.ID, "confirm")).click()
 
 
     # Change database

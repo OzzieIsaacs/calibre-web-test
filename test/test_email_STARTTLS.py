@@ -127,19 +127,5 @@ class test_STARTTLS(unittest.TestCase, ui_class):
         self.assertTrue(self.check_element_on_page((By.ID, "flash_alert")))
         self.driver.get(password_link[:password_link.rfind("/")] + '/99')
         self.assertTrue(self.check_element_on_page((By.ID, "flash_alert")))
-        '''cookie = self.driver.get_cookies()
-        cook = dict(session=cookie[1]['value'], remember_token=cookie[0]['value'])
-        req_session = requests.session()
-        req_session.get('http://127.0.0.1:8083/admin/user/' + user_id, cookies=cook)
-        resp = req_session.get(password_link)
-        alert = re.search('(id="flash_alert")', resp.text)
-        self.assertTrue(alert[1])
-        # check route isn't reachable
-        # check route does nothing with invalid id
-        resp = req_session.get( password_link[:password_link.rfind("/")] + '/99')
-        alert = re.search('(id="flash_alert")', resp.text)
-        self.assertTrue(alert[1])
-        req_session.close()'''
-
         self.edit_user('paswd_resend',{'delete':1})
         self.setup_server(False, {'mail_server': '127.0.0.1'})

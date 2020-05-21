@@ -8,12 +8,15 @@ import json
 from config import FILEPATH, WIKIPATH
 import msgpack
 import babel.messages.pofile as pofile
+import babel.messages.mofile as mofile
 from babel import Locale as LC
+import re
 
 decoders = (
     None,
     lambda x, fj: set(x),
 )
+
 
 def msgpack_decoder(code, data):
     return decoders[code](msgpack_loads(data), False)
@@ -56,10 +59,6 @@ for file in glob.glob1("./translations", "*.po"):
     translateFile=open(message_path)
     mergedTranslation=pofile.read_po(translateFile,locale=langcode)
     translateFile.close()
-    target_path = os.path.join(FILEPATH , "cps","translations" , langcode , "LC_MESSAGES","messages.po")
-    targetFile = open(target_path,'wb')
-    pofile.write_po(targetFile, mergedTranslation, ignore_obsolete=True, width=0)
-    targetFile.close()
 
     # transfer calibre language translation to
     count = 0
@@ -69,6 +68,22 @@ for file in glob.glob1("./translations", "*.po"):
     allMsg = len(mergedTranslation._messages)
     for x in mergedTranslation.check():
         print(x)
+    for element in mergedTranslation:
+        idstring=re.findall("\((.*?)\)%s",element.id)
+        if idstring and element.string:
+            transid = set(re.findall("\((.*?)\)%s", element.string))
+            origid = set(idstring)
+            if transid != origid:
+                print("Format string error {}: '{}'".format(langcode,element.id))
+    # write mo and po files
+    mo_path = os.path.join(FILEPATH , "cps","translations" , langcode , "LC_MESSAGES","messages.mo")
+    target_path = os.path.join(FILEPATH, "cps", "translations", langcode, "LC_MESSAGES", "messages.po")
+    targetFile = open(target_path,'wb')
+    pofile.write_po(targetFile, mergedTranslation, ignore_obsolete=True, width=0)
+    targetFile.close()
+    mo_File = open(mo_path,'wb')
+    mofile.write_mo(mo_File, mergedTranslation)
+    mo_File.close()
     languageFile=open("./translations/" + file)
     LanguageTranslation=pofile.read_po(languageFile)
     languageFile.close()
@@ -135,11 +150,11 @@ with open(os.path.join(WIKIPATH, 'Translation-Status.md'), 'w', encoding='utf8')
     f.write("\r\n".join(translation_list))
 
 # Generate .mo files
-trans_path = "cps/translations"
-if sys.version_info < (3, 0):
-    trans_path = trans_path.encode(sys.getfilesystemencoding())
-p = subprocess.Popen("pybabel compile -d " + FILEPATH + trans_path,
-                     shell=True, stdout=subprocess.PIPE, stdin=subprocess.PIPE)
-p.wait()
+#trans_path = "cps/translations"
+#if sys.version_info < (3, 0):
+#    trans_path = trans_path.encode(sys.getfilesystemencoding())
+#p = subprocess.Popen("pybabel compile -d " + FILEPATH + trans_path,
+#                     shell=True, stdout=subprocess.PIPE, stdin=subprocess.PIPE)
+#p.wait()
 
 

@@ -65,13 +65,15 @@ class test_edit_additional_books(TestCase, ui_class):
         self.assertEqual('Author Name', details['author'][0])
         self.assertEqual('3.0', details['series_index'])
         self.assertEqual('No Series', details['series'])
-        cookie = self.driver.get_cookies()
-        cook = dict(session=cookie[1]['value'], remember_token=cookie[0]['value'])
-        resp = requests.get( 'http://127.0.0.1:8083' + details['cover'], cookies=cook)
+        r = requests.session()
+        payload = {'username': 'admin', 'password': 'admin123', 'submit':"", 'next':"/", "remember_me":"on"}
+        r.post('http://127.0.0.1:8083/login',data=payload)
+        resp = r.get( 'http://127.0.0.1:8083' + details['cover'])
         self.assertEqual('8936',resp.headers['Content-Length'])
         self.fill_basic_config({'config_rarfile_location': ''})
         self.assertTrue(self.check_element_on_page((By.ID, "flash_success")))
         self.fill_basic_config({'config_uploading': 0})
+        r.close()
 
     def test_upload_metadata_cbt(self):
         self.fill_basic_config({'config_uploading':1})
@@ -87,12 +89,13 @@ class test_edit_additional_books(TestCase, ui_class):
         self.assertEqual('Author Name', details['author'][0])
         self.assertEqual('3.0', details['series_index'])
         self.assertEqual('No Series', details['series'])
-
-        cookie = self.driver.get_cookies()
-        cook = dict(session=cookie[1]['value'], remember_token=cookie[0]['value'])
-        resp = requests.get( 'http://127.0.0.1:8083' + details['cover'], cookies=cook)
+        r = requests.session()
+        payload = {'username': 'admin', 'password': 'admin123', 'submit':"", 'next':"/", "remember_me":"on"}
+        r.post('http://127.0.0.1:8083/login',data=payload)
+        resp = requests.get( 'http://127.0.0.1:8083' + details['cover'])
         self.assertEqual('8936',resp.headers['Content-Length'])
         self.fill_basic_config({'config_uploading': 0})
+        r.close()
 
 
     def test_delete_book(self):

@@ -137,6 +137,8 @@ class test_kobo_sync(unittest.TestCase, ui_class):
                          'testbook执')
         self.assertEqual(data[0]['NewEntitlement']['BookEntitlement']['Created'],
                          '2017-01-20T20:00:15Z') # 'Tue, 05 Jul 2016 19:30:06 GMT'
+        # check none series index is filled with number
+        self.assertEqual(data[2]['NewEntitlement']['BookMetadata']['Series']['Number'], 1)
         # moving date
         #self.assertEqual(data[0]['NewEntitlement']['BookEntitlement']['LastModified'],
         #                 '2019-01-12T11:18:51Z') # 'Mon, 02 Apr 2018 16:35:50 GMT'

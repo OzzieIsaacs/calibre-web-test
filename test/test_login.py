@@ -318,3 +318,24 @@ class test_login(unittest.TestCase, ui_class):
         url = 'http://127.0.0.1:8083/login'
         self.assertTrue(digest_login(url,200))
 
+
+    def test_login_rename_user(self):
+        self.driver.get("http://127.0.0.1:8083/login")
+        self.login('admin','admin123')
+        self.create_user('new_user',{'password':'1234','email':'a12@b.com'})
+        self.assertTrue(self.check_element_on_page((By.ID, "flash_success")))
+        self.logout()
+        self.assertTrue(self.login('new_user','1234'))
+        self.goto_page('user_setup')
+        self.assertFalse(self.check_element_on_page((By.ID, "nickname")))
+        self.logout()
+        self.login('admin','admin123')
+        self.assertTrue(self.check_element_on_page((By.ID, "flash_success")))
+        self.edit_user('new_user', {'nickname': 'old_user'})
+        self.assertTrue(self.check_element_on_page((By.ID, "flash_success")))
+        self.logout()
+        self.assertFalse(self.login('new_user','1234'))
+        self.assertTrue(self.login('old_user', '1234'))
+        self.logout()
+        self.assertTrue(self.login('admin','admin123'))
+        self.edit_user('old_user', {'delete': 1})
