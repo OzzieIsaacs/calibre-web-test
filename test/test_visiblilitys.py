@@ -589,8 +589,8 @@ class calibre_web_visibilitys(unittest.TestCase, ui_class):
         time.sleep(2)
         self.edit_book(10, custom_content={"Custom Text 人物 *'()&": ''})
         self.edit_book(11, custom_content={"Custom Text 人物 *'()&": ''})
-        self.edit_book(8, custom_content={"Custom Text 人物 *'()&": ''})
-        self.edit_book(3, custom_content={"Custom Text 人物 *'()&": ''})
+        self.edit_book(9, custom_content={"Custom Text 人物 *'()&": ''})
+        self.edit_book(1, custom_content={"Custom Text 人物 *'()&": ''})
         self.fill_view_config({'config_restricted_column': "None"})
 
     def test_allow_columns(self):
@@ -638,8 +638,8 @@ class calibre_web_visibilitys(unittest.TestCase, ui_class):
         time.sleep(2)
         self.edit_book(10, custom_content={"Custom Text 人物 *'()&": ''})
         self.edit_book(11, custom_content={"Custom Text 人物 *'()&": ''})
-        self.edit_book(8, custom_content={"Custom Text 人物 *'()&": ''})
-        self.edit_book(3, custom_content={"Custom Text 人物 *'()&": ''})
+        self.edit_book(1, custom_content={"Custom Text 人物 *'()&": ''})
+        self.edit_book(9, custom_content={"Custom Text 人物 *'()&": ''})
         self.fill_view_config({'config_restricted_column': "None"})
         self.goto_page('nav_new')
         books = self.get_books_displayed()
