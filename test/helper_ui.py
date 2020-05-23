@@ -391,6 +391,13 @@ class ui_class():
         element.click()
         time.sleep (10)
 
+    def reconnect_database(self):
+        self.goto_page('admin_setup')
+        self.driver.find_element_by_id('restart_database').click()
+        element = self.check_element_on_page((By.ID, "DialogFinished"))
+        element.click()
+        time.sleep (3)
+
     @classmethod
     def stop_calibre_web(cls, proc=None):
         cls.goto_page('admin_setup')

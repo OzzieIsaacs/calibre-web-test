@@ -336,4 +336,7 @@ class test_updater(unittest.TestCase, ui_class):
         # Additional folders, additional files
         # check all relevant files are kept, venv folder
 
+    def test_reconnect_database(self):
+        self.reconnect_database()
+        self.assertTrue(self.check_element_on_page((By.ID, "check_for_update")))
 
