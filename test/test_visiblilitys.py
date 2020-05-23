@@ -686,7 +686,8 @@ class calibre_web_visibilitys(unittest.TestCase, ui_class):
         self.check_element_on_page((By.ID, "edit_book")).click()
         self.check_element_on_page((By.ID, "custom_column_3"))
         search = self.adv_search('', get=True)
-        self.assertTrue(search['cust_columns']['Custom Bool 1 Ä'])
+        self.assertFalse('Custom Bool 1 Ä' in search['cust_columns'],
+                         'Bool column linked to read function, should not visible')
         self.fill_view_config({'config_read_column': ""})
         self.get_book_details(5)
         self.check_element_on_page((By.ID, "edit_book")).click()
