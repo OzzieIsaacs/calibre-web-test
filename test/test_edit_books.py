@@ -833,6 +833,9 @@ class test_edit_books(TestCase, ui_class):
 
     # download of books
     def test_download_book(self):
+        self.goto_page('user_setup')
+        book_downloads = self.driver.find_elements_by_class_name("media-object")
+        self.assertEqual(0, len(book_downloads))
         self.get_book_details(5)
         element=self.check_element_on_page((By.XPATH, "//*[starts-with(@id,'btnGroupDrop')]"))
         download_link=element.get_attribute("href")
@@ -847,9 +850,17 @@ class test_edit_books(TestCase, ui_class):
         resp = r.get(download_link)
         self.assertEqual(resp.status_code, 403)
         book = self.get_book_details(5)
-        self.assertNotIn('download',book)
+        self.assertNotIn('download', book)
         self.edit_user('admin', {'download_role': 1})
         r.close()
+        self.goto_page('user_setup')
+        book_downloads = self.driver.find_elements_by_class_name("media-object")
+        self.assertEqual(1, len(book_downloads))
+        book_downloads[0].click()
+        book = self.get_book_details()
+        self.assertEqual('testbook', book['title'])
+        # self.assertFalse(self.check_element_on_page((By.XPATH, "//*/h2/div/")))
+
 
     # If more than one book has the same: author, tag or series it should be possible to change uppercase
     # letters to lowercase and vice versa. Example:
