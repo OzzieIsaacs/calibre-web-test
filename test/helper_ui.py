@@ -1441,7 +1441,7 @@ class ui_class():
                         }
             else:
                 text_inputs = ['book_title', 'bookAuthor', 'publisher', 'comment', 'custom_column_8',
-                               'custom_column_10', 'custom_column_1', 'custom_column_6']
+                               'custom_column_10', 'custom_column_1', 'custom_column_6', 'custom_column_4']
                 selects = ['custom_column_9', 'custom_column_3']
                 process_text = dict()
                 process_checkboxes = dict()
