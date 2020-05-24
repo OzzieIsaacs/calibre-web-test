@@ -134,7 +134,32 @@ class test_logging(unittest.TestCase, ui_class):
         accordions = self.driver.find_elements_by_class_name("accordion-toggle")
         accordions[2].click()
         logpath = self.driver.find_element_by_id("config_logfile").get_attribute("value")
-        self.assertTrue(logpath=="", "logfile config value is not empty after reseting to default")
+        self.assertEqual(logpath, "", "logfile config value is not empty after reseting to default")
+
+    def test_access_log_recover(self):
+        os.makedirs(os.path.join(CALIBRE_WEB_PATH, 'hö lo'))
+        self.fill_basic_config({'config_access_log': 1,
+                                'config_access_logfile': os.path.join(CALIBRE_WEB_PATH, 'hö lo', 'lü g')})
+        self.check_element_on_page((By.ID, "flash_success"))
+        time.sleep(BOOT_TIME)
+        # delete old logfile and check new logfile present
+        try:
+            os.remove(os.path.join(CALIBRE_WEB_PATH, 'access.log'))
+        except Exception:
+            pass
+        self.assertTrue(os.path.isfile(os.path.join(CALIBRE_WEB_PATH, 'hö lo', 'lü g')))
+        shutil.rmtree(os.path.join(CALIBRE_WEB_PATH, u'hö lo').encode('UTF-8'), ignore_errors=True)
+        # restart calibre-web and check if old logfile is used again
+        self.restart_calibre_web()
+        self.goto_page("basic_config")
+        self.assertFalse(os.path.isfile(os.path.join(CALIBRE_WEB_PATH, 'hö lo', 'lü g')))
+        self.assertTrue(os.path.isfile(os.path.join(CALIBRE_WEB_PATH, 'access.log')))
+        # check if logpath is deleted
+        accordions = self.driver.find_elements_by_class_name("accordion-toggle")
+        accordions[2].click()
+        logpath = self.driver.find_element_by_id("config_access_logfile").get_attribute("value")
+        self.assertEqual(logpath, "access.log", "Access logfile config value is not empty after reseting to default")
+
 
     def test_logviewer(self):
         self.fill_basic_config({'config_logfile': '/dev/stdout',
