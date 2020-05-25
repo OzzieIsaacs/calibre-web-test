@@ -92,7 +92,7 @@ class test_edit_additional_books(TestCase, ui_class):
         r = requests.session()
         payload = {'username': 'admin', 'password': 'admin123', 'submit':"", 'next':"/", "remember_me":"on"}
         r.post('http://127.0.0.1:8083/login',data=payload)
-        resp = requests.get( 'http://127.0.0.1:8083' + details['cover'])
+        resp = r.get( 'http://127.0.0.1:8083' + details['cover'])
         self.assertEqual('8936',resp.headers['Content-Length'])
         self.fill_basic_config({'config_uploading': 0})
         r.close()
