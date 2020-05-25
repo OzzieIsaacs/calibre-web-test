@@ -391,6 +391,13 @@ class ui_class():
         element.click()
         time.sleep (10)
 
+    def reconnect_database(self):
+        self.goto_page('admin_setup')
+        self.driver.find_element_by_id('restart_database').click()
+        element = self.check_element_on_page((By.ID, "DialogFinished"))
+        element.click()
+        time.sleep (3)
+
     @classmethod
     def stop_calibre_web(cls, proc=None):
         cls.goto_page('admin_setup')
@@ -1226,9 +1233,11 @@ class ui_class():
             else:
                 ret['download'] = [d.text for d in download1]
 
-            # element = tree.find("//*[@id='have_read_cb']")
-            ret['read']= cls.check_element_on_page((By.XPATH, "//*[@id='have_read_cb']")).is_selected()
-
+            element = cls.check_element_on_page((By.XPATH, "//*[@id='have_read_cb']"))
+            if element:
+                ret['read']= element.is_selected()
+            else:
+                ret['read'] = None
             archive = cls.check_element_on_page((By.XPATH, "//*[@id='have_read_cb']"))
             if archive:
                 ret['archived'] = archive.is_selected()
@@ -1417,11 +1426,7 @@ class ui_class():
                 cust_columns = self.driver.find_elements_by_xpath("//label[starts-with(@for, 'custom_')]")
                 ret = dict()
                 if len(cust_columns):  # we have custom columns
-                    for col in cust_columns:  # .getchildren()[0].getchildren()[1:]:
-                        # inp = cust_columns[0].find_element_by_xpath(".//following-sibling::*")
-                        #element = dict()
-                        #element['Text'] = col.text
-                        #element['element'] = inp
+                    for col in cust_columns:
                         ret[col.text]= cust_columns[0].find_element_by_xpath(".//following-sibling::*")
 
                 return {'include_tags':inc_tags,
@@ -1435,15 +1440,20 @@ class ui_class():
                         'cust_columns': ret
                         }
             else:
-                text_inputs = ['book_title', 'bookAuthor', 'publisher', 'comment']
+                text_inputs = ['book_title', 'bookAuthor', 'publisher', 'comment', 'custom_column_8',
+                               'custom_column_10', 'custom_column_1', 'custom_column_6', 'custom_column_4']
+                selects = ['custom_column_9', 'custom_column_3']
                 process_text = dict()
                 process_checkboxes = dict()
+                process_select = dict()
 
                 # check if checkboxes are in list and seperate lists
 
                 for element, key in enumerate(term_dict):
                     if key in text_inputs:
                         process_text[key] = term_dict[key]
+                    elif key in selects:
+                        process_select[key] = term_dict[key]
                     else:
                         process_checkboxes[key] = term_dict[key]
 
@@ -1451,6 +1461,10 @@ class ui_class():
                     ele = self.driver.find_element_by_id(key)
                     ele.clear()
                     ele.send_keys(process_text[key])
+
+                for element, key in enumerate(process_select):
+                    select = Select(self.driver.find_element_by_id(key))
+                    select.select_by_visible_text(process_select[key])
 
                 for element, key in enumerate(process_checkboxes):
                     ele = self.driver.find_element(By.XPATH,

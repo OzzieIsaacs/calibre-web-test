@@ -351,6 +351,7 @@ class calibre_web_visibilitys(unittest.TestCase, ui_class):
             self.create_user('User', {'password':u"Guêst",'email': 'alfa@web.com'})
             self.assertTrue(self.check_element_on_page((By.ID, "flash_success")))
             # check if on admin page
+            self.goto_page("admin_setup")
             if self.check_element_on_page((By.ID, "admin_new_user")):
                 row_count = len(self.get_user_list())
                 self.assertEqual(row_count,2)
@@ -577,6 +578,7 @@ class calibre_web_visibilitys(unittest.TestCase, ui_class):
         self.assertEqual(len(elements['include_extension']), 4)
         self.assertEqual(len(elements['exclude_extension']), 4)
         self.assertEqual(len(self.adv_search({'book_title':'Buchtitel'})),0)
+        self.assertEqual(len(self.adv_search({"custom_column_10": 'test'})), 0)
         self.assertEqual(len(self.adv_search({'bookAuthor': 'Peter Parker'})), 1)
         self.assertEqual(len(self.search('Lulu de Marco')), 1)
         self.assertEqual(len(self.search('Loko')), 0)
@@ -588,8 +590,8 @@ class calibre_web_visibilitys(unittest.TestCase, ui_class):
         time.sleep(2)
         self.edit_book(10, custom_content={"Custom Text 人物 *'()&": ''})
         self.edit_book(11, custom_content={"Custom Text 人物 *'()&": ''})
-        self.edit_book(8, custom_content={"Custom Text 人物 *'()&": ''})
-        self.edit_book(3, custom_content={"Custom Text 人物 *'()&": ''})
+        self.edit_book(9, custom_content={"Custom Text 人物 *'()&": ''})
+        self.edit_book(1, custom_content={"Custom Text 人物 *'()&": ''})
         self.fill_view_config({'config_restricted_column': "None"})
 
     def test_allow_columns(self):
@@ -626,6 +628,7 @@ class calibre_web_visibilitys(unittest.TestCase, ui_class):
         self.assertEqual(len(elements['include_extension']), 3)
         self.assertEqual(len(elements['exclude_extension']), 3)
         self.assertEqual(len(self.adv_search({'book_title':'Buchtitel'})),1)
+        self.assertEqual(len(self.adv_search({"custom_column_10": 'Allow'})), 4)
         self.assertEqual(len(self.adv_search({'bookAuthor': 'Peter Parker'})), 1)
         self.assertEqual(len(self.search('Lulu de Marco')), 0)
         self.assertEqual(len(self.search('Loko')), 1)
@@ -637,8 +640,8 @@ class calibre_web_visibilitys(unittest.TestCase, ui_class):
         time.sleep(2)
         self.edit_book(10, custom_content={"Custom Text 人物 *'()&": ''})
         self.edit_book(11, custom_content={"Custom Text 人物 *'()&": ''})
-        self.edit_book(8, custom_content={"Custom Text 人物 *'()&": ''})
-        self.edit_book(3, custom_content={"Custom Text 人物 *'()&": ''})
+        self.edit_book(1, custom_content={"Custom Text 人物 *'()&": ''})
+        self.edit_book(9, custom_content={"Custom Text 人物 *'()&": ''})
         self.fill_view_config({'config_restricted_column': "None"})
         self.goto_page('nav_new')
         books = self.get_books_displayed()
@@ -683,7 +686,8 @@ class calibre_web_visibilitys(unittest.TestCase, ui_class):
         self.check_element_on_page((By.ID, "edit_book")).click()
         self.check_element_on_page((By.ID, "custom_column_3"))
         search = self.adv_search('', get=True)
-        self.assertTrue(search['cust_columns']['Custom Bool 1 Ä'])
+        self.assertFalse('Custom Bool 1 Ä' in search['cust_columns'],
+                         'Bool column linked to read function, should not visible')
         self.fill_view_config({'config_read_column': ""})
         self.get_book_details(5)
         self.check_element_on_page((By.ID, "edit_book")).click()

@@ -55,6 +55,34 @@ else:
 DEFAULT_TEMPLATE = os.path.join(os.path.dirname(__file__), "template", "report_template.html")
 
 
+def to_unicode(s):
+    try:
+        if not PY3K:
+            return unicode(s)
+        return s
+    except UnicodeDecodeError:
+        # s is non ascii byte string
+        return s.decode('unicode_escape')
+
+class OutputRedirector(object):
+    """ Wrapper to redirect stdout or stderr """
+
+    def __init__(self, fp):
+        self.fp = fp
+
+    def write(self, s):
+        self.fp.write(to_unicode(s))
+
+    def writelines(self, lines):
+        lines = map(to_unicode, lines)
+        self.fp.writelines(lines)
+
+    def flush(self):
+        self.fp.flush()
+
+#stdout_redirector = OutputRedirector(sys.stdout)
+#stderr_redirector = OutputRedirector(sys.stderr)
+
 def load_template(template):
     """ Try to read a file from a given path, if file
         does not exist, load default one. """
@@ -240,6 +268,27 @@ class CalibreResult(TextTestResult):
             self.stream.write(" " + self.getDescription(test))
             self.stream.write(" ... ")
 
+        # just one buffer for both stdout and stderr
+        '''self.outputBuffer = StringIO.StringIO()
+        stdout_redirector.fp = self.outputBuffer
+        stderr_redirector.fp = self.outputBuffer'''
+        '''self.stdout0 = sys.stdout
+        self.stderr0 = sys.stderr
+        sys.stdout = stdout_redirector
+        sys.stderr = stderr_redirector'''
+
+    #def complete_output(self):
+        """
+        Disconnect output redirection and return buffer.
+        Safe to call multiple times.
+        """
+        '''if self.stdout0:
+            sys.stdout = self.stdout0
+            sys.stderr = self.stderr0
+            self.stdout0 = None
+            self.stderr0 = None
+        return self.outputBuffer.getvalue()'''
+        #return self._stdout_data
 
     def _save_output_data(self):
         try:

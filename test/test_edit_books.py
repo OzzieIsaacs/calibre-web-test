@@ -128,6 +128,11 @@ class test_edit_books(TestCase, ui_class):
         title = self.check_element_on_page((By.ID, "book_title"))
         self.assertEqual(u'Pipo|;.:', title.get_attribute('value'))
         self.edit_book(content={'book_title': u'Very long extra super turbo cool title without any issue of displaying including ö utf-8 characters'})
+        ele=self.check_element_on_page((By.ID, "title"))
+        self.assertEqual(ele.text, u'Very long extra super turbo cool title without any issue of ...')
+        self.check_element_on_page((By.ID, "edit_book")).click()
+        self.edit_book(content={'book_title': u'book6'})
+
 
 
     # goto Book 2
@@ -269,7 +274,7 @@ class test_edit_books(TestCase, ui_class):
         self.assertEqual(len(books[1]),2)
         books[1][0]['ele'].click()
         ele=self.check_element_on_page((By.ID, "title"))
-        self.assertTrue(ele.text==u'Very long extra super turbo cool title without any issue of ...')
+        self.assertEqual(u'book6', ele.text)
         self.check_element_on_page((By.ID, "edit_book")).click()
         self.edit_book(content={'series': u''})
 
@@ -420,19 +425,23 @@ class test_edit_books(TestCase, ui_class):
 
     # change comments, add comments, delete comments
     def test_edit_custom_bool(self):
+        self.assertEqual(len(self.adv_search({u'custom_column_3': u'Yes'})), 0)
         self.get_book_details(5)
         self.check_element_on_page((By.ID, "edit_book")).click()
         self.edit_book(custom_content={u'Custom Bool 1 Ä':u'Yes'})
         vals = self.get_book_details(5)
         self.assertEqual(u'ok', vals['cust_columns'][0]['value'])
+        self.assertEqual(len(self.adv_search({u'custom_column_3': u'No'})), 0)
+        self.assertEqual(len(self.adv_search({u'custom_column_3': u'Yes'})), 1)
+        self.get_book_details(5)
         self.check_element_on_page((By.ID, "edit_book")).click()
         self.edit_book(custom_content={u'Custom Bool 1 Ä': u""})
         vals = self.get_book_details(5)
         self.assertEqual(0,len(vals['cust_columns']))
 
 
-    # change comments, add comments, delete comments
     def test_edit_custom_rating(self):
+        self.assertEqual(len(self.adv_search({u'custom_column_1': u'3'})), 0)
         self.get_book_details(5)
         self.check_element_on_page((By.ID, "edit_book")).click()
         self.edit_book(custom_content={u'Custom Rating 人物':'3'})
@@ -442,18 +451,25 @@ class test_edit_books(TestCase, ui_class):
         self.edit_book(custom_content={u'Custom Rating 人物': '6'})
         vals = self.get_book_details(5)
         self.assertEqual('3', vals['cust_columns'][0]['value'])
+        self.assertEqual(len(self.adv_search({u'custom_column_1': u'4'})), 0)
+        self.assertEqual(len(self.adv_search({u'custom_column_1': u'3'})), 1)
+        self.get_book_details(5)
         self.check_element_on_page((By.ID, "edit_book")).click()
         self.edit_book(custom_content={u'Custom Rating 人物': ''})
         vals = self.get_book_details(5)
         self.assertEqual(0, len(vals['cust_columns']))
 
-    # change comments, add comments, delete comments
+
     def test_edit_custom_single_select(self):
+        self.assertEqual(len(self.adv_search({u'custom_column_9': u'人物'})), 0)
         self.get_book_details(5)
         self.check_element_on_page((By.ID, "edit_book")).click()
         self.edit_book(custom_content={u'Custom 人物 Enum':u'人物'})
         vals = self.get_book_details(5)
         self.assertEqual(u'人物', vals['cust_columns'][0]['value'])
+        self.assertEqual(len(self.adv_search({u'custom_column_9': u'Alfa'})), 0)
+        self.assertEqual(len(self.adv_search({u'custom_column_9': u'人物'})), 1)
+        self.get_book_details(5)
         self.check_element_on_page((By.ID, "edit_book")).click()
         self.edit_book(custom_content={u'Custom 人物 Enum': ''})
         vals = self.get_book_details(5)
@@ -461,15 +477,71 @@ class test_edit_books(TestCase, ui_class):
 
     # change comments, add comments, delete comments
     def test_edit_custom_text(self):
+        self.assertEqual(len(self.adv_search({u'custom_column_10': u'人 Ä'})), 0)
         self.get_book_details(5)
         self.check_element_on_page((By.ID, "edit_book")).click()
         self.edit_book(custom_content={u'Custom Text 人物 *\'()&': u'Lulu 人 Ä'})
         vals = self.get_book_details(5)
         self.assertEqual(u'Lulu 人 Ä', vals['cust_columns'][0]['value'])
+        self.assertEqual(len(self.adv_search({u'custom_column_10': u'Koko'})), 0)
+        self.assertEqual(len(self.adv_search({u'custom_column_10': u'lu'})), 1)
+        self.assertEqual(len(self.adv_search({u'custom_column_10': u'人 Ä'})), 1)
+        self.get_book_details(5)
         self.check_element_on_page((By.ID, "edit_book")).click()
         self.edit_book(custom_content={u'Custom Text 人物 *\'()&': ''})
         vals = self.get_book_details(5)
         self.assertEqual(0, len(vals['cust_columns']))
+
+    # change comments, add comments, delete comments
+    def test_edit_custom_categories(self):
+        self.assertEqual(len(self.adv_search({u'custom_column_6': u'人 Ü'})), 0)
+        self.get_book_details(5)
+        self.check_element_on_page((By.ID, "edit_book")).click()
+        self.edit_book(custom_content={u'Custom categories\|, 人物': u'KuKu 人 Ü'})
+        vals = self.get_book_details(5)
+        self.assertEqual(u'KuKu 人 Ü', vals['cust_columns'][0]['value'])
+        self.assertEqual(len(self.adv_search({u'custom_column_6': u'Koko'})), 0)
+        self.assertEqual(len(self.adv_search({u'custom_column_6': u'Ku'})), 1)
+        self.assertEqual(len(self.adv_search({u'custom_column_6': u'人 Ü'})), 1)
+        self.get_book_details(5)
+        self.check_element_on_page((By.ID, "edit_book")).click()
+        self.edit_book(custom_content={u'Custom categories\|, 人物': ''})
+        vals = self.get_book_details(5)
+        self.assertEqual(0, len(vals['cust_columns']))
+
+
+    # change comments, add comments, delete comments
+    def test_edit_custom_float(self):
+        self.assertEqual(len(self.adv_search({u'custom_column_8': u'-2.5'})), 0)
+        self.get_book_details(5)
+        self.check_element_on_page((By.ID, "edit_book")).click()
+        self.edit_book(custom_content={u'Custom Float 人物': u'-2.5'})
+        vals = self.get_book_details(5)
+        self.assertEqual(u'-2.5', vals['cust_columns'][0]['value'])
+        self.assertEqual(len(self.adv_search({u'custom_column_8': u'-2.3'})), 0)
+        self.assertEqual(len(self.adv_search({u'custom_column_8': u'-2.5'})), 1)
+        self.get_book_details(5)
+        self.check_element_on_page((By.ID, "edit_book")).click()
+        self.edit_book(custom_content={u'Custom Float 人物': ''})
+        vals = self.get_book_details(5)
+        self.assertEqual(0, len(vals['cust_columns']))
+
+    # change comments, add comments, delete comments
+    def test_edit_custom_int(self):
+        self.assertEqual(len(self.adv_search({u'custom_column_4': u'0'})), 0)
+        self.get_book_details(5)
+        self.check_element_on_page((By.ID, "edit_book")).click()
+        self.edit_book(custom_content={u'Custom Integer 人物': u'0'})
+        vals = self.get_book_details(5)
+        self.assertEqual(u'0', vals['cust_columns'][0]['value'])
+        self.assertEqual(len(self.adv_search({u'custom_column_4': u'5'})), 0)
+        self.assertEqual(len(self.adv_search({u'custom_column_4': u'0'})), 1)
+        self.get_book_details(5)
+        self.check_element_on_page((By.ID, "edit_book")).click()
+        self.edit_book(custom_content={u'Custom Integer 人物': ''})
+        vals = self.get_book_details(5)
+        self.assertEqual(0, len(vals['cust_columns']))
+
 
     @skip("Not Implemented")
     def test_edit_publishing_date(self):
@@ -784,7 +856,7 @@ class test_edit_books(TestCase, ui_class):
         payload = {'username': 'admin', 'password': 'admin123', 'submit':"", 'next':"/", "remember_me":"on"}
         r.post('http://127.0.0.1:8083/login',data=payload)
         resp = r.get( 'http://127.0.0.1:8083' + details['cover'])
-        self.assertEqual('8936',resp.headers['Content-Length'])
+        self.assertEqual('8936', resp.headers['Content-Length'])
         self.fill_basic_config({'config_uploading': 0})
         r.close()
 
@@ -805,7 +877,7 @@ class test_edit_books(TestCase, ui_class):
         payload = {'username': 'admin', 'password': 'admin123', 'submit':"", 'next':"/", "remember_me":"on"}
         r.post('http://127.0.0.1:8083/login',data=payload)
         resp = r.get( 'http://127.0.0.1:8083' + details['cover'])
-        self.assertEqual('182574',resp.headers['Content-Length'])
+        self.assertEqual('8936',resp.headers['Content-Length'])
         self.fill_basic_config({'config_uploading': 0})
         r.close()
 
@@ -833,6 +905,9 @@ class test_edit_books(TestCase, ui_class):
 
     # download of books
     def test_download_book(self):
+        self.goto_page('user_setup')
+        book_downloads = self.driver.find_elements_by_class_name("media-object")
+        self.assertEqual(0, len(book_downloads))
         self.get_book_details(5)
         element=self.check_element_on_page((By.XPATH, "//*[starts-with(@id,'btnGroupDrop')]"))
         download_link=element.get_attribute("href")
@@ -847,9 +922,17 @@ class test_edit_books(TestCase, ui_class):
         resp = r.get(download_link)
         self.assertEqual(resp.status_code, 403)
         book = self.get_book_details(5)
-        self.assertNotIn('download',book)
+        self.assertNotIn('download', book)
         self.edit_user('admin', {'download_role': 1})
         r.close()
+        self.goto_page('user_setup')
+        book_downloads = self.driver.find_elements_by_class_name("media-object")
+        self.assertEqual(1, len(book_downloads))
+        book_downloads[0].click()
+        book = self.get_book_details()
+        self.assertEqual('testbook', book['title'])
+        # self.assertFalse(self.check_element_on_page((By.XPATH, "//*/h2/div/")))
+
 
     # If more than one book has the same: author, tag or series it should be possible to change uppercase
     # letters to lowercase and vice versa. Example:
