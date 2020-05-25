@@ -170,11 +170,13 @@ def add_dependency(name, testclass_name):
 
     environment.add_Environment(testclass_name, element_version)
 
+
 def remove_dependency(names):
     for name in names:
+        if name.startswith('git|'):
+            name = name[4:]
         with process_open([VENV_PYTHON, "-m", "pip", "uninstall", "-y", name], (0, 5)) as q:
             q.wait()
-
 
 
 def kill_old_cps(port=8083):

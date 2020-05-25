@@ -86,9 +86,9 @@ class test_edit_additional_books(TestCase, ui_class):
         self.check_element_on_page((By.ID, 'edit_cancel')).click()
         details = self.get_book_details()
         self.assertEqual('Test 执 to', details['title'])
-        self.assertEqual('uthor Nameless', details['author'][0])
-        self.assertEqual('3.0', details['series_index'])
-        self.assertEqual('No Series', details['series'])
+        self.assertEqual('Author Nameless', details['author'][0])
+        self.assertEqual('2.0', details['series_index'])
+        self.assertEqual('No S', details['series'])
         r = requests.session()
         payload = {'username': 'admin', 'password': 'admin123', 'submit':"", 'next':"/", "remember_me":"on"}
         r.post('http://127.0.0.1:8083/login',data=payload)
