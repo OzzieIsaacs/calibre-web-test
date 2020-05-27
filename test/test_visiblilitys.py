@@ -821,7 +821,7 @@ class calibre_web_visibilitys(unittest.TestCase, ui_class):
         self.goto_page('nav_archived')
         list_element = self.get_books_displayed()
         self.assertEqual(len(list_element[1]),1)
-        # check book with archive set is not accessible?? -> No??
+        # check book with archive set is accessible
         details = self.get_book_details(5)
         self.assertEqual('testbook', details['title'])
         # check right cover of book is visible
@@ -831,10 +831,10 @@ class calibre_web_visibilitys(unittest.TestCase, ui_class):
         resp = r.get( 'http://127.0.0.1:8083/cover/'+list_element[1][0]['id'])
         self.assertEqual('16790',resp.headers['Content-Length'])
         r.close()
-        # check archive book invisible in search result
-        self.assertEqual(len(self.search('testbook')), 0)
-        # check archive book invisible in advanced search result
-        self.assertEqual(len(self.adv_search({'book_title': 'testbook'})), 0)
+        # check archive book visible in search result
+        self.assertEqual(len(self.search('testbook')), 1)
+        # check archive book visible in advanced search result
+        self.assertEqual(len(self.adv_search({'book_title': 'testbook'})), 1)
         # set archive book section invisible
         self.goto_page('user_setup')
         self.change_user({'show_32768': 0})
