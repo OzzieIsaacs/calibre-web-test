@@ -4,6 +4,7 @@ import unittest
 from selenium.webdriver.common.by import By
 from selenium.webdriver.support.ui import WebDriverWait
 from selenium.webdriver.support import expected_conditions as EC
+from selenium.webdriver.common.keys import Keys
 import time
 import requests
 from helper_ui import ui_class
@@ -98,6 +99,12 @@ class calibre_web_visibilitys(unittest.TestCase, ui_class):
 
         # Check random menu is in sidebar
         self.assertTrue(self.check_element_on_page((By.ID, "nav_rand")))
+
+        # Check no random books in random section
+        self.assertTrue(self.goto_page('nav_rand'))
+        self.assertFalse(self.check_element_on_page((By.ID, "books_rand")))
+
+
 
     # checks if message for empty email working, sets e-mail for admin
     def test_user_email_available(self):
@@ -230,6 +237,19 @@ class calibre_web_visibilitys(unittest.TestCase, ui_class):
         self.change_user({'show_16': 1})
         self.assertTrue(self.check_element_on_page((By.ID, "flash_success")))
         self.assertTrue(self.check_element_on_page((By.ID, "nav_hot")))
+
+    # checks if admin can change random books
+    def test_admin_change_visibility_random(self):
+        self.goto_page('user_setup')
+        self.change_user({'show_32':0})
+        self.assertTrue(self.check_element_on_page((By.ID, "flash_success")))
+        self.assertFalse(self.check_element_on_page((By.ID, "nav_rand")))
+        self.change_user({'show_32': 1})
+        self.assertTrue(self.check_element_on_page((By.ID, "flash_success")))
+        self.assertTrue(self.check_element_on_page((By.ID, "nav_rand")))
+        self.goto_page("nav_rand")
+        self.assertEqual(11, len(self.get_books_displayed()[1]))
+
 
     # checks if admin can change series
     def test_admin_change_visibility_series(self):
@@ -787,6 +807,45 @@ class calibre_web_visibilitys(unittest.TestCase, ui_class):
         self.fill_view_config({'config_authors_max': "0"})
         result = self.search('Yang')
         self.assertEqual(len(result[0]['author']), 4)
+
+    def test_archive_books(self):
+        # check archive book visible in book details
+        details = self.get_book_details(5)
+        self.assertIsNotNone(details['archived'])
+        self.assertFalse(details['archived'])
+        # tick archive book in book details
+        self.check_element_on_page((By.XPATH,"//*[@id='archived_cb']")).click()
+        details = self.get_book_details(5)
+        self.assertTrue(details['archived'])
+        # check one book in archive section
+        self.goto_page('nav_archived')
+        list_element = self.get_books_displayed()
+        self.assertEqual(len(list_element[1]),1)
+        # check book with archive set is not accessible?? -> No??
+        details = self.get_book_details(5)
+        self.assertEqual('testbook', details['title'])
+        # check right cover of book is visible
+        r = requests.session()
+        payload = {'username': 'admin', 'password': 'admin123', 'submit':"", 'next':"/", "remember_me":"on"}
+        r.post('http://127.0.0.1:8083/login',data=payload)
+        resp = r.get( 'http://127.0.0.1:8083/cover/'+list_element[1][0]['id'])
+        self.assertEqual('16790',resp.headers['Content-Length'])
+        r.close()
+        # check archive book invisible in search result
+        self.assertEqual(len(self.search('testbook')), 0)
+        # check archive book invisible in advanced search result
+        self.assertEqual(len(self.adv_search({'book_title': 'testbook'})), 0)
+        # set archive book section invisible
+        self.goto_page('user_setup')
+        self.change_user({'show_32768': 0})
+        # check book with archive set should be visible again
+        details = self.get_book_details(5)
+        # check archive book invisible in book details
+        self.assertIsNone(details['archived'])
+        # check archive book visible in search result
+        self.assertEqual(len(self.search('testbook')), 1)
+        # check archive book visible in advanced search result
+        self.assertEqual(len(self.adv_search({'book_title': 'testbook'})), 1)
 
 
 

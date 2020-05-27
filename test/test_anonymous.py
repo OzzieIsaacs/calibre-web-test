@@ -47,8 +47,12 @@ class test_anonymous(unittest.TestCase, ui_class):
         self.goto_page('nav_new')
         self.assertTrue(self.check_element_on_page((By.ID, "books_rand")))
 
+        # check random books not shown in random section
+        self.assertTrue(self.goto_page('nav_rand'))
+        self.assertFalse(self.check_element_on_page((By.ID, "books_rand")))
+
         # check random books shown in category section
-        '''list_element = self.goto_page('nav_cat')
+        list_element = self.goto_page('nav_cat')
         self.assertIsNotNone(list_element)
         list_element[0].click()
         self.assertTrue(self.check_element_on_page((By.ID, "books_rand")))
@@ -82,9 +86,9 @@ class test_anonymous(unittest.TestCase, ui_class):
         list_element = self.goto_page('nav_publisher')
         self.assertIsNotNone(list_element)
         list_element[0].click()
-        self.assertTrue(self.check_element_on_page((By.ID, "books_rand")))'''
+        self.assertTrue(self.check_element_on_page((By.ID, "books_rand")))
 
-        # check random books shown in ratingd section
+        # check random books shown in rating section
         list_element = self.goto_page('nav_rate')
         self.assertIsNotNone(list_element)
         list_element[0].find_element_by_xpath('..').click()

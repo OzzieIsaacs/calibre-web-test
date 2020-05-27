@@ -24,6 +24,7 @@ RESTRICT_COL_TEMPLATE   = 5
 page = dict()
 page['nav_serie']={'check':(By.TAG_NAME, "h1"),'click':[(By.ID, "nav_serie")]}
 page['nav_publisher']={'check':(By.TAG_NAME, "h1"),'click':[(By.ID, "nav_publisher")]}
+page['nav_rand']={'check':(By.TAG_NAME, "h2"),'click':[(By.ID, "nav_rand")]}
 page['nav_format']={'check':(By.TAG_NAME, "h1"),'click':[(By.ID, "nav_format")]}
 page['nav_rate']={'check':(By.TAG_NAME, "h1"),'click':[(By.ID, "nav_rate")]}
 page['nav_archived']={'check':(By.TAG_NAME, "h1"),'click':[(By.ID, "nav_archived")]}
@@ -36,6 +37,7 @@ page['nav_about']={'check':(By.ID, "stats"),'click':[(By.ID, "nav_about")]}
 page['nav_rated']={'check':None,'click':[(By.ID, "nav_rated")]}
 page['nav_read']={'check':None,'click':[(By.ID, "nav_read")]}
 page['nav_unread']={'check':None,'click':[(By.ID, "nav_unread")]}
+page['nav_archived']={'check':None,'click':[(By.ID, "nav_archived")]}
 page['nav_sort_old']={'check':None,'click':[(By.ID, "nav_sort"),(By.ID, "nav_sort_old")]}
 page['nav_sort_new']={'check':None,'click':[(By.ID, "nav_sort"),(By.ID, "nav_sort_new")]}
 page['nav_sort_asc']={'check':None,'click':[(By.ID, "nav_sort"),(By.ID, "nav_sort_asc")]}
@@ -1238,7 +1240,7 @@ class ui_class():
                 ret['read']= element.is_selected()
             else:
                 ret['read'] = None
-            archive = cls.check_element_on_page((By.XPATH, "//*[@id='have_read_cb']"))
+            archive = cls.check_element_on_page((By.XPATH, "//*[@id='archived_cb']"))
             if archive:
                 ret['archived'] = archive.is_selected()
             else:
