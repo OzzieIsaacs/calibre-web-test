@@ -158,7 +158,7 @@ class test_logging(unittest.TestCase, ui_class):
         accordions = self.driver.find_elements_by_class_name("accordion-toggle")
         accordions[2].click()
         logpath = self.driver.find_element_by_id("config_access_logfile").get_attribute("value")
-        self.assertEqual(logpath, "access.log", "Access logfile config value is not empty after reseting to default")
+        self.assertEqual(logpath, "", "Access logfile config value is not empty after reseting to default")
 
 
     def test_logviewer(self):
