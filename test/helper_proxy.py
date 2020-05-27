@@ -211,6 +211,41 @@ def zipball(version) -> str:
         print('Testfixture broken')
         return '{}', 404
 
+@git.route("/cover/<type>")
+def cover(type) -> str:
+    try:
+        error_type = val.get_type()
+        val.pop_type()
+        if error_type == 'HTTPError':
+            return '', 404
+        if error_type == 'GeneralError':    # invalid file
+            return "Lulu"
+        if error_type == 'Timeout':
+            time.sleep(612)
+            return ''
+        else:
+            # version='{}.{}.{}'.format(*val.get_Version()[0])
+            cover_path = os.path.join(os.getcwd(), 'files')
+            if type == 'test.jpg':
+                result = send_from_directory(cover_path,'cover.jpg',
+                                           as_attachment=True,
+                                           mimetype='image/jpeg',
+                                           attachment_filename='äo.jpg')
+            elif type == 'test.png':
+                result = send_from_directory(cover_path,'cover.png',
+                                           as_attachment=True,
+                                           mimetype='image/png',
+                                           attachment_filename='o.pgk')
+            elif type == 'test.webp':
+                result = send_from_directory(cover_path,'cover.webp',
+                                           as_attachment=True,
+                                           mimetype='image/webp',
+                                           attachment_filename='äo.webp')
+            result.headers['Accept-Ranges'] = 'bytes'
+            return result
+    except Exception as e:
+        print('Testfixture broken %e', e)
+        return '', 404
 
 app = Flask("gitty")
 app.register_blueprint(git, url_prefix='/repos/janeczku/calibre-web')
