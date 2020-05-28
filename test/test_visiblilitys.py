@@ -846,6 +846,12 @@ class calibre_web_visibilitys(unittest.TestCase, ui_class):
         self.assertEqual(len(self.search('testbook')), 1)
         # check archive book visible in advanced search result
         self.assertEqual(len(self.adv_search({'book_title': 'testbook'})), 1)
+        # revert changes
+        self.goto_page('user_setup')
+        self.change_user({'show_32768': 1})
+        details = self.get_book_details(5)
+        self.check_element_on_page((By.XPATH,"//*[@id='archived_cb']")).click()
+
 
 
 
