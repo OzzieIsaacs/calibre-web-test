@@ -241,6 +241,22 @@ def cover(type) -> str:
                                            as_attachment=True,
                                            mimetype='image/webp',
                                            attachment_filename='äo.webp')
+            elif type == 'test.bmp':
+                result = send_from_directory(cover_path,'cover.bmp',
+                                           as_attachment=True,
+                                           mimetype='image/bmp',
+                                           attachment_filename='äo.bmp')
+            elif type == 'test.jol':
+                result = send_from_directory(cover_path,'cover.bmp',
+                                           as_attachment=True,
+                                           mimetype='image/jpeg',
+                                           attachment_filename='äo.bmp')
+            elif type == 'test.brk':
+                result = send_from_directory(cover_path,'book.cbz',
+                                           as_attachment=True,
+                                           mimetype='image/png',
+                                           attachment_filename='äo.cbz')
+
             result.headers['Accept-Ranges'] = 'bytes'
             return result
     except Exception as e:
