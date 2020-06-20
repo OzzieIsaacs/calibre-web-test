@@ -6,6 +6,7 @@ from helper_ui import ui_class
 from config_test import TEST_DB, BOOT_TIME, CALIBRE_WEB_PATH
 from helper_func import startup, debug_startup
 from helper_proxy import Proxy, val
+import requests
 from selenium.webdriver.common.by import By
 from zipfile import ZipFile, ZipInfo
 import os
@@ -335,4 +336,8 @@ class test_updater(unittest.TestCase, ui_class):
     def test_reconnect_database(self):
         self.reconnect_database()
         self.assertTrue(self.check_element_on_page((By.ID, "check_for_update")))
+        resp = requests.get('http://127.0.0.1:8083/reconnect')
+        self.assertEqual(200,resp.status_code)
+        self.assertDictEqual({},resp.json())
+
 
