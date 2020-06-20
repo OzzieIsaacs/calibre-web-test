@@ -273,6 +273,7 @@ class test_edit_books(TestCase, ui_class):
         books=self.get_books_displayed()
         self.assertEqual(len(books[1]),2)
         books[1][0]['ele'].click()
+        time.sleep(2)
         ele=self.check_element_on_page((By.ID, "title"))
         self.assertEqual(u'book6', ele.text)
         self.check_element_on_page((By.ID, "edit_book")).click()

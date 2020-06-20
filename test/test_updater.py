@@ -13,10 +13,6 @@ import os
 import time
 
 
-'''@parameterized_class([
-   { "py_version": u'/usr/bin/python'},
-   { "py_version": u'/usr/bin/python3'}]
-    ,names=('Python27','Python36'))'''
 class test_updater(unittest.TestCase, ui_class):
     p=None
     driver = None
