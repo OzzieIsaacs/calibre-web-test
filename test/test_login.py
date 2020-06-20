@@ -6,15 +6,11 @@ from selenium.webdriver.common.by import By
 from selenium.common.exceptions import WebDriverException
 import re
 from helper_ui import ui_class
-from config_test import TEST_DB
+from config_test import TEST_DB, BOOT_TIME
 from helper_func import startup, check_response_language_header, curl_available, digest_login
-from parameterized import parameterized_class
+from selenium import webdriver
+import requests
 
-
-'''@parameterized_class([
-   { "py_version": u'/usr/bin/python'},
-   { "py_version": u'/usr/bin/python3'},
-],names=('Python27','Python36'))'''
 class test_login(unittest.TestCase, ui_class):
     p=None
     driver = None
@@ -339,3 +335,33 @@ class test_login(unittest.TestCase, ui_class):
         self.logout()
         self.assertTrue(self.login('admin','admin123'))
         self.edit_user('old_user', {'delete': 1})
+
+
+    def test_login_remember_me(self):
+        # simulate login, close browser, restart browser, session shall be renewed, user stays logged in
+        r = requests.session()
+        payload = {'username': 'admin', 'password': 'admin123', 'submit':"", 'next':"/", "remember_me":"on"}
+        r.post('http://127.0.0.1:8083/login', data=payload)
+        remember = r.cookies['remember_token']
+        r.close()
+        r = requests.session()
+        site = r.get('http://127.0.0.1:8083', cookies={'remember_token':remember})
+        self.assertTrue(re.search("Calibre-Web | Recently Added Books", site.content.decode('utf-8')))
+        cover = r.get('http://127.0.0.1:8083/cover/8')
+        self.assertEqual('21896', cover.headers['Content-Length'])
+        r.get('http://127.0.0.1:8083/logout')
+        r.close()
+
+        # simulate login without remember me, close browser, restart browser, no remember me token, user logged out and
+        # redirected to login page
+        r = requests.session()
+        payload = {'username': 'admin', 'password': 'admin123', 'submit':"", 'next':"/"}
+        r.post('http://127.0.0.1:8083/login',data=payload)
+        self.assertFalse(r.cookies.get('remember_token'))
+        r.close()
+        r = requests.session()
+        site = r.get('http://127.0.0.1:8083')
+        self.assertTrue(re.search("Calibre-Web | login", site.content.decode('utf-8')))
+        r.close()
+
+
