@@ -8,7 +8,7 @@ import unittest
 from selenium.webdriver.common.by import By
 import time
 from helper_ui import ui_class
-from config_test import TEST_DB, base_path
+from config_test import TEST_DB, base_path, BOOT_TIME
 from parameterized import parameterized_class
 from helper_func import startup, debug_startup, add_dependency, remove_dependency, unrar_path, is_unrar_not_present
 import requests
@@ -142,3 +142,61 @@ class test_edit_additional_books(TestCase, ui_class):
         self.delete_book(5)
         self.assertTrue(self.check_element_on_page((By.ID, "flash_success")))
         self.assertFalse(os.path.isdir(os.path.join(TEST_DB, 'John Doe')))
+
+    def test_writeonly_path(self):
+        self.fill_view_config({'config_read_column': "Custom Bool 1 Ä"})
+        self.assertTrue(self.check_element_on_page((By.ID, "flash_success")))
+        self.fill_basic_config({'config_uploading':1})
+        time.sleep(3)
+        self.assertTrue(self.check_element_on_page((By.ID, "flash_success")))
+
+        rights = os.stat(TEST_DB).st_mode & 0o777
+        os.chmod(TEST_DB, 0o400)
+        self.get_book_details(7)
+        self.check_element_on_page((By.ID, "edit_book")).click()
+        self.edit_book(content={u'tags': 'Geno'})
+        self.assertTrue(self.check_element_on_page((By.ID, "flash_alert")))
+        details = self.get_book_details(7)
+        self.assertEqual('Gênot', details['tag'][0])
+        self.check_element_on_page((By.ID, "edit_book")).click()
+        self.edit_book(content={u'book_title': 'Buuk'})
+        self.assertTrue(self.check_element_on_page((By.ID, "flash_alert")))
+        details = self.get_book_details(7)
+        self.assertEqual('Buuko', details['title'])
+        self.check_element_on_page((By.ID, "edit_book")).click()
+        self.edit_book(content={u'bookAuthor': 'Jon Döe'})
+        self.assertTrue(self.check_element_on_page((By.ID, "flash_alert")))
+        details = self.get_book_details(7)
+        self.assertEqual('John Döe', details['author'][0])
+
+
+        values = self.get_book_details(8)
+        self.assertFalse(values['read'])
+        read = self.check_element_on_page((By.XPATH,"//*[@id='have_read_cb']"))
+        self.assertTrue(read)
+        read.click()
+        values = self.get_book_details(8)
+        self.assertFalse(values['read'])
+
+        upload_file = os.path.join(base_path, 'files', 'book.cbr')
+        upload = self.check_element_on_page((By.ID, 'btn-upload'))
+        upload.send_keys(upload_file)
+        time.sleep(2)
+        self.assertTrue(self.check_element_on_page((By.ID, "flash_alert")))
+        books = self.get_books_displayed()
+        self.assertEqual(11, len(books[1]))
+        # restart and check it fails
+        self.restart_calibre_web()
+        self.goto_page('nav_new')
+        os.chmod(TEST_DB, rights)
+        self.fill_initial_config(dict(config_calibre_dir=TEST_DB))
+        # wait for cw to reboot
+        time.sleep(BOOT_TIME)
+        # Wait for config screen with login button to show up
+        login_button = self.driver.find_element_by_name("login")
+        login_button.click()
+        self.login("admin", "admin123")
+        self.fill_basic_config({'config_uploading': 0})
+
+        book_path = os.path.join(TEST_DB, 'John Doe', 'Buuko (7)')
+        self.assertTrue(os.path.isdir(book_path))
