@@ -26,7 +26,7 @@ if __name__ == '__main__':
             my_env = os.environ.copy()
             my_env["PATH"] = SELENIUM_SERVER + ":" + my_env["PATH"]
             print ('Selenium server not running, trying to start')
-            p = process_open(["java", "-jar", SELENIUM_SERVER], (2), my_env)
+            p = process_open(["java", "-jar", SELENIUM_SERVER], [2], my_env)
             time.sleep(5)
             result= False
             retry +=1
