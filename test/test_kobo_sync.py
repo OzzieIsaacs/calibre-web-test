@@ -50,7 +50,7 @@ class TestKoboSync(unittest.TestCase, ui_class):
         remove_dependency(cls.json_line)
 
     def inital_sync(self):
-        if test_kobo_sync.syncToken:
+        if TestKoboSync.syncToken:
             return
         # change book 5 to have unicode char in title author, description
         self.get_book_details(5)
@@ -77,13 +77,13 @@ class TestKoboSync(unittest.TestCase, ui_class):
         r = requests.post(self.kobo_adress+'/v1/auth/device', json=payload)
         self.assertEqual(r.status_code, 200)
         # request init request to get metadata format
-        test_kobo_sync.header = {
+        TestKoboSync.header = {
             'Authorization': 'Bearer ' + r.json()['AccessToken'],
             'Content-Type': 'application/json'
         }
         expectUrl = '/'.join(self.kobo_adress.split('/')[0:-2])
         session = requests.session()
-        r = session.get(self.kobo_adress+'/v1/initialization', headers=test_kobo_sync.header)
+        r = session.get(self.kobo_adress+'/v1/initialization', headers=TestKoboSync.header)
         self.assertEqual(r.status_code, 200)
         # Check cover links
         self.assertEqual(len(r.json()), 1)
@@ -93,15 +93,15 @@ class TestKoboSync(unittest.TestCase, ui_class):
         self.assertEqual(self.kobo_adress + "/{ImageId}/{width}/{height}/false/image.jpg",
                          r.json()['Resources']['image_url_template'])
         # perform user profile request
-        r = session.get(self.kobo_adress+'/v1/user/profile', headers=test_kobo_sync.header)
+        r = session.get(self.kobo_adress+'/v1/user/profile', headers=TestKoboSync.header)
         self.assertEqual(r.status_code, 200)
         self.assertEqual(r.json(), {})
         # perform benefits request
-        r = session.get(self.kobo_adress+'/v1/user/loyalty/benefits', headers=test_kobo_sync.header)
+        r = session.get(self.kobo_adress+'/v1/user/loyalty/benefits', headers=TestKoboSync.header)
         self.assertEqual(r.status_code, 200)
         self.assertEqual(r.json(), {})
         # perform analytics request
-        r = session.get(self.kobo_adress+'/v1/analytics/gettests', headers=test_kobo_sync.header)
+        r = session.get(self.kobo_adress+'/v1/analytics/gettests', headers=TestKoboSync.header)
         self.assertEqual(r.status_code, 200)
         self.assertEqual(r.json(), {})
 
@@ -111,7 +111,7 @@ class TestKoboSync(unittest.TestCase, ui_class):
         r = session.get(self.kobo_adress+'/v1/library/sync', params=params)
         self.assertEqual(r.status_code, 200)
         data = r.json()
-        test_kobo_sync.syncToken = {'x-kobo-synctoken': r.headers['x-kobo-synctoken']}
+        TestKoboSync.syncToken = {'x-kobo-synctoken': r.headers['x-kobo-synctoken']}
         self.assertEqual(len(data), 4, "4 Books should have valid kobo formats (epub, epub3, kebub)")
         self.assertEqual(data[0]['NewEntitlement']['BookMetadata']['DownloadUrls'][1]['Format'], 'EPUB')
         self.assertEqual(data[0]['NewEntitlement']['BookMetadata']['DownloadUrls'][1]['Size'], 6720)
@@ -146,11 +146,11 @@ class TestKoboSync(unittest.TestCase, ui_class):
         # ToDo Check Reading state
         # self.assertEqual(data[0]['NewEntitlement']['ReadingState'], '')
         # perform image request of first book
-        r = session.get(self.kobo_adress+'/' + bood_uuid + '/100/100/false/image.jpg', headers=test_kobo_sync.header)
+        r = session.get(self.kobo_adress+'/' + bood_uuid + '/100/100/false/image.jpg', headers=TestKoboSync.header)
         self.assertEqual(r.status_code, 200)
         self.assertEqual(16790, len(r.content))
         # perform image request of unknown book
-        r = session.get(self.kobo_adress+'/100129102/100/100/false/image.jpg', headers=test_kobo_sync.header)
+        r = session.get(self.kobo_adress+'/100129102/100/100/false/image.jpg', headers=TestKoboSync.header)
         self.assertEqual(r.status_code, 200)
         self.assertEqual(r.json(), {})
 
@@ -166,25 +166,25 @@ class TestKoboSync(unittest.TestCase, ui_class):
         self.assertEqual(r.status_code, 200)
         self.assertEqual(r.json(), {})
         # perform analytics request
-        r = session.get(self.kobo_adress+'/v1/analytics/get', headers=test_kobo_sync.header)
+        r = session.get(self.kobo_adress+'/v1/analytics/get', headers=TestKoboSync.header)
         self.assertEqual(r.status_code, 200)
         self.assertEqual(r.json(), {})
 
         # perform nextread request
         r = session.get(self.kobo_adress + '/v1/products/2fe593b7-1389-4478-b66f-f07bf4c4d5b0/nextread',
-                        headers=test_kobo_sync.header)
+                        headers=TestKoboSync.header)
         self.assertEqual(r.status_code, 200)
         self.assertEqual(r.json(), {})
         session.close()
 
     def sync_kobo(self):
         changeSession = requests.session()
-        r = changeSession.get(self.kobo_adress+'/v1/initialization', headers=test_kobo_sync.header)
+        r = changeSession.get(self.kobo_adress+'/v1/initialization', headers=TestKoboSync.header)
         self.assertEqual(r.status_code, 200)
         params = {'Filter': 'All', 'DownloadUrlFilter': 'Generic,Android', 'PrioritizeRecentReads':'true'}
-        r = changeSession.get(self.kobo_adress+'/v1/library/sync', params=params, headers=test_kobo_sync.syncToken)
+        r = changeSession.get(self.kobo_adress+'/v1/library/sync', params=params, headers=TestKoboSync.syncToken)
         self.assertEqual(r.status_code, 200)
-        test_kobo_sync.syncToken = {'x-kobo-synctoken': r.headers['x-kobo-synctoken']}
+        TestKoboSync.syncToken = {'x-kobo-synctoken': r.headers['x-kobo-synctoken']}
         data = r.json()
         changeSession.close()
         return data
@@ -216,14 +216,14 @@ class TestKoboSync(unittest.TestCase, ui_class):
 
         # append synctoken to headers and start over again
         newSession = requests.session()
-        r = newSession.get(self.kobo_adress+'/v1/initialization', headers=test_kobo_sync.header)
+        r = newSession.get(self.kobo_adress+'/v1/initialization', headers=TestKoboSync.header)
         self.assertEqual(r.status_code, 200)
         params = {'Filter': 'All', 'DownloadUrlFilter': 'Generic,Android', 'PrioritizeRecentReads':'true'}
-        r = newSession.get(self.kobo_adress+'/v1/library/sync', params=params, headers=test_kobo_sync.syncToken)
+        r = newSession.get(self.kobo_adress+'/v1/library/sync', params=params, headers=TestKoboSync.syncToken)
         self.assertEqual(r.status_code, 200)
         self.assertEqual(r.json(), [])
         newSession.close()
-        test_kobo_sync.syncToken = {'x-kobo-synctoken': r.headers['x-kobo-synctoken']}
+        TestKoboSync.syncToken = {'x-kobo-synctoken': r.headers['x-kobo-synctoken']}
 
     def test_sync_upload(self):
         self.inital_sync()
@@ -325,10 +325,10 @@ class TestKoboSync(unittest.TestCase, ui_class):
         tagId = data[0]['ChangedTag']['Tag']['Id']
         # Try to change name of shelf with wrong Id
         newSession = requests.session()
-        r = newSession.get(self.kobo_adress+'/v1/initialization', headers=test_kobo_sync.header)
+        r = newSession.get(self.kobo_adress+'/v1/initialization', headers=TestKoboSync.header)
 
         r = newSession.put(self.kobo_adress+'/v1/library/tags/'+tagId + '1',
-                           headers=test_kobo_sync.syncToken, data={'Name':'test'})
+                           headers=TestKoboSync.syncToken, data={'Name':'test'})
         self.assertEqual(404, r.status_code)
 
         # Try to change name of shelf with wrong Payload
@@ -421,7 +421,7 @@ class TestKoboSync(unittest.TestCase, ui_class):
         self.inital_sync()
         # create private shelf
         newSession = requests.session()
-        r = newSession.get(self.kobo_adress+'/v1/initialization', headers=test_kobo_sync.header)
+        r = newSession.get(self.kobo_adress+'/v1/initialization', headers=TestKoboSync.header)
 
         r = newSession.post(self.kobo_adress + '/v1/library/tags', json={'Name': 'BooksAdd', 'Items': []})
         self.assertEqual(201, r.status_code)
@@ -490,7 +490,7 @@ class TestKoboSync(unittest.TestCase, ui_class):
         self.inital_sync()
         # reading state
         newSession = requests.session()
-        r = newSession.get(self.kobo_adress+'/v1/initialization', headers=test_kobo_sync.header)
+        r = newSession.get(self.kobo_adress+'/v1/initialization', headers=TestKoboSync.header)
 
         r = newSession.get(self.kobo_adress + '/v1/library/77/state')
         self.assertEqual(200, r.status_code)
