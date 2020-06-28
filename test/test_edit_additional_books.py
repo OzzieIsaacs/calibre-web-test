@@ -203,7 +203,7 @@ class TestEditAdditionalBooks(TestCase, ui_class):
         self.login("admin", "admin123")
         self.fill_basic_config({'config_uploading': 0})
 
-        book_path = os.path.join(TEST_DB, 'John Doe', 'Buuko (7)')
+        book_path = os.path.join(TEST_DB, 'John Doe', 'Buuko (9)')
         self.assertTrue(os.path.isdir(book_path))
 
     def test_writeonly_database(self):

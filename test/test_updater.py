@@ -21,16 +21,16 @@ class test_updater(unittest.TestCase, ui_class):
 
     @classmethod
     def setUpClass(cls):
-        cls.copy_cw()
-        cls.proxy = Proxy()
-        cls.proxy.start()
-        pem_file = os.path.join(os.path.expanduser('~'),'.mitmproxy','mitmproxy-ca-cert.pem')
-        startup(cls, cls.py_version,{'config_calibre_dir':TEST_DB},
-                env={'http_proxy':'http://127.0.0.1:8080',
-                     'https_proxy':'https://127.0.0.1:8080',
-                     'REQUESTS_CA_BUNDLE': pem_file,
-                     'LANG':'de_DE.UTF-8'
-                     })
+        if cls.copy_cw():
+            cls.proxy = Proxy()
+            cls.proxy.start()
+            pem_file = os.path.join(os.path.expanduser('~'),'.mitmproxy','mitmproxy-ca-cert.pem')
+            startup(cls, cls.py_version,{'config_calibre_dir':TEST_DB},
+                    env={'http_proxy':'http://127.0.0.1:8080',
+                         'https_proxy':'https://127.0.0.1:8080',
+                         'REQUESTS_CA_BUNDLE': pem_file,
+                         'LANG':'de_DE.UTF-8'
+                         })
 
     @classmethod
     def tearDownClass(cls):
@@ -74,9 +74,10 @@ class test_updater(unittest.TestCase, ui_class):
                             filePath = os.path.join(folderName, filename)
                             zipObj.write(filePath, os.path.join('calibre-web-0.6.6',os.path.relpath(filePath,CALIBRE_WEB_PATH + '_2')))
                 zipObj.write(os.path.join(CALIBRE_WEB_PATH + '_2', 'cps.py'), arcname='calibre-web-0.6.6/cps.py')
+                return True
         else:
             print('target directory already existing')
-            raise BaseException()
+            return False
 
     @classmethod
     def return_cw(cls):
