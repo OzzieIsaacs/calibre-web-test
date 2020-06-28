@@ -1257,6 +1257,7 @@ class ui_class():
     @classmethod
     def check_tasks(cls):
         if cls.goto_page('tasks'):
+            time.sleep(1)
             parser = lxml.etree.HTMLParser()
             html = cls.driver.page_source
 

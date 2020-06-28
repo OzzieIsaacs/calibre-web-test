@@ -74,6 +74,10 @@ def startup(inst, pyVersion, config, login=True, host="http://127.0.0.1:8083", e
         os.remove(os.path.join(CALIBRE_WEB_PATH, 'app.db'))
     except Exception:
         pass
+    try:
+        os.chmod(TEST_DB, 0o764)
+    except Exception:
+        pass
     shutil.rmtree(TEST_DB, ignore_errors=True)
     shutil.copytree('./Calibre_db', TEST_DB)
     inst.p = process_open([pyVersion, os.path.join(CALIBRE_WEB_PATH, u'cps.py')], [1], sout=None, env=env)
@@ -81,6 +85,7 @@ def startup(inst, pyVersion, config, login=True, host="http://127.0.0.1:8083", e
     # create a new Firefox session
     inst.driver = webdriver.Firefox()
     inst.driver.implicitly_wait(BOOT_TIME)
+    time.sleep(1)
     if inst.p.poll():
         kill_old_cps()
         inst.p = process_open([pyVersion, os.path.join(CALIBRE_WEB_PATH, u'cps.py')], [1], sout=None, env=env)

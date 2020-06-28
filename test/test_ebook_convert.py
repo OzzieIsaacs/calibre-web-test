@@ -351,7 +351,7 @@ class TestEbookConvert(unittest.TestCase, ui_class):
         self.logout()
         self.login('admin', 'admin123')
         ret = self.check_tasks()
-        self.assertEqual(memory+1, len(ret))
+        self.assertEqual(memory + 1, len(ret))
 
 
     # start conversion of epub -> mobi
