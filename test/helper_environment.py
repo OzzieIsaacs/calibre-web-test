@@ -40,13 +40,13 @@ class Environment:
         uname = platform.uname()
         self.result.append(('Platform', '{0.system} {0.release} {0.version} {0.processor} {0.machine}'.format(uname),
                             'Basic'))
-        p = process_open([initial, "-V"], list(0))
+        p = process_open([initial, "-V"], [0])
         p.wait()
         lines = ''.join(p.stdout.readlines())
         pVersion = re.findall('(\d+\.\d+\.\d+)', lines)[0]
         self.result.append(('Python', pVersion, 'Basic'))
 
-        p = process_open([initial, "-m", "pip", "freeze"], list(0))
+        p = process_open([initial, "-m", "pip", "freeze"], [0])
         p.wait()
         dists = [str(d).strip().split("==") for d in p.stdout.readlines()]
         with open(os.path.join(CALIBRE_WEB_PATH, 'requirements.txt'), 'r') as f:
@@ -65,7 +65,7 @@ class Environment:
     def add_Environment(self, test, extension):
         if self.initial:
             try:
-                p = process_open([self.initial, "-m", "pip", "freeze"], list(0))
+                p = process_open([self.initial, "-m", "pip", "freeze"], [0])
                 p.wait()
                 dists = [str(d).strip().split("==") for d in p.stdout.readlines()]
                 normalized_Ext = [name.replace('_', '-').upper() for name in extension]
