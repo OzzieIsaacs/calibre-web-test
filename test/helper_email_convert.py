@@ -95,8 +95,8 @@ class MyMessage:
             username = re.findall('User name:\s(.*)\r', self.message.decode('utf-8'))
             password = re.findall('Password:\s(.*)\r', self.message.decode('utf-8'))
             if len(username) and len(password):
-                return list(username[0], password[0])
-        return list(False, False)
+                return [username[0], password[0]]
+        return [False, False]
 
     def check_email_received(self):
         return bool(self.size)

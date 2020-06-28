@@ -187,8 +187,8 @@ class test_register(unittest.TestCase, ui_class):
         self.logout()
 
     def test_forgot_password(self):
-        if not self.check_user_logged_in('admin',True):
-            self.login('admin','admin123')
+        if not self.check_user_logged_in('admin', True):
+            self.login('admin', 'admin123')
         self.email_server.handler.reset_email_received()
         self.create_user('forget', {'passwd_role': 0, 'password': '123', 'email': 'alfa@b.com'})
         self.logout()
@@ -197,5 +197,5 @@ class test_register(unittest.TestCase, ui_class):
         __, passw = self.email_server.handler.extract_register_info()
         self.email_server.handler.reset_email_received()
         self.login('forget', passw)
-        self.assertTrue(self.check_user_logged_in('forget',noCompare=True))
+        self.assertTrue(self.check_user_logged_in('forget', noCompare=True))
         self.assertFalse(self.forgot_password('forgot'))

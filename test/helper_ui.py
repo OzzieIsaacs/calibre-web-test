@@ -75,29 +75,6 @@ class ui_class():
         except:
             return False
 
-    '''
-    return values: 
-    - alert-info, alert-danger, alert-success, alert-warning if flash message occours
-    - '-1' if resend button is not presend
-    - '0' if no flash message occurs after submit button is pushed    
-    '''
-    @classmethod
-    def forgot_password(cls,user):
-        cls.logout()
-        cls.check_element_on_page((By.ID, "username"))
-        username = cls.driver.find_element_by_id("username")
-        resend = cls.driver.find_element_by_id("forgot")
-        if resend:
-            username.send_keys(user)
-            resend.click()
-            flash = cls.check_element_on_page((By.CLASS_NAME, "alert"))
-            if flash:
-                id = flash.get_attribute('id')
-                return id
-            else:
-                return 0
-        return -1
-
     @classmethod
     def logout(cls):
         logout = cls.check_element_on_page((By.ID, "logout"))
@@ -133,14 +110,14 @@ class ui_class():
         else:
             return False
 
-    '''@classmethod
+    @classmethod
     def forgot_password(cls, user):
         cls.goto_page('login')
         username = cls.driver.find_element_by_name("username")
         submit = cls.driver.find_element_by_name("forgot")
         username.send_keys(user)
         submit.click()
-        return bool(cls.check_element_on_page((By.ID, "flash_info")))'''
+        return bool(cls.check_element_on_page((By.ID, "flash_info")))
 
 
     @classmethod

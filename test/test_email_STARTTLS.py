@@ -3,7 +3,7 @@
 import unittest
 import time
 
-from .helper_email_convert import AIOSMTPServer
+from helper_email_convert import AIOSMTPServer
 import helper_email_convert
 from selenium.webdriver.common.by import By
 from helper_ui import ui_class
