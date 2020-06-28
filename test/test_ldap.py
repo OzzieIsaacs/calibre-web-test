@@ -148,8 +148,8 @@ class test_ldap_login(unittest.TestCase, ui_class):
         self.fill_basic_config({'config_ldap_provider_url': '127.0.0.1',
                                 'config_ldap_port': '3268',
                                 'config_ldap_authentication': 'Simple',
-                                'config_ldap_dn': 'ou=people,dc=utm,dc=edu,dc=ec',
-                                'config_ldap_serv_username': 'cn=root,dc=utm,dc=edu,dc=ec',
+                                'config_ldap_dn': 'ou=people,dc=calibreweb,dc=com',
+                                'config_ldap_serv_username': 'cn=root,dc=calibreweb,dc=com',
                                 'config_ldap_serv_password': 'secret',
                                 'config_ldap_user_object': '(uid=%s)',
                                 'config_ldap_group_object_filter': '',
@@ -157,10 +157,9 @@ class test_ldap_login(unittest.TestCase, ui_class):
                                 })
         self.assertTrue(self.check_element_on_page((By.ID, "flash_success")))
         time.sleep(BOOT_TIME)
-        self.server.relisten(config=1, port=3268, encrypt=None)
         # create new user
         # give user password different form ldap
-        self.create_user('user0@we.de',{'email':'user0@exi.com','password':'1234'})
+        self.create_user('user0',{'email':'user0@exi.com','password':'1234'})
         self.assertTrue(self.check_element_on_page((By.ID, "flash_success")))
         # logout
         self.logout()

@@ -314,4 +314,7 @@ class Proxy(threading.Thread):
         self.m.run()
 
     def stop_proxy(self):
-        self.m.shutdown()
+        try:
+            self.m.shutdown()
+        except Exception:
+            pass
