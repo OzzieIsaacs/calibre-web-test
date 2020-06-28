@@ -295,7 +295,7 @@ class test_Login(unittest.TestCase, ui_class):
         self.assertTrue(check_response_language_header(url,
                                                        ['Accept-Language: zh_cn;q=0.9,de;q=0.8,en;q=0.7'],
                                                        200,
-                                                       '<label for="username">昵称</label>'))
+                                                       '<label for="username">用户名</label>'))
         self.assertTrue(check_response_language_header(url,
                                                        ['Accept-Language: xx'],
                                                        200,

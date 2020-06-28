@@ -748,7 +748,7 @@ class TestEditBooks(TestCase, ui_class):
         payload = {'username': 'admin', 'password': 'admin123', 'submit':"", 'next':"/", "remember_me":"on"}
         r.post('http://127.0.0.1:8083/login', data=payload)
         resp = r.get('http://127.0.0.1:8083' + details['cover'])
-        self.assertEqual('182574', resp.headers['Content-Length'])
+        self.assertEqual('23390', resp.headers['Content-Length'])
         self.fill_basic_config({'config_uploading': 0})
         r.close()
 
