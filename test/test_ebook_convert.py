@@ -360,7 +360,7 @@ class TestEbookConvert(unittest.TestCase, ui_class):
     # check email received
     # check filename
     def test_email_only(self):
-        self.setup_server(True, {'mail_use_ssl':'None', 'mail_password':'10234'})
+        self.setup_server(True, {'mail_use_ssl': 'None', 'mail_password': '10234'})
         task_len = len(self.check_tasks())
         vals = self.get_convert_book(8)
         select = Select(vals['btn_from'])
