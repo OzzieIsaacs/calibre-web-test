@@ -306,15 +306,20 @@ class Proxy(threading.Thread):
 
         self.m = DumpMaster(None, with_termlog=False, with_dumper=False)
         self.m.server = proxy.server.ProxyServer(pconf)
+        if self.m.server.channel.loop.is_closed():
+            self.m.server.channel.loop = asyncio.new_event_loop()
         self.m.addons.add(Github_Proxy())
         self.m.addons.add(wsgiapp.WSGIApp(app, "gitty.local", 443))
 
     def run(self):
-        asyncio.set_event_loop(self.m.server.channel.loop)
-        self.m.run()
+        try:
+            asyncio.set_event_loop(self.m.server.channel.loop)
+            self.m.run()
+        except Exception as e:
+            print(e)
 
     def stop_proxy(self):
         try:
             self.m.shutdown()
-        except Exception:
-            pass
+        except Exception as e:
+            print(e)
