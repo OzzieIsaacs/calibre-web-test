@@ -2,15 +2,15 @@
 
 import unittest
 from helper_ui import ui_class
-from config_test import TEST_DB, VENV_PYTHON, CALIBRE_WEB_PATH, base_path
-from helper_func import startup, debug_startup, get_Host_IP, add_dependency, remove_dependency, kill_old_cps
+from config_test import TEST_DB
+from helper_func import startup, debug_startup, add_dependency, remove_dependency
 from selenium.webdriver.common.by import By
 from config_goodreads import GOODREADS_API_KEY, GOODREADS_API_SECRET
 
 
-class test_goodreads(unittest.TestCase, ui_class):
+class TestGoodreads(unittest.TestCase, ui_class):
 
-    p=None
+    p = None
     driver = None
     dependency = ["goodreads", "python-Levenshteinf"]
 
@@ -21,7 +21,7 @@ class test_goodreads(unittest.TestCase, ui_class):
         try:
             startup(cls, cls.py_version, {'config_calibre_dir':TEST_DB,
                                           'config_use_goodreads':1})
-        except Exception as e:
+        except Exception:
             cls.driver.quit()
             cls.p.terminate()
             cls.p.poll()
@@ -49,8 +49,8 @@ class test_goodreads(unittest.TestCase, ui_class):
                 el.click()
                 break
         self.assertFalse(self.check_element_on_page((By.CLASS_NAME, "author-photo")))
-        self.assertFalse(self.check_element_on_page((By.XPATH,"//*/h3[contains(text(), 'More by')]")))
-        self.assertEqual(1,len(self.get_books_displayed()[1]))
+        self.assertFalse(self.check_element_on_page((By.XPATH, "//*/h3[contains(text(), 'More by')]")))
+        self.assertEqual(1, len(self.get_books_displayed()[1]))
         self.get_book_details(5)
         self.check_element_on_page((By.ID, "edit_book")).click()
         self.edit_book(content={'bookAuthor': u'John Döe'})
@@ -70,8 +70,8 @@ class test_goodreads(unittest.TestCase, ui_class):
                 el.click()
                 break
         self.assertTrue(self.check_element_on_page((By.CLASS_NAME, "author-photo")))
-        self.assertTrue(self.check_element_on_page((By.XPATH,"//*/h3[contains(text(), 'More by')]")))
-        self.assertEqual(1,len(self.get_books_displayed()[1]))
+        self.assertTrue(self.check_element_on_page((By.XPATH, "//*/h3[contains(text(), 'More by')]")))
+        self.assertEqual(1, len(self.get_books_displayed()[1]))
         self.get_book_details(7)
         self.check_element_on_page((By.ID, "edit_book")).click()
         self.edit_book(content={'bookAuthor': u'John Döe'})
@@ -82,12 +82,8 @@ class test_goodreads(unittest.TestCase, ui_class):
                 el.click()
                 break
         self.assertFalse(self.check_element_on_page((By.CLASS_NAME, "author-photo")))
-        self.assertFalse(self.check_element_on_page((By.XPATH,"//*/h3[contains(text(), 'More by')]")))
-        self.assertEqual(1,len(self.get_books_displayed()[1]))
+        self.assertFalse(self.check_element_on_page((By.XPATH, "//*/h3[contains(text(), 'More by')]")))
+        self.assertEqual(1, len(self.get_books_displayed()[1]))
 
-
-
-
-
-    def test_kobo_about(self):
+    def test_goodreads_about(self):
         self.assertTrue(self.goto_page('nav_about'))

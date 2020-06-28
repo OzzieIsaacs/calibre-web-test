@@ -4,17 +4,19 @@
 
 from unittest import TestCase
 import os
-from selenium.webdriver.common.by import By
 import time
+import requests
+
+from selenium.webdriver.common.by import By
 from helper_ui import ui_class
 from config_test import TEST_DB
 # from parameterized import parameterized_class
 from helper_func import startup, debug_startup, add_dependency, remove_dependency
-import requests
 from helper_proxy import Proxy, val
 
-class test_cover_edit__books(TestCase, ui_class):
-    p=None
+
+class testCoverEditBooks(TestCase, ui_class):
+    p = None
     driver = None
     dependencys = ['Pillow']
 
@@ -35,7 +37,7 @@ class test_cover_edit__books(TestCase, ui_class):
             time.sleep(3)
             #time.sleep(1)
             #time.sleep(1)
-        except Exception as e:
+        except Exception:
             cls.driver.quit()
             cls.p.kill()
 
@@ -64,22 +66,22 @@ class test_cover_edit__books(TestCase, ui_class):
         #self.assertTrue("Error Downloading Cover" in self.check_element_on_page((By.ID, "flash_alert")).text)
         r = requests.session()
         payload = {'username': 'admin', 'password': 'admin123', 'submit':"", 'next':"/", "remember_me":"on"}
-        r.post('http://127.0.0.1:8083/login',data=payload)
+        r.post('http://127.0.0.1:8083/login', data=payload)
         self.check_element_on_page((By.ID, "edit_book")).click()
         self.edit_book(content={'cover_url': u'https://api.github.com/repos/janeczku/calibre-web/cover/test.jpg'})
         self.assertFalse(self.check_element_on_page((By.ID, 'flash_alert')))
-        resp = r.get( 'http://127.0.0.1:8083/cover/8')
-        self.assertEqual('15938',resp.headers['Content-Length'])
+        resp = r.get('http://127.0.0.1:8083/cover/8')
+        self.assertEqual('15938', resp.headers['Content-Length'])
         self.check_element_on_page((By.ID, "edit_book")).click()
         self.edit_book(content={'cover_url': u'https://api.github.com/repos/janeczku/calibre-web/cover/test.webp'})
         self.assertFalse(self.check_element_on_page((By.ID, 'flash_alert')))
-        resp = r.get( 'http://127.0.0.1:8083/cover/8')
-        self.assertEqual('17420',resp.headers['Content-Length'])
+        resp = r.get('http://127.0.0.1:8083/cover/8')
+        self.assertEqual('17420', resp.headers['Content-Length'])
         self.check_element_on_page((By.ID, "edit_book")).click()
         self.edit_book(content={'cover_url': u'https://api.github.com/repos/janeczku/calibre-web/cover/test.png'})
         self.assertFalse(self.check_element_on_page((By.ID, 'flash_alert')))
-        resp = r.get( 'http://127.0.0.1:8083/cover/8')
-        self.assertEqual('20317',resp.headers['Content-Length'])
+        resp = r.get('http://127.0.0.1:8083/cover/8')
+        self.assertEqual('20317', resp.headers['Content-Length'])
         r.close()
         self.check_element_on_page((By.ID, "edit_book")).click()
         self.edit_book(content={'cover_url': u'https://api.github.com/repos/janeczku/calibre-web/cover/test.bmp'})
@@ -90,6 +92,4 @@ class test_cover_edit__books(TestCase, ui_class):
         self.check_element_on_page((By.ID, "edit_book")).click()
         self.edit_book(content={'cover_url': u'https://api.github.com/repos/janeczku/calibre-web/cover/test.brk'})
         self.assertTrue(self.check_element_on_page((By.ID, 'flash_alert')))
-        self.assertTrue(False,"Browser-Cache Problem: Old Cover is displayed instead of New Cover")
-
-
+        self.assertTrue(False, "Browser-Cache Problem: Old Cover is displayed instead of New Cover")

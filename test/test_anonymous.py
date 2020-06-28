@@ -9,12 +9,8 @@ from helper_func import startup
 # from .parameterized import parameterized_class
 
 
-'''@parameterized_class([
-   { "py_version": u'/usr/bin/python'},
-   { "py_version": u'/usr/bin/python3'}]
-    ,names=('Python27','Python36'))'''
-class test_anonymous(unittest.TestCase, ui_class):
-    p=None
+class testAnonymous(unittest.TestCase, ui_class):
+    p = None
     driver = None
 
     @classmethod
@@ -32,7 +28,7 @@ class test_anonymous(unittest.TestCase, ui_class):
         if not self.check_user_logged_in('admin'):
             self.logout()
             self.check_element_on_page((By.ID, "top_user")).click()
-            self.login('admin','admin123')
+            self.login('admin', 'admin123')
 
     def test_guest_about(self):
         self.logout()
@@ -40,8 +36,8 @@ class test_anonymous(unittest.TestCase, ui_class):
 
     # Checks if random book section is available in all sidebar menus
     def test_guest_random_books_available(self):
-        self.edit_user('Guest',{'show_128':1, 'show_2': 1, 'show_64':1, 'show_8192': 1, 'show_16384': 1,
-                                'show_16': 1, 'show_4': 1, 'show_4096': 1, 'show_8': 1, 'show_32':1})
+        self.edit_user('Guest', {'show_128': 1, 'show_2': 1, 'show_64': 1, 'show_8192': 1, 'show_16384': 1,
+                                 'show_16': 1, 'show_4': 1, 'show_4096': 1, 'show_8': 1, 'show_32': 1})
         self.logout()
         # check random books shown in new section
         self.goto_page('nav_new')
@@ -104,8 +100,8 @@ class test_anonymous(unittest.TestCase, ui_class):
         self.assertTrue(self.check_element_on_page((By.ID, "nav_rand")))
         self.check_element_on_page((By.ID, "top_user")).click()
         self.login('admin', 'admin123')
-        self.edit_user('Guest',{'show_32':0, 'show_128':0, 'show_2': 0, 'show_8192': 0, 'show_16384': 0,
-                                'show_16': 0, 'show_4': 0, 'show_4096': 0, 'show_8': 0, 'show_64':0})
+        self.edit_user('Guest', {'show_32': 0, 'show_128': 0, 'show_2': 0, 'show_8192': 0, 'show_16384': 0,
+                                 'show_16': 0, 'show_4': 0, 'show_4096': 0, 'show_8': 0, 'show_64': 0})
         self.logout()
         self.assertFalse(self.check_element_on_page((By.ID, "nav_read")))
         self.assertFalse(self.check_element_on_page((By.ID, "nav_unread")))
@@ -114,15 +110,13 @@ class test_anonymous(unittest.TestCase, ui_class):
         self.assertFalse(self.check_element_on_page((By.ID, "nav_format")))
         self.assertFalse(self.check_element_on_page((By.ID, "nav_publisher")))
         self.assertTrue(self.check_element_on_page((By.ID, "nav_new")))
-        #login as admin again
+        # login as admin again
         self.login('admin', 'admin123')
-
-
 
     # checks if admin can configure sidebar for random view
     def test_guest_visibility_sidebar(self):
-        self.edit_user('Guest',{'show_32':0, 'show_128':1, 'show_2': 1,
-                                'show_16': 1, 'show_4': 1, 'show_4096': 1, 'show_8': 1, 'show_64':1})
+        self.edit_user('Guest', {'show_32': 0, 'show_128':1, 'show_2': 1,
+                                 'show_16': 1, 'show_4': 1, 'show_4096': 1, 'show_8': 1, 'show_64': 1})
         self.assertTrue(self.check_element_on_page((By.ID, "flash_success")))
         self.logout()
         self.assertFalse(self.check_element_on_page((By.ID, "nav_rand")))
@@ -161,7 +155,7 @@ class test_anonymous(unittest.TestCase, ui_class):
         self.goto_page("nav_rated")
         self.assertTrue(self.check_element_on_page((By.ID, "books_rand")))
         self.assertFalse(self.check_element_on_page((By.ID, "nav_rand")))
-        # Go to admin section and reenable show random view
+        # Go to admin section and re enable show random view
         self.check_element_on_page((By.ID, "top_user")).click()
         self.login('admin', 'admin123')
         self.edit_user('Guest', {'show_32': 1})
@@ -201,18 +195,18 @@ class test_anonymous(unittest.TestCase, ui_class):
         self.assertTrue(self.check_element_on_page((By.ID, "nav_rand")))
         self.check_element_on_page((By.ID, "top_user")).click()
         self.login('admin', 'admin123')
-        self.edit_user('Guest',{'show_32':0, 'show_128':0, 'show_2': 0,
-                                'show_16': 0, 'show_4': 0, 'show_4096': 0, 'show_8': 0, 'show_64':0})
+        self.edit_user('Guest', {'show_32': 0, 'show_128': 0, 'show_2': 0,
+                                 'show_16': 0, 'show_4': 0, 'show_4096': 0, 'show_8': 0, 'show_64': 0})
 
     # Test if user can change visibility of sidebar view best rated books
     def test_guest_change_visibility_rated(self):
-        self.edit_user('Guest',{'show_128':1})
+        self.edit_user('Guest', {'show_128': 1})
         self.assertTrue(self.check_element_on_page((By.ID, "flash_success")))
         self.logout()
         self.assertTrue(self.check_element_on_page((By.ID, "nav_rated")))
         self.check_element_on_page((By.ID, "top_user")).click()
         self.login('admin', 'admin123')
-        self.edit_user('Guest',{'show_128': 0})
+        self.edit_user('Guest', {'show_128': 0})
         self.assertTrue(self.check_element_on_page((By.ID, "flash_success")))
         self.logout()
         self.assertFalse(self.check_element_on_page((By.ID, "nav_rated")))
@@ -225,7 +219,7 @@ class test_anonymous(unittest.TestCase, ui_class):
         self.assertTrue(self.check_element_on_page((By.ID, "nav_lang")))
         self.check_element_on_page((By.ID, "top_user")).click()
         self.login('admin', 'admin123')
-        self.edit_user('Guest',{'show_2': 0})
+        self.edit_user('Guest', {'show_2': 0})
         self.assertTrue(self.check_element_on_page((By.ID, "flash_success")))
         self.logout()
         self.assertFalse(self.check_element_on_page((By.ID, "nav_lang")))
@@ -238,7 +232,7 @@ class test_anonymous(unittest.TestCase, ui_class):
         self.assertTrue(self.check_element_on_page((By.ID, "nav_hot")))
         self.check_element_on_page((By.ID, "top_user")).click()
         self.login('admin', 'admin123')
-        self.edit_user('Guest',{'show_16': 0})
+        self.edit_user('Guest', {'show_16': 0})
         self.assertTrue(self.check_element_on_page((By.ID, "flash_success")))
         self.logout()
         self.assertFalse(self.check_element_on_page((By.ID, "nav_hot")))
@@ -264,7 +258,7 @@ class test_anonymous(unittest.TestCase, ui_class):
         self.assertTrue(self.check_element_on_page((By.ID, "nav_publisher")))
         self.check_element_on_page((By.ID, "top_user")).click()
         self.login('admin', 'admin123')
-        self.edit_user('Guest',{'show_4096': 0})
+        self.edit_user('Guest', {'show_4096': 0})
         self.assertTrue(self.check_element_on_page((By.ID, "flash_success")))
         self.logout()
         self.assertFalse(self.check_element_on_page((By.ID, "nav_publisher")))
@@ -277,7 +271,7 @@ class test_anonymous(unittest.TestCase, ui_class):
         self.assertTrue(self.check_element_on_page((By.ID, "nav_format")))
         self.check_element_on_page((By.ID, "top_user")).click()
         self.login('admin', 'admin123')
-        self.edit_user('Guest',{'show_16384': 0})
+        self.edit_user('Guest', {'show_16384': 0})
         self.assertTrue(self.check_element_on_page((By.ID, "flash_success")))
         self.logout()
         self.assertFalse(self.check_element_on_page((By.ID, "nav_format")))
@@ -290,11 +284,10 @@ class test_anonymous(unittest.TestCase, ui_class):
         self.assertTrue(self.check_element_on_page((By.ID, "nav_rate")))
         self.check_element_on_page((By.ID, "top_user")).click()
         self.login('admin', 'admin123')
-        self.edit_user('Guest',{'show_8192': 0})
+        self.edit_user('Guest', {'show_8192': 0})
         self.assertTrue(self.check_element_on_page((By.ID, "flash_success")))
         self.logout()
         self.assertFalse(self.check_element_on_page((By.ID, "nav_rate")))
-
 
     # checks if admin can't change read and archive visibility, name, locale can't be changed and isn't visible
     def test_guest_restricted_settings_visibility(self):
@@ -306,7 +299,6 @@ class test_anonymous(unittest.TestCase, ui_class):
         self.assertIsNone(rights['locale'])
         self.assertIsNone(rights['edit_shelf_role'])
         self.assertIsNone(rights['admin_role'])
-
 
     # checks if admin can change categories
     def test_guest_change_visibility_category(self):
@@ -326,9 +318,9 @@ class test_anonymous(unittest.TestCase, ui_class):
         self.goto_page('admin_setup')
         user = self.driver.find_elements_by_xpath("//table[@id='table_user']/tbody/tr/td/a")
         for ele in user:
-            if 'Guest' == ele.text:
+            if ele.text == 'Guest':
                 ele.click()
                 self.assertTrue(self.check_element_on_page((By.ID, "email")))
                 self.assertFalse(self.check_element_on_page((By.ID, "locale")))
                 return
-        self.assertTrue(False,"User account not found")
+        self.assertTrue(False, "User account not found")

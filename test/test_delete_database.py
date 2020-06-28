@@ -9,7 +9,7 @@ from config_test import TEST_DB
 from helper_func import startup, debug_startup
 
 
-class test_delete_database(TestCase, ui_class):
+class TestDeleteDatabase(TestCase, ui_class):
     p = None
     driver = None
 

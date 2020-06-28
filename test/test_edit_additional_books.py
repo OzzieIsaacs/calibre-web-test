@@ -5,23 +5,21 @@
 from unittest import TestCase
 import os
 import unittest
-from selenium.webdriver.common.by import By
 import time
-from helper_ui import ui_class
-from config_test import TEST_DB, base_path, BOOT_TIME
-from .parameterized import parameterized_class
-from helper_func import startup, debug_startup, add_dependency, remove_dependency, unrar_path, is_unrar_not_present
 import requests
 
-'''@parameterized_class([
-   { "py_version": u'/usr/bin/python'},
-   { "py_version": u'/usr/bin/python3'}
-],names=('Python27','Python36'))'''
-@unittest.skipIf(is_unrar_not_present(),"Skipping convert, unrar not found")
-class test_edit_additional_books(TestCase, ui_class):
-    p=None
+from selenium.webdriver.common.by import By
+from helper_ui import ui_class
+from config_test import TEST_DB, base_path, BOOT_TIME
+# from .parameterized import parameterized_class
+from helper_func import startup, debug_startup, add_dependency, remove_dependency, unrar_path, is_unrar_not_present
+
+
+@unittest.skipIf(is_unrar_not_present(), "Skipping convert, unrar not found")
+class TestEditAdditionalBooks(TestCase, ui_class):
+    p = None
     driver = None
-    dependencys = ['Pillow','lxml', 'git|comicapi', 'rarfile']
+    dependencys = ['Pillow', 'lxml', 'git|comicapi', 'rarfile']
 
     @classmethod
     def setUpClass(cls):
@@ -30,7 +28,7 @@ class test_edit_additional_books(TestCase, ui_class):
         try:
             startup(cls, cls.py_version, {'config_calibre_dir':TEST_DB})
             time.sleep(3)
-        except Exception as e:
+        except Exception:
             cls.driver.quit()
             cls.p.kill()
 
@@ -67,9 +65,9 @@ class test_edit_additional_books(TestCase, ui_class):
         self.assertEqual('No Series', details['series'])
         r = requests.session()
         payload = {'username': 'admin', 'password': 'admin123', 'submit':"", 'next':"/", "remember_me":"on"}
-        r.post('http://127.0.0.1:8083/login',data=payload)
-        resp = r.get( 'http://127.0.0.1:8083' + details['cover'])
-        self.assertEqual('8936',resp.headers['Content-Length'])
+        r.post('http://127.0.0.1:8083/login', data=payload)
+        resp = r.get('http://127.0.0.1:8083' + details['cover'])
+        self.assertEqual('8936', resp.headers['Content-Length'])
         self.fill_basic_config({'config_rarfile_location': ''})
         self.assertTrue(self.check_element_on_page((By.ID, "flash_success")))
         self.fill_basic_config({'config_uploading': 0})
@@ -91,9 +89,9 @@ class test_edit_additional_books(TestCase, ui_class):
         self.assertEqual('No S', details['series'])
         r = requests.session()
         payload = {'username': 'admin', 'password': 'admin123', 'submit':"", 'next':"/", "remember_me":"on"}
-        r.post('http://127.0.0.1:8083/login',data=payload)
-        resp = r.get( 'http://127.0.0.1:8083' + details['cover'])
-        self.assertEqual('8936',resp.headers['Content-Length'])
+        r.post('http://127.0.0.1:8083/login', data=payload)
+        resp = r.get('http://127.0.0.1:8083' + details['cover'])
+        self.assertEqual('8936', resp.headers['Content-Length'])
         self.fill_basic_config({'config_uploading': 0})
         r.close()
 
@@ -105,7 +103,7 @@ class test_edit_additional_books(TestCase, ui_class):
                                        "Custom Text 人物 *'()&": 'test text',
                                        u'Custom Bool 1 Ä':u'Yes'})
         details = self.get_book_details(7)
-        self.assertEqual('4',details['cust_columns'][0]['value'])
+        self.assertEqual('4', details['cust_columns'][0]['value'])
         self.assertEqual('ok', details['cust_columns'][1]['value'])
         self.assertEqual('test text', details['cust_columns'][2]['value'])
         book_path = os.path.join(TEST_DB, 'John Doe', 'Buuko (7)')
@@ -120,7 +118,7 @@ class test_edit_additional_books(TestCase, ui_class):
         details = self.get_book_details()
         self.assertEqual('Buuko', details['title'])
         self.assertEqual('John Döe', details['author'][0])
-        self.assertEqual('4',details['cust_columns'][0]['value'])
+        self.assertEqual('4', details['cust_columns'][0]['value'])
         self.assertEqual('ok', details['cust_columns'][1]['value'])
         self.assertEqual('test text', details['cust_columns'][2]['value'])
         os.rmdir(sub_folder)
@@ -174,7 +172,7 @@ class test_edit_additional_books(TestCase, ui_class):
 
         values = self.get_book_details(8)
         self.assertFalse(values['read'])
-        read = self.check_element_on_page((By.XPATH,"//*[@id='have_read_cb']"))
+        read = self.check_element_on_page((By.XPATH, "//*[@id='have_read_cb']"))
         self.assertTrue(read)
         read.click()
         values = self.get_book_details(8)

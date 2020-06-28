@@ -10,7 +10,7 @@ sys.path.append(CALIBRE_WEB_PATH)
 # sys.path.insert(0, os.path.join(CALIBRE_WEB_PATH, 'vendor'))
 
 
-class calibre_helper(unittest.TestCase):
+class CalibreHelper(unittest.TestCase):
 
     @classmethod
     def setUpClass(cls):
@@ -36,11 +36,11 @@ class calibre_helper(unittest.TestCase):
         self.assertEqual(helper.get_valid_filename(u'1234567890123456789012345678901234567890123456789012345678'
                 u'901234567890123456789012345678901234567890123456789012345678901234567890'), u'123456789012345678901'
                 u'23456789012345678901234567890123456789012345678901234567890123456789012345678901234567890123456789'
-                                                                                             u'012345678')
+                u'012345678')
     def test_check_char_replacement(self):
         self.assertEqual(helper.get_valid_filename(u'A*B+C:D"E/F<G>H?'), u'A_B_C_D_E_F_G_H_')
 
-    def test_check_degEUR_replacement(self):
+    def test_check_deg_eur_replacement(self):
         self.assertEqual(helper.get_valid_filename(u'°€'), u'degEUR')
 
     def test_author_sort(self):
