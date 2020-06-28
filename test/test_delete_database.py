@@ -4,25 +4,23 @@
 from unittest import TestCase
 import time
 from helper_ui import ui_class
-from config_test import TEST_DB, base_path
-from parameterized import parameterized_class
-from helper_func import startup, debug_startup, add_dependency, remove_dependency
-
+from config_test import TEST_DB
+# from parameterized import parameterized_class
+from helper_func import startup, debug_startup
 
 
 class test_delete_database(TestCase, ui_class):
-    p=None
+    p = None
     driver = None
 
     @classmethod
     def setUpClass(cls):
         try:
-            startup(cls, cls.py_version, {'config_calibre_dir':TEST_DB})
+            startup(cls, cls.py_version, {'config_calibre_dir': TEST_DB})
             time.sleep(3)
-        except Exception as e:
+        except Exception:
             cls.driver.quit()
             cls.p.kill()
-
 
     @classmethod
     def tearDownClass(cls):
@@ -58,5 +56,3 @@ class test_delete_database(TestCase, ui_class):
         self.assertEqual(0, len(list_element))
         list_element = self.goto_page("nav_cat")
         self.assertEqual(0, len(list_element))
-
-

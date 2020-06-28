@@ -133,14 +133,14 @@ class ui_class():
         else:
             return False
 
-    @classmethod
+    '''@classmethod
     def forgot_password(cls, user):
         cls.goto_page('login')
         username = cls.driver.find_element_by_name("username")
         submit = cls.driver.find_element_by_name("forgot")
         username.send_keys(user)
         submit.click()
-        return bool(cls.check_element_on_page((By.ID, "flash_info")))
+        return bool(cls.check_element_on_page((By.ID, "flash_info")))'''
 
 
     @classmethod

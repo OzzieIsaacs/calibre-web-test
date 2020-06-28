@@ -15,7 +15,7 @@ from config_test import CALIBRE_WEB_PATH, TEST_DB, BOOT_TIME
 import re
 import sys
 
-from parameterized import parameterized_class
+# from parameterized import parameterized_class
 
 '''@parameterized_class([
    { "py_version": u'/usr/bin/python'},
@@ -245,13 +245,13 @@ class test_cli(unittest.TestCase, ui_class):
 
     def test_bind_to_single_interface(self):
         address = get_Host_IP()
-        p = process_open([self.py_version, os.path.join(CALIBRE_WEB_PATH, u'cps.py'), '-i', 'http://'+address], (1))
+        p = process_open([self.py_version, os.path.join(CALIBRE_WEB_PATH, u'cps.py'), '-i', 'http://'+address], [1])
         time.sleep(2)
         if p.poll() is None:
             p.kill()
         nextline = p.communicate()[0]
         self.assertIsNotNone(re.findall('Illegal IP address string', nextline))
-        p = process_open([self.py_version, os.path.join(CALIBRE_WEB_PATH, u'cps.py'), '-i', address], (1))
+        p = process_open([self.py_version, os.path.join(CALIBRE_WEB_PATH, u'cps.py'), '-i', address], [1])
 
         time.sleep(BOOT_TIME)
         # navigate to the application home page
@@ -303,9 +303,9 @@ class test_cli(unittest.TestCase, ui_class):
     # stop process A
     def test_already_started(self):
         os.chdir(CALIBRE_WEB_PATH)
-        p1 = process_open([self.py_version, u'cps.py'], (1))
+        p1 = process_open([self.py_version, u'cps.py'], [1])
         time.sleep(BOOT_TIME)
-        p2 = process_open([self.py_version, u'cps.py'], (1))
+        p2 = process_open([self.py_version, u'cps.py'], [1]]
         time.sleep(BOOT_TIME)
         result = p2.poll()
         if result is None:

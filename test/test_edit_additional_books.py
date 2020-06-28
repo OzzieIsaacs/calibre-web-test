@@ -9,7 +9,7 @@ from selenium.webdriver.common.by import By
 import time
 from helper_ui import ui_class
 from config_test import TEST_DB, base_path, BOOT_TIME
-from parameterized import parameterized_class
+from .parameterized import parameterized_class
 from helper_func import startup, debug_startup, add_dependency, remove_dependency, unrar_path, is_unrar_not_present
 import requests
 
@@ -125,7 +125,7 @@ class test_edit_additional_books(TestCase, ui_class):
         self.assertEqual('test text', details['cust_columns'][2]['value'])
         os.rmdir(sub_folder)
 
-        # change permission of folder -> denied because of access rights
+        # change permission of folder -> delete denied because of access rights
         os.chmod(book_path, 0o400)
         self.delete_book(7)
         self.assertTrue(self.check_element_on_page((By.ID, "flash_alert")))
@@ -142,6 +142,8 @@ class test_edit_additional_books(TestCase, ui_class):
         self.delete_book(5)
         self.assertTrue(self.check_element_on_page((By.ID, "flash_success")))
         self.assertFalse(os.path.isdir(os.path.join(TEST_DB, 'John Doe')))
+
+        # ToDo: what happens if folder isn't valid and no book or author folder is present?
 
     def test_writeonly_path(self):
         self.fill_view_config({'config_read_column': "Custom Bool 1 Ä"})
@@ -200,3 +202,6 @@ class test_edit_additional_books(TestCase, ui_class):
 
         book_path = os.path.join(TEST_DB, 'John Doe', 'Buuko (7)')
         self.assertTrue(os.path.isdir(book_path))
+
+    def test_writeonly_database(self):
+        pass

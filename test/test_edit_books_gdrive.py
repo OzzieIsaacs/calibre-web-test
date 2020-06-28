@@ -34,7 +34,7 @@ class test_edit_books_gdrive(unittest.TestCase, ui_class):
             pass
         shutil.rmtree(TEST_DB,ignore_errors=True)
         shutil.copytree('./Calibre_db', TEST_DB)
-        cls.p = process_open([u"python", os.path.join(CALIBRE_WEB_PATH,u'cps.py')],(1))
+        cls.p = process_open([u"python", os.path.join(CALIBRE_WEB_PATH,u'cps.py')],[1])
 
         # create a new Firefox session
         cls.driver = webdriver.Firefox()

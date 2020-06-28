@@ -40,7 +40,7 @@ def startup(inst, pyVersion, config, login=True):
         pass
     shutil.rmtree(TEST_DB, ignore_errors=True)
     shutil.copytree('./Calibre_db', TEST_DB)
-    inst.p = process_open([pyVersion, os.path.join(CALIBRE_WEB_PATH, u'cps.py')], (1), sout=None)
+    inst.p = process_open([pyVersion, os.path.join(CALIBRE_WEB_PATH, u'cps.py')], [1], sout=None)
 
     # create a new Firefox session
     inst.driver = webdriver.Firefox()

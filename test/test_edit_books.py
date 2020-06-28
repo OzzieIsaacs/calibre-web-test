@@ -9,18 +9,19 @@ from selenium.webdriver.common.keys import Keys
 import time
 from helper_ui import ui_class
 from config_test import TEST_DB, base_path
-from parameterized import parameterized_class
+# from parameterized import parameterized_class
 from helper_func import startup, debug_startup, add_dependency, remove_dependency
 import requests
+
 
 '''@parameterized_class([
    { "py_version": u'/usr/bin/python'},
    { "py_version": u'/usr/bin/python3'}
 ],names=('Python27','Python36'))'''
 class test_edit_books(TestCase, ui_class):
-    p=None
+    p = None
     driver = None
-    dependencys = ['Pillow','lxml']
+    dependencys = ['Pillow', 'lxml']
     # py_version = u'/usr/bin/python3'
 
     @classmethod
@@ -28,12 +29,11 @@ class test_edit_books(TestCase, ui_class):
         add_dependency(cls.dependencys, cls.__name__)
 
         try:
-            startup(cls, cls.py_version, {'config_calibre_dir':TEST_DB})
+            startup(cls, cls.py_version, {'config_calibre_dir': TEST_DB})
             time.sleep(3)
-        except Exception as e:
+        except Exception:
             cls.driver.quit()
             cls.p.kill()
-
 
     @classmethod
     def tearDownClass(cls):
@@ -70,69 +70,68 @@ class test_edit_books(TestCase, ui_class):
     def test_edit_title(self):
         self.get_book_details(4)
         self.check_element_on_page((By.ID, "edit_book")).click()
-        self.edit_book(content={'book_title':u'O0ü 执'})
-        values=self.get_book_details()
-        self.assertEqual(u'O0ü 执',values['title'])
-        self.assertTrue(os.path.isdir(os.path.join(TEST_DB,values['author'][0],'O0u Zhi (4)')))
+        self.edit_book(content={'book_title': u'O0ü 执'})
+        values = self.get_book_details()
+        self.assertEqual(u'O0ü 执', values['title'])
+        self.assertTrue(os.path.isdir(os.path.join(TEST_DB, values['author'][0], 'O0u Zhi (4)')))
         self.assertFalse(os.path.isdir(os.path.join(TEST_DB, values['author'][0],
-                                                  'Very long extra super turbo cool tit (4)')))
+                                                    'Very long extra super turbo cool tit (4)')))
         self.check_element_on_page((By.ID, "edit_book")).click()
-        with open(os.path.join(TEST_DB,values['author'][0],'O0u Zhi (4)','test.dum'), 'wb') as fout:
+        with open(os.path.join(TEST_DB, values['author'][0], 'O0u Zhi (4)', 'test.dum'), 'wb') as fout:
             fout.write(os.urandom(124))
-        self.edit_book(content={'book_title':u' O0ü 执'},detail_v=True)
+        self.edit_book(content={'book_title': u' O0ü 执'}, detail_v=True)
         title = self.check_element_on_page((By.ID, "book_title"))
         # calibre strips spaces in beginning
         self.assertEqual(u'O0ü 执', title.get_attribute('value'))
-        self.assertTrue(os.path.isdir(os.path.join(TEST_DB,values['author'][0],'O0u Zhi (4)')))
-        self.edit_book(content={'book_title':u'O0ü name'},detail_v=True)
+        self.assertTrue(os.path.isdir(os.path.join(TEST_DB, values['author'][0], 'O0u Zhi (4)')))
+        self.edit_book(content={'book_title': u'O0ü name'}, detail_v=True)
         title = self.check_element_on_page((By.ID, "book_title"))
         # calibre strips spaces in the end
         self.assertEqual(u'O0ü name', title.get_attribute('value'))
-        self.assertTrue(os.path.isdir(os.path.join(TEST_DB,values['author'][0],'O0u name (4)')))
+        self.assertTrue(os.path.isdir(os.path.join(TEST_DB, values['author'][0], 'O0u name (4)')))
         self.assertFalse(os.path.isdir(os.path.join(TEST_DB, values['author'][0], 'O0u Zhi (4)')))
-        self.edit_book(content={'book_title':''})
+        self.edit_book(content={'book_title': ''})
         values=self.get_book_details()
-        os.path.join(TEST_DB,values['author'][0],'Unknown')
+        os.path.join(TEST_DB, values['author'][0], 'Unknown')
         self.assertEqual('Unknown', values['title'])
-        self.assertTrue(os.path.isdir(os.path.join(TEST_DB,values['author'][0],'Unknown (4)')))
+        self.assertTrue(os.path.isdir(os.path.join(TEST_DB, values['author'][0], 'Unknown (4)')))
         self.check_element_on_page((By.ID, "edit_book")).click()
-        self.edit_book(content={'book_title':'The camicdemo'})
-        values=self.get_book_details()
-        os.path.join(TEST_DB,values['author'][0],'The camicdemo')
-        self.assertEqual('The camicdemo',values['title'])
+        self.edit_book(content={'book_title': 'The camicdemo'})
+        values = self.get_book_details()
+        os.path.join(TEST_DB, values['author'][0], 'The camicdemo')
+        self.assertEqual('The camicdemo', values['title'])
         self.goto_page('nav_new')
         books = self.get_books_displayed()
         self.assertEqual('The camicdemo', books[1][8]['title'])
-        file_path=os.path.join(TEST_DB, values['author'][0], 'The camicdemo (4)')
+        file_path = os.path.join(TEST_DB, values['author'][0], 'The camicdemo (4)')
         not_file_path = os.path.join(TEST_DB, values['author'][0], 'camicdemo')
         os.renames(file_path, not_file_path)
         self.get_book_details(4)
         self.check_element_on_page((By.ID, "edit_book")).click()
         self.edit_book(content={'book_title': u'Not found'})
-        self.check_element_on_page((By.ID,'flash_alert'))
+        self.check_element_on_page((By.ID, 'flash_alert'))
         title = self.check_element_on_page((By.ID, "book_title"))
         # calibre strips spaces in the end
         self.assertEqual('The camicdemo', title.get_attribute('value'))
         os.renames(not_file_path, file_path)
         # missing cover file is not detected, and cover file is moved
-        cover_file=os.path.join(TEST_DB, values['author'][0], 'The camicdemo (4)','cover.jpg')
-        not_cover_file = os.path.join(TEST_DB, values['author'][0], 'The camicdemo (4)','no_cover.jpg')
+        cover_file = os.path.join(TEST_DB, values['author'][0], 'The camicdemo (4)', 'cover.jpg')
+        not_cover_file = os.path.join(TEST_DB, values['author'][0], 'The camicdemo (4)', 'no_cover.jpg')
         os.renames(cover_file, not_cover_file)
-        self.edit_book(content={'book_title': u'No Cover'},detail_v=True)
+        self.edit_book(content={'book_title': u'No Cover'}, detail_v=True)
         title = self.check_element_on_page((By.ID, "book_title"))
         self.assertEqual('No Cover', title.get_attribute('value'))
-        cover_file=os.path.join(TEST_DB, values['author'][0], 'No Cover (4)','cover.jpg')
-        not_cover_file = os.path.join(TEST_DB, values['author'][0], 'No Cover (4)','no_cover.jpg')
+        cover_file = os.path.join(TEST_DB, values['author'][0], 'No Cover (4)', 'cover.jpg')
+        not_cover_file = os.path.join(TEST_DB, values['author'][0], 'No Cover (4)', 'no_cover.jpg')
         os.renames(not_cover_file, cover_file)
-        self.edit_book(content={'book_title': u'Pipo|;.:'},detail_v=True)
+        self.edit_book(content={'book_title': u'Pipo|;.:'}, detail_v=True)
         title = self.check_element_on_page((By.ID, "book_title"))
         self.assertEqual(u'Pipo|;.:', title.get_attribute('value'))
         self.edit_book(content={'book_title': u'Very long extra super turbo cool title without any issue of displaying including ö utf-8 characters'})
-        ele=self.check_element_on_page((By.ID, "title"))
+        ele = self.check_element_on_page((By.ID, "title"))
         self.assertEqual(ele.text, u'Very long extra super turbo cool title without any issue of ...')
         self.check_element_on_page((By.ID, "edit_book")).click()
         self.edit_book(content={'book_title': u'book6'})
-
 
 
     # goto Book 2

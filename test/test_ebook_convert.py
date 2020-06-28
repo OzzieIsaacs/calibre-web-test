@@ -1,7 +1,7 @@
 #!/usr/bin/env python
 # -*- coding: utf-8 -*-
 
-from helper_email_convert import AIOSMTPServer
+from .helper_email_convert import AIOSMTPServer
 import unittest
 import os
 from selenium.webdriver.common.by import By
@@ -10,7 +10,7 @@ import time
 from helper_ui import ui_class
 from config_test import CALIBRE_WEB_PATH, TEST_DB
 import helper_email_convert
-from parameterized import parameterized_class
+# from parameterized import parameterized_class
 from helper_func import startup
 
 

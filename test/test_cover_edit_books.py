@@ -4,13 +4,12 @@
 
 from unittest import TestCase
 import os
-import unittest
 from selenium.webdriver.common.by import By
 import time
 from helper_ui import ui_class
-from config_test import TEST_DB, base_path
-from parameterized import parameterized_class
-from helper_func import startup, debug_startup, add_dependency, remove_dependency, unrar_path, is_unrar_not_present
+from config_test import TEST_DB
+# from parameterized import parameterized_class
+from helper_func import startup, debug_startup, add_dependency, remove_dependency
 import requests
 from helper_proxy import Proxy, val
 

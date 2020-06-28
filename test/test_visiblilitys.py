@@ -4,38 +4,35 @@ import unittest
 from selenium.webdriver.common.by import By
 from selenium.webdriver.support.ui import WebDriverWait
 from selenium.webdriver.support import expected_conditions as EC
-from selenium.webdriver.common.keys import Keys
+
 import time
 import requests
 from helper_ui import ui_class
-from helper_ui import RESTRICT_TAG_ME, RESTRICT_COL_ME, RESTRICT_TAG_USER, RESTRICT_COL_USER
+from helper_ui import RESTRICT_TAG_ME, RESTRICT_COL_USER
 from config_test import TEST_DB
-from parameterized import parameterized_class
+# from parameterized import parameterized_class
 from helper_func import startup, debug_startup
 
 '''
-ToDOs: suche:
+ToDOs: search:
 buchtitel (leerzeichen, unicode zeichen, kein treffer)
 author (nachname, „name, vorname“, vornname jeweils mit unicode, kein treffer)
 serie (leerzeichen, unicode, kein treffer)
-ergebnis zu shelf hinzufügen (kein ergebnis vorhanden, public shelf, private shelf, buch schon vorhanden, kein shelf vorhanden)
+ergebnis zu shelf hinzufügen (kein ergebnis vorhanden, public shelf, private shelf, buch schon vorhanden, kein shelf 
+vorhanden)
 '''
 
 
-'''@parameterized_class([
-   { "py_version": u'/usr/bin/python'},
-   { "py_version": u'/usr/bin/python3'},
-],names=('Python27','Python36'))'''
-class calibre_web_visibilitys(unittest.TestCase, ui_class):
+class TestCalibreWebVisibilitys(unittest.TestCase, ui_class):
 
-    p=None
+    p = None
     driver = None
 
     @classmethod
     def setUpClass(cls):
         try:
-            startup(cls, cls.py_version, {'config_calibre_dir':TEST_DB})
-        except:
+            startup(cls, cls.py_version, {'config_calibre_dir': TEST_DB})
+        except Exception:
             cls.driver.quit()
             cls.p.kill()
 
@@ -104,16 +101,14 @@ class calibre_web_visibilitys(unittest.TestCase, ui_class):
         self.assertTrue(self.goto_page('nav_rand'))
         self.assertFalse(self.check_element_on_page((By.ID, "books_rand")))
 
-
-
     # checks if message for empty email working, sets e-mail for admin
     def test_user_email_available(self):
         self.driver.find_element_by_id("top_user").click()
         WebDriverWait(self.driver, 5).until(EC.presence_of_element_located((By.ID, "email")))
-        #emailcontent = self.driver.find_element_by_id("email").get_attribute("value")
-        submit=self.driver.find_element_by_id("submit")
-        #self.assertEqual(emailcontent,u'')
-        #submit.click()
+        # emailContent = self.driver.find_element_by_id("email").get_attribute("value")
+        submit = self.driver.find_element_by_id("submit")
+        # self.assertEqual(emailContent,u'')
+        # submit.click()
         self.driver.find_element_by_id("email").clear()
         self.driver.find_element_by_id("email").send_keys("alfa@web.de")
         submit.click()
@@ -127,7 +122,7 @@ class calibre_web_visibilitys(unittest.TestCase, ui_class):
     # checks if admin can configure sidebar for random view
     def test_user_visibility_sidebar(self):
         self.goto_page('user_setup')
-        self.change_user({'show_32':0})
+        self.change_user({'show_32': 0})
         self.assertTrue(self.check_element_on_page((By.ID, "flash_success")))
         self.assertFalse(self.check_element_on_page((By.ID, "nav_rand")))
         self.goto_page("nav_new")
@@ -173,16 +168,16 @@ class calibre_web_visibilitys(unittest.TestCase, ui_class):
         self.goto_page("nav_unread")
         self.assertTrue(self.check_element_on_page((By.ID, "books_rand")))
         self.assertFalse(self.check_element_on_page((By.ID, "nav_rand")))
-        # Go to admin section and reenable show random view
+        # Go to admin section and re enable show random view
         self.goto_page('user_setup')
-        self.change_user({'show_32':1})
+        self.change_user({'show_32': 1})
         self.assertTrue(self.check_element_on_page((By.ID, "nav_rand")))
         self.assertTrue(self.check_element_on_page((By.ID, "flash_success")))
 
     # Test if user can change visibility of sidebar view best rated books
     def test_admin_change_visibility_rated(self):
         self.goto_page('user_setup')
-        self.change_user({'show_128':0})
+        self.change_user({'show_128': 0})
         self.assertTrue(self.check_element_on_page((By.ID, "flash_success")))
         self.assertFalse(self.check_element_on_page((By.ID, "nav_rated")))
         self.change_user({'show_128': 1})
@@ -192,7 +187,7 @@ class calibre_web_visibilitys(unittest.TestCase, ui_class):
     # Test if user can change visibility of sidebar view read and unread books
     def test_admin_change_visibility_read(self):
         self.goto_page('user_setup')
-        self.change_user({'show_256':0})
+        self.change_user({'show_256': 0})
         self.assertTrue(self.check_element_on_page((By.ID, "flash_success")))
         self.assertFalse(self.check_element_on_page((By.ID, "nav_read")))
         self.assertFalse(self.check_element_on_page((By.ID, "nav_unread")))
@@ -202,7 +197,7 @@ class calibre_web_visibilitys(unittest.TestCase, ui_class):
         self.assertTrue(self.check_element_on_page((By.ID, "nav_unread")))
         values = self.get_book_details(8)
         self.assertFalse(values['read'])
-        read = self.check_element_on_page((By.XPATH,"//*[@id='have_read_cb']"))
+        read = self.check_element_on_page((By.XPATH, "//*[@id='have_read_cb']"))
         self.assertTrue(read)
         read.click()
         values = self.get_book_details()
@@ -210,18 +205,20 @@ class calibre_web_visibilitys(unittest.TestCase, ui_class):
         self.goto_page('nav_read')
         books = self.get_books_displayed()
         self.assertEqual(1, len(books[1]))
-        self.assertEqual('Read Books (1)', self.check_element_on_page((By.XPATH, "//*[@class='discover load-more']/H2")).text)
+        self.assertEqual('Read Books (1)',
+                         self.check_element_on_page((By.XPATH, "//*[@class='discover load-more']/H2")).text)
         self.goto_page('nav_unread')
         books = self.get_books_displayed()
         self.assertEqual(10, len(books[1]))
-        self.assertEqual('Unread Books (10)', self.check_element_on_page((By.XPATH, "//*[@class='discover load-more']/H2")).text)
+        self.assertEqual('Unread Books (10)',
+                         self.check_element_on_page((By.XPATH, "//*[@class='discover load-more']/H2")).text)
         self.get_book_details(8)
         self.check_element_on_page((By.XPATH, "//*[@id='have_read_cb']")).click()
 
     # checks if admin can change user language
     def test_admin_change_visibility_language(self):
         self.goto_page('user_setup')
-        self.change_user({'show_2':0})
+        self.change_user({'show_2': 0})
         self.assertTrue(self.check_element_on_page((By.ID, "flash_success")))
         self.assertFalse(self.check_element_on_page((By.ID, "nav_lang")))
         self.change_user({'show_2': 1})
@@ -231,7 +228,7 @@ class calibre_web_visibilitys(unittest.TestCase, ui_class):
     # checks if admin can change hot books
     def test_admin_change_visibility_hot(self):
         self.goto_page('user_setup')
-        self.change_user({'show_16':0})
+        self.change_user({'show_16': 0})
         self.assertTrue(self.check_element_on_page((By.ID, "flash_success")))
         self.assertFalse(self.check_element_on_page((By.ID, "nav_hot")))
         self.change_user({'show_16': 1})
@@ -241,7 +238,7 @@ class calibre_web_visibilitys(unittest.TestCase, ui_class):
     # checks if admin can change random books
     def test_admin_change_visibility_random(self):
         self.goto_page('user_setup')
-        self.change_user({'show_32':0})
+        self.change_user({'show_32': 0})
         self.assertTrue(self.check_element_on_page((By.ID, "flash_success")))
         self.assertFalse(self.check_element_on_page((By.ID, "nav_rand")))
         self.change_user({'show_32': 1})
@@ -250,11 +247,10 @@ class calibre_web_visibilitys(unittest.TestCase, ui_class):
         self.goto_page("nav_rand")
         self.assertEqual(11, len(self.get_books_displayed()[1]))
 
-
     # checks if admin can change series
     def test_admin_change_visibility_series(self):
         self.goto_page('user_setup')
-        self.change_user({'show_4':0})
+        self.change_user({'show_4': 0})
         self.assertTrue(self.check_element_on_page((By.ID, "flash_success")))
         self.assertFalse(self.check_element_on_page((By.ID, "nav_serie")))
         self.change_user({'show_4': 1})
@@ -264,38 +260,37 @@ class calibre_web_visibilitys(unittest.TestCase, ui_class):
     # checks if admin can change publisher
     def test_admin_change_visibility_publisher(self):
         self.goto_page('user_setup')
-        self.change_user({'show_4096':0})
+        self.change_user({'show_4096': 0})
         self.assertTrue(self.check_element_on_page((By.ID, "flash_success")))
         self.assertFalse(self.check_element_on_page((By.ID, "nav_publisher")))
         self.change_user({'show_4096': 1})
         self.assertTrue(self.check_element_on_page((By.ID, "flash_success")))
         self.assertTrue(self.check_element_on_page((By.ID, "nav_publisher")))
 
-
     # checks if admin can change ratings
     def test_admin_change_visibility_rating(self):
         self.goto_page('user_setup')
-        self.change_user({'show_8192':0})
+        self.change_user({'show_8192': 0})
         self.assertTrue(self.check_element_on_page((By.ID, "flash_success")))
         self.assertFalse(self.check_element_on_page((By.ID, "nav_rate")))
         self.change_user({'show_8192': 1})
         self.assertTrue(self.check_element_on_page((By.ID, "flash_success")))
         self.assertTrue(self.check_element_on_page((By.ID, "nav_rate")))
 
-    # checks if admin can change fileformats
+    # checks if admin can change fileFormats
     def test_admin_change_visibility_file_formats(self):
         self.goto_page('user_setup')
-        self.change_user({'show_16384':0})
+        self.change_user({'show_16384': 0})
         self.assertTrue(self.check_element_on_page((By.ID, "flash_success")))
         self.assertFalse(self.check_element_on_page((By.ID, "nav_format")))
         self.change_user({'show_16384': 1})
         self.assertTrue(self.check_element_on_page((By.ID, "flash_success")))
         self.assertTrue(self.check_element_on_page((By.ID, "nav_format")))
 
-    # checks if admin can change fileformats
+    # checks if admin can change fileFormats
     def test_admin_change_visibility_archived(self):
         self.goto_page('user_setup')
-        self.change_user({'show_32768':0})
+        self.change_user({'show_32768': 0})
         self.assertTrue(self.check_element_on_page((By.ID, "flash_success")))
         self.assertFalse(self.check_element_on_page((By.ID, "nav_archived")))
         self.change_user({'show_32768': 1})
@@ -309,7 +304,7 @@ class calibre_web_visibilitys(unittest.TestCase, ui_class):
         time.sleep(5)
         self.goto_page('user_setup')
         time.sleep(5)
-        self.change_user({'show_64':0,'email':'a@f.de'})
+        self.change_user({'show_64': 0, 'email': 'a@f.de'})
         time.sleep(5)
         self.change_user({'show_64': 0, 'email': 'a@f.de'})
         time.sleep(5)
@@ -322,10 +317,10 @@ class calibre_web_visibilitys(unittest.TestCase, ui_class):
     # checks if admin can change categories
     def test_admin_change_visibility_category(self):
         self.goto_page('user_setup')
-        self.change_user({'show_8':0})
+        self.change_user({'show_8': 0})
         self.assertTrue(self.check_element_on_page((By.ID, "flash_success")))
         # Category not visible
-        self.assertFalse(self.check_element_on_page((By.ID, "nav_cat"))) # self.driver.find_elements_by_id("nav_author").__len__())
+        self.assertFalse(self.check_element_on_page((By.ID, "nav_cat")))
         self.change_user({'show_8': 1})
         self.assertTrue(self.check_element_on_page((By.ID, "flash_success")))
         self.assertTrue(self.check_element_on_page((By.ID, "nav_cat")))
@@ -334,7 +329,7 @@ class calibre_web_visibilitys(unittest.TestCase, ui_class):
     def test_admin_change_password(self):
         self.change_current_user_password("1234")
         self.logout()
-        self.assertFalse(self.login("admin","admin123"))
+        self.assertFalse(self.login("admin", "admin123"))
         self.assertTrue(self.login("admin", "1234"))
         self.assertTrue(self.change_current_user_password("admin123"))
 
@@ -352,7 +347,6 @@ class calibre_web_visibilitys(unittest.TestCase, ui_class):
         back.click()
         self.assertTrue(self.check_element_on_page((By.ID, "admin_edit_email")))
 
-
     # checks if admin can add a new user
     def test_admin_add_user(self):
         # goto admin page
@@ -362,46 +356,44 @@ class calibre_web_visibilitys(unittest.TestCase, ui_class):
         new_user = self.check_element_on_page((By.ID, "admin_new_user"))
         if new_user:
             row_count = len(self.get_user_list())
-            self.assertEqual(row_count,1)
+            self.assertEqual(row_count, 1)
             # goto add user page
             self.create_user(None, {'email': 'alfa@web.com'})
             self.assertTrue(self.check_element_on_page((By.ID, "flash_alert")))
             self.create_user('User', {'email': 'alfa@web.com'})
             self.assertTrue(self.check_element_on_page((By.ID, "flash_alert")))
-            self.create_user('User', {'password':u"Guêst",'email': 'alfa@web.com'})
+            self.create_user('User', {'password': u"Guêst", 'email': 'alfa@web.com'})
             self.assertTrue(self.check_element_on_page((By.ID, "flash_success")))
             # check if on admin page
             self.goto_page("admin_setup")
             if self.check_element_on_page((By.ID, "admin_new_user")):
                 row_count = len(self.get_user_list())
-                self.assertEqual(row_count,2)
+                self.assertEqual(row_count, 2)
                 return
         self.assertIsNone("Error creating new users")
 
-
     def test_search_string(self):
-        self.adv_search({'book_title':'Hallo'}, get=False)
+        self.adv_search({'book_title': 'Hallo'}, get=False)
         field = self.check_element_on_page((By.ID, "query"))
         self.assertEqual('', field.get_attribute('value'))
         self.search('Hallo')
         field = self.check_element_on_page((By.ID, "query"))
-        self.assertEqual('Hallo',field.get_attribute('value'))
-
+        self.assertEqual('Hallo', field.get_attribute('value'))
 
     def test_search_functions(self):
         r = requests.session()
-        payload = {'username': 'admin', 'password': 'admin123', 'submit':"", 'next':"/", "remember_me":"on"}
-        r.post('http://127.0.0.1:8083/login',data=payload)
+        payload = {'username': 'admin', 'password': 'admin123', 'submit': "", 'next': "/", "remember_me": "on"}
+        r.post('http://127.0.0.1:8083/login', data=payload)
         resp = r.get('http://127.0.0.1:8083/search')
-        self.assertEqual(200,resp.status_code)
+        self.assertEqual(200, resp.status_code)
         resp = r.get('http://127.0.0.1:8083/advanced_search')
         self.assertEqual(200, resp.status_code)
         r.close()
 
     def test_restrict_tags(self):
         # create shelf with Genot content
-        elements=self.adv_search('',get=True)
-        self.assertEqual(len(elements['include_tags']),1)
+        elements = self.adv_search('', get=True)
+        self.assertEqual(len(elements['include_tags']), 1)
         self.assertEqual(len(elements['exclude_tags']), 1)
         self.create_shelf('restrict', False)
         self.assertTrue(self.check_element_on_page((By.ID, "flash_success")))
@@ -423,17 +415,17 @@ class calibre_web_visibilitys(unittest.TestCase, ui_class):
         self.goto_page('nav_new')
         self.list_shelfs('restrict')['ele'].click()
         shelf_books = self.get_shelf_books_displayed()
-        self.assertEqual(len(shelf_books),3)
+        self.assertEqual(len(shelf_books), 3)
         restricts = self.list_restrictions(RESTRICT_TAG_ME)
         self.assertEqual(len(restricts), 0)
-        self.add_restrictions('Genot',allow=False)
+        self.add_restrictions('Genot', allow=False)
         close = self.check_element_on_page((By.ID, "restrict_close"))
         self.assertTrue(close)
         close.click()
         time.sleep(2)
         self.list_shelfs('restrict')['ele'].click()
         shelf_books = self.get_shelf_books_displayed()
-        self.assertEqual(len(shelf_books),3)
+        self.assertEqual(len(shelf_books), 3)
         restricts = self.list_restrictions(RESTRICT_TAG_ME)
         self.assertEqual(len(restricts), 1)
         self.delete_restrictions('d0')
@@ -454,17 +446,17 @@ class calibre_web_visibilitys(unittest.TestCase, ui_class):
         self.check_element_on_page((By.ID, "order_shelf")).click()
         order = self.get_order_shelf_list()
         self.assertEqual(len(order), 3)
-        elements=self.adv_search('',get=True)
-        self.assertEqual(len(elements['include_tags']),0)
+        elements = self.adv_search('', get=True)
+        self.assertEqual(len(elements['include_tags']), 0)
         self.assertEqual(len(elements['exclude_tags']), 0)
-        self.assertEqual(len(self.adv_search({'book_title':'book10'})),0)
+        self.assertEqual(len(self.adv_search({'book_title': 'book10'})), 0)
         self.assertEqual(len(self.adv_search({'bookAuthor': 'Lulu de Marco'})), 0)
         self.assertEqual(len(self.search('Lulu de Marco')), 0)
         self.assertEqual(len(self.search('book10')), 0)
         self.assertEqual(len(self.search('Gênot')), 0)
         self.goto_page('nav_new')
         self.assertEqual(len(self.get_books_displayed()[1]), 7)
-        restricts = self.list_restrictions(RESTRICT_TAG_ME)
+        self.list_restrictions(RESTRICT_TAG_ME)
         self.delete_restrictions('d0')
         close = self.check_element_on_page((By.ID, "restrict_close"))
         close.click()
@@ -495,17 +487,17 @@ class calibre_web_visibilitys(unittest.TestCase, ui_class):
         self.goto_page('nav_new')
         self.list_shelfs('allow')['ele'].click()
         shelf_books = self.get_shelf_books_displayed()
-        self.assertEqual(len(shelf_books),3)
+        self.assertEqual(len(shelf_books), 3)
         restricts = self.list_restrictions(RESTRICT_TAG_ME)
         self.assertEqual(len(restricts), 0)
-        self.add_restrictions('Genot',allow=True)
+        self.add_restrictions('Genot', allow=True)
         close = self.check_element_on_page((By.ID, "restrict_close"))
         self.assertTrue(close)
         close.click()
         time.sleep(2)
         self.list_shelfs('allow')['ele'].click()
         shelf_books = self.get_shelf_books_displayed()
-        self.assertEqual(len(shelf_books),0)
+        self.assertEqual(len(shelf_books), 0)
         restricts = self.list_restrictions(RESTRICT_TAG_ME)
         self.assertEqual(len(restricts), 1)
         self.delete_restrictions('a0')
@@ -526,7 +518,7 @@ class calibre_web_visibilitys(unittest.TestCase, ui_class):
         self.check_element_on_page((By.ID, "order_shelf")).click()
         order = self.get_order_shelf_list()
         self.assertEqual(len(order), 3)
-        elements=self.adv_search('',get=True)
+        elements = self.adv_search('', get=True)
         self.assertEqual(len(elements['include_tags']), 1)
         self.assertEqual(len(elements['exclude_tags']), 1)
         self.assertEqual(len(elements['include_serie']), 1)
@@ -535,7 +527,7 @@ class calibre_web_visibilitys(unittest.TestCase, ui_class):
         self.assertEqual(len(elements['exclude_language']), 2)
         self.assertEqual(len(elements['include_extension']), 3)
         self.assertEqual(len(elements['exclude_extension']), 3)
-        self.assertEqual(len(self.adv_search({'book_title':'book10'})),1)
+        self.assertEqual(len(self.adv_search({'book_title': 'book10'})), 1)
         self.assertEqual(len(self.adv_search({'book_title': 'Der Buchtitel'})), 0)
         self.assertEqual(len(self.adv_search({'bookAuthor': 'Peter Parker'})), 1)
         self.assertEqual(len(self.search('Lulu de Marco')), 1)
@@ -545,7 +537,7 @@ class calibre_web_visibilitys(unittest.TestCase, ui_class):
         self.assertEqual(len(self.search('Der Buchtitel')), 0)
         self.goto_page('nav_new')
         self.assertEqual(len(self.get_books_displayed()[1]), 4)
-        restricts = self.list_restrictions(RESTRICT_TAG_ME)
+        self.list_restrictions(RESTRICT_TAG_ME)
         self.delete_restrictions('a0')
         close = self.check_element_on_page((By.ID, "restrict_close"))
         close.click()
@@ -556,20 +548,20 @@ class calibre_web_visibilitys(unittest.TestCase, ui_class):
         self.check_element_on_page((By.ID, "confirm")).click()
 
     def test_restrict_columns(self):
-        self.edit_book(10, custom_content={"Custom Text 人物 *'()&":'test'})
+        self.edit_book(10, custom_content={"Custom Text 人物 *'()&": 'test'})
         self.edit_book(11, custom_content={"Custom Text 人物 *'()&": 'test'})
         self.edit_book(1, custom_content={"Custom Text 人物 *'()&": 'test'})
         self.edit_book(9, custom_content={"Custom Text 人物 *'()&": 'test'})
         restricts = self.list_restrictions(RESTRICT_COL_USER, username="admin")
         self.assertEqual(len(restricts), 0)
-        self.add_restrictions('testo',allow=False)
+        self.add_restrictions('testo', allow=False)
         close = self.check_element_on_page((By.ID, "restrict_close"))
         self.assertTrue(close)
         close.click()
         time.sleep(2)
         self.goto_page('nav_new')
         books = self.get_books_displayed()
-        self.assertEqual(len(books[1]),11)
+        self.assertEqual(len(books[1]), 11)
         restricts = self.list_restrictions(RESTRICT_COL_USER, username="admin")
         self.assertEqual(len(restricts), 1)
         self.delete_restrictions('d0')
@@ -587,8 +579,8 @@ class calibre_web_visibilitys(unittest.TestCase, ui_class):
         self.goto_page('nav_new')
         books = self.get_books_displayed()
         self.assertEqual(len(books[1]), 11)
-        self.fill_view_config({'config_restricted_column':"Custom Text 人物 *'()&"})
-        elements=self.adv_search('',get=True)
+        self.fill_view_config({'config_restricted_column': "Custom Text 人物 *'()&"})
+        elements = self.adv_search('', get=True)
         self.assertEqual(len(elements['include_tags']), 1)
         self.assertEqual(len(elements['exclude_tags']), 1)
         self.assertEqual(len(elements['include_serie']), 1)
@@ -597,7 +589,7 @@ class calibre_web_visibilitys(unittest.TestCase, ui_class):
         self.assertEqual(len(elements['exclude_language']), 2)
         self.assertEqual(len(elements['include_extension']), 4)
         self.assertEqual(len(elements['exclude_extension']), 4)
-        self.assertEqual(len(self.adv_search({'book_title':'Buchtitel'})),0)
+        self.assertEqual(len(self.adv_search({'book_title': 'Buchtitel'})), 0)
         self.assertEqual(len(self.adv_search({"custom_column_10": 'test'})), 0)
         self.assertEqual(len(self.adv_search({'bookAuthor': 'Peter Parker'})), 1)
         self.assertEqual(len(self.search('Lulu de Marco')), 1)
@@ -615,7 +607,7 @@ class calibre_web_visibilitys(unittest.TestCase, ui_class):
         self.fill_view_config({'config_restricted_column': "None"})
 
     def test_allow_columns(self):
-        self.fill_view_config({'config_restricted_column':"Custom Text 人物 *'()&"})
+        self.fill_view_config({'config_restricted_column': "Custom Text 人物 *'()&"})
         self.edit_book(10, custom_content={"Custom Text 人物 *'()&": 'allow'})
         self.edit_book(11, custom_content={"Custom Text 人物 *'()&": 'allow'})
         self.edit_book(1, custom_content={"Custom Text 人物 *'()&": 'allow'})
@@ -628,7 +620,7 @@ class calibre_web_visibilitys(unittest.TestCase, ui_class):
         time.sleep(2)
         self.goto_page('nav_new')
         books = self.get_books_displayed()
-        self.assertEqual(len(books[1]),11)
+        self.assertEqual(len(books[1]), 11)
         self.list_restrictions(RESTRICT_COL_USER, username="admin")
         self.add_restrictions('allow', allow=True)
         close = self.check_element_on_page((By.ID, "restrict_close"))
@@ -638,7 +630,7 @@ class calibre_web_visibilitys(unittest.TestCase, ui_class):
         self.goto_page('nav_new')
         books = self.get_books_displayed()
         self.assertEqual(len(books[1]), 4)
-        elements=self.adv_search('', get=True)
+        elements = self.adv_search('', get=True)
         self.assertEqual(len(elements['include_tags']), 1)
         self.assertEqual(len(elements['exclude_tags']), 1)
         self.assertEqual(len(elements['include_serie']), 1)
@@ -647,7 +639,7 @@ class calibre_web_visibilitys(unittest.TestCase, ui_class):
         self.assertEqual(len(elements['exclude_language']), 1)
         self.assertEqual(len(elements['include_extension']), 3)
         self.assertEqual(len(elements['exclude_extension']), 3)
-        self.assertEqual(len(self.adv_search({'book_title':'Buchtitel'})),1)
+        self.assertEqual(len(self.adv_search({'book_title': 'Buchtitel'})), 1)
         self.assertEqual(len(self.adv_search({"custom_column_10": 'Allow'})), 4)
         self.assertEqual(len(self.adv_search({'bookAuthor': 'Peter Parker'})), 1)
         self.assertEqual(len(self.search('Lulu de Marco')), 0)
@@ -672,31 +664,31 @@ class calibre_web_visibilitys(unittest.TestCase, ui_class):
         self.assertTrue(search['cust_columns']['Custom Bool 1 Ä'])
         self.get_book_details(5)
         self.check_element_on_page((By.ID, "edit_book")).click()
-        self.edit_book(custom_content={u'Custom Bool 1 Ä':u'No'})
+        self.edit_book(custom_content={u'Custom Bool 1 Ä': u'No'})
         self.get_book_details(7)
         self.check_element_on_page((By.ID, "edit_book")).click()
-        self.edit_book(custom_content={u'Custom Bool 1 Ä':u'Yes'})
+        self.edit_book(custom_content={u'Custom Bool 1 Ä': u'Yes'})
         details = self.get_book_details(5)
         self.assertEqual(details['cust_columns'][0]['value'], 'remove')
         details = self.get_book_details(7)
         self.assertEqual(details['cust_columns'][0]['value'], 'ok')
         self.goto_page("nav_read")
         list_element = self.get_books_displayed()
-        self.assertEqual(len(list_element[1]),0)
+        self.assertEqual(len(list_element[1]), 0)
         self.goto_page("nav_unread")
         list_element = self.get_books_displayed()
-        self.assertEqual(len(list_element[1]),11)
+        self.assertEqual(len(list_element[1]), 11)
         self.fill_view_config({'config_read_column': "Custom Bool 1 Ä"})
         self.assertTrue(self.check_element_on_page((By.ID, "flash_success")))
         self.goto_page("nav_read")
         list_element = self.get_books_displayed()
-        self.assertEqual(len(list_element[1]),1)
+        self.assertEqual(len(list_element[1]), 1)
         self.goto_page("nav_unread")
         list_element = self.get_books_displayed()
-        self.assertEqual(len(list_element[1]),10)
+        self.assertEqual(len(list_element[1]), 10)
         details = self.get_book_details(5)
         self.assertFalse(details['read'])
-        self.assertEqual(len(details['cust_columns']),0)
+        self.assertEqual(len(details['cust_columns']), 0)
         details = self.get_book_details(7)
         self.assertTrue(details['read'])
         self.assertEqual(len(details['cust_columns']), 0)
@@ -711,15 +703,15 @@ class calibre_web_visibilitys(unittest.TestCase, ui_class):
         self.fill_view_config({'config_read_column': ""})
         self.get_book_details(5)
         self.check_element_on_page((By.ID, "edit_book")).click()
-        self.edit_book(custom_content={u'Custom Bool 1 Ä':u''})
+        self.edit_book(custom_content={u'Custom Bool 1 Ä': u''})
         self.get_book_details(7)
         self.check_element_on_page((By.ID, "edit_book")).click()
-        self.edit_book(custom_content={u'Custom Bool 1 Ä':u''})
+        self.edit_book(custom_content={u'Custom Bool 1 Ä': u''})
 
     def test_hide_custom_column(self):
         self.get_book_details(5)
         self.check_element_on_page((By.ID, "edit_book")).click()
-        self.edit_book(custom_content={u'Custom Bool 1 Ä':u'No',
+        self.edit_book(custom_content={u'Custom Bool 1 Ä': u'No',
                                        'Custom Rating 人物': 5,
                                        'Custom Integer 人物': 1,
                                        'Custom categories\|, 人物': 'Test',
@@ -756,7 +748,7 @@ class calibre_web_visibilitys(unittest.TestCase, ui_class):
         details = self.get_book_details(5)
         self.assertFalse(details.get('cust_columns'))
         self.check_element_on_page((By.ID, "edit_book")).click()
-        self.edit_book(custom_content={u'Custom Bool 1 Ä':u'',
+        self.edit_book(custom_content={u'Custom Bool 1 Ä': u'',
                                        'Custom Rating 人物': '',
                                        'Custom Integer 人物': '',
                                        'Custom categories\|, 人物': '',
@@ -767,7 +759,7 @@ class calibre_web_visibilitys(unittest.TestCase, ui_class):
         self.fill_view_config({'config_columns_to_ignore': ""})
 
     def test_authors_max_settings(self):
-        self.create_shelf('Author',False)
+        self.create_shelf('Author', False)
         self.assertTrue(self.check_element_on_page((By.ID, "flash_success")))
         details = self.get_book_details(1)
         self.assertEqual(len(details['author']), 4)
@@ -814,22 +806,22 @@ class calibre_web_visibilitys(unittest.TestCase, ui_class):
         self.assertIsNotNone(details['archived'])
         self.assertFalse(details['archived'])
         # tick archive book in book details
-        self.check_element_on_page((By.XPATH,"//*[@id='archived_cb']")).click()
+        self.check_element_on_page((By.XPATH, "//*[@id='archived_cb']")).click()
         details = self.get_book_details(5)
         self.assertTrue(details['archived'])
         # check one book in archive section
         self.goto_page('nav_archived')
         list_element = self.get_books_displayed()
-        self.assertEqual(len(list_element[1]),1)
+        self.assertEqual(len(list_element[1]), 1)
         # check book with archive set is accessible
         details = self.get_book_details(5)
         self.assertEqual('testbook', details['title'])
         # check right cover of book is visible
         r = requests.session()
-        payload = {'username': 'admin', 'password': 'admin123', 'submit':"", 'next':"/", "remember_me":"on"}
-        r.post('http://127.0.0.1:8083/login',data=payload)
-        resp = r.get( 'http://127.0.0.1:8083/cover/'+list_element[1][0]['id'])
-        self.assertEqual('16790',resp.headers['Content-Length'])
+        payload = {'username': 'admin', 'password': 'admin123', 'submit': "", 'next': "/", "remember_me": "on"}
+        r.post('http://127.0.0.1:8083/login', data=payload)
+        resp = r.get('http://127.0.0.1:8083/cover/'+list_element[1][0]['id'])
+        self.assertEqual('16790', resp.headers['Content-Length'])
         r.close()
         # check archive book visible in search result
         self.assertEqual(len(self.search('testbook')), 1)
@@ -849,9 +841,5 @@ class calibre_web_visibilitys(unittest.TestCase, ui_class):
         # revert changes
         self.goto_page('user_setup')
         self.change_user({'show_32768': 1})
-        details = self.get_book_details(5)
-        self.check_element_on_page((By.XPATH,"//*[@id='archived_cb']")).click()
-
-
-
-
+        self.get_book_details(5)
+        self.check_element_on_page((By.XPATH, "//*[@id='archived_cb']")).click()

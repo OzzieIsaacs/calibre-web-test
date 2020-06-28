@@ -12,7 +12,7 @@ import time
 from helper_ui import ui_class
 from config_test import CALIBRE_WEB_PATH, TEST_DB, BOOT_TIME
 
-from parameterized import parameterized_class
+# from parameterized import parameterized_class
 from helper_func import startup
 
 '''@parameterized_class([

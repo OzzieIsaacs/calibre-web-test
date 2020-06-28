@@ -13,7 +13,7 @@ from helper_ui import ui_class
 from config_test import CALIBRE_WEB_PATH, TEST_DB, BOOT_TIME
 import re
 from helper_func import startup
-from parameterized import parameterized_class
+# from parameterized import parameterized_class
 
 
 '''@parameterized_class([

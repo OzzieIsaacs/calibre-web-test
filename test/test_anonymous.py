@@ -6,8 +6,8 @@ from selenium.webdriver.common.by import By
 from helper_ui import ui_class
 from config_test import TEST_DB
 from helper_func import startup
-from parameterized import parameterized_class
-import time
+# from .parameterized import parameterized_class
+
 
 '''@parameterized_class([
    { "py_version": u'/usr/bin/python'},

@@ -1,6 +1,6 @@
 #!/usr/bin/env python
 # -*- coding: utf-8 -*-
-from helper_email_convert import AIOSMTPServer
+from .helper_email_convert import AIOSMTPServer
 import helper_email_convert
 import unittest
 from selenium.webdriver.common.by import By
@@ -9,8 +9,7 @@ from helper_ui import ui_class
 from config_test import CALIBRE_WEB_PATH, TEST_DB, BOOT_TIME
 # from parameterized import parameterized_class
 from helper_func import startup, wait_Email_received
-import requests
-import re
+
 
 '''@parameterized_class([
    { "py_version": u'/usr/bin/python'},

@@ -4,10 +4,11 @@
 from helper_email_convert import AIOSMTPServer
 from config_test import TEST_DB
 from helper_func import startup, wait_Email_received
-from parameterized import parameterized_class
+# from parameterized import parameterized_class
 import unittest
 from helper_ui import ui_class
 import time
+
 
 '''@parameterized_class([
    { "py_version": u'/usr/bin/python'},

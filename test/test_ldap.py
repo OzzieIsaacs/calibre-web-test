@@ -3,8 +3,8 @@
 import unittest
 import time
 from helper_ui import ui_class
-from config_test import TEST_DB, VENV_PYTHON, CALIBRE_WEB_PATH, BOOT_TIME
-from helper_func import startup, debug_startup, get_Host_IP, add_dependency, remove_dependency, kill_old_cps
+from config_test import TEST_DB, BOOT_TIME
+from helper_func import startup, debug_startup, add_dependency, remove_dependency
 from selenium.webdriver.common.by import By
 from helper_ldap import TestLDAPServer
 import requests
@@ -148,8 +148,8 @@ class test_ldap_login(unittest.TestCase, ui_class):
         self.fill_basic_config({'config_ldap_provider_url': '127.0.0.1',
                                 'config_ldap_port': '3268',
                                 'config_ldap_authentication': 'Simple',
-                                'config_ldap_dn': 'ou=people,dc=calibreweb,dc=com',
-                                'config_ldap_serv_username': 'cn=root,dc=calibreweb,dc=com',
+                                'config_ldap_dn': 'ou=people,dc=utm,dc=edu,dc=ec',
+                                'config_ldap_serv_username': 'cn=root,dc=utm,dc=edu,dc=ec',
                                 'config_ldap_serv_password': 'secret',
                                 'config_ldap_user_object': '(uid=%s)',
                                 'config_ldap_group_object_filter': '',
@@ -157,9 +157,10 @@ class test_ldap_login(unittest.TestCase, ui_class):
                                 })
         self.assertTrue(self.check_element_on_page((By.ID, "flash_success")))
         time.sleep(BOOT_TIME)
+        self.server.relisten(config=1, port=3268, encrypt=None)
         # create new user
         # give user password different form ldap
-        self.create_user('user0',{'email':'user0@exi.com','password':'1234'})
+        self.create_user('user0@we.de',{'email':'user0@exi.com','password':'1234'})
         self.assertTrue(self.check_element_on_page((By.ID, "flash_success")))
         # logout
         self.logout()

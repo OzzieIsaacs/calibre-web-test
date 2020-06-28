@@ -1,7 +1,5 @@
-#!/usr/bin/env python3
 # -*- coding: utf-8 -*-
 
-# from parameterized import parameterized_class
 from HTMLTestRunner import runner as HTMLTestRunner
 import os
 import re
