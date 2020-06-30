@@ -66,6 +66,11 @@ class CalibreHelper(unittest.TestCase):
     def test_author_sort_comma(self):
         self.assertEqual(helper.get_sorted_author(u'Single, name'), u'Single, name')
 
+    def test_random_password(self):
+        for i in range(1,100):
+            self.assertTrue(helper.generate_random_password())
+
+
     @classmethod
     def tearDownClass(cls):
         global helper
