@@ -325,7 +325,7 @@ class TestKoboSync(unittest.TestCase, ui_class):
         tagId = data[0]['ChangedTag']['Tag']['Id']
         # Try to change name of shelf with wrong Id
         newSession = requests.session()
-        r = newSession.get(self.kobo_adress+'/v1/initialization', headers=TestKoboSync.header)
+        newSession.get(self.kobo_adress+'/v1/initialization', headers=TestKoboSync.header)
 
         r = newSession.put(self.kobo_adress+'/v1/library/tags/'+tagId + '1',
                            headers=TestKoboSync.syncToken, data={'Name':'test'})

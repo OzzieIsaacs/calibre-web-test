@@ -109,19 +109,27 @@ class TestEditAdditionalBooks(TestCase, ui_class):
         book_path = os.path.join(TEST_DB, 'John Doe', 'Buuko (7)')
 
         # add folder to folder
-        sub_folder = os.path.join(book_path, 'new_subfolder')
+        details = self.get_book_details(1)
+        book_path1 = os.path.join(TEST_DB, details['author'][0], details['title'] + ' (1)')
+        sub_folder = os.path.join(book_path1, 'new_subfolder')
         os.mkdir(sub_folder)
         # delete book, -> denied because of additional folder
-        self.delete_book(7)
+        self.delete_book(1)
+        self.assertTrue(self.check_element_on_page((By.ID, "flash_warning")))
+        # self.check_element_on_page((By.ID, 'edit_cancel')).click()
+        os.rmdir(sub_folder)
+        self.assertTrue(os.path.isdir(book_path1))
+        self.assertEqual(0,len([name for name in os.listdir(book_path1) if os.path.isfile(name)]))
+        self.get_book_details(1)
         self.assertTrue(self.check_element_on_page((By.ID, "flash_alert")))
-        self.check_element_on_page((By.ID, 'edit_cancel')).click()
-        details = self.get_book_details()
+
+        details = self.get_book_details(7)
+        self.assertTrue(os.path.isdir(os.path.join(TEST_DB, 'John Doe')))
         self.assertEqual('Buuko', details['title'])
         self.assertEqual('John Döe', details['author'][0])
         self.assertEqual('4', details['cust_columns'][0]['value'])
         self.assertEqual('ok', details['cust_columns'][1]['value'])
         self.assertEqual('test text', details['cust_columns'][2]['value'])
-        os.rmdir(sub_folder)
 
         # change permission of folder -> delete denied because of access rights
         os.chmod(book_path, 0o400)
@@ -133,7 +141,7 @@ class TestEditAdditionalBooks(TestCase, ui_class):
         # delete book author folder stays
         self.delete_book(7)
         self.assertTrue(self.check_element_on_page((By.ID, "flash_success")))
-        details = self.get_book_details(7)
+        self.get_book_details(7)
         self.assertTrue(self.check_element_on_page((By.ID, "flash_alert")))
         self.assertTrue(os.path.isdir(os.path.join(TEST_DB, 'John Doe')))
         # delete book -> author folder deleted
