@@ -2,9 +2,10 @@
 
 import unittest
 import time
+import re
 from helper_ui import ui_class
 from config_test import TEST_DB, BOOT_TIME
-from helper_func import startup, debug_startup, add_dependency, remove_dependency
+from helper_func import startup, debug_startup, add_dependency, remove_dependency, get_Host_IP
 from selenium.webdriver.common.by import By
 from helper_ldap import TestLDAPServer
 import requests
@@ -14,7 +15,7 @@ class test_ldap_login(unittest.TestCase, ui_class):
     p=None
     driver = None
     kobo_adress = None
-    dep_line = ["Flask-SimpleLDAP", "python-ldap"]
+    dep_line = ["Flask-SimpleLDAP", "python-ldap", "jsonschema"]
 
     @classmethod
     def setUpClass(cls):
@@ -45,6 +46,37 @@ class test_ldap_login(unittest.TestCase, ui_class):
             cls.server.stopListen()
         except Exception as e:
             print(e)
+
+    def inital_sync(self, kobo_adress):
+        # generate payload for auth request
+        payload = {
+            "AffiliateName": "Kobo",
+            "AppVersion": "4.19.14123",
+            "ClientKey": "MDAwMDAwMDAtMDAwMC0wMDAwLTAwMDAtMDAwMDAwMDAwMzc1",
+            "DeviceId": "lnez00rs6cox274bx8c97kyr67ga3tnn0c1745tbjd9rmsmcywxmmcrw2zcayu6d",
+            "PlatformId": "00000000-0000-0000-0000-000000000375",
+            "UserKey": "12345678-9012-abcd-efgh-a7b6c0d8e7f2"
+        }
+        r = requests.post(kobo_adress+'/v1/auth/device', json=payload)
+        self.assertEqual(r.status_code, 200)
+        # request init request to get metadata format
+        header = {
+            'Authorization': 'Bearer ' + r.json()['AccessToken'],
+            'Content-Type': 'application/json'
+        }
+        session = requests.session()
+        r = session.get(kobo_adress+'/v1/initialization', headers=header)
+        self.assertEqual(r.status_code, 200)
+        params = {'Filter': 'All', 'DownloadUrlFilter': 'Generic,Android', 'PrioritizeRecentReads':'true'}
+        r = session.get(self.kobo_adress+'/v1/library/sync', params=params)
+        self.assertEqual(r.status_code, 200)
+        # syncToken = {'x-kobo-synctoken': r.headers['x-kobo-synctoken']}
+        Item1 = {'Type': 'ProductRevisionTagItem', 'RevisionId':'8f1b72c1-e9a4-4212-b538-8e4f4837d201'}
+        r = session.post(self.kobo_adress + '/v1/library/tags', json={'Name': 'Success', 'Items': [Item1]})
+        self.assertEqual(201, r.status_code)
+        session.close()
+
+
 
     def test_invalid_LDAP(self):
         # set to default
@@ -706,4 +738,42 @@ class test_ldap_login(unittest.TestCase, ui_class):
         self.login("admin", "admin123")
         self.edit_user('执一', {'delete': 1})
         self.assertTrue(self.check_element_on_page((By.ID, "flash_success")))
+
+    def test_ldap_kobo_sync(self):
+        self.fill_basic_config({'config_ldap_provider_url': '127.0.0.1',
+                                'config_ldap_port': '3268',
+                                'config_ldap_authentication': 'Simple',
+                                'config_ldap_dn': 'ou=people,dc=calibreweb,dc=com',
+                                'config_ldap_serv_username': 'cn=root,dc=calibreweb,dc=com',
+                                'config_ldap_serv_password': 'secret',
+                                'config_ldap_user_object': '(uid=%s)',
+                                'config_ldap_group_object_filter': '',
+                                'config_ldap_openldap': 1
+                                })
+        self.assertTrue(self.check_element_on_page((By.ID, "flash_success")))
+        time.sleep(BOOT_TIME)
+        # start ldap
+        self.server.relisten(config=2, port=3268, encrypt=None)
+        # create new user
+        self.create_user('执一',{'email':'use10@oxi.com','password':'1234', 'download_role': 1})
+        self.assertTrue(self.check_element_on_page((By.ID, "flash_success")))
+        host = 'http://' + get_Host_IP() + ':8083'
+        self.fill_basic_config({'config_kobo_sync': 1})
+        time.sleep(BOOT_TIME)
+        self.logout()
+        self.driver.get(host)
+        self.login('执一','eekretsay')
+        self.goto_page('user_setup')
+        self.check_element_on_page((By.ID, "config_create_kobo_token")).click()
+        link = self.check_element_on_page((By.CLASS_NAME, "well"))
+        self.kobo_adress = host + '/kobo/' + re.findall(".*/kobo/(.*)", link.text)[0]
+        self.check_element_on_page((By.ID, "kobo_close")).click()
+        time.sleep(2)
+        self.logout()
+        self.inital_sync(self.kobo_adress)
+
+        self.login("admin", "admin123")
+        self.edit_user('执一', {'delete': 1})
+        self.fill_basic_config({'config_kobo_sync': 0})
+
 
