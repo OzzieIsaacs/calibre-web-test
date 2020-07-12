@@ -1034,7 +1034,7 @@ class ui_class():
             book_r['id'] = book_r['link'][6:]
             book_r['title']= meta[0].getchildren()[0].text
             authors = meta[1].getchildren()
-            book_r['author'] = [a.text for a in authors if a.text is not '&' and a.attrib.get('class') != 'author-name author-hidden']
+            book_r['author'] = [a.text for a in authors if a.text != '&' and a.attrib.get('class') != 'author-name author-hidden']
             if len(meta) == 3:
                 ratings = meta[2].getchildren()
                 counter = 0
@@ -1055,7 +1055,7 @@ class ui_class():
             bk['ele'] = cls.check_element_on_page((By.XPATH,"//a[@href='"+bk['link']+"']/img"))
             bk['title']= meta[0].getchildren()[0].text
             authors = meta[1].getchildren()
-            bk['author'] = [a.text for a in authors if a.text is not '&' and a.attrib.get('class') != 'author-name author-hidden']
+            bk['author'] = [a.text for a in authors if a.text != '&' and a.attrib.get('class') != 'author-name author-hidden']
             if len(meta) == 3:
                 ratings = meta[2].getchildren()
                 counter = 0
@@ -1088,7 +1088,7 @@ class ui_class():
             bk['ele'] = self.check_element_on_page((By.XPATH,"//a[@href='"+bk['link']+"']/img"))
             bk['title']= meta[0].getchildren()[0].text
             authors = meta[1].getchildren()
-            bk['author'] = [a.text for a in authors if a.text is not '&' and a.attrib.get('class') != 'author-name author-hidden']
+            bk['author'] = [a.text for a in authors if a.text != '&' and a.attrib.get('class') != 'author-name author-hidden']
             if len(meta) == 3:
                 ratings = meta[2].getchildren()
                 counter = 0

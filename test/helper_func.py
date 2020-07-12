@@ -15,8 +15,14 @@ import errno
 import psutil
 from helper_environment import environment
 from psutil import process_iter
-from signal import SIGKILL
+import os
 import sys
+import socket
+
+if os.name != 'nt':
+    from signal import SIGKILL
+else:
+    from signal import SIGTERM as SIGKILL
 
 try:
     import pycurl
@@ -43,11 +49,23 @@ def is_port_in_use(port):
 
 # Function to return IP address
 def get_Host_IP():
-    addrs = psutil.net_if_addrs()
-    for ele, key in enumerate(addrs):
-        if key != 'lo':
-            if addrs[key][0][2]:
-                return addrs[key][0][1]
+    if os.name!='nt':
+        addrs = psutil.net_if_addrs()
+        for ele, key in enumerate(addrs):
+            if key != 'lo':
+                if addrs[key][0][2]:
+                    return addrs[key][0][1]
+    else:
+        s = socket.socket(socket.AF_INET, socket.SOCK_DGRAM)
+        try:
+            # doesn't even have to be reachable
+            s.connect(('10.255.255.255', 1))
+            IP = s.getsockname()[0]
+        except Exception:
+            IP = '127.0.0.1'
+        finally:
+            s.close()
+        return IP
 
 
 def debug_startup(inst, __, ___, login=True, host="http://127.0.0.1:8083", env=None):
@@ -84,6 +102,7 @@ def startup(inst, pyVersion, config, login=True, host="http://127.0.0.1:8083", e
 
     # create a new Firefox session
     inst.driver = webdriver.Firefox()
+    # inst.driver = webdriver.Chrome()
     inst.driver.implicitly_wait(BOOT_TIME)
     time.sleep(1)
     if inst.p.poll():

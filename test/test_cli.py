@@ -276,7 +276,7 @@ class testCli(unittest.TestCase, ui_class):
 
 
     def test_environ_port_setting(self):
-        p = process_open([self.py_version, os.path.join(CALIBRE_WEB_PATH,u'cps.py')],(1), env={'CALIBRE_PORT':'8082'})
+        p = process_open([self.py_version, os.path.join(CALIBRE_WEB_PATH,u'cps.py')],[1], env={'CALIBRE_PORT':'8082'})
 
         time.sleep(BOOT_TIME)
         # navigate to the application home page
@@ -307,10 +307,11 @@ class testCli(unittest.TestCase, ui_class):
         time.sleep(BOOT_TIME)
         p2 = process_open([self.py_version, u'cps.py'], [1])
         time.sleep(BOOT_TIME)
+        time.sleep(2)
         result = p2.poll()
         if result is None:
             p2.terminate()
-            self.assert_('2nd process not terminated, port is already in use')
+            self.assertTrue('2nd process not terminated, port is already in use')
         self.assertEqual(result, 1)
         p1.terminate()
         time.sleep(3)

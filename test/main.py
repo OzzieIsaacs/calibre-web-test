@@ -12,7 +12,7 @@ import sys
 import venv
 from CalibreResult import CalibreResult
 from helper_environment import environment
-from subprocess import check_output
+from subprocess import check_output, CalledProcessError
 
 if __name__ == '__main__':
     sub_dependencys = ["Werkzeug", "Jinja2", "singledispatch"]
@@ -62,13 +62,17 @@ if __name__ == '__main__':
     if not found:
         exit()
     # generate virtual environment
-    venv.create(VENV_PATH, clear=True, with_pip=True)
+    try:
+        venv.create(VENV_PATH, clear=True, with_pip=True)
+    except CalledProcessError:
+        venv.create(VENV_PATH, system_site_packages =True, with_pip=False)
     print("Creating virtual environment for testing")
 
 
     requirements_file = os.path.join(CALIBRE_WEB_PATH, 'requirements.txt')
-    p = process_open([VENV_PYTHON, "-m", "pip", "install", "-r",requirements_file],(0,5))
-    p.wait()
+    if os.name != 'nt':
+        p = process_open([VENV_PYTHON, "-m", "pip", "install", "-r",requirements_file],(0,5))
+        p.wait()
     environment.init_Environment(VENV_PYTHON, sub_dependencys)
 
     all_tests = unittest.TestLoader().discover('.')
