@@ -40,7 +40,7 @@ if __name__ == '__main__':
     # check pip ist installed
     if os.name != 'nt':
         found = False
-        pversion=("python3.7", "python3.6")
+        pversion=("python3.8", "python3.7")
         for python in pversion:
             try:
                 p = process_open([python, "-m", "pip", "-V"])

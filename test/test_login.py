@@ -6,10 +6,10 @@ from selenium.webdriver.common.by import By
 from selenium.common.exceptions import WebDriverException
 import re
 from helper_ui import ui_class
-from config_test import TEST_DB
+from config_test import TEST_DB, CALIBRE_WEB_PATH
 from helper_func import startup, check_response_language_header, curl_available, digest_login
-# from selenium import webdriver
 import requests
+import os
 
 
 class test_Login(unittest.TestCase, ui_class):
@@ -26,6 +26,7 @@ class test_Login(unittest.TestCase, ui_class):
 
     @classmethod
     def tearDownClass(cls):
+        cls.driver.get("http://127.0.0.1:8083/login")
         cls.login('admin', 'admin123')
         cls.stop_calibre_web()
         # close the browser window and stop calibre-web
@@ -360,3 +361,13 @@ class test_Login(unittest.TestCase, ui_class):
         site = r.get('http://127.0.0.1:8083')
         self.assertTrue(re.search("Calibre-Web | login", site.content.decode('utf-8')))
         r.close()
+
+    # try to access all pages without login
+    def test_robots(self):
+        self.assertEqual(self.fail_access_page("http://127.0.0.1:8083/robots.txt"), 2)
+        with open(os.path.join(CALIBRE_WEB_PATH,'cps','static','robots.txt'),'w') as robotsfile:
+            robotsfile.write('This is a robÄtsfile')
+        r = requests.get('http://127.0.0.1:8083/robots.txt')
+        self.assertEqual(200, r.status_code)
+        self.assertEqual('This is a robÄtsfile', r.text)
+        os.unlink(os.path.join(CALIBRE_WEB_PATH,'cps', 'static','robots.txt'))
