@@ -435,6 +435,9 @@ class test_user_template(unittest.TestCase, ui_class):
         # check random books shown in archived section
         list_element = self.goto_page("nav_archived")
         self.assertFalse(self.check_element_on_page((By.ID, "books_rand")))
+        # check about page visible and libs section not visible
+        self.assertTrue(self.goto_page('nav_about'))
+        self.assertFalse(self.check_element_on_page((By.ID, 'libs')))
         self.logout()
         self.login('admin','admin123')
         # delete user
