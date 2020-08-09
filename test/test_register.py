@@ -199,3 +199,21 @@ class test_register(unittest.TestCase, ui_class):
         self.login('forget', passw)
         self.assertTrue(self.check_user_logged_in('forget', noCompare=True))
         self.assertFalse(self.forgot_password('forgot'))
+
+    # register user, extract password, login, check rights
+    def test_registering_only_email(self):
+        if not self.check_user_logged_in('admin',True):
+            self.login('admin', 'admin123')
+        self.fill_basic_config({'config_register_email': 1})
+        self.logout()
+        self.assertEqual(u'flash_success', self.register(u'','hujh@de.de'))
+        self.assertTrue(wait_Email_received(self.email_server.handler.check_email_received))
+        user, passw = self.email_server.handler.extract_register_info()
+        self.assertEqual('hujh@de.de', user)
+        self.email_server.handler.reset_email_received()
+        self.assertTrue(self.login(user, passw))
+        self.logout()
+        self.login('admin', 'admin123')
+        self.fill_basic_config({'config_register_email': 0})
+        self.logout()
+

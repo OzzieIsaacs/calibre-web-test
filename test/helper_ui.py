@@ -22,46 +22,47 @@ RESTRICT_COL_TEMPLATE   = 5
 
 # Dict for pages and the way to reach them
 page = dict()
-page['nav_serie']={'check':(By.TAG_NAME, "h1"),'click':[(By.ID, "nav_serie")]}
-page['nav_publisher']={'check':(By.TAG_NAME, "h1"),'click':[(By.ID, "nav_publisher")]}
-page['nav_rand']={'check':(By.TAG_NAME, "h2"),'click':[(By.ID, "nav_rand")]}
-page['nav_format']={'check':(By.TAG_NAME, "h1"),'click':[(By.ID, "nav_format")]}
-page['nav_rate']={'check':(By.TAG_NAME, "h1"),'click':[(By.ID, "nav_rate")]}
-page['nav_archived']={'check':(By.TAG_NAME, "h1"),'click':[(By.ID, "nav_archived")]}
-page['nav_new']={'check':None,'click':[(By.ID, "nav_new")]}
-page['nav_cat']={'check':(By.TAG_NAME, "h1"),'click':[(By.ID, "nav_cat")]}
-page['nav_author']={'check':(By.TAG_NAME, "h1"),'click':[(By.ID, "nav_author")]}
-page['nav_lang']={'check':(By.TAG_NAME, "h1"),'click':[(By.ID, "nav_lang")]}
-page['nav_hot']={'check':None,'click':[(By.ID, "nav_hot")]}
-page['nav_about']={'check':(By.ID, "stats"),'click':[(By.ID, "nav_about")]}
-page['nav_rated']={'check':None,'click':[(By.ID, "nav_rated")]}
-page['nav_read']={'check':None,'click':[(By.ID, "nav_read")]}
-page['nav_unread']={'check':None,'click':[(By.ID, "nav_unread")]}
-page['nav_archived']={'check':None,'click':[(By.ID, "nav_archived")]}
-page['nav_sort_old']={'check':None,'click':[(By.ID, "nav_sort"),(By.ID, "nav_sort_old")]}
-page['nav_sort_new']={'check':None,'click':[(By.ID, "nav_sort"),(By.ID, "nav_sort_new")]}
-page['nav_sort_asc']={'check':None,'click':[(By.ID, "nav_sort"),(By.ID, "nav_sort_asc")]}
-page['nav_sort_desc']={'check':None,'click':[(By.ID, "nav_sort"),(By.ID, "nav_sort_desc")]}
-page['basic_config']={'check':(By.ID, "config_calibre_dir"),'click':[(By.ID, "top_admin"),(By.ID, "basic_config")]}
-page['view_config']={'check':None,'click':[(By.ID, "top_admin"),(By.ID, "view_config")]}
-page['mail_server']={'check':(By.ID, "mail_server"),'click':[(By.ID, "top_admin"),(By.ID, "admin_edit_email")]}
-page['admin_setup']={'check':(By.ID, "admin_edit_email"),'click':[(By.ID, "top_admin")]}
-page['user_setup']={'check':(By.ID, "kindle_mail"),'click':[(By.ID, "top_user")]}
-page['create_shelf']={'check':(By.ID, "title"),'click':[(By.ID, "nav_createshelf")]}
-page['create_user']={'check':(By.ID, "nickname"),'click':[(By.ID, "top_admin"),(By.ID, "admin_new_user")]}
-page['register']={'check':(By.ID, "nickname"),'click':[(By.ID, "register")]}
-page['tasks']={'check':(By.TAG_NAME, "h2"),'click':[(By.ID, "top_tasks")]}
-page['register']={'check':(By.ID, "nickname"),'click':[(By.ID, "register")]}
-page['login']={'check':(By.NAME, "username"),'click':[(By.ID, "logout")]}
-page['unlogged_login']={'check':(By.NAME, "username"),'click':[(By.CLASS_NAME, "glyphicon-log-in")]}
-page['logviewer']={'check':(By.ID, "log_group"),'click':[(By.ID, "top_admin"),(By.ID, "logfile")]}
-page['adv_search']={'check':(By.ID, "adv_submit"),'click':[(By.ID, "advanced_search")]}
+page['nav_serie'] = {'check': (By.TAG_NAME, "h1"), 'click': [(By.ID, "nav_serie")]}
+page['nav_publisher'] = {'check': (By.TAG_NAME, "h1"), 'click': [(By.ID, "nav_publisher")]}
+page['nav_rand'] = {'check': (By.TAG_NAME, "h2"), 'click': [(By.ID, "nav_rand")]}
+page['nav_format'] = {'check': (By.TAG_NAME, "h1"), 'click': [(By.ID, "nav_format")]}
+page['nav_rate'] = {'check': (By.TAG_NAME, "h1"), 'click': [(By.ID, "nav_rate")]}
+page['nav_archived'] = {'check': (By.TAG_NAME, "h1"), 'click': [(By.ID, "nav_archived")]}
+page['nav_new'] = {'check': None, 'click': [(By.ID, "nav_new")]}
+page['nav_cat'] = {'check': (By.TAG_NAME, "h1"), 'click': [(By.ID, "nav_cat")]}
+page['nav_author'] = {'check': (By.TAG_NAME, "h1"), 'click': [(By.ID, "nav_author")]}
+page['nav_lang'] = {'check': (By.TAG_NAME, "h1"), 'click': [(By.ID, "nav_lang")]}
+page['nav_hot'] = {'check': None, 'click': [(By.ID, "nav_hot")]}
+page['nav_about'] = {'check': (By.ID, "stats"), 'click': [(By.ID, "nav_about")]}
+page['nav_rated'] = {'check': None, 'click': [(By.ID, "nav_rated")]}
+page['nav_read'] = {'check': None, 'click': [(By.ID, "nav_read")]}
+page['nav_unread'] = {'check': None, 'click': [(By.ID, "nav_unread")]}
+page['nav_archived'] = {'check': None, 'click': [(By.ID, "nav_archived")]}
+page['nav_sort_old'] = {'check': None, 'click': [(By.ID, "nav_sort"), (By.ID, "nav_sort_old")]}
+page['nav_sort_new'] = {'check': None, 'click': [(By.ID, "nav_sort"), (By.ID, "nav_sort_new")]}
+page['nav_sort_asc'] = {'check': None, 'click': [(By.ID, "nav_sort"), (By.ID, "nav_sort_asc")]}
+page['nav_sort_desc'] = {'check': None, 'click': [(By.ID, "nav_sort"), (By.ID, "nav_sort_desc")]}
+page['basic_config'] = {'check': (By.ID, "config_calibre_dir"),
+                        'click': [(By.ID, "top_admin"), (By.ID, "basic_config")]}
+page['view_config'] = {'check': None, 'click': [(By.ID, "top_admin"), (By.ID, "view_config")]}
+page['mail_server'] = {'check': (By.ID, "mail_server"), 'click': [(By.ID, "top_admin"), (By.ID, "admin_edit_email")]}
+page['admin_setup'] = {'check': (By.ID, "admin_edit_email"), 'click': [(By.ID, "top_admin")]}
+page['user_setup'] = {'check': (By.ID, "kindle_mail"), 'click': [(By.ID, "top_user")]}
+page['create_shelf'] = {'check': (By.ID, "title"), 'click': [(By.ID, "nav_createshelf")]}
+page['create_user'] = {'check': (By.ID, "nickname"), 'click': [(By.ID, "top_admin"), (By.ID, "admin_new_user")]}
+page['register'] = {'check': (By.ID, "email"), 'click': [(By.ID, "register")]}
+page['tasks'] = {'check': (By.TAG_NAME, "h2"), 'click': [(By.ID, "top_tasks")]}
+page['login'] = {'check': (By.NAME, "username"), 'click': [(By.ID, "logout")]}
+page['unlogged_login'] = {'check': (By.NAME, "username"), 'click': [(By.CLASS_NAME, "glyphicon-log-in")]}
+page['logviewer'] = {'check': (By.ID, "log_group"), 'click': [(By.ID, "top_admin"), (By.ID, "logfile")]}
+page['adv_search'] = {'check': (By.ID, "adv_submit"), 'click': [(By.ID, "advanced_search")]}
+
 
 class ui_class():
     py_version = PY_BIN
 
     @classmethod
-    def login(cls,user, passwd):
+    def login(cls, user, passwd):
         WebDriverWait(cls.driver, 5).until(EC.presence_of_element_located((By.ID, "username")))
         username = cls.driver.find_element_by_id("username")
         password = cls.driver.find_element_by_id("password")
@@ -84,7 +85,7 @@ class ui_class():
         return False
 
     @classmethod
-    def check_user_logged_in(cls,user, noCompare=False):
+    def check_user_logged_in(cls, user, noCompare=False):
         user_element = cls.check_element_on_page((By.ID, "top_user"))
         if user_element:
             if noCompare:
@@ -94,18 +95,18 @@ class ui_class():
         return False
 
     @classmethod
-    def register(cls,user, email):
+    def register(cls, user, email):
         cls.goto_page('register')
-        username = cls.driver.find_element_by_name("nickname")
+        if user != '':
+            username = cls.driver.find_element_by_name("nickname")
+            username.send_keys(user)
         emailfield = cls.driver.find_element_by_name("email")
         submit = cls.driver.find_element_by_id("submit")
-        username.send_keys(user)
         emailfield.send_keys(email)
         submit.click()
         flash = cls.check_element_on_page((By.CLASS_NAME, "alert"))
         if flash:
             id = flash.get_attribute('id')
-            # text = flash.get_attribute('text')
             return id
         else:
             return False
@@ -227,7 +228,7 @@ class ui_class():
         # special handling for checkboxes
         checkboxes = ['config_uploading', 'config_anonbrowse', 'config_public_reg', 'config_remote_login',
                       'config_access_log', 'config_kobo_sync', 'config_kobo_proxy', 'config_ldap_openldap',
-                      'config_use_goodreads']
+                      'config_use_goodreads', 'config_register_email']
         options = ['config_log_level', 'config_google_drive_folder', 'config_updatechannel', 'config_login_type',
                    'config_ldap_encryption', 'config_ldap_authentication']
         selects = ['config_ebookconverter']
@@ -238,6 +239,7 @@ class ui_class():
                                            'config_access_log']):
             opener.append(2)
         if any(key in elements for key in ['config_uploading', 'config_anonbrowse', 'config_public_reg',
+                                           'config_register_email',
                                            'config_remote_login', 'config_use_goodreads', 'config_goodreads_api_key',
                                            'config_goodreads_api_secret', 'config_kobo_sync', 'config_kobo_proxy',
                                            'config_login_type', 'config_ldap_provider_url', 'config_ldap_port',
