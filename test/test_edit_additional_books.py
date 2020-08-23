@@ -152,6 +152,8 @@ class TestEditAdditionalBooks(TestCase, ui_class):
         # ToDo: what happens if folder isn't valid and no book or author folder is present?
 
     def test_writeonly_path(self):
+        self.goto_page('nav_new')
+        number_books = self.get_books_displayed()
         self.fill_view_config({'config_read_column': "Custom Bool 1 Ä"})
         self.assertTrue(self.check_element_on_page((By.ID, "flash_success")))
         self.fill_basic_config({'config_uploading':1})
@@ -197,7 +199,7 @@ class TestEditAdditionalBooks(TestCase, ui_class):
         time.sleep(2)
         self.assertTrue(self.check_element_on_page((By.ID, "flash_alert")))
         books = self.get_books_displayed()
-        self.assertEqual(11, len(books[1]))
+        self.assertEqual(len(number_books[1]), len(books[1]))
         # restart and check it fails
         self.restart_calibre_web()
         self.goto_page('nav_new')

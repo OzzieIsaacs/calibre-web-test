@@ -3,141 +3,166 @@
 
 import unittest
 from selenium import webdriver
+import re
 import os
+import json
 from selenium.webdriver.common.by import By
 from selenium.webdriver.support.ui import WebDriverWait
 from selenium.webdriver.support import expected_conditions as EC
 import time
 import shutil
 from helper_ui import ui_class
-from subproc_wrapper import process_open
+
 from config_test import CALIBRE_WEB_PATH, TEST_DB, BOOT_TIME
-from parameterized import parameterized_class
+from helper_func import add_dependency, remove_dependency, startup
+# from parameterized import parameterized_class
 # test editing books on gdrive
 
 
-'''@parameterized_class([
-   { "py_version": u'/usr/bin/python'},
-   { "py_version": u'/usr/bin/python3'}
-],names=('Python27','Python36'))'''
-@unittest.skip("Not Implemented")
+# @unittest.skip("Not Implemented")
 class test_edit_books_gdrive(unittest.TestCase, ui_class):
     p=None
     driver = None
+    dependency = ["oauth2client", "PyDrive", "PyYAML", "google-api-python-client", "httplib2"]
 
     @classmethod
     def setUpClass(cls):
-        pass
-        '''try:
-            os.remove(os.path.join(CALIBRE_WEB_PATH,'app.db'))
-        except:
-            pass
-        shutil.rmtree(TEST_DB,ignore_errors=True)
-        shutil.copytree('./Calibre_db', TEST_DB)
-        cls.p = process_open([u"python", os.path.join(CALIBRE_WEB_PATH,u'cps.py')],[1])
+        add_dependency(cls.dependency, cls.__name__)
 
-        # create a new Firefox session
-        cls.driver = webdriver.Firefox()
-        # time.sleep(15)
-        cls.driver.implicitly_wait(BOOT_TIME)
-        print('Calibre-web started')
+        # remove slient_secrets.file
 
-        cls.driver.maximize_window()
+        src = os.path.join(CALIBRE_WEB_PATH, "client_secrets.json")
+        dst = os.path.join(CALIBRE_WEB_PATH, "client_secret.json")
+        os.chmod(src, 0o764)
+        if os.path.exists(dst):
+            os.unlink(dst)
+        shutil.move(src, dst)
 
-        # navigate to the application home page
-        cls.driver.get("http://127.0.0.1:8083")
+        # delete settings_yaml file
+        set_yaml = os.path.join(CALIBRE_WEB_PATH, "settings.yaml")
+        if os.path.exists(set_yaml):
+            os.unlink(set_yaml)
 
-        # Wait for config screen to show up
-        cls.fill_initial_config({'config_calibre_dir':TEST_DB})
+        # delete gdrive file
+        gdrive_db = os.path.join(CALIBRE_WEB_PATH, "gdrive.db")
+        if os.path.exists(gdrive_db):
+            os.unlink(gdrive_db)
 
-        # wait for cw to reboot
-        time.sleep(BOOT_TIME)
+        # delete gdrive authenticated file
+        gdaauth = os.path.join(CALIBRE_WEB_PATH, "gdaauth")
+        if os.path.exists(gdaauth):
+            os.unlink(gdaauth)
 
-        # Wait for config screen with login button to show up
-        WebDriverWait(cls.driver, 5).until(EC.presence_of_element_located((By.NAME, "login")))
-        login_button = cls.driver.find_element_by_name("login")
-        login_button.click()
-
-        # login and create 2nd user
-        cls.login("admin", "admin123")
-        # time.sleep(3)
-        cls.create_user('shelf', {'edit_shelf_role':1, 'password':'123', 'email':'a@b.com'})
-        cls.edit_user('admin',{'edit_shelf_role':1, 'email':'e@fe.de'})'''
-
+        try:
+            startup(cls, cls.py_version, {}, only_startup=True)
+        except Exception:
+            cls.driver.quit()
+            cls.p.kill()
 
     @classmethod
     def tearDownClass(cls):
-        pass
+        dst = os.path.join(CALIBRE_WEB_PATH, "client_secrets.json")
+        src = os.path.join(CALIBRE_WEB_PATH, "client_secret.json")
+        if os.path.exists(src):
+            os.chmod(src, 0o764)
+            shutil.move(src,dst)
+
+        remove_dependency(cls.dependency)
         # close the browser window and stop calibre-web
-        #cls.driver.quit()
-        #cls.p.terminate()
+        cls.driver.quit()
+        cls.p.terminate()
 
 
-    # goto Book 1
-    # Change Title with unicode chars
-    # save title, go to show books page
-    # check title
-    # edit title with spaces on beginning
-    # save title, stay on page
-    # check title correct, check folder name correct, old folder deleted
-    # edit title remove title
-    # save title, stay on page
-    # check title correct (unknown)
-    # change title to something where the title regex matches
-    # check title correct, check if book correct in order of a-z books
-    # add files to folder of book
-    # change title of book,
-    # check folder moves completly with all files
-    # remove folder permissions
-    # change title of book
-    # error should occour
-    # delete cover file
-    # change title of book
-    # error metadata should occour
-    # change title of book
-    # delete book format
-    # error metadata should occour
-    # Test Capital letters and lowercase characters
-    # booktitle with ,;|
-    def edit_title(self):
-        self.assertIsNone('Not Implemented')
+    def test_config_gdrive(self):
+        # invalid db and tick gdrive
+        self.fill_initial_config(dict(config_calibre_dir=TEST_DB[:-1], config_use_google_drive=1))
+        self.assertTrue(self.check_element_on_page((By.ID, 'flash_alert')))
+        # Tick gdrive and valid db
+        self.fill_initial_config(dict(config_calibre_dir=TEST_DB, config_use_google_drive=1))
+        # error no json file
+        self.assertFalse(self.check_element_on_page((By.ID, "gdrive_error")).is_displayed())
+        self.assertTrue(self.check_element_on_page((By.ID, 'flash_success')))
+        login = self.check_element_on_page((By.NAME, "login"))
+        use_gdrive = self.check_element_on_page((By.ID, "config_use_google_drive"))
+        self.assertTrue(use_gdrive)
+        self.assertFalse(use_gdrive.is_selected())
+        use_gdrive.click()
+        self.assertTrue(self.check_element_on_page((By.ID, "gdrive_error")).is_displayed())
 
-    # goto Book 2
-    # Change Author with unicode chars
-    # save book, go to show books page
-    # check Author
-    # edit Author with spaces on beginning (Single name)
-    # save book, stay on page
-    # check Author correct, check folder name correct, old folder deleted (last book of author)
-    # edit Author of book 7, book 2 and 7 have same author now
-    # check authorfolder has 2 subfolders
-    # change author of book 2
-    # save book, stay on page
-    # check Author correct, check folder name correct, old folder still existing (not last book of author)
-    # edit Author remove Author
-    # save book, stay on page
-    # check Author correct (unknown)
-    # edit Author, add 2nd not exisiting author
-    # save book, stay on page
-    # check Authors correct
-    # Author Alfa Alfa & Beta Beta (where is book saved?) -> Alfa Alfa
-    # Author Beta Beta & Alfa Alfa (where is book saved?) -> Beta Beta
-    # change author to something with ',' in it
-    # save book, stay on page
-    # check author correct, check if author correct in order authors (author sort should be 2nd 1st)
-    # change author to something with '|' in it
-    # save book, stay on page
-    # check author correct (what is correct)???
-    # add files to folder of author
-    # change author of book,
-    # check folder moves completly with all files
-    # remove folder permissions
-    # change author of book
-    # error should occour
-    # remove folder of author
-    # change author of book
-    # error should occour
-    # Test Capital letters and lowercase characters
+        dst = os.path.join(CALIBRE_WEB_PATH, "client_secrets.json")
+        src = os.path.join(CALIBRE_WEB_PATH, "client_secret.json")
+        shutil.copy(src,dst)
+        os.chmod(dst, 0o040)
+
+        self.assertTrue(login)
+        login.click()
+        # message continue after login
+        time.sleep(BOOT_TIME)
+        self.login('admin', 'admin123')
+        self.goto_page('basic_config')
+        self.assertFalse(self.check_element_on_page((By.ID, "gdrive_error")).is_displayed())
+        use_gdrive = self.check_element_on_page((By.ID, "config_use_google_drive"))
+        self.assertTrue(use_gdrive)
+        use_gdrive.click()
+        # error json file not readable
+        self.assertTrue(self.check_element_on_page((By.ID, "gdrive_error")).is_displayed())
+        os.chmod(dst, 0o700)
+        with open(dst, 'r') as settings:
+            content = json.load(settings)
+
+        callback = content['web']['redirect_uris'][0].strip('/gdrive/callback')
+        content.pop('web', None)
+
+        with open(dst, 'w') as data_file:
+            json.dump(content, data_file)
+        time.sleep(1)
+        self.goto_page('basic_config')
+        use_gdrive = self.check_element_on_page((By.ID, "config_use_google_drive"))
+        use_gdrive.click()
+        # error json file not configured for web
+        self.assertTrue(self.check_element_on_page((By.ID, "gdrive_error")).is_displayed())
+
+        shutil.copy(src, dst)
+        time.sleep(1)
+        self.goto_page('basic_config')
+        use_gdrive = self.check_element_on_page((By.ID, "config_use_google_drive"))
+        use_gdrive.click()
+        # no error in json file
+        self.assertFalse(self.check_element_on_page((By.ID, "gdrive_error")))
+        save = self.check_element_on_page((By.NAME, "submit"))
+        self.assertTrue(save)
+        save.click()
+        self.assertTrue(self.check_element_on_page((By.ID, 'flash_success')))
+
+        auth_button = self.check_element_on_page((By.ID, "gdrive_auth"))
+        self.assertTrue(auth_button)
+        auth_button.click()
+        g_login = self.check_element_on_page((By.ID, "identifierId"))        
+        #error = re.findall('does not match the ones authorized',self.driver.page_source)
+        #self.assertTrue(error)
+        #self.driver.get(callback)
+        #self.login('admin','admin123')
+        #self.goto_page('basic_config')
+        #auth_button = self.check_element_on_page((By.ID, "gdrive_auth"))
+        #self.assertTrue(auth_button)
+        #auth_button.click()
+        #error = re.findall('does not match the ones authorized',self.driver.page_source)
+
+        # google flow
+
+
+
+
+
+
+
+
+
+
+
+
+
+
     def edit_author(self):
         self.assertIsNone('Not Implemented')
 

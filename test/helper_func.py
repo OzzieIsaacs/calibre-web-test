@@ -86,7 +86,7 @@ def debug_startup(inst, __, ___, login=True, host="http://127.0.0.1:8083", env=N
         inst.logout()
 
 
-def startup(inst, pyVersion, config, login=True, host="http://127.0.0.1:8083", env=None):
+def startup(inst, pyVersion, config, login=True, host="http://127.0.0.1:8083", env=None, only_startup=False):
     print("\n%s - %s: " % (inst.py_version, inst.__name__))
     try:
         os.remove(os.path.join(CALIBRE_WEB_PATH, 'app.db'))
@@ -116,24 +116,25 @@ def startup(inst, pyVersion, config, login=True, host="http://127.0.0.1:8083", e
     # navigate to the application home page
     inst.driver.get(host)
 
-    # Wait for config screen to show up
-    inst.fill_initial_config(dict(config_calibre_dir=config['config_calibre_dir']))
-    del config['config_calibre_dir']
+    if not only_startup:
+        # Wait for config screen to show up
+        inst.fill_initial_config(dict(config_calibre_dir=config['config_calibre_dir']))
+        del config['config_calibre_dir']
 
-    # wait for cw to reboot
-    time.sleep(BOOT_TIME)
+        # wait for cw to reboot
+        time.sleep(BOOT_TIME)
 
-    # Wait for config screen with login button to show up
-    WebDriverWait(inst.driver, 5).until(EC.presence_of_element_located((By.NAME, "login")))
-    login_button = inst.driver.find_element_by_name("login")
-    login_button.click()
-    inst.login("admin", "admin123")
-    if config:
-        inst.fill_basic_config(config)
-    time.sleep(BOOT_TIME)
-    # login
-    if not login:
-        inst.logout()
+        # Wait for config screen with login button to show up
+        WebDriverWait(inst.driver, 5).until(EC.presence_of_element_located((By.NAME, "login")))
+        login_button = inst.driver.find_element_by_name("login")
+        login_button.click()
+        inst.login("admin", "admin123")
+        if config:
+            inst.fill_basic_config(config)
+        time.sleep(BOOT_TIME)
+        # login
+        if not login:
+            inst.logout()
 
 
 def wait_Email_received(func):

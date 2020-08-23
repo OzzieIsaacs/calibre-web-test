@@ -228,7 +228,7 @@ class ui_class():
         # special handling for checkboxes
         checkboxes = ['config_uploading', 'config_anonbrowse', 'config_public_reg', 'config_remote_login',
                       'config_access_log', 'config_kobo_sync', 'config_kobo_proxy', 'config_ldap_openldap',
-                      'config_use_goodreads', 'config_register_email']
+                      'config_use_goodreads', 'config_register_email', 'config_use_google_drive']
         options = ['config_log_level', 'config_google_drive_folder', 'config_updatechannel', 'config_login_type',
                    'config_ldap_encryption', 'config_ldap_authentication']
         selects = ['config_ebookconverter']

@@ -118,7 +118,7 @@ class TestKoboSync(unittest.TestCase, ui_class):
         self.assertEqual(data[0]['NewEntitlement']['BookMetadata']['DownloadUrls'][1]['Url'],
                          expectUrl + "/download/5/epub")
         self.assertEqual(data[0]['NewEntitlement']['BookMetadata']['Contributors'],
-                         'John Döe执')
+                         ['John Döe执', 'Mon Go'])
         self.assertEqual(data[0]['NewEntitlement']['BookMetadata']['CoverImageId'],
                          bood_uuid)
         self.assertEqual('<p>b物</p>', data[0]['NewEntitlement']['BookMetadata']['Description'])
@@ -208,7 +208,7 @@ class TestKoboSync(unittest.TestCase, ui_class):
         session = requests.session()
         r = session.get(self.kobo_adress+'x/v1/initialization', headers=header)
         self.assertEqual(r.status_code, 401)
-        session.close()
+        session.close()'''
 
 
     def test_sync_unchanged(self):
@@ -225,7 +225,7 @@ class TestKoboSync(unittest.TestCase, ui_class):
         newSession.close()
         TestKoboSync.syncToken = {'x-kobo-synctoken': r.headers['x-kobo-synctoken']}
 
-    def test_sync_upload(self):
+    '''def test_sync_upload(self):
         self.inital_sync()
         # Upload new book
         # sync and get this book and nothing else
@@ -386,13 +386,12 @@ class TestKoboSync(unittest.TestCase, ui_class):
         self.assertEqual(1, len(books))
         self.assertEqual('5', books[0]['id'])
 
-        '''
         # logout, login new user, create shelf for new user
-        self.logout()
-        self.login('user0','1234')
-        self.create_shelf('new_user', True)
-        data = self.sync_kobo() # sync to get id of shelf
-        self.change_shelf('new_user', public=0)
+        # self.logout()
+        # self.login('user0','1234')
+        # self.create_shelf('new_user', True)
+        # data = self.sync_kobo() # sync to get id of shelf
+        # self.change_shelf('new_user', public=0)
 
         # ToDo:
         # request new user shelf -> error
@@ -401,8 +400,8 @@ class TestKoboSync(unittest.TestCase, ui_class):
         # self.assertEqual(401, r.status_code)
 
         # logout
-        self.logout()
-        self.login('admin','admin123')'''
+        # self.logout()
+        # self.login('admin','admin123')
         newSession.close()
         # delete user
         self.edit_user('user0', {'delete': 1})
