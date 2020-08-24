@@ -41,7 +41,7 @@ if __name__ == '__main__':
     if True: # os.name != 'nt':
         found = False
         python_exe = ""
-        pversion = ["python3.7", "python3.8", "python3", "c:\\python38\python.exe", "c:\\python37\python.exe"]
+        pversion = ["python3.7", "python3.8", "python3", "c:\\python38\\python.exe", "c:\\python37\\python.exe"]
         for python in pversion:
             try:
                 p = process_open([python, "-m", "pip", "-V"])
