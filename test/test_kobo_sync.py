@@ -208,7 +208,7 @@ class TestKoboSync(unittest.TestCase, ui_class):
         session = requests.session()
         r = session.get(self.kobo_adress+'x/v1/initialization', headers=header)
         self.assertEqual(r.status_code, 401)
-        session.close()'''
+        session.close()
 
 
     def test_sync_unchanged(self):
@@ -225,7 +225,7 @@ class TestKoboSync(unittest.TestCase, ui_class):
         newSession.close()
         TestKoboSync.syncToken = {'x-kobo-synctoken': r.headers['x-kobo-synctoken']}
 
-    '''def test_sync_upload(self):
+    def test_sync_upload(self):
         self.inital_sync()
         # Upload new book
         # sync and get this book and nothing else

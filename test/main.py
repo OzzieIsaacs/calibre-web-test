@@ -40,11 +40,12 @@ if __name__ == '__main__':
     # check pip ist installed
     if os.name != 'nt':
         found = False
-        pversion=("python3.8", "python3.7")
+        pversion = ["python3.7", "python3.8", "python3"]
         for python in pversion:
             try:
                 p = process_open([python, "-m", "pip", "-V"])
             except FileNotFoundError:
+                print("{} not found".format(python))
                 continue
             p.wait()
             res = (p.stdout.readlines())
@@ -60,6 +61,7 @@ if __name__ == '__main__':
         print("Test are not guaranteed to run on windows")
         found = True
     if not found:
+        print("Pip not found, can't setup test environment")
         exit()
     # generate virtual environment
     try:
