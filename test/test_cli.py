@@ -15,27 +15,27 @@ from config_test import CALIBRE_WEB_PATH, TEST_DB, BOOT_TIME
 import re
 import sys
 
-from parameterized import parameterized_class
+# from parameterized import parameterized_class
 
 '''@parameterized_class([
    { "py_version": u'/usr/bin/python'},
    { "py_version": u'/usr/bin/python3'},
 ],names=('Python27','Python36'))'''
-class test_cli(unittest.TestCase, ui_class):
+class testCli(unittest.TestCase, ui_class):
 
     @classmethod
     def setUpClass(cls):
         cls.driver = webdriver.Firefox()
         cls.driver.implicitly_wait(10)
         cls.driver.maximize_window()
-        shutil.rmtree(TEST_DB,ignore_errors=True)
+        shutil.rmtree(TEST_DB, ignore_errors=True)
         shutil.copytree('./Calibre_db', TEST_DB)
 
     def setUp(self):
         os.chdir(os.path.dirname(__file__))
         try:
-            os.remove(os.path.join(CALIBRE_WEB_PATH,'app.db'))
-        except:
+            os.remove(os.path.join(CALIBRE_WEB_PATH, 'app.db'))
+        except Exception:
             pass
 
     @classmethod
@@ -49,7 +49,7 @@ class test_cli(unittest.TestCase, ui_class):
 
     def test_cli_different_folder(self):
         os.chdir(CALIBRE_WEB_PATH)
-        self.p = process_open([self.py_version, u'cps.py'],(1))
+        self.p = process_open([self.py_version, u'cps.py'], [1])
         os.chdir(os.path.dirname(__file__))
         try:
             # create a new Firefox session
@@ -83,8 +83,8 @@ class test_cli(unittest.TestCase, ui_class):
         new_db = os.path.join(CALIBRE_WEB_PATH, 'hü go.app')  # .decode('UTF-8')
         # if sys.version_info < (3, 0):
         new_db = new_db # .decode('UTF-8')
-        self.p = process_open([self.py_version, os.path.join(CALIBRE_WEB_PATH,u'cps.py'),
-                        '-p', new_db], (1,3))
+        self.p = process_open([self.py_version, os.path.join(CALIBRE_WEB_PATH, u'cps.py'),
+                               '-p', new_db], [1, 3])
 
         time.sleep(15)
         # navigate to the application home page
@@ -105,7 +105,7 @@ class test_cli(unittest.TestCase, ui_class):
         login_button = self.check_element_on_page((By.NAME, "login"))
         self.assertTrue(login_button)
         login_button.click()
-        self.login('admin','admin123')
+        self.login('admin', 'admin123')
         self.stop_calibre_web(self.p)
         self.p.terminate()
         time.sleep(3)
@@ -124,32 +124,32 @@ class test_cli(unittest.TestCase, ui_class):
             real_key_file = real_key_file.decode('UTF-8')
             real_crt_file = real_crt_file.decode('UTF-8')
 
-        p = process_open([self.py_version, os.path.join(CALIBRE_WEB_PATH,u'cps.py'),
-                        '-c', path_like_file],(1,3))
+        p = process_open([self.py_version, os.path.join(CALIBRE_WEB_PATH, u'cps.py'),
+                          '-c', path_like_file],[1, 3])
         time.sleep(2)
         nextline = p.communicate()[0]
         if p.poll() is None:
             p.kill()
         self.assertIsNotNone(re.findall('Certfilepath is invalid. Exiting', nextline))
 
-        p = process_open([self.py_version, os.path.join(CALIBRE_WEB_PATH,u'cps.py'),
-                        '-k', path_like_file],(1,3))
+        p = process_open([self.py_version, os.path.join(CALIBRE_WEB_PATH, u'cps.py'),
+                          '-k', path_like_file], [1, 3])
         time.sleep(2)
         nextline = p.communicate()[0]
         if p.poll() is None:
             p.kill()
         self.assertIsNotNone(re.findall('Keyfilepath is invalid. Exiting', nextline))
 
-        p = process_open([self.py_version, os.path.join(CALIBRE_WEB_PATH,u'cps.py'),
-                        '-c', only_path],(1,3))
+        p = process_open([self.py_version, os.path.join(CALIBRE_WEB_PATH, u'cps.py'),
+                          '-c', only_path], [1, 3])
         time.sleep(2)
         nextline = p.communicate()[0]
         if p.poll() is None:
             p.kill()
         self.assertIsNotNone(re.findall('Certfilepath is invalid. Exiting', nextline))
 
-        p = process_open([self.py_version, os.path.join(CALIBRE_WEB_PATH,u'cps.py'),
-                        '-k', only_path],(1,3))
+        p = process_open([self.py_version, os.path.join(CALIBRE_WEB_PATH, u'cps.py'),
+                          '-k', only_path],[1, 3])
         time.sleep(2)
         nextline = p.communicate()[0]
         if p.poll() is None:
@@ -245,13 +245,13 @@ class test_cli(unittest.TestCase, ui_class):
 
     def test_bind_to_single_interface(self):
         address = get_Host_IP()
-        p = process_open([self.py_version, os.path.join(CALIBRE_WEB_PATH, u'cps.py'), '-i', 'http://'+address], (1))
+        p = process_open([self.py_version, os.path.join(CALIBRE_WEB_PATH, u'cps.py'), '-i', 'http://'+address], [1])
         time.sleep(2)
         if p.poll() is None:
             p.kill()
         nextline = p.communicate()[0]
         self.assertIsNotNone(re.findall('Illegal IP address string', nextline))
-        p = process_open([self.py_version, os.path.join(CALIBRE_WEB_PATH, u'cps.py'), '-i', address], (1))
+        p = process_open([self.py_version, os.path.join(CALIBRE_WEB_PATH, u'cps.py'), '-i', address], [1])
 
         time.sleep(BOOT_TIME)
         # navigate to the application home page
@@ -276,7 +276,9 @@ class test_cli(unittest.TestCase, ui_class):
 
 
     def test_environ_port_setting(self):
-        p = process_open([self.py_version, os.path.join(CALIBRE_WEB_PATH,u'cps.py')],(1), env={'CALIBRE_PORT':'8082'})
+        my_env = os.environ.copy()
+        my_env["CALIBRE_PORT"] = '8082'
+        p = process_open([self.py_version, os.path.join(CALIBRE_WEB_PATH,u'cps.py')],[1], env=my_env)
 
         time.sleep(BOOT_TIME)
         # navigate to the application home page
@@ -303,14 +305,15 @@ class test_cli(unittest.TestCase, ui_class):
     # stop process A
     def test_already_started(self):
         os.chdir(CALIBRE_WEB_PATH)
-        p1 = process_open([self.py_version, u'cps.py'], (1))
+        p1 = process_open([self.py_version, u'cps.py'], [1])
         time.sleep(BOOT_TIME)
-        p2 = process_open([self.py_version, u'cps.py'], (1))
+        p2 = process_open([self.py_version, u'cps.py'], [1])
         time.sleep(BOOT_TIME)
+        time.sleep(2)
         result = p2.poll()
         if result is None:
             p2.terminate()
-            self.assert_('2nd process not terminated, port is already in use')
+            self.assertTrue('2nd process not terminated, port is already in use')
         self.assertEqual(result, 1)
         p1.terminate()
         time.sleep(3)

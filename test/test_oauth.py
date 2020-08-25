@@ -19,7 +19,7 @@ class test_OAuth_login(unittest.TestCase, ui_class):
         add_dependency(cls.dep_line, cls.__name__)
 
         try:
-            startup(cls, cls.py_version, {'config_calibre_dir':TEST_DB}, env=None)
+            startup(cls, cls.py_version, {'config_calibre_dir':TEST_DB})
         except Exception as e:
             cls.driver.quit()
             cls.p.terminate()

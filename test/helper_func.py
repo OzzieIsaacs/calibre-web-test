@@ -164,7 +164,11 @@ def add_dependency(name, testclass_name):
 
     for indx, element in enumerate(element_version):
         with process_open([VENV_PYTHON, "-m", "pip", "install", element], (0, 5)) as r:
-            r.wait()
+            if os.name == 'nt':
+                while r.poll() == None:
+                    print(r.stdout.readline())
+            else:
+                r.wait()
         if element.lower().startswith('git'):
             element_version[indx] = element[element.rfind('#egg=')+5:]
 
@@ -176,7 +180,11 @@ def remove_dependency(names):
         if name.startswith('git|'):
             name = name[4:]
         with process_open([VENV_PYTHON, "-m", "pip", "uninstall", "-y", name], (0, 5)) as q:
-            q.wait()
+            if os.name == 'nt':
+                while q.poll() == None:
+                    print(q.stdout.readline())
+            else:
+                q.wait()
 
 
 def kill_old_cps(port=8083):

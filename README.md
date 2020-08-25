@@ -27,6 +27,8 @@ Calibre-web-test
 
 - All dependencies listed in requirements.txt have to be installed
 
+- Ldaptor causes a problem in conjunction with the tests, so the patch suggested in https://github.com/twisted/ldaptor/issues/170 has to be applied
+
 - tests are only running with tornado as wsgi server
 
 - install Calibre as conversion tool (if running from within pycharm debugger version 3.48 at most, as Calibre 4.x crash during conversion in this configuration)
