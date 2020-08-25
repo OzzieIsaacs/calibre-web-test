@@ -1,50 +1,45 @@
-#!/usr/bin/env python
 # -*- coding: utf-8 -*-
+
+import unittest
+import time
+
 from helper_email_convert import AIOSMTPServer
 import helper_email_convert
-import unittest
 from selenium.webdriver.common.by import By
-import time
 from helper_ui import ui_class
 from config_test import CALIBRE_WEB_PATH, TEST_DB, BOOT_TIME
 # from parameterized import parameterized_class
 from helper_func import startup, wait_Email_received
-import requests
-import re
 
-'''@parameterized_class([
-   { "py_version": u'/usr/bin/python'},
-   { "py_version": u'/usr/bin/python3'},
-],names=('Python27','Python36'))'''
+
 @unittest.skipIf(helper_email_convert.is_calibre_not_present(),"Skipping convert, calibre not found")
 class test_STARTTLS(unittest.TestCase, ui_class):
-    p=None
+    p = None
     driver = None
     email_server = None
 
     @classmethod
     def setUpClass(cls):
-        print('test_STARTTLS')
         # start email server
         cls.email_server = AIOSMTPServer(
-            hostname='127.0.0.1',port=1026,
+            hostname='127.0.0.1',
+            port=1026,
             only_ssl=False,
             startSSL=True,
             certfile='SSL/ssl.crt',
             keyfile='SSL/ssl.key',
-            # credential_validator=CredentialValidator(),
             timeout=10
         )
         cls.email_server.start()
         try:
-            startup(cls, cls.py_version, {'config_calibre_dir':TEST_DB,
-                                          'config_converterpath':helper_email_convert.calibre_path(),
-                                          'config_ebookconverter':'converter2'})
+            startup(cls, cls.py_version, {'config_calibre_dir': TEST_DB,
+                                          'config_converterpath': helper_email_convert.calibre_path(),
+                                          'config_ebookconverter': 'converter2'})
 
             cls.edit_user('admin', {'email': 'a5@b.com','kindle_mail': 'a1@b.com'})
-            cls.setup_server(True, {'mail_server':'127.0.0.1', 'mail_port':'1026',
-                                'mail_use_ssl':'SSL/TLS','mail_login':'name@host.com','mail_password':'10234',
-                                'mail_from':'name@host.com'})
+            cls.setup_server(True, {'mail_server': '127.0.0.1', 'mail_port': '1026',
+                                    'mail_use_ssl': 'SSL/TLS', 'mail_login': 'name@host.com', 'mail_password':'10234',
+                                    'mail_from': 'name@host.com'})
         except:
             cls.driver.quit()
             cls.p.kill()
@@ -104,7 +99,7 @@ class test_STARTTLS(unittest.TestCase, ui_class):
     def test_STARTTLS_resend_password(self):
         self.create_user('paswd_resend', {'password': '123', 'email': 'a@b.com', 'edit_role': 1})
         self.setup_server(False, {'mail_use_ssl': 'STARTTLS'})
-        self.assertTrue(self.edit_user(u'paswd_resend', { 'resend_password':1}))
+        self.assertTrue(self.edit_user(u'paswd_resend', { 'resend_password': 1}))
         self.edit_user('paswd_resend', element={})
         password_link = self.check_element_on_page((By.ID, "resend_password")).find_elements_by_tag_name("a")[0].get_attribute('href')
         user_id = password_link[password_link.rfind("/")+1:]
@@ -127,5 +122,5 @@ class test_STARTTLS(unittest.TestCase, ui_class):
         self.assertTrue(self.check_element_on_page((By.ID, "flash_alert")))
         self.driver.get(password_link[:password_link.rfind("/")] + '/99')
         self.assertTrue(self.check_element_on_page((By.ID, "flash_alert")))
-        self.edit_user('paswd_resend',{'delete':1})
+        self.edit_user('paswd_resend', {'delete': 1})
         self.setup_server(False, {'mail_server': '127.0.0.1'})

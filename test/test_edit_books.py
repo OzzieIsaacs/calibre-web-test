@@ -4,23 +4,21 @@
 
 from unittest import TestCase, skip
 import os
-from selenium.webdriver.common.by import By
-from selenium.webdriver.common.keys import Keys
 import time
-from helper_ui import ui_class
-from config_test import TEST_DB, base_path
-from parameterized import parameterized_class
-from helper_func import startup, debug_startup, add_dependency, remove_dependency
 import requests
 
-'''@parameterized_class([
-   { "py_version": u'/usr/bin/python'},
-   { "py_version": u'/usr/bin/python3'}
-],names=('Python27','Python36'))'''
-class test_edit_books(TestCase, ui_class):
-    p=None
+from selenium.webdriver.common.by import By
+from selenium.webdriver.common.keys import Keys
+from helper_ui import ui_class
+from config_test import TEST_DB, base_path
+# from parameterized import parameterized_class
+from helper_func import startup, debug_startup, add_dependency, remove_dependency
+
+
+class TestEditBooks(TestCase, ui_class):
+    p = None
     driver = None
-    dependencys = ['Pillow','lxml']
+    dependencys = ['Pillow', 'lxml']
     # py_version = u'/usr/bin/python3'
 
     @classmethod
@@ -28,12 +26,11 @@ class test_edit_books(TestCase, ui_class):
         add_dependency(cls.dependencys, cls.__name__)
 
         try:
-            startup(cls, cls.py_version, {'config_calibre_dir':TEST_DB})
+            startup(cls, cls.py_version, {'config_calibre_dir': TEST_DB})
             time.sleep(3)
-        except Exception as e:
+        except Exception:
             cls.driver.quit()
             cls.p.kill()
-
 
     @classmethod
     def tearDownClass(cls):
@@ -70,69 +67,68 @@ class test_edit_books(TestCase, ui_class):
     def test_edit_title(self):
         self.get_book_details(4)
         self.check_element_on_page((By.ID, "edit_book")).click()
-        self.edit_book(content={'book_title':u'O0ü 执'})
-        values=self.get_book_details()
-        self.assertEqual(u'O0ü 执',values['title'])
-        self.assertTrue(os.path.isdir(os.path.join(TEST_DB,values['author'][0],'O0u Zhi (4)')))
+        self.edit_book(content={'book_title': u'O0ü 执'})
+        values = self.get_book_details()
+        self.assertEqual(u'O0ü 执', values['title'])
+        self.assertTrue(os.path.isdir(os.path.join(TEST_DB, values['author'][0], 'O0u Zhi (4)')))
         self.assertFalse(os.path.isdir(os.path.join(TEST_DB, values['author'][0],
-                                                  'Very long extra super turbo cool tit (4)')))
+                                                    'Very long extra super turbo cool tit (4)')))
         self.check_element_on_page((By.ID, "edit_book")).click()
-        with open(os.path.join(TEST_DB,values['author'][0],'O0u Zhi (4)','test.dum'), 'wb') as fout:
+        with open(os.path.join(TEST_DB, values['author'][0], 'O0u Zhi (4)', 'test.dum'), 'wb') as fout:
             fout.write(os.urandom(124))
-        self.edit_book(content={'book_title':u' O0ü 执'},detail_v=True)
+        self.edit_book(content={'book_title': u' O0ü 执'}, detail_v=True)
         title = self.check_element_on_page((By.ID, "book_title"))
         # calibre strips spaces in beginning
         self.assertEqual(u'O0ü 执', title.get_attribute('value'))
-        self.assertTrue(os.path.isdir(os.path.join(TEST_DB,values['author'][0],'O0u Zhi (4)')))
-        self.edit_book(content={'book_title':u'O0ü name'},detail_v=True)
+        self.assertTrue(os.path.isdir(os.path.join(TEST_DB, values['author'][0], 'O0u Zhi (4)')))
+        self.edit_book(content={'book_title': u'O0ü name'}, detail_v=True)
         title = self.check_element_on_page((By.ID, "book_title"))
         # calibre strips spaces in the end
         self.assertEqual(u'O0ü name', title.get_attribute('value'))
-        self.assertTrue(os.path.isdir(os.path.join(TEST_DB,values['author'][0],'O0u name (4)')))
+        self.assertTrue(os.path.isdir(os.path.join(TEST_DB, values['author'][0], 'O0u name (4)')))
         self.assertFalse(os.path.isdir(os.path.join(TEST_DB, values['author'][0], 'O0u Zhi (4)')))
-        self.edit_book(content={'book_title':''})
-        values=self.get_book_details()
-        os.path.join(TEST_DB,values['author'][0],'Unknown')
+        self.edit_book(content={'book_title': ''})
+        values = self.get_book_details()
+        os.path.join(TEST_DB, values['author'][0], 'Unknown')
         self.assertEqual('Unknown', values['title'])
-        self.assertTrue(os.path.isdir(os.path.join(TEST_DB,values['author'][0],'Unknown (4)')))
+        self.assertTrue(os.path.isdir(os.path.join(TEST_DB, values['author'][0], 'Unknown (4)')))
         self.check_element_on_page((By.ID, "edit_book")).click()
-        self.edit_book(content={'book_title':'The camicdemo'})
-        values=self.get_book_details()
-        os.path.join(TEST_DB,values['author'][0],'The camicdemo')
-        self.assertEqual('The camicdemo',values['title'])
+        self.edit_book(content={'book_title': 'The camicdemo'})
+        values = self.get_book_details()
+        os.path.join(TEST_DB, values['author'][0], 'The camicdemo')
+        self.assertEqual('The camicdemo', values['title'])
         self.goto_page('nav_new')
         books = self.get_books_displayed()
         self.assertEqual('The camicdemo', books[1][8]['title'])
-        file_path=os.path.join(TEST_DB, values['author'][0], 'The camicdemo (4)')
+        file_path = os.path.join(TEST_DB, values['author'][0], 'The camicdemo (4)')
         not_file_path = os.path.join(TEST_DB, values['author'][0], 'camicdemo')
         os.renames(file_path, not_file_path)
         self.get_book_details(4)
         self.check_element_on_page((By.ID, "edit_book")).click()
         self.edit_book(content={'book_title': u'Not found'})
-        self.check_element_on_page((By.ID,'flash_alert'))
+        self.check_element_on_page((By.ID, 'flash_alert'))
         title = self.check_element_on_page((By.ID, "book_title"))
         # calibre strips spaces in the end
         self.assertEqual('The camicdemo', title.get_attribute('value'))
         os.renames(not_file_path, file_path)
         # missing cover file is not detected, and cover file is moved
-        cover_file=os.path.join(TEST_DB, values['author'][0], 'The camicdemo (4)','cover.jpg')
-        not_cover_file = os.path.join(TEST_DB, values['author'][0], 'The camicdemo (4)','no_cover.jpg')
+        cover_file = os.path.join(TEST_DB, values['author'][0], 'The camicdemo (4)', 'cover.jpg')
+        not_cover_file = os.path.join(TEST_DB, values['author'][0], 'The camicdemo (4)', 'no_cover.jpg')
         os.renames(cover_file, not_cover_file)
-        self.edit_book(content={'book_title': u'No Cover'},detail_v=True)
+        self.edit_book(content={'book_title': u'No Cover'}, detail_v=True)
         title = self.check_element_on_page((By.ID, "book_title"))
         self.assertEqual('No Cover', title.get_attribute('value'))
-        cover_file=os.path.join(TEST_DB, values['author'][0], 'No Cover (4)','cover.jpg')
-        not_cover_file = os.path.join(TEST_DB, values['author'][0], 'No Cover (4)','no_cover.jpg')
+        cover_file = os.path.join(TEST_DB, values['author'][0], 'No Cover (4)', 'cover.jpg')
+        not_cover_file = os.path.join(TEST_DB, values['author'][0], 'No Cover (4)', 'no_cover.jpg')
         os.renames(not_cover_file, cover_file)
-        self.edit_book(content={'book_title': u'Pipo|;.:'},detail_v=True)
+        self.edit_book(content={'book_title': u'Pipo|;.:'}, detail_v=True)
         title = self.check_element_on_page((By.ID, "book_title"))
         self.assertEqual(u'Pipo|;.:', title.get_attribute('value'))
         self.edit_book(content={'book_title': u'Very long extra super turbo cool title without any issue of displaying including ö utf-8 characters'})
-        ele=self.check_element_on_page((By.ID, "title"))
+        ele = self.check_element_on_page((By.ID, "title"))
         self.assertEqual(ele.text, u'Very long extra super turbo cool title without any issue of ...')
         self.check_element_on_page((By.ID, "edit_book")).click()
         self.edit_book(content={'book_title': u'book6'})
-
 
 
     # goto Book 2
@@ -175,34 +171,34 @@ class test_edit_books(TestCase, ui_class):
         self.get_book_details(8)
         self.check_element_on_page((By.ID, "edit_book")).click()
         self.edit_book(content={'bookAuthor':u'O0ü 执'})
-        values=self.get_book_details()
-        self.assertEqual(u'O0ü 执',values['author'][0])
-        self.assertTrue(os.path.isdir(os.path.join(TEST_DB,'O0u Zhi','book8 (8)')))
+        values = self.get_book_details()
+        self.assertEqual(u'O0ü 执', values['author'][0])
+        self.assertTrue(os.path.isdir(os.path.join(TEST_DB, 'O0u Zhi', 'book8 (8)')))
         self.assertFalse(os.path.isdir(os.path.join(TEST_DB, 'Leo Baskerville',
-                                                  'book8 (8)')))
+                                                    'book8 (8)')))
         self.check_element_on_page((By.ID, "edit_book")).click()
-        self.edit_book(content={'bookAuthor':u' O0ü name '},detail_v=True)
+        self.edit_book(content={'bookAuthor':u' O0ü name '}, detail_v=True)
         author = self.check_element_on_page((By.ID, "bookAuthor"))
         # calibre strips spaces in the end
         self.assertEqual(u'O0ü name', author.get_attribute('value'))
-        self.assertTrue(os.path.isdir(os.path.join(TEST_DB,'O0u name','book8 (8)')))
+        self.assertTrue(os.path.isdir(os.path.join(TEST_DB, 'O0u name', 'book8 (8)')))
         self.edit_book(content={'bookAuthor':''})
-        values=self.get_book_details()
-        os.path.join(TEST_DB,'Unknown','book8 (8)')
+        values = self.get_book_details()
+        os.path.join(TEST_DB, 'Unknown', 'book8 (8)')
         self.assertEqual('Unknown', values['author'][0])
-        self.assertTrue(os.path.isdir(os.path.join(TEST_DB,values['author'][0],'book8 (8)')))
+        self.assertTrue(os.path.isdir(os.path.join(TEST_DB, values['author'][0], 'book8 (8)')))
         self.check_element_on_page((By.ID, "edit_book")).click()
         # Check authorsort
         self.edit_book(content={'bookAuthor':'Marco, Lulu de'})
-        values=self.get_book_details()
-        os.path.join(TEST_DB,values['author'][0],'book8 (8)')
-        self.assertEqual(values['author'][0],'Marco, Lulu de')
+        values = self.get_book_details()
+        os.path.join(TEST_DB, values['author'][0], 'book8 (8)')
+        self.assertEqual(values['author'][0], 'Marco, Lulu de')
         list_element = self.goto_page('nav_author')
         # ToDo check names of List elements
         self.get_book_details(8)
         self.check_element_on_page((By.ID, "edit_book")).click()
 
-        self.edit_book(content={'bookAuthor': 'Sigurd Lindgren'},detail_v=True)
+        self.edit_book(content={'bookAuthor': 'Sigurd Lindgren'}, detail_v=True)
         author = self.check_element_on_page((By.ID, "bookAuthor")).get_attribute('value')
         self.assertEqual(u'Sigurd Lindgren', author)
         self.assertTrue(os.path.isdir(os.path.join(TEST_DB, author, 'book8 (8)')))
@@ -219,13 +215,13 @@ class test_edit_books(TestCase, ui_class):
         self.assertEqual(u'Pipo, Pipe', author.get_attribute('value'))
         list_element = self.goto_page('nav_author')
 
-        file_path=os.path.join(TEST_DB, 'Pipo, Pipe', 'book8 (8)')
+        file_path = os.path.join(TEST_DB, 'Pipo, Pipe', 'book8 (8)')
         not_file_path = os.path.join(TEST_DB, 'Pipo, Pipe', 'nofolder')
         os.renames(file_path, not_file_path)
         self.get_book_details(8)
         self.check_element_on_page((By.ID, "edit_book")).click()
         self.edit_book(content={'bookAuthor': u'Not found'})
-        self.check_element_on_page((By.ID,'flash_alert'))
+        self.check_element_on_page((By.ID, 'flash_alert'))
         author = self.check_element_on_page((By.ID, "bookAuthor"))
         self.assertEqual('Pipo, Pipe', author.get_attribute('value'))
         os.renames(not_file_path, file_path)
@@ -236,45 +232,45 @@ class test_edit_books(TestCase, ui_class):
         self.get_book_details(9)
         self.check_element_on_page((By.ID, "edit_book")).click()
         self.edit_book(content={'series':u'O0ü 执'})
-        values=self.get_book_details()
-        self.assertEqual(u'O0ü 执',values['series'])
+        values = self.get_book_details()
+        self.assertEqual(u'O0ü 执', values['series'])
         self.check_element_on_page((By.ID, "edit_book")).click()
         self.edit_book(content={'series':u'Alf|alfa, Kuko'})
-        values=self.get_book_details()
-        self.assertEqual(u'Alf|alfa, Kuko',values['series'])
+        values = self.get_book_details()
+        self.assertEqual(u'Alf|alfa, Kuko', values['series'])
         list_element = self.goto_page('nav_serie')
         self.assertEqual(list_element[0].text, u'Alf|alfa, Kuko')
 
         self.get_book_details(9)
         self.check_element_on_page((By.ID, "edit_book")).click()
         self.edit_book(content={'series':''})
-        values=self.get_book_details()
+        values = self.get_book_details()
         self.assertFalse('series' in values)
 
         self.check_element_on_page((By.ID, "edit_book")).click()
-        self.edit_book(content={'series':'Loko'},detail_v=True)
+        self.edit_book(content={'series':'Loko'}, detail_v=True)
         series = self.check_element_on_page((By.ID, "series"))
         self.assertEqual(u'Loko', series.get_attribute('value'))
 
         self.get_book_details(4)
         self.check_element_on_page((By.ID, "edit_book")).click()
         self.edit_book(content={'series':u'loko'})
-        values=self.get_book_details()
-        self.assertEqual(u'loko',values['series'])
+        values = self.get_book_details()
+        self.assertEqual(u'loko', values['series'])
         list_element = self.goto_page('nav_serie')
         self.assertEqual(list_element[1].text, u'loko')
 
         self.get_book_details(4)
         self.check_element_on_page((By.ID, "edit_book")).click()
-        self.edit_book(content={'series':u'Loko','series_index':'1.0'})
-        values=self.get_book_details()
+        self.edit_book(content={'series':u'Loko', 'series_index':'1.0'})
+        values = self.get_book_details()
         self.assertEqual(u'Loko', values['series'])
         self.check_element_on_page((By.XPATH, "//*[contains(@href,'series')]/ancestor::p/a")).click()
-        books=self.get_books_displayed()
-        self.assertEqual(len(books[1]),2)
+        books = self.get_books_displayed()
+        self.assertEqual(len(books[1]), 2)
         books[1][0]['ele'].click()
         time.sleep(2)
-        ele=self.check_element_on_page((By.ID, "title"))
+        ele = self.check_element_on_page((By.ID, "title"))
         self.assertEqual(u'book6', ele.text)
         self.check_element_on_page((By.ID, "edit_book")).click()
         self.edit_book(content={'series': u''})
@@ -284,36 +280,36 @@ class test_edit_books(TestCase, ui_class):
         self.get_book_details(12)
         self.check_element_on_page((By.ID, "edit_book")).click()
         self.edit_book(content={'tags':u'O0ü 执'})
-        values=self.get_book_details()
-        self.assertEqual(len(values['tag']),1)
-        self.assertEqual(u'O0ü 执',values['tag'][0])
+        values = self.get_book_details()
+        self.assertEqual(len(values['tag']), 1)
+        self.assertEqual(u'O0ü 执', values['tag'][0])
         self.check_element_on_page((By.ID, "edit_book")).click()
         self.edit_book(content={'tags':u'Alf|alfa'})
-        values=self.get_book_details()
-        self.assertEqual(u'Alf|alfa',values['tag'][0])
+        values = self.get_book_details()
+        self.assertEqual(u'Alf|alfa', values['tag'][0])
         list_element = self.goto_page('nav_cat')
         self.assertEqual(list_element[0].text, u'Alf|alfa')
 
         self.get_book_details(12)
         self.check_element_on_page((By.ID, "edit_book")).click()
         self.edit_book(content={'tags':''})
-        values=self.get_book_details()
+        values = self.get_book_details()
         self.assertEqual(len(values['tag']), 0)
 
         self.check_element_on_page((By.ID, "edit_book")).click()
-        self.edit_book(content={'tags':u' Gênot & Peter '},detail_v=True)
+        self.edit_book(content={'tags':u' Gênot & Peter '}, detail_v=True)
         tags = self.check_element_on_page((By.ID, "tags"))
         self.assertEqual(u'Gênot & Peter', tags.get_attribute('value'))
 
         self.edit_book(content={'tags':u' Gênot , Peter '})
         values = self.get_book_details()
-        self.assertEqual(u'Gênot',values['tag'][0])
+        self.assertEqual(u'Gênot', values['tag'][0])
         self.assertEqual(u'Peter', values['tag'][1])
 
         self.check_element_on_page((By.ID, "edit_book")).click()
         self.edit_book(content={'tags':u'gênot'})
         values = self.get_book_details()
-        self.assertEqual(u'gênot',values['tag'][0])
+        self.assertEqual(u'gênot', values['tag'][0])
         self.get_book_details(12)
         self.check_element_on_page((By.ID, "edit_book")).click()
         self.edit_book(content={'tags':'Gênot'})
@@ -323,35 +319,35 @@ class test_edit_books(TestCase, ui_class):
         self.get_book_details(7)
         self.check_element_on_page((By.ID, "edit_book")).click()
         self.edit_book(content={'publisher':u'O0ü 执'})
-        values=self.get_book_details()
-        self.assertEqual(len(values['publisher']),1)
-        self.assertEqual(u'O0ü 执',values['publisher'][0])
+        values = self.get_book_details()
+        self.assertEqual(len(values['publisher']), 1)
+        self.assertEqual(u'O0ü 执', values['publisher'][0])
         self.check_element_on_page((By.ID, "edit_book")).click()
         self.edit_book(content={'publisher':u'Beta|,Bet'})
-        values=self.get_book_details()
-        self.assertEqual(u'Beta|,Bet',values['publisher'][0])
+        values = self.get_book_details()
+        self.assertEqual(u'Beta|,Bet', values['publisher'][0])
         list_element = self.goto_page('nav_publisher')
         self.assertEqual(list_element[0].text, u'Beta|,Bet', "Publisher Sorted according to name, B before R")
 
         self.get_book_details(7)
         self.check_element_on_page((By.ID, "edit_book")).click()
         self.edit_book(content={'publisher':''})
-        values=self.get_book_details()
+        values = self.get_book_details()
         self.assertEqual(len(values['publisher']), 0)
 
         self.check_element_on_page((By.ID, "edit_book")).click()
-        self.edit_book(content={'publisher':u' Gênot & Peter '},detail_v=True)
+        self.edit_book(content={'publisher':u' Gênot & Peter '}, detail_v=True)
         publisher = self.check_element_on_page((By.ID, "publisher"))
         self.assertEqual(u'Gênot & Peter', publisher.get_attribute('value'))
 
         self.edit_book(content={'publisher':u' Gênot , Peter '})
         values = self.get_book_details()
-        self.assertEqual(u'Gênot , Peter',values['publisher'][0])
+        self.assertEqual(u'Gênot , Peter', values['publisher'][0])
 
         self.check_element_on_page((By.ID, "edit_book")).click()
         self.edit_book(content={'publisher':u'gênot'})
         values = self.get_book_details()
-        self.assertEqual(u'gênot',values['publisher'][0])
+        self.assertEqual(u'gênot', values['publisher'][0])
         self.check_element_on_page((By.ID, "edit_book")).click()
         self.edit_book(content={'publisher':u'Gênot'})
         values = self.get_book_details()
@@ -363,13 +359,13 @@ class test_edit_books(TestCase, ui_class):
         self.get_book_details(3)
         self.check_element_on_page((By.ID, "edit_book")).click()
         self.edit_book(content={'languages':u'english'})
-        values=self.get_book_details()
-        self.assertEqual(len(values['languages']),1)
-        self.assertEqual('English',values['languages'][0])
+        values = self.get_book_details()
+        self.assertEqual(len(values['languages']), 1)
+        self.assertEqual('English', values['languages'][0])
         self.check_element_on_page((By.ID, "edit_book")).click()
         self.edit_book(content={'languages':u'German'})
-        values=self.get_book_details()
-        self.assertEqual('German',values['languages'][0])
+        values = self.get_book_details()
+        self.assertEqual('German', values['languages'][0])
         list_element = self.goto_page('nav_lang')
         self.assertEqual(list_element[2].text, u'German')
         self.get_book_details(3)
@@ -378,9 +374,9 @@ class test_edit_books(TestCase, ui_class):
         self.check_element_on_page((By.ID, 'flash_alert'))
         self.edit_book(content={'languages': 'German, English'})
         self.get_book_details(3)
-        values=self.get_book_details()
-        self.assertEqual(len(values['languages']),2)
-        self.assertEqual('German',values['languages'][1])
+        values = self.get_book_details()
+        self.assertEqual(len(values['languages']), 2)
+        self.assertEqual('German', values['languages'][1])
         self.assertEqual('English', values['languages'][0])
 
 
@@ -388,23 +384,23 @@ class test_edit_books(TestCase, ui_class):
     # check if book with rating of 4 stars appears in list of hot books
     def test_edit_rating(self):
         self.goto_page('nav_rated')
-        books=self.get_books_displayed()
+        books = self.get_books_displayed()
         self.assertEqual(1, len(books[1]))
         self.get_book_details(3)
         self.check_element_on_page((By.ID, "edit_book")).click()
         self.edit_book(content={'rating':4})
-        values=self.get_book_details()
+        values = self.get_book_details()
         self.assertEqual(4, values['rating'])
         self.goto_page('nav_rated')
-        books=self.get_books_displayed()
+        books = self.get_books_displayed()
         self.assertEqual(1, len(books[1]))
         self.get_book_details(3)
         self.check_element_on_page((By.ID, "edit_book")).click()
         self.edit_book(content={'rating':5})
-        values=self.get_book_details()
+        values = self.get_book_details()
         self.assertEqual(5, values['rating'])
         self.goto_page('nav_rated')
-        books=self.get_books_displayed()
+        books = self.get_books_displayed()
         self.assertEqual(2, len(books[1]))
         self.get_book_details(3)
         self.check_element_on_page((By.ID, "edit_book")).click()
@@ -438,7 +434,7 @@ class test_edit_books(TestCase, ui_class):
         self.check_element_on_page((By.ID, "edit_book")).click()
         self.edit_book(custom_content={u'Custom Bool 1 Ä': u""})
         vals = self.get_book_details(5)
-        self.assertEqual(0,len(vals['cust_columns']))
+        self.assertEqual(0, len(vals['cust_columns']))
 
 
     def test_edit_custom_rating(self):
@@ -498,7 +494,7 @@ class test_edit_books(TestCase, ui_class):
         self.assertEqual(len(self.adv_search({u'custom_column_6': u'人 Ü'})), 0)
         self.get_book_details(5)
         self.check_element_on_page((By.ID, "edit_book")).click()
-        self.edit_book(custom_content={u'Custom categories\|, 人物': u'KuKu 人 Ü'})
+        self.edit_book(custom_content={r'Custom categories\|, 人物': u'KuKu 人 Ü'})
         vals = self.get_book_details(5)
         self.assertEqual(u'KuKu 人 Ü', vals['cust_columns'][0]['value'])
         self.assertEqual(len(self.adv_search({u'custom_column_6': u'Koko'})), 0)
@@ -506,7 +502,7 @@ class test_edit_books(TestCase, ui_class):
         self.assertEqual(len(self.adv_search({u'custom_column_6': u'人 Ü'})), 1)
         self.get_book_details(5)
         self.check_element_on_page((By.ID, "edit_book")).click()
-        self.edit_book(custom_content={u'Custom categories\|, 人物': ''})
+        self.edit_book(custom_content={r'Custom categories\|, 人物': ''})
         vals = self.get_book_details(5)
         self.assertEqual(0, len(vals['cust_columns']))
 
@@ -551,19 +547,19 @@ class test_edit_books(TestCase, ui_class):
     def test_typeahead_functions(self):
         req = requests.session()
         payload = {'username': 'admin', 'password': 'admin123', 'submit':"", 'next':"/", "remember_me":"on"}
-        req.post('http://127.0.0.1:8083/login',data=payload)
-        r=req.get('http://127.0.0.1:8083/get_languages_json')
-        self.assertEqual(200,r.status_code)
-        r = req.get('http://127.0.0.1:8083/get_matching_tags')
-        self.assertEqual(200, r.status_code)
-        r = req.get('http://127.0.0.1:8083/get_series_json')
-        self.assertEqual(200, r.status_code)
-        r = req.get('http://127.0.0.1:8083/get_tags_json')
-        self.assertEqual(200, r.status_code)
-        r = req.get('http://127.0.0.1:8083/get_publishers_json')
-        self.assertEqual(200, r.status_code)
-        r = req.get('http://127.0.0.1:8083/get_authors_json')
-        self.assertEqual(200, r.status_code)
+        req.post('http://127.0.0.1:8083/login', data=payload)
+        resp = req.get('http://127.0.0.1:8083/get_languages_json')
+        self.assertEqual(200, resp.status_code)
+        resp = req.get('http://127.0.0.1:8083/get_matching_tags')
+        self.assertEqual(200, resp.status_code)
+        resp = req.get('http://127.0.0.1:8083/get_series_json')
+        self.assertEqual(200, resp.status_code)
+        resp = req.get('http://127.0.0.1:8083/get_tags_json')
+        self.assertEqual(200, resp.status_code)
+        resp = req.get('http://127.0.0.1:8083/get_publishers_json')
+        self.assertEqual(200, resp.status_code)
+        resp = req.get('http://127.0.0.1:8083/get_authors_json')
+        self.assertEqual(200, resp.status_code)
         req.close()
 
     # change comments, add comments, delete comments
@@ -575,7 +571,7 @@ class test_edit_books(TestCase, ui_class):
         lang.send_keys(Keys.DELETE)
         lang.send_keys('G')
         time.sleep(1)
-        typeahead=self.check_element_on_page((By.CLASS_NAME, "tt-dataset-languages"))
+        typeahead = self.check_element_on_page((By.CLASS_NAME, "tt-dataset-languages"))
         typeahead_set = set(typeahead.text.split("\n"))
         result = set(("German", "Greek; Modern (1453-)", "Ga", "Gayo", "Gbaya (Central African Republic)"))
         self.assertEqual(typeahead_set, result)
@@ -586,8 +582,8 @@ class test_edit_books(TestCase, ui_class):
         self.assertEqual(typeahead_set, result)
         lang.send_keys('y')
         time.sleep(1)
-        typeahead_set= set(typeahead.text.split("\n"))
-        result = set(("Gayo","Hiligaynon"))
+        typeahead_set = set(typeahead.text.split("\n"))
+        result = set(("Gayo", "Hiligaynon"))
         self.assertEqual(typeahead_set, result)
         lang.send_keys('o')
         time.sleep(1)
@@ -608,8 +604,8 @@ class test_edit_books(TestCase, ui_class):
         lang.send_keys(Keys.DELETE)
         lang.send_keys('D')
         time.sleep(1)
-        typeahead=self.check_element_on_page((By.CLASS_NAME, "tt-dataset-series"))
-        self.assertEqual('Djüngel',typeahead.text)
+        typeahead = self.check_element_on_page((By.CLASS_NAME, "tt-dataset-series"))
+        self.assertEqual('Djüngel', typeahead.text)
         lang.send_keys('j')
         time.sleep(1)
         typeahead = self.check_element_on_page((By.CLASS_NAME, "tt-dataset-series"))
@@ -631,7 +627,8 @@ class test_edit_books(TestCase, ui_class):
         time.sleep(1)
         typeahead = self.check_element_on_page((By.CLASS_NAME, "tt-dataset-authors"))
         typeahead_set = set(typeahead.text.split("\n"))
-        result = set(("John Döe & John Döe", "John Döe & Peter Parker", "John Döe & Asterix Lionherd", "John Döe & Frodo Beutlin", "John Döe & Norbert Halagal"))
+        result = set(("John Döe & John Döe", "John Döe & Peter Parker", "John Döe & Asterix Lionherd",
+                      "John Döe & Frodo Beutlin", "John Döe & Norbert Halagal"))
         self.assertEqual(typeahead_set, result)
         lang.send_keys('ro')
         time.sleep(1)
@@ -655,8 +652,8 @@ class test_edit_books(TestCase, ui_class):
         lang.send_keys(Keys.DELETE)
         lang.send_keys('g')
         time.sleep(1)
-        typeahead=self.check_element_on_page((By.CLASS_NAME, "tt-dataset-tags"))
-        self.assertEqual('Gênot',typeahead.text)
+        typeahead = self.check_element_on_page((By.CLASS_NAME, "tt-dataset-tags"))
+        self.assertEqual('Gênot', typeahead.text)
         lang.send_keys('e')
         time.sleep(1)
         typeahead = self.check_element_on_page((By.CLASS_NAME, "tt-dataset-tags"))
@@ -678,8 +675,8 @@ class test_edit_books(TestCase, ui_class):
         lang.send_keys(Keys.DELETE)
         lang.send_keys('a')
         time.sleep(1)
-        typeahead=self.check_element_on_page((By.CLASS_NAME, "tt-dataset-publishers"))
-        self.assertEqual('Randomhäus',typeahead.text)
+        typeahead = self.check_element_on_page((By.CLASS_NAME, "tt-dataset-publishers"))
+        self.assertEqual('Randomhäus', typeahead.text)
         lang.send_keys(Keys.DOWN)
         lang.send_keys(Keys.RETURN)
         self.check_element_on_page((By.ID, "submit")).click()
@@ -698,10 +695,10 @@ class test_edit_books(TestCase, ui_class):
         time.sleep(2)
         r = requests.session()
         payload = {'username': 'admin', 'password': 'admin123', 'submit':"", 'next':"/", "remember_me":"on"}
-        r.post('http://127.0.0.1:8083/login',data=payload)
-        resp = r.get( 'http://127.0.0.1:8083/cover/5')
+        r.post('http://127.0.0.1:8083/login', data=payload)
+        resp = r.get('http://127.0.0.1:8083/cover/5')
         with open(jpegcover, 'rb') as reader:
-            self.assertEqual(reader.read(),resp.content)
+            self.assertEqual(reader.read(), resp.content)
 
         self.get_book_details(5)
         self.check_element_on_page((By.ID, "edit_book")).click()
@@ -710,7 +707,7 @@ class test_edit_books(TestCase, ui_class):
         self.assertTrue(self.check_element_on_page((By.CLASS_NAME, "alert")))
         self.driver.refresh()
         time.sleep(2)
-        resp = r.get( 'http://127.0.0.1:8083/cover/5')
+        resp = r.get('http://127.0.0.1:8083/cover/5')
         with open(jpegcover, 'rb') as reader:
             self.assertEqual(reader.read(), resp.content)
 
@@ -720,8 +717,8 @@ class test_edit_books(TestCase, ui_class):
         self.edit_book(content={'local_cover': pngcover})
         self.driver.refresh()
         time.sleep(2)
-        resp = r.get( 'http://127.0.0.1:8083/cover/5')
-        self.assertEqual('20317',resp.headers['Content-Length'])
+        resp = r.get('http://127.0.0.1:8083/cover/5')
+        self.assertEqual('20317', resp.headers['Content-Length'])
 
         self.get_book_details(5)
         self.check_element_on_page((By.ID, "edit_book")).click()
@@ -729,10 +726,10 @@ class test_edit_books(TestCase, ui_class):
         self.edit_book(content={'local_cover': pngcover})
         self.driver.refresh()
         time.sleep(2)
-        resp = r.get( 'http://127.0.0.1:8083/cover/5')
-        self.assertEqual('17420',resp.headers['Content-Length'])
+        resp = r.get('http://127.0.0.1:8083/cover/5')
+        self.assertEqual('17420', resp.headers['Content-Length'])
         r.close()
-        self.assertTrue(False,"Browser-Cache Problem: Old Cover is displayed instead of New Cover")
+        self.assertTrue(False, "Browser-Cache Problem: Old Cover is displayed instead of New Cover")
 
     # check metadata recognition
     def test_upload_book_pdf(self):
@@ -749,9 +746,9 @@ class test_edit_books(TestCase, ui_class):
         self.assertEqual('Unknown', details['author'][0])
         r = requests.session()
         payload = {'username': 'admin', 'password': 'admin123', 'submit':"", 'next':"/", "remember_me":"on"}
-        r.post('http://127.0.0.1:8083/login',data=payload)
-        resp = r.get( 'http://127.0.0.1:8083' + details['cover'])
-        self.assertEqual('182574',resp.headers['Content-Length'])
+        r.post('http://127.0.0.1:8083/login', data=payload)
+        resp = r.get('http://127.0.0.1:8083' + details['cover'])
+        self.assertLess('23300', resp.headers['Content-Length'])
         self.fill_basic_config({'config_uploading': 0})
         r.close()
 
@@ -771,9 +768,9 @@ class test_edit_books(TestCase, ui_class):
         self.assertEqual('Unknown', details['author'][0])
         r = requests.session()
         payload = {'username': 'admin', 'password': 'admin123', 'submit':"", 'next':"/", "remember_me":"on"}
-        r.post('http://127.0.0.1:8083/login',data=payload)
-        resp = r.get( 'http://127.0.0.1:8083' + details['cover'])
-        self.assertEqual('182574',resp.headers['Content-Length'])
+        r.post('http://127.0.0.1:8083/login', data=payload)
+        resp = r.get('http://127.0.0.1:8083' + details['cover'])
+        self.assertEqual('182574', resp.headers['Content-Length'])
         self.fill_basic_config({'config_uploading': 0})
         r.close()
 
@@ -792,9 +789,9 @@ class test_edit_books(TestCase, ui_class):
         self.assertEqual('Unknown', details['author'][0])
         r = requests.session()
         payload = {'username': 'admin', 'password': 'admin123', 'submit':"", 'next':"/", "remember_me":"on"}
-        r.post('http://127.0.0.1:8083/login',data=payload)
-        resp = r.get( 'http://127.0.0.1:8083' + details['cover'])
-        self.assertEqual('182574',resp.headers['Content-Length'])
+        r.post('http://127.0.0.1:8083/login', data=payload)
+        resp = r.get('http://127.0.0.1:8083' + details['cover'])
+        self.assertEqual('182574', resp.headers['Content-Length'])
         self.fill_basic_config({'config_uploading': 0})
         r.close()
 
@@ -812,9 +809,9 @@ class test_edit_books(TestCase, ui_class):
         self.assertEqual('Unknown', details['author'][0])
         r = requests.session()
         payload = {'username': 'admin', 'password': 'admin123', 'submit':"", 'next':"/", "remember_me":"on"}
-        r.post('http://127.0.0.1:8083/login',data=payload)
-        resp = r.get( 'http://127.0.0.1:8083' + details['cover'])
-        self.assertEqual('182574',resp.headers['Content-Length'])
+        r.post('http://127.0.0.1:8083/login', data=payload)
+        resp = r.get('http://127.0.0.1:8083' + details['cover'])
+        self.assertEqual('182574', resp.headers['Content-Length'])
         self.fill_basic_config({'config_uploading': 0})
         r.close()
 
@@ -834,9 +831,9 @@ class test_edit_books(TestCase, ui_class):
         self.assertEqual('Noname 23', details['author'][0])
         r = requests.session()
         payload = {'username': 'admin', 'password': 'admin123', 'submit':"", 'next':"/", "remember_me":"on"}
-        r.post('http://127.0.0.1:8083/login',data=payload)
-        resp = r.get( 'http://127.0.0.1:8083' + details['cover'])
-        self.assertEqual('8936',resp.headers['Content-Length'])
+        r.post('http://127.0.0.1:8083/login', data=payload)
+        resp = r.get('http://127.0.0.1:8083' + details['cover'])
+        self.assertEqual('8936', resp.headers['Content-Length'])
         self.fill_basic_config({'config_uploading': 0})
         r.close()
 
@@ -855,8 +852,8 @@ class test_edit_books(TestCase, ui_class):
         self.assertEqual('Unknown', details['author'][0])
         r = requests.session()
         payload = {'username': 'admin', 'password': 'admin123', 'submit':"", 'next':"/", "remember_me":"on"}
-        r.post('http://127.0.0.1:8083/login',data=payload)
-        resp = r.get( 'http://127.0.0.1:8083' + details['cover'])
+        r.post('http://127.0.0.1:8083/login', data=payload)
+        resp = r.get('http://127.0.0.1:8083' + details['cover'])
         self.assertEqual('8936', resp.headers['Content-Length'])
         self.fill_basic_config({'config_uploading': 0})
         r.close()
@@ -876,9 +873,9 @@ class test_edit_books(TestCase, ui_class):
         self.assertEqual('Unknown', details['author'][0])
         r = requests.session()
         payload = {'username': 'admin', 'password': 'admin123', 'submit':"", 'next':"/", "remember_me":"on"}
-        r.post('http://127.0.0.1:8083/login',data=payload)
-        resp = r.get( 'http://127.0.0.1:8083' + details['cover'])
-        self.assertEqual('8936',resp.headers['Content-Length'])
+        r.post('http://127.0.0.1:8083/login', data=payload)
+        resp = r.get('http://127.0.0.1:8083' + details['cover'])
+        self.assertEqual('8936', resp.headers['Content-Length'])
         self.fill_basic_config({'config_uploading': 0})
         r.close()
 
@@ -898,9 +895,9 @@ class test_edit_books(TestCase, ui_class):
         self.assertEqual('Unknown', details['author'][0])
         r = requests.session()
         payload = {'username': 'admin', 'password': 'admin123', 'submit':"", 'next':"/", "remember_me":"on"}
-        r.post('http://127.0.0.1:8083/login',data=payload)
-        resp = r.get( 'http://127.0.0.1:8083' + details['cover'])
-        self.assertEqual('182574',resp.headers['Content-Length'])
+        r.post('http://127.0.0.1:8083/login', data=payload)
+        resp = r.get('http://127.0.0.1:8083' + details['cover'])
+        self.assertEqual('182574', resp.headers['Content-Length'])
         self.fill_basic_config({'config_uploading': 0})
         r.close()
 
@@ -910,16 +907,17 @@ class test_edit_books(TestCase, ui_class):
         book_downloads = self.driver.find_elements_by_class_name("media-object")
         self.assertEqual(0, len(book_downloads))
         self.get_book_details(5)
-        element=self.check_element_on_page((By.XPATH, "//*[starts-with(@id,'btnGroupDrop')]"))
-        download_link=element.get_attribute("href")
-        self.assertTrue(download_link.endswith('/5.epub'),'Download Link has invalid format for kobo browser, has to end with filename')
+        element = self.check_element_on_page((By.XPATH, "//*[starts-with(@id,'btnGroupDrop')]"))
+        download_link = element.get_attribute("href")
+        self.assertTrue(download_link.endswith('/5.epub'),
+                        'Download Link has invalid format for kobo browser, has to end with filename')
         r = requests.session()
         payload = {'username': 'admin', 'password': 'admin123', 'submit':"", 'next':"/", "remember_me":"on"}
-        r.post('http://127.0.0.1:8083/login',data=payload)
+        r.post('http://127.0.0.1:8083/login', data=payload)
         resp = r.get(download_link)
-        self.assertEqual(resp.headers['Content-Type'],'application/epub+zip')
+        self.assertEqual(resp.headers['Content-Type'], 'application/epub+zip')
         self.assertEqual(resp.status_code, 200)
-        self.edit_user('admin',{'download_role':0})
+        self.edit_user('admin', {'download_role':0})
         resp = r.get(download_link)
         self.assertEqual(resp.status_code, 403)
         book = self.get_book_details(5)

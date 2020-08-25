@@ -28,3 +28,4 @@ build/example_tasks.txt
 build/hints.txt
 selenium
 
+/venv/

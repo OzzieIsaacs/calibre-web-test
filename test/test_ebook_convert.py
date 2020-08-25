@@ -1,26 +1,23 @@
 #!/usr/bin/env python
 # -*- coding: utf-8 -*-
 
-from helper_email_convert import AIOSMTPServer
 import unittest
 import os
+import time
+
+from helper_email_convert import AIOSMTPServer
+import helper_email_convert
 from selenium.webdriver.common.by import By
 from selenium.webdriver.support.ui import Select
-import time
 from helper_ui import ui_class
 from config_test import CALIBRE_WEB_PATH, TEST_DB
-import helper_email_convert
-from parameterized import parameterized_class
+# from parameterized import parameterized_class
 from helper_func import startup
 
 
-'''@parameterized_class([
-   { "py_version": u'/usr/bin/python'},
-   { "py_version": u'/usr/bin/python3'},
-],names=('Python27','Python36'))'''
-@unittest.skipIf(helper_email_convert.is_calibre_not_present(),"Skipping convert, calibre not found")
-class test_ebook_convert(unittest.TestCase, ui_class):
-    p=None
+@unittest.skipIf(helper_email_convert.is_calibre_not_present(), "Skipping convert, calibre not found")
+class TestEbookConvert(unittest.TestCase, ui_class):
+    p = None
     driver = None
     email_server = None
     #py_version = u'/usr/bin/python'
@@ -29,7 +26,8 @@ class test_ebook_convert(unittest.TestCase, ui_class):
     def setUpClass(cls):
         # start email server
         cls.email_server = AIOSMTPServer(
-            hostname='127.0.0.1',port=1025,
+            hostname='127.0.0.1',
+            port=1025,
             only_ssl=False,
             timeout=10
         )
@@ -40,12 +38,12 @@ class test_ebook_convert(unittest.TestCase, ui_class):
             startup(cls, cls.py_version, {'config_calibre_dir':TEST_DB,
                                           'config_converterpath':helper_email_convert.calibre_path()})
 
-            cls.edit_user('admin', {'email': 'a5@b.com','kindle_mail': 'a1@b.com'})
+            cls.edit_user('admin', {'email': 'a5@b.com', 'kindle_mail': 'a1@b.com'})
             cls.setup_server(True, {'mail_server':'127.0.0.1', 'mail_port':'1025',
-                                'mail_use_ssl':'None','mail_login':'name@host.com','mail_password':'1234',
-                                'mail_from':'name@host.com'})
+                                    'mail_use_ssl':'None', 'mail_login':'name@host.com', 'mail_password':'1234',
+                                    'mail_from':'name@host.com'})
             time.sleep(2)
-        except:
+        except Exception:
             cls.driver.quit()
             cls.p.kill()
 
@@ -63,7 +61,7 @@ class test_ebook_convert(unittest.TestCase, ui_class):
     def tearDown(self):
         if not self.check_user_logged_in('admin'):
             self.logout()
-            self.login('admin','admin123')
+            self.login('admin', 'admin123')
         self.fill_basic_config({'config_calibre': ''})
 
 
@@ -71,7 +69,7 @@ class test_ebook_convert(unittest.TestCase, ui_class):
     def test_convert_deactivate(self):
         self.fill_basic_config({'config_converterpath': ""})
         self.goto_page('nav_about')
-        self.assertFalse(self.check_element_on_page((By.XPATH,"//tr/th[text()='Calibre converter']/following::td[1]")))
+        self.assertFalse(self.check_element_on_page((By.XPATH, "//tr/th[text()='Calibre converter']/following::td[1]")))
         details = self.get_book_details(5)
         self.assertFalse(details['kindlebtn'])
         vals = self.get_convert_book(5)
@@ -87,17 +85,17 @@ class test_ebook_convert(unittest.TestCase, ui_class):
         task_len = len(self.check_tasks())
         self.fill_basic_config({'config_converterpath':'/opt/calibre/ebook-polish'})
         self.goto_page('nav_about')
-        element = self.check_element_on_page((By.XPATH,"//tr/th[text()='ebook converter']/following::td[1]"))
-        self.assertEqual(element.text,'not installed')
+        element = self.check_element_on_page((By.XPATH, "//tr/th[text()='ebook converter']/following::td[1]"))
+        self.assertEqual(element.text, 'not installed')
         details = self.get_book_details(5)
-        self.assertEqual(len(details['kindle']),1)
+        self.assertEqual(len(details['kindle']), 1)
         # ToDo: check convert function
         vals = self.get_convert_book(5)
 
         # ToDo: change behavior convert should only be visible if ebookconverter has valid entry
         self.fill_basic_config({'config_converterpath':'/opt/calibre/kuku'})
         details = self.get_book_details(5)
-        self.assertEqual(len(details['kindle']),1)
+        self.assertEqual(len(details['kindle']), 1)
         details['kindlebtn'].click()
         # conv = self.check_element_on_page((By.LINK_TEXT, details['kindle'][0].text))
         # self.assertTrue(conv)
@@ -111,13 +109,13 @@ class test_ebook_convert(unittest.TestCase, ui_class):
         # self.assertFalse(vals['btn_from'])
         # self.assertFalse(vals['btn_to'])
 
-        nonexec = os.path.join(CALIBRE_WEB_PATH,'app.db')
+        nonexec = os.path.join(CALIBRE_WEB_PATH, 'app.db')
         self.fill_basic_config({'config_converterpath': nonexec})
         self.goto_page('nav_about')
         element = self.check_element_on_page((By.XPATH, "//tr/th[text()='ebook converter']/following::td[1]"))
         self.assertEqual(element.text, 'Execution permissions missing')
         details = self.get_book_details(5)
-        self.assertEqual(len(details['kindle']),1)
+        self.assertEqual(len(details['kindle']), 1)
         details['kindlebtn'].click()
         # conv = self.check_element_on_page((By.LINK_TEXT, details['kindle'][0].text))
         # self.assertTrue(conv)
@@ -129,10 +127,10 @@ class test_ebook_convert(unittest.TestCase, ui_class):
             time.sleep(2)
             ret = self.check_tasks()
             if len(ret) - task_len == 2:
-                if ret[-1]['result'] ==  'Finished' or ret[-1]['result'] ==  'Failed':
+                if ret[-1]['result'] == 'Finished' or ret[-1]['result'] == 'Failed':
                     break
             i += 1
-        self.assertEqual(len(ret),(task_len+2) % 20)
+        self.assertEqual(len(ret), (task_len+2) % 20)
         if len(ret) > 1:
             self.assertEqual(ret[-2]['result'], 'Failed')
         self.assertEqual(ret[-1]['result'], 'Failed')
@@ -178,7 +176,7 @@ class test_ebook_convert(unittest.TestCase, ui_class):
         self.setup_server(True, {'mail_password': '10234', 'mail_use_ssl':'None'})
         task_len = len(self.check_tasks())
         details = self.get_book_details(9)
-        self.assertEqual(len(details['kindle']),1)
+        self.assertEqual(len(details['kindle']), 1)
         details['kindlebtn'].click()
         # conv = self.check_element_on_page((By.LINK_TEXT, details['kindle'][0].getchildren()[0].tail))
         # self.assertTrue(conv)
@@ -188,7 +186,7 @@ class test_ebook_convert(unittest.TestCase, ui_class):
             time.sleep(2)
             ret = self.check_tasks()
             if len(ret) - task_len == 2:
-                if ret[-1]['result'] ==  'Finished' or ret[-1]['result'] ==  'Failed':
+                if ret[-1]['result'] == 'Finished' or ret[-1]['result'] == 'Failed':
                     break
             i += 1
         self.assertEqual(ret[-2]['result'], 'Finished')
@@ -218,14 +216,14 @@ class test_ebook_convert(unittest.TestCase, ui_class):
         orig_file = os.path.join(TEST_DB, u'Leo Baskerville/book8 (8)',
                                  u'book8 - Leo Baskerville.epub').encode('UTF-8')
         moved_file = os.path.join(TEST_DB, u'Leo Baskerville/book8 (8)',
-                                 u'book8.epub').encode('UTF-8')
-        os.rename(orig_file,moved_file)
+                                  u'book8.epub').encode('UTF-8')
+        os.rename(orig_file, moved_file)
         with open(orig_file, 'wb') as fout:
             fout.write(os.urandom(124))
         self.setup_server(True, {'mail_password': '10234'})
         task_len = len(self.check_tasks())
         details = self.get_book_details(8)
-        self.assertEqual(len(details['kindle']),1)
+        self.assertEqual(len(details['kindle']), 1)
         details['kindlebtn'].click()
         # conv = self.check_element_on_page((By.LINK_TEXT, details['kindle'][1].text))
         # self.assertTrue(conv)
@@ -235,7 +233,7 @@ class test_ebook_convert(unittest.TestCase, ui_class):
             time.sleep(2)
             ret = self.check_tasks()
             if len(ret) - task_len == 1:
-                if ret[-1]['result'] ==  'Finished' or ret[-1]['result'] ==  'Failed':
+                if ret[-1]['result'] == 'Finished' or ret[-1]['result'] == 'Failed':
                     break
             i += 1
         self.assertEqual(ret[-1]['result'], 'Failed')
@@ -319,18 +317,18 @@ class test_ebook_convert(unittest.TestCase, ui_class):
         self.create_user('solo', {'password': '123', 'email': 'a@b.com', 'edit_role':1})
         time.sleep(2)
         ret = self.check_tasks()
-        lenret= len(ret)
-        if lenret >6:
+        lenret = len(ret)
+        if lenret > 6:
             self.assertEqual(ret[-6]['result'], 'Finished')
-        if lenret >5:
+        if lenret > 5:
             self.assertEqual(ret[-5]['result'], 'Finished')
-        if lenret >4:
+        if lenret > 4:
             self.assertEqual(ret[-4]['result'], 'Finished')
-        if lenret >3:
+        if lenret > 3:
             self.assertEqual(ret[-3]['result'], 'Finished')
-        if lenret >2:
+        if lenret > 2:
             self.assertEqual(ret[-2]['result'], 'Finished')
-        if lenret >1:
+        if lenret > 1:
             self.assertEqual(ret[-1]['result'], 'Finished')
         memory = len(ret)
 
@@ -353,7 +351,7 @@ class test_ebook_convert(unittest.TestCase, ui_class):
         self.logout()
         self.login('admin', 'admin123')
         ret = self.check_tasks()
-        self.assertEqual(memory+1, len(ret))
+        self.assertEqual(memory + 1, len(ret))
 
 
     # start conversion of epub -> mobi
@@ -362,7 +360,7 @@ class test_ebook_convert(unittest.TestCase, ui_class):
     # check email received
     # check filename
     def test_email_only(self):
-        self.setup_server(True, {'mail_use_ssl':'None','mail_password':'10234'})
+        self.setup_server(True, {'mail_use_ssl': 'None', 'mail_password': '10234'})
         task_len = len(self.check_tasks())
         vals = self.get_convert_book(8)
         select = Select(vals['btn_from'])
@@ -376,7 +374,7 @@ class test_ebook_convert(unittest.TestCase, ui_class):
             time.sleep(2)
             ret = self.check_tasks()
             if len(ret) - task_len == 1:
-                if ret[-1]['result'] ==  'Finished' or ret[-1]['result'] ==  'Failed':
+                if ret[-1]['result'] == 'Finished' or ret[-1]['result'] == 'Failed':
                     break
             i += 1
         self.assertEqual(ret[-1]['result'], 'Finished')
@@ -395,7 +393,7 @@ class test_ebook_convert(unittest.TestCase, ui_class):
                     break
             i += 1
         self.assertEqual(ret[-1]['result'], 'Finished')
-        self.assertGreaterEqual(self.email_server.handler.message_size,17477)
+        self.assertGreaterEqual(self.email_server.handler.message_size, 17477)
         self.setup_server(False, {'mail_password':'1234'})
 
 
@@ -426,9 +424,9 @@ class test_ebook_convert(unittest.TestCase, ui_class):
 
 
     # check behavior for failed server setup (STARTTLS)
-    def test_STARTTLS_smtp_setup_error(self):
+    def test_starttls_smtp_setup_error(self):
         task_len = len(self.check_tasks())
-        self.setup_server(False, {'mail_use_ssl':'STARTTLS','mail_password':'10234'})
+        self.setup_server(False, {'mail_use_ssl':'STARTTLS', 'mail_password':'10234'})
         details = self.get_book_details(7)
         details['kindlebtn'].click()
         conv = self.check_element_on_page((By.LINK_TEXT, details['kindle'][0].text))
@@ -446,9 +444,9 @@ class test_ebook_convert(unittest.TestCase, ui_class):
         self.assertEqual(ret[-1]['result'], 'Failed')
 
     # check behavior for failed server setup (SSL)
-    def test_SSL_smtp_setup_error(self):
+    def test_ssl_smtp_setup_error(self):
         task_len = len(self.check_tasks())
-        self.setup_server(False, {'mail_use_ssl':'SSL/TLS','mail_password':'10234'})
+        self.setup_server(False, {'mail_use_ssl':'SSL/TLS', 'mail_password':'10234'})
         details = self.get_book_details(7)
         details['kindlebtn'].click()
         conv = self.check_element_on_page((By.LINK_TEXT, details['kindle'][0].text))

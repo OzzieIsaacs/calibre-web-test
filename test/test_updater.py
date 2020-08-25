@@ -1,19 +1,21 @@
 # -*- coding: utf-8 -*-
 
+import os
+import time
 import unittest
 import shutil
+import requests
+
 from helper_ui import ui_class
 from config_test import TEST_DB, BOOT_TIME, CALIBRE_WEB_PATH
 from helper_func import startup, debug_startup
 from helper_proxy import Proxy, val
 from selenium.webdriver.common.by import By
 from zipfile import ZipFile, ZipInfo
-import os
 # from parameterized import parameterized_class
-import time
 
 
-class test_updater(unittest.TestCase, ui_class):
+class TestUpdater(unittest.TestCase, ui_class):
     p=None
     driver = None
     proxy = None

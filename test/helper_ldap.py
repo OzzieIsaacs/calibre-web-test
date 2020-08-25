@@ -1,4 +1,3 @@
-import sys
 import threading
 try:
     from cStringIO import StringIO as BytesIO
@@ -19,7 +18,7 @@ from ldaptor.protocols.ldap import distinguishedname
 # from ldaptor import interfaces
 import time
 
-LDAP_AUTH_ANON   = 0
+LDAP_AUTH_ANON = 0
 LDAP_AUTH_UNAUTH = 1
 LDAP_AUTH_SIMPLE = 2
 
@@ -244,25 +243,29 @@ member: cn=user124,ou=People,dc=calibreweb,dc=com
 member: uid=user13,ou=People,dc=calibreweb,dc=com
 
 """
+
+
 class Tree(object):
 
     def __init__(self, config=0):
         global config1, config2, config3
+        ldif = None
         if config == 1:
-            LDIF = config1
+            ldif = config1
         if config == 2:
-            LDIF = config2
+            ldif = config2
         if config == 3:
-            LDIF = config3
+            ldif = config3
         if config == 4:
-            LDIF = config4
-        self.f = BytesIO(LDIF)
+            ldif = config4
+        self.f = BytesIO(ldif)
         d = fromLDIFFile(self.f)
         d.addCallback(self.ldifRead)
 
     def ldifRead(self, result):
         self.f.close()
         self.db = result
+
 
 class LDAPSTARTTLSServer(LDAPServer):
     """
@@ -277,7 +280,7 @@ class LDAPSTARTTLSServer(LDAPServer):
         self.startTLS_initiated = False
         self.authentication = LDAP_AUTH_SIMPLE
 
-    def _handle_Bind(self, request, controls, reply):
+    def _handle_Bind(self, request, controls, __):
         if request.version != 3:
             raise ldaperrors.LDAPProtocolError(
                 'Version %u not supported' % request.version)
@@ -346,7 +349,7 @@ class LDAPSTARTTLSServer(LDAPServer):
             return d
         return self.handleUnknown(request, controls, reply)
 
-    def handleStartTLSRequest(self, request, controls, reply):
+    def handleStartTLSRequest(self, request, __, reply):
         """
         If the protocol factory has an `options` attribute it is assumed
         to be a `twisted.internet.ssl.CertificateOptions` that can be used
@@ -384,6 +387,7 @@ class LDAPSTARTTLSServer(LDAPServer):
                 "Responding with 'unavailable' (52): " + repr(msg))
         return defer.succeed(msg)
 
+
 class LDAPServerFactory(ServerFactory):
     protocol = LDAPServer
 
@@ -404,7 +408,7 @@ class LDAPServerFactory(ServerFactory):
 class TestLDAPServer(threading.Thread):
     def __init__(self, port=8080, encrypt=None, config=0, auth=LDAP_AUTH_SIMPLE):
         threading.Thread.__init__(self)
-        self.is_running=False
+        self.is_running = False
 
         registerAdapter(
             lambda x: x.root,
@@ -417,7 +421,7 @@ class TestLDAPServer(threading.Thread):
         tls = False
         cert = None
         tree = Tree(config)
-        if encrypt != None:
+        if encrypt is not None:
             cert = ssl.DefaultOpenSSLContextFactory('./SSL/ssl.key', './SSL/ssl.crt')
         if encrypt == 'TLS':
             tls = True
@@ -432,17 +436,17 @@ class TestLDAPServer(threading.Thread):
         # self.serv = reactor.listenSSL(port, factory)
         self.is_running = True
 
-
     def stopListen(self):
         if self.is_running:
             def cbloseConnection(result):
                 return
-                #print('Connection: ' + result)
+                # print('Connection: ' + result)
                 # self.is_running = False
-            def cberrloseConnection(failure):#
+
+            def cberrloseConnection(failure):
                 return
-                #print('failure Connect: ' + str(failure))
-                #self.is_running = False
+                # print('failure Connect: ' + str(failure))
+                # self.is_running = False
 
             # e = self.serv.loseConnection()
             e = defer.maybeDeferred(self.serv.loseConnection)
@@ -458,9 +462,10 @@ class TestLDAPServer(threading.Thread):
             except Exception:
                 pass
 
-            def cbStopListening(result):
+            def cbStopListening(__):
                 # print('Stopped: ' + result)
                 self.is_running = False
+
             def cberrStop(failure):
                 # print('failure: ' + str(failure))
                 self.is_running = False
@@ -471,7 +476,7 @@ class TestLDAPServer(threading.Thread):
             self.is_running = False
             time.sleep(2)
 
-    def relisten(self, port=8080, encrypt=None, config=0, auth = LDAP_AUTH_SIMPLE):
+    def relisten(self, port=8080, encrypt=None, config=0, auth=LDAP_AUTH_SIMPLE):
         self.stopListen()
         self._createListner(port, encrypt, config, auth)
 
@@ -485,5 +490,3 @@ class TestLDAPServer(threading.Thread):
     def stop_LdapServer(self):
         self.is_running = False
         reactor.callFromThread(reactor.stop)
-
-

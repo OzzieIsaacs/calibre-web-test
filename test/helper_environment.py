@@ -7,44 +7,46 @@ import os
 import sys
 import pkg_resources
 
-class Environment():
+
+class Environment:
     def __init__(self):
         self.initial = None
         dep = list()
-        self.result=list()
+        self.result = list()
         uname = platform.uname()
-        self.result.append(('Platform','{0.system} {0.release} {0.version} {0.processor} {0.machine}'.format(uname)))
+        self.result.append(('Platform', '{0.system} {0.release} {0.version} {0.processor} {0.machine}'.format(uname)))
         self.result.append(('Python', sys.version))
 
         dists = [str(d).split(" ") for d in pkg_resources.working_set]
-        with open(os.path.join(CALIBRE_WEB_PATH,'requirements.txt'), 'r') as f:
+        with open(os.path.join(CALIBRE_WEB_PATH, 'requirements.txt'), 'r') as f:
             for line in f:
                 if not line.startswith('#') and not line == '\n' and not line.startswith('git'):
                     dep.append(line.split('=', 1)[0].strip('>'))
-        with open(os.path.join(CALIBRE_WEB_PATH,'optional-requirements.txt'), 'r') as f:
+        with open(os.path.join(CALIBRE_WEB_PATH, 'optional-requirements.txt'), 'r') as f:
             for line in f:
                 if not line.startswith('#') and not line == '\n' and not line.startswith('git'):
                     dep.append(line.split('=', 1)[0].split('>', 1)[0])
         normalized_dep = [name.replace('_', '-').upper() for name in dep]
         for element in dists:
-            if element[0].replace('_','-').upper() in normalized_dep:
-                self.result.append((element[0],element[1], 'Basic'))
+            if element[0].replace('_', '-').upper() in normalized_dep:
+                self.result.append((element[0], element[1], 'Basic'))
 
-
-    def init_Environment(self, initial, sub_dependencys=list()):
+    def init_Environment(self, initial, sub_dependencys=None):
+        if sub_dependencys is None:
+            sub_dependencys = list()
         self.initial = initial
         dep = sub_dependencys
         self.result = list()
         uname = platform.uname()
         self.result.append(('Platform', '{0.system} {0.release} {0.version} {0.processor} {0.machine}'.format(uname),
                             'Basic'))
-        p = process_open([initial, "-V"], (0))
+        p = process_open([initial, "-V"], [0])
         p.wait()
         lines = ''.join(p.stdout.readlines())
-        pVersion = re.findall("(\d+\.\d+\.\d+)", lines)[0]
-        self.result.append(('Python', pVersion,'Basic'))
+        pVersion = re.findall('(\d+\.\d+\.\d+)', lines)[0]
+        self.result.append(('Python', pVersion, 'Basic'))
 
-        p = process_open([initial, "-m", "pip", "freeze"], (0))
+        p = process_open([initial, "-m", "pip", "freeze"], [0])
         p.wait()
         dists = [str(d).strip().split("==") for d in p.stdout.readlines()]
         with open(os.path.join(CALIBRE_WEB_PATH, 'requirements.txt'), 'r') as f:
@@ -55,22 +57,22 @@ class Environment():
             for line in f:
                 if not line.startswith('#') and not line == '\n' and not line.startswith('git'):
                     dep.append(line.split('=', 1)[0].split('>', 1)[0])
-        normalized_dep = [name.replace('_','-').upper() for name in dep]
+        normalized_dep = [name.replace('_', '-').upper() for name in dep]
         for element in dists:
-            if element[0].replace('_','-').upper() in normalized_dep:
-                self.result.append((element[0],element[1], 'Basic'))
+            if element[0].replace('_', '-').upper() in normalized_dep:
+                self.result.append((element[0], element[1], 'Basic'))
 
     def add_Environment(self, test, extension):
         if self.initial:
             try:
-                p = process_open([self.initial, "-m", "pip", "freeze"], (0))
+                p = process_open([self.initial, "-m", "pip", "freeze"], [0])
                 p.wait()
                 dists = [str(d).strip().split("==") for d in p.stdout.readlines()]
                 normalized_Ext = [name.replace('_', '-').upper() for name in extension]
                 for element in dists:
-                    if element[0].replace('_','-').upper() in normalized_Ext:
-                        self.result.append((element[0],element[1],test))
-            except:
+                    if element[0].replace('_', '-').upper() in normalized_Ext:
+                        self.result.append((element[0], element[1], test))
+            except Exception:
                 pass
         else:
             for testdep in extension:

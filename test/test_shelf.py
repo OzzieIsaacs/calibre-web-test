@@ -6,9 +6,10 @@ from selenium.webdriver.common.by import By
 import time
 from helper_ui import ui_class
 from config_test import TEST_DB
-from helper_func import is_port_in_use, startup
-from parameterized import parameterized_class
+from helper_func import startup
+# from parameterized import parameterized_class
 import requests
+
 
 '''@parameterized_class([
    { "py_version": u'/usr/bin/python'},

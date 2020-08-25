@@ -2,19 +2,13 @@
 # -*- coding: utf-8 -*-
 
 import unittest
-from selenium import webdriver
-import os
 from selenium.webdriver.common.by import By
-from selenium.webdriver.support.ui import WebDriverWait
-from selenium.webdriver.support import expected_conditions as EC
 import time
-import shutil
 from helper_ui import ui_class, RESTRICT_TAG_TEMPLATE, RESTRICT_COL_TEMPLATE
-from subproc_wrapper import process_open
 from config_test import CALIBRE_WEB_PATH, TEST_DB, BOOT_TIME
 from helper_func import startup
+# from parameterized import parameterized_class
 
-from parameterized import parameterized_class
 
 '''@parameterized_class([
    { "py_version": u'/usr/bin/python'},
@@ -441,6 +435,9 @@ class test_user_template(unittest.TestCase, ui_class):
         # check random books shown in archived section
         list_element = self.goto_page("nav_archived")
         self.assertFalse(self.check_element_on_page((By.ID, "books_rand")))
+        # check about page visible and libs section not visible
+        self.assertTrue(self.goto_page('nav_about'))
+        self.assertFalse(self.check_element_on_page((By.ID, 'libs')))
         self.logout()
         self.login('admin','admin123')
         # delete user

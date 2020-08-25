@@ -13,7 +13,7 @@ from helper_ui import ui_class
 from config_test import CALIBRE_WEB_PATH, TEST_DB, BOOT_TIME
 import re
 from helper_func import startup
-from parameterized import parameterized_class
+# from parameterized import parameterized_class
 
 
 '''@parameterized_class([
@@ -21,7 +21,7 @@ from parameterized import parameterized_class
    { "py_version": u'/usr/bin/python3'},
 ],names=('Python27','Python36'))'''
 class test_logging(unittest.TestCase, ui_class):
-    p=None
+    p = None
 
     @classmethod
     def setUpClass(cls):
@@ -29,9 +29,9 @@ class test_logging(unittest.TestCase, ui_class):
             os.remove(os.path.join(CALIBRE_WEB_PATH, 'calibre-web.log'))
             os.remove(os.path.join(CALIBRE_WEB_PATH, 'calibre-web.log.1'))
             os.remove(os.path.join(CALIBRE_WEB_PATH, 'calibre-web.log.2'))
-        except:
+        except Exception:
             pass
-        startup(cls, cls.py_version, {'config_calibre_dir':TEST_DB,'config_log_level':'DEBUG'})
+        startup(cls, cls.py_version, {'config_calibre_dir': TEST_DB, 'config_log_level': 'DEBUG'})
         time.sleep(3)
 
     @classmethod
@@ -44,27 +44,27 @@ class test_logging(unittest.TestCase, ui_class):
 
     def test_failed_login(self):
         self.driver.find_element_by_id("logout").click()
-        self.assertFalse(self.login("admin","123"))
+        self.assertFalse(self.login("admin", "123"))
         self.assertTrue(self.login("admin", "admin123"))
-        with open(os.path.join(CALIBRE_WEB_PATH,'calibre-web.log'),'r') as logfile:
+        with open(os.path.join(CALIBRE_WEB_PATH, 'calibre-web.log'), 'r') as logfile:
             data = logfile.read()
-        self.assertIsNotNone(re.findall('Login failed for user "admin" IP-adress:',data), "Login failed message not in Logfile")
+        self.assertIsNotNone(re.findall('Login failed for user "admin" IP-adress:', data),
+                             "Login failed message not in Logfile")
 
     @unittest.skip("Not Implemented")
     def test_failed_register(self):
         self.assertIsNone('not Implemented', 'Registering user with wrong domain is not in Logfile')
 
-
     def test_debug_log(self):
         # check Debug entry from starting
-        with open(os.path.join(CALIBRE_WEB_PATH,'calibre-web.log'),'r') as logfile:
+        with open(os.path.join(CALIBRE_WEB_PATH, 'calibre-web.log'), 'r') as logfile:
             data = logfile.read()
         self.assertIsNotNone(re.findall('DEBUG - Computing cache-busting values', data))
 
         # Change setting to warning
-        self.fill_basic_config({'config_log_level':'WARNING'})
+        self.fill_basic_config({'config_log_level': 'WARNING'})
         time.sleep(BOOT_TIME)
-        alf = WebDriverWait(self.driver, 5).until(EC.presence_of_element_located((By.ID, "flash_success")))
+        WebDriverWait(self.driver, 5).until(EC.presence_of_element_located((By.ID, "flash_success")))
         # error entry by deleting book with subfolder
         self.driver.get("http://127.0.0.1:8083/delete/5")
         time.sleep(4)
@@ -72,20 +72,20 @@ class test_logging(unittest.TestCase, ui_class):
         self.driver.get("http://127.0.0.1:8083/shelf/add/7/7")
         time.sleep(4)
 
-        with open(os.path.join(CALIBRE_WEB_PATH,'calibre-web.log'),'r') as logfile:
+        with open(os.path.join(CALIBRE_WEB_PATH, 'calibre-web.log'), 'r') as logfile:
             data = logfile.read()
-        self.assertListEqual(re.findall('INFO in web: Invalid shelf specified',data),[])
-        self.assertIsNotNone(re.findall('ERROR in helper: Deleting book 5 failed',data))
+        self.assertListEqual(re.findall('INFO in web: Invalid shelf specified', data), [])
+        self.assertIsNotNone(re.findall('ERROR in helper: Deleting book 5 failed', data))
 
         # Change setting back to Info
         # Info entry by adding shelf
-        self.fill_basic_config({'config_log_level':'INFO'})
+        self.fill_basic_config({'config_log_level': 'INFO'})
         time.sleep(BOOT_TIME)
         self.driver.get("http://127.0.0.1:8083/shelf/add/7/7")
         time.sleep(4)
-        with open(os.path.join(CALIBRE_WEB_PATH,'calibre-web.log'),'r') as logfile:
+        with open(os.path.join(CALIBRE_WEB_PATH, 'calibre-web.log'), 'r') as logfile:
             data = logfile.read()
-        self.assertIsNotNone(re.findall('INFO in web: Invalid shelf specified',data))
+        self.assertIsNotNone(re.findall('INFO in web: Invalid shelf specified', data))
 
     def test_logfile_change(self):
         # check if path is accepted
@@ -95,7 +95,7 @@ class test_logging(unittest.TestCase, ui_class):
             # check if path with trailing slash is accepted
             self.fill_basic_config({'config_logfile': CALIBRE_WEB_PATH+os.sep})
             WebDriverWait(self.driver, 5).until(EC.presence_of_element_located((By.ID, "flash_alert")))
-            # check if non exsiting path is accepted
+            # check if non existing path is accepted
             self.fill_basic_config({'config_logfile': os.path.join(CALIBRE_WEB_PATH, 'hü lo', 'lö g.log')})
             WebDriverWait(self.driver, 5).until(EC.presence_of_element_located((By.ID, "flash_alert")))
             # check if path without extension is accepted
@@ -105,16 +105,16 @@ class test_logging(unittest.TestCase, ui_class):
             WebDriverWait(self.driver, 5).until(EC.presence_of_element_located((By.ID, "flash_success")))
             time.sleep(7)
             # wait for restart
-            self.assertTrue(os.path.isfile(os.path.join(CALIBRE_WEB_PATH, 'hü lo','lö g')))
+            self.assertTrue(os.path.isfile(os.path.join(CALIBRE_WEB_PATH, 'hü lo', 'lö g')))
             shutil.rmtree(os.path.join(CALIBRE_WEB_PATH, u'hü lo').encode('UTF-8'), ignore_errors=True)
-            #Reset Logfile to default
+            # Reset Logfile to default
             self.fill_basic_config({'config_logfile': ''})
             time.sleep(BOOT_TIME)
             WebDriverWait(self.driver, 5).until(EC.presence_of_element_located((By.ID, "flash_success")))
             time.sleep(7)
 
         except TimeoutException:
-            self.assertIsNotNone('Fail','Element could not be found')
+            self.assertIsNotNone('Fail', 'Element could not be found')
 
     def test_logfile_recover(self):
         os.makedirs(os.path.join(CALIBRE_WEB_PATH, 'hü lo'))
@@ -160,11 +160,10 @@ class test_logging(unittest.TestCase, ui_class):
         logpath = self.driver.find_element_by_id("config_access_logfile").get_attribute("value")
         self.assertEqual(logpath, "", "Access logfile config value is not empty after reseting to default")
 
-
     def test_logviewer(self):
         self.fill_basic_config({'config_logfile': '/dev/stdout',
                                 'config_access_log': 1,
-                                'config_access_logfile':'access.log'})
+                                'config_access_logfile': 'access.log'})
         self.check_element_on_page((By.ID, "flash_success"))
         time.sleep(BOOT_TIME)
         self.goto_page('logviewer')
@@ -178,7 +177,7 @@ class test_logging(unittest.TestCase, ui_class):
 
         self.fill_basic_config({'config_logfile': 'log.log',
                                 'config_access_log': 0,
-                                'config_access_logfile':''})
+                                'config_access_logfile': ''})
         self.check_element_on_page((By.ID, "flash_success"))
         time.sleep(BOOT_TIME)
         self.goto_page('logviewer')
@@ -190,7 +189,7 @@ class test_logging(unittest.TestCase, ui_class):
 
         self.fill_basic_config({'config_logfile': 'log.log',
                                 'config_access_log': 1,
-                                'config_access_logfile':'access.log'})
+                                'config_access_logfile': 'access.log'})
         self.check_element_on_page((By.ID, "flash_success"))
         time.sleep(BOOT_TIME)
         self.goto_page('logviewer')
@@ -200,12 +199,12 @@ class test_logging(unittest.TestCase, ui_class):
         self.assertTrue(access)
         self.assertFalse(access.is_selected())
         self.assertTrue(logger.is_selected())
-        text1=len(self.check_element_on_page((By.ID, 'renderer')).text)
+        text1 = len(self.check_element_on_page((By.ID, 'renderer')).text)
         access.click()
         time.sleep(2)
         self.assertTrue(access.is_selected())
         self.assertFalse(logger.is_selected())
-        text2=len(self.check_element_on_page((By.ID, 'renderer')).text)
+        text2 = len(self.check_element_on_page((By.ID, 'renderer')).text)
         self.assertNotEqual(text1, text2)
         # Just check if there is output in the field
 

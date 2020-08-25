@@ -23,7 +23,7 @@ Calibre-web-test
 - selenium (https://selenium-release.storage.googleapis.com/3.141/selenium-server-standalone-3.141.59.jar) has to be located in subfolder selenium (configurable)
 - java has to be installed and in path
 
-- I'm doing my tests with firefox, so geckodriver has to be installed and in path (https://github.com/mozilla/geckodriver/releases)
+- I'm doing my tests with Firefox, so geckodriver has to be installed and in path (https://github.com/mozilla/geckodriver/releases) and also Firefox itself
 
 - All dependencies listed in requirements.txt have to be installed
 
