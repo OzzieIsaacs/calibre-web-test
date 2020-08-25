@@ -20,10 +20,10 @@ def is_calibre_not_present():
 
 def calibre_path():
     if sys.platform == "win32":
-        calibre_path = ["C:\\program files\\calibre2\\calibre-convert.exe",
-                        "C:\\program files(x86)\\calibre2\\calibre-convert.exe",
-                        "C:\\program files\\calibre\\calibre-convert.exe",
-                        "C:\\program files(x86)\\calibre\\calibre-convert.exe"]
+        calibre_path = ["C:\\program files\\calibre2\\ebook-convert.exe",
+                        "C:\\program files(x86)\\calibre2\\ebook-convert.exe",
+                        "C:\\program files\\calibre\\ebook-convert.exe",
+                        "C:\\program files(x86)\\calibre\\ebook-convert.exe"]
     else:
         calibre_path = ["/opt/calibre/ebook-convert"]
     for element in calibre_path:
