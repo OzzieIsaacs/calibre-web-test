@@ -548,7 +548,7 @@ class CalibreResult(TextTestResult):
                 report_file.write(report)
         except UnicodeEncodeError:
             with open(path_file, 'wb') as report_file:
-                report_file.write(report)
+                report_file.write(report.encode('utf-8'))
 
 
     def _exc_info_to_string(self, err, test):
