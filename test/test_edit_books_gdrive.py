@@ -133,8 +133,9 @@ class test_edit_books_gdrive(unittest.TestCase, ui_class):
         self.assertTrue(save)
         save.click()
         self.assertTrue(self.check_element_on_page((By.ID, 'flash_success')))
-
+        time.sleep(1)
         auth_button = self.check_element_on_page((By.ID, "gdrive_auth"))
+        time.sleep(1)
         self.assertTrue(auth_button)
         auth_button.click()
         g_login = self.check_element_on_page((By.ID, "identifierId"))        
