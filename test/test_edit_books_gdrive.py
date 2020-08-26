@@ -65,7 +65,10 @@ class test_edit_books_gdrive(unittest.TestCase, ui_class):
         src = os.path.join(CALIBRE_WEB_PATH, "client_secret.json")
         if os.path.exists(src):
             os.chmod(src, 0o764)
-            shutil.move(src,dst)
+            try:
+                shutil.move(src,dst)
+            except PermissionError:
+                print('File move failed')
 
         remove_dependency(cls.dependency)
         # close the browser window and stop calibre-web
@@ -100,7 +103,9 @@ class test_edit_books_gdrive(unittest.TestCase, ui_class):
         time.sleep(BOOT_TIME)
         self.login('admin', 'admin123')
         self.goto_page('basic_config')
-        self.assertFalse(self.check_element_on_page((By.ID, "gdrive_error")).is_displayed())
+        gdriveError = self.check_element_on_page((By.ID, "gdrive_error"))
+        self.assertTrue(gdriveError)
+        self.assertFalse(gdriveError.is_displayed())
         use_gdrive = self.check_element_on_page((By.ID, "config_use_google_drive"))
         self.assertTrue(use_gdrive)
         use_gdrive.click()

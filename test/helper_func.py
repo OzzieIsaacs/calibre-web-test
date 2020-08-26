@@ -10,7 +10,6 @@ from selenium import webdriver
 from selenium.webdriver.common.by import By
 from selenium.webdriver.support import expected_conditions as EC
 import time
-import socket
 import errno
 import psutil
 from helper_environment import environment
@@ -18,6 +17,7 @@ from psutil import process_iter
 import os
 import sys
 import socket
+import importlib
 
 if os.name != 'nt':
     from signal import SIGKILL
@@ -97,7 +97,10 @@ def startup(inst, pyVersion, config, login=True, host="http://127.0.0.1:8083", e
     except Exception:
         pass
     shutil.rmtree(TEST_DB, ignore_errors=True)
-    shutil.copytree('./Calibre_db', TEST_DB)
+    try:
+        shutil.copytree('./Calibre_db', TEST_DB)
+    except FileExistsError:
+        print('Test DB already present, might not be a clean version')
     inst.p = process_open([pyVersion, os.path.join(CALIBRE_WEB_PATH, u'cps.py')], [1], sout=None, env=env)
 
     # create a new Firefox session
@@ -186,6 +189,12 @@ def add_dependency(name, testclass_name):
     with open(os.path.join(CALIBRE_WEB_PATH, 'optional-requirements.txt'), 'r') as f:
         requirements = f.readlines()
     for element in name:
+        if element.lower().startswith('local|'):
+            # full_module_name = ".config_test." + element.split('|')[1]
+            # The file gets executed upon import, as expected.
+            # tmp = __import__('pkg', fromlist=['mod', 'mod2'])
+            whl = importlib.__import__("config_test", fromlist=[element.split('|')[1]])
+            element_version.append(whl.__dict__[element.split('|')[1]])
         for line in requirements:
             if element.lower().startswith('git|') \
                     and not line.startswith('#') \
@@ -196,6 +205,7 @@ def add_dependency(name, testclass_name):
             elif not line.startswith('#') \
                     and not line == '\n' \
                     and not line.startswith('git') \
+                    and not line.startswith('local') \
                     and line.upper().startswith(element.upper()):
                 element_version.append(line.split('=', 1)[0].strip('>'))
                 break
@@ -217,6 +227,8 @@ def remove_dependency(names):
     for name in names:
         if name.startswith('git|'):
             name = name[4:]
+        if name.startswith('local|'):
+            name = name.split('|')[2]
         with process_open([VENV_PYTHON, "-m", "pip", "uninstall", "-y", name], (0, 5)) as q:
             if os.name == 'nt':
                 while q.poll() == None:

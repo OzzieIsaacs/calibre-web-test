@@ -543,8 +543,13 @@ class CalibreResult(TextTestResult):
         path_file = os.path.abspath(os.path.join(dir_to, report_name))
         self.stream.writeln(os.path.relpath(path_file))
         self.report_files.append(path_file)
-        with open(path_file, 'w') as report_file:
-            report_file.write(report)
+        try:
+            with open(path_file, 'w') as report_file:
+                report_file.write(report)
+        except UnicodeEncodeError:
+            with open(path_file, 'wb') as report_file:
+                report_file.write(report)
+
 
     def _exc_info_to_string(self, err, test):
         """ Converts a sys.exc_info()-style tuple of values into a string."""

@@ -5,9 +5,13 @@ from helper_ui import ui_class
 from config_test import TEST_DB
 from helper_func import startup, debug_startup, add_dependency, remove_dependency
 from selenium.webdriver.common.by import By
-from config_goodreads import GOODREADS_API_KEY, GOODREADS_API_SECRET
+try:
+    from config_goodreads import GOODREADS_API_KEY, GOODREADS_API_SECRET
+    GR = True
+except ImportError:
+    GR = False
 
-
+@unittest.skipIf(not GR, "Skipping Goodread Test, no config file found")
 class TestGoodreads(unittest.TestCase, ui_class):
 
     p = None

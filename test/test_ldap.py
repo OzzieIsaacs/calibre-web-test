@@ -3,6 +3,7 @@
 import unittest
 import time
 import re
+import os
 from helper_ui import ui_class
 from config_test import TEST_DB, BOOT_TIME
 from helper_func import startup, debug_startup, add_dependency, remove_dependency, get_Host_IP
@@ -15,7 +16,10 @@ class test_ldap_login(unittest.TestCase, ui_class):
     p=None
     driver = None
     kobo_adress = None
-    dep_line = ["Flask-SimpleLDAP", "python-ldap", "jsonschema"]
+    if os.name == 'nt':
+        dep_line = ["local|LDAP_WHL|python-ldap", "jsonschema", "Flask-SimpleLDAP"]
+    else:
+        dep_line = ["Flask-SimpleLDAP", "python-ldap", "jsonschema"]
 
     @classmethod
     def setUpClass(cls):
