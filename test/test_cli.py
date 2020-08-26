@@ -25,6 +25,8 @@ class testCli(unittest.TestCase, ui_class):
 
     @classmethod
     def setUpClass(cls):
+        # startup function is not called, therfore direct print
+        print("\n%s - %s: " % (cls.py_version, cls.__name__))
         cls.driver = webdriver.Firefox()
         cls.driver.implicitly_wait(10)
         cls.driver.maximize_window()

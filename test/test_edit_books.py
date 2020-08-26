@@ -238,8 +238,9 @@ class TestEditBooks(TestCase, ui_class):
         self.edit_book(content={'series':u'Alf|alfa, Kuko'})
         values = self.get_book_details()
         self.assertEqual(u'Alf|alfa, Kuko', values['series'])
-        list_element = self.goto_page('nav_serie')
-        self.assertEqual(list_element[0].text, u'Alf|alfa, Kuko')
+        self.goto_page('nav_serie')
+        list_element = self.get_series_books_displayed()
+        self.assertEqual(list_element[0]['title'], u'Alf|alfa, Kuko')
 
         self.get_book_details(9)
         self.check_element_on_page((By.ID, "edit_book")).click()
@@ -257,8 +258,9 @@ class TestEditBooks(TestCase, ui_class):
         self.edit_book(content={'series':u'loko'})
         values = self.get_book_details()
         self.assertEqual(u'loko', values['series'])
-        list_element = self.goto_page('nav_serie')
-        self.assertEqual(list_element[1].text, u'loko')
+        self.goto_page('nav_serie')
+        list_element = self.get_series_books_displayed()
+        self.assertEqual(list_element[1]['title'], u'loko')
 
         self.get_book_details(4)
         self.check_element_on_page((By.ID, "edit_book")).click()

@@ -64,9 +64,11 @@ class TestCalibreWebVisibilitys(unittest.TestCase, ui_class):
         self.assertTrue(self.check_element_on_page((By.ID, "books_rand")))
 
         # check random books shown in series section
-        list_element = self.goto_page('nav_serie')
+        self.goto_page('nav_serie')
+        list_element = self.get_series_books_displayed()
         self.assertIsNotNone(list_element)
-        list_element[0].click()
+        list_element[0]['ele'].click()
+
         self.assertTrue(self.check_element_on_page((By.ID, "books_rand")))
 
         # check random books NOT shown in author section
@@ -134,7 +136,9 @@ class TestCalibreWebVisibilitys(unittest.TestCase, ui_class):
         self.assertFalse(self.check_element_on_page((By.ID, "nav_rand")))
         # check random books shown in series section
         list_element = self.goto_page("nav_serie")
-        list_element[0].click()
+        list_element = self.get_series_books_displayed()
+        self.assertIsNotNone(list_element)
+        list_element[0]['ele'].click()
         self.assertTrue(self.check_element_on_page((By.ID, "books")))
         self.assertFalse(self.check_element_on_page((By.ID, "nav_rand")))
         # check random books not shown in author section
