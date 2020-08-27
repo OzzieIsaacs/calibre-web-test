@@ -151,6 +151,7 @@ class TestEditAdditionalBooks(TestCase, ui_class):
 
         # ToDo: what happens if folder isn't valid and no book or author folder is present?
 
+    @skipif(os.name == 'nt', 'writeonly database on windows is not checked')
     def test_writeonly_path(self):
         self.goto_page('nav_new')
         number_books = self.get_books_displayed()

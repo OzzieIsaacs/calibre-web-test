@@ -720,7 +720,7 @@ class TestEditBooks(TestCase, ui_class):
         self.driver.refresh()
         time.sleep(2)
         resp = r.get('http://127.0.0.1:8083/cover/5')
-        self.assertEqual('20317', resp.headers['Content-Length'])
+        self.assertAlmostEqual('20317', resp.headers['Content-Length'], delta=300)
 
         self.get_book_details(5)
         self.check_element_on_page((By.ID, "edit_book")).click()
@@ -826,7 +826,7 @@ class TestEditBooks(TestCase, ui_class):
         upload = self.check_element_on_page((By.ID, 'btn-upload'))
         upload.send_keys(upload_file)
 
-        time.sleep(2)
+        time.sleep(3)
         self.check_element_on_page((By.ID, 'edit_cancel')).click()
         details = self.get_book_details()
         self.assertEqual('book9', details['title'])

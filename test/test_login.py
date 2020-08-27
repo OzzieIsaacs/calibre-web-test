@@ -10,6 +10,7 @@ from config_test import TEST_DB, CALIBRE_WEB_PATH
 from helper_func import startup, check_response_language_header, curl_available, digest_login
 import requests
 import os
+import time
 
 
 class test_Login(unittest.TestCase, ui_class):
@@ -32,6 +33,10 @@ class test_Login(unittest.TestCase, ui_class):
         # close the browser window and stop calibre-web
         cls.driver.quit()
         cls.p.terminate()
+        try:
+            os.unlink(os.path.join(CALIBRE_WEB_PATH, 'cps', 'static', 'robots.txt'))
+        except:
+            pass
 
     def tearDown(self):
         if self.check_user_logged_in('', True):
@@ -365,9 +370,10 @@ class test_Login(unittest.TestCase, ui_class):
     # try to access all pages without login
     def test_robots(self):
         self.assertEqual(self.fail_access_page("http://127.0.0.1:8083/robots.txt"), 2)
-        with open(os.path.join(CALIBRE_WEB_PATH,'cps','static','robots.txt'),'w') as robotsfile:
-            robotsfile.write('This is a robÄtsfile')
+        with open(os.path.join(CALIBRE_WEB_PATH, 'cps', 'static', 'robots.txt'), 'wb') as robotsfile:
+            robotsfile.write('This is a robÄtsfile'.encode('utf-8'))
         r = requests.get('http://127.0.0.1:8083/robots.txt')
         self.assertEqual(200, r.status_code)
         self.assertEqual('This is a robÄtsfile', r.text)
+        time.sleep(2)
         os.unlink(os.path.join(CALIBRE_WEB_PATH,'cps', 'static','robots.txt'))
