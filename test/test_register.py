@@ -14,7 +14,7 @@ import time
    { "py_version": u'/usr/bin/python'},
    { "py_version": u'/usr/bin/python3'},
 ],names=('Python27','Python36'))'''
-class test_register(unittest.TestCase, ui_class):
+class TestRegister(unittest.TestCase, ui_class):
     p=None
     driver = None
     # py_version = u'/usr/bin/python3'

@@ -18,7 +18,7 @@ opds feed tests
    { "py_version": u'/usr/bin/python'},
    { "py_version": u'/usr/bin/python3'},
 ],names=('Python27','Python36'))'''
-class test_opds_feed(unittest.TestCase, ui_class):
+class TestOPDSFeed(unittest.TestCase, ui_class):
     p=None
     driver = None
 

@@ -13,7 +13,7 @@ import os
 import time
 
 
-class test_Login(unittest.TestCase, ui_class):
+class TestLogin(unittest.TestCase, ui_class):
     p = None
     driver = None
 

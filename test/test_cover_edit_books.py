@@ -15,7 +15,7 @@ from helper_func import startup, debug_startup, add_dependency, remove_dependenc
 from helper_proxy import Proxy, val
 
 
-class testCoverEditBooks(TestCase, ui_class):
+class TestCoverEditBooks(TestCase, ui_class):
     p = None
     driver = None
     dependencys = ['Pillow']

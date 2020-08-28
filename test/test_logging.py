@@ -20,7 +20,7 @@ from helper_func import startup
    { "py_version": u'/usr/bin/python'},
    { "py_version": u'/usr/bin/python3'},
 ],names=('Python27','Python36'))'''
-class test_logging(unittest.TestCase, ui_class):
+class TestLogging(unittest.TestCase, ui_class):
     p = None
 
     @classmethod

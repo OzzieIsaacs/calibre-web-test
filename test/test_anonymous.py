@@ -9,7 +9,7 @@ from helper_func import startup
 # from .parameterized import parameterized_class
 
 
-class testAnonymous(unittest.TestCase, ui_class):
+class TestAnonymous(unittest.TestCase, ui_class):
     p = None
     driver = None
 
@@ -20,7 +20,7 @@ class testAnonymous(unittest.TestCase, ui_class):
     @classmethod
     def tearDownClass(cls):
         cls.stop_calibre_web()
-        #close the browser window and stop calibre-web
+        # close the browser window and stop calibre-web
         cls.driver.quit()
         cls.p.terminate()
 
@@ -54,7 +54,7 @@ class testAnonymous(unittest.TestCase, ui_class):
         self.assertTrue(self.check_element_on_page((By.ID, "books_rand")))
 
         # check random books shown in series section
-        list_element = self.goto_page('nav_serie')
+        self.goto_page('nav_serie')
         # check if we are seeing list view
         # if len(list_element == 0):
         list_element = self.get_series_books_displayed()
@@ -118,7 +118,7 @@ class testAnonymous(unittest.TestCase, ui_class):
 
     # checks if admin can configure sidebar for random view
     def test_guest_visibility_sidebar(self):
-        self.edit_user('Guest', {'show_32': 0, 'show_128':1, 'show_2': 1,
+        self.edit_user('Guest', {'show_32': 0, 'show_128': 1, 'show_2': 1,
                                  'show_16': 1, 'show_4': 1, 'show_4096': 1, 'show_8': 1, 'show_64': 1})
         self.assertTrue(self.check_element_on_page((By.ID, "flash_success")))
         self.logout()

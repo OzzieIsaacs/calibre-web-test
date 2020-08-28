@@ -11,7 +11,7 @@ from selenium.webdriver.common.by import By
 from helper_ldap import TestLDAPServer
 import requests
 
-class test_ldap_login(unittest.TestCase, ui_class):
+class TestLdapLogin(unittest.TestCase, ui_class):
 
     p=None
     driver = None

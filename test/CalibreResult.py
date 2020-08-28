@@ -638,7 +638,7 @@ class CalibreResult(TextTestResult):
 
     def _prep_desc(self,desc, classname=True):
         namelist = desc.split('.')
-        if len(namelist) == 3:
+        if len(namelist) >= 3:
             if classname:
                 name = namelist[-2] + ' - ' + namelist[-1]
             else:

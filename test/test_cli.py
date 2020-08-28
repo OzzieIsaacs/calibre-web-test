@@ -15,13 +15,8 @@ from config_test import CALIBRE_WEB_PATH, TEST_DB, BOOT_TIME
 import re
 import sys
 
-# from parameterized import parameterized_class
 
-'''@parameterized_class([
-   { "py_version": u'/usr/bin/python'},
-   { "py_version": u'/usr/bin/python3'},
-],names=('Python27','Python36'))'''
-class testCli(unittest.TestCase, ui_class):
+class TestCli(unittest.TestCase, ui_class):
 
     @classmethod
     def setUpClass(cls):
@@ -46,7 +41,7 @@ class testCli(unittest.TestCase, ui_class):
         cls.driver.quit()
         try:
             os.remove(os.path.join(CALIBRE_WEB_PATH, 'app.db'))
-        except:
+        except Exception:
             pass
 
     def test_cli_different_folder(self):
@@ -60,7 +55,7 @@ class testCli(unittest.TestCase, ui_class):
             self.driver.get("http://127.0.0.1:8083")
 
             # Wait for config screen to show up
-            self.fill_initial_config({'config_calibre_dir':TEST_DB})
+            self.fill_initial_config({'config_calibre_dir': TEST_DB})
 
             # wait for cw to reboot
             time.sleep(BOOT_TIME)
@@ -76,15 +71,13 @@ class testCli(unittest.TestCase, ui_class):
             self.assertTrue(self.check_element_on_page((By.NAME, "query")))
             self.stop_calibre_web(self.p)
 
-        except:
+        except Exception:
             pass
         self.p.terminate()
 
-
     def test_cli_different_settings_database(self):
         new_db = os.path.join(CALIBRE_WEB_PATH, 'hü go.app')  # .decode('UTF-8')
-        # if sys.version_info < (3, 0):
-        new_db = new_db # .decode('UTF-8')
+        new_db = new_db
         self.p = process_open([self.py_version, os.path.join(CALIBRE_WEB_PATH, u'cps.py'),
                                '-p', new_db], [1, 3])
 
@@ -98,7 +91,7 @@ class testCli(unittest.TestCase, ui_class):
         self.driver.get("http://127.0.0.1:8083")
 
         # Wait for config screen to show up
-        self.fill_initial_config({'config_calibre_dir':TEST_DB})
+        self.fill_initial_config({'config_calibre_dir': TEST_DB})
 
         # wait for cw to reboot
         time.sleep(BOOT_TIME)
@@ -114,20 +107,19 @@ class testCli(unittest.TestCase, ui_class):
         self.assertTrue(os.path.isfile(new_db), "New settingsfile location not accepted")
         os.remove(new_db)
 
-
     def test_cli_SSL_files(self):
         os.chdir(os.path.dirname(__file__))
         shutil.rmtree(os.path.join(CALIBRE_WEB_PATH, 'hü lo'), ignore_errors=True)
         path_like_file = CALIBRE_WEB_PATH
         only_path = CALIBRE_WEB_PATH + os.sep
-        real_key_file = os.path.join(CALIBRE_WEB_PATH, 'hü lo', 'lö g.key') # .decode('UTF-8')
-        real_crt_file = os.path.join(CALIBRE_WEB_PATH, 'hü lo', 'lö g.crt') # .decode('UTF-8')
+        real_key_file = os.path.join(CALIBRE_WEB_PATH, 'hü lo', 'lö g.key')
+        real_crt_file = os.path.join(CALIBRE_WEB_PATH, 'hü lo', 'lö g.crt')
         if sys.version_info < (3, 0):
             real_key_file = real_key_file.decode('UTF-8')
             real_crt_file = real_crt_file.decode('UTF-8')
 
         p = process_open([self.py_version, os.path.join(CALIBRE_WEB_PATH, u'cps.py'),
-                          '-c', path_like_file],[1, 3])
+                          '-c', path_like_file], [1, 3])
         time.sleep(2)
         nextline = p.communicate()[0]
         if p.poll() is None:
@@ -151,23 +143,23 @@ class testCli(unittest.TestCase, ui_class):
         self.assertIsNotNone(re.findall('Certfilepath is invalid. Exiting', nextline))
 
         p = process_open([self.py_version, os.path.join(CALIBRE_WEB_PATH, u'cps.py'),
-                          '-k', only_path],[1, 3])
+                          '-k', only_path], [1, 3])
         time.sleep(2)
         nextline = p.communicate()[0]
         if p.poll() is None:
             p.kill()
         self.assertIsNotNone(re.findall('Keyfilepath is invalid. Exiting', nextline))
 
-        p = process_open([self.py_version, os.path.join(CALIBRE_WEB_PATH,u'cps.py'),
-                        '-c', real_crt_file],(1,3))
+        p = process_open([self.py_version, os.path.join(CALIBRE_WEB_PATH, u'cps.py'),
+                         '-c', real_crt_file], (1, 3))
         time.sleep(2)
         if p.poll() is None:
             p.kill()
         nextline = p.communicate()[0]
         self.assertIsNotNone(re.findall('Certfilepath is invalid. Exiting', nextline))
 
-        p = process_open([self.py_version, os.path.join(CALIBRE_WEB_PATH,u'cps.py'),
-                        '-k', real_key_file],(1,3))
+        p = process_open([self.py_version, os.path.join(CALIBRE_WEB_PATH, u'cps.py'),
+                         '-k', real_key_file], (1, 3))
         time.sleep(2)
         if p.poll() is None:
             p.kill()
@@ -180,27 +172,27 @@ class testCli(unittest.TestCase, ui_class):
         with open(real_crt_file, 'wb') as fout:
             fout.write(os.urandom(124))
 
-        p = process_open([self.py_version, os.path.join(CALIBRE_WEB_PATH,u'cps.py'),
-                        '-c', real_crt_file],(1,3))
+        p = process_open([self.py_version, os.path.join(CALIBRE_WEB_PATH, u'cps.py'),
+                         '-c', real_crt_file], (1, 3))
         time.sleep(2)
         if p.poll() is None:
             p.kill()
         nextline = p.communicate()[0]
         self.assertIsNotNone(re.findall('Certfile and Keyfile have to be used together. Exiting', nextline))
 
-        p = process_open([self.py_version, os.path.join(CALIBRE_WEB_PATH,u'cps.py'),
-                        '-k', real_key_file],(1,3))
+        p = process_open([self.py_version, os.path.join(CALIBRE_WEB_PATH, u'cps.py'),
+                         '-k', real_key_file], (1, 3))
         time.sleep(2)
         if p.poll() is None:
             p.kill()
         nextline = p.communicate()[0]
         self.assertIsNotNone(re.findall('Certfile and Keyfile have to be used together. Exiting', nextline))
 
-        p = process_open([self.py_version, os.path.join(CALIBRE_WEB_PATH,u'cps.py'),
-                        '-c', real_crt_file, '-k', real_key_file],(1,3,5))
+        p = process_open([self.py_version, os.path.join(CALIBRE_WEB_PATH, u'cps.py'),
+                         '-c', real_crt_file, '-k', real_key_file], (1, 3, 5))
 
         if p.poll() is not None:
-            self.assertIsNone('Fail','Unexpected error')
+            self.assertIsNone('Fail', 'Unexpected error')
             p.kill()
         p.terminate()
         time.sleep(10)
@@ -215,15 +207,15 @@ class testCli(unittest.TestCase, ui_class):
         p.kill()
         shutil.rmtree(os.path.join(CALIBRE_WEB_PATH, 'hü lo'), ignore_errors=True)
         shutil.copytree('./SSL', os.path.join(CALIBRE_WEB_PATH, 'hü lo'))
-        real_crt_file = os.path.join(CALIBRE_WEB_PATH, 'hü lo', 'ssl.crt') # .decode('UTF-8')
-        real_key_file = os.path.join(CALIBRE_WEB_PATH, 'hü lo', 'ssl.key') # .decode('UTF-8')
+        real_crt_file = os.path.join(CALIBRE_WEB_PATH, 'hü lo', 'ssl.crt')
+        real_key_file = os.path.join(CALIBRE_WEB_PATH, 'hü lo', 'ssl.key')
         if sys.version_info < (3, 0):
             real_crt_file = real_crt_file.decode('UTF-8')
             real_key_file = real_key_file.decode('UTF-8')
-        p = process_open([self.py_version, os.path.join(CALIBRE_WEB_PATH,u'cps.py'),
-                        '-c', real_crt_file, '-k', real_key_file],(1,3,5))
+        p = process_open([self.py_version, os.path.join(CALIBRE_WEB_PATH, u'cps.py'),
+                         '-c', real_crt_file, '-k', real_key_file], (1, 3, 5))
         if p.poll() is not None:
-            self.assertIsNone('Fail','Unexpected error')
+            self.assertIsNone('Fail', 'Unexpected error')
         time.sleep(10)
 
         # navigate to the application home page
@@ -238,8 +230,6 @@ class testCli(unittest.TestCase, ui_class):
         time.sleep(3)
         p.poll()
 
-
-    # @unittest.expectedFailure
     @unittest.skip("Not Implemented")
     def test_cli_gdrive_location(self):
         # ToDo: implement
@@ -268,19 +258,18 @@ class testCli(unittest.TestCase, ui_class):
             error = e.msg
         self.assertTrue(re.findall('Reached error page:\sabout:neterror\?e=connectionFailure', error))
         try:
-            self.driver.get("http://"+ address +":8083")
-        except WebDriverException as e:
+            self.driver.get("http://" + address + ":8083")
+        except WebDriverException:
             self.assertIsNone('Limit listening address not working')
         self.assertTrue(self.check_element_on_page((By.ID, "config_calibre_dir")))
         p.terminate()
         time.sleep(3)
         p.poll()
 
-
     def test_environ_port_setting(self):
         my_env = os.environ.copy()
         my_env["CALIBRE_PORT"] = '8082'
-        p = process_open([self.py_version, os.path.join(CALIBRE_WEB_PATH,u'cps.py')],[1], env=my_env)
+        p = process_open([self.py_version, os.path.join(CALIBRE_WEB_PATH, u'cps.py')], [1], env=my_env)
 
         time.sleep(BOOT_TIME)
         # navigate to the application home page
@@ -320,5 +309,3 @@ class testCli(unittest.TestCase, ui_class):
         p1.terminate()
         time.sleep(3)
         p1.poll()
-
-

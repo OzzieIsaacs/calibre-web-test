@@ -10,7 +10,7 @@ sys.path.append(CALIBRE_WEB_PATH)
 # sys.path.insert(0, os.path.join(CALIBRE_WEB_PATH, 'vendor'))
 
 
-class CalibreHelper(unittest.TestCase):
+class TestCalibreHelper(unittest.TestCase):
 
     @classmethod
     def setUpClass(cls):

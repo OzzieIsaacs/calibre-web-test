@@ -14,7 +14,7 @@ from helper_func import startup
    { "py_version": u'/usr/bin/python'},
    { "py_version": u'/usr/bin/python3'},
 ],names=('Python27','Python36'))'''
-class test_user_template(unittest.TestCase, ui_class):
+class TestUserTemplate(unittest.TestCase, ui_class):
     p=None
     driver = None
 

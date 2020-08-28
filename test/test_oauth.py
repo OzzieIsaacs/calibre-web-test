@@ -8,7 +8,7 @@ from helper_func import startup, debug_startup, add_dependency, remove_dependenc
 from selenium.webdriver.common.by import By
 
 
-class test_OAuth_login(unittest.TestCase, ui_class):
+class TestOAuthLogin(unittest.TestCase, ui_class):
 
     p = None
     driver = None

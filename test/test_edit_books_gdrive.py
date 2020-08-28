@@ -20,7 +20,7 @@ from helper_func import add_dependency, remove_dependency, startup
 
 
 # @unittest.skip("Not Implemented")
-class test_edit_books_gdrive(unittest.TestCase, ui_class):
+class TestEditBooksGdrive(unittest.TestCase, ui_class):
     p=None
     driver = None
     dependency = ["oauth2client", "PyDrive", "PyYAML", "google-api-python-client", "httplib2"]

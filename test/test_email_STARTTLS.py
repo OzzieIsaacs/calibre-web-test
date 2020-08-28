@@ -13,7 +13,7 @@ from helper_func import startup, wait_Email_received
 
 
 @unittest.skipIf(helper_email_convert.is_calibre_not_present(),"Skipping convert, calibre not found")
-class test_STARTTLS(unittest.TestCase, ui_class):
+class TestSTARTTLS(unittest.TestCase, ui_class):
     p = None
     driver = None
     email_server = None
