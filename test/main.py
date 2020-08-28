@@ -14,6 +14,7 @@ from CalibreResult import CalibreResult
 from helper_environment import environment
 from subprocess import check_output, CalledProcessError
 
+
 if __name__ == '__main__':
     sub_dependencys = ["Werkzeug", "Jinja2", "singledispatch"]
     result=False

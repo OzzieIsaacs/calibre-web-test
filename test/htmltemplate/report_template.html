@@ -98,7 +98,7 @@
     </tr>
 {% for result in results %}
 {% if result['header'] %}
-    <tr class="result['header']['style']">
+    <tr id="su" class="{{ result['header']['style'] }}">
         <td>{{ result['header']['desc'] }}</td>
         <td class="text-center">{{ result['header']['count'] }}</td>
         <td class="text-center">{{ result['header']['Pass'] }}</td>
