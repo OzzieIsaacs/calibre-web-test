@@ -90,6 +90,21 @@ def startup(inst, pyVersion, config, login=True, host="http://127.0.0.1:8083", e
     print("\n%s - %s: " % (inst.py_version, inst.__name__))
     try:
         os.remove(os.path.join(CALIBRE_WEB_PATH, 'app.db'))
+    except PermissionError:
+        for proc in process_iter():
+            try:
+                if 'python' in proc.name():
+                    res = [i for i in proc.cmdline() if 'cps.py' in i]
+                    if res:
+                        proc.send_signal(SIGKILL)
+                        print('Killed old Calibre-Web instance')
+            except (PermissionError, psutil.AccessDenied, psutil.NoSuchProcess):
+                pass
+
+        try:
+            os.remove(os.path.join(CALIBRE_WEB_PATH, 'app.db'))
+        except Exception as e:
+            print(e)
     except Exception:
         pass
     try:
