@@ -61,19 +61,23 @@ class TestEditBooksGdrive(unittest.TestCase, ui_class):
 
     @classmethod
     def tearDownClass(cls):
+        cls.driver.get("http://127.0.0.1:8083")
+        cls.stop_calibre_web()
+        # close the browser window and stop calibre-web
+        cls.driver.quit()
+        cls.p.terminate()
+
+        remove_dependency(cls.dependency)
+
         dst = os.path.join(CALIBRE_WEB_PATH, "client_secrets.json")
         src = os.path.join(CALIBRE_WEB_PATH, "client_secret.json")
         if os.path.exists(src):
             os.chmod(src, 0o764)
             try:
-                shutil.move(src,dst)
+                shutil.move(src, dst)
             except PermissionError:
                 print('File move failed')
 
-        remove_dependency(cls.dependency)
-        # close the browser window and stop calibre-web
-        cls.driver.quit()
-        cls.p.terminate()
 
 
     def test_config_gdrive(self):
@@ -94,7 +98,7 @@ class TestEditBooksGdrive(unittest.TestCase, ui_class):
 
         dst = os.path.join(CALIBRE_WEB_PATH, "client_secrets.json")
         src = os.path.join(CALIBRE_WEB_PATH, "client_secret.json")
-        shutil.copy(src,dst)
+        shutil.copy(src, dst)
         os.chmod(dst, 0o040)
 
         self.assertTrue(login)
@@ -103,19 +107,21 @@ class TestEditBooksGdrive(unittest.TestCase, ui_class):
         time.sleep(BOOT_TIME)
         self.login('admin', 'admin123')
         self.goto_page('basic_config')
-        gdriveError = self.check_element_on_page((By.ID, "gdrive_error"))
-        self.assertTrue(gdriveError)
-        self.assertFalse(gdriveError.is_displayed())
+        if os.name != 'nt':
+            gdriveError = self.check_element_on_page((By.ID, "gdrive_error"))
+            self.assertTrue(gdriveError)
+            self.assertFalse(gdriveError.is_displayed())
         use_gdrive = self.check_element_on_page((By.ID, "config_use_google_drive"))
         self.assertTrue(use_gdrive)
         use_gdrive.click()
-        # error json file not readable
-        self.assertTrue(self.check_element_on_page((By.ID, "gdrive_error")).is_displayed())
+        if os.name != 'nt':
+            # error json file not readable
+            self.assertTrue(self.check_element_on_page((By.ID, "gdrive_error")).is_displayed())
         os.chmod(dst, 0o700)
         with open(dst, 'r') as settings:
             content = json.load(settings)
 
-        callback = content['web']['redirect_uris'][0].strip('/gdrive/callback')
+        # callback = content['web']['redirect_uris'][0].strip('/gdrive/callback')
         content.pop('web', None)
 
         with open(dst, 'w') as data_file:
