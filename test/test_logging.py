@@ -117,7 +117,8 @@ class TestLogging(unittest.TestCase, ui_class):
             self.assertIsNotNone('Fail', 'Element could not be found')
 
     def test_logfile_recover(self):
-        os.makedirs(os.path.join(CALIBRE_WEB_PATH, 'hü lo'))
+        if not os.path.isdir(os.path.join(CALIBRE_WEB_PATH, 'hü lo')):
+            os.makedirs(os.path.join(CALIBRE_WEB_PATH, 'hü lo'))
         self.fill_basic_config({'config_logfile': os.path.join(CALIBRE_WEB_PATH, 'hü lo', 'lö g')})
         self.check_element_on_page((By.ID, "flash_success"))
         time.sleep(BOOT_TIME)

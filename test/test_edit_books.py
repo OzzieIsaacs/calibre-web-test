@@ -729,7 +729,7 @@ class TestEditBooks(TestCase, ui_class):
         self.driver.refresh()
         time.sleep(2)
         resp = r.get('http://127.0.0.1:8083/cover/5')
-        self.assertEqual('17420', resp.headers['Content-Length'])
+        self.assertEqual(17420, int(resp.headers['Content-Length']), delta=300)
         r.close()
         self.assertTrue(False, "Browser-Cache Problem: Old Cover is displayed instead of New Cover")
 
