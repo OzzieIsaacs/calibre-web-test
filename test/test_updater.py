@@ -82,7 +82,7 @@ class TestUpdater(unittest.TestCase, ui_class):
     @classmethod
     def return_cw(cls):
         if os.path.isdir(CALIBRE_WEB_PATH + '_2'):
-            shutil.rmtree(CALIBRE_WEB_PATH)
+            shutil.rmtree(CALIBRE_WEB_PATH, ignore_errors=True)
             shutil.move(CALIBRE_WEB_PATH + '_2', CALIBRE_WEB_PATH)
         try:
             os.remove(os.path.join('cps_copy.zip'))

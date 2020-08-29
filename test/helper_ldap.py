@@ -15,7 +15,6 @@ from ldaptor.protocols import pureldap
 from twisted.internet import defer, ssl
 from twisted.internet import reactor
 from ldaptor.protocols.ldap import distinguishedname
-# from ldaptor import interfaces
 import time
 
 LDAP_AUTH_ANON = 0

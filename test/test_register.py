@@ -10,12 +10,8 @@ from helper_ui import ui_class
 import time
 
 
-'''@parameterized_class([
-   { "py_version": u'/usr/bin/python'},
-   { "py_version": u'/usr/bin/python3'},
-],names=('Python27','Python36'))'''
 class TestRegister(unittest.TestCase, ui_class):
-    p=None
+    p = None
     driver = None
     # py_version = u'/usr/bin/python3'
 
@@ -197,6 +193,7 @@ class TestRegister(unittest.TestCase, ui_class):
         __, passw = self.email_server.handler.extract_register_info()
         self.email_server.handler.reset_email_received()
         self.login('forget', passw)
+        time.sleep(1)
         self.assertTrue(self.check_user_logged_in('forget', noCompare=True))
         self.assertFalse(self.forgot_password('forgot'))
 

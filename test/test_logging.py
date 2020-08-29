@@ -137,7 +137,8 @@ class TestLogging(unittest.TestCase, ui_class):
         self.assertEqual(logpath, "", "logfile config value is not empty after reseting to default")
 
     def test_access_log_recover(self):
-        os.makedirs(os.path.join(CALIBRE_WEB_PATH, 'hö lo'))
+        if not os.path.isdir(os.path.join(CALIBRE_WEB_PATH, 'hö lo')):
+            os.makedirs(os.path.join(CALIBRE_WEB_PATH, 'hö lo'))
         self.fill_basic_config({'config_access_log': 1,
                                 'config_access_logfile': os.path.join(CALIBRE_WEB_PATH, 'hö lo', 'lü g')})
         self.check_element_on_page((By.ID, "flash_success"))
