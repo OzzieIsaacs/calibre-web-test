@@ -14,6 +14,7 @@ from subproc_wrapper import process_open
 from config_test import CALIBRE_WEB_PATH, TEST_DB, BOOT_TIME
 import re
 import sys
+from helper_func import save_logfiles
 
 
 class TestCli(unittest.TestCase, ui_class):
@@ -43,6 +44,7 @@ class TestCli(unittest.TestCase, ui_class):
             os.remove(os.path.join(CALIBRE_WEB_PATH, 'app.db'))
         except Exception:
             pass
+        save_logfiles(cls.__name__)
 
     def test_cli_different_folder(self):
         os.chdir(CALIBRE_WEB_PATH)

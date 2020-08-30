@@ -12,7 +12,8 @@ import sys
 import venv
 from CalibreResult import CalibreResult
 from helper_environment import environment
-from subprocess import check_output, CalledProcessError
+from helper_func import kill_dead_cps
+from subprocess import CalledProcessError
 
 
 if __name__ == '__main__':
@@ -110,4 +111,5 @@ if __name__ == '__main__':
     # run the suite using HTMLTestRunner
     runner.run(all_tests)
     print("\nAll tests finished, please check testresults")
+    kill_dead_cps()
     sys.exit(0)

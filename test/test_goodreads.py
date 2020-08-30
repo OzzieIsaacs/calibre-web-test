@@ -5,11 +5,13 @@ from helper_ui import ui_class
 from config_test import TEST_DB
 from helper_func import startup, debug_startup, add_dependency, remove_dependency
 from selenium.webdriver.common.by import By
+from helper_func import save_logfiles
 try:
     from config_goodreads import GOODREADS_API_KEY, GOODREADS_API_SECRET
     GR = True
 except ImportError:
     GR = False
+
 
 @unittest.skipIf(not GR, "Skipping Goodread Test, no config file found")
 class TestGoodreads(unittest.TestCase, ui_class):
@@ -37,6 +39,7 @@ class TestGoodreads(unittest.TestCase, ui_class):
         cls.p.terminate()
         # close the browser window and stop calibre-web
         remove_dependency(cls.dependency)
+        save_logfiles(cls.__name__)
 
 
     def test_author_page_invalid(self):

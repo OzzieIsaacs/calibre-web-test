@@ -2,9 +2,8 @@
 
 import unittest
 from selenium.webdriver.common.by import By
-# from selenium.webdriver.support.ui import WebDriverWait
-# from selenium.webdriver.support import expected_conditions as EC
 
+from helper_func import save_logfiles
 import time
 import requests
 from helper_ui import ui_class
@@ -12,15 +11,6 @@ from helper_ui import RESTRICT_TAG_ME, RESTRICT_COL_USER
 from config_test import TEST_DB
 # from parameterized import parameterized_class
 from helper_func import startup, debug_startup
-
-'''
-ToDOs: search:
-buchtitel (leerzeichen, unicode zeichen, kein treffer)
-author (nachname, „name, vorname“, vornname jeweils mit unicode, kein treffer)
-serie (leerzeichen, unicode, kein treffer)
-ergebnis zu shelf hinzufügen (kein ergebnis vorhanden, public shelf, private shelf, buch schon vorhanden, kein shelf 
-vorhanden)
-'''
 
 
 class TestCalibreWebVisibilitys(unittest.TestCase, ui_class):
@@ -42,6 +32,7 @@ class TestCalibreWebVisibilitys(unittest.TestCase, ui_class):
         # close the browser window and stop calibre-web
         cls.driver.quit()
         cls.p.terminate()
+        save_logfiles(cls.__name__)
 
     def test_checked_logged_in(self):
         # get the search textbox

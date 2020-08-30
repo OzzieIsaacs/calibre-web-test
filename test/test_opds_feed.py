@@ -9,6 +9,7 @@ import requests
 from helper_func import startup, debug_startup
 # from .parameterized import parameterized_class
 import time
+from helper_func import save_logfiles
 '''
 opds feed tests
 '''
@@ -33,6 +34,7 @@ class TestOPDSFeed(unittest.TestCase, ui_class):
         # close the browser window and stop calibre-web
         cls.driver.quit()
         cls.p.terminate()
+        save_logfiles(cls.__name__)
 
     def tearDown(self):
         if self.check_user_logged_in('admin'):

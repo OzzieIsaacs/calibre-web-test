@@ -3,7 +3,7 @@
 import os
 import shutil
 import re
-from config_test import CALIBRE_WEB_PATH, TEST_DB, BOOT_TIME, VENV_PYTHON
+from config_test import CALIBRE_WEB_PATH, TEST_DB, BOOT_TIME, VENV_PYTHON, base_path
 from selenium.webdriver.support.ui import WebDriverWait
 from subproc_wrapper import process_open
 from selenium import webdriver
@@ -18,6 +18,7 @@ import os
 import sys
 import socket
 import importlib
+import datetime
 
 if os.name != 'nt':
     from signal import SIGKILL
@@ -72,9 +73,7 @@ def debug_startup(inst, __, ___, login=True, host="http://127.0.0.1:8083", env=N
 
     # create a new Firefox session
     inst.driver = webdriver.Firefox()
-
     inst.driver.implicitly_wait(BOOT_TIME)
-
     inst.driver.maximize_window()
 
     # navigate to the application home page
@@ -91,16 +90,7 @@ def startup(inst, pyVersion, config, login=True, host="http://127.0.0.1:8083", e
     try:
         os.remove(os.path.join(CALIBRE_WEB_PATH, 'app.db'))
     except PermissionError:
-        for proc in process_iter():
-            try:
-                if 'python' in proc.name():
-                    res = [i for i in proc.cmdline() if 'cps.py' in i]
-                    if res:
-                        proc.send_signal(SIGKILL)
-                        print('Killed old Calibre-Web instance')
-            except (PermissionError, psutil.AccessDenied, psutil.NoSuchProcess):
-                pass
-
+        kill_dead_cps()
         try:
             os.remove(os.path.join(CALIBRE_WEB_PATH, 'app.db'))
         except Exception as e:
@@ -263,6 +253,17 @@ def kill_old_cps(port=8083):
         except (PermissionError, psutil.AccessDenied):
             pass
 
+def kill_dead_cps():
+    for proc in process_iter():
+        try:
+            if 'python' in proc.name():
+                res = [i for i in proc.cmdline() if 'cps.py' in i]
+                if res:
+                    proc.send_signal(SIGKILL)
+                    print('Killed old Calibre-Web instance')
+        except (PermissionError, psutil.AccessDenied, psutil.NoSuchProcess):
+            pass
+
 
 def unrar_path():
     if sys.platform == "win32":
@@ -277,3 +278,17 @@ def unrar_path():
 
 def is_unrar_not_present():
     return unrar_path() is None
+
+def save_logfiles(module_name):
+    if not os.path.isdir(os.path.join(base_path, 'outcome')):
+        os.makedirs(os.path.join(base_path, 'outcome'))
+    datestamp = datetime.datetime.now().strftime('%Y%m%d%H%M%S')
+    outdir = os.path.join(base_path, 'outcome', module_name + '-' + datestamp)
+    if not os.path.isdir(outdir):
+        os.makedirs(outdir)
+    for file in ['calibre-web.log', 'calibre-web.log', 'calibre-web.log.1', 'calibre-web.log.2',
+                 'access.log', 'access.log.1', 'access.log.2']:
+        src = os.path.join(CALIBRE_WEB_PATH, file)
+        dest = os.path.join(outdir, file)
+        if os.path.exists(src):
+            shutil.copy(src,dest)

@@ -13,6 +13,7 @@ from config_test import TEST_DB
 # from parameterized import parameterized_class
 from helper_func import startup, debug_startup, add_dependency, remove_dependency
 from helper_proxy import Proxy, val
+from helper_func import save_logfiles
 
 
 class TestCoverEditBooks(TestCase, ui_class):
@@ -47,6 +48,7 @@ class TestCoverEditBooks(TestCase, ui_class):
         cls.driver.quit()
         cls.proxy.stop_proxy()
         cls.p.terminate()
+        save_logfiles(cls.__name__)
 
     def test_upload_jpg(self):
         val.set_type(['HTTPError'])

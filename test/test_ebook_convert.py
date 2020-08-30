@@ -13,6 +13,7 @@ from helper_ui import ui_class
 from config_test import CALIBRE_WEB_PATH, TEST_DB
 # from parameterized import parameterized_class
 from helper_func import startup
+from helper_func import save_logfiles
 
 
 @unittest.skipIf(helper_email_convert.is_calibre_not_present(), "Skipping convert, calibre not found")
@@ -55,7 +56,7 @@ class TestEbookConvert(unittest.TestCase, ui_class):
         cls.p.terminate()
         cls.email_server.stop()
         time.sleep(2)
-        # cls.p.kill()
+        save_logfiles(cls.__name__)
 
 
     def tearDown(self):

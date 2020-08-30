@@ -7,13 +7,9 @@ import time
 from helper_ui import ui_class, RESTRICT_TAG_TEMPLATE, RESTRICT_COL_TEMPLATE
 from config_test import CALIBRE_WEB_PATH, TEST_DB, BOOT_TIME
 from helper_func import startup
-# from parameterized import parameterized_class
+from helper_func import save_logfiles
 
 
-'''@parameterized_class([
-   { "py_version": u'/usr/bin/python'},
-   { "py_version": u'/usr/bin/python3'},
-],names=('Python27','Python36'))'''
 class TestUserTemplate(unittest.TestCase, ui_class):
     p=None
     driver = None
@@ -32,7 +28,7 @@ class TestUserTemplate(unittest.TestCase, ui_class):
         # close the browser window and stop calibre-web
         cls.driver.quit()
         cls.p.terminate()
-        # cls.p.kill()
+        save_logfiles(cls.__name__)
 
     def tearDown(self):
         if not self.check_user_logged_in('admin'):

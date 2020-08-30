@@ -13,6 +13,7 @@ from helper_ui import ui_class
 from config_test import TEST_DB, base_path, BOOT_TIME
 # from .parameterized import parameterized_class
 from helper_func import startup, debug_startup, add_dependency, remove_dependency, unrar_path, is_unrar_not_present
+from helper_func import save_logfiles
 
 
 @unittest.skipIf(is_unrar_not_present(), "Skipping convert, unrar not found")
@@ -39,6 +40,7 @@ class TestEditAdditionalBooks(TestCase, ui_class):
         # close the browser window and stop calibre-web
         cls.driver.quit()
         cls.p.terminate()
+        save_logfiles(cls.__name__)
 
     def test_upload_metadate_cbr(self):
         self.fill_basic_config({'config_uploading': 1})

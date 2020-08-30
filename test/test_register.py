@@ -8,6 +8,7 @@ from helper_func import startup, wait_Email_received
 import unittest
 from helper_ui import ui_class
 import time
+from helper_func import save_logfiles
 
 
 class TestRegister(unittest.TestCase, ui_class):
@@ -45,6 +46,7 @@ class TestRegister(unittest.TestCase, ui_class):
         cls.driver.quit()
         cls.p.terminate()
         cls.email_server.stop()
+        save_logfiles(cls.__name__)
 
     def tearDown(self):
         self.email_server.handler.reset_email_received()

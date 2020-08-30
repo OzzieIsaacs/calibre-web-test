@@ -9,6 +9,7 @@ from config_test import TEST_DB
 from helper_func import startup
 # from parameterized import parameterized_class
 import requests
+from helper_func import save_logfiles
 
 
 '''@parameterized_class([
@@ -35,6 +36,7 @@ class TestShelf(unittest.TestCase, ui_class):
         # close the browser window and stop calibre-web
         cls.driver.quit()
         cls.p.terminate()
+        save_logfiles(cls.__name__)
 
     def tearDown(self):
         if not self.check_user_logged_in('admin'):

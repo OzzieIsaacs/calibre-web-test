@@ -7,6 +7,7 @@ from helper_ui import ui_class
 from config_test import TEST_DB
 # from parameterized import parameterized_class
 from helper_func import startup, debug_startup
+from helper_func import save_logfiles
 
 
 class TestDeleteDatabase(TestCase, ui_class):
@@ -28,6 +29,7 @@ class TestDeleteDatabase(TestCase, ui_class):
         # close the browser window and stop calibre-web
         cls.driver.quit()
         cls.p.terminate()
+        save_logfiles(cls.__name__)
 
     def test_delete_books_in_database(self):
         self.delete_book(1)

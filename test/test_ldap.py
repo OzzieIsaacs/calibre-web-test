@@ -10,6 +10,8 @@ from helper_func import startup, debug_startup, add_dependency, remove_dependenc
 from selenium.webdriver.common.by import By
 from helper_ldap import TestLDAPServer
 import requests
+from helper_func import save_logfiles
+
 
 class TestLdapLogin(unittest.TestCase, ui_class):
 
@@ -43,6 +45,7 @@ class TestLdapLogin(unittest.TestCase, ui_class):
         cls.driver.quit()
         # close the browser window and stop calibre-web
         remove_dependency(cls.dep_line)
+        save_logfiles(cls.__name__)
 
     @classmethod
     def tearDown(cls):

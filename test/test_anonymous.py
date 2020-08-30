@@ -6,7 +6,8 @@ from selenium.webdriver.common.by import By
 from helper_ui import ui_class
 from config_test import TEST_DB
 from helper_func import startup
-# from .parameterized import parameterized_class
+from helper_func import save_logfiles
+
 
 
 class TestAnonymous(unittest.TestCase, ui_class):
@@ -23,6 +24,7 @@ class TestAnonymous(unittest.TestCase, ui_class):
         # close the browser window and stop calibre-web
         cls.driver.quit()
         cls.p.terminate()
+        save_logfiles(cls.__name__)
 
     def tearDown(self):
         if not self.check_user_logged_in('admin'):

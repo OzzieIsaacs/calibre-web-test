@@ -13,6 +13,7 @@ from helper_ui import ui_class
 from config_test import TEST_DB, base_path
 # from parameterized import parameterized_class
 from helper_func import startup, debug_startup, add_dependency, remove_dependency
+from helper_func import save_logfiles
 
 
 class TestEditBooks(TestCase, ui_class):
@@ -39,7 +40,7 @@ class TestEditBooks(TestCase, ui_class):
         # close the browser window and stop calibre-web
         cls.driver.quit()
         cls.p.terminate()
-        # cls.p.kill()
+        save_logfiles(cls.__name__)
 
     # goto Book 1
     # Change Title with unicode chars

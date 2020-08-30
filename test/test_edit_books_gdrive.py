@@ -15,7 +15,7 @@ from helper_ui import ui_class
 
 from config_test import CALIBRE_WEB_PATH, TEST_DB, BOOT_TIME
 from helper_func import add_dependency, remove_dependency, startup
-# from parameterized import parameterized_class
+from helper_func import save_logfiles
 # test editing books on gdrive
 
 
@@ -77,6 +77,7 @@ class TestEditBooksGdrive(unittest.TestCase, ui_class):
                 shutil.move(src, dst)
             except PermissionError:
                 print('File move failed')
+        save_logfiles(cls.__name__)
 
 
 

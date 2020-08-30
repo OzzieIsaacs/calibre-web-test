@@ -3,11 +3,10 @@
 import sys
 import unittest
 from config_test import CALIBRE_WEB_PATH
+from helper_func import save_logfiles
 
-# Insert local directories into path
-# sys.path.insert(0, os.path.join(CALIBRE_WEB_PATH, 'cps'))
 sys.path.append(CALIBRE_WEB_PATH)
-# sys.path.insert(0, os.path.join(CALIBRE_WEB_PATH, 'vendor'))
+
 
 
 class TestCalibreHelper(unittest.TestCase):
@@ -103,3 +102,4 @@ class TestCalibreHelper(unittest.TestCase):
         # helper.global_WorkerThread.stop()
         del sys.modules["cps.helper"]
         del helper
+        save_logfiles(cls.__name__)

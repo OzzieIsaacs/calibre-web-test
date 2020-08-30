@@ -13,13 +13,9 @@ from helper_ui import ui_class
 from config_test import CALIBRE_WEB_PATH, TEST_DB, BOOT_TIME
 import re
 from helper_func import startup
-# from parameterized import parameterized_class
+from helper_func import save_logfiles
 
 
-'''@parameterized_class([
-   { "py_version": u'/usr/bin/python'},
-   { "py_version": u'/usr/bin/python3'},
-],names=('Python27','Python36'))'''
 class TestLogging(unittest.TestCase, ui_class):
     p = None
 
@@ -40,7 +36,7 @@ class TestLogging(unittest.TestCase, ui_class):
         # close the browser window and stop calibre-web
         cls.driver.quit()
         cls.p.terminate()
-        # cls.p.kill()
+        save_logfiles(cls.__name__)
 
     def test_failed_login(self):
         self.driver.find_element_by_id("logout").click()

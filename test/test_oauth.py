@@ -6,6 +6,7 @@ from helper_ui import ui_class
 from config_test import TEST_DB, BOOT_TIME
 from helper_func import startup, debug_startup, add_dependency, remove_dependency
 from selenium.webdriver.common.by import By
+from helper_func import save_logfiles
 
 
 class TestOAuthLogin(unittest.TestCase, ui_class):
@@ -32,6 +33,7 @@ class TestOAuthLogin(unittest.TestCase, ui_class):
         cls.driver.quit()
         # close the browser window and stop calibre-web
         remove_dependency(cls.dep_line)
+        save_logfiles(cls.__name__)
 
 
     def test_visible_oauth(self):

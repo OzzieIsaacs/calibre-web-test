@@ -11,6 +11,7 @@ from helper_func import startup, check_response_language_header, curl_available,
 import requests
 import os
 import time
+from helper_func import save_logfiles
 
 
 class TestLogin(unittest.TestCase, ui_class):
@@ -37,6 +38,7 @@ class TestLogin(unittest.TestCase, ui_class):
             os.unlink(os.path.join(CALIBRE_WEB_PATH, 'cps', 'static', 'robots.txt'))
         except:
             pass
+        save_logfiles(cls.__name__)
 
     def tearDown(self):
         if self.check_user_logged_in('', True):
