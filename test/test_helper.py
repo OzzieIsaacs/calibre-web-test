@@ -18,6 +18,11 @@ def _get_updater_thread():
 
 class TestCalibreHelper(unittest.TestCase):
 
+    @classmethod
+    def setUpClass(cls):
+        # startup function is not called, therfore direct print
+        print("\n%s - %s: " % ("", cls.__name__))
+
     def test_check_high23(self):
         self.assertEqual(helper.get_valid_filename(u'²³'), u'23')
 

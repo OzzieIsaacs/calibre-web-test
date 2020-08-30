@@ -58,13 +58,11 @@ class TestEbookConvert(unittest.TestCase, ui_class):
         time.sleep(2)
         save_logfiles(cls.__name__)
 
-
     def tearDown(self):
         if not self.check_user_logged_in('admin'):
             self.logout()
             self.login('admin', 'admin123')
         self.fill_basic_config({'config_calibre': ''})
-
 
     # deactivate converter and check send to kindle and convert are not visible anymore
     def test_convert_deactivate(self):
