@@ -455,20 +455,26 @@ class CalibreResult(TextTestResult):
         report = self._generate_report(self.result)
 
         if not testRunner.combine_reports:
-            # # ToDo Implementent
+            index = 0
             for test_case_class_name, test_case_tests in all_results.items():
-                header_info = self._get_header_info(test_case_tests, testRunner.start_time,
-                                                    testRunner.start_time + testRunner.time_taken)
+                # Start and stop is not counted for single reports
+                header_info = self._get_header_info(test_case_tests, "", "")
+                try:
+                    title = "{} - {}".format(testRunner.report_title, test_case_class_name.split('.')[1])
+                except Exception:
+                    title = "{} - {}".format(testRunner.report_title, test_case_class_name)
                 html_file = render_html(
                     testRunner.template,
-                    title=testRunner.report_title,
+                    title=title,
                     header_info=header_info,
-                    all_results={test_case_class_name: test_case_tests},
+                    all_results={test_case_class_name: all_results[test_case_class_name]},
+                    results=[report[index]],
                     status_tags=status_tags,
                     summaries=summaries,
                     environ=environment.get_Environment(),
                     **testRunner.template_args
                 )
+                index += 1
                 # append test case name if multiple reports to be generated
                 if testRunner.report_name is None:
                     report_name_body = self.default_prefix + test_case_class_name
