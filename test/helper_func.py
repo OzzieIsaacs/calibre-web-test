@@ -3,7 +3,7 @@
 import os
 import shutil
 import re
-from config_test import CALIBRE_WEB_PATH, TEST_DB, BOOT_TIME, VENV_PYTHON, base_path
+from config_test import CALIBRE_WEB_PATH, TEST_DB, BOOT_TIME, VENV_PYTHON, base_path, TEST_OS
 from selenium.webdriver.support.ui import WebDriverWait
 from subproc_wrapper import process_open
 from selenium import webdriver
@@ -19,6 +19,15 @@ import sys
 import socket
 import importlib
 import datetime
+import smtplib
+from email.mime.text import MIMEText
+
+try:
+    from config_email import E_MAIL_ADDRESS, SERVER_ADDRESS, STARTSSL, SERVER_PORT, E_MAIL_LOGIN, E_MAIL_PASSWORD
+    email_config = True
+except ImportError:
+    print('Create config_email file to email finishing message')
+    email_config = False
 
 if os.name != 'nt':
     from signal import SIGKILL
@@ -292,3 +301,26 @@ def save_logfiles(module_name):
         dest = os.path.join(outdir, file)
         if os.path.exists(src):
             shutil.copy(src,dest)
+
+def email_notifier():
+    if not email_config:
+        return
+    msg = MIMEText('Calibre-Web Tests finished')
+    msg['Subject'] = 'Calibre-Web Tests on ' + TEST_OS + ' finished'
+    msg['From'] = E_MAIL_ADDRESS
+    msg['To'] = E_MAIL_ADDRESS
+
+    s = smtplib.SMTP(SERVER_ADDRESS, SERVER_PORT)
+    if STARTSSL:
+        s.starttls()
+    if E_MAIL_LOGIN and E_MAIL_PASSWORD:
+        s.login(E_MAIL_LOGIN, E_MAIL_PASSWORD)
+    s.send_message(msg)
+    s.quit()
+
+def poweroff(power):
+    if power:
+        os.system('shutdown -P')
+        time.sleep(12)
+
+

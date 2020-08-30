@@ -1,2 +1,4 @@
 /config_goodreads.py
 venv/
+outcome/
+/config_email.py

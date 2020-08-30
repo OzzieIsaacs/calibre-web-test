@@ -6,20 +6,27 @@ import re
 import time
 import requests
 from subproc_wrapper import process_open
-from config_test import SELENIUM_SERVER, CALIBRE_WEB_PATH, VENV_PATH, VENV_PYTHON
+from config_test import SELENIUM_SERVER, CALIBRE_WEB_PATH, VENV_PATH, VENV_PYTHON, TEST_OS
 import unittest
 import sys
 import venv
 from CalibreResult import CalibreResult
 from helper_environment import environment
-from helper_func import kill_dead_cps
+from helper_func import kill_dead_cps, email_notifier, poweroff
 from subprocess import CalledProcessError
 
+from config_email import probe
 
 if __name__ == '__main__':
     sub_dependencys = ["Werkzeug", "Jinja2", "singledispatch"]
     result=False
     retry=0
+    probe()
+    # print('Poweroff after finishing tests? [Y/n]')
+    power = input('Poweroff after finishing tests? [y/N]').lower() == 'y'
+    if power:
+        print('!!!! PC will shutdown after tests finished !!!!')
+
     while True:
         try:
             r = requests.get('http://localhost:4444/wd/hub/status').json()
@@ -40,35 +47,31 @@ if __name__ == '__main__':
             break
 
     # check pip ist installed
-    if True: # os.name != 'nt':
-        found = False
-        python_exe = ""
-        pversion = ["python3.7", "python3.8", "python3", "c:\\python38\\python.exe", "c:\\python37\\python.exe"]
-        for python in pversion:
-            try:
-                p = process_open([python, "-m", "pip", "-V"])
-            except (FileNotFoundError, Exception):
-                print("{} not found".format(python))
-                continue
-            p.wait()
-            res = (p.stdout.readlines())
-            try:
-                pip = re.match(("pip\s(.*)\sfrom\s(.*)\s\((.*)\).*"),res[0])
-            except IndexError as e:
-                continue
-            except TypeError as e:
-                pip = re.match(("pip\s(.*)\sfrom\s(.*)\s\((.*)\).*"), res[0].decode('utf-8'))
-            if pip:
-                print("Found Pip for {} in {}".format(pip[3],pip[2]))
-                found = True
-                python_exe = python
-                break
-            else:
-                print("Pip not found, can't setup test environment")
-                # exit()
-    else:
-        print("Test are not guaranteed to run on windows")
-        found = True
+    found = False
+    python_exe = ""
+    pversion = ["python3.7", "python3.8", "python3", "c:\\python38\\python.exe", "c:\\python37\\python.exe"]
+    for python in pversion:
+        try:
+            p = process_open([python, "-m", "pip", "-V"])
+        except (FileNotFoundError, Exception):
+            print("{} not found".format(python))
+            continue
+        p.wait()
+        res = (p.stdout.readlines())
+        try:
+            pip = re.match(("pip\s(.*)\sfrom\s(.*)\s\((.*)\).*"),res[0])
+        except IndexError as e:
+            continue
+        except TypeError as e:
+            pip = re.match(("pip\s(.*)\sfrom\s(.*)\s\((.*)\).*"), res[0].decode('utf-8'))
+        if pip:
+            print("Found Pip for {} in {}".format(pip[3],pip[2]))
+            found = True
+            python_exe = python
+            break
+        else:
+            print("Pip not found, can't setup test environment")
+
     if not found:
         print("Pip not found, can't setup test environment")
         exit()
@@ -99,9 +102,10 @@ if __name__ == '__main__':
     # configure HTMLTestRunner options
     outfile = os.path.join(CALIBRE_WEB_PATH, 'test')
     template = os.path.join(os.path.dirname(__file__), 'htmltemplate', 'report_template.html')
-    runner = HTMLTestRunner.HTMLTestRunner(output=outfile,report_name="Calibre-Web TestSummary",
+    runner = HTMLTestRunner.HTMLTestRunner(output=outfile,
+                                           report_name="Calibre-Web TestSummary_" + TEST_OS,
                                            report_title='Calibre-Web Tests',
-                                           description ='Systemtests for Calibre-web',
+                                           description='Systemtests for Calibre-web',
                                            combine_reports=True,
                                            template=template,
                                            stream=sys.stdout,
@@ -112,4 +116,8 @@ if __name__ == '__main__':
     runner.run(all_tests)
     print("\nAll tests finished, please check testresults")
     kill_dead_cps()
+    # E-Mail tests finished
+    email_notifier()
+
+    poweroff(power)
     sys.exit(0)
