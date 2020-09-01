@@ -21,7 +21,7 @@ if __name__ == '__main__':
     sub_dependencys = ["Werkzeug", "Jinja2", "singledispatch"]
     result=False
     retry=0
-    probe()
+    # probe()
     # print('Poweroff after finishing tests? [Y/n]')
     power = input('Poweroff after finishing tests? [y/N]').lower() == 'y'
     if power:

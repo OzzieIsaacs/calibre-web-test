@@ -116,7 +116,7 @@
 {% endif %}
     {% for row in result['tests'] %}
     {% if row['script']['output'] != '' %}
-        <tr id='{{ row['tid'] }}' class='{{ row['Class'] }} {{ row['style'] }}'>
+        <tr id="{{ row['tid'] }}" class="{{ row['Class'] }} {{ row['style'] }}">
             <td>
                 <div class='testcase'>{{row['desc']}}</div>
             </td>
@@ -125,10 +125,10 @@
                     <a class="popup_link text-center" onfocus='blur()' onclick="showTestDetail('div_{{row['tid']}}')">{{row['status']}}</a>
                 </div>
                 <!--css div popup start-->
-                <div id='div_{{row['tid']}}' class="popup_window test_output" style="display:none;">
+                <div id="div_{{row['tid']}}" class="popup_window test_output" style="display:none;">
                     <div class='close_button pull-right'>
                         <button type="button" class="close" aria-label="Close" onfocus='this.blur();'
-                                onclick="document.getElementById('div_{{row['tid']}}').style.display='none'"><span
+                                onclick='document.getElementById('div_{{row["tid"]}}').style.display='none'"><span
                                 aria-hidden="true">&times;</span></button>
                     </div>
                     <div class="text-left pull-left">
