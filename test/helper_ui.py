@@ -124,25 +124,10 @@ class ui_class():
     @classmethod
     def list_shelfs(cls, search_name=None):
         all_shelfs = cls.driver.find_elements_by_xpath( "//a/span[@class='glyphicon glyphicon-list shelf']//ancestor::a")
-        # private_shelfs = cls.driver.find_elements_by_xpath("//a/span[@class='glyphicon glyphicon-list private_shelf']//ancestor::a")
         ret_shelfs = list()
         ret_ele = None
-        '''for shelf in private_shelfs:
-            sh = dict()
-            sh['id'] = shelf.get_attribute('href')[shelf.get_attribute('href').rfind('/')+1:]
-            sh['name'] = shelf.text
-            sh['ele'] = shelf
-            sh['public'] = False
-            if search_name == shelf.text:
-                ret_ele = sh
-            else:
-                ret_shelfs.append(sh)'''
+
         for shelf in all_shelfs:
-            # no = next((index for (index, d) in enumerate(ret_shelfs) if d["name"] == shelf.text), None)
-            #if no:
-            #    ret_shelfs[no]['public'] = True
-            #    ret_shelfs[no]['ele'] = shelf
-            #else:
             sh = dict()
             sh['id'] = shelf.get_attribute('href')[shelf.get_attribute('href').rfind('/')+1:]
             sh['name'] = shelf.text
@@ -150,7 +135,6 @@ class ui_class():
                 sh['public'] = True
             else:
                 sh['public'] = False
-            # sh['public'] = True
             sh['ele'] = shelf
             if search_name == shelf.text:
                 if ret_ele:
@@ -163,12 +147,6 @@ class ui_class():
             return ret_ele
         else:
             return ret_shelfs
-
-    @classmethod
-    def page_has_loaded(cls):
-        # self.log.info("Checking if {} page is loaded.".format(self.driver.current_url))
-        page_state = cls.driver.execute_script('return document.readyState;')
-        return page_state == 'complete'
 
     @classmethod
     def goto_page(cls, page_target):
