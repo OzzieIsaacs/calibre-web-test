@@ -5,7 +5,7 @@ import unittest
 from selenium.webdriver.common.by import By
 import time
 from helper_ui import ui_class
-from config_test import TEST_DB
+from config_test import TEST_DB, BOOT_TIME
 from helper_func import startup
 # from parameterized import parameterized_class
 import requests
@@ -370,3 +370,64 @@ class TestShelf(unittest.TestCase, ui_class):
     def test_shelf_database_change(self):
         self.create_shelf('order', False)
         self.assertTrue(self.check_element_on_page((By.ID, "flash_success")))
+
+    def test_shelf_anonymous(self):
+        # Enable Anonymous browsing and create shelf
+        self.fill_basic_config({'config_anonbrowse': 1})
+        time.sleep(BOOT_TIME)
+        self.create_shelf('anon', True)
+
+        # Add Book to shelf
+        self.goto_page('nav_new')
+        books = self.get_books_displayed()
+        self.get_book_details(int(books[1][2]['id']))
+        self.check_element_on_page((By.ID, "add-to-shelf")).click()
+        shelf_list = self.driver.find_elements_by_xpath("//ul[@id='add-to-shelves']/li")
+        self.assertEqual(1, len(shelf_list))
+        self.check_element_on_page((By.XPATH, "//ul[@id='add-to-shelves']/li/a[contains(.,'anon')]")).click()
+        # Check if book is in shelf
+        self.list_shelfs('anon (Public)')['ele'].click()
+        shelf_books = self.get_shelf_books_displayed()
+        self.assertEqual(len(shelf_books), 1)
+        # Logout and check anonymous user can see book in shelf
+        self.logout()
+        all_shelfs = self.list_shelfs()
+        anon_shelf = [el for el in all_shelfs if 'anon' in el['name']]
+        self.assertEqual(1, len(anon_shelf))
+        anon_shelf[0]['ele'].click()
+        self.assertFalse(self.check_element_on_page((By.ID, "edit_shelf")))
+        shelf_books = self.get_shelf_books_displayed()
+        self.assertEqual(len(shelf_books), 1)
+
+        self.goto_page('nav_new')
+        self.get_book_details(int(books[1][1]['id']))
+        self.assertFalse(self.check_element_on_page((By.ID, "add-to-shelf")))
+
+        self.check_element_on_page((By.ID, "top_user")).click()
+        self.login('admin', 'admin123')
+        # make shelf private
+        self.list_shelfs(u'anon (Public)')['ele'].click()
+        edit_shelf = self.check_element_on_page((By.ID, "edit_shelf"))
+        edit_shelf.click()
+        public=self.check_element_on_page((By.NAME, "is_public"))
+        self.assertTrue(public.is_selected())
+        public.click()
+        self.check_element_on_page((By.ID, "submit")).click()
+        self.assertTrue(self.check_element_on_page((By.ID, "flash_success")))
+        # logout and check if anonymous user can see still see shelf (should not)
+        self.logout()
+        self.assertFalse(self.list_shelfs('anon'))
+        # login delete shelf and remove anonbrowser setting
+        self.check_element_on_page((By.ID, "top_user")).click()
+        self.login('admin', 'admin123')
+        self.fill_basic_config({'config_anonbrowse': 0})
+        self.logout()
+        # Check with deactivated anonymous browsing access to private shelfs not possible
+        self.driver.get('http://127.0.0.1:8083/shelf/' + anon_shelf[0]['id'])
+        self.assertEqual(self.driver.title, u'Calibre-Web | Login')
+        self.login('admin', 'admin123')
+
+        self.list_shelfs(u'anon')['ele'].click()
+        del_shelf = self.check_element_on_page((By.ID, "delete_shelf"))
+        del_shelf.click()
+        self.check_element_on_page((By.ID, "confirm")).click()
