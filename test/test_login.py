@@ -369,7 +369,7 @@ class TestLogin(unittest.TestCase, ui_class):
         self.assertTrue(re.search("Calibre-Web | login", site.content.decode('utf-8')))
         r.close()
 
-    # try to access all pages without login
+    # try to access robots.txt file
     def test_robots(self):
         self.assertEqual(self.fail_access_page("http://127.0.0.1:8083/robots.txt"), 2)
         with open(os.path.join(CALIBRE_WEB_PATH, 'cps', 'static', 'robots.txt'), 'wb') as robotsfile:
@@ -379,3 +379,10 @@ class TestLogin(unittest.TestCase, ui_class):
         self.assertEqual('This is a robÄtsfile', r.text)
         time.sleep(2)
         os.unlink(os.path.join(CALIBRE_WEB_PATH,'cps', 'static','robots.txt'))
+
+    def test_next(self):
+        self.driver.get("http://127.0.0.1:8083/me")
+        self.login('admin', 'admin123')
+        self.assertTrue(self.check_element_on_page((By.ID, "flash_success")))
+        self.assertTrue(self.check_element_on_page((By.ID, "kindle_mail")))
+        self.logout()
