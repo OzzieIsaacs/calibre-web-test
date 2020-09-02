@@ -152,11 +152,12 @@ class TestEditAdditionalBooks(TestCase, ui_class):
         # ToDo: what happens if folder isn't valid and no book or author folder is present?
 
     def test_writeonly_path(self):
+        self.fill_basic_config({'config_rarfile_location': unrar_path()})
         self.goto_page('nav_new')
         number_books = self.get_books_displayed()
         self.fill_view_config({'config_read_column': "Custom Bool 1 Ä"})
         self.assertTrue(self.check_element_on_page((By.ID, "flash_success")))
-        self.fill_basic_config({'config_uploading':1})
+        self.fill_basic_config({'config_uploading': 1})
         time.sleep(3)
         self.assertTrue(self.check_element_on_page((By.ID, "flash_success")))
         self.get_book_details(9)
@@ -211,8 +212,7 @@ class TestEditAdditionalBooks(TestCase, ui_class):
         login_button = self.driver.find_element_by_name("login")
         login_button.click()
         self.login("admin", "admin123")
-        self.fill_basic_config({'config_uploading': 0})
-
+        self.fill_basic_config({'config_uploading': 0, 'config_rarfile_location': ""})
         book_path = os.path.join(TEST_DB, 'John Doe', 'Buuko (9)')
         self.assertTrue(os.path.isdir(book_path))
 
