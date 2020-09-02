@@ -1331,13 +1331,52 @@ class ui_class():
         submit.click()
         return
 
+    def add_identifier(self, key, value):
+        add_button = self.check_element_on_page((By.ID, "add-identifier-line"))
+        if not add_button:
+            return False
+        add_button.click()
+        key_input = self.check_element_on_page((By.XPATH, "//input[starts-with(@name, 'identifier-type-')]"))
+        if not key_input:
+            return False
+        value_input = self.check_element_on_page((By.XPATH, "//input[starts-with(@name, 'identifier-val-')]"))
+        if not value_input:
+            return False
+        key_input.send_keys(key)
+        value_input.send_keys(value)
+        return True
+
+    def edit_identifier_value(self, key, value):
+        value_input = self.check_element_on_page((By.XPATH, "//input[starts-with(@name, 'identifier-val-" + key + "')]"))
+        if not value_input:
+            return False
+        value_input.send_keys(Keys.CONTROL, "a")
+        value_input.send_keys(Keys.DELETE)
+        value_input.send_keys(value)
+        return True
+
+    def edit_identifier_key(self, key_old, key_new):
+        key_input = self.check_element_on_page((By.XPATH, "//input[starts-with(@name, 'identifier-type-" + key_old + "')]"))
+        if not key_input:
+            return False
+        key_input.send_keys(Keys.CONTROL, "a")
+        key_input.send_keys(Keys.DELETE)
+        key_input.send_keys(key_new)
+        return True
+
+    def delete_identifier(self, key):
+        delete_button = self.check_element_on_page((By.XPATH, "//tr[td/input[@name='identifier-type-" + key + "']]/td/a"))
+        if not delete_button:
+            return False
+        delete_button.click()
+        return True
+
     def delete_book(self, id):
         self.get_book_details(id)
         self.check_element_on_page((By.ID, "edit_book")).click()
         self.check_element_on_page((By.ID, "delete")).click()
         self.check_element_on_page((By.ID, "delete_confirm")).click()
         time.sleep(2)
-
 
     @classmethod
     def get_convert_book(cls, id=-1, root_url='http://127.0.0.1:8083'):

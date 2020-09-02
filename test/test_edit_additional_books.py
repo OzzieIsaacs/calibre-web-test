@@ -218,3 +218,39 @@ class TestEditAdditionalBooks(TestCase, ui_class):
 
     def test_writeonly_database(self):
         pass
+
+    def test_edit_book_identifier(self):
+        reference = self.get_book_details(9)
+        self.check_element_on_page((By.ID, "edit_book")).click()
+        self.add_identifier('Hallo', 'bert')
+        submit = self.check_element_on_page((By.ID, "submit"))
+        submit.click()
+        self.check_element_on_page((By.ID, "edit_book")).click()
+        self.edit_identifier_value('Hallo', 'bert1')
+        submit = self.check_element_on_page((By.ID, "submit"))
+        submit.click()
+        self.check_element_on_page((By.ID, "edit_book")).click()
+        self.edit_identifier_key('Hallo', 'Hallo1')
+        submit = self.check_element_on_page((By.ID, "submit"))
+        submit.click()
+        self.check_element_on_page((By.ID, "edit_book")).click()
+        self.delete_identifier('Hallo1')
+        submit = self.check_element_on_page((By.ID, "submit"))
+        submit.click()
+
+        # press 3 times on add identifier save -> nothing
+        # add identifier, don't save -> nothing
+        # add identifier, remove it, save -> nothing
+        # add identifier, save -> visible
+        # edit identifier value and key, don't save -> old value
+        # edit identifier value and key, save -> new value
+        # edit identifier value, save -> new value
+        # edit identifier key, save -> new key
+        # delete identifier, don't save -> still there
+        # delete identifier, save -> gone
+        # add 2 identifier, save -> both there
+        # add identifier with unicode key and value -> okay
+        # add identifier with space at end -> okay
+        # add identifier with ,|:;_#+\?^ -> okay
+        # add identifier with same name except capital letter and lowercase letter -> fail only one value taken
+        # check links of identifiers -> amazon, doi, posdsd, amazon_de cand COM -> fail
