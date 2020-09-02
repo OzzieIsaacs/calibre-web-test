@@ -12,7 +12,7 @@ import requests
 import os
 
 
-class test_Login(unittest.TestCase, ui_class):
+class TestLogin(unittest.TestCase, ui_class):
     p = None
     driver = None
 
@@ -32,6 +32,11 @@ class test_Login(unittest.TestCase, ui_class):
         # close the browser window and stop calibre-web
         cls.driver.quit()
         cls.p.terminate()
+        try:
+            os.unlink(os.path.join(CALIBRE_WEB_PATH, 'cps', 'static', 'robots.txt'))
+        except:
+            pass
+        save_logfiles(cls.__name__)
 
     def tearDown(self):
         if self.check_user_logged_in('', True):
@@ -362,12 +367,20 @@ class test_Login(unittest.TestCase, ui_class):
         self.assertTrue(re.search("Calibre-Web | login", site.content.decode('utf-8')))
         r.close()
 
-    # try to access all pages without login
+    # try to access robots.txt file
     def test_robots(self):
         self.assertEqual(self.fail_access_page("http://127.0.0.1:8083/robots.txt"), 2)
-        with open(os.path.join(CALIBRE_WEB_PATH,'cps','static','robots.txt'),'w') as robotsfile:
-            robotsfile.write('This is a robÄtsfile')
+        with open(os.path.join(CALIBRE_WEB_PATH, 'cps', 'static', 'robots.txt'), 'wb') as robotsfile:
+            robotsfile.write('This is a robÄtsfile'.encode('utf-8'))
         r = requests.get('http://127.0.0.1:8083/robots.txt')
         self.assertEqual(200, r.status_code)
         self.assertEqual('This is a robÄtsfile', r.text)
+        time.sleep(2)
         os.unlink(os.path.join(CALIBRE_WEB_PATH,'cps', 'static','robots.txt'))
+
+    def test_next(self):
+        self.driver.get("http://127.0.0.1:8083/me")
+        self.login('admin', 'admin123')
+        self.assertTrue(self.check_element_on_page((By.ID, "flash_success")))
+        self.assertTrue(self.check_element_on_page((By.ID, "kindle_mail")))
+        self.logout()
