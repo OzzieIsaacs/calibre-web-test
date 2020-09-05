@@ -42,6 +42,7 @@ class TestCli(unittest.TestCase, ui_class):
         cls.driver.quit()
         try:
             os.remove(os.path.join(CALIBRE_WEB_PATH, 'app.db'))
+            shutil.rmtree(os.path.join(CALIBRE_WEB_PATH, u'hü lo'), ignore_errors=True)
         except Exception:
             pass
         save_logfiles(cls.__name__)

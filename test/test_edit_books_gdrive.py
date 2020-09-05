@@ -30,34 +30,37 @@ class TestEditBooksGdrive(unittest.TestCase, ui_class):
         add_dependency(cls.dependency, cls.__name__)
 
         # remove slient_secrets.file
-
-        src = os.path.join(CALIBRE_WEB_PATH, "client_secrets.json")
-        dst = os.path.join(CALIBRE_WEB_PATH, "client_secret.json")
-        os.chmod(src, 0o764)
-        if os.path.exists(dst):
-            os.unlink(dst)
-        shutil.move(src, dst)
-
-        # delete settings_yaml file
-        set_yaml = os.path.join(CALIBRE_WEB_PATH, "settings.yaml")
-        if os.path.exists(set_yaml):
-            os.unlink(set_yaml)
-
-        # delete gdrive file
-        gdrive_db = os.path.join(CALIBRE_WEB_PATH, "gdrive.db")
-        if os.path.exists(gdrive_db):
-            os.unlink(gdrive_db)
-
-        # delete gdrive authenticated file
-        gdaauth = os.path.join(CALIBRE_WEB_PATH, "gdaauth")
-        if os.path.exists(gdaauth):
-            os.unlink(gdaauth)
-
         try:
+            src = os.path.join(CALIBRE_WEB_PATH, "client_secrets.json")
+            dst = os.path.join(CALIBRE_WEB_PATH, "client_secret.json")
+            os.chmod(src, 0o764)
+            if os.path.exists(dst):
+                os.unlink(dst)
+            shutil.move(src, dst)
+
+
+            # delete settings_yaml file
+            set_yaml = os.path.join(CALIBRE_WEB_PATH, "settings.yaml")
+            if os.path.exists(set_yaml):
+                os.unlink(set_yaml)
+
+            # delete gdrive file
+            gdrive_db = os.path.join(CALIBRE_WEB_PATH, "gdrive.db")
+            if os.path.exists(gdrive_db):
+                os.unlink(gdrive_db)
+
+            # delete gdrive authenticated file
+            #gdaauth = os.path.join(CALIBRE_WEB_PATH, "gdrive_credentials")
+            #if os.path.exists(gdaauth):
+            #    os.unlink(gdaauth)
+
             startup(cls, cls.py_version, {}, only_startup=True)
         except Exception:
-            cls.driver.quit()
-            cls.p.kill()
+            try:
+                cls.driver.quit()
+                cls.p.kill()
+            except Exception:
+                pass
 
     @classmethod
     def tearDownClass(cls):
