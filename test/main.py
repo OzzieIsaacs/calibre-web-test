@@ -15,14 +15,12 @@ from helper_environment import environment
 from helper_func import kill_dead_cps, email_notifier, poweroff
 from subprocess import CalledProcessError
 
-from config_email import probe
 
 if __name__ == '__main__':
     sub_dependencys = ["Werkzeug", "Jinja2", "singledispatch"]
     result=False
     retry=0
-    # probe()
-    # print('Poweroff after finishing tests? [Y/n]')
+
     power = input('Poweroff after finishing tests? [y/N]').lower() == 'y'
     if power:
         print('!!!! PC will shutdown after tests finished !!!!')
