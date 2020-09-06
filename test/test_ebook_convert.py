@@ -50,11 +50,14 @@ class TestEbookConvert(unittest.TestCase, ui_class):
 
     @classmethod
     def tearDownClass(cls):
-        cls.stop_calibre_web()
-        # close the browser window and stop calibre-web
+        cls.email_server.stop()
+        try:
+            cls.stop_calibre_web()
+            # close the browser window and stop calibre-web
+        except:
+            pass
         cls.driver.quit()
         cls.p.terminate()
-        cls.email_server.stop()
         time.sleep(2)
         save_logfiles(cls.__name__)
 

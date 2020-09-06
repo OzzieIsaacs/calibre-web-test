@@ -16,7 +16,7 @@ if os.name == 'nt':
 else:
     VENV_PYTHON = os.path.join(VENV_PATH, 'bin', 'python3')
     LDAP_WHL = None
-    TEST_OS = ''
+    TEST_OS = 'Linux'
 
 if sys.version_info < (3, 0):
     TEST_DB = os.path.abspath(os.path.join(base_path, '..', '..', 'Dokumente', 'tüst db')).decode('UTF-8')
