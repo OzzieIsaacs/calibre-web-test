@@ -1133,7 +1133,7 @@ class ui_class():
                 ret['languages'] = only_lang.split(', ')
 
             ids = tree.findall("//*[@class='identifiers']//a")
-            ret['Identifier'] = [id.text for id in ids]
+            ret['identifier'] = [{id.text:id.attrib['href']} for id in ids]
 
             # find cover
             ret['cover'] = tree.find("//*[@class='cover']//img").attrib['src']
@@ -1336,15 +1336,17 @@ class ui_class():
         if not add_button:
             return False
         add_button.click()
-        key_input = self.check_element_on_page((By.XPATH, "//input[starts-with(@name, 'identifier-type-')]"))
-        if not key_input:
+        try:
+            key_input = self.driver.find_elements_by_xpath("//input[starts-with(@name, 'identifier-type-')]")[-1]
+        except Exception:
             return False
-        value_input = self.check_element_on_page((By.XPATH, "//input[starts-with(@name, 'identifier-val-')]"))
-        if not value_input:
+        try:
+            value_input = self.driver.find_elements_by_xpath("//input[starts-with(@name, 'identifier-val-')]")[-1]
+        except Exception:
             return False
         key_input.send_keys(key)
         value_input.send_keys(value)
-        return True
+        return key_input.get_attribute("name").split('-')[-1]
 
     def edit_identifier_value(self, key, value):
         value_input = self.check_element_on_page((By.XPATH, "//input[starts-with(@name, 'identifier-val-" + key + "')]"))
@@ -1363,6 +1365,13 @@ class ui_class():
         key_input.send_keys(Keys.DELETE)
         key_input.send_keys(key_new)
         return True
+
+    def get_identifier_value(self, key):
+        value = self.check_element_on_page((By.XPATH, "//input[starts-with(@name, 'identifier-val-" + key + "')]"))
+        if not value:
+            return False
+        return value.get_attribute('value')
+
 
     def delete_identifier(self, key):
         delete_button = self.check_element_on_page((By.XPATH, "//tr[td/input[@name='identifier-type-" + key + "']]/td/a"))

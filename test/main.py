@@ -88,7 +88,7 @@ if __name__ == '__main__':
     p = process_open([VENV_PYTHON, "-m", "pip", "install", "-r", requirements_file],(0,5))
     if os.name == 'nt':
         while p.poll() == None:
-            print(p.stdout.readline())
+            p.stdout.readline()
     else:
         p.wait()
     environment.init_Environment(VENV_PYTHON, sub_dependencys)
