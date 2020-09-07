@@ -11,12 +11,13 @@ from selenium.webdriver.common.by import By
 from helper_email_convert import AIOSMTPServer
 import helper_email_convert
 from helper_ui import ui_class
-from config_test import CALIBRE_WEB_PATH, TEST_DB, BOOT_TIME
+from config_test import CALIBRE_WEB_PATH, TEST_DB, BOOT_TIME, base_path
 # from parameterized import parameterized_class
 from helper_func import startup
 
+
 @unittest.skipIf(helper_email_convert.is_calibre_not_present(),"Skipping convert, calibre not found")
-class test_SSL(unittest.TestCase, ui_class):
+class TestSSL(unittest.TestCase, ui_class):
     p = None
     driver = None
     email_server = None
@@ -135,3 +136,42 @@ class test_SSL(unittest.TestCase, ui_class):
             data = logfile.read()
         self.assertTrue(len(re.findall('Subject: Calibre-Web test e-mail',data)),"Email logging not working")
 
+
+    def test_email_limit(self):
+        # enable upload files
+        self.fill_basic_config({'config_uploading': 1})
+        time.sleep(3)
+        random_file = os.path.join(base_path, 'files', 'random.mobi')
+        # create random .mobi file size >2 mb
+        with open(random_file, 'wb') as fout:
+            fout.write(os.urandom(2049*1024))
+        self.goto_page('nav_new')
+        upload = self.check_element_on_page((By.ID, 'btn-upload'))
+        upload.send_keys(random_file)
+        time.sleep(4)
+        self.check_element_on_page((By.ID, 'edit_cancel')).click()
+        book_details = self.get_book_details()
+        self.assertTrue(book_details['kindlebtn'])
+        # set limit to 0 mb
+        self.setup_server(False, {'mail_size': ''})
+        self.assertFalse(self.check_element_on_page((By.ID, "flash_success")))
+        # set limit to 0.5 mb
+        self.setup_server(False, {'mail_size': '0.5'})
+        self.assertFalse(self.check_element_on_page((By.ID, "flash_success")))
+        # set limit to -1 mb
+        self.setup_server(False, {'mail_size': '-1'})
+        self.assertFalse(self.check_element_on_page((By.ID, "flash_success")))
+        # set limit to 601 mb
+        self.setup_server(False, {'mail_size': '601'})
+        self.assertFalse(self.check_element_on_page((By.ID, "flash_success")))
+        # set limit to 1 mb
+        self.setup_server(False, {'mail_size': '2'})
+        self.assertTrue(self.check_element_on_page((By.ID, "flash_success")))
+
+        # try to send
+        details = self.get_book_details(int(book_details['cover'].split('/')[-1]))
+        # check what happens
+        self.assertFalse(details['kindlebtn'])
+
+        self.fill_basic_config({'config_uploading': 0})
+        os.unlink(random_file)
