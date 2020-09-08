@@ -26,12 +26,11 @@ class TestEditAdditionalBooks(TestCase, ui_class):
         add_dependency(cls.dependencys, cls.__name__)
 
         try:
-            startup(cls, cls.py_version, {'config_calibre_dir':TEST_DB})
+            startup(cls, cls.py_version, {'config_calibre_dir': TEST_DB})
             time.sleep(3)
         except Exception:
             cls.driver.quit()
             cls.p.kill()
-
 
     @classmethod
     def tearDownClass(cls):
@@ -42,7 +41,7 @@ class TestEditAdditionalBooks(TestCase, ui_class):
         cls.p.terminate()
 
     def test_upload_metadate_cbr(self):
-        self.fill_basic_config({'config_uploading':1})
+        self.fill_basic_config({'config_uploading': 1})
         time.sleep(3)
         self.assertTrue(self.check_element_on_page((By.ID, "flash_success")))
         self.fill_basic_config({'config_rarfile_location': '/bin/ur'})
@@ -64,7 +63,7 @@ class TestEditAdditionalBooks(TestCase, ui_class):
         self.assertEqual('3.0', details['series_index'])
         self.assertEqual('No Series', details['series'])
         r = requests.session()
-        payload = {'username': 'admin', 'password': 'admin123', 'submit':"", 'next':"/", "remember_me":"on"}
+        payload = {'username': 'admin', 'password': 'admin123', 'submit': "", 'next': "/", "remember_me": "on"}
         r.post('http://127.0.0.1:8083/login', data=payload)
         resp = r.get('http://127.0.0.1:8083' + details['cover'])
         self.assertEqual('8936', resp.headers['Content-Length'])
@@ -74,7 +73,7 @@ class TestEditAdditionalBooks(TestCase, ui_class):
         r.close()
 
     def test_upload_metadata_cbt(self):
-        self.fill_basic_config({'config_uploading':1})
+        self.fill_basic_config({'config_uploading': 1})
         time.sleep(3)
         self.goto_page('nav_new')
         upload_file = os.path.join(base_path, 'files', 'book.cbt')
@@ -88,7 +87,7 @@ class TestEditAdditionalBooks(TestCase, ui_class):
         self.assertEqual('2.0', details['series_index'])
         self.assertEqual('No S', details['series'])
         r = requests.session()
-        payload = {'username': 'admin', 'password': 'admin123', 'submit':"", 'next':"/", "remember_me":"on"}
+        payload = {'username': 'admin', 'password': 'admin123', 'submit': "", 'next': "/", "remember_me": "on"}
         r.post('http://127.0.0.1:8083/login', data=payload)
         resp = r.get('http://127.0.0.1:8083' + details['cover'])
         self.assertEqual('8936', resp.headers['Content-Length'])
@@ -96,12 +95,73 @@ class TestEditAdditionalBooks(TestCase, ui_class):
         r.close()
 
 
+    # limit upload formats to epub -> check pdf -> denied, upload epub allowed
+    # limit upload formats to FB2 -> upload FB2 allowed
+    def test_change_upload_formats(self):
+        self.fill_basic_config({'config_uploading': 1, 'config_upload_formats': 'epub'})
+        time.sleep(3)
+        self.goto_page('nav_new')
+        upload_file = os.path.join(base_path, 'files', 'book.pdf')
+        upload = self.check_element_on_page((By.ID, 'btn-upload'))
+        upload.send_keys(upload_file)
+        self.assertTrue(self.check_element_on_page((By.ID, "flash_alert")))
+
+        self.goto_page('nav_new')
+        upload_file = os.path.join(base_path, 'files', 'book.epub')
+        upload = self.check_element_on_page((By.ID, 'btn-upload'))
+        upload.send_keys(upload_file)
+        time.sleep(2)
+        self.assertTrue(self.check_element_on_page((By.ID, 'edit_cancel')))
+        self.delete_book(int(self.driver.current_url.split('/')[-1]))
+
+        self.fill_basic_config({'config_upload_formats': 'FB2'})
+        time.sleep(3)
+        self.goto_page('nav_new')
+        upload_file = os.path.join(base_path, 'files', 'book.fb2')
+        upload = self.check_element_on_page((By.ID, 'btn-upload'))
+        upload.send_keys(upload_file)
+        time.sleep(2)
+        self.assertTrue(self.check_element_on_page((By.ID, 'edit_cancel')))
+        self.delete_book(int(self.driver.current_url.split('/')[-1]))
+
+        self.fill_basic_config({'config_upload_formats': 'jpg'})
+        time.sleep(3)
+        self.goto_page('nav_new')
+        upload_file = os.path.join(base_path, 'files', 'cover.jpg')
+        upload = self.check_element_on_page((By.ID, 'btn-upload'))
+        upload.send_keys(upload_file)
+        time.sleep(2)
+        self.assertTrue(self.check_element_on_page((By.ID, 'edit_cancel')))
+        self.delete_book(int(self.driver.current_url.split('/')[-1]))
+
+        self.fill_basic_config({'config_upload_formats': ''})
+        time.sleep(3)
+        self.goto_page('nav_new')
+        upload_file = os.path.join(base_path, 'files', 'cover.bmp')
+        upload = self.check_element_on_page((By.ID, 'btn-upload'))
+        upload.send_keys(upload_file)
+        time.sleep(2)
+        self.assertTrue(self.check_element_on_page((By.ID, 'edit_cancel')))
+        self.delete_book(int(self.driver.current_url.split('/')[-1]))
+
+        # dublicate formats
+        self.fill_basic_config({'config_upload_formats': 'epub, ePub'})
+        self.assertTrue(self.check_element_on_page((By.ID, "flash_success")))
+
+        accordions = self.driver.find_elements_by_class_name("accordion-toggle")
+        accordions[3].click()
+        formats = self.check_element_on_page((By.ID, 'config_upload_formats'))
+        self.assertEqual('epub', formats.get_attribute('value'))
+        self.fill_basic_config({'config_upload_formats': 'txt,pdf,epub,kepub,mobi,azw,azw3,cbr,cbz,cbt,djvu,prc,doc,'
+                                                         'docx,fb2,html,rtf,lit,odt,mp3,mp4,ogg,opus,wav,flac,m4a,m4b'})
+
+
     def test_delete_book(self):
         self.get_book_details(7)
         self.check_element_on_page((By.ID, "edit_book")).click()
         self.edit_book(custom_content={u'Custom Rating 人物': '4',
                                        "Custom Text 人物 *'()&": 'test text',
-                                       u'Custom Bool 1 Ä':u'Yes'})
+                                       u'Custom Bool 1 Ä': u'Yes'})
         details = self.get_book_details(7)
         self.assertEqual('4', details['cust_columns'][0]['value'])
         self.assertEqual('ok', details['cust_columns'][1]['value'])
@@ -119,7 +179,7 @@ class TestEditAdditionalBooks(TestCase, ui_class):
         # self.check_element_on_page((By.ID, 'edit_cancel')).click()
         os.rmdir(sub_folder)
         self.assertTrue(os.path.isdir(book_path1))
-        self.assertEqual(0,len([name for name in os.listdir(book_path1) if os.path.isfile(name)]))
+        self.assertEqual(0, len([name for name in os.listdir(book_path1) if os.path.isfile(name)]))
         self.get_book_details(1)
         self.assertTrue(self.check_element_on_page((By.ID, "flash_alert")))
 
@@ -151,6 +211,7 @@ class TestEditAdditionalBooks(TestCase, ui_class):
 
         # ToDo: what happens if folder isn't valid and no book or author folder is present?
 
+    @unittest.skipIf(os.name == 'nt', 'writeonly database on windows is not checked')
     def test_writeonly_path(self):
         self.fill_basic_config({'config_rarfile_location': unrar_path()})
         self.goto_page('nav_new')
@@ -184,7 +245,6 @@ class TestEditAdditionalBooks(TestCase, ui_class):
         self.assertTrue(self.check_element_on_page((By.ID, "flash_alert")))
         details = self.get_book_details(9)
         self.assertEqual('John Döe', details['author'][0])
-
 
         values = self.get_book_details(8)
         self.assertFalse(values['read'])
@@ -270,7 +330,7 @@ class TestEditAdditionalBooks(TestCase, ui_class):
         self.check_element_on_page((By.ID, "submit")).click()
         result = self.get_book_details()
         self.assertEqual(reference_length + 1, len(result['identifier']))
-        self.assertEqual('Hallo1', result['identifier'][-1])
+        self.assertEqual('Hallo1', list(result['identifier'][-1].keys())[0])
 
         # edit identifier value, save -> new value
         self.check_element_on_page((By.ID, "edit_book")).click()
@@ -393,7 +453,7 @@ class TestEditAdditionalBooks(TestCase, ui_class):
 
         identifier = [sub['Amazon'] for sub in result['identifier'] if 'Amazon' in sub]
         self.assertTrue(len(identifier))
-        self.assertTrue('amzn.com' in identifier[0])
+        self.assertTrue('amazon.com' in identifier[0])
         self.assertTrue('123456' in identifier[0])
 
         identifier = [sub['ISBN'] for sub in result['identifier'] if 'ISBN' in sub]
@@ -423,7 +483,7 @@ class TestEditAdditionalBooks(TestCase, ui_class):
 
         identifier = [sub['asin'] for sub in result['identifier'] if 'asin' in sub]
         self.assertTrue(len(identifier))
-        self.assertTrue('amzn' in identifier[0])
+        self.assertTrue('amazon' in identifier[0])
         self.assertTrue('abc123' in identifier[0])
 
         identifier = [sub['Douban'] for sub in result['identifier'] if 'Douban' in sub]
