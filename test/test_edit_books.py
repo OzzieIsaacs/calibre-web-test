@@ -882,7 +882,6 @@ class TestEditBooks(TestCase, ui_class):
         self.fill_basic_config({'config_uploading': 0})
         r.close()
 
-
     def test_upload_book_cbr(self):
         self.fill_basic_config({'config_uploading':1})
         time.sleep(3)

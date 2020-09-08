@@ -270,7 +270,7 @@ class TestEditAdditionalBooks(TestCase, ui_class):
         self.check_element_on_page((By.ID, "submit")).click()
         result = self.get_book_details()
         self.assertEqual(reference_length + 1, len(result['identifier']))
-        self.assertEqual('Hallo1', result['identifier'][-1])
+        self.assertEqual('Hallo1', list(result['identifier'][-1].keys())[0])
 
         # edit identifier value, save -> new value
         self.check_element_on_page((By.ID, "edit_book")).click()
@@ -393,7 +393,7 @@ class TestEditAdditionalBooks(TestCase, ui_class):
 
         identifier = [sub['Amazon'] for sub in result['identifier'] if 'Amazon' in sub]
         self.assertTrue(len(identifier))
-        self.assertTrue('amzn.com' in identifier[0])
+        self.assertTrue('amazon.com' in identifier[0])
         self.assertTrue('123456' in identifier[0])
 
         identifier = [sub['ISBN'] for sub in result['identifier'] if 'ISBN' in sub]
@@ -423,7 +423,7 @@ class TestEditAdditionalBooks(TestCase, ui_class):
 
         identifier = [sub['asin'] for sub in result['identifier'] if 'asin' in sub]
         self.assertTrue(len(identifier))
-        self.assertTrue('amzn' in identifier[0])
+        self.assertTrue('amazon' in identifier[0])
         self.assertTrue('abc123' in identifier[0])
 
         identifier = [sub['Douban'] for sub in result['identifier'] if 'Douban' in sub]
