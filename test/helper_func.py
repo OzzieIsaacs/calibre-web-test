@@ -132,7 +132,7 @@ def startup(inst, pyVersion, config, login=True, host="http://127.0.0.1:8083", e
 
     # navigate to the application home page
     inst.driver.get(host)
-
+    time.sleep(1)
     if not only_startup:
         # Wait for config screen to show up
         inst.fill_initial_config(dict(config_calibre_dir=config['config_calibre_dir']))

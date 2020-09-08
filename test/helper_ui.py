@@ -217,7 +217,7 @@ class ui_class():
                                            'config_access_log']):
             opener.append(2)
         if any(key in elements for key in ['config_uploading', 'config_anonbrowse', 'config_public_reg',
-                                           'config_register_email',
+                                           'config_register_email', 'config_upload_formats',
                                            'config_remote_login', 'config_use_goodreads', 'config_goodreads_api_key',
                                            'config_goodreads_api_secret', 'config_kobo_sync', 'config_kobo_proxy',
                                            'config_login_type', 'config_ldap_provider_url', 'config_ldap_port',
