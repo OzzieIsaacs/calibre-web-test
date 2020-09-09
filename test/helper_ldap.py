@@ -421,7 +421,7 @@ class TestLDAPServer(threading.Thread):
         cert = None
         tree = Tree(config)
         if encrypt is not None:
-            cert = ssl.DefaultOpenSSLContextFactory('./SSL/ssl.key', './SSL/ssl.crt')
+            cert = ssl.DefaultOpenSSLContextFactory('./files/ssl.key', './files/ssl.crt')
         if encrypt == 'TLS':
             tls = True
         factory = LDAPServerFactory(tree.db, tls, auth)

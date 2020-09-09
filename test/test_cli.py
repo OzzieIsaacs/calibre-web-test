@@ -209,7 +209,7 @@ class TestCli(unittest.TestCase, ui_class):
             self.assertIsNotNone(re.findall('Reached error page: about:neterror?nssFailure', e.msg))
         p.kill()
         shutil.rmtree(os.path.join(CALIBRE_WEB_PATH, 'hü lo'), ignore_errors=True)
-        shutil.copytree('./SSL', os.path.join(CALIBRE_WEB_PATH, 'hü lo'))
+        shutil.copytree('./files', os.path.join(CALIBRE_WEB_PATH, 'hü lo'))
         real_crt_file = os.path.join(CALIBRE_WEB_PATH, 'hü lo', 'ssl.crt')
         real_key_file = os.path.join(CALIBRE_WEB_PATH, 'hü lo', 'ssl.key')
         if sys.version_info < (3, 0):

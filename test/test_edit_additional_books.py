@@ -156,8 +156,6 @@ class TestEditAdditionalBooks(TestCase, ui_class):
         self.fill_basic_config({'config_upload_formats': 'txt,pdf,epub,kepub,mobi,azw,azw3,cbr,cbz,cbt,djvu,prc,doc,'
                                                          'docx,fb2,html,rtf,lit,odt,mp3,mp4,ogg,opus,wav,flac,m4a,m4b'})
 
-
-
     def test_delete_book(self):
         self.get_book_details(7)
         self.check_element_on_page((By.ID, "edit_book")).click()
@@ -359,7 +357,7 @@ class TestEditAdditionalBooks(TestCase, ui_class):
         self.delete_identifier('Hallo2')
         self.check_element_on_page((By.ID, "edit_cancel")).click()
         result = self.get_book_details()
-        self.assertEqual(reference_length + 1 , len(result['identifier']))
+        self.assertEqual(reference_length + 1, len(result['identifier']))
         self.assertEqual('Hallo2', list(result['identifier'][-1].keys())[0])
 
         # delete identifier, save -> gone
@@ -383,7 +381,6 @@ class TestEditAdditionalBooks(TestCase, ui_class):
         self.delete_identifier('kilo')
         self.delete_identifier('koli')
         self.check_element_on_page((By.ID, "submit")).click()
-
 
     def test_edit_special_book_identifier(self):
         reference_length = len(self.get_book_details(3)['identifier'])
@@ -420,7 +417,6 @@ class TestEditAdditionalBooks(TestCase, ui_class):
         self.delete_identifier('O0ü ')
         self.check_element_on_page((By.ID, "submit")).click()
 
-
     def test_edit_book_identifier_capital(self):
         # add identifier with same name except capital letter and lowercase letter -> Warning is displayed
         reference_length = len(self.get_book_details(13)['identifier'])
@@ -434,7 +430,6 @@ class TestEditAdditionalBooks(TestCase, ui_class):
         self.check_element_on_page((By.ID, "edit_book")).click()
         self.assertTrue(self.delete_identifier('AlfA'))
         self.check_element_on_page((By.ID, "submit")).click()
-
 
     def test_edit_book_identifier_standard(self):
         reference_length = len(self.get_book_details(4)['identifier'])

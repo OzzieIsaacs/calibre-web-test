@@ -94,7 +94,8 @@ def debug_startup(inst, __, ___, login=True, host="http://127.0.0.1:8083", env=N
         inst.logout()
 
 
-def startup(inst, pyVersion, config, login=True, host="http://127.0.0.1:8083", env=None, only_startup=False):
+def startup(inst, pyVersion, config, login=True, host="http://127.0.0.1:8083",
+            env=None, only_startup=False, only_metadata=False):
     print("\n%s - %s: " % (inst.py_version, inst.__name__))
     try:
         os.remove(os.path.join(CALIBRE_WEB_PATH, 'app.db'))
@@ -111,10 +112,18 @@ def startup(inst, pyVersion, config, login=True, host="http://127.0.0.1:8083", e
     except Exception:
         pass
     shutil.rmtree(TEST_DB, ignore_errors=True)
-    try:
-        shutil.copytree('./Calibre_db', TEST_DB)
-    except FileExistsError:
-        print('Test DB already present, might not be a clean version')
+    if not only_metadata:
+        try:
+            shutil.copytree('./Calibre_db', TEST_DB)
+        except FileExistsError:
+            print('Test DB already present, might not be a clean version')
+    else:
+        try:
+            os.makedirs(TEST_DB)
+            shutil.copy('./Calibre_db/metadata.db', os.path.join(TEST_DB, 'metadata.db'))
+        except FileExistsError:
+            print('Metadata.db already present, might not be a clean version')
+
     inst.p = process_open([pyVersion, os.path.join(CALIBRE_WEB_PATH, u'cps.py')], [1], sout=None, env=env)
 
     # create a new Firefox session

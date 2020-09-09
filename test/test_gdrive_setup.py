@@ -2,25 +2,21 @@
 # -*- coding: utf-8 -*-
 
 import unittest
-from selenium import webdriver
-import re
 import os
 import json
 from selenium.webdriver.common.by import By
-from selenium.webdriver.support.ui import WebDriverWait
-from selenium.webdriver.support import expected_conditions as EC
 import time
 import shutil
 from helper_ui import ui_class
 
-from config_test import CALIBRE_WEB_PATH, TEST_DB, BOOT_TIME
+from config_test import CALIBRE_WEB_PATH, TEST_DB, BOOT_TIME, base_path
 from helper_func import add_dependency, remove_dependency, startup
 from helper_func import save_logfiles
 # test editing books on gdrive
 
 
 # @unittest.skip("Not Implemented")
-class TestEditBooksGdrive(unittest.TestCase, ui_class):
+class TestSetupGdrive(unittest.TestCase, ui_class):
     p=None
     driver = None
     dependency = ["oauth2client", "PyDrive", "PyYAML", "google-api-python-client", "httplib2"]
@@ -31,12 +27,9 @@ class TestEditBooksGdrive(unittest.TestCase, ui_class):
 
         # remove slient_secrets.file
         try:
-            src = os.path.join(CALIBRE_WEB_PATH, "client_secrets.json")
-            dst = os.path.join(CALIBRE_WEB_PATH, "client_secret.json")
-            os.chmod(src, 0o764)
+            dst = os.path.join(CALIBRE_WEB_PATH, "client_secrets.json")
             if os.path.exists(dst):
                 os.unlink(dst)
-            shutil.move(src, dst)
 
 
             # delete settings_yaml file
@@ -50,9 +43,9 @@ class TestEditBooksGdrive(unittest.TestCase, ui_class):
                 os.unlink(gdrive_db)
 
             # delete gdrive authenticated file
-            #gdaauth = os.path.join(CALIBRE_WEB_PATH, "gdrive_credentials")
-            #if os.path.exists(gdaauth):
-            #    os.unlink(gdaauth)
+            gdauth = os.path.join(CALIBRE_WEB_PATH, "gdrive_credentials")
+            if os.path.exists(gdauth):
+                os.unlink(gdauth)
 
             startup(cls, cls.py_version, {}, only_startup=True)
         except Exception:
@@ -72,14 +65,21 @@ class TestEditBooksGdrive(unittest.TestCase, ui_class):
 
         remove_dependency(cls.dependency)
 
-        dst = os.path.join(CALIBRE_WEB_PATH, "client_secrets.json")
+        src1 = os.path.join(CALIBRE_WEB_PATH, "client_secrets.json")
         src = os.path.join(CALIBRE_WEB_PATH, "client_secret.json")
+        if os.path.exists(src1):
+            os.chmod(src1, 0o764)
+            try:
+                os.unlink(src1)
+            except PermissionError:
+                print('File delete failed')
+
         if os.path.exists(src):
             os.chmod(src, 0o764)
             try:
-                shutil.move(src, dst)
+                os.unlink(src)
             except PermissionError:
-                print('File move failed')
+                print('File delete failed')
         save_logfiles(cls.__name__)
 
 
@@ -101,7 +101,7 @@ class TestEditBooksGdrive(unittest.TestCase, ui_class):
         self.assertTrue(self.check_element_on_page((By.ID, "gdrive_error")).is_displayed())
 
         dst = os.path.join(CALIBRE_WEB_PATH, "client_secrets.json")
-        src = os.path.join(CALIBRE_WEB_PATH, "client_secret.json")
+        src = os.path.join(base_path, "files", "client_secrets.json")
         shutil.copy(src, dst)
         os.chmod(dst, 0o040)
 
@@ -154,17 +154,8 @@ class TestEditBooksGdrive(unittest.TestCase, ui_class):
         self.assertTrue(auth_button)
         auth_button.click()
         g_login = self.check_element_on_page((By.ID, "identifierId"))        
-        #error = re.findall('does not match the ones authorized',self.driver.page_source)
-        #self.assertTrue(error)
-        #self.driver.get(callback)
-        #self.login('admin','admin123')
-        #self.goto_page('basic_config')
-        #auth_button = self.check_element_on_page((By.ID, "gdrive_auth"))
-        #self.assertTrue(auth_button)
-        #auth_button.click()
-        #error = re.findall('does not match the ones authorized',self.driver.page_source)
+        self.assertTrue(g_login)
 
-        # google flow
 
 
 
