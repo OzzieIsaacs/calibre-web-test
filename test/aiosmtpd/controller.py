@@ -7,10 +7,12 @@ import sys
 from aiosmtpd.smtp import SMTP
 from public import public
 
-def get_server_context(certfile='SSL/ssl.crt', keyfile='SSL/ssl.key'):
+
+def get_server_context(certfile='files/ssl.crt', keyfile='files/ssl.key'):
     tls_context = ssl.create_default_context(ssl.Purpose.CLIENT_AUTH)
     tls_context.load_cert_chain(certfile, keyfile)
     return tls_context
+
 
 @public
 class Controller:

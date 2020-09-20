@@ -1,109 +1,180 @@
 #!/usr/bin/env python
 # -*- coding: utf-8 -*-
 
-
-from unittest import TestCase, skip
+import unittest
+from selenium import webdriver
+import re
+import io
 import os
+from selenium.webdriver.common.by import By
 import time
 import requests
-
-from selenium.webdriver.common.by import By
-from selenium.webdriver.common.keys import Keys
+import shutil
 from helper_ui import ui_class
-from config_test import TEST_DB, base_path
-# from parameterized import parameterized_class
-from helper_func import startup, debug_startup, add_dependency, remove_dependency
+
+from config_test import CALIBRE_WEB_PATH, TEST_DB, BOOT_TIME, base_path
+from helper_func import add_dependency, remove_dependency, startup
 from helper_func import save_logfiles
+from helper_gdrive import prepare_gdrive, remove_gdrive, connect_gdrive, check_path_gdrive
+# test editing books on gdrive
 
 
-class TestEditBooks(TestCase, ui_class):
-    p = None
+WAIT_GDRIVE = 11
+
+@unittest.skipIf(not os.path.exists(os.path.join(base_path, "files", "client_secrets.json")) or
+                 not os.path.exists(os.path.join(base_path, "files", "gdrive_credentials")),
+                 "client_secrets.json and/or gdrive_credentials file is missing")
+class TestEditBooksOnGdrive(unittest.TestCase, ui_class):
+    p=None
     driver = None
-    dependencys = ['Pillow', 'lxml']
-    # py_version = u'/usr/bin/python3'
+    dependency = ["oauth2client", "PyDrive", "PyYAML", "google-api-python-client", "httplib2", "Pillow", "lxml"]
 
     @classmethod
     def setUpClass(cls):
-        add_dependency(cls.dependencys, cls.__name__)
+        add_dependency(cls.dependency, cls.__name__)
 
+        prepare_gdrive()
         try:
-            startup(cls, cls.py_version, {'config_calibre_dir': TEST_DB})
-            time.sleep(3)
-        except Exception:
-            cls.driver.quit()
-            cls.p.kill()
+            src = os.path.join(base_path, "files", "client_secrets.json")
+            dst = os.path.join(CALIBRE_WEB_PATH, "client_secrets.json")
+            os.chmod(src, 0o764)
+            if os.path.exists(dst):
+                os.unlink(dst)
+            shutil.copy(src, dst)
+
+            # delete settings_yaml file
+            set_yaml = os.path.join(CALIBRE_WEB_PATH, "settings.yaml")
+            if os.path.exists(set_yaml):
+                os.unlink(set_yaml)
+
+            # delete gdrive file
+            gdrive_db = os.path.join(CALIBRE_WEB_PATH, "gdrive.db")
+            if os.path.exists(gdrive_db):
+                os.unlink(gdrive_db)
+
+            # delete gdrive authenticated file
+            src = os.path.join(base_path, 'files', "gdrive_credentials")
+            dst = os.path.join(CALIBRE_WEB_PATH, "gdrive_credentials")
+            os.chmod(src, 0o764)
+            if os.path.exists(dst):
+                os.unlink(dst)
+            shutil.copy(src, dst)
+
+            startup(cls,
+                    cls.py_version,
+                    {'config_calibre_dir': TEST_DB,'config_use_google_drive':1 },
+                    only_metadata=True)
+            cls.fill_basic_config({'config_google_drive_folder':'test'})
+        except Exception as e:
+            try:
+                cls.driver.quit()
+                cls.p.kill()
+            except Exception:
+                pass
+
 
     @classmethod
     def tearDownClass(cls):
-        remove_dependency(cls.dependencys)
+        # remove_gdrive()
+        cls.driver.get("http://127.0.0.1:8083")
         cls.stop_calibre_web()
         # close the browser window and stop calibre-web
         cls.driver.quit()
         cls.p.terminate()
+
+        remove_dependency(cls.dependency)
+
+        src1 = os.path.join(CALIBRE_WEB_PATH, "client_secrets.json")
+        src = os.path.join(CALIBRE_WEB_PATH, "gdrive_credentials")
+        if os.path.exists(src):
+            os.chmod(src, 0o764)
+            try:
+                os.unlink(src)
+            except PermissionError:
+                print('File delete failed')
+        if os.path.exists(src1):
+            os.chmod(src1, 0o764)
+            try:
+                os.unlink(src1)
+            except PermissionError:
+                print('File delete failed')
+
         save_logfiles(cls.__name__)
 
-    # goto Book 1
-    # Change Title with unicode chars
-    # save title, go to show books page
-    # check title
-    # edit title with spaces on beginning
-    # save title, stay on page
-    # check title correct, check folder name correct, old folder deleted
-    # edit title remove title
-    # save title
-    # check title correct (Unknown)
-    # change title to something where the title regex matches
-    # check title correct, check if book correct in order of a-z books
-    # add files to folder of book
-    # change title of book,
-    # check folder moves completly with all files
-    # delete complete folder
-    # change title of book
-    # error metadata should occour
-    # delete cover file
-    # change title of book
-    # metadata error does not occour
-    # Test Capital letters and lowercase characters
-    # booktitle with ,;|
+
     def test_edit_title(self):
+        fs = connect_gdrive("test")
         self.get_book_details(4)
         self.check_element_on_page((By.ID, "edit_book")).click()
         self.edit_book(content={'book_title': u'O0ü 执'})
         values = self.get_book_details()
         self.assertEqual(u'O0ü 执', values['title'])
-        self.assertTrue(os.path.isdir(os.path.join(TEST_DB, values['author'][0], 'O0u Zhi (4)')))
-        self.assertFalse(os.path.isdir(os.path.join(TEST_DB, values['author'][0],
-                                                    'Very long extra super turbo cool tit (4)')))
+        new_book_path = os.path.join('test', values['author'][0], 'O0u Zhi (4)')
+        gdrive_path = check_path_gdrive(fs, new_book_path)
+        self.assertTrue(gdrive_path)
+        old_book_path = os.path.join('test', values['author'][0], 'Very long extra super turbo cool tit (4)')
+        gdrive_path = check_path_gdrive(fs, old_book_path)
+        self.assertFalse(gdrive_path)
         self.check_element_on_page((By.ID, "edit_book")).click()
-        with open(os.path.join(TEST_DB, values['author'][0], 'O0u Zhi (4)', 'test.dum'), 'wb') as fout:
-            fout.write(os.urandom(124))
+        # file operation
+        fout = io.BytesIO()
+        fout.write(os.urandom(124))
+        #with open(os.path.join(TEST_DB, values['author'][0], 'O0u Zhi (4)', 'test.dum'), 'wb') as fout:
+        # fout.write(os.urandom(124))
+        fs.upload(os.path.join('test', values['author'][0], 'O0u Zhi (4)', 'test.dum'), fout)
+        fout.close()
         self.edit_book(content={'book_title': u' O0ü 执'}, detail_v=True)
+        time.sleep(WAIT_GDRIVE)
+        self.check_element_on_page((By.ID, 'flash_success'))
         title = self.check_element_on_page((By.ID, "book_title"))
         # calibre strips spaces in beginning
         self.assertEqual(u'O0ü 执', title.get_attribute('value'))
-        self.assertTrue(os.path.isdir(os.path.join(TEST_DB, values['author'][0], 'O0u Zhi (4)')))
+        # self.assertTrue(os.path.isdir(os.path.join(TEST_DB, values['author'][0], 'O0u Zhi (4)')))
+        new_book_path = os.path.join('test', values['author'][0], 'O0u Zhi (4)')
+        gdrive_path = check_path_gdrive(fs, new_book_path)
+        self.assertTrue(gdrive_path)
         self.edit_book(content={'book_title': u'O0ü name'}, detail_v=True)
+        time.sleep(WAIT_GDRIVE)
+        self.check_element_on_page((By.ID, 'flash_success'))
         title = self.check_element_on_page((By.ID, "book_title"))
         # calibre strips spaces in the end
         self.assertEqual(u'O0ü name', title.get_attribute('value'))
-        self.assertTrue(os.path.isdir(os.path.join(TEST_DB, values['author'][0], 'O0u name (4)')))
-        self.assertFalse(os.path.isdir(os.path.join(TEST_DB, values['author'][0], 'O0u Zhi (4)')))
+        # self.assertTrue(os.path.isdir(os.path.join(TEST_DB, values['author'][0], 'O0u name (4)')))
+        new_book_path = os.path.join('test', values['author'][0], 'O0u name (4)')
+        gdrive_path = check_path_gdrive(fs, new_book_path)
+        self.assertTrue(gdrive_path)
+        # self.assertFalse(os.path.isdir(os.path.join(TEST_DB, values['author'][0], 'O0u Zhi (4)')))
+        old_book_path = os.path.join('test', values['author'][0], 'O0u Zhi (4)')
+        gdrive_path = check_path_gdrive(fs, old_book_path)
+        self.assertFalse(gdrive_path)
+
         self.edit_book(content={'book_title': ''})
+        time.sleep(WAIT_GDRIVE)
         values = self.get_book_details()
-        os.path.join(TEST_DB, values['author'][0], 'Unknown')
+        # os.path.join(TEST_DB, values['author'][0], 'Unknown')
         self.assertEqual('Unknown', values['title'])
-        self.assertTrue(os.path.isdir(os.path.join(TEST_DB, values['author'][0], 'Unknown (4)')))
+        # self.assertTrue(os.path.isdir(os.path.join(TEST_DB, values['author'][0], 'Unknown (4)')))
+        new_book_path = os.path.join('test', values['author'][0], 'Unknown (4)')
+        gdrive_path = check_path_gdrive(fs, new_book_path)
+        self.assertTrue(gdrive_path)
+        old_book_path = os.path.join('test', values['author'][0], 'Unknown')
+        gdrive_path = check_path_gdrive(fs, old_book_path)
+        self.assertFalse(gdrive_path)
+
         self.check_element_on_page((By.ID, "edit_book")).click()
         self.edit_book(content={'book_title': 'The camicdemo'})
         values = self.get_book_details()
-        os.path.join(TEST_DB, values['author'][0], 'The camicdemo')
+        # os.path.join(TEST_DB, values['author'][0], 'The camicdemo')
         self.assertEqual('The camicdemo', values['title'])
         self.goto_page('nav_new')
+        time.sleep(WAIT_GDRIVE)
         books = self.get_books_displayed()
         self.assertEqual('The camicdemo', books[1][8]['title'])
-        file_path = os.path.join(TEST_DB, values['author'][0], 'The camicdemo (4)')
-        not_file_path = os.path.join(TEST_DB, values['author'][0], 'camicdemo')
-        os.renames(file_path, not_file_path)
+        file_path = os.path.join('test', values['author'][0], 'The camicdemo (4)')
+        not_file_path = os.path.join('test', values['author'][0], 'camicdemo')
+
+        # file operation
+        fs.movedir(file_path, not_file_path, create=True)
         self.get_book_details(4)
         self.check_element_on_page((By.ID, "edit_book")).click()
         self.edit_book(content={'book_title': u'Not found'})
@@ -111,23 +182,33 @@ class TestEditBooks(TestCase, ui_class):
         title = self.check_element_on_page((By.ID, "book_title"))
         # calibre strips spaces in the end
         self.assertEqual('The camicdemo', title.get_attribute('value'))
-        os.renames(not_file_path, file_path)
+        # file operation
+        fs.movedir(not_file_path, file_path, create=True)
         # missing cover file is not detected, and cover file is moved
-        cover_file = os.path.join(TEST_DB, values['author'][0], 'The camicdemo (4)', 'cover.jpg')
-        not_cover_file = os.path.join(TEST_DB, values['author'][0], 'The camicdemo (4)', 'no_cover.jpg')
-        os.renames(cover_file, not_cover_file)
+        cover_file = os.path.join('test', values['author'][0], 'The camicdemo (4)', 'cover.jpg')
+        not_cover_file = os.path.join('test', values['author'][0], 'The camicdemo (4)', 'no_cover.jpg')
+
+        # file operation
+        fs.move(cover_file, not_cover_file)
         self.edit_book(content={'book_title': u'No Cover'}, detail_v=True)
+        time.sleep(WAIT_GDRIVE)
+        self.check_element_on_page((By.ID, 'flash_success'))
         title = self.check_element_on_page((By.ID, "book_title"))
         self.assertEqual('No Cover', title.get_attribute('value'))
-        cover_file = os.path.join(TEST_DB, values['author'][0], 'No Cover (4)', 'cover.jpg')
-        not_cover_file = os.path.join(TEST_DB, values['author'][0], 'No Cover (4)', 'no_cover.jpg')
-        os.renames(not_cover_file, cover_file)
+        cover_file = os.path.join('test', values['author'][0], 'No Cover (4)', 'cover.jpg')
+        not_cover_file = os.path.join('test', values['author'][0], 'No Cover (4)', 'no_cover.jpg')
+
+        fs.move(not_cover_file, cover_file)
+        fs.close()
         self.edit_book(content={'book_title': u'Pipo|;.:'}, detail_v=True)
+        time.sleep(WAIT_GDRIVE)
+        self.check_element_on_page((By.ID, 'flash_success'))
         title = self.check_element_on_page((By.ID, "book_title"))
         self.assertEqual(u'Pipo|;.:', title.get_attribute('value'))
         self.edit_book(content={'book_title': u'Very long extra super turbo cool title without any issue of displaying including ö utf-8 characters'})
         ele = self.check_element_on_page((By.ID, "title"))
         self.assertEqual(ele.text, u'Very long extra super turbo cool title without any issue of ...')
+        time.sleep(WAIT_GDRIVE)
         self.check_element_on_page((By.ID, "edit_book")).click()
         self.edit_book(content={'book_title': u'book6'})
 
@@ -169,30 +250,45 @@ class TestEditBooks(TestCase, ui_class):
     # error should occour
     # Test Capital letters and lowercase characters
     def test_edit_author(self):
+        fs = connect_gdrive("test")
         self.get_book_details(8)
         self.check_element_on_page((By.ID, "edit_book")).click()
         self.edit_book(content={'bookAuthor':u'O0ü 执'})
         values = self.get_book_details()
         self.assertEqual(u'O0ü 执', values['author'][0])
-        self.assertTrue(os.path.isdir(os.path.join(TEST_DB, 'O0u Zhi', 'book8 (8)')))
-        self.assertFalse(os.path.isdir(os.path.join(TEST_DB, 'Leo Baskerville',
-                                                    'book8 (8)')))
+        new_book_path = os.path.join('test', 'O0u Zhi', 'book8 (8)')
+        gdrive_path = check_path_gdrive(fs, new_book_path)
+        self.assertTrue(gdrive_path)
+        old_book_path = os.path.join('test', 'Leo Baskerville', 'book8 (8)')
+        gdrive_path = check_path_gdrive(fs, old_book_path)
+        self.assertFalse(gdrive_path)
+
         self.check_element_on_page((By.ID, "edit_book")).click()
         self.edit_book(content={'bookAuthor':u' O0ü name '}, detail_v=True)
+        time.sleep(WAIT_GDRIVE)
+        self.check_element_on_page((By.ID, 'flash_success'))
         author = self.check_element_on_page((By.ID, "bookAuthor"))
         # calibre strips spaces in the end
         self.assertEqual(u'O0ü name', author.get_attribute('value'))
-        self.assertTrue(os.path.isdir(os.path.join(TEST_DB, 'O0u name', 'book8 (8)')))
+        # self.assertTrue(os.path.isdir(os.path.join(TEST_DB, 'O0u name', 'book8 (8)')))
+        new_book_path = os.path.join('test', 'O0u name', 'book8 (8)')
+        gdrive_path = check_path_gdrive(fs, new_book_path)
+        self.assertTrue(gdrive_path)
+
         self.edit_book(content={'bookAuthor':''})
         values = self.get_book_details()
         os.path.join(TEST_DB, 'Unknown', 'book8 (8)')
         self.assertEqual('Unknown', values['author'][0])
-        self.assertTrue(os.path.isdir(os.path.join(TEST_DB, values['author'][0], 'book8 (8)')))
+        # self.assertTrue(os.path.isdir(os.path.join(TEST_DB, values['author'][0], 'book8 (8)')))
+        new_book_path = os.path.join('test', values['author'][0], 'book8 (8)')
+        gdrive_path = check_path_gdrive(fs, new_book_path)
+        self.assertTrue(gdrive_path)
+
         self.check_element_on_page((By.ID, "edit_book")).click()
         # Check authorsort
         self.edit_book(content={'bookAuthor':'Marco, Lulu de'})
         values = self.get_book_details()
-        os.path.join(TEST_DB, values['author'][0], 'book8 (8)')
+        # os.path.join(TEST_DB, values['author'][0], 'book8 (8)')
         self.assertEqual(values['author'][0], 'Marco, Lulu de')
         list_element = self.goto_page('nav_author')
         # ToDo check names of List elements
@@ -200,33 +296,60 @@ class TestEditBooks(TestCase, ui_class):
         self.check_element_on_page((By.ID, "edit_book")).click()
 
         self.edit_book(content={'bookAuthor': 'Sigurd Lindgren'}, detail_v=True)
+        time.sleep(11)
+        self.check_element_on_page((By.ID, 'flash_success'))
         author = self.check_element_on_page((By.ID, "bookAuthor")).get_attribute('value')
         self.assertEqual(u'Sigurd Lindgren', author)
-        self.assertTrue(os.path.isdir(os.path.join(TEST_DB, author, 'book8 (8)')))
+        new_book_path = os.path.join('test', author, 'book8 (8)')
+        gdrive_path = check_path_gdrive(fs, new_book_path)
+        self.assertTrue(gdrive_path)
+
+        # self.assertTrue(os.path.isdir(os.path.join(TEST_DB, author, 'book8 (8)')))
         self.edit_book(content={'bookAuthor': 'Sigurd Lindgren&Leo Baskerville'}, detail_v=True)
-        self.assertTrue(os.path.isdir(os.path.join(TEST_DB, 'Sigurd Lindgren', 'book8 (8)')))
-        self.assertFalse(os.path.isdir(os.path.join(TEST_DB, 'Leo Baskerville', 'book8 (8)')))
+        time.sleep(11)
+        self.check_element_on_page((By.ID, 'flash_success'))
+        new_book_path = os.path.join('test',  'Sigurd Lindgren', 'book8 (8)')
+        gdrive_path = check_path_gdrive(fs, new_book_path)
+        self.assertTrue(gdrive_path)
+        old_book_path = os.path.join('test', 'Leo Baskerville', 'book8 (8)')
+        gdrive_path = check_path_gdrive(fs, old_book_path)
+        self.assertFalse(gdrive_path)
+
         author = self.check_element_on_page((By.ID, "bookAuthor"))
         self.assertEqual(u'Sigurd Lindgren & Leo Baskerville', author.get_attribute('value'))
         self.edit_book(content={'bookAuthor': ' Leo Baskerville & Sigurd Lindgren '}, detail_v=True)
-        self.assertFalse(os.path.isdir(os.path.join(TEST_DB, 'Sigurd Lindgren', 'book8 (8)')))
-        self.assertTrue(os.path.isdir(os.path.join(TEST_DB, 'Leo Baskerville', 'book8 (8)')))
+        time.sleep(11)
+        self.check_element_on_page((By.ID, 'flash_success'))
+
+        new_book_path = os.path.join('test',  'Leo Baskerville', 'book8 (8)')
+        gdrive_path = check_path_gdrive(fs, new_book_path)
+        self.assertTrue(gdrive_path)
+        old_book_path = os.path.join('test', 'Sigurd Lindgren', 'book8 (8)')
+        gdrive_path = check_path_gdrive(fs, old_book_path)
+        self.assertFalse(gdrive_path)
+
         self.edit_book(content={'bookAuthor': 'Pipo| Pipe'}, detail_v=True)
+        time.sleep(WAIT_GDRIVE)
+        self.check_element_on_page((By.ID, 'flash_success'))
         author = self.check_element_on_page((By.ID, "bookAuthor"))
         self.assertEqual(u'Pipo, Pipe', author.get_attribute('value'))
         list_element = self.goto_page('nav_author')
 
-        file_path = os.path.join(TEST_DB, 'Pipo, Pipe', 'book8 (8)')
-        not_file_path = os.path.join(TEST_DB, 'Pipo, Pipe', 'nofolder')
-        os.renames(file_path, not_file_path)
+        file_path = os.path.join('test', 'Pipo, Pipe', 'book8 (8)')
+        not_file_path = os.path.join('test', 'Pipo, Pipe', 'nofolder')
+        fs.movedir(file_path, not_file_path, create=True)
         self.get_book_details(8)
         self.check_element_on_page((By.ID, "edit_book")).click()
         self.edit_book(content={'bookAuthor': u'Not found'})
         self.check_element_on_page((By.ID, 'flash_alert'))
         author = self.check_element_on_page((By.ID, "bookAuthor"))
         self.assertEqual('Pipo, Pipe', author.get_attribute('value'))
-        os.renames(not_file_path, file_path)
+        fs.movedir(not_file_path, file_path, create=True)
+        fs.close()
         self.edit_book(content={'bookAuthor': 'Leo Baskerville'}, detail_v=True)
+        time.sleep(WAIT_GDRIVE)
+        self.check_element_on_page((By.ID, 'flash_success'))
+
 
     # series with unicode spaces, ,|,
     def test_edit_series(self):
@@ -251,6 +374,8 @@ class TestEditBooks(TestCase, ui_class):
 
         self.check_element_on_page((By.ID, "edit_book")).click()
         self.edit_book(content={'series':'Loko'}, detail_v=True)
+        time.sleep(WAIT_GDRIVE)
+        self.check_element_on_page((By.ID, 'flash_success'))
         series = self.check_element_on_page((By.ID, "series"))
         self.assertEqual(u'Loko', series.get_attribute('value'))
 
@@ -278,7 +403,6 @@ class TestEditBooks(TestCase, ui_class):
         self.check_element_on_page((By.ID, "edit_book")).click()
         self.edit_book(content={'series': u''})
 
-
     def test_edit_category(self):
         self.get_book_details(12)
         self.check_element_on_page((By.ID, "edit_book")).click()
@@ -301,6 +425,8 @@ class TestEditBooks(TestCase, ui_class):
 
         self.check_element_on_page((By.ID, "edit_book")).click()
         self.edit_book(content={'tags':u' Gênot & Peter '}, detail_v=True)
+        time.sleep(WAIT_GDRIVE)
+        self.check_element_on_page((By.ID, 'flash_success'))
         tags = self.check_element_on_page((By.ID, "tags"))
         self.assertEqual(u'Gênot & Peter', tags.get_attribute('value'))
 
@@ -340,6 +466,8 @@ class TestEditBooks(TestCase, ui_class):
 
         self.check_element_on_page((By.ID, "edit_book")).click()
         self.edit_book(content={'publisher':u' Gênot & Peter '}, detail_v=True)
+        time.sleep(WAIT_GDRIVE)
+        self.check_element_on_page((By.ID, 'flash_success'))
         publisher = self.check_element_on_page((By.ID, "publisher"))
         self.assertEqual(u'Gênot & Peter', publisher.get_attribute('value'))
 
@@ -374,6 +502,7 @@ class TestEditBooks(TestCase, ui_class):
         self.get_book_details(3)
         self.check_element_on_page((By.ID, "edit_book")).click()
         self.edit_book(content={'languages':'German & English'}, detail_v=True)
+        time.sleep(WAIT_GDRIVE)
         self.check_element_on_page((By.ID, 'flash_alert'))
         self.edit_book(content={'languages': 'German, English'})
         self.get_book_details(3)
@@ -542,153 +671,6 @@ class TestEditBooks(TestCase, ui_class):
         vals = self.get_book_details(5)
         self.assertEqual(0, len(vals['cust_columns']))
 
-
-    @skip("Not Implemented")
-    def test_edit_publishing_date(self):
-        self.assertIsNone('Not Implemented')
-
-    def test_typeahead_functions(self):
-        req = requests.session()
-        payload = {'username': 'admin', 'password': 'admin123', 'submit':"", 'next':"/", "remember_me":"on"}
-        req.post('http://127.0.0.1:8083/login', data=payload)
-        resp = req.get('http://127.0.0.1:8083/get_languages_json')
-        self.assertEqual(200, resp.status_code)
-        resp = req.get('http://127.0.0.1:8083/get_matching_tags')
-        self.assertEqual(200, resp.status_code)
-        resp = req.get('http://127.0.0.1:8083/get_series_json')
-        self.assertEqual(200, resp.status_code)
-        resp = req.get('http://127.0.0.1:8083/get_tags_json')
-        self.assertEqual(200, resp.status_code)
-        resp = req.get('http://127.0.0.1:8083/get_publishers_json')
-        self.assertEqual(200, resp.status_code)
-        resp = req.get('http://127.0.0.1:8083/get_authors_json')
-        self.assertEqual(200, resp.status_code)
-        req.close()
-
-    # change comments, add comments, delete comments
-    def test_typeahead_language(self):
-        self.get_book_details(5)
-        self.check_element_on_page((By.ID, "edit_book")).click()
-        lang = self.check_element_on_page((By.ID, "languages"))
-        lang.send_keys(Keys.CONTROL, "a")
-        lang.send_keys(Keys.DELETE)
-        lang.send_keys('G')
-        time.sleep(1)
-        typeahead = self.check_element_on_page((By.CLASS_NAME, "tt-dataset-languages"))
-        typeahead_set = set(typeahead.text.split("\n"))
-        result = set(("German", "Greek; Modern (1453-)", "Ga", "Gayo", "Gbaya (Central African Republic)"))
-        self.assertEqual(typeahead_set, result)
-        lang.send_keys('a')
-        time.sleep(1)
-        typeahead_set = set(typeahead.text.split("\n"))
-        result = set(("Ga", "Gayo", "Gaelic; Scottish", "Galician", "Ganda"))
-        self.assertEqual(typeahead_set, result)
-        lang.send_keys('y')
-        time.sleep(1)
-        typeahead_set = set(typeahead.text.split("\n"))
-        result = set(("Gayo", "Hiligaynon"))
-        self.assertEqual(typeahead_set, result)
-        lang.send_keys('o')
-        time.sleep(1)
-        lang.send_keys(Keys.DOWN)
-        lang.send_keys(Keys.RETURN)
-        self.check_element_on_page((By.ID, "submit")).click()
-        details = self.get_book_details(5)
-        self.assertEqual(details['languages'][0], 'Gayo')
-        self.get_book_details(5)
-        self.check_element_on_page((By.ID, "edit_book")).click()
-        self.edit_book(content={u'languages':u'English'})
-
-    def test_typeahead_series(self):
-        self.get_book_details(5)
-        self.check_element_on_page((By.ID, "edit_book")).click()
-        lang = self.check_element_on_page((By.ID, "series"))
-        lang.send_keys(Keys.CONTROL, "a")
-        lang.send_keys(Keys.DELETE)
-        lang.send_keys('D')
-        time.sleep(1)
-        typeahead = self.check_element_on_page((By.CLASS_NAME, "tt-dataset-series"))
-        self.assertEqual('Djüngel', typeahead.text)
-        lang.send_keys('j')
-        time.sleep(1)
-        typeahead = self.check_element_on_page((By.CLASS_NAME, "tt-dataset-series"))
-        self.assertEqual('Djüngel', typeahead.text)
-        lang.send_keys(Keys.DOWN)
-        lang.send_keys(Keys.RETURN)
-        self.check_element_on_page((By.ID, "submit")).click()
-        details = self.get_book_details(5)
-        self.assertEqual(details['series'], 'Djüngel')
-        self.get_book_details(5)
-        self.check_element_on_page((By.ID, "edit_book")).click()
-        self.edit_book(content={u'series':u''})
-
-    def test_typeahead_author(self):
-        self.get_book_details(5)
-        self.check_element_on_page((By.ID, "edit_book")).click()
-        lang = self.check_element_on_page((By.ID, "bookAuthor"))
-        lang.send_keys('&')
-        time.sleep(1)
-        typeahead = self.check_element_on_page((By.CLASS_NAME, "tt-dataset-authors"))
-        typeahead_set = set(typeahead.text.split("\n"))
-        result = set(("John Döe & John Döe", "John Döe & Peter Parker", "John Döe & Asterix Lionherd",
-                      "John Döe & Frodo Beutlin", "John Döe & Norbert Halagal"))
-        self.assertEqual(typeahead_set, result)
-        lang.send_keys('ro')
-        time.sleep(1)
-        typeahead = self.check_element_on_page((By.CLASS_NAME, "tt-dataset-authors"))
-        self.assertEqual('John Döe & Frodo Beutlin', typeahead.text)
-        lang.send_keys(Keys.DOWN)
-        lang.send_keys(Keys.RETURN)
-        self.check_element_on_page((By.ID, "submit")).click()
-        details = self.get_book_details(5)
-        self.assertEqual(details['author'][1], 'Frodo Beutlin')
-        self.assertEqual(details['author'][0], 'John Döe')
-        self.get_book_details(5)
-        self.check_element_on_page((By.ID, "edit_book")).click()
-        self.edit_book(content={u'bookAuthor':u'John Döe'})
-
-    def test_typeahead_tag(self):
-        self.get_book_details(5)
-        self.check_element_on_page((By.ID, "edit_book")).click()
-        lang = self.check_element_on_page((By.ID, "tags"))
-        lang.send_keys(Keys.CONTROL, "a")
-        lang.send_keys(Keys.DELETE)
-        lang.send_keys('g')
-        time.sleep(1)
-        typeahead = self.check_element_on_page((By.CLASS_NAME, "tt-dataset-tags"))
-        self.assertEqual('Gênot', typeahead.text)
-        lang.send_keys('e')
-        time.sleep(1)
-        typeahead = self.check_element_on_page((By.CLASS_NAME, "tt-dataset-tags"))
-        self.assertEqual('Gênot', typeahead.text)
-        lang.send_keys(Keys.DOWN)
-        lang.send_keys(Keys.RETURN)
-        self.check_element_on_page((By.ID, "submit")).click()
-        details = self.get_book_details(5)
-        self.assertEqual(details['tag'][0], 'Gênot')
-        self.get_book_details(5)
-        self.check_element_on_page((By.ID, "edit_book")).click()
-        self.edit_book(content={u'tags':u''})
-
-    def test_typeahead_publisher(self):
-        self.get_book_details(10)
-        self.check_element_on_page((By.ID, "edit_book")).click()
-        lang = self.check_element_on_page((By.ID, "publisher"))
-        lang.send_keys(Keys.CONTROL, "a")
-        lang.send_keys(Keys.DELETE)
-        lang.send_keys('a')
-        time.sleep(1)
-        typeahead = self.check_element_on_page((By.CLASS_NAME, "tt-dataset-publishers"))
-        self.assertEqual('Randomhäus', typeahead.text)
-        lang.send_keys(Keys.DOWN)
-        lang.send_keys(Keys.RETURN)
-        self.check_element_on_page((By.ID, "submit")).click()
-        details = self.get_book_details(10)
-        self.assertEqual(details['publisher'][0], 'Randomhäus')
-        self.get_book_details(10)
-        self.check_element_on_page((By.ID, "edit_book")).click()
-        self.edit_book(content={u'publisher':u''})
-
     def test_upload_cover_hdd(self):
         self.get_book_details(5)
         self.check_element_on_page((By.ID, "edit_book")).click()
@@ -734,48 +716,6 @@ class TestEditBooks(TestCase, ui_class):
         r.close()
         self.assertTrue(False, "Browser-Cache Problem: Old Cover is displayed instead of New Cover")
 
-    # check metadata recognition
-    def test_upload_book_pdf(self):
-        self.fill_basic_config({'config_uploading':1})
-        time.sleep(3)
-        self.goto_page('nav_new')
-        upload_file = os.path.join(base_path, 'files', 'book.pdf')
-        upload = self.check_element_on_page((By.ID, 'btn-upload'))
-        upload.send_keys(upload_file)
-        time.sleep(2)
-        self.check_element_on_page((By.ID, 'edit_cancel')).click()
-        details = self.get_book_details()
-        self.assertEqual('book', details['title'])
-        self.assertEqual('Unknown', details['author'][0])
-        r = requests.session()
-        payload = {'username': 'admin', 'password': 'admin123', 'submit':"", 'next':"/", "remember_me":"on"}
-        r.post('http://127.0.0.1:8083/login', data=payload)
-        resp = r.get('http://127.0.0.1:8083' + details['cover'])
-        self.assertLess('23300', resp.headers['Content-Length'])
-        self.fill_basic_config({'config_uploading': 0})
-        r.close()
-
-    # check metadata recognition
-    def test_upload_book_fb2(self):
-        self.fill_basic_config({'config_uploading':1})
-        time.sleep(3)
-        self.goto_page('nav_new')
-        upload_file = os.path.join(base_path, 'files', 'book.fb2')
-        upload = self.check_element_on_page((By.ID, 'btn-upload'))
-        upload.send_keys(upload_file)
-        # ToDo: check file contents
-        time.sleep(2)
-        self.check_element_on_page((By.ID, 'edit_cancel')).click()
-        details = self.get_book_details()
-        self.assertEqual('book', details['title'])
-        self.assertEqual('Unknown', details['author'][0])
-        r = requests.session()
-        payload = {'username': 'admin', 'password': 'admin123', 'submit':"", 'next':"/", "remember_me":"on"}
-        r.post('http://127.0.0.1:8083/login', data=payload)
-        resp = r.get('http://127.0.0.1:8083' + details['cover'])
-        self.assertEqual('182574', resp.headers['Content-Length'])
-        self.fill_basic_config({'config_uploading': 0})
-        r.close()
 
     def test_upload_book_lit(self):
         self.fill_basic_config({'config_uploading':1})
@@ -798,27 +738,6 @@ class TestEditBooks(TestCase, ui_class):
         self.fill_basic_config({'config_uploading': 0})
         r.close()
 
-    def test_upload_book_mobi(self):
-        self.fill_basic_config({'config_uploading':1})
-        time.sleep(3)
-        self.goto_page('nav_new')
-        upload_file = os.path.join(base_path, 'files', 'book.mobi')
-        upload = self.check_element_on_page((By.ID, 'btn-upload'))
-        upload.send_keys(upload_file)
-        time.sleep(2)
-        self.check_element_on_page((By.ID, 'edit_cancel')).click()
-        details = self.get_book_details()
-        self.assertEqual('book', details['title'])
-        self.assertEqual('Unknown', details['author'][0])
-        r = requests.session()
-        payload = {'username': 'admin', 'password': 'admin123', 'submit':"", 'next':"/", "remember_me":"on"}
-        r.post('http://127.0.0.1:8083/login', data=payload)
-        resp = r.get('http://127.0.0.1:8083' + details['cover'])
-        self.assertEqual('182574', resp.headers['Content-Length'])
-        self.fill_basic_config({'config_uploading': 0})
-        r.close()
-
-
     def test_upload_book_epub(self):
         self.fill_basic_config({'config_uploading':1})
         time.sleep(3)
@@ -839,69 +758,8 @@ class TestEditBooks(TestCase, ui_class):
         self.assertEqual('8936', resp.headers['Content-Length'])
         self.fill_basic_config({'config_uploading': 0})
         r.close()
+        # ToDo: Check folder are right
 
-    def test_upload_book_cbz(self):
-        self.fill_basic_config({'config_uploading':1})
-        time.sleep(3)
-        self.goto_page('nav_new')
-        upload_file = os.path.join(base_path, 'files', 'book.cbz')
-        upload = self.check_element_on_page((By.ID, 'btn-upload'))
-        upload.send_keys(upload_file)
-
-        time.sleep(2)
-        self.check_element_on_page((By.ID, 'edit_cancel')).click()
-        details = self.get_book_details()
-        self.assertEqual('book', details['title'])
-        self.assertEqual('Unknown', details['author'][0])
-        r = requests.session()
-        payload = {'username': 'admin', 'password': 'admin123', 'submit':"", 'next':"/", "remember_me":"on"}
-        r.post('http://127.0.0.1:8083/login', data=payload)
-        resp = r.get('http://127.0.0.1:8083' + details['cover'])
-        self.assertEqual('8936', resp.headers['Content-Length'])
-        self.fill_basic_config({'config_uploading': 0})
-        r.close()
-
-    def test_upload_book_cbt(self):
-        self.fill_basic_config({'config_uploading':1})
-        time.sleep(3)
-        self.goto_page('nav_new')
-        upload_file = os.path.join(base_path, 'files', 'book.cbt')
-        upload = self.check_element_on_page((By.ID, 'btn-upload'))
-        upload.send_keys(upload_file)
-
-        time.sleep(2)
-        self.check_element_on_page((By.ID, 'edit_cancel')).click()
-        details = self.get_book_details()
-        self.assertEqual('book', details['title'])
-        self.assertEqual('Unknown', details['author'][0])
-        r = requests.session()
-        payload = {'username': 'admin', 'password': 'admin123', 'submit':"", 'next':"/", "remember_me":"on"}
-        r.post('http://127.0.0.1:8083/login', data=payload)
-        resp = r.get('http://127.0.0.1:8083' + details['cover'])
-        self.assertEqual('8936', resp.headers['Content-Length'])
-        self.fill_basic_config({'config_uploading': 0})
-        r.close()
-
-    def test_upload_book_cbr(self):
-        self.fill_basic_config({'config_uploading':1})
-        time.sleep(3)
-        self.goto_page('nav_new')
-        upload_file = os.path.join(base_path, 'files', 'book.cbr')
-        upload = self.check_element_on_page((By.ID, 'btn-upload'))
-        upload.send_keys(upload_file)
-
-        time.sleep(2)
-        self.check_element_on_page((By.ID, 'edit_cancel')).click()
-        details = self.get_book_details()
-        self.assertEqual('book', details['title'])
-        self.assertEqual('Unknown', details['author'][0])
-        r = requests.session()
-        payload = {'username': 'admin', 'password': 'admin123', 'submit':"", 'next':"/", "remember_me":"on"}
-        r.post('http://127.0.0.1:8083/login', data=payload)
-        resp = r.get('http://127.0.0.1:8083' + details['cover'])
-        self.assertEqual('182574', resp.headers['Content-Length'])
-        self.fill_basic_config({'config_uploading': 0})
-        r.close()
 
     # download of books
     def test_download_book(self):
@@ -932,20 +790,4 @@ class TestEditBooks(TestCase, ui_class):
         book_downloads[0].click()
         book = self.get_book_details()
         self.assertEqual('testbook', book['title'])
-        # self.assertFalse(self.check_element_on_page((By.XPATH, "//*/h2/div/")))
-
-
-    # If more than one book has the same: author, tag or series it should be possible to change uppercase
-    # letters to lowercase and vice versa. Example:
-    # Book1 and Book2 are both part of the series "colLection". Changing the series to 'collection'
-    # Expected Behavior: Both books later on are part of the series 'collection'
-    @skip("Not Implemented")
-    def test_rename_uppercase_lowercase(self):
-        pass
-
-    # If authors are: "Claire North & Peter Snoogut" then authorsort should be: "North, Claire & Snoogut, Peter"
-    # The files should be saved in ../Claire North/...
-    # ------------ nachfolgendes kann man sich sparen ---------
-    # the IDs in books_authors links have to be arranged according to sort order of names e.g:
-    # before : Claire North (4) Peter Snoogut (100) -> "Peter Snoogut & Claire North"
-    # afterwards Claire North (100) Peter Snoogut (4)
+        # self.assertFalse(self.check_element_on_page((By.XPATH, "//*/h2/div/")))'''
