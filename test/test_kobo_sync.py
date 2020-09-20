@@ -10,6 +10,8 @@ from helper_ui import ui_class
 from config_test import TEST_DB, VENV_PYTHON, CALIBRE_WEB_PATH, base_path
 from helper_func import startup, debug_startup, get_Host_IP, add_dependency, remove_dependency, kill_old_cps
 from selenium.webdriver.common.by import By
+from helper_func import save_logfiles
+
 
 class TestKoboSync(unittest.TestCase, ui_class):
 
@@ -48,6 +50,7 @@ class TestKoboSync(unittest.TestCase, ui_class):
         cls.p.terminate()
         # close the browser window and stop calibre-web
         remove_dependency(cls.json_line)
+        save_logfiles(cls.__name__)
 
     def inital_sync(self):
         if TestKoboSync.syncToken:

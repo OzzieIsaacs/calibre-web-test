@@ -1051,6 +1051,37 @@ class ui_class():
             pagination = [p.text for p in pages]
         return [books_rand, books, pagination]
 
+    @classmethod
+    def get_series_books_displayed(cls):
+        parser = lxml.etree.HTMLParser()
+        html = cls.driver.page_source
+
+        tree = lxml.etree.parse(StringIO(html), parser)
+        books = list()
+        b = tree.xpath("//*[@id='list']/div")
+        for book in b:
+            ele = book.getchildren()
+            # ele[0] -> cover
+            meta=ele[1].getchildren()
+            bk = dict()
+            bk['link'] = ele[0].getchildren()[0].attrib['href']
+            bk['id'] = bk['link'].split('/')[-1]
+            bk['ele'] = cls.check_element_on_page((By.XPATH,"//a[@href='"+bk['link']+"']/img"))
+            bk['title']= meta[0].getchildren()[0].text
+            '''authors = meta[1].getchildren()
+            bk['author'] = [a.text for a in authors if a.text != '&' and a.attrib.get('class') != 'author-name author-hidden']
+            if len(meta) == 3:
+                ratings = meta[2].getchildren()
+                counter = 0
+                for rating in ratings:
+                    if rating.attrib['class'] == 'glyphicon glyphicon-star good':
+                        counter += 1
+                bk['rating'] = counter'''
+            books.append(bk)
+
+        return books
+
+
     def get_shelf_books_displayed(self):
         parser = lxml.etree.HTMLParser()
         html = self.driver.page_source

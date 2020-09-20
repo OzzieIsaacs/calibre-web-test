@@ -13,6 +13,7 @@ from helper_ui import ui_class
 from config_test import CALIBRE_WEB_PATH, TEST_DB
 # from parameterized import parameterized_class
 from helper_func import startup
+from helper_func import save_logfiles
 
 
 @unittest.skipIf(helper_email_convert.is_calibre_not_present(), "Skipping convert, calibre not found")
@@ -50,20 +51,21 @@ class TestEbookConvert(unittest.TestCase, ui_class):
     @classmethod
     def tearDownClass(cls):
         cls.email_server.stop()
-        cls.stop_calibre_web()
-        # close the browser window and stop calibre-web
+        try:
+            cls.stop_calibre_web()
+            # close the browser window and stop calibre-web
+        except:
+            pass
         cls.driver.quit()
         cls.p.terminate()
         time.sleep(2)
-        # cls.p.kill()
-
+        save_logfiles(cls.__name__)
 
     def tearDown(self):
         if not self.check_user_logged_in('admin'):
             self.logout()
             self.login('admin', 'admin123')
         self.fill_basic_config({'config_calibre': ''})
-
 
     # deactivate converter and check send to kindle and convert are not visible anymore
     def test_convert_deactivate(self):

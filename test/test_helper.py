@@ -3,19 +3,25 @@
 import sys
 import unittest
 from config_test import CALIBRE_WEB_PATH
+from helper_func import save_logfiles
 
-# Insert local directories into path
-# sys.path.insert(0, os.path.join(CALIBRE_WEB_PATH, 'cps'))
 sys.path.append(CALIBRE_WEB_PATH)
-# sys.path.insert(0, os.path.join(CALIBRE_WEB_PATH, 'vendor'))
+from cps import helper, updater
+import threading
+
+def _get_updater_thread():
+    for t in threading.enumerate():
+        if isinstance(t, updater.Updater):
+            return t
+    return None
 
 
-class CalibreHelper(unittest.TestCase):
+class TestCalibreHelper(unittest.TestCase):
 
     @classmethod
     def setUpClass(cls):
-        global helper
-        from cps import helper
+        # startup function is not called, therfore direct print
+        print("\n%s - %s: " % ("", cls.__name__))
 
     def test_check_high23(self):
         self.assertEqual(helper.get_valid_filename(u'²³'), u'23')
@@ -99,7 +105,8 @@ class CalibreHelper(unittest.TestCase):
 
     @classmethod
     def tearDownClass(cls):
-        global helper
-        # helper.global_WorkerThread.stop()
-        del sys.modules["cps.helper"]
-        del helper
+        # Updater Thread is running in the background, preventing tests main routine from finishing
+        # -> Finds updater and stops it
+        updater_thread = _get_updater_thread()
+        if updater_thread:
+            updater_thread.stop()

@@ -13,6 +13,7 @@ from helper_ui import ui_class
 from config_test import TEST_DB, base_path, BOOT_TIME
 # from .parameterized import parameterized_class
 from helper_func import startup, debug_startup, add_dependency, remove_dependency, unrar_path, is_unrar_not_present
+from helper_func import save_logfiles
 
 
 @unittest.skipIf(is_unrar_not_present(), "Skipping convert, unrar not found")
@@ -26,12 +27,11 @@ class TestEditAdditionalBooks(TestCase, ui_class):
         add_dependency(cls.dependencys, cls.__name__)
 
         try:
-            startup(cls, cls.py_version, {'config_calibre_dir':TEST_DB})
+            startup(cls, cls.py_version, {'config_calibre_dir': TEST_DB})
             time.sleep(3)
         except Exception:
             cls.driver.quit()
             cls.p.kill()
-
 
     @classmethod
     def tearDownClass(cls):
@@ -40,9 +40,10 @@ class TestEditAdditionalBooks(TestCase, ui_class):
         # close the browser window and stop calibre-web
         cls.driver.quit()
         cls.p.terminate()
+        save_logfiles(cls.__name__)
 
     def test_upload_metadate_cbr(self):
-        self.fill_basic_config({'config_uploading':1})
+        self.fill_basic_config({'config_uploading': 1})
         time.sleep(3)
         self.assertTrue(self.check_element_on_page((By.ID, "flash_success")))
         self.fill_basic_config({'config_rarfile_location': '/bin/ur'})
@@ -64,7 +65,7 @@ class TestEditAdditionalBooks(TestCase, ui_class):
         self.assertEqual('3.0', details['series_index'])
         self.assertEqual('No Series', details['series'])
         r = requests.session()
-        payload = {'username': 'admin', 'password': 'admin123', 'submit':"", 'next':"/", "remember_me":"on"}
+        payload = {'username': 'admin', 'password': 'admin123', 'submit': "", 'next': "/", "remember_me": "on"}
         r.post('http://127.0.0.1:8083/login', data=payload)
         resp = r.get('http://127.0.0.1:8083' + details['cover'])
         self.assertEqual('8936', resp.headers['Content-Length'])
@@ -74,7 +75,7 @@ class TestEditAdditionalBooks(TestCase, ui_class):
         r.close()
 
     def test_upload_metadata_cbt(self):
-        self.fill_basic_config({'config_uploading':1})
+        self.fill_basic_config({'config_uploading': 1})
         time.sleep(3)
         self.goto_page('nav_new')
         upload_file = os.path.join(base_path, 'files', 'book.cbt')
@@ -88,20 +89,19 @@ class TestEditAdditionalBooks(TestCase, ui_class):
         self.assertEqual('2.0', details['series_index'])
         self.assertEqual('No S', details['series'])
         r = requests.session()
-        payload = {'username': 'admin', 'password': 'admin123', 'submit':"", 'next':"/", "remember_me":"on"}
+        payload = {'username': 'admin', 'password': 'admin123', 'submit': "", 'next': "/", "remember_me": "on"}
         r.post('http://127.0.0.1:8083/login', data=payload)
         resp = r.get('http://127.0.0.1:8083' + details['cover'])
         self.assertEqual('8936', resp.headers['Content-Length'])
         self.fill_basic_config({'config_uploading': 0})
         r.close()
 
-
     def test_delete_book(self):
         self.get_book_details(7)
         self.check_element_on_page((By.ID, "edit_book")).click()
         self.edit_book(custom_content={u'Custom Rating 人物': '4',
                                        "Custom Text 人物 *'()&": 'test text',
-                                       u'Custom Bool 1 Ä':u'Yes'})
+                                       u'Custom Bool 1 Ä': u'Yes'})
         details = self.get_book_details(7)
         self.assertEqual('4', details['cust_columns'][0]['value'])
         self.assertEqual('ok', details['cust_columns'][1]['value'])
@@ -119,7 +119,7 @@ class TestEditAdditionalBooks(TestCase, ui_class):
         # self.check_element_on_page((By.ID, 'edit_cancel')).click()
         os.rmdir(sub_folder)
         self.assertTrue(os.path.isdir(book_path1))
-        self.assertEqual(0,len([name for name in os.listdir(book_path1) if os.path.isfile(name)]))
+        self.assertEqual(0, len([name for name in os.listdir(book_path1) if os.path.isfile(name)]))
         self.get_book_details(1)
         self.assertTrue(self.check_element_on_page((By.ID, "flash_alert")))
 
@@ -151,6 +151,7 @@ class TestEditAdditionalBooks(TestCase, ui_class):
 
         # ToDo: what happens if folder isn't valid and no book or author folder is present?
 
+    @unittest.skipIf(os.name == 'nt', 'writeonly database on windows is not checked')
     def test_writeonly_path(self):
         self.fill_basic_config({'config_rarfile_location': unrar_path()})
         self.goto_page('nav_new')
@@ -184,7 +185,6 @@ class TestEditAdditionalBooks(TestCase, ui_class):
         self.assertTrue(self.check_element_on_page((By.ID, "flash_alert")))
         details = self.get_book_details(9)
         self.assertEqual('John Döe', details['author'][0])
-
 
         values = self.get_book_details(8)
         self.assertFalse(values['read'])

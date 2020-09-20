@@ -15,12 +15,12 @@ from helper_ui import ui_class
 
 from config_test import CALIBRE_WEB_PATH, TEST_DB, BOOT_TIME
 from helper_func import add_dependency, remove_dependency, startup
-# from parameterized import parameterized_class
+from helper_func import save_logfiles
 # test editing books on gdrive
 
 
 # @unittest.skip("Not Implemented")
-class test_edit_books_gdrive(unittest.TestCase, ui_class):
+class TestEditBooksGdrive(unittest.TestCase, ui_class):
     p=None
     driver = None
     dependency = ["oauth2client", "PyDrive", "PyYAML", "google-api-python-client", "httplib2"]
@@ -30,47 +30,58 @@ class test_edit_books_gdrive(unittest.TestCase, ui_class):
         add_dependency(cls.dependency, cls.__name__)
 
         # remove slient_secrets.file
-
-        src = os.path.join(CALIBRE_WEB_PATH, "client_secrets.json")
-        dst = os.path.join(CALIBRE_WEB_PATH, "client_secret.json")
-        os.chmod(src, 0o764)
-        if os.path.exists(dst):
-            os.unlink(dst)
-        shutil.move(src, dst)
-
-        # delete settings_yaml file
-        set_yaml = os.path.join(CALIBRE_WEB_PATH, "settings.yaml")
-        if os.path.exists(set_yaml):
-            os.unlink(set_yaml)
-
-        # delete gdrive file
-        gdrive_db = os.path.join(CALIBRE_WEB_PATH, "gdrive.db")
-        if os.path.exists(gdrive_db):
-            os.unlink(gdrive_db)
-
-        # delete gdrive authenticated file
-        gdaauth = os.path.join(CALIBRE_WEB_PATH, "gdaauth")
-        if os.path.exists(gdaauth):
-            os.unlink(gdaauth)
-
         try:
+            src = os.path.join(CALIBRE_WEB_PATH, "client_secrets.json")
+            dst = os.path.join(CALIBRE_WEB_PATH, "client_secret.json")
+            os.chmod(src, 0o764)
+            if os.path.exists(dst):
+                os.unlink(dst)
+            shutil.move(src, dst)
+
+
+            # delete settings_yaml file
+            set_yaml = os.path.join(CALIBRE_WEB_PATH, "settings.yaml")
+            if os.path.exists(set_yaml):
+                os.unlink(set_yaml)
+
+            # delete gdrive file
+            gdrive_db = os.path.join(CALIBRE_WEB_PATH, "gdrive.db")
+            if os.path.exists(gdrive_db):
+                os.unlink(gdrive_db)
+
+            # delete gdrive authenticated file
+            #gdaauth = os.path.join(CALIBRE_WEB_PATH, "gdrive_credentials")
+            #if os.path.exists(gdaauth):
+            #    os.unlink(gdaauth)
+
             startup(cls, cls.py_version, {}, only_startup=True)
         except Exception:
-            cls.driver.quit()
-            cls.p.kill()
+            try:
+                cls.driver.quit()
+                cls.p.kill()
+            except Exception:
+                pass
 
     @classmethod
     def tearDownClass(cls):
+        cls.driver.get("http://127.0.0.1:8083")
+        cls.stop_calibre_web()
+        # close the browser window and stop calibre-web
+        cls.driver.quit()
+        cls.p.terminate()
+
+        remove_dependency(cls.dependency)
+
         dst = os.path.join(CALIBRE_WEB_PATH, "client_secrets.json")
         src = os.path.join(CALIBRE_WEB_PATH, "client_secret.json")
         if os.path.exists(src):
             os.chmod(src, 0o764)
-            shutil.move(src,dst)
+            try:
+                shutil.move(src, dst)
+            except PermissionError:
+                print('File move failed')
+        save_logfiles(cls.__name__)
 
-        remove_dependency(cls.dependency)
-        # close the browser window and stop calibre-web
-        cls.driver.quit()
-        cls.p.terminate()
 
 
     def test_config_gdrive(self):
@@ -91,7 +102,7 @@ class test_edit_books_gdrive(unittest.TestCase, ui_class):
 
         dst = os.path.join(CALIBRE_WEB_PATH, "client_secrets.json")
         src = os.path.join(CALIBRE_WEB_PATH, "client_secret.json")
-        shutil.copy(src,dst)
+        shutil.copy(src, dst)
         os.chmod(dst, 0o040)
 
         self.assertTrue(login)
@@ -100,17 +111,21 @@ class test_edit_books_gdrive(unittest.TestCase, ui_class):
         time.sleep(BOOT_TIME)
         self.login('admin', 'admin123')
         self.goto_page('basic_config')
-        self.assertFalse(self.check_element_on_page((By.ID, "gdrive_error")).is_displayed())
+        if os.name != 'nt':
+            gdriveError = self.check_element_on_page((By.ID, "gdrive_error"))
+            self.assertTrue(gdriveError)
+            self.assertFalse(gdriveError.is_displayed())
         use_gdrive = self.check_element_on_page((By.ID, "config_use_google_drive"))
         self.assertTrue(use_gdrive)
         use_gdrive.click()
-        # error json file not readable
-        self.assertTrue(self.check_element_on_page((By.ID, "gdrive_error")).is_displayed())
+        if os.name != 'nt':
+            # error json file not readable
+            self.assertTrue(self.check_element_on_page((By.ID, "gdrive_error")).is_displayed())
         os.chmod(dst, 0o700)
         with open(dst, 'r') as settings:
             content = json.load(settings)
 
-        callback = content['web']['redirect_uris'][0].strip('/gdrive/callback')
+        # callback = content['web']['redirect_uris'][0].strip('/gdrive/callback')
         content.pop('web', None)
 
         with open(dst, 'w') as data_file:
@@ -133,8 +148,9 @@ class test_edit_books_gdrive(unittest.TestCase, ui_class):
         self.assertTrue(save)
         save.click()
         self.assertTrue(self.check_element_on_page((By.ID, 'flash_success')))
-
+        time.sleep(1)
         auth_button = self.check_element_on_page((By.ID, "gdrive_auth"))
+        time.sleep(1)
         self.assertTrue(auth_button)
         auth_button.click()
         g_login = self.check_element_on_page((By.ID, "identifierId"))        

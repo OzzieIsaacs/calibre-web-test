@@ -13,14 +13,10 @@ from helper_ui import ui_class
 from config_test import CALIBRE_WEB_PATH, TEST_DB, BOOT_TIME
 import re
 from helper_func import startup
-# from parameterized import parameterized_class
+from helper_func import save_logfiles
 
 
-'''@parameterized_class([
-   { "py_version": u'/usr/bin/python'},
-   { "py_version": u'/usr/bin/python3'},
-],names=('Python27','Python36'))'''
-class test_logging(unittest.TestCase, ui_class):
+class TestLogging(unittest.TestCase, ui_class):
     p = None
 
     @classmethod
@@ -40,7 +36,12 @@ class test_logging(unittest.TestCase, ui_class):
         # close the browser window and stop calibre-web
         cls.driver.quit()
         cls.p.terminate()
-        # cls.p.kill()
+        save_logfiles(cls.__name__)
+        try:
+            shutil.rmtree(os.path.join(CALIBRE_WEB_PATH, u'hü lo'), ignore_errors=True)
+            shutil.rmtree(os.path.join(CALIBRE_WEB_PATH, u'hö lo'), ignore_errors=True)
+        except:
+            pass
 
     def test_failed_login(self):
         self.driver.find_element_by_id("logout").click()
@@ -106,7 +107,7 @@ class test_logging(unittest.TestCase, ui_class):
             time.sleep(7)
             # wait for restart
             self.assertTrue(os.path.isfile(os.path.join(CALIBRE_WEB_PATH, 'hü lo', 'lö g')))
-            shutil.rmtree(os.path.join(CALIBRE_WEB_PATH, u'hü lo').encode('UTF-8'), ignore_errors=True)
+            shutil.rmtree(os.path.join(CALIBRE_WEB_PATH, u'hü lo'), ignore_errors=True)
             # Reset Logfile to default
             self.fill_basic_config({'config_logfile': ''})
             time.sleep(BOOT_TIME)
@@ -117,15 +118,19 @@ class test_logging(unittest.TestCase, ui_class):
             self.assertIsNotNone('Fail', 'Element could not be found')
 
     def test_logfile_recover(self):
-        os.makedirs(os.path.join(CALIBRE_WEB_PATH, 'hü lo'))
+        if not os.path.isdir(os.path.join(CALIBRE_WEB_PATH, 'hü lo')):
+            os.makedirs(os.path.join(CALIBRE_WEB_PATH, 'hü lo'))
         self.fill_basic_config({'config_logfile': os.path.join(CALIBRE_WEB_PATH, 'hü lo', 'lö g')})
         self.check_element_on_page((By.ID, "flash_success"))
         time.sleep(BOOT_TIME)
         # delete old logfile and check new logfile present
-        os.remove(os.path.join(CALIBRE_WEB_PATH, 'calibre-web.log'))
+        try:
+            os.remove(os.path.join(CALIBRE_WEB_PATH, 'calibre-web.log'))
+        except Exception:
+            pass
         self.assertTrue(os.path.isfile(os.path.join(CALIBRE_WEB_PATH, 'hü lo', 'lö g')))
-        shutil.rmtree(os.path.join(CALIBRE_WEB_PATH, u'hü lo').encode('UTF-8'), ignore_errors=True)
         # restart calibre-web and check if old logfile is used again
+        shutil.rmtree(os.path.join(CALIBRE_WEB_PATH, u'hü lo'), ignore_errors=True)
         self.restart_calibre_web()
         self.assertFalse(os.path.isfile(os.path.join(CALIBRE_WEB_PATH, 'hü lo', 'lö g')))
         self.assertTrue(os.path.isfile(os.path.join(CALIBRE_WEB_PATH, 'calibre-web.log')))
@@ -137,7 +142,8 @@ class test_logging(unittest.TestCase, ui_class):
         self.assertEqual(logpath, "", "logfile config value is not empty after reseting to default")
 
     def test_access_log_recover(self):
-        os.makedirs(os.path.join(CALIBRE_WEB_PATH, 'hö lo'))
+        if not os.path.isdir(os.path.join(CALIBRE_WEB_PATH, 'hö lo')):
+            os.makedirs(os.path.join(CALIBRE_WEB_PATH, 'hö lo'))
         self.fill_basic_config({'config_access_log': 1,
                                 'config_access_logfile': os.path.join(CALIBRE_WEB_PATH, 'hö lo', 'lü g')})
         self.check_element_on_page((By.ID, "flash_success"))
@@ -148,7 +154,7 @@ class test_logging(unittest.TestCase, ui_class):
         except Exception:
             pass
         self.assertTrue(os.path.isfile(os.path.join(CALIBRE_WEB_PATH, 'hö lo', 'lü g')))
-        shutil.rmtree(os.path.join(CALIBRE_WEB_PATH, u'hö lo').encode('UTF-8'), ignore_errors=True)
+        shutil.rmtree(os.path.join(CALIBRE_WEB_PATH, u'hö lo'), ignore_errors=True)
         # restart calibre-web and check if old logfile is used again
         self.restart_calibre_web()
         self.goto_page("basic_config")

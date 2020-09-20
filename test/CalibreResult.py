@@ -1,4 +1,4 @@
-#-*- coding: utf-8 -*-
+# -*- coding: utf-8 -*-
 """
 ------------------------------------------------------------------------
 Copyright (c) 2004-2007, Wai Yip Tung
@@ -40,9 +40,6 @@ import copy
 import traceback
 from unittest import TestResult, TextTestResult
 from unittest.result import failfast
-import pkg_resources
-from config_test import CALIBRE_WEB_PATH
-import platform
 from helper_environment import environment
 from jinja2 import Template
 
@@ -64,6 +61,7 @@ def to_unicode(s):
         # s is non ascii byte string
         return s.decode('unicode_escape')
 
+
 class OutputRedirector(object):
     """ Wrapper to redirect stdout or stderr """
 
@@ -80,8 +78,6 @@ class OutputRedirector(object):
     def flush(self):
         self.fp.flush()
 
-#stdout_redirector = OutputRedirector(sys.stdout)
-#stderr_redirector = OutputRedirector(sys.stderr)
 
 def load_template(template):
     """ Try to read a file from a given path, if file
@@ -268,35 +264,12 @@ class CalibreResult(TextTestResult):
             self.stream.write(" " + self.getDescription(test))
             self.stream.write(" ... ")
 
-        # just one buffer for both stdout and stderr
-        '''self.outputBuffer = StringIO.StringIO()
-        stdout_redirector.fp = self.outputBuffer
-        stderr_redirector.fp = self.outputBuffer'''
-        '''self.stdout0 = sys.stdout
-        self.stderr0 = sys.stderr
-        sys.stdout = stdout_redirector
-        sys.stderr = stderr_redirector'''
-
-    #def complete_output(self):
-        """
-        Disconnect output redirection and return buffer.
-        Safe to call multiple times.
-        """
-        '''if self.stdout0:
-            sys.stdout = self.stdout0
-            sys.stderr = self.stderr0
-            self.stdout0 = None
-            self.stderr0 = None
-        return self.outputBuffer.getvalue()'''
-        #return self._stdout_data
-
     def _save_output_data(self):
         try:
             self._stdout_data = sys.stdout.getvalue()
             self._stderr_data = sys.stderr.getvalue()
         except AttributeError:
             pass
-
 
     def stopTest(self, test):
         """ Called after execute each test method. """
@@ -313,7 +286,6 @@ class CalibreResult(TextTestResult):
         # We must disconnect stdout in stopTest(),
         # which is guaranteed to be called.
         # self.complete_output()
-
 
     def addSuccess(self, test):
         """ Called when a test executes successfully. """
@@ -337,7 +309,6 @@ class CalibreResult(TextTestResult):
         self._save_output_data()
         testinfo = self.infoclass(self, test, self.infoclass.ERROR, err)
         self._prepare_callback(testinfo, self.errors, 'ERROR', 'E')
-        # output = self.complete_output()
         self.result.append((2, test, self._stdout_data, testinfo.test_exception_info))
 
     def addSubTest(self, testcase, test, err):
@@ -415,9 +386,9 @@ class CalibreResult(TextTestResult):
     def _format_duration(elapsed_time):
         """Format the elapsed time in seconds, or milliseconds if the duration is less than 1 second."""
         if elapsed_time > 3600:
-            duration = '{}h {} min'.format(int(elapsed_time / 3600), int(elapsed_time % 3600))
+            duration = '{}h {} min'.format(int(elapsed_time / 3600), int((elapsed_time % 3600) / 60))
         elif elapsed_time > 60:
-            duration = '{}:{} min'.format(int(elapsed_time/60), int(elapsed_time%60))
+            duration = '{}:{} min'.format(int(elapsed_time/60), int(elapsed_time % 60))
         elif elapsed_time > 1:
             duration = '{:2.2f} s'.format(elapsed_time)
         else:
@@ -476,29 +447,34 @@ class CalibreResult(TextTestResult):
 
         return summaries
 
-
     def generate_reports(self, testRunner):
         """ Generate report(s) for all given test cases that have been run. """
         status_tags = ('success', 'danger', 'warning', 'info')
         all_results = self._get_info_by_testcase()
         summaries = self._get_report_summaries(all_results, testRunner)
-        report =self._generate_report(self.result)
+        report = self._generate_report(self.result)
 
         if not testRunner.combine_reports:
-            # # ToDo Implementent
+            index = 0
             for test_case_class_name, test_case_tests in all_results.items():
-                header_info = self._get_header_info(test_case_tests, testRunner.start_time,
-                                                    testRunner.start_time+ testRunner.time_taken)
+                # Start and stop is not counted for single reports
+                header_info = self._get_header_info(test_case_tests, "", "")
+                try:
+                    title = "{} - {}".format(testRunner.report_title, test_case_class_name.split('.')[1])
+                except Exception:
+                    title = "{} - {}".format(testRunner.report_title, test_case_class_name)
                 html_file = render_html(
                     testRunner.template,
-                    title=testRunner.report_title,
+                    title=title,
                     header_info=header_info,
-                    all_results={test_case_class_name: test_case_tests},
+                    all_results={test_case_class_name: all_results[test_case_class_name]},
+                    results=[report[index]],
                     status_tags=status_tags,
                     summaries=summaries,
                     environ=environment.get_Environment(),
                     **testRunner.template_args
                 )
+                index += 1
                 # append test case name if multiple reports to be generated
                 if testRunner.report_name is None:
                     report_name_body = self.default_prefix + test_case_class_name
@@ -517,7 +493,7 @@ class CalibreResult(TextTestResult):
                 title=testRunner.report_title,
                 header_info=header_info,
                 all_results=all_results,
-                results = report,
+                results=report,
                 status_tags=status_tags,
                 summaries=summaries,
                 environ=environment.get_Environment(),
@@ -536,15 +512,17 @@ class CalibreResult(TextTestResult):
         if not os.path.exists(dir_to):
             os.makedirs(dir_to)
 
-        #if testRunner.timestamp:
-        #    report_name += "_" + testRunner.timestamp
         report_name += ".html"
 
         path_file = os.path.abspath(os.path.join(dir_to, report_name))
         self.stream.writeln(os.path.relpath(path_file))
         self.report_files.append(path_file)
-        with open(path_file, 'w') as report_file:
-            report_file.write(report)
+        try:
+            with open(path_file, 'w') as report_file:
+                report_file.write(report)
+        except UnicodeEncodeError:
+            with open(path_file, 'wb') as report_file:
+                report_file.write(report.encode('utf-8'))
 
     def _exc_info_to_string(self, err, test):
         """ Converts a sys.exc_info()-style tuple of values into a string."""
@@ -599,15 +577,9 @@ class CalibreResult(TextTestResult):
                     ne += 1
                 elif n == 3:
                     ns += 1
-                    # else:
-                    #     # ne += 1
-                    #     print 'TESTING'
 
             # format class description
-            if cls.__module__ == "__main__":
-                name = cls.__name__
-            else:
-                name = "%s.%s" % (cls.__module__, cls.__name__)
+            name = cls.__name__
             doc = cls.__doc__ and cls.__doc__.split("\n")[0] or ""
             desc = doc and '%s: %s' % (name, doc) or name
             if not PY3K:
@@ -632,45 +604,45 @@ class CalibreResult(TextTestResult):
 
             for tid, (n, t, o, e) in enumerate(cls_results):
                 self._generate_report_test(rows, cid, tid, n, t, o, e)
-            report.append({'header':rowheader,'tests':rows})
+            report.append({'header': rowheader, 'tests': rows})
 
-        '''result_sum = result.success_count \
-            + result.failure_count \
-            + result.error_count \
-            + result.skip_count'''
         return report
-        #report = dict(
-        #    test_list=''.join(rows))
-        # return report
+
+    def _prep_desc(self, desc, classname=True):
+        namelist = desc.split('.')
+        if len(namelist) >= 3:
+            if classname:
+                name = namelist[-2] + ' - ' + namelist[-1]
+            else:
+                name = namelist[-1]
+        else:
+            name = ''.join(namelist[:-1])+')'
+        return name
 
     def _generate_report_test(self, rows, class_id, test_id, n, t, output, e):
         # e.g. 'pt1.1', 'ft1.1', etc
         has_output = bool(output or e)
+
+        # skipped
         if n == 3:
+            name = self._prep_desc(t.id())
             test_id = 's' + 't%s.%s' \
                       % (class_id + 1, test_id + 1)
+        # error
         elif n == 2:
+            name = self._prep_desc(t.id())
             test_id = 'e' + 't%s.%s' \
                       % (class_id + 1, test_id + 1)
+        # pass or fail
         else:
-            test_id = (n == 0 and 'p' or 'f') + 't%s.%s' \
-                                            % (class_id + 1, test_id + 1)
-        namelist = t.id().split('.')
-        if len(namelist) == 3:
-            name = namelist[-1]
-        else:
-            name = ''.join(namelist[:-1])+')'
+            name = self._prep_desc(t.id())
+            test_id = (n == 0 and 'p' or 'f') + 't%s.%s' % (class_id + 1, test_id + 1)
         doc = t.shortDescription() or ""
         desc = doc and ('%s: %s' % (name, doc)) or name
-        # tmpl = has_output and self.REPORT_TEST_WITH_OUTPUT_TMPL or \
-        #        self.REPORT_TEST_NO_OUTPUT_TMPL
+
         if not PY3K:
             if isinstance(desc, str):
                 desc = desc.decode("utf-8")
-        '''if has_output:
-            tmpl = self.REPORT_TEST_WITH_OUTPUT_TMPL
-        else:
-            tmpl = self.REPORT_TEST_NO_OUTPUT_TEMPLATE'''
         # o and e should be byte string because
         # they are collected from stdout and stderr?
         if output is None:
@@ -678,7 +650,6 @@ class CalibreResult(TextTestResult):
         if isinstance(output, str):
             # TODO: some problem with 'string_escape':
             # it escape \n and mess up formatting
-            # uo = unicode(o.encode('string_escape'))
             if not PY3K:
                 uo = output.decode('latin-1')
             else:
@@ -710,8 +681,6 @@ class CalibreResult(TextTestResult):
             status=self.STATUS[n],
         )
         rows.append(row)
-        #if not has_output:
-        #    return
         return rows
 
     def _generate_ending(self):

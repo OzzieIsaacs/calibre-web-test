@@ -2,9 +2,8 @@
 
 import unittest
 from selenium.webdriver.common.by import By
-from selenium.webdriver.support.ui import WebDriverWait
-from selenium.webdriver.support import expected_conditions as EC
 
+from helper_func import save_logfiles
 import time
 import requests
 from helper_ui import ui_class
@@ -12,15 +11,6 @@ from helper_ui import RESTRICT_TAG_ME, RESTRICT_COL_USER
 from config_test import TEST_DB
 # from parameterized import parameterized_class
 from helper_func import startup, debug_startup
-
-'''
-ToDOs: search:
-buchtitel (leerzeichen, unicode zeichen, kein treffer)
-author (nachname, „name, vorname“, vornname jeweils mit unicode, kein treffer)
-serie (leerzeichen, unicode, kein treffer)
-ergebnis zu shelf hinzufügen (kein ergebnis vorhanden, public shelf, private shelf, buch schon vorhanden, kein shelf 
-vorhanden)
-'''
 
 
 class TestCalibreWebVisibilitys(unittest.TestCase, ui_class):
@@ -42,6 +32,7 @@ class TestCalibreWebVisibilitys(unittest.TestCase, ui_class):
         # close the browser window and stop calibre-web
         cls.driver.quit()
         cls.p.terminate()
+        save_logfiles(cls.__name__)
 
     def test_checked_logged_in(self):
         # get the search textbox
@@ -64,9 +55,11 @@ class TestCalibreWebVisibilitys(unittest.TestCase, ui_class):
         self.assertTrue(self.check_element_on_page((By.ID, "books_rand")))
 
         # check random books shown in series section
-        list_element = self.goto_page('nav_serie')
+        self.goto_page('nav_serie')
+        list_element = self.get_series_books_displayed()
         self.assertIsNotNone(list_element)
-        list_element[0].click()
+        list_element[0]['ele'].click()
+
         self.assertTrue(self.check_element_on_page((By.ID, "books_rand")))
 
         # check random books NOT shown in author section
@@ -104,11 +97,9 @@ class TestCalibreWebVisibilitys(unittest.TestCase, ui_class):
     # checks if message for empty email working, sets e-mail for admin
     def test_user_email_available(self):
         self.driver.find_element_by_id("top_user").click()
-        WebDriverWait(self.driver, 5).until(EC.presence_of_element_located((By.ID, "email")))
-        # emailContent = self.driver.find_element_by_id("email").get_attribute("value")
+        self.check_element_on_page((By.ID, "email"))
+        # WebDriverWait(self.driver, 5).until(EC.presence_of_element_located((By.ID, "email")))
         submit = self.driver.find_element_by_id("submit")
-        # self.assertEqual(emailContent,u'')
-        # submit.click()
         self.driver.find_element_by_id("email").clear()
         self.driver.find_element_by_id("email").send_keys("alfa@web.de")
         submit.click()
@@ -133,8 +124,10 @@ class TestCalibreWebVisibilitys(unittest.TestCase, ui_class):
         self.assertTrue(self.check_element_on_page((By.ID, "books")))
         self.assertFalse(self.check_element_on_page((By.ID, "nav_rand")))
         # check random books shown in series section
-        list_element = self.goto_page("nav_serie")
-        list_element[0].click()
+        self.goto_page("nav_serie")
+        list_element = self.get_series_books_displayed()
+        self.assertIsNotNone(list_element)
+        list_element[0]['ele'].click()
         self.assertTrue(self.check_element_on_page((By.ID, "books")))
         self.assertFalse(self.check_element_on_page((By.ID, "nav_rand")))
         # check random books not shown in author section
@@ -714,7 +707,7 @@ class TestCalibreWebVisibilitys(unittest.TestCase, ui_class):
         self.edit_book(custom_content={u'Custom Bool 1 Ä': u'No',
                                        'Custom Rating 人物': 5,
                                        'Custom Integer 人物': 1,
-                                       'Custom categories\|, 人物': 'Test',
+                                       r'Custom categories\|, 人物': 'Test',
                                        'Custom Float 人物': '3.5',
                                        'Custom 人物 Enum': 'Alfa',
                                        'Custom Text 人物 *\'()&': 'Tedo'
@@ -731,7 +724,7 @@ class TestCalibreWebVisibilitys(unittest.TestCase, ui_class):
         self.assertTrue(search['cust_columns']['Custom Rating 人物'])
         self.assertTrue(search['cust_columns']['Custom Bool 1 Ä'])
         self.assertTrue(search['cust_columns']['Custom Integer 人物'])
-        self.assertTrue(search['cust_columns']['Custom categories\|, 人物'])
+        self.assertTrue(search['cust_columns'][r'Custom categories\|, 人物'])
         self.assertTrue(search['cust_columns']['Custom Float 人物'])
         self.assertTrue(search['cust_columns']['Custom 人物 Enum'])
         self.assertTrue(search['cust_columns']['Custom Text 人物 *\'()&'])
@@ -741,7 +734,7 @@ class TestCalibreWebVisibilitys(unittest.TestCase, ui_class):
         self.assertFalse(search['cust_columns'].get('Custom Rating 人物'))
         self.assertFalse(search['cust_columns'].get('Custom Bool 1 Ä'))
         self.assertFalse(search['cust_columns'].get('Custom Integer 人物'))
-        self.assertFalse(search['cust_columns'].get('Custom categories\|, 人物'))
+        self.assertFalse(search['cust_columns'].get(r'Custom categories\|, 人物'))
         self.assertFalse(search['cust_columns'].get('Custom Float 人物'))
         self.assertFalse(search['cust_columns'].get('Custom 人物 Enum'))
         self.assertFalse(search['cust_columns'].get('Custom Text 人物 *\'()&'))
@@ -751,7 +744,7 @@ class TestCalibreWebVisibilitys(unittest.TestCase, ui_class):
         self.edit_book(custom_content={u'Custom Bool 1 Ä': u'',
                                        'Custom Rating 人物': '',
                                        'Custom Integer 人物': '',
-                                       'Custom categories\|, 人物': '',
+                                       r'Custom categories\|, 人物': '',
                                        'Custom Float 人物': '',
                                        'Custom 人物 Enum': '',
                                        'Custom Text 人物 *\'()&': ''

@@ -10,6 +10,8 @@ from config_test import TEST_DB, CALIBRE_WEB_PATH
 from helper_func import startup, check_response_language_header, curl_available, digest_login
 import requests
 import os
+import time
+from helper_func import save_logfiles
 
 
 class TestLogin(unittest.TestCase, ui_class):

@@ -10,10 +10,11 @@ from helper_ui import ui_class
 from config_test import CALIBRE_WEB_PATH, TEST_DB, BOOT_TIME
 # from parameterized import parameterized_class
 from helper_func import startup, wait_Email_received
+from helper_func import save_logfiles
 
 
 @unittest.skipIf(helper_email_convert.is_calibre_not_present(),"Skipping convert, calibre not found")
-class test_STARTTLS(unittest.TestCase, ui_class):
+class TestSTARTTLS(unittest.TestCase, ui_class):
     p = None
     driver = None
     email_server = None
@@ -52,6 +53,7 @@ class test_STARTTLS(unittest.TestCase, ui_class):
         cls.p.terminate()
         cls.email_server.stop()
         time.sleep(2)
+        save_logfiles(cls.__name__)
 
     # start sending e-mail
     # check email received

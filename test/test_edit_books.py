@@ -13,6 +13,7 @@ from helper_ui import ui_class
 from config_test import TEST_DB, base_path
 # from parameterized import parameterized_class
 from helper_func import startup, debug_startup, add_dependency, remove_dependency
+from helper_func import save_logfiles
 
 
 class TestEditBooks(TestCase, ui_class):
@@ -39,7 +40,7 @@ class TestEditBooks(TestCase, ui_class):
         # close the browser window and stop calibre-web
         cls.driver.quit()
         cls.p.terminate()
-        # cls.p.kill()
+        save_logfiles(cls.__name__)
 
     # goto Book 1
     # Change Title with unicode chars
@@ -238,8 +239,9 @@ class TestEditBooks(TestCase, ui_class):
         self.edit_book(content={'series':u'Alf|alfa, Kuko'})
         values = self.get_book_details()
         self.assertEqual(u'Alf|alfa, Kuko', values['series'])
-        list_element = self.goto_page('nav_serie')
-        self.assertEqual(list_element[0].text, u'Alf|alfa, Kuko')
+        self.goto_page('nav_serie')
+        list_element = self.get_series_books_displayed()
+        self.assertEqual(list_element[0]['title'], u'Alf|alfa, Kuko')
 
         self.get_book_details(9)
         self.check_element_on_page((By.ID, "edit_book")).click()
@@ -257,8 +259,9 @@ class TestEditBooks(TestCase, ui_class):
         self.edit_book(content={'series':u'loko'})
         values = self.get_book_details()
         self.assertEqual(u'loko', values['series'])
-        list_element = self.goto_page('nav_serie')
-        self.assertEqual(list_element[1].text, u'loko')
+        self.goto_page('nav_serie')
+        list_element = self.get_series_books_displayed()
+        self.assertEqual(list_element[1]['title'], u'loko')
 
         self.get_book_details(4)
         self.check_element_on_page((By.ID, "edit_book")).click()
@@ -718,7 +721,7 @@ class TestEditBooks(TestCase, ui_class):
         self.driver.refresh()
         time.sleep(2)
         resp = r.get('http://127.0.0.1:8083/cover/5')
-        self.assertEqual('20317', resp.headers['Content-Length'])
+        self.assertAlmostEqual(20317, int(resp.headers['Content-Length']), delta=300)
 
         self.get_book_details(5)
         self.check_element_on_page((By.ID, "edit_book")).click()
@@ -727,7 +730,7 @@ class TestEditBooks(TestCase, ui_class):
         self.driver.refresh()
         time.sleep(2)
         resp = r.get('http://127.0.0.1:8083/cover/5')
-        self.assertEqual('17420', resp.headers['Content-Length'])
+        self.assertAlmostEqual(17420, int(resp.headers['Content-Length']), delta=300)
         r.close()
         self.assertTrue(False, "Browser-Cache Problem: Old Cover is displayed instead of New Cover")
 
@@ -824,7 +827,7 @@ class TestEditBooks(TestCase, ui_class):
         upload = self.check_element_on_page((By.ID, 'btn-upload'))
         upload.send_keys(upload_file)
 
-        time.sleep(2)
+        time.sleep(3)
         self.check_element_on_page((By.ID, 'edit_cancel')).click()
         details = self.get_book_details()
         self.assertEqual('book9', details['title'])

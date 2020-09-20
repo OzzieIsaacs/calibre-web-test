@@ -36,12 +36,16 @@
       <div class="col-xs-12 col-sm-6">
       <div class="row">
         <div class="col-xs-6 col-md-6 col-sm-offset-3" style="margin-top:50px;">
+            {% if header_info.start_time != "" %}
             <p class='text-justify attribute'><strong>Start Time: </strong>{{ header_info.start_time.strftime("%Y-%m-%d %H:%M:%S") }}</p>
+            {% endif %}
         </div>
       </div>
       <div class="row">
         <div class="col-xs-6 col-md-6 col-sm-offset-3">
+            {% if header_info.stop_time != "" %}
             <p class='text-justify attribute'><strong>Stop Time: </strong>{{ header_info.stop_time.strftime("%Y-%m-%d %H:%M:%S") }}</p>
+            {% endif %}
         </div>
       </div>
       <div class="row">
@@ -98,7 +102,7 @@
     </tr>
 {% for result in results %}
 {% if result['header'] %}
-    <tr class="result['header']['style']">
+    <tr id="su" class="{{ result['header']['style'] }}">
         <td>{{ result['header']['desc'] }}</td>
         <td class="text-center">{{ result['header']['count'] }}</td>
         <td class="text-center">{{ result['header']['Pass'] }}</td>
@@ -112,7 +116,7 @@
 {% endif %}
     {% for row in result['tests'] %}
     {% if row['script']['output'] != '' %}
-        <tr id='{{ row['tid'] }}' class='{{ row['Class'] }} {{ row['style'] }}'>
+        <tr id="{{ row['tid'] }}" class="{{ row['Class'] }} {{ row['style'] }}">
             <td>
                 <div class='testcase'>{{row['desc']}}</div>
             </td>
@@ -121,10 +125,10 @@
                     <a class="popup_link text-center" onfocus='blur()' onclick="showTestDetail('div_{{row['tid']}}')">{{row['status']}}</a>
                 </div>
                 <!--css div popup start-->
-                <div id='div_{{row['tid']}}' class="popup_window test_output" style="display:none;">
+                <div id="div_{{row['tid']}}" class="popup_window test_output" style="display:none;">
                     <div class='close_button pull-right'>
                         <button type="button" class="close" aria-label="Close" onfocus='this.blur();'
-                                onclick="document.getElementById('div_{{row['tid']}}').style.display='none'"><span
+                                onclick='document.getElementById('div_{{row["tid"]}}').style.display='none'"><span
                                 aria-hidden="true">&times;</span></button>
                     </div>
                     <div class="text-left pull-left">

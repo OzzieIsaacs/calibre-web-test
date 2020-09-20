@@ -8,14 +8,11 @@ from helper_func import startup, wait_Email_received
 import unittest
 from helper_ui import ui_class
 import time
+from helper_func import save_logfiles
 
 
-'''@parameterized_class([
-   { "py_version": u'/usr/bin/python'},
-   { "py_version": u'/usr/bin/python3'},
-],names=('Python27','Python36'))'''
-class test_register(unittest.TestCase, ui_class):
-    p=None
+class TestRegister(unittest.TestCase, ui_class):
+    p = None
     driver = None
     # py_version = u'/usr/bin/python3'
 
@@ -49,6 +46,7 @@ class test_register(unittest.TestCase, ui_class):
         cls.driver.quit()
         cls.p.terminate()
         cls.email_server.stop()
+        save_logfiles(cls.__name__)
 
     def tearDown(self):
         self.email_server.handler.reset_email_received()
@@ -197,6 +195,7 @@ class test_register(unittest.TestCase, ui_class):
         __, passw = self.email_server.handler.extract_register_info()
         self.email_server.handler.reset_email_received()
         self.login('forget', passw)
+        time.sleep(1)
         self.assertTrue(self.check_user_logged_in('forget', noCompare=True))
         self.assertFalse(self.forgot_password('forgot'))
 

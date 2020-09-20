@@ -9,13 +9,14 @@ from config_test import TEST_DB, BOOT_TIME
 from helper_func import startup
 # from parameterized import parameterized_class
 import requests
+from helper_func import save_logfiles
 
 
 '''@parameterized_class([
    { "py_version": u'/usr/bin/python'},
    { "py_version": u'/usr/bin/python3'},
 ],names=('Python27','Python36'))'''
-class test_shelf(unittest.TestCase, ui_class):
+class TestShelf(unittest.TestCase, ui_class):
     p=None
     driver = None
 
@@ -35,6 +36,7 @@ class test_shelf(unittest.TestCase, ui_class):
         # close the browser window and stop calibre-web
         cls.driver.quit()
         cls.p.terminate()
+        save_logfiles(cls.__name__)
 
     def tearDown(self):
         if not self.check_user_logged_in('admin'):

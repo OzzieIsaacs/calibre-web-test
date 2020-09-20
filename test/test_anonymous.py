@@ -6,10 +6,11 @@ from selenium.webdriver.common.by import By
 from helper_ui import ui_class
 from config_test import TEST_DB
 from helper_func import startup
-# from .parameterized import parameterized_class
+from helper_func import save_logfiles
 
 
-class testAnonymous(unittest.TestCase, ui_class):
+
+class TestAnonymous(unittest.TestCase, ui_class):
     p = None
     driver = None
 
@@ -20,9 +21,10 @@ class testAnonymous(unittest.TestCase, ui_class):
     @classmethod
     def tearDownClass(cls):
         cls.stop_calibre_web()
-        #close the browser window and stop calibre-web
+        # close the browser window and stop calibre-web
         cls.driver.quit()
         cls.p.terminate()
+        save_logfiles(cls.__name__)
 
     def tearDown(self):
         if not self.check_user_logged_in('admin'):
@@ -54,9 +56,12 @@ class testAnonymous(unittest.TestCase, ui_class):
         self.assertTrue(self.check_element_on_page((By.ID, "books_rand")))
 
         # check random books shown in series section
-        list_element = self.goto_page('nav_serie')
+        self.goto_page('nav_serie')
+        # check if we are seeing list view
+        # if len(list_element == 0):
+        list_element = self.get_series_books_displayed()
         self.assertIsNotNone(list_element)
-        list_element[0].click()
+        list_element[0]['ele'].click()
         self.assertTrue(self.check_element_on_page((By.ID, "books_rand")))
 
         # check random books NOT shown in author section
@@ -115,7 +120,7 @@ class testAnonymous(unittest.TestCase, ui_class):
 
     # checks if admin can configure sidebar for random view
     def test_guest_visibility_sidebar(self):
-        self.edit_user('Guest', {'show_32': 0, 'show_128':1, 'show_2': 1,
+        self.edit_user('Guest', {'show_32': 0, 'show_128': 1, 'show_2': 1,
                                  'show_16': 1, 'show_4': 1, 'show_4096': 1, 'show_8': 1, 'show_64': 1})
         self.assertTrue(self.check_element_on_page((By.ID, "flash_success")))
         self.logout()
@@ -128,8 +133,11 @@ class testAnonymous(unittest.TestCase, ui_class):
         self.assertTrue(self.check_element_on_page((By.ID, "books")))
         self.assertFalse(self.check_element_on_page((By.ID, "nav_rand")))
         # check random books shown in series section
-        list_element = self.goto_page("nav_serie")
-        list_element[0].click()
+        self.goto_page("nav_serie")
+        list_element = self.get_series_books_displayed()
+        self.assertIsNotNone(list_element)
+        list_element[0]['ele'].click()
+
         self.assertTrue(self.check_element_on_page((By.ID, "books")))
         self.assertFalse(self.check_element_on_page((By.ID, "nav_rand")))
         # check random books not shown in author section
@@ -166,8 +174,11 @@ class testAnonymous(unittest.TestCase, ui_class):
         self.assertTrue(self.check_element_on_page((By.ID, "books")))
         self.assertTrue(self.check_element_on_page((By.ID, "nav_rand")))
         # check random books shown in series section
-        list_element = self.goto_page("nav_serie")
-        list_element[0].click()
+        self.goto_page("nav_serie")
+        list_element = self.get_series_books_displayed()
+        self.assertIsNotNone(list_element)
+        list_element[0]['ele'].click()
+
         self.assertTrue(self.check_element_on_page((By.ID, "books")))
         self.assertTrue(self.check_element_on_page((By.ID, "nav_rand")))
         # check random books not shown in author section

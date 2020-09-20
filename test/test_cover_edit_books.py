@@ -13,9 +13,10 @@ from config_test import TEST_DB
 # from parameterized import parameterized_class
 from helper_func import startup, debug_startup, add_dependency, remove_dependency
 from helper_proxy import Proxy, val
+from helper_func import save_logfiles
 
 
-class testCoverEditBooks(TestCase, ui_class):
+class TestCoverEditBooks(TestCase, ui_class):
     p = None
     driver = None
     dependencys = ['Pillow']
@@ -28,15 +29,13 @@ class testCoverEditBooks(TestCase, ui_class):
             cls.proxy = Proxy()
             cls.proxy.start()
             pem_file = os.path.join(os.path.expanduser('~'), '.mitmproxy', 'mitmproxy-ca-cert.pem')
-            startup(cls, cls.py_version, {'config_calibre_dir': TEST_DB},
-                    env={'http_proxy': 'http://127.0.0.1:8080',
-                         'https_proxy': 'https://127.0.0.1:8080',
-                         'REQUESTS_CA_BUNDLE': pem_file,
-                         'LANG': 'de_DE.UTF-8'
-                         })
+            my_env = os.environ.copy()
+            my_env["http_proxy"] = 'http://127.0.0.1:8080'
+            my_env["https_proxy"] = 'https://127.0.0.1:8080'
+            my_env["REQUESTS_CA_BUNDLE"] = pem_file
+            # my_env["LANG"] = 'de_DE.UTF-8'
+            startup(cls, cls.py_version, {'config_calibre_dir': TEST_DB}, env=my_env)
             time.sleep(3)
-            #time.sleep(1)
-            #time.sleep(1)
         except Exception:
             cls.driver.quit()
             cls.p.kill()
@@ -49,6 +48,7 @@ class testCoverEditBooks(TestCase, ui_class):
         cls.driver.quit()
         cls.proxy.stop_proxy()
         cls.p.terminate()
+        save_logfiles(cls.__name__)
 
     def test_upload_jpg(self):
         val.set_type(['HTTPError'])
@@ -71,17 +71,17 @@ class testCoverEditBooks(TestCase, ui_class):
         self.edit_book(content={'cover_url': u'https://api.github.com/repos/janeczku/calibre-web/cover/test.jpg'})
         self.assertFalse(self.check_element_on_page((By.ID, 'flash_alert')))
         resp = r.get('http://127.0.0.1:8083/cover/8')
-        self.assertEqual('15938', resp.headers['Content-Length'])
+        self.assertAlmostEqual(15938, int(resp.headers['Content-Length']), delta=300)
         self.check_element_on_page((By.ID, "edit_book")).click()
         self.edit_book(content={'cover_url': u'https://api.github.com/repos/janeczku/calibre-web/cover/test.webp'})
         self.assertFalse(self.check_element_on_page((By.ID, 'flash_alert')))
         resp = r.get('http://127.0.0.1:8083/cover/8')
-        self.assertEqual('17420', resp.headers['Content-Length'])
+        self.assertAlmostEqual(17420, int(resp.headers['Content-Length']), delta=300)
         self.check_element_on_page((By.ID, "edit_book")).click()
         self.edit_book(content={'cover_url': u'https://api.github.com/repos/janeczku/calibre-web/cover/test.png'})
         self.assertFalse(self.check_element_on_page((By.ID, 'flash_alert')))
         resp = r.get('http://127.0.0.1:8083/cover/8')
-        self.assertEqual('20317', resp.headers['Content-Length'])
+        self.assertAlmostEqual(20317, int(resp.headers['Content-Length']), delta=300)
         r.close()
         self.check_element_on_page((By.ID, "edit_book")).click()
         self.edit_book(content={'cover_url': u'https://api.github.com/repos/janeczku/calibre-web/cover/test.bmp'})
