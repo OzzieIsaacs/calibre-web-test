@@ -23,8 +23,11 @@ import smtplib
 from email.mime.text import MIMEText
 
 try:
-    from config_email import E_MAIL_ADDRESS, SERVER_ADDRESS, STARTSSL, SERVER_PORT, E_MAIL_LOGIN, E_MAIL_PASSWORD
+    from config_email import E_MAIL_ADDRESS, E_MAIL_SERVER_ADDRESS, STARTSSL, EMAIL_SERVER_PORT
+    from config_email import E_MAIL_LOGIN, E_MAIL_PASSWORD
+    from config_email import SERVER_PASSWORD, SERVER_NAME, SERVER_FILE_DESTINATION, SERVER_USER, SERVER_PORT
     email_config = True
+    import paramiko
 except ImportError:
     print('Create config_email file to email finishing message')
     email_config = False
@@ -311,21 +314,36 @@ def save_logfiles(module_name):
         if os.path.exists(src):
             shutil.copy(src,dest)
 
-def email_notifier():
+def finishing_notifier():
     if not email_config:
         return
+    result_upload(TEST_OS)
     msg = MIMEText('Calibre-Web Tests finished')
     msg['Subject'] = 'Calibre-Web Tests on ' + TEST_OS + ' finished'
     msg['From'] = E_MAIL_ADDRESS
     msg['To'] = E_MAIL_ADDRESS
 
-    s = smtplib.SMTP(SERVER_ADDRESS, SERVER_PORT)
+    s = smtplib.SMTP(E_MAIL_SERVER_ADDRESS, EMAIL_SERVER_PORT)
     if STARTSSL:
         s.starttls()
     if E_MAIL_LOGIN and E_MAIL_PASSWORD:
         s.login(E_MAIL_LOGIN, E_MAIL_PASSWORD)
     s.send_message(msg)
     s.quit()
+
+def createSSHClient(server, port, user, password):
+    client = paramiko.SSHClient()
+    client.load_system_host_keys()
+    client.set_missing_host_key_policy(paramiko.AutoAddPolicy())
+    client.connect(server, port, user, password)
+    return client
+
+def result_upload(TEST_OS):
+    ssh = createSSHClient(SERVER_NAME, SERVER_PORT, SERVER_USER, SERVER_PASSWORD)
+    ftp_client = ssh.open_sftp()
+    file_destiation = os.path.join(SERVER_FILE_DESTINATION, 'Calibre-Web TestSummary_' + TEST_OS + '.html')
+    ftp_client.put('./../../calibre-web/test/Calibre-Web TestSummary_' + TEST_OS + '.html', file_destiation)
+    ftp_client.close()
 
 def poweroff(power):
     if power:

@@ -20,3 +20,7 @@ Flask-Principal>=0.3.2
 
 # Gdrive integration
 fs.googledrivefs>=1.7.0
+
+# E-Mailing results and uploading results to server
+keyring>=21.0.0
+paramiko>=2.7.0

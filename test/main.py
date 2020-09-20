@@ -12,7 +12,7 @@ import sys
 import venv
 from CalibreResult import CalibreResult
 from helper_environment import environment
-from helper_func import kill_dead_cps, email_notifier, poweroff
+from helper_func import kill_dead_cps, finishing_notifier, poweroff
 from subprocess import CalledProcessError
 
 
@@ -115,7 +115,7 @@ if __name__ == '__main__':
     print("\nAll tests finished, please check testresults")
     kill_dead_cps()
     # E-Mail tests finished
-    email_notifier()
+    finishing_notifier()
 
     poweroff(power)
     sys.exit(0)
