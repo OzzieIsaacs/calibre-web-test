@@ -42,7 +42,7 @@ class TestEditAdditionalBooks(TestCase, ui_class):
         cls.p.terminate()
         save_logfiles(cls.__name__)
 
-    def test_upload_metadate_cbr(self):
+    def test_upload_metadata_cbr(self):
         self.fill_basic_config({'config_uploading': 1})
         time.sleep(3)
         self.assertTrue(self.check_element_on_page((By.ID, "flash_success")))
