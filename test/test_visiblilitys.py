@@ -365,6 +365,12 @@ class TestCalibreWebVisibilitys(unittest.TestCase, ui_class):
                 return
         self.assertIsNone("Error creating new users")
 
+    def test_change_title(self):
+        self.fill_view_config({'config_calibre_web_title': 'Lü 执'})
+        self.goto_page('nav_new')
+        self.assertEqual('Lü 执', self.check_element_on_page((By.CLASS_NAME, "navbar-brand")).text)
+
+
     def test_search_string(self):
         self.adv_search({'book_title': 'Hallo'}, get=False)
         field = self.check_element_on_page((By.ID, "query"))

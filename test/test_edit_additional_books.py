@@ -276,7 +276,8 @@ class TestEditAdditionalBooks(TestCase, ui_class):
         book_path = os.path.join(TEST_DB, 'John Doe', 'Buuko (9)')
         self.assertTrue(os.path.isdir(book_path))
 
-    def test_writeonly_database(self):
+    @unittest.skip('Not implemented')
+    def test_writeonly_calibre_database(self):
         pass
 
     def test_edit_book_identifier(self):
