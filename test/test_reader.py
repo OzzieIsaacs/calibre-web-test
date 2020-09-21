@@ -73,6 +73,14 @@ class TestReader(unittest.TestCase, ui_class):
         self.assertTrue(content)
         self.assertTrue('Überall dieselbe alte Leier.' in content[1].text)
         self.driver.switch_to.default_content()
+        self.driver.close()
+        self.driver.switch_to.window(self.current_handle)
+        # remove viewer rights
+        self.edit_user('admin', {'viewer_role': 0})
+        self.get_book_details(8)
+        self.assertFalse(self.check_element_on_page((By.ID, "read-in-browser")))
+        self.edit_user('admin', {'viewer_role': 1})
+
 
     def test_pdf_reader(self):
         self.get_book_details(13)
@@ -86,6 +94,45 @@ class TestReader(unittest.TestCase, ui_class):
         content = self.driver.find_elements_by_xpath("//div[@class='textLayer']/span")
         self.assertTrue(content)
         self.assertTrue('Lorem ipsum dolor sit amet, consectetuer adipiscing elit' in content[0].text)
+        self.driver.close()
+        self.driver.switch_to.window(self.current_handle)
+        self.fill_basic_config({'config_anonbrowse': 1})
+        time.sleep(3)
+        self.edit_user('Guest', {'viewer_role': 1})
+        self.logout()
+        self.get_book_details(13)
+        self.check_element_on_page((By.ID, "read-in-browser")).click()
+        current_handles = self.driver.window_handles
+        self.check_element_on_page((By.XPATH, "//ul[@aria-labelledby='read-in-browser']/li/a[contains(.,'pdf')]")).click()
+        new_handle = [x for x in self.driver.window_handles if x not in current_handles]
+        if len(new_handle) != 1:
+            self.assertFalse('Not exactly one new tab was opened')
+        self.driver.switch_to.window(new_handle[0])
+        self.assertFalse(self.check_element_on_page((By.ID, "print")))
+        self.assertFalse(self.check_element_on_page((By.ID, "download")))
+        self.driver.close()
+        self.driver.switch_to.window(self.current_handle)
+        self.check_element_on_page((By.ID, "top_user")).click()
+        self.login('admin', 'admin123')
+        self.edit_user('Guest', {'download_role': 1})
+        self.logout()
+        self.get_book_details(13)
+        self.check_element_on_page((By.ID, "read-in-browser")).click()
+        current_handles = self.driver.window_handles
+        self.check_element_on_page((By.XPATH, "//ul[@aria-labelledby='read-in-browser']/li/a[contains(.,'pdf')]")).click()
+        new_handle = [x for x in self.driver.window_handles if x not in current_handles]
+        if len(new_handle) != 1:
+            self.assertFalse('Not exactly one new tab was opened')
+        self.driver.switch_to.window(new_handle[0])
+        self.assertTrue(self.check_element_on_page((By.ID, "print")))
+        self.assertTrue(self.check_element_on_page((By.ID, "download")))
+        self.driver.close()
+        self.driver.switch_to.window(self.current_handle)
+        self.check_element_on_page((By.ID, "top_user")).click()
+        self.login('admin', 'admin123')
+        self.fill_basic_config({'config_anonbrowse': 0})
+
+
 
     def test_comic_reader(self):
         self.get_book_details(3)
