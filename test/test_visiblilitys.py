@@ -544,6 +544,7 @@ class TestCalibreWebVisibilitys(unittest.TestCase, ui_class):
         shelfs = self.list_shelfs()
         shelfs[0]['ele'].click()
         self.check_element_on_page((By.ID, "delete_shelf")).click()
+        time.sleep(1)
         self.check_element_on_page((By.ID, "confirm")).click()
 
     def test_restrict_columns(self):
