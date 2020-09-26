@@ -59,6 +59,7 @@ class TestEditAdditionalBooks(TestCase, ui_class):
         upload.send_keys(upload_file)
         time.sleep(2)
         self.check_element_on_page((By.ID, 'edit_cancel')).click()
+        time.sleep(2)
         details = self.get_book_details()
         self.assertEqual('Test 执book', details['title'])
         self.assertEqual('Author Name', details['author'][0])
@@ -73,6 +74,7 @@ class TestEditAdditionalBooks(TestCase, ui_class):
         self.assertTrue(self.check_element_on_page((By.ID, "flash_success")))
         self.fill_basic_config({'config_uploading': 0})
         r.close()
+        time.sleep(2)
 
     def test_upload_metadata_cbt(self):
         self.fill_basic_config({'config_uploading': 1})
@@ -83,6 +85,7 @@ class TestEditAdditionalBooks(TestCase, ui_class):
         upload.send_keys(upload_file)
         time.sleep(2)
         self.check_element_on_page((By.ID, 'edit_cancel')).click()
+        time.sleep(2)
         details = self.get_book_details()
         self.assertEqual('Test 执 to', details['title'])
         self.assertEqual('Author Nameless', details['author'][0])
@@ -92,9 +95,10 @@ class TestEditAdditionalBooks(TestCase, ui_class):
         payload = {'username': 'admin', 'password': 'admin123', 'submit': "", 'next': "/", "remember_me": "on"}
         r.post('http://127.0.0.1:8083/login', data=payload)
         resp = r.get('http://127.0.0.1:8083' + details['cover'])
-        self.assertEqual('8936', resp.headers['Content-Length'])
         self.fill_basic_config({'config_uploading': 0})
+        self.assertEqual('8936', resp.headers['Content-Length'])
         r.close()
+        time.sleep(2)
 
     # limit upload formats to epub -> check pdf -> denied, upload epub allowed
     # limit upload formats to FB2 -> upload fb2 allowed

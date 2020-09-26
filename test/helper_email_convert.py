@@ -101,6 +101,8 @@ class MyMessage:
         return [False, False]
 
     def check_email_received(self):
+        if 0 < self.size < 1000:
+            return bool(self.message)
         return bool(self.size)
 
     def reset_email_received(self):

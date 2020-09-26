@@ -23,6 +23,7 @@ class TestOAuthLogin(unittest.TestCase, ui_class):
         try:
             startup(cls, cls.py_version, {'config_calibre_dir':TEST_DB})
         except Exception as e:
+            print('setup failed')
             cls.driver.quit()
             cls.p.terminate()
 

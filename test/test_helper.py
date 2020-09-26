@@ -8,6 +8,7 @@ from helper_func import save_logfiles
 sys.path.append(CALIBRE_WEB_PATH)
 from cps import helper, updater
 import threading
+import os
 
 def _get_updater_thread():
     for t in threading.enumerate():
