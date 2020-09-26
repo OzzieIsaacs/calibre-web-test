@@ -627,7 +627,7 @@ class TestEditBooks(TestCase, ui_class):
         self.check_element_on_page((By.ID, "edit_book")).click()
         lang = self.check_element_on_page((By.ID, "bookAuthor"))
         lang.send_keys('&')
-        time.sleep(1)
+        time.sleep(1.5)
         typeahead = self.check_element_on_page((By.CLASS_NAME, "tt-dataset-authors"))
         typeahead_set = set(typeahead.text.split("\n"))
         result = set(("John Döe & John Döe", "John Döe & Peter Parker", "John Döe & Asterix Lionherd",
@@ -690,6 +690,7 @@ class TestEditBooks(TestCase, ui_class):
         self.edit_book(content={u'publisher':u''})
 
     def test_upload_cover_hdd(self):
+        self.fill_basic_config({'config_uploading': 1})
         self.get_book_details(5)
         self.check_element_on_page((By.ID, "edit_book")).click()
         jpegcover = os.path.join(base_path, 'files', 'cover.jpg')
@@ -732,6 +733,7 @@ class TestEditBooks(TestCase, ui_class):
         resp = r.get('http://127.0.0.1:8083/cover/5')
         self.assertAlmostEqual(17420, int(resp.headers['Content-Length']), delta=300)
         r.close()
+        self.fill_basic_config({'config_uploading': 0})
         self.assertTrue(False, "Browser-Cache Problem: Old Cover is displayed instead of New Cover")
 
     # check metadata recognition
