@@ -627,7 +627,7 @@ class TestEditBooks(TestCase, ui_class):
         self.check_element_on_page((By.ID, "edit_book")).click()
         lang = self.check_element_on_page((By.ID, "bookAuthor"))
         lang.send_keys('&')
-        time.sleep(1.5)
+        time.sleep(2.5)
         typeahead = self.check_element_on_page((By.CLASS_NAME, "tt-dataset-authors"))
         typeahead_set = set(typeahead.text.split("\n"))
         result = set(("John Döe & John Döe", "John Döe & Peter Parker", "John Döe & Asterix Lionherd",
