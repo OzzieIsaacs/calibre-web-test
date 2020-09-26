@@ -133,7 +133,7 @@ def startup(inst, pyVersion, config, login=True, host="http://127.0.0.1:8083",
     inst.driver = webdriver.Firefox()
     # inst.driver = webdriver.Chrome()
     inst.driver.implicitly_wait(BOOT_TIME)
-    time.sleep(1)
+    time.sleep(2)
     if inst.p.poll():
         kill_old_cps()
         inst.p = process_open([pyVersion, os.path.join(CALIBRE_WEB_PATH, u'cps.py')], [1], sout=None, env=env)
@@ -144,7 +144,7 @@ def startup(inst, pyVersion, config, login=True, host="http://127.0.0.1:8083",
 
     # navigate to the application home page
     inst.driver.get(host)
-    time.sleep(1)
+    time.sleep(2)
     if not only_startup:
         # Wait for config screen to show up
         inst.fill_initial_config(dict(config_calibre_dir=config['config_calibre_dir']))
@@ -169,9 +169,9 @@ def startup(inst, pyVersion, config, login=True, host="http://127.0.0.1:8083",
 def wait_Email_received(func):
     i = 0
     while i < 10:
+        time.sleep(2)
         if func():
             return True
-        time.sleep(2)
         i += 1
     return False
 
@@ -240,7 +240,7 @@ def add_dependency(name, testclass_name):
         with process_open([VENV_PYTHON, "-m", "pip", "install", element], (0, 5)) as r:
             if os.name == 'nt':
                 while r.poll() == None:
-                    print(r.stdout.readline())
+                    r.stdout.readline()
             else:
                 r.wait()
         if element.lower().startswith('git'):
@@ -258,7 +258,7 @@ def remove_dependency(names):
         with process_open([VENV_PYTHON, "-m", "pip", "uninstall", "-y", name], (0, 5)) as q:
             if os.name == 'nt':
                 while q.poll() == None:
-                    print(q.stdout.readline())
+                    q.stdout.readline()
             else:
                 q.wait()
 
@@ -281,7 +281,8 @@ def kill_dead_cps():
                 res = [i for i in proc.cmdline() if 'cps.py' in i]
                 if res:
                     proc.send_signal(SIGKILL)
-                    print('Killed old Calibre-Web instance')
+                    print('Killed dead Calibre-Web instance')
+                    time.sleep(2)
         except (PermissionError, psutil.AccessDenied, psutil.NoSuchProcess):
             pass
 

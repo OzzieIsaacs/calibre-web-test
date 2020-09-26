@@ -672,6 +672,7 @@ class TestEditBooksOnGdrive(unittest.TestCase, ui_class):
         self.assertEqual(0, len(vals['cust_columns']))
 
     def test_upload_cover_hdd(self):
+        self.fill_basic_config({'config_uploading': 1})
         self.get_book_details(5)
         self.check_element_on_page((By.ID, "edit_book")).click()
         jpegcover = os.path.join(base_path, 'files', 'cover.jpg')
@@ -714,6 +715,7 @@ class TestEditBooksOnGdrive(unittest.TestCase, ui_class):
         resp = r.get('http://127.0.0.1:8083/cover/5')
         self.assertAlmostEqual(17420, int(resp.headers['Content-Length']), delta=300)
         r.close()
+        self.fill_basic_config({'config_uploading': 0})
         self.assertTrue(False, "Browser-Cache Problem: Old Cover is displayed instead of New Cover")
 
 
