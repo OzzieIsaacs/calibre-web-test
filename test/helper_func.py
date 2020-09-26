@@ -29,7 +29,7 @@ try:
     email_config = True
     import paramiko
 except ImportError:
-    print('Create config_email file to email finishing message')
+    print('Create config_email.py file to email finishing message')
     email_config = False
 
 if os.name != 'nt':

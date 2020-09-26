@@ -359,7 +359,11 @@ class ui_class():
 
     @classmethod
     def stop_calibre_web(cls, proc=None):
-        cls.goto_page('admin_setup')
+        try:
+            cls.goto_page('admin_setup')
+        except:
+            cls.driver.get("http://127.0.0.1:8083")
+            cls.goto_page('admin_setup')
         cls.driver.find_element_by_id('admin_stop').click()
         element = cls.check_element_on_page((By.ID, "shutdown"))
         element.click()

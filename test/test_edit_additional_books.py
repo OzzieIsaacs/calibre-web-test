@@ -42,7 +42,7 @@ class TestEditAdditionalBooks(TestCase, ui_class):
         cls.p.terminate()
         save_logfiles(cls.__name__)
 
-    def test_upload_metadate_cbr(self):
+    def test_upload_metadata_cbr(self):
         self.fill_basic_config({'config_uploading': 1})
         time.sleep(3)
         self.assertTrue(self.check_element_on_page((By.ID, "flash_success")))
@@ -276,7 +276,8 @@ class TestEditAdditionalBooks(TestCase, ui_class):
         book_path = os.path.join(TEST_DB, 'John Doe', 'Buuko (9)')
         self.assertTrue(os.path.isdir(book_path))
 
-    def test_writeonly_database(self):
+    @unittest.skip('Not implemented')
+    def test_writeonly_calibre_database(self):
         pass
 
     def test_edit_book_identifier(self):
@@ -515,3 +516,74 @@ class TestEditAdditionalBooks(TestCase, ui_class):
         self.delete_identifier('url')
         self.delete_identifier('AMaZON_DE')
         self.check_element_on_page((By.ID, "submit")).click()
+
+    def test_upload_edit_role(self):
+        self.fill_basic_config({'config_uploading': 1})
+        time.sleep(3)
+        self.create_user('user0', {'password': '1234', 'email': 'a@b.com', 'upload_role': 0, 'edit_role': 1})
+        self.assertTrue(self.check_element_on_page((By.ID, "flash_success")))
+        self.logout()
+        r = requests.session()
+        payload = {'username': 'user0', 'password': '1234', 'submit': "", 'next': "/", "remember_me": "on"}
+        r.post('http://127.0.0.1:8083/login', data=payload)
+        cover_file = os.path.join(base_path, 'files', 'cover.jpg')
+        upload_file = open(os.path.join(base_path, 'files', 'book.cbt'), 'rb')
+        files = {'btn-upload': upload_file}
+        result = r.post('http://127.0.0.1:8083/upload', files=files)
+        self.assertEqual(403, result.status_code)
+        upload_file.close()
+        values = {'book_title': 'Buuko', 'author_name': 'John Döe', 'description': '',
+                  'tags': 'Gênot', 'series': 'Djüngel', 'series_index': '3.0', 'ratings': '4',
+                  'pubdate': '', 'languages': '', 'detail_view': 'on'}
+        upload_file = open(os.path.join(base_path, 'files', 'book.cbt'), 'rb')
+        files_format = {'btn-upload-format': upload_file}
+        result = r.post('http://127.0.0.1:8083/admin/book/13', files=files_format, data=values)
+        self.assertEqual(403, result.status_code)
+        upload_file.close()
+        cover_file = open(os.path.join(base_path, 'files', 'cover.jpg'), 'rb')
+        files_cover = {'btn-upload-cover': cover_file}
+        result = r.post('http://127.0.0.1:8083/admin/book/13', files=files_cover, data=values)
+        self.assertEqual(403, result.status_code)
+        cover_file.close()
+        values['cover_url'] = "/home/user/kurt.jpg"
+        result = r.post('http://127.0.0.1:8083/admin/book/13', data=values)
+        self.assertEqual(403, result.status_code)
+        r.close()
+        self.login('user0', '1234')
+        self.assertFalse(self.check_element_on_page((By.ID, 'btn-upload')))
+        self.get_book_details(13)
+        self.check_element_on_page((By.ID, "edit_book")).click()
+        self.assertFalse(self.check_element_on_page((By.ID, 'btn-upload-cover')))
+        self.assertFalse(self.check_element_on_page((By.ID, 'btn-upload-format')))
+        self.assertFalse(self.check_element_on_page((By.ID, 'cover_url')))
+        self.logout()
+        self.login('admin', 'admin123')
+        self.edit_user('user0', {'upload_role': 1})
+        self.logout()
+        self.login('user0', '1234')
+        self.assertTrue(self.check_element_on_page((By.ID, 'btn-upload')))
+        self.get_book_details(13)
+        self.check_element_on_page((By.ID, "edit_book")).click()
+        self.assertTrue(self.check_element_on_page((By.ID, 'btn-upload-cover')))
+        self.assertTrue(self.check_element_on_page((By.ID, 'btn-upload-format')))
+        self.assertTrue(self.check_element_on_page((By.ID, 'cover_url')))
+        self.logout()
+        self.login('admin', 'admin123')
+        self.edit_user('user0', {'edit_role': 0})
+        self.logout()
+        self.login('user0', '1234')
+        self.get_book_details(13)
+        self.assertFalse(self.check_element_on_page((By.ID, "edit_book")))
+        self.logout()
+        r = requests.session()
+        payload = {'username': 'user0', 'password': '1234', 'submit': "", 'next': "/", "remember_me": "on"}
+        r.post('http://127.0.0.1:8083/login', data=payload)
+        result = r.get('http://127.0.0.1:8083/admin/book/13')
+        self.assertEqual(403, result.status_code)
+        r.close()
+
+        self.login('admin', 'admin123')
+        self.edit_user('user0', {'delete': 1})
+        self.fill_basic_config({'config_uploading': 0})
+        time.sleep(3)
+

@@ -19,7 +19,7 @@ from helper_gdrive import prepare_gdrive, remove_gdrive, connect_gdrive, check_p
 # test editing books on gdrive
 
 
-WAIT_GDRIVE = 11
+WAIT_GDRIVE = 15
 
 @unittest.skipIf(not os.path.exists(os.path.join(base_path, "files", "client_secrets.json")) or
                  not os.path.exists(os.path.join(base_path, "files", "gdrive_credentials")),
