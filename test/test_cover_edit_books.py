@@ -88,7 +88,8 @@ class TestCoverEditBooks(TestCase, ui_class):
         self.assertTrue(self.check_element_on_page((By.ID, 'flash_alert')))
         self.check_element_on_page((By.ID, "edit_book")).click()
         self.edit_book(content={'cover_url': u'https://api.github.com/repos/janeczku/calibre-web/cover/test.jol'})
-        self.assertTrue(self.check_element_on_page((By.ID, 'flash_alert')))
+        # Check if file content is detected correct
+        self.assertTrue(self.check_element_on_page((By.ID, 'flash_alert')), "BMP file is not detected")
         self.check_element_on_page((By.ID, "edit_book")).click()
         self.edit_book(content={'cover_url': u'https://api.github.com/repos/janeczku/calibre-web/cover/test.brk'})
         self.assertTrue(self.check_element_on_page((By.ID, 'flash_alert')))

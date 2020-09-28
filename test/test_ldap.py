@@ -15,7 +15,7 @@ from helper_func import save_logfiles
 
 class TestLdapLogin(unittest.TestCase, ui_class):
 
-    p=None
+    p = None
     driver = None
     kobo_adress = None
     if os.name == 'nt':
