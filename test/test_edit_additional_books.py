@@ -529,7 +529,7 @@ class TestEditAdditionalBooks(TestCase, ui_class):
         r = requests.session()
         payload = {'username': 'user0', 'password': '1234', 'submit': "", 'next': "/", "remember_me": "on"}
         r.post('http://127.0.0.1:8083/login', data=payload)
-        cover_file = os.path.join(base_path, 'files', 'cover.jpg')
+        # cover_file = os.path.join(base_path, 'files', 'cover.jpg')
         upload_file = open(os.path.join(base_path, 'files', 'book.cbt'), 'rb')
         files = {'btn-upload': upload_file}
         result = r.post('http://127.0.0.1:8083/upload', files=files)
@@ -589,4 +589,63 @@ class TestEditAdditionalBooks(TestCase, ui_class):
         self.edit_user('user0', {'delete': 1})
         self.fill_basic_config({'config_uploading': 0})
         time.sleep(3)
+
+
+    def test_delete_role(self):
+        self.fill_basic_config({'config_uploading': 1})
+        time.sleep(3)
+        self.get_book_details(12)
+        self.check_element_on_page((By.ID, "edit_book")).click()
+
+        upload = self.check_element_on_page((By.ID, 'btn-upload-format'))
+        upload_file = os.path.join(base_path, 'files', 'book.fb2')
+        upload.send_keys(upload_file)
+        submit = self.check_element_on_page((By.ID, "submit"))
+        submit.click()
+        self.fill_basic_config({'config_uploading': 0})
+        time.sleep(3)
+
+        self.create_user('user2', {'password': '1234', 'email': 'a2@b.com', 'edit_role': 0, 'delete_role': 0})
+        self.assertTrue(self.check_element_on_page((By.ID, "flash_success")))
+        self.logout()
+        r = requests.session()
+        payload = {'username': 'user2', 'password': '1234', 'submit': "", 'next': "/", "remember_me": "on"}
+        r.post('http://127.0.0.1:8083/login', data=payload)
+        result = r.post('http://127.0.0.1:8083/delete/12/FB2')
+        self.assertEqual(405, result.status_code)
+        result = r.post('http://127.0.0.1:8083/delete/12')
+        self.assertEqual(405, result.status_code)
+        result = r.post('http://127.0.0.1:8083/ajax/delete/12')
+        self.assertEqual(405, result.status_code)
+
+        self.login('admin', 'admin123')
+        self.edit_user('user2', {'edit_role': 1, 'delete_role': 0})
+        self.logout()
+        self.login('user2','1234')
+        self.get_book_details(12)
+        self.check_element_on_page((By.ID, "edit_book")).click()
+        self.assertFalse(self.check_element_on_page((By.ID, "delete")))
+        self.assertFalse(self.check_element_on_page((By.ID, "delete")))
+        self.logout()
+        result = r.post('http://127.0.0.1:8083/delete/12/FB2')
+        self.assertEqual(405, result.status_code)
+        result = r.post('http://127.0.0.1:8083/delete/12')
+        self.assertEqual(405, result.status_code)
+        self.login('admin', 'admin123')
+        self.edit_user('user2', {'delete_role': 1})
+        self.logout()
+        self.login('user2','1234')
+        self.get_book_details(12)
+        self.check_element_on_page((By.ID, "edit_book")).click()
+        self.assertTrue(self.check_element_on_page((By.ID, "delete")))
+        self.assertTrue(self.delete_book_format(12, 'FB2'))
+        self.logout()
+        self.login('admin', 'admin123')
+        self.edit_user('user2', {'delete': 1})
+        # ToDo: Test book delete rights on book list
+
+
+
+
+
 

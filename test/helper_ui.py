@@ -1424,6 +1424,21 @@ class ui_class():
         self.check_element_on_page((By.ID, "delete_confirm")).click()
         time.sleep(2)
 
+    def delete_book_format(self, id, format):
+        self.get_book_details(id)
+        self.check_element_on_page((By.ID, "edit_book")).click()
+        b = self.check_element_on_page((By.XPATH, "//*[@data-delete-format='" + format.upper() + "']"))
+        if not b:
+            return False
+        b.click()
+        c = self.check_element_on_page((By.ID, "delete_confirm"))
+        if not c:
+            return False
+        c.click()
+        time.sleep(2)
+        return True
+
+
     @classmethod
     def get_convert_book(cls, id=-1, root_url='http://127.0.0.1:8083'):
         if id>0:
