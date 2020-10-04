@@ -180,7 +180,6 @@ class TestEditAdditionalBooks(TestCase, ui_class):
         # delete book, -> denied because of additional folder
         self.delete_book(1)
         self.assertTrue(self.check_element_on_page((By.ID, "flash_warning")))
-        # self.check_element_on_page((By.ID, 'edit_cancel')).click()
         os.rmdir(sub_folder)
         self.assertTrue(os.path.isdir(book_path1))
         self.assertEqual(0, len([name for name in os.listdir(book_path1) if os.path.isfile(name)]))

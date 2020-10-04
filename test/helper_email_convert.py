@@ -112,6 +112,7 @@ class MyMessage:
 def AIOSMTPServer(hostname='', port=1025, authenticate=True, startSSL=False, only_ssl=None,
                   certfile=None, keyfile=None, timeout=300):
     # logging.basicConfig(level=logging.INFO)
+    print("Starting E-Mail Server")
     loop = asyncio.get_event_loop()
     # SSL
     # controller= amain(authenticate=True, startSSL=False, ssl_only=True)

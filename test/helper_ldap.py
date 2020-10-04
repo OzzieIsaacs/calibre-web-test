@@ -1,4 +1,5 @@
 import threading
+from OpenSSL import SSL
 try:
     from cStringIO import StringIO as BytesIO
 except ImportError:
@@ -243,6 +244,14 @@ member: uid=user13,ou=People,dc=calibreweb,dc=com
 
 """
 
+def verifyCallback(__, x509, ___, ____, ok):
+    if not ok:
+        print ('invalid cert from subject:', x509.get_subject())
+        return False
+    else:
+        print ("Certs are fine")
+    return True
+
 
 class Tree(object):
 
@@ -405,7 +414,7 @@ class LDAPServerFactory(ServerFactory):
 
 
 class TestLDAPServer(threading.Thread):
-    def __init__(self, port=8080, encrypt=None, config=0, auth=LDAP_AUTH_SIMPLE):
+    def __init__(self, port=8080, encrypt=None, config=0, auth=LDAP_AUTH_SIMPLE, validate=False):
         threading.Thread.__init__(self)
         self.is_running = False
 
@@ -414,9 +423,9 @@ class TestLDAPServer(threading.Thread):
             LDAPServerFactory,
             IConnectedLDAPEntry)
 
-        self._createListner(port, encrypt, config, auth)
+        self._createListner(port, encrypt, config, auth, validate)
 
-    def _createListner(self, port, encrypt, config, auth):
+    def _createListner(self, port, encrypt, config, auth, validate):
         tls = False
         cert = None
         tree = Tree(config)
@@ -429,23 +438,32 @@ class TestLDAPServer(threading.Thread):
             factory.options = cert
         factory.debug = False
         if encrypt == 'SSL':
+            if validate:
+                ctx = cert.getContext()
+
+                ctx.set_verify(
+                    SSL.VERIFY_PEER | SSL.VERIFY_FAIL_IF_NO_PEER_CERT,
+                    verifyCallback
+                )
+
+                # Since we have self-signed certs we have to explicitly
+                # tell the server to trust them.
+                ctx.load_verify_locations('./files/ca.pem')
+
             self.serv = reactor.listenSSL(port, factory, cert)
         else:
             self.serv = reactor.listenTCP(port, factory)
-        # self.serv = reactor.listenSSL(port, factory)
         self.is_running = True
 
     def stopListen(self):
         if self.is_running:
             def cbloseConnection(result):
-                return
                 # print('Connection: ' + result)
-                # self.is_running = False
+                return
 
             def cberrloseConnection(failure):
-                return
                 # print('failure Connect: ' + str(failure))
-                # self.is_running = False
+                return
 
             # e = self.serv.loseConnection()
             e = defer.maybeDeferred(self.serv.loseConnection)
@@ -475,9 +493,9 @@ class TestLDAPServer(threading.Thread):
             self.is_running = False
             time.sleep(2)
 
-    def relisten(self, port=8080, encrypt=None, config=0, auth=LDAP_AUTH_SIMPLE):
+    def relisten(self, port=8080, encrypt=None, config=0, auth=LDAP_AUTH_SIMPLE, validate=False):
         self.stopListen()
-        self._createListner(port, encrypt, config, auth)
+        self._createListner(port, encrypt, config, auth, validate)
 
     def is_running(self):
         return self.is_running

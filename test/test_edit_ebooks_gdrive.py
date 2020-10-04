@@ -91,13 +91,13 @@ class TestEditBooksOnGdrive(unittest.TestCase, ui_class):
             try:
                 os.unlink(src)
             except PermissionError:
-                print('File delete failed')
+                print('gdrive_credentials delete failed')
         if os.path.exists(src1):
             os.chmod(src1, 0o764)
             try:
                 os.unlink(src1)
             except PermissionError:
-                print('File delete failed')
+                print('client_secrets.json delete failed')
 
         save_logfiles(cls.__name__)
 

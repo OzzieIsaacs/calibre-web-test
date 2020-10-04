@@ -211,6 +211,7 @@ def digest_login(url, expected_response):
 
 
 def add_dependency(name, testclass_name):
+    print("Adding dependencies")
     element_version = list()
     with open(os.path.join(CALIBRE_WEB_PATH, 'optional-requirements.txt'), 'r') as f:
         requirements = f.readlines()
@@ -273,6 +274,9 @@ def kill_old_cps(port=8083):
                     break
         except (PermissionError, psutil.AccessDenied):
             pass
+    # Give Calibre-Web time to die
+    time.sleep(3)
+
 
 def kill_dead_cps():
     for proc in process_iter():
@@ -285,6 +289,8 @@ def kill_dead_cps():
                     time.sleep(2)
         except (PermissionError, psutil.AccessDenied, psutil.NoSuchProcess):
             pass
+    # Give Calibre-Web time to die
+    time.sleep(3)
 
 
 def unrar_path():
