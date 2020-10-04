@@ -1438,6 +1438,48 @@ class ui_class():
         time.sleep(2)
         return True
 
+    def goto_blist_page(self, page):
+        if not self.check_element_on_page((By.CLASS_NAME, "pagination")):
+            return False
+        pages = self.driver.find_elements_by_class_name("page-item")
+        for p in pages:
+            if p.text == str(page):
+                if 'active' not in p.get_attribute('class'):
+                    ele = p.find_element_by_xpath('./a')
+                    ele.click()
+                return True
+        return False
+
+    def get_blist(self, page=1):
+        # get current page
+        if not page == -1:
+            self.goto_page('nav_list')
+            time.sleep(2)
+            if not self.goto_blist_page(page):
+                return False
+        header = self.driver.find_elements_by_xpath("//thead/tr/th/div[starts-with(@class, 'th-inner')]")
+        rows = self.driver.find_elements_by_xpath("//tbody/tr")
+        for row in rows:
+            elements = row.find_elements_by_xpath("./td")
+
+    def select_blist_books(self, books):
+        pass
+
+    def merge_blist_books(self, abort=False):
+        pass
+
+    def deselect_blist_books(self):
+        pass
+
+    def change_blist_visibliity(self, parameter_dict):
+        pass
+
+    def delete_blist_book(self, book):
+        pass
+
+    def edit_blist_book(self, book_dict):
+        pass
+
 
     @classmethod
     def get_convert_book(cls, id=-1, root_url='http://127.0.0.1:8083'):
