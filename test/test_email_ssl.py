@@ -16,7 +16,6 @@ from config_test import CALIBRE_WEB_PATH, TEST_DB, BOOT_TIME, base_path
 from helper_func import startup, save_logfiles
 
 
-
 @unittest.skipIf(helper_email_convert.is_calibre_not_present(),"Skipping convert, calibre not found")
 class TestSSL(unittest.TestCase, ui_class):
     p = None

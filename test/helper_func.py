@@ -144,6 +144,7 @@ def startup(inst, pyVersion, config, login=True, host="http://127.0.0.1:8083",
 
     # navigate to the application home page
     inst.driver.get(host)
+    # toDO: Check title is valid
     time.sleep(2)
     if not only_startup:
         # Wait for config screen to show up
@@ -211,6 +212,7 @@ def digest_login(url, expected_response):
 
 
 def add_dependency(name, testclass_name):
+    print("Adding dependencies")
     element_version = list()
     with open(os.path.join(CALIBRE_WEB_PATH, 'optional-requirements.txt'), 'r') as f:
         requirements = f.readlines()
@@ -273,6 +275,9 @@ def kill_old_cps(port=8083):
                     break
         except (PermissionError, psutil.AccessDenied):
             pass
+    # Give Calibre-Web time to die
+    time.sleep(3)
+
 
 def kill_dead_cps():
     for proc in process_iter():
@@ -285,6 +290,8 @@ def kill_dead_cps():
                     time.sleep(2)
         except (PermissionError, psutil.AccessDenied, psutil.NoSuchProcess):
             pass
+    # Give Calibre-Web time to die
+    time.sleep(3)
 
 
 def unrar_path():

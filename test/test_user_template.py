@@ -45,6 +45,7 @@ class TestUserTemplate(unittest.TestCase, ui_class):
         self.login('random','1234')
         self.assertTrue(self.check_element_on_page((By.ID, "nav_new")))
         self.assertTrue(self.check_element_on_page((By.ID, "nav_hot")))
+        self.assertTrue(self.check_element_on_page((By.ID, "nav_download")))
         self.assertTrue(self.check_element_on_page((By.ID, "nav_rated")))
         self.assertTrue(self.check_element_on_page((By.ID, "nav_read")))
         self.assertTrue(self.check_element_on_page((By.ID, "nav_unread")))
@@ -56,6 +57,7 @@ class TestUserTemplate(unittest.TestCase, ui_class):
         self.assertTrue(self.check_element_on_page((By.ID, "nav_publisher")))
         self.assertTrue(self.check_element_on_page((By.ID, "nav_format")))
         self.assertTrue(self.check_element_on_page((By.ID, "nav_archived")))
+        self.assertTrue(self.check_element_on_page((By.ID, "nav_list")))
         self.logout()
         self.login('admin','admin123')
         # delete user
@@ -63,14 +65,14 @@ class TestUserTemplate(unittest.TestCase, ui_class):
 
     def test_recent_user_template(self):
         self.fill_view_config({'show_4':0,'show_8':0, 'show_16':0, 'show_32':0, 'show_64':0, 'show_128':0,
-                               'show_256': 0, 'show_4096': 0, 'show_8192': 0,
-                               'show_16384': 0, 'show_32768': 0, 'show_2':0
+                               'show_256': 0, 'show_4096': 0, 'show_8192': 0, 'show_131072':0,
+                               'show_16384': 0, 'show_32768': 0, 'show_2':0, 'show_65536':0
                                })
         self.goto_page('create_user')
         self.create_user('recent',{'password':'1234','email':'a4@b.com'})
         self.fill_view_config({'show_4':1,'show_8':1, 'show_16':1, 'show_32':1, 'show_64':1, 'show_128':1,
-                               'show_256': 1, 'show_4096': 1, 'show_8192': 1,
-                               'show_16384': 1, 'show_32768': 1, 'show_2': 1
+                               'show_256': 1, 'show_4096': 1, 'show_8192': 1, 'show_65536':1,
+                               'show_16384': 1, 'show_32768': 1, 'show_2': 1, 'show_131072':1,
                                })
         self.assertTrue(self.check_element_on_page((By.ID, "flash_success")))
         self.logout()
@@ -78,6 +80,7 @@ class TestUserTemplate(unittest.TestCase, ui_class):
         self.assertTrue(self.check_element_on_page((By.ID, "nav_new")))
         self.assertFalse(self.check_element_on_page((By.ID, "nav_hot")))
         self.assertFalse(self.check_element_on_page((By.ID, "nav_rated")))
+        self.assertFalse(self.check_element_on_page((By.ID, "nav_download")))
         self.assertFalse(self.check_element_on_page((By.ID, "nav_read")))
         self.assertFalse(self.check_element_on_page((By.ID, "nav_unread")))
         self.assertFalse(self.check_element_on_page((By.ID, "nav_rand")))
@@ -88,6 +91,7 @@ class TestUserTemplate(unittest.TestCase, ui_class):
         self.assertFalse(self.check_element_on_page((By.ID, "nav_publisher")))
         self.assertFalse(self.check_element_on_page((By.ID, "nav_format")))
         self.assertFalse(self.check_element_on_page((By.ID, "nav_archived")))
+        self.assertFalse(self.check_element_on_page((By.ID, "nav_list")))
         self.logout()
         self.login('admin','admin123')
         # delete user
@@ -104,6 +108,7 @@ class TestUserTemplate(unittest.TestCase, ui_class):
         self.assertTrue(self.check_element_on_page((By.ID, "nav_new")))
         # self.assertTrue(self.check_element_on_page((By.ID, "nav_sort")))
         self.assertFalse(self.check_element_on_page((By.ID, "nav_hot")))
+        self.assertTrue(self.check_element_on_page((By.ID, "nav_download")))
         self.assertTrue(self.check_element_on_page((By.ID, "nav_rated")))
         self.assertTrue(self.check_element_on_page((By.ID, "nav_read")))
         self.assertTrue(self.check_element_on_page((By.ID, "nav_unread")))
@@ -115,6 +120,7 @@ class TestUserTemplate(unittest.TestCase, ui_class):
         self.assertTrue(self.check_element_on_page((By.ID, "nav_publisher")))
         self.assertTrue(self.check_element_on_page((By.ID, "nav_format")))
         self.assertTrue(self.check_element_on_page((By.ID, "nav_archived")))
+        self.assertTrue(self.check_element_on_page((By.ID, "nav_list")))
         self.logout()
         self.login('admin','admin123')
         # delete user
@@ -132,6 +138,7 @@ class TestUserTemplate(unittest.TestCase, ui_class):
         # self.assertTrue(self.check_element_on_page((By.ID, "nav_sort")))
         self.assertTrue(self.check_element_on_page((By.ID, "nav_hot")))
         self.assertFalse(self.check_element_on_page((By.ID, "nav_rated")))
+        self.assertTrue(self.check_element_on_page((By.ID, "nav_download")))
         self.assertTrue(self.check_element_on_page((By.ID, "nav_read")))
         self.assertTrue(self.check_element_on_page((By.ID, "nav_unread")))
         self.assertTrue(self.check_element_on_page((By.ID, "nav_rand")))
@@ -142,6 +149,7 @@ class TestUserTemplate(unittest.TestCase, ui_class):
         self.assertTrue(self.check_element_on_page((By.ID, "nav_publisher")))
         self.assertTrue(self.check_element_on_page((By.ID, "nav_format")))
         self.assertTrue(self.check_element_on_page((By.ID, "nav_archived")))
+        self.assertTrue(self.check_element_on_page((By.ID, "nav_list")))
         self.logout()
         self.login('admin','admin123')
         # delete user
@@ -158,6 +166,7 @@ class TestUserTemplate(unittest.TestCase, ui_class):
         self.assertTrue(self.check_element_on_page((By.ID, "nav_new")))
         # self.assertTrue(self.check_element_on_page((By.ID, "nav_sort")))
         self.assertTrue(self.check_element_on_page((By.ID, "nav_hot")))
+        self.assertTrue(self.check_element_on_page((By.ID, "nav_download")))
         self.assertTrue(self.check_element_on_page((By.ID, "nav_rated")))
         self.assertTrue(self.check_element_on_page((By.ID, "nav_read")))
         self.assertTrue(self.check_element_on_page((By.ID, "nav_unread")))
@@ -169,6 +178,7 @@ class TestUserTemplate(unittest.TestCase, ui_class):
         self.assertTrue(self.check_element_on_page((By.ID, "nav_publisher")))
         self.assertTrue(self.check_element_on_page((By.ID, "nav_format")))
         self.assertTrue(self.check_element_on_page((By.ID, "nav_archived")))
+        self.assertTrue(self.check_element_on_page((By.ID, "nav_list")))
         self.logout()
         self.login('admin','admin123')
         # delete user
@@ -184,6 +194,7 @@ class TestUserTemplate(unittest.TestCase, ui_class):
         self.login('series','1234')
         self.assertTrue(self.check_element_on_page((By.ID, "nav_new")))
         self.assertTrue(self.check_element_on_page((By.ID, "nav_hot")))
+        self.assertTrue(self.check_element_on_page((By.ID, "nav_download")))
         self.assertTrue(self.check_element_on_page((By.ID, "nav_rated")))
         self.assertTrue(self.check_element_on_page((By.ID, "nav_read")))
         self.assertTrue(self.check_element_on_page((By.ID, "nav_unread")))
@@ -195,6 +206,7 @@ class TestUserTemplate(unittest.TestCase, ui_class):
         self.assertTrue(self.check_element_on_page((By.ID, "nav_publisher")))
         self.assertTrue(self.check_element_on_page((By.ID, "nav_format")))
         self.assertTrue(self.check_element_on_page((By.ID, "nav_archived")))
+        self.assertTrue(self.check_element_on_page((By.ID, "nav_list")))
         self.logout()
         self.login('admin','admin123')
         # delete user
@@ -211,6 +223,7 @@ class TestUserTemplate(unittest.TestCase, ui_class):
         self.assertTrue(self.check_element_on_page((By.ID, "nav_new")))
         # self.assertTrue(self.check_element_on_page((By.ID, "nav_sort")))
         self.assertTrue(self.check_element_on_page((By.ID, "nav_hot")))
+        self.assertTrue(self.check_element_on_page((By.ID, "nav_download")))
         self.assertTrue(self.check_element_on_page((By.ID, "nav_rated")))
         self.assertTrue(self.check_element_on_page((By.ID, "nav_read")))
         self.assertTrue(self.check_element_on_page((By.ID, "nav_unread")))
@@ -222,6 +235,7 @@ class TestUserTemplate(unittest.TestCase, ui_class):
         self.assertTrue(self.check_element_on_page((By.ID, "nav_publisher")))
         self.assertTrue(self.check_element_on_page((By.ID, "nav_format")))
         self.assertTrue(self.check_element_on_page((By.ID, "nav_archived")))
+        self.assertTrue(self.check_element_on_page((By.ID, "nav_list")))
         self.logout()
         self.login('admin','admin123')
         # delete user
@@ -238,6 +252,7 @@ class TestUserTemplate(unittest.TestCase, ui_class):
         self.assertTrue(self.check_element_on_page((By.ID, "nav_new")))
         # self.assertTrue(self.check_element_on_page((By.ID, "nav_sort")))
         self.assertTrue(self.check_element_on_page((By.ID, "nav_hot")))
+        self.assertTrue(self.check_element_on_page((By.ID, "nav_download")))
         self.assertTrue(self.check_element_on_page((By.ID, "nav_rated")))
         self.assertTrue(self.check_element_on_page((By.ID, "nav_read")))
         self.assertTrue(self.check_element_on_page((By.ID, "nav_unread")))
@@ -249,6 +264,7 @@ class TestUserTemplate(unittest.TestCase, ui_class):
         self.assertFalse(self.check_element_on_page((By.ID, "nav_publisher")))
         self.assertTrue(self.check_element_on_page((By.ID, "nav_format")))
         self.assertTrue(self.check_element_on_page((By.ID, "nav_archived")))
+        self.assertTrue(self.check_element_on_page((By.ID, "nav_list")))
         self.logout()
         self.login('admin','admin123')
         # delete user
@@ -265,6 +281,7 @@ class TestUserTemplate(unittest.TestCase, ui_class):
         self.assertTrue(self.check_element_on_page((By.ID, "nav_new")))
         # self.assertTrue(self.check_element_on_page((By.ID, "nav_sort")))
         self.assertTrue(self.check_element_on_page((By.ID, "nav_hot")))
+        self.assertTrue(self.check_element_on_page((By.ID, "nav_download")))
         self.assertTrue(self.check_element_on_page((By.ID, "nav_rated")))
         self.assertTrue(self.check_element_on_page((By.ID, "nav_read")))
         self.assertTrue(self.check_element_on_page((By.ID, "nav_unread")))
@@ -276,6 +293,7 @@ class TestUserTemplate(unittest.TestCase, ui_class):
         self.assertTrue(self.check_element_on_page((By.ID, "nav_publisher")))
         self.assertFalse(self.check_element_on_page((By.ID, "nav_format")))
         self.assertTrue(self.check_element_on_page((By.ID, "nav_archived")))
+        self.assertTrue(self.check_element_on_page((By.ID, "nav_list")))
         self.logout()
         self.login('admin','admin123')
         # delete user
@@ -291,6 +309,7 @@ class TestUserTemplate(unittest.TestCase, ui_class):
         self.login('format','1234')
         self.assertTrue(self.check_element_on_page((By.ID, "nav_new")))
         self.assertTrue(self.check_element_on_page((By.ID, "nav_hot")))
+        self.assertTrue(self.check_element_on_page((By.ID, "nav_download")))
         self.assertTrue(self.check_element_on_page((By.ID, "nav_rated")))
         self.assertTrue(self.check_element_on_page((By.ID, "nav_read")))
         self.assertTrue(self.check_element_on_page((By.ID, "nav_unread")))
@@ -302,6 +321,7 @@ class TestUserTemplate(unittest.TestCase, ui_class):
         self.assertTrue(self.check_element_on_page((By.ID, "nav_publisher")))
         self.assertTrue(self.check_element_on_page((By.ID, "nav_format")))
         self.assertFalse(self.check_element_on_page((By.ID, "nav_archived")))
+        self.assertTrue(self.check_element_on_page((By.ID, "nav_list")))
         self.logout()
         self.login('admin','admin123')
         # delete user
@@ -319,6 +339,7 @@ class TestUserTemplate(unittest.TestCase, ui_class):
         self.assertTrue(self.check_element_on_page((By.ID, "nav_new")))
         # self.assertTrue(self.check_element_on_page((By.ID, "nav_sort")))
         self.assertTrue(self.check_element_on_page((By.ID, "nav_hot")))
+        self.assertTrue(self.check_element_on_page((By.ID, "nav_download")))
         self.assertTrue(self.check_element_on_page((By.ID, "nav_rated")))
         self.assertTrue(self.check_element_on_page((By.ID, "nav_read")))
         self.assertTrue(self.check_element_on_page((By.ID, "nav_unread")))
@@ -330,6 +351,7 @@ class TestUserTemplate(unittest.TestCase, ui_class):
         self.assertTrue(self.check_element_on_page((By.ID, "nav_publisher")))
         self.assertTrue(self.check_element_on_page((By.ID, "nav_format")))
         self.assertTrue(self.check_element_on_page((By.ID, "nav_archived")))
+        self.assertTrue(self.check_element_on_page((By.ID, "nav_list")))
         self.logout()
         self.login('admin','admin123')
         # delete user
@@ -346,6 +368,7 @@ class TestUserTemplate(unittest.TestCase, ui_class):
         self.assertTrue(self.check_element_on_page((By.ID, "nav_new")))
         # self.assertTrue(self.check_element_on_page((By.ID, "nav_sort")))
         self.assertTrue(self.check_element_on_page((By.ID, "nav_hot")))
+        self.assertTrue(self.check_element_on_page((By.ID, "nav_download")))
         self.assertTrue(self.check_element_on_page((By.ID, "nav_rated")))
         self.assertFalse(self.check_element_on_page((By.ID, "nav_read")))
         self.assertFalse(self.check_element_on_page((By.ID, "nav_unread")))
@@ -357,10 +380,69 @@ class TestUserTemplate(unittest.TestCase, ui_class):
         self.assertTrue(self.check_element_on_page((By.ID, "nav_publisher")))
         self.assertTrue(self.check_element_on_page((By.ID, "nav_format")))
         self.assertTrue(self.check_element_on_page((By.ID, "nav_archived")))
+        self.assertTrue(self.check_element_on_page((By.ID, "nav_list")))
         self.logout()
         self.login('admin','admin123')
         # delete user
         self.edit_user('read',{'delete':1})
+
+    def test_download_user_template(self):
+        self.fill_view_config({'show_65536': 0 })
+        self.goto_page('create_user')
+        self.create_user('download',{'password':'1234','email':'aaa@b.com'})
+        self.assertTrue(self.check_element_on_page((By.ID, "flash_success")))
+        self.fill_view_config({'show_65536' : 1})
+        self.logout()
+        self.login('download','1234')
+        self.assertTrue(self.check_element_on_page((By.ID, "nav_new")))
+        # self.assertTrue(self.check_element_on_page((By.ID, "nav_sort")))
+        self.assertTrue(self.check_element_on_page((By.ID, "nav_hot")))
+        self.assertFalse(self.check_element_on_page((By.ID, "nav_download")))
+        self.assertTrue(self.check_element_on_page((By.ID, "nav_rated")))
+        self.assertTrue(self.check_element_on_page((By.ID, "nav_read")))
+        self.assertTrue(self.check_element_on_page((By.ID, "nav_unread")))
+        self.assertTrue(self.check_element_on_page((By.ID, "nav_rand")))
+        self.assertTrue(self.check_element_on_page((By.ID, "nav_cat")))
+        self.assertTrue(self.check_element_on_page((By.ID, "nav_serie")))
+        self.assertTrue(self.check_element_on_page((By.ID, "nav_author")))
+        self.assertTrue(self.check_element_on_page((By.ID, "nav_lang")))
+        self.assertTrue(self.check_element_on_page((By.ID, "nav_publisher")))
+        self.assertTrue(self.check_element_on_page((By.ID, "nav_format")))
+        self.assertTrue(self.check_element_on_page((By.ID, "nav_archived")))
+        self.assertTrue(self.check_element_on_page((By.ID, "nav_list")))
+        self.logout()
+        self.login('admin','admin123')
+        # delete user
+        self.edit_user('download',{'delete':1})
+
+    def test_list_user_template(self):
+        self.fill_view_config({'show_131072': 0 })
+        self.goto_page('create_user')
+        self.create_user('list',{'password':'1234','email':'aaa@b.com'})
+        self.assertTrue(self.check_element_on_page((By.ID, "flash_success")))
+        self.fill_view_config({'show_131072' : 1})
+        self.logout()
+        self.login('list','1234')
+        self.assertTrue(self.check_element_on_page((By.ID, "nav_new")))
+        # self.assertTrue(self.check_element_on_page((By.ID, "nav_sort")))
+        self.assertTrue(self.check_element_on_page((By.ID, "nav_hot")))
+        self.assertTrue(self.check_element_on_page((By.ID, "nav_download")))
+        self.assertTrue(self.check_element_on_page((By.ID, "nav_rated")))
+        self.assertTrue(self.check_element_on_page((By.ID, "nav_read")))
+        self.assertTrue(self.check_element_on_page((By.ID, "nav_unread")))
+        self.assertTrue(self.check_element_on_page((By.ID, "nav_rand")))
+        self.assertTrue(self.check_element_on_page((By.ID, "nav_cat")))
+        self.assertTrue(self.check_element_on_page((By.ID, "nav_serie")))
+        self.assertTrue(self.check_element_on_page((By.ID, "nav_author")))
+        self.assertTrue(self.check_element_on_page((By.ID, "nav_lang")))
+        self.assertTrue(self.check_element_on_page((By.ID, "nav_publisher")))
+        self.assertTrue(self.check_element_on_page((By.ID, "nav_format")))
+        self.assertTrue(self.check_element_on_page((By.ID, "nav_archived")))
+        self.assertFalse(self.check_element_on_page((By.ID, "nav_list")))
+        self.logout()
+        self.login('admin','admin123')
+        # delete user
+        self.edit_user('list',{'delete':1})
 
     def test_detail_random_user_template(self):
         self.fill_view_config({'Show_detail_random':0})
@@ -373,6 +455,7 @@ class TestUserTemplate(unittest.TestCase, ui_class):
         self.assertTrue(self.check_element_on_page((By.ID, "nav_new")))
         # self.assertTrue(self.check_element_on_page((By.ID, "nav_sort")))
         self.assertTrue(self.check_element_on_page((By.ID, "nav_hot")))
+        self.assertTrue(self.check_element_on_page((By.ID, "nav_download")))
         self.assertTrue(self.check_element_on_page((By.ID, "nav_rated")))
         self.assertTrue(self.check_element_on_page((By.ID, "nav_read")))
         self.assertTrue(self.check_element_on_page((By.ID, "nav_unread")))
@@ -384,6 +467,7 @@ class TestUserTemplate(unittest.TestCase, ui_class):
         self.assertTrue(self.check_element_on_page((By.ID, "nav_publisher")))
         self.assertTrue(self.check_element_on_page((By.ID, "nav_format")))
         self.assertTrue(self.check_element_on_page((By.ID, "nav_archived")))
+        self.assertTrue(self.check_element_on_page((By.ID, "nav_list")))
         self.goto_page("nav_new")
         self.assertFalse(self.check_element_on_page((By.ID, "books_rand")))
         # check random books not shown in category section
@@ -392,10 +476,10 @@ class TestUserTemplate(unittest.TestCase, ui_class):
         self.assertTrue(self.check_element_on_page((By.ID, "books")))
         self.assertFalse(self.check_element_on_page((By.ID, "books_rand")))
         # check random books shown in series section
-        list_element = self.goto_page("nav_serie")
-        # list_element = self.get_series_books_displayed()
+        self.goto_page("nav_serie")
+        list_element = self.get_series_books_displayed()
         self.assertIsNotNone(list_element)
-        list_element[0].click()
+        list_element[0]['ele'].click()
         self.assertTrue(self.check_element_on_page((By.ID, "books")))
         self.assertFalse(self.check_element_on_page((By.ID, "books_rand")))
         # check random books not shown in author section
@@ -415,6 +499,9 @@ class TestUserTemplate(unittest.TestCase, ui_class):
         self.assertFalse(self.check_element_on_page((By.ID, "books_rand")))
         # check random books not shown in hot section
         self.goto_page("nav_hot")
+        self.assertFalse(self.check_element_on_page((By.ID, "books_rand")))
+        # check random books not shown in hot section
+        self.goto_page("nav_download")
         self.assertFalse(self.check_element_on_page((By.ID, "books_rand")))
         # check random books not shown in best rated section
         self.goto_page("nav_rated")

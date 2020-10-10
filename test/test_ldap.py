@@ -4,8 +4,9 @@ import unittest
 import time
 import re
 import os
+import shutil
 from helper_ui import ui_class
-from config_test import TEST_DB, BOOT_TIME
+from config_test import TEST_DB, BOOT_TIME, CALIBRE_WEB_PATH, base_path
 from helper_func import startup, debug_startup, add_dependency, remove_dependency, get_Host_IP
 from selenium.webdriver.common.by import By
 from helper_ldap import TestLDAPServer
@@ -15,7 +16,7 @@ from helper_func import save_logfiles
 
 class TestLdapLogin(unittest.TestCase, ui_class):
 
-    p=None
+    p = None
     driver = None
     kobo_adress = None
     if os.name == 'nt':
@@ -501,6 +502,61 @@ class TestLdapLogin(unittest.TestCase, ui_class):
         self.assertTrue(self.check_element_on_page((By.ID, "flash_success")))
         # stop ldap
         self.server.stopListen()
+
+    @unittest.skip('Unknown how to test certificate')
+    def test_LDAP_SSL_CERTIFICATE(self):
+        shutil.rmtree(os.path.join(CALIBRE_WEB_PATH, 'files'), ignore_errors=True)
+        src = os.path.join(base_path, 'files','ca.pem')
+        real_key_file = os.path.join(CALIBRE_WEB_PATH, 'files', 'ca.pem')
+        os.makedirs(os.path.join(CALIBRE_WEB_PATH, 'files'))
+        shutil.copy(src, real_key_file)
+        # configure ssl LDAP
+        self.fill_basic_config({'config_ldap_provider_url': '127.0.0.1',
+                                'config_ldap_port': '3268',
+                                'config_ldap_authentication': 'Simple',
+                                'config_ldap_dn': 'ou=people,dc=calibreweb,dc=com',
+                                'config_ldap_serv_username': 'cn=root,dc=calibreweb,dc=com',
+                                'config_ldap_serv_password': 'secret',
+                                'config_ldap_user_object': '(uid=%s)',
+                                'config_ldap_group_object_filter': '',
+                                'config_ldap_openldap': 1,
+                                'config_ldap_encryption': 'SSL',
+                                'config_ldap_cert_path': real_key_file
+                                })
+        self.assertTrue(self.check_element_on_page((By.ID, "flash_success")))
+        time.sleep(BOOT_TIME)
+        # create new user
+        # give user password different form ldap
+        self.create_user('user0',{'email':'user0@exi.com','password':'1235'})
+        self.assertTrue(self.check_element_on_page((By.ID, "flash_success")))
+        # start SSl LDAP
+        # self.server.relisten(config=1, port=3268, encrypt="SSL", validate=True)
+        # logout
+        self.logout()
+        # login as LDAP user
+        self.login('user0', 'terces')
+        self.assertTrue(self.check_element_on_page((By.ID, "flash_success")))
+        # logout
+        self.logout()
+        # login as admin
+        self.login('admin', 'admin123')
+        self.assertTrue(self.check_element_on_page((By.ID, "flash_warning")))
+        # configure no certificate LDAP
+        self.fill_basic_config({'config_ldap_cert_path': ''})
+        time.sleep(BOOT_TIME)
+        # logout
+        self.logout()
+        # try login -> not reachable
+        self.login('user0', 'terces')
+        self.assertTrue(self.check_element_on_page((By.ID, "flash_alert")))
+        # login admin
+        self.login('admin', 'admin123')
+        self.assertTrue(self.check_element_on_page((By.ID, "flash_warning")))
+        self.edit_user('user0', {'delete': 1})
+        self.assertTrue(self.check_element_on_page((By.ID, "flash_success")))
+        # stop ldap
+        self.server.stopListen()
+
 
     def test_LDAP_STARTTLS(self):
         # configure LDAP STARTTLS

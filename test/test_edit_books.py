@@ -239,9 +239,9 @@ class TestEditBooks(TestCase, ui_class):
         self.edit_book(content={'series':u'Alf|alfa, Kuko'})
         values = self.get_book_details()
         self.assertEqual(u'Alf|alfa, Kuko', values['series'])
-        list_element = self.goto_page('nav_serie')
-        # list_element = self.get_series_books_displayed()
-        self.assertEqual(list_element[0].text, u'Alf|alfa, Kuko')
+        self.goto_page('nav_serie')
+        list_element = self.get_series_books_displayed()
+        self.assertEqual(list_element[0]['title'], u'Alf|alfa, Kuko')
 
         self.get_book_details(9)
         self.check_element_on_page((By.ID, "edit_book")).click()
@@ -259,9 +259,9 @@ class TestEditBooks(TestCase, ui_class):
         self.edit_book(content={'series':u'loko'})
         values = self.get_book_details()
         self.assertEqual(u'loko', values['series'])
-        list_element = self.goto_page('nav_serie')
-        # list_element = self.get_series_books_displayed()
-        self.assertEqual(list_element[1].text, u'loko')
+        self.goto_page('nav_serie')
+        list_element = self.get_series_books_displayed()
+        self.assertEqual(list_element[1]['title'], u'loko')
 
         self.get_book_details(4)
         self.check_element_on_page((By.ID, "edit_book")).click()
@@ -913,9 +913,9 @@ class TestEditBooks(TestCase, ui_class):
 
     # download of books
     def test_download_book(self):
-        self.goto_page('user_setup')
-        book_downloads = self.driver.find_elements_by_class_name("media-object")
-        self.assertEqual(0, len(book_downloads))
+        self.goto_page('nav_download')
+        number_books = self.get_books_displayed()
+        self.assertEqual(0, len(number_books[1]))
         self.get_book_details(5)
         element = self.check_element_on_page((By.XPATH, "//*[starts-with(@id,'btnGroupDrop')]"))
         download_link = element.get_attribute("href")
@@ -934,13 +934,9 @@ class TestEditBooks(TestCase, ui_class):
         self.assertNotIn('download', book)
         self.edit_user('admin', {'download_role': 1})
         r.close()
-        self.goto_page('user_setup')
-        book_downloads = self.driver.find_elements_by_class_name("media-object")
-        self.assertEqual(1, len(book_downloads))
-        book_downloads[0].click()
-        book = self.get_book_details()
-        self.assertEqual('testbook', book['title'])
-        # self.assertFalse(self.check_element_on_page((By.XPATH, "//*/h2/div/")))
+        self.goto_page('nav_download')
+        number_books = self.get_books_displayed()
+        self.assertEqual(1, len(number_books[1]))
 
 
     # If more than one book has the same: author, tag or series it should be possible to change uppercase

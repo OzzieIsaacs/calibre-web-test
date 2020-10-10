@@ -33,6 +33,8 @@ page['nav_cat'] = {'check': (By.TAG_NAME, "h1"), 'click': [(By.ID, "nav_cat")]}
 page['nav_author'] = {'check': (By.TAG_NAME, "h1"), 'click': [(By.ID, "nav_author")]}
 page['nav_lang'] = {'check': (By.TAG_NAME, "h1"), 'click': [(By.ID, "nav_lang")]}
 page['nav_hot'] = {'check': None, 'click': [(By.ID, "nav_hot")]}
+page['nav_download'] = {'check': (By.TAG_NAME, "h2"), 'click': [(By.ID, "nav_download")]}
+page['nav_list'] = {'check': (By.ID, "merge_books"), 'click': [(By.ID, "nav_list")]}
 page['nav_about'] = {'check': (By.ID, "stats"), 'click': [(By.ID, "nav_about")]}
 page['nav_rated'] = {'check': None, 'click': [(By.ID, "nav_rated")]}
 page['nav_read'] = {'check': None, 'click': [(By.ID, "nav_read")]}
@@ -294,7 +296,7 @@ class ui_class():
         checkboxes = ['admin_role', 'download_role', 'upload_role', 'edit_role', 'delete_role', 'passwd_role',
                       'viewer_role', 'edit_shelf_role', 'show_32', 'show_16', 'show_128', 'show_32768',
                         'show_2', 'show_4', 'show_8', 'show_64', 'show_256', 'show_8192', 'show_16384',
-                        'Show_detail_random', 'show_4096']
+                        'Show_detail_random', 'show_4096', 'show_65536', 'show_131072']
         selects = ['config_theme', 'config_restricted_column', 'config_read_column']
         # depending on elements open accordions or not
         if any(key in elements for key in ['config_calibre_web_title', 'config_books_per_page', 'config_theme',
@@ -304,9 +306,9 @@ class ui_class():
         if any(key in elements for key in ['admin_role', 'download_role', 'upload_role', 'edit_role', 'viewer_role',
                                            'delete_role', 'passwd_role', 'edit_shelf_role']):
             opener.append(1)
-        if any(key in elements for key in ['show_32', 'show_16', 'show_128', 'show_32768',
+        if any(key in elements for key in ['show_32', 'show_16', 'show_128', 'show_32768', 'show_65536',
                                            'show_2', 'show_4', 'show_8', 'show_64', 'show_8192', 'show_16384',
-                                           'show_256', 'Show_detail_random', 'show_4096']):
+                                           'show_256', 'Show_detail_random', 'show_4096', 'show_131072']):
             opener.append(2)
 
         # open all necessary accordions
@@ -646,7 +648,7 @@ class ui_class():
         print('User: %s not found' % name)
         return False
 
-    def get_user_settings(self,name):
+    def get_user_settings(self, name):
         self.goto_page('admin_setup')
         user = self.driver.find_elements_by_xpath("//table[@id='table_user']/tbody/tr/td/a")
         for ele in user:
@@ -688,7 +690,7 @@ class ui_class():
                         user_settings['show_512'] = element.is_selected()
                     else:'''
                     user_settings['show_512'] = None
-                    user_settings['show_1024'] = None   # was sorted
+                    user_settings['show_1024'] = None  # was sorted
                     user_settings['show_2048'] = None  # was mature content
                     user_settings['show_4096'] = int(self.check_element_on_page((By.ID, "show_4096")).is_selected())
                     user_settings['show_8192'] = int(self.check_element_on_page((By.ID, "show_8192")).is_selected())
@@ -698,6 +700,16 @@ class ui_class():
                         user_settings['show_32768'] = element.is_selected()
                     else:
                         user_settings['show_32768'] = None
+                    element = self.check_element_on_page((By.ID, "show_65536"))
+                    if element:
+                        user_settings['show_65536'] = element.is_selected()
+                    else:
+                        user_settings['show_65536'] = None
+                    element = self.check_element_on_page((By.ID, "show_131072"))
+                    if element:
+                        user_settings['show_131072'] = element.is_selected()
+                    else:
+                        user_settings['show_131072'] = None
                     user_settings['Show_detail_random'] = int(self.check_element_on_page((By.ID, "Show_detail_random")).is_selected())
                     element = self.check_element_on_page((By.ID, "admin_role"))
                     if element:
@@ -1421,6 +1433,63 @@ class ui_class():
         self.check_element_on_page((By.ID, "delete")).click()
         self.check_element_on_page((By.ID, "delete_confirm")).click()
         time.sleep(2)
+
+    def delete_book_format(self, id, format):
+        self.get_book_details(id)
+        self.check_element_on_page((By.ID, "edit_book")).click()
+        b = self.check_element_on_page((By.XPATH, "//*[@data-delete-format='" + format.upper() + "']"))
+        if not b:
+            return False
+        b.click()
+        c = self.check_element_on_page((By.ID, "delete_confirm"))
+        if not c:
+            return False
+        c.click()
+        time.sleep(2)
+        return True
+
+    def goto_blist_page(self, page):
+        if not self.check_element_on_page((By.CLASS_NAME, "pagination")):
+            return False
+        pages = self.driver.find_elements_by_class_name("page-item")
+        for p in pages:
+            if p.text == str(page):
+                if 'active' not in p.get_attribute('class'):
+                    ele = p.find_element_by_xpath('./a')
+                    ele.click()
+                return True
+        return False
+
+    def get_blist(self, page=1):
+        # get current page
+        if not page == -1:
+            self.goto_page('nav_list')
+            time.sleep(2)
+            if not self.goto_blist_page(page):
+                return False
+        header = self.driver.find_elements_by_xpath("//thead/tr/th/div[starts-with(@class, 'th-inner')]")
+        rows = self.driver.find_elements_by_xpath("//tbody/tr")
+        for row in rows:
+            elements = row.find_elements_by_xpath("./td")
+
+    def select_blist_books(self, books):
+        pass
+
+    def merge_blist_books(self, abort=False):
+        pass
+
+    def deselect_blist_books(self):
+        pass
+
+    def change_blist_visibliity(self, parameter_dict):
+        pass
+
+    def delete_blist_book(self, book):
+        pass
+
+    def edit_blist_book(self, book_dict):
+        pass
+
 
     @classmethod
     def get_convert_book(cls, id=-1, root_url='http://127.0.0.1:8083'):

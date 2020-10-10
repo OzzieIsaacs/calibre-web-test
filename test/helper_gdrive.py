@@ -20,6 +20,7 @@ def get_credentials():
                               client_secret=tokens['client_secret'])
 
 def prepare_gdrive():
+    print("Preparing GDrive")
     credentials = get_credentials()
     fs = GoogleDriveFS(credentials=credentials)
     try:
@@ -31,11 +32,7 @@ def prepare_gdrive():
 
     # copy database from local to gdrive
     test = fs.makedir('test')
-    #fs.makedir('test')
-    #info = fs.getinfo('test')
-    #root_id = info.raw['sharing']['id']
     copy_fs(OSFS('./Calibre_db'), test) # GoogleDriveFS(credentials=get_credentials(), rootId=root_id))
-    # fs.removedir('/test/New Folder')
     fs.close()
 
 

@@ -56,11 +56,12 @@ class TestAnonymous(unittest.TestCase, ui_class):
         self.assertTrue(self.check_element_on_page((By.ID, "books_rand")))
 
         # check random books shown in series section
+        self.goto_page('nav_serie')
         # check if we are seeing list view
         # if len(list_element == 0):
-        list_element = self.goto_page('nav_serie')
+        list_element = self.get_series_books_displayed()
         self.assertIsNotNone(list_element)
-        list_element[0].click()
+        list_element[0]['ele'].click()
         self.assertTrue(self.check_element_on_page((By.ID, "books_rand")))
 
         # check random books NOT shown in author section
@@ -108,6 +109,8 @@ class TestAnonymous(unittest.TestCase, ui_class):
                                  'show_16': 0, 'show_4': 0, 'show_4096': 0, 'show_8': 0, 'show_64': 0})
         self.logout()
         self.assertFalse(self.check_element_on_page((By.ID, "nav_read")))
+        self.assertFalse(self.check_element_on_page((By.ID, "nav_download")))
+        self.assertFalse(self.check_element_on_page((By.ID, "nav_list")))
         self.assertFalse(self.check_element_on_page((By.ID, "nav_unread")))
         self.assertFalse(self.check_element_on_page((By.ID, "nav_archived")))
         self.assertFalse(self.check_element_on_page((By.ID, "nav_rate")))
@@ -132,10 +135,10 @@ class TestAnonymous(unittest.TestCase, ui_class):
         self.assertTrue(self.check_element_on_page((By.ID, "books")))
         self.assertFalse(self.check_element_on_page((By.ID, "nav_rand")))
         # check random books shown in series section
-        list_element = self.goto_page("nav_serie")
-        #list_element = self.get_series_books_displayed()
-        #self.assertIsNotNone(list_element)
-        list_element[0].click()
+        self.goto_page("nav_serie")
+        list_element = self.get_series_books_displayed()
+        self.assertIsNotNone(list_element)
+        list_element[0]['ele'].click()
 
         self.assertTrue(self.check_element_on_page((By.ID, "books")))
         self.assertFalse(self.check_element_on_page((By.ID, "nav_rand")))
@@ -173,10 +176,10 @@ class TestAnonymous(unittest.TestCase, ui_class):
         self.assertTrue(self.check_element_on_page((By.ID, "books")))
         self.assertTrue(self.check_element_on_page((By.ID, "nav_rand")))
         # check random books shown in series section
-        list_element = self.goto_page("nav_serie")
-        # list_element = self.get_series_books_displayed()
+        self.goto_page("nav_serie")
+        list_element = self.get_series_books_displayed()
         self.assertIsNotNone(list_element)
-        list_element[0].click()
+        list_element[0]['ele'].click()
 
         self.assertTrue(self.check_element_on_page((By.ID, "books")))
         self.assertTrue(self.check_element_on_page((By.ID, "nav_rand")))
@@ -306,6 +309,8 @@ class TestAnonymous(unittest.TestCase, ui_class):
         self.assertIsNone(rights['nickname'])
         self.assertIsNone(rights['show_256'])
         self.assertIsNone(rights['show_32768'])
+        self.assertIsNone(rights['show_65536'])
+        self.assertIsNone(rights['show_131072'])
         self.assertIsNone(rights['locale'])
         self.assertIsNone(rights['edit_shelf_role'])
         self.assertIsNone(rights['admin_role'])
