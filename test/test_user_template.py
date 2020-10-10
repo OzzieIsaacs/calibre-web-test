@@ -65,14 +65,14 @@ class TestUserTemplate(unittest.TestCase, ui_class):
 
     def test_recent_user_template(self):
         self.fill_view_config({'show_4':0,'show_8':0, 'show_16':0, 'show_32':0, 'show_64':0, 'show_128':0,
-                               'show_256': 0, 'show_4096': 0, 'show_8192': 0,
-                               'show_16384': 0, 'show_32768': 0, 'show_2':0
+                               'show_256': 0, 'show_4096': 0, 'show_8192': 0, 'show_131072':0,
+                               'show_16384': 0, 'show_32768': 0, 'show_2':0, 'show_65536':0
                                })
         self.goto_page('create_user')
         self.create_user('recent',{'password':'1234','email':'a4@b.com'})
         self.fill_view_config({'show_4':1,'show_8':1, 'show_16':1, 'show_32':1, 'show_64':1, 'show_128':1,
-                               'show_256': 1, 'show_4096': 1, 'show_8192': 1,
-                               'show_16384': 1, 'show_32768': 1, 'show_2': 1
+                               'show_256': 1, 'show_4096': 1, 'show_8192': 1, 'show_65536':1,
+                               'show_16384': 1, 'show_32768': 1, 'show_2': 1, 'show_131072':1,
                                })
         self.assertTrue(self.check_element_on_page((By.ID, "flash_success")))
         self.logout()
@@ -391,7 +391,7 @@ class TestUserTemplate(unittest.TestCase, ui_class):
         self.goto_page('create_user')
         self.create_user('download',{'password':'1234','email':'aaa@b.com'})
         self.assertTrue(self.check_element_on_page((By.ID, "flash_success")))
-        self.fill_view_config({'show_256' : 1})
+        self.fill_view_config({'show_65536' : 1})
         self.logout()
         self.login('download','1234')
         self.assertTrue(self.check_element_on_page((By.ID, "nav_new")))
@@ -420,13 +420,13 @@ class TestUserTemplate(unittest.TestCase, ui_class):
         self.goto_page('create_user')
         self.create_user('list',{'password':'1234','email':'aaa@b.com'})
         self.assertTrue(self.check_element_on_page((By.ID, "flash_success")))
-        self.fill_view_config({'show_256' : 1})
+        self.fill_view_config({'show_131072' : 1})
         self.logout()
         self.login('list','1234')
         self.assertTrue(self.check_element_on_page((By.ID, "nav_new")))
         # self.assertTrue(self.check_element_on_page((By.ID, "nav_sort")))
         self.assertTrue(self.check_element_on_page((By.ID, "nav_hot")))
-        self.assertFalse(self.check_element_on_page((By.ID, "nav_download")))
+        self.assertTrue(self.check_element_on_page((By.ID, "nav_download")))
         self.assertTrue(self.check_element_on_page((By.ID, "nav_rated")))
         self.assertTrue(self.check_element_on_page((By.ID, "nav_read")))
         self.assertTrue(self.check_element_on_page((By.ID, "nav_unread")))
@@ -438,7 +438,7 @@ class TestUserTemplate(unittest.TestCase, ui_class):
         self.assertTrue(self.check_element_on_page((By.ID, "nav_publisher")))
         self.assertTrue(self.check_element_on_page((By.ID, "nav_format")))
         self.assertTrue(self.check_element_on_page((By.ID, "nav_archived")))
-        self.assertTrue(self.check_element_on_page((By.ID, "nav_list")))
+        self.assertFalse(self.check_element_on_page((By.ID, "nav_list")))
         self.logout()
         self.login('admin','admin123')
         # delete user

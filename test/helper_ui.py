@@ -296,7 +296,7 @@ class ui_class():
         checkboxes = ['admin_role', 'download_role', 'upload_role', 'edit_role', 'delete_role', 'passwd_role',
                       'viewer_role', 'edit_shelf_role', 'show_32', 'show_16', 'show_128', 'show_32768',
                         'show_2', 'show_4', 'show_8', 'show_64', 'show_256', 'show_8192', 'show_16384',
-                        'Show_detail_random', 'show_4096']
+                        'Show_detail_random', 'show_4096', 'show_65536', 'show_131072']
         selects = ['config_theme', 'config_restricted_column', 'config_read_column']
         # depending on elements open accordions or not
         if any(key in elements for key in ['config_calibre_web_title', 'config_books_per_page', 'config_theme',
@@ -306,9 +306,9 @@ class ui_class():
         if any(key in elements for key in ['admin_role', 'download_role', 'upload_role', 'edit_role', 'viewer_role',
                                            'delete_role', 'passwd_role', 'edit_shelf_role']):
             opener.append(1)
-        if any(key in elements for key in ['show_32', 'show_16', 'show_128', 'show_32768',
+        if any(key in elements for key in ['show_32', 'show_16', 'show_128', 'show_32768', 'show_65536',
                                            'show_2', 'show_4', 'show_8', 'show_64', 'show_8192', 'show_16384',
-                                           'show_256', 'Show_detail_random', 'show_4096']):
+                                           'show_256', 'Show_detail_random', 'show_4096', 'show_131072']):
             opener.append(2)
 
         # open all necessary accordions

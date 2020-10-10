@@ -29,11 +29,11 @@ class TestLdapLogin(unittest.TestCase, ui_class):
         add_dependency(cls.dep_line, cls.__name__)
 
         try:
-            cls.server = TestLDAPServer(config=4, port=3268, encrypt="SSL", validate=True) # encrypt=None)
+            cls.server = TestLDAPServer(config=4, port=3268, encrypt=None)
             cls.server.start()
             startup(cls, cls.py_version, {'config_calibre_dir':TEST_DB,'config_login_type':'Use LDAP Authentication'})
             # print('stop in setup')
-            # cls.server.stopListen()
+            cls.server.stopListen()
         except Exception as e:
             cls.driver.quit()
             cls.p.terminate()

@@ -144,6 +144,7 @@ def startup(inst, pyVersion, config, login=True, host="http://127.0.0.1:8083",
 
     # navigate to the application home page
     inst.driver.get(host)
+    # toDO: Check title is valid
     time.sleep(2)
     if not only_startup:
         # Wait for config screen to show up
