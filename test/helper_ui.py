@@ -648,7 +648,7 @@ class ui_class():
         print('User: %s not found' % name)
         return False
 
-    def get_user_settings(self,name):
+    def get_user_settings(self, name):
         self.goto_page('admin_setup')
         user = self.driver.find_elements_by_xpath("//table[@id='table_user']/tbody/tr/td/a")
         for ele in user:
@@ -690,7 +690,7 @@ class ui_class():
                         user_settings['show_512'] = element.is_selected()
                     else:'''
                     user_settings['show_512'] = None
-                    user_settings['show_1024'] = None   # was sorted
+                    user_settings['show_1024'] = None  # was sorted
                     user_settings['show_2048'] = None  # was mature content
                     user_settings['show_4096'] = int(self.check_element_on_page((By.ID, "show_4096")).is_selected())
                     user_settings['show_8192'] = int(self.check_element_on_page((By.ID, "show_8192")).is_selected())
@@ -700,6 +700,16 @@ class ui_class():
                         user_settings['show_32768'] = element.is_selected()
                     else:
                         user_settings['show_32768'] = None
+                    element = self.check_element_on_page((By.ID, "show_65536"))
+                    if element:
+                        user_settings['show_65536'] = element.is_selected()
+                    else:
+                        user_settings['show_65536'] = None
+                    element = self.check_element_on_page((By.ID, "show_131072"))
+                    if element:
+                        user_settings['show_131072'] = element.is_selected()
+                    else:
+                        user_settings['show_131072'] = None
                     user_settings['Show_detail_random'] = int(self.check_element_on_page((By.ID, "Show_detail_random")).is_selected())
                     element = self.check_element_on_page((By.ID, "admin_role"))
                     if element:
