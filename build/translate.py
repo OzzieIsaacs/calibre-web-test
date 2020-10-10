@@ -48,12 +48,14 @@ p.wait()
 out_iso = dict()
 os.chdir(workdir)
 translation_list = list()
+langcode_list = list()
 
 lang_keys = need_iso['name_map'].keys()
 
 
 for file in glob.glob1("./translations", "*.po"):
     langcode=file[23:-3]
+    langcode_list.append(langcode)
     # Remove old content from po file
     message_path = os.path.join(FILEPATH,'cps','translations',langcode, 'LC_MESSAGES','messages.po')
     translateFile=open(message_path)
@@ -149,6 +151,11 @@ with open(os.path.join(WIKIPATH, 'Translation-Status.md'), 'w', encoding='utf8')
     f.write(headline)
     f.write("\r\n".join(translation_list))
 
+# check if all datepicker localefiles are present
+for code in langcode_list:
+    if not os.path.isfile(os.path.join(FILEPATH, 'cps', 'static', 'js', 'libs', 'bootstrap-datepicker', 'locales',
+                                  'bootstrap-datepicker.'+ code +'.min.js')):
+        print('                             !!!  Error Bootstrap Datepicker locale missing for: ' + code)
 # Generate .mo files
 #trans_path = "cps/translations"
 #if sys.version_info < (3, 0):
