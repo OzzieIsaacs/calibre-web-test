@@ -5,7 +5,7 @@ from selenium.webdriver.common.keys import Keys
 from selenium.webdriver.support.ui import WebDriverWait, Select
 from selenium.webdriver.support import expected_conditions as EC
 from selenium.common.exceptions import TimeoutException
-from config_test import PY_BIN
+from config_test import PY_BIN, BOOT_TIME
 import time
 import lxml.etree
 try:
@@ -627,7 +627,7 @@ class ui_class():
 
 
     @classmethod
-    def check_element_on_page(cls, element, timeout=5):
+    def check_element_on_page(cls, element, timeout=BOOT_TIME):
         try:
             el = WebDriverWait(cls.driver, timeout).until(EC.presence_of_element_located(element))
             return el
@@ -1034,15 +1034,16 @@ class ui_class():
             if len(meta) >= 3:
                 for met in meta[2:]:
                     element = met.getchildren()
-                    if 'class' in element[0].attrib:
-                        counter = 0
-                        for rating in element:
-                            if rating.attrib['class'] == 'glyphicon glyphicon-star good':
-                                counter += 1
-                        book_r['rating'] = counter
-                    elif 'href' in element[0].attrib:
-                        book_r['series'] = element[0].text.rstrip().lstrip()
-                        book_r['series_index'] = element[0].tail.rstrip().lstrip().strip(')').lstrip('(')
+                    if len(element):
+                        if 'class' in element[0].attrib:
+                            counter = 0
+                            for rating in element:
+                                if rating.attrib['class'] == 'glyphicon glyphicon-star good':
+                                    counter += 1
+                            book_r['rating'] = counter
+                        elif 'href' in element[0].attrib:
+                            book_r['series'] = element[0].text.rstrip().lstrip()
+                            book_r['series_index'] = element[0].tail.rstrip().lstrip().strip(')').lstrip('(')
             books_rand.append(book_r)
         books = list()
         b = tree.xpath("//*[@class='discover load-more']/div/div")
@@ -1060,15 +1061,16 @@ class ui_class():
             if len(meta) >= 3:
                 for met in meta[2:]:
                     element = met.getchildren()
-                    if 'class' in element[0].attrib:
-                        counter = 0
-                        for rating in element:
-                            if rating.attrib['class'] == 'glyphicon glyphicon-star good':
-                                counter += 1
-                        bk['rating'] = counter
-                    elif 'href' in element[0].attrib:
-                        bk['series'] = element[0].text.rstrip().lstrip()
-                        bk['series_index'] = element[0].tail.rstrip().lstrip().strip(')').lstrip('(')
+                    if len(element):
+                        if 'class' in element[0].attrib:
+                            counter = 0
+                            for rating in element:
+                                if rating.attrib['class'] == 'glyphicon glyphicon-star good':
+                                    counter += 1
+                            bk['rating'] = counter
+                        elif 'href' in element[0].attrib:
+                            bk['series'] = element[0].text.rstrip().lstrip()
+                            bk['series_index'] = element[0].tail.rstrip().lstrip().strip(')').lstrip('(')
             books.append(bk)
 
         pages = tree.xpath("//*[@class='pagination']/a")
@@ -1120,15 +1122,16 @@ class ui_class():
             if len(meta) >= 3:
                 for met in meta[2:]:
                     element = met.getchildren()
-                    if 'class' in element[0].attrib:
-                        counter = 0
-                        for rating in element:
-                            if rating.attrib['class'] == 'glyphicon glyphicon-star good':
-                                counter += 1
-                        bk['rating'] = counter
-                    elif 'href' in element[0].attrib:
-                        bk['series'] = element[0].text.rstrip().lstrip()
-                        bk['series_index'] = element[0].tail.rstrip().lstrip().strip(')').lstrip('(')
+                    if len(element):
+                        if 'class' in element[0].attrib:
+                            counter = 0
+                            for rating in element:
+                                if rating.attrib['class'] == 'glyphicon glyphicon-star good':
+                                    counter += 1
+                            bk['rating'] = counter
+                        elif 'href' in element[0].attrib:
+                            bk['series'] = element[0].text.rstrip().lstrip()
+                            bk['series_index'] = element[0].tail.rstrip().lstrip().strip(')').lstrip('(')
             books.append(bk)
         return books
 
