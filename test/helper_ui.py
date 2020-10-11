@@ -1031,13 +1031,18 @@ class ui_class():
             book_r['title']= meta[0].getchildren()[0].text
             authors = meta[1].getchildren()
             book_r['author'] = [a.text for a in authors if a.text != '&' and a.attrib.get('class') != 'author-name author-hidden']
-            if len(meta) == 3:
-                ratings = meta[2].getchildren()
-                counter = 0
-                for rating in ratings:
-                    if rating.attrib['class'] == 'glyphicon glyphicon-star good':
-                        counter += 1
-                book_r['rating'] = counter
+            if len(meta) >= 3:
+                for met in meta[2:]:
+                    element = met.getchildren()
+                    if 'class' in element[0].attrib:
+                        counter = 0
+                        for rating in element:
+                            if rating.attrib['class'] == 'glyphicon glyphicon-star good':
+                                counter += 1
+                        book_r['rating'] = counter
+                    elif 'href' in element[0].attrib:
+                        book_r['series'] = element[0].text.rstrip().lstrip()
+                        book_r['series_index'] = element[0].tail.rstrip().lstrip().strip(')').lstrip('(')
             books_rand.append(book_r)
         books = list()
         b = tree.xpath("//*[@class='discover load-more']/div/div")
@@ -1052,13 +1057,18 @@ class ui_class():
             bk['title']= meta[0].getchildren()[0].text
             authors = meta[1].getchildren()
             bk['author'] = [a.text for a in authors if a.text != '&' and a.attrib.get('class') != 'author-name author-hidden']
-            if len(meta) == 3:
-                ratings = meta[2].getchildren()
-                counter = 0
-                for rating in ratings:
-                    if rating.attrib['class'] == 'glyphicon glyphicon-star good':
-                        counter += 1
-                bk['rating'] = counter
+            if len(meta) >= 3:
+                for met in meta[2:]:
+                    element = met.getchildren()
+                    if 'class' in element[0].attrib:
+                        counter = 0
+                        for rating in element:
+                            if rating.attrib['class'] == 'glyphicon glyphicon-star good':
+                                counter += 1
+                        bk['rating'] = counter
+                    elif 'href' in element[0].attrib:
+                        bk['series'] = element[0].text.rstrip().lstrip()
+                        bk['series_index'] = element[0].tail.rstrip().lstrip().strip(')').lstrip('(')
             books.append(bk)
 
         pages = tree.xpath("//*[@class='pagination']/a")
@@ -1084,15 +1094,6 @@ class ui_class():
             bk['id'] = bk['link'].split('/')[-1]
             bk['ele'] = cls.check_element_on_page((By.XPATH,"//a[@href='"+bk['link']+"']/img"))
             bk['title']= meta[0].getchildren()[0].text
-            '''authors = meta[1].getchildren()
-            bk['author'] = [a.text for a in authors if a.text != '&' and a.attrib.get('class') != 'author-name author-hidden']
-            if len(meta) == 3:
-                ratings = meta[2].getchildren()
-                counter = 0
-                for rating in ratings:
-                    if rating.attrib['class'] == 'glyphicon glyphicon-star good':
-                        counter += 1
-                bk['rating'] = counter'''
             books.append(bk)
 
         return books
@@ -1116,13 +1117,18 @@ class ui_class():
             bk['title']= meta[0].getchildren()[0].text
             authors = meta[1].getchildren()
             bk['author'] = [a.text for a in authors if a.text != '&' and a.attrib.get('class') != 'author-name author-hidden']
-            if len(meta) == 3:
-                ratings = meta[2].getchildren()
-                counter = 0
-                for rating in ratings:
-                    if rating.attrib['class'] == 'glyphicon glyphicon-star good':
-                        counter += 1
-                bk['rating'] = counter
+            if len(meta) >= 3:
+                for met in meta[2:]:
+                    element = met.getchildren()
+                    if 'class' in element[0].attrib:
+                        counter = 0
+                        for rating in element:
+                            if rating.attrib['class'] == 'glyphicon glyphicon-star good':
+                                counter += 1
+                        bk['rating'] = counter
+                    elif 'href' in element[0].attrib:
+                        bk['series'] = element[0].text.rstrip().lstrip()
+                        bk['series_index'] = element[0].tail.rstrip().lstrip().strip(')').lstrip('(')
             books.append(bk)
         return books
 
