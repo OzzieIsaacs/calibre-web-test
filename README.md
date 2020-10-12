@@ -33,9 +33,11 @@ Calibre-web-test
 
 - install Calibre as conversion tool (if running from within pycharm debugger version 3.48 at most, as Calibre 4.x crash during conversion in this configuration)
 
-- configure folder names in file ./test/config_test.py
+- Copy files from ./test/config_files to /test, configure folder names in file ./test/config_test.py
 
 - optional: for testing of goodreads you need a goodreads account with the corresponding api-key, the credentials have to be added in config_goodreads.py
+
+- After finishing all tests an email can be send out, the password for the e-mail account and the location of the result file (accessible via ssh) can be stored using keyring (https://pypi.org/project/keyring/), configuration options are stored in config_email
 
 - Installing on Windows requires pycurl which can be installed using wheel in a virtual environment (download from here: https://www.lfd.uci.edu/~gohlke/pythonlibs/)
 
@@ -43,7 +45,6 @@ Calibre-web-test
 
 - Testing GDrive requires a fully setup gdrive setup, please place the corresponding client_secrets.json and gdrive_credentials in calibre-web/test/files folder
 
-- After finishing all tests an email can be send out, the password for the e-mail account and the location of the result file (accessible via ssh) can be stored using keyring (https://pypi.org/project/keyring/)
 ## Start Testing
 
 Tests are running with python 3.6+ (better 3.7 as with 3.6 testing the e-mail startssl/ssl functionality will be skipped) by starting ./test/main.py (tests run for ca. 45min), tested on Linux Mint 19.3. \
