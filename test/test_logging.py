@@ -132,14 +132,23 @@ class TestLogging(unittest.TestCase, ui_class):
         # restart calibre-web and check if old logfile is used again
         shutil.rmtree(os.path.join(CALIBRE_WEB_PATH, u'hü lo'), ignore_errors=True)
         self.restart_calibre_web()
-        self.assertFalse(os.path.isfile(os.path.join(CALIBRE_WEB_PATH, 'hü lo', 'lö g')))
-        self.assertTrue(os.path.isfile(os.path.join(CALIBRE_WEB_PATH, 'calibre-web.log')))
-        # check if logpath is deleted
-        self.goto_page("basic_config")
-        accordions = self.driver.find_elements_by_class_name("accordion-toggle")
-        accordions[2].click()
-        logpath = self.driver.find_element_by_id("config_logfile").get_attribute("value")
-        self.assertEqual(logpath, "", "logfile config value is not empty after reseting to default")
+        if os.name != 'nt':
+            self.assertFalse(os.path.isfile(os.path.join(CALIBRE_WEB_PATH, 'hü lo', 'lö g')))
+            self.assertTrue(os.path.isfile(os.path.join(CALIBRE_WEB_PATH, 'calibre-web.log')))
+            # check if logpath is deleted
+            self.goto_page("basic_config")
+            accordions = self.driver.find_elements_by_class_name("accordion-toggle")
+            accordions[2].click()
+            logpath = self.driver.find_element_by_id("config_logfile").get_attribute("value")
+            self.assertEqual(logpath, "", "logfile config value is not empty after reseting to default")
+        else:
+            # It's NOT possible to delete the path, therefore changed folder/file is taken
+            self.assertTrue(os.path.isfile(os.path.join(CALIBRE_WEB_PATH, 'hü lo', 'lö g')))
+            self.assertFalse(os.path.isfile(os.path.join(CALIBRE_WEB_PATH, 'calibre-web.log')))
+            # ToDo: Stop Calibre-Web delete folder restart it and check if folder is the new one
+        self.fill_basic_config({'config_logfile': ''})
+        time.sleep(BOOT_TIME)
+        shutil.rmtree(os.path.join(CALIBRE_WEB_PATH, u'hü lo'), ignore_errors=True)
 
     def test_access_log_recover(self):
         if not os.path.isdir(os.path.join(CALIBRE_WEB_PATH, 'hö lo')):
@@ -158,13 +167,24 @@ class TestLogging(unittest.TestCase, ui_class):
         # restart calibre-web and check if old logfile is used again
         self.restart_calibre_web()
         self.goto_page("basic_config")
-        self.assertFalse(os.path.isfile(os.path.join(CALIBRE_WEB_PATH, 'hö lo', 'lü g')))
-        self.assertTrue(os.path.isfile(os.path.join(CALIBRE_WEB_PATH, 'access.log')))
-        # check if logpath is deleted
-        accordions = self.driver.find_elements_by_class_name("accordion-toggle")
-        accordions[2].click()
-        logpath = self.driver.find_element_by_id("config_access_logfile").get_attribute("value")
-        self.assertEqual(logpath, "", "Access logfile config value is not empty after reseting to default")
+        if os.name != 'nt':
+            # It's possible to delete the path, therefore original file is taken
+            self.assertFalse(os.path.isfile(os.path.join(CALIBRE_WEB_PATH, 'hö lo', 'lü g')))
+            self.assertTrue(os.path.isfile(os.path.join(CALIBRE_WEB_PATH, 'access.log')))
+            # check if logpath is deleted
+            accordions = self.driver.find_elements_by_class_name("accordion-toggle")
+            accordions[2].click()
+            logpath = self.driver.find_element_by_id("config_access_logfile").get_attribute("value")
+            self.assertEqual(logpath, "", "Access logfile config value is not empty after reseting to default")
+        else:
+            # It's NOT possible to delete the path, therefore changed folder/file is taken
+            self.assertTrue(os.path.isfile(os.path.join(CALIBRE_WEB_PATH, 'hö lo', 'lü g')))
+            self.assertFalse(os.path.isfile(os.path.join(CALIBRE_WEB_PATH, 'access.log')))
+            # ToDo: Stop Calibre-Web delete folder restart it and check if folder is the new one
+        self.fill_basic_config({'config_access_log': 0, 'config_access_logfile': ''})
+        time.sleep(BOOT_TIME)
+        shutil.rmtree(os.path.join(CALIBRE_WEB_PATH, u'hö lo'), ignore_errors=True)
+
 
     def test_logviewer(self):
         self.fill_basic_config({'config_logfile': '/dev/stdout',

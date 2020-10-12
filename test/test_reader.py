@@ -91,6 +91,7 @@ class TestReader(unittest.TestCase, ui_class):
         if len(new_handle) != 1:
             self.assertFalse('Not exactly one new tab was opened')
         self.driver.switch_to.window(new_handle[0])
+        time.sleep(3)
         content = self.driver.find_elements_by_xpath("//div[@class='textLayer']/span")
         self.assertTrue(content)
         self.assertTrue('Lorem ipsum dolor sit amet, consectetuer adipiscing elit' in content[0].text)
@@ -108,6 +109,7 @@ class TestReader(unittest.TestCase, ui_class):
         if len(new_handle) != 1:
             self.assertFalse('Not exactly one new tab was opened')
         self.driver.switch_to.window(new_handle[0])
+        time.sleep(3)
         self.assertFalse(self.check_element_on_page((By.ID, "print")))
         self.assertFalse(self.check_element_on_page((By.ID, "download")))
         self.driver.close()
@@ -124,6 +126,7 @@ class TestReader(unittest.TestCase, ui_class):
         if len(new_handle) != 1:
             self.assertFalse('Not exactly one new tab was opened')
         self.driver.switch_to.window(new_handle[0])
+        time.sleep(3)
         self.assertTrue(self.check_element_on_page((By.ID, "print")))
         self.assertTrue(self.check_element_on_page((By.ID, "download")))
         self.driver.close()
