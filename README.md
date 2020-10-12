@@ -43,6 +43,7 @@ Calibre-web-test
 
 - Testing GDrive requires a fully setup gdrive setup, please place the corresponding client_secrets.json and gdrive_credentials in calibre-web/test/files folder
 
+- After finishing all tests an email can be send out, the password for the e-mail account and the location of the result file (accessible via ssh) can be stored using keyring (https://pypi.org/project/keyring/)
 ## Start Testing
 
 Tests are running with python 3.6+ (better 3.7 as with 3.6 testing the e-mail startssl/ssl functionality will be skipped) by starting ./test/main.py (tests run for ca. 45min), tested on Linux Mint 19.3. \

@@ -8,7 +8,10 @@ from selenium.webdriver.common.by import By
 from helper_func import save_logfiles
 try:
     from config_goodreads import GOODREADS_API_KEY, GOODREADS_API_SECRET
-    GR = True
+    if GOODREADS_API_KEY !='' and GOODREADS_API_SECRET !='':
+        GR = True
+    else:
+        GR = False
 except ImportError:
     GR = False
 
