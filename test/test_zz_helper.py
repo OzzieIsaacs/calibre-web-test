@@ -140,5 +140,5 @@ class TestCalibreHelper(unittest.TestCase):
         del sys.modules["cps.subproc_wrapper"]
         del sys.modules["cps.gdriveutils"]
         del sys.modules["cps.tasks.mail"]
-        del sys.modules["cps.tasks.convert"]test_convert_failed_and_email
+        del sys.modules["cps.tasks.convert"]
         del updater
