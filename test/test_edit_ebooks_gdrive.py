@@ -67,6 +67,7 @@ class TestEditBooksOnGdrive(unittest.TestCase, ui_class):
             cls.fill_basic_config({'config_google_drive_folder':'test'})
         except Exception as e:
             try:
+                print(e)
                 cls.driver.quit()
                 cls.p.kill()
             except Exception:
@@ -76,11 +77,14 @@ class TestEditBooksOnGdrive(unittest.TestCase, ui_class):
     @classmethod
     def tearDownClass(cls):
         # remove_gdrive()
-        cls.driver.get("http://127.0.0.1:8083")
-        cls.stop_calibre_web()
-        # close the browser window and stop calibre-web
-        cls.driver.quit()
-        cls.p.terminate()
+        try:
+            cls.driver.get("http://127.0.0.1:8083")
+            cls.stop_calibre_web()
+            # close the browser window and stop calibre-web
+            cls.driver.quit()
+            cls.p.terminate()
+        except Exception as e:
+            print(e)
 
         remove_dependency(cls.dependency)
 

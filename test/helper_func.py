@@ -121,12 +121,23 @@ def startup(inst, pyVersion, config, login=True, host="http://127.0.0.1:8083",
         os.remove(os.path.join(CALIBRE_WEB_PATH, 'app.db'))
     except PermissionError:
         kill_dead_cps()
+        time.sleep(5)
         try:
             os.remove(os.path.join(CALIBRE_WEB_PATH, 'app.db'))
         except Exception as e:
             print(e)
-    except Exception:
-        pass
+    except Exception as ex:
+        print(ex)
+    try:
+        os.remove(os.path.join(CALIBRE_WEB_PATH, 'gdrive.db'))
+    except PermissionError:
+        time.sleep(5)
+        try:
+            os.remove(os.path.join(CALIBRE_WEB_PATH, 'gdrive.db'))
+        except Exception as e:
+            print(e)
+    except Exception as ex:
+        print(ex)
     try:
         os.chmod(TEST_DB, 0o764)
     except Exception:

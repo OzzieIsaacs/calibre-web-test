@@ -85,6 +85,7 @@ class TestEbookConvertGDrive(unittest.TestCase, ui_class):
             time.sleep(2)
         except Exception as e:
             try:
+                print(e)
                 cls.driver.quit()
                 cls.p.kill()
             except Exception:
@@ -98,10 +99,10 @@ class TestEbookConvertGDrive(unittest.TestCase, ui_class):
             cls.driver.get("http://127.0.0.1:8083")
             cls.stop_calibre_web()
             # close the browser window and stop calibre-web
-        except:
-            pass
-        cls.driver.quit()
-        cls.p.terminate()
+            cls.driver.quit()
+            cls.p.terminate()
+        except Exception as e:
+            print(e)
         time.sleep(2)
 
         remove_dependency(cls.dependency)
