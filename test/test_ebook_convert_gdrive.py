@@ -202,9 +202,9 @@ class TestEbookConvertGDrive(unittest.TestCase, ui_class):
     def test_convert_failed_and_email(self):
         fs = connect_gdrive("test")
         orig_file = os.path.join( 'test', 'Leo Baskerville','book8 (8)',
-                                 u'book8 - Leo Baskerville.epub')
+                                 u'book8 - Leo Baskerville.epub').replace('\\', '/')
         moved_file = os.path.join('test', 'Leo Baskerville', 'book8 (8)',
-                                  u'book8.epub')
+                                  u'book8.epub').replace('\\', '/')
         fs.move(orig_file, moved_file, overwrite=True)
 
         fout = io.BytesIO()
