@@ -15,7 +15,7 @@ from helper_func import startup, debug_startup, add_dependency, remove_dependenc
 from helper_func import save_logfiles
 
 
-class TestEditBooks(TestCase, ui_class):
+class TestEditBooksList(TestCase, ui_class):
     p = None
     driver = None
     # dependencys = ['Pillow', 'lxml']

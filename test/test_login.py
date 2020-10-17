@@ -148,7 +148,7 @@ class TestLogin(unittest.TestCase, ui_class):
         self.assertEqual(self.fail_access_page("http://127.0.0.1:8083/shutdown"), 1)
         self.assertEqual(self.fail_access_page("http://127.0.0.1:8083/update"), 2)
         self.assertEqual(self.fail_access_page("http://127.0.0.1:8083/search"), 1)
-        self.assertEqual(self.fail_access_page("http://127.0.0.1:8083/advanced_search"), 1)
+        self.assertEqual(self.fail_access_page("http://127.0.0.1:8083/advsearch"), 1)
         self.assertEqual(self.fail_access_page("http://127.0.0.1:8083/cover"), 2)
         self.assertEqual(self.fail_access_page("http://127.0.0.1:8083/cover/213"), 1)
         self.assertEqual(self.fail_access_page("http://127.0.0.1:8083/show/1/epub"), 1)
