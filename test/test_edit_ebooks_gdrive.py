@@ -2,8 +2,6 @@
 # -*- coding: utf-8 -*-
 
 import unittest
-from selenium import webdriver
-import re
 import io
 import os
 from selenium.webdriver.common.by import By
