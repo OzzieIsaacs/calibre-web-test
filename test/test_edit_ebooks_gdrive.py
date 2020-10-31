@@ -713,7 +713,7 @@ class TestEditBooksOnGdrive(unittest.TestCase, ui_class):
         pngcover = os.path.join(base_path, 'files', 'cover.webp')
         self.edit_book(content={'local_cover': pngcover})
         self.driver.refresh()
-        time.sleep(2)
+        time.sleep(5)
         resp = r.get('http://127.0.0.1:8083/cover/5')
         self.assertAlmostEqual(17420, int(resp.headers['Content-Length']), delta=300)
         r.close()
@@ -729,7 +729,7 @@ class TestEditBooksOnGdrive(unittest.TestCase, ui_class):
         upload = self.check_element_on_page((By.ID, 'btn-upload'))
         upload.send_keys(upload_file)
         # ToDo: check file contents
-        time.sleep(2)
+        time.sleep(WAIT_GDRIVE)
         self.check_element_on_page((By.ID, 'edit_cancel')).click()
         details = self.get_book_details()
         self.assertEqual('book', details['title'])
@@ -750,7 +750,7 @@ class TestEditBooksOnGdrive(unittest.TestCase, ui_class):
         upload = self.check_element_on_page((By.ID, 'btn-upload'))
         upload.send_keys(upload_file)
 
-        time.sleep(3)
+        time.sleep(WAIT_GDRIVE)
         self.check_element_on_page((By.ID, 'edit_cancel')).click()
         details = self.get_book_details()
         self.assertEqual('book9', details['title'])

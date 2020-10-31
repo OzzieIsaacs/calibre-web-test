@@ -175,6 +175,7 @@ class TestLogin(unittest.TestCase, ui_class):
         self.assertEqual(self.fail_access_page("http://127.0.0.1:8083/me"), 1)
         self.assertEqual(self.fail_access_page("http://127.0.0.1:8083/admin"), 1)
         self.assertEqual(self.fail_access_page("http://127.0.0.1:8083/"), 1)
+        self.assertEqual(self.fail_access_page("http://127.0.0.1:8083/import_ldap_users"), 1)
 
     # login with admin
     # create new user, leave password empty
