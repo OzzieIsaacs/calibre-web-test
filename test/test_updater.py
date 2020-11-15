@@ -44,7 +44,11 @@ class TestUpdater(unittest.TestCase, ui_class):
 
     def tearDown(self):
         if not self.check_user_logged_in('admin'):
-            self.logout()
+            try:
+                self.logout()
+            except:
+                self.driver.get("http://127.0.0.1:8083")
+                self.logout()
             self.login('admin', 'admin123')
 
     def check_updater(self, responsetext, className, timeout=0.5):
@@ -57,6 +61,8 @@ class TestUpdater(unittest.TestCase, ui_class):
 
     @classmethod
     def copy_cw(cls):
+        if os.path.isdir(CALIBRE_WEB_PATH + '_2'):
+            shutil.rmtree(CALIBRE_WEB_PATH + '_2', ignore_errors=True)
         if not os.path.isdir(CALIBRE_WEB_PATH + '_2'):
             shutil.copytree(CALIBRE_WEB_PATH, CALIBRE_WEB_PATH + '_2')
             with ZipFile('cps_copy.zip', 'w') as zipObj:
@@ -81,8 +87,18 @@ class TestUpdater(unittest.TestCase, ui_class):
     @classmethod
     def return_cw(cls):
         if os.path.isdir(CALIBRE_WEB_PATH + '_2'):
-            shutil.rmtree(CALIBRE_WEB_PATH, ignore_errors=True)
-            shutil.move(CALIBRE_WEB_PATH + '_2', CALIBRE_WEB_PATH)
+            if os.name != 'nt':
+                shutil.rmtree(CALIBRE_WEB_PATH, ignore_errors=True)
+                shutil.move(CALIBRE_WEB_PATH + '_2', CALIBRE_WEB_PATH)
+            else:
+                # On windows the Test folder is locked, as the testoutput is going to be written to it
+                # special treatment
+                try:
+                    shutil.rmtree(CALIBRE_WEB_PATH, ignore_errors=True)
+                    shutil.copytree(CALIBRE_WEB_PATH + '_2', CALIBRE_WEB_PATH,  dirs_exist_ok=True)
+                    shutil.rmtree(CALIBRE_WEB_PATH + '_2', ignore_errors=True)
+                except:
+                    pass
         try:
             os.remove(os.path.join('cps_copy.zip'))
         except Exception:
@@ -320,6 +336,7 @@ class TestUpdater(unittest.TestCase, ui_class):
         time.sleep(0.5)
         updater = self.check_element_on_page((By.ID, "check_for_update"))
         updater.click()
+        time.sleep(2)
         performUpdate = self.check_element_on_page((By.ID, "perform_update"))
         performUpdate.click()
         time.sleep(10)

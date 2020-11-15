@@ -2,8 +2,6 @@
 # -*- coding: utf-8 -*-
 
 import unittest
-from selenium import webdriver
-import re
 import io
 import os
 from selenium.webdriver.common.by import By
@@ -67,6 +65,7 @@ class TestEditBooksOnGdrive(unittest.TestCase, ui_class):
             cls.fill_basic_config({'config_google_drive_folder':'test'})
         except Exception as e:
             try:
+                print(e)
                 cls.driver.quit()
                 cls.p.kill()
             except Exception:
@@ -76,11 +75,14 @@ class TestEditBooksOnGdrive(unittest.TestCase, ui_class):
     @classmethod
     def tearDownClass(cls):
         # remove_gdrive()
-        cls.driver.get("http://127.0.0.1:8083")
-        cls.stop_calibre_web()
-        # close the browser window and stop calibre-web
-        cls.driver.quit()
-        cls.p.terminate()
+        try:
+            cls.driver.get("http://127.0.0.1:8083")
+            cls.stop_calibre_web()
+            # close the browser window and stop calibre-web
+            cls.driver.quit()
+            cls.p.terminate()
+        except Exception as e:
+            print(e)
 
         remove_dependency(cls.dependency)
 
@@ -109,10 +111,10 @@ class TestEditBooksOnGdrive(unittest.TestCase, ui_class):
         self.edit_book(content={'book_title': u'O0ü 执'})
         values = self.get_book_details()
         self.assertEqual(u'O0ü 执', values['title'])
-        new_book_path = os.path.join('test', values['author'][0], 'O0u Zhi (4)')
+        new_book_path = os.path.join('test', values['author'][0], 'O0u Zhi (4)').replace('\\','/')
         gdrive_path = check_path_gdrive(fs, new_book_path)
         self.assertTrue(gdrive_path)
-        old_book_path = os.path.join('test', values['author'][0], 'Very long extra super turbo cool tit (4)')
+        old_book_path = os.path.join('test', values['author'][0], 'Very long extra super turbo cool tit (4)').replace('\\','/')
         gdrive_path = check_path_gdrive(fs, old_book_path)
         self.assertFalse(gdrive_path)
         self.check_element_on_page((By.ID, "edit_book")).click()
@@ -130,7 +132,7 @@ class TestEditBooksOnGdrive(unittest.TestCase, ui_class):
         # calibre strips spaces in beginning
         self.assertEqual(u'O0ü 执', title.get_attribute('value'))
         # self.assertTrue(os.path.isdir(os.path.join(TEST_DB, values['author'][0], 'O0u Zhi (4)')))
-        new_book_path = os.path.join('test', values['author'][0], 'O0u Zhi (4)')
+        new_book_path = os.path.join('test', values['author'][0], 'O0u Zhi (4)').replace('\\','/')
         gdrive_path = check_path_gdrive(fs, new_book_path)
         self.assertTrue(gdrive_path)
         self.edit_book(content={'book_title': u'O0ü name'}, detail_v=True)
@@ -140,11 +142,11 @@ class TestEditBooksOnGdrive(unittest.TestCase, ui_class):
         # calibre strips spaces in the end
         self.assertEqual(u'O0ü name', title.get_attribute('value'))
         # self.assertTrue(os.path.isdir(os.path.join(TEST_DB, values['author'][0], 'O0u name (4)')))
-        new_book_path = os.path.join('test', values['author'][0], 'O0u name (4)')
+        new_book_path = os.path.join('test', values['author'][0], 'O0u name (4)').replace('\\','/')
         gdrive_path = check_path_gdrive(fs, new_book_path)
         self.assertTrue(gdrive_path)
         # self.assertFalse(os.path.isdir(os.path.join(TEST_DB, values['author'][0], 'O0u Zhi (4)')))
-        old_book_path = os.path.join('test', values['author'][0], 'O0u Zhi (4)')
+        old_book_path = os.path.join('test', values['author'][0], 'O0u Zhi (4)').replace('\\','/')
         gdrive_path = check_path_gdrive(fs, old_book_path)
         self.assertFalse(gdrive_path)
 
@@ -154,10 +156,10 @@ class TestEditBooksOnGdrive(unittest.TestCase, ui_class):
         # os.path.join(TEST_DB, values['author'][0], 'Unknown')
         self.assertEqual('Unknown', values['title'])
         # self.assertTrue(os.path.isdir(os.path.join(TEST_DB, values['author'][0], 'Unknown (4)')))
-        new_book_path = os.path.join('test', values['author'][0], 'Unknown (4)')
+        new_book_path = os.path.join('test', values['author'][0], 'Unknown (4)').replace('\\','/')
         gdrive_path = check_path_gdrive(fs, new_book_path)
         self.assertTrue(gdrive_path)
-        old_book_path = os.path.join('test', values['author'][0], 'Unknown')
+        old_book_path = os.path.join('test', values['author'][0], 'Unknown').replace('\\','/')
         gdrive_path = check_path_gdrive(fs, old_book_path)
         self.assertFalse(gdrive_path)
 
@@ -170,8 +172,8 @@ class TestEditBooksOnGdrive(unittest.TestCase, ui_class):
         time.sleep(WAIT_GDRIVE)
         books = self.get_books_displayed()
         self.assertEqual('The camicdemo', books[1][8]['title'])
-        file_path = os.path.join('test', values['author'][0], 'The camicdemo (4)')
-        not_file_path = os.path.join('test', values['author'][0], 'camicdemo')
+        file_path = os.path.join('test', values['author'][0], 'The camicdemo (4)').replace('\\','/')
+        not_file_path = os.path.join('test', values['author'][0], 'camicdemo').replace('\\','/')
 
         # file operation
         fs.movedir(file_path, not_file_path, create=True)
@@ -185,8 +187,8 @@ class TestEditBooksOnGdrive(unittest.TestCase, ui_class):
         # file operation
         fs.movedir(not_file_path, file_path, create=True)
         # missing cover file is not detected, and cover file is moved
-        cover_file = os.path.join('test', values['author'][0], 'The camicdemo (4)', 'cover.jpg')
-        not_cover_file = os.path.join('test', values['author'][0], 'The camicdemo (4)', 'no_cover.jpg')
+        cover_file = os.path.join('test', values['author'][0], 'The camicdemo (4)', 'cover.jpg').replace('\\','/')
+        not_cover_file = os.path.join('test', values['author'][0], 'The camicdemo (4)', 'no_cover.jpg').replace('\\','/')
 
         # file operation
         fs.move(cover_file, not_cover_file)
@@ -195,8 +197,8 @@ class TestEditBooksOnGdrive(unittest.TestCase, ui_class):
         self.check_element_on_page((By.ID, 'flash_success'))
         title = self.check_element_on_page((By.ID, "book_title"))
         self.assertEqual('No Cover', title.get_attribute('value'))
-        cover_file = os.path.join('test', values['author'][0], 'No Cover (4)', 'cover.jpg')
-        not_cover_file = os.path.join('test', values['author'][0], 'No Cover (4)', 'no_cover.jpg')
+        cover_file = os.path.join('test', values['author'][0], 'No Cover (4)', 'cover.jpg').replace('\\','/')
+        not_cover_file = os.path.join('test', values['author'][0], 'No Cover (4)', 'no_cover.jpg').replace('\\','/')
 
         fs.move(not_cover_file, cover_file)
         fs.close()
@@ -256,10 +258,10 @@ class TestEditBooksOnGdrive(unittest.TestCase, ui_class):
         self.edit_book(content={'bookAuthor':u'O0ü 执'})
         values = self.get_book_details()
         self.assertEqual(u'O0ü 执', values['author'][0])
-        new_book_path = os.path.join('test', 'O0u Zhi', 'book8 (8)')
+        new_book_path = os.path.join('test', 'O0u Zhi', 'book8 (8)').replace('\\','/')
         gdrive_path = check_path_gdrive(fs, new_book_path)
         self.assertTrue(gdrive_path)
-        old_book_path = os.path.join('test', 'Leo Baskerville', 'book8 (8)')
+        old_book_path = os.path.join('test', 'Leo Baskerville', 'book8 (8)').replace('\\','/')
         gdrive_path = check_path_gdrive(fs, old_book_path)
         self.assertFalse(gdrive_path)
 
@@ -271,16 +273,16 @@ class TestEditBooksOnGdrive(unittest.TestCase, ui_class):
         # calibre strips spaces in the end
         self.assertEqual(u'O0ü name', author.get_attribute('value'))
         # self.assertTrue(os.path.isdir(os.path.join(TEST_DB, 'O0u name', 'book8 (8)')))
-        new_book_path = os.path.join('test', 'O0u name', 'book8 (8)')
+        new_book_path = os.path.join('test', 'O0u name', 'book8 (8)').replace('\\','/')
         gdrive_path = check_path_gdrive(fs, new_book_path)
         self.assertTrue(gdrive_path)
 
         self.edit_book(content={'bookAuthor':''})
         values = self.get_book_details()
-        os.path.join(TEST_DB, 'Unknown', 'book8 (8)')
+        # os.path.join(TEST_DB, 'Unknown', 'book8 (8)')
         self.assertEqual('Unknown', values['author'][0])
         # self.assertTrue(os.path.isdir(os.path.join(TEST_DB, values['author'][0], 'book8 (8)')))
-        new_book_path = os.path.join('test', values['author'][0], 'book8 (8)')
+        new_book_path = os.path.join('test', values['author'][0], 'book8 (8)').replace('\\','/')
         gdrive_path = check_path_gdrive(fs, new_book_path)
         self.assertTrue(gdrive_path)
 
@@ -300,7 +302,7 @@ class TestEditBooksOnGdrive(unittest.TestCase, ui_class):
         self.check_element_on_page((By.ID, 'flash_success'))
         author = self.check_element_on_page((By.ID, "bookAuthor")).get_attribute('value')
         self.assertEqual(u'Sigurd Lindgren', author)
-        new_book_path = os.path.join('test', author, 'book8 (8)')
+        new_book_path = os.path.join('test', author, 'book8 (8)').replace('\\','/')
         gdrive_path = check_path_gdrive(fs, new_book_path)
         self.assertTrue(gdrive_path)
 
@@ -308,10 +310,10 @@ class TestEditBooksOnGdrive(unittest.TestCase, ui_class):
         self.edit_book(content={'bookAuthor': 'Sigurd Lindgren&Leo Baskerville'}, detail_v=True)
         time.sleep(11)
         self.check_element_on_page((By.ID, 'flash_success'))
-        new_book_path = os.path.join('test',  'Sigurd Lindgren', 'book8 (8)')
+        new_book_path = os.path.join('test',  'Sigurd Lindgren', 'book8 (8)').replace('\\','/')
         gdrive_path = check_path_gdrive(fs, new_book_path)
         self.assertTrue(gdrive_path)
-        old_book_path = os.path.join('test', 'Leo Baskerville', 'book8 (8)')
+        old_book_path = os.path.join('test', 'Leo Baskerville', 'book8 (8)').replace('\\','/')
         gdrive_path = check_path_gdrive(fs, old_book_path)
         self.assertFalse(gdrive_path)
 
@@ -321,10 +323,10 @@ class TestEditBooksOnGdrive(unittest.TestCase, ui_class):
         time.sleep(11)
         self.check_element_on_page((By.ID, 'flash_success'))
 
-        new_book_path = os.path.join('test',  'Leo Baskerville', 'book8 (8)')
+        new_book_path = os.path.join('test',  'Leo Baskerville', 'book8 (8)').replace('\\','/')
         gdrive_path = check_path_gdrive(fs, new_book_path)
         self.assertTrue(gdrive_path)
-        old_book_path = os.path.join('test', 'Sigurd Lindgren', 'book8 (8)')
+        old_book_path = os.path.join('test', 'Sigurd Lindgren', 'book8 (8)').replace('\\','/')
         gdrive_path = check_path_gdrive(fs, old_book_path)
         self.assertFalse(gdrive_path)
 
@@ -335,8 +337,8 @@ class TestEditBooksOnGdrive(unittest.TestCase, ui_class):
         self.assertEqual(u'Pipo, Pipe', author.get_attribute('value'))
         list_element = self.goto_page('nav_author')
 
-        file_path = os.path.join('test', 'Pipo, Pipe', 'book8 (8)')
-        not_file_path = os.path.join('test', 'Pipo, Pipe', 'nofolder')
+        file_path = os.path.join('test', 'Pipo, Pipe', 'book8 (8)').replace('\\','/')
+        not_file_path = os.path.join('test', 'Pipo, Pipe', 'nofolder').replace('\\','/')
         fs.movedir(file_path, not_file_path, create=True)
         self.get_book_details(8)
         self.check_element_on_page((By.ID, "edit_book")).click()
@@ -711,7 +713,7 @@ class TestEditBooksOnGdrive(unittest.TestCase, ui_class):
         pngcover = os.path.join(base_path, 'files', 'cover.webp')
         self.edit_book(content={'local_cover': pngcover})
         self.driver.refresh()
-        time.sleep(2)
+        time.sleep(5)
         resp = r.get('http://127.0.0.1:8083/cover/5')
         self.assertAlmostEqual(17420, int(resp.headers['Content-Length']), delta=300)
         r.close()
@@ -727,7 +729,7 @@ class TestEditBooksOnGdrive(unittest.TestCase, ui_class):
         upload = self.check_element_on_page((By.ID, 'btn-upload'))
         upload.send_keys(upload_file)
         # ToDo: check file contents
-        time.sleep(2)
+        time.sleep(WAIT_GDRIVE)
         self.check_element_on_page((By.ID, 'edit_cancel')).click()
         details = self.get_book_details()
         self.assertEqual('book', details['title'])
@@ -748,7 +750,7 @@ class TestEditBooksOnGdrive(unittest.TestCase, ui_class):
         upload = self.check_element_on_page((By.ID, 'btn-upload'))
         upload.send_keys(upload_file)
 
-        time.sleep(3)
+        time.sleep(WAIT_GDRIVE)
         self.check_element_on_page((By.ID, 'edit_cancel')).click()
         details = self.get_book_details()
         self.assertEqual('book9', details['title'])

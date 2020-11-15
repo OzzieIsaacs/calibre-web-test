@@ -385,7 +385,7 @@ class TestCalibreWebVisibilitys(unittest.TestCase, ui_class):
         r.post('http://127.0.0.1:8083/login', data=payload)
         resp = r.get('http://127.0.0.1:8083/search')
         self.assertEqual(200, resp.status_code)
-        resp = r.get('http://127.0.0.1:8083/advanced_search')
+        resp = r.get('http://127.0.0.1:8083/advsearch')
         self.assertEqual(200, resp.status_code)
         r.close()
 

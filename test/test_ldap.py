@@ -775,10 +775,10 @@ class TestLdapLogin(unittest.TestCase, ui_class):
         r = requests.get('http://127.0.0.1:8083/opds', auth=('执一'.encode('utf-8'), 'eekretsay'))
         self.assertEqual(200, r.status_code)
         elements = self.get_opds_index(r.text)
-        r = requests.get('http://127.0.0.1:8083'+elements['Recently added Books']['link'], auth=('执一'.encode('utf-8'), 'eekretsay'))
+        r = requests.get('http://127.0.0.1:8083' + elements['Recently added Books']['link'], auth=('执一'.encode('utf-8'), 'eekretsay'))
         entries = self.get_opds_feed(r.text)
         # check download book
-        r = requests.get('http://127.0.0.1:8083'+ entries['elements'][0]['download'], auth=('执一'.encode('utf-8'), 'eekretsay'))
+        r = requests.get('http://127.0.0.1:8083' + entries['elements'][0]['download'], auth=('执一'.encode('utf-8'), 'eekretsay'))
         self.assertEqual(len(r.content), 28590)
         self.assertEqual(r.headers['Content-Type'], 'application/pdf')
         # login admin and remove download role from 执一
@@ -801,6 +801,34 @@ class TestLdapLogin(unittest.TestCase, ui_class):
         self.login("admin", "admin123")
         self.edit_user('执一', {'delete': 1})
         self.assertTrue(self.check_element_on_page((By.ID, "flash_success")))
+
+    def test_ldap_opds_anonymous(self):
+        self.fill_basic_config({'config_ldap_provider_url': '127.0.0.1',
+                                'config_ldap_port': '3268',
+                                'config_ldap_authentication': 'Simple',
+                                'config_ldap_dn': 'ou=people,dc=calibreweb,dc=com',
+                                'config_ldap_serv_username': 'cn=root,dc=calibreweb,dc=com',
+                                'config_ldap_serv_password': 'secret',
+                                'config_ldap_user_object': '(uid=%s)',
+                                'config_ldap_group_object_filter': '',
+                                'config_ldap_openldap': 1
+                                })
+        self.assertTrue(self.check_element_on_page((By.ID, "flash_success")))
+        time.sleep(BOOT_TIME)
+        # enable anonymous browsing
+        self.fill_basic_config({'config_anonbrowse': 1})
+        time.sleep(BOOT_TIME)
+        # start ldap
+        self.server.relisten(config=2, port=3268, encrypt=None)
+
+
+        self.logout()
+        r = requests.get('http://127.0.0.1:8083/opds')
+        self.assertEqual(200, r.status_code)
+        elements = self.get_opds_index(r.text)
+
+        self.login("admin", "admin123")
+        self.fill_basic_config({'config_anonbrowse': 0})
 
     def test_ldap_kobo_sync(self):
         self.fill_basic_config({'config_ldap_provider_url': '127.0.0.1',

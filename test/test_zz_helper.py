@@ -3,12 +3,9 @@
 import sys
 import unittest
 from config_test import CALIBRE_WEB_PATH
-from helper_func import save_logfiles
 
-sys.path.append(CALIBRE_WEB_PATH)
-from cps import helper, updater
 import threading
-import os
+
 
 def _get_updater_thread():
     for t in threading.enumerate():
@@ -21,6 +18,12 @@ class TestCalibreHelper(unittest.TestCase):
 
     @classmethod
     def setUpClass(cls):
+        sys.path.append(CALIBRE_WEB_PATH)
+        global helper
+        global updater
+        # if imported at top of file, the import is excecuted at startup and creates ghost calibre-web instance
+        from cps import helper, updater
+        # from cps import helper
         # startup function is not called, therfore direct print
         print("\n%s - %s: " % ("", cls.__name__))
 
@@ -108,6 +111,34 @@ class TestCalibreHelper(unittest.TestCase):
     def tearDownClass(cls):
         # Updater Thread is running in the background, preventing tests main routine from finishing
         # -> Finds updater and stops it
+        global helper
+        global updater
+
+        del sys.modules["cps.helper"]
+        del helper
+
         updater_thread = _get_updater_thread()
         if updater_thread:
             updater_thread.stop()
+        del sys.modules["cps.constants"]
+        del sys.modules["cps.cli"]
+        del sys.modules["cps.logger"]
+        del sys.modules["cps.ub"]
+        del sys.modules["cps.config_sql"]
+        del sys.modules["cps.cache_buster"]
+        del sys.modules["cps.iso_language_names"]
+        del sys.modules["cps.isoLanguages"]
+        del sys.modules["cps.pagination"]
+        del sys.modules["cps.db"]
+        del sys.modules["cps.reverseproxy"]
+        del sys.modules["cps.server"]
+        del sys.modules["cps.services"]
+        del sys.modules["cps.updater"]
+        del sys.modules["cps"]
+        del sys.modules["cps.tasks"]
+        del sys.modules["cps.services.worker"]
+        del sys.modules["cps.subproc_wrapper"]
+        del sys.modules["cps.gdriveutils"]
+        del sys.modules["cps.tasks.mail"]
+        del sys.modules["cps.tasks.convert"]
+        del updater

@@ -25,12 +25,29 @@ from email.mime.text import MIMEText
 try:
     from config_email import E_MAIL_ADDRESS, E_MAIL_SERVER_ADDRESS, STARTSSL, EMAIL_SERVER_PORT
     from config_email import E_MAIL_LOGIN, E_MAIL_PASSWORD
+    if E_MAIL_ADDRESS != '' and E_MAIL_SERVER_ADDRESS !='' and E_MAIL_LOGIN !='' and E_MAIL_PASSWORD !='':
+        email_config = True
+    else:
+        email_config = False
+        print('config_email.py E-Mail not configured')
+except ImportError:
+    email_config = False
+
+try:
     from config_email import SERVER_PASSWORD, SERVER_NAME, SERVER_FILE_DESTINATION, SERVER_USER, SERVER_PORT
-    email_config = True
+    if SERVER_PASSWORD != '' and SERVER_NAME !='' and SERVER_FILE_DESTINATION !='' and SERVER_USER !='':
+        server_config = True
+    else:
+        print('config_email.py Server not configured')
+        server_config = False
+except ImportError:
+    server_config = False
+
+try:
     import paramiko
 except ImportError:
     print('Create config_email.py file to email finishing message')
-    email_config = False
+    server_config = False
 
 if os.name != 'nt':
     from signal import SIGKILL
@@ -90,7 +107,7 @@ def debug_startup(inst, __, ___, login=True, host="http://127.0.0.1:8083", env=N
 
     # navigate to the application home page
     inst.driver.get(host)
-
+    WebDriverWait(inst.driver, 5).until(EC.title_contains("Calibre-Web"))
     inst.login("admin", "admin123")
     # login
     if not login:
@@ -104,12 +121,23 @@ def startup(inst, pyVersion, config, login=True, host="http://127.0.0.1:8083",
         os.remove(os.path.join(CALIBRE_WEB_PATH, 'app.db'))
     except PermissionError:
         kill_dead_cps()
+        time.sleep(5)
         try:
             os.remove(os.path.join(CALIBRE_WEB_PATH, 'app.db'))
         except Exception as e:
             print(e)
-    except Exception:
-        pass
+    except Exception as ex:
+        print(ex)
+    try:
+        os.remove(os.path.join(CALIBRE_WEB_PATH, 'gdrive.db'))
+    except PermissionError:
+        time.sleep(5)
+        try:
+            os.remove(os.path.join(CALIBRE_WEB_PATH, 'gdrive.db'))
+        except Exception as e:
+            print(e)
+    except Exception as ex:
+        print(ex)
     try:
         os.chmod(TEST_DB, 0o764)
     except Exception:
@@ -126,14 +154,11 @@ def startup(inst, pyVersion, config, login=True, host="http://127.0.0.1:8083",
             shutil.copy('./Calibre_db/metadata.db', os.path.join(TEST_DB, 'metadata.db'))
         except FileExistsError:
             print('Metadata.db already present, might not be a clean version')
-
     inst.p = process_open([pyVersion, os.path.join(CALIBRE_WEB_PATH, u'cps.py')], [1], sout=None, env=env)
-
     # create a new Firefox session
     inst.driver = webdriver.Firefox()
     # inst.driver = webdriver.Chrome()
-    inst.driver.implicitly_wait(BOOT_TIME)
-    time.sleep(2)
+    time.sleep(BOOT_TIME)
     if inst.p.poll():
         kill_old_cps()
         inst.p = process_open([pyVersion, os.path.join(CALIBRE_WEB_PATH, u'cps.py')], [1], sout=None, env=env)
@@ -144,8 +169,7 @@ def startup(inst, pyVersion, config, login=True, host="http://127.0.0.1:8083",
 
     # navigate to the application home page
     inst.driver.get(host)
-    # toDO: Check title is valid
-    time.sleep(2)
+    WebDriverWait(inst.driver, 5).until(EC.title_contains("Calibre-Web"))
     if not only_startup:
         # Wait for config screen to show up
         inst.fill_initial_config(dict(config_calibre_dir=config['config_calibre_dir']))
@@ -323,21 +347,28 @@ def save_logfiles(module_name):
             shutil.copy(src,dest)
 
 def finishing_notifier():
-    if not email_config:
-        return
-    result_upload(TEST_OS)
-    msg = MIMEText('Calibre-Web Tests finished')
-    msg['Subject'] = 'Calibre-Web Tests on ' + TEST_OS + ' finished'
-    msg['From'] = E_MAIL_ADDRESS
-    msg['To'] = E_MAIL_ADDRESS
+    try:
+        if server_config:
+            result_upload(TEST_OS)
+    except Exception as e:
+        print(e)
+    try:
+        if email_config:
 
-    s = smtplib.SMTP(E_MAIL_SERVER_ADDRESS, EMAIL_SERVER_PORT)
-    if STARTSSL:
-        s.starttls()
-    if E_MAIL_LOGIN and E_MAIL_PASSWORD:
-        s.login(E_MAIL_LOGIN, E_MAIL_PASSWORD)
-    s.send_message(msg)
-    s.quit()
+            msg = MIMEText('Calibre-Web Tests finished')
+            msg['Subject'] = 'Calibre-Web Tests on ' + TEST_OS + ' finished'
+            msg['From'] = E_MAIL_ADDRESS
+            msg['To'] = E_MAIL_ADDRESS
+
+            s = smtplib.SMTP(E_MAIL_SERVER_ADDRESS, EMAIL_SERVER_PORT)
+            if STARTSSL:
+                s.starttls()
+            if E_MAIL_LOGIN and E_MAIL_PASSWORD:
+                s.login(E_MAIL_LOGIN, E_MAIL_PASSWORD)
+            s.send_message(msg)
+            s.quit()
+    except Exception as e:
+        print(e)
 
 def createSSHClient(server, port, user, password):
     client = paramiko.SSHClient()
@@ -349,8 +380,8 @@ def createSSHClient(server, port, user, password):
 def result_upload(TEST_OS):
     ssh = createSSHClient(SERVER_NAME, SERVER_PORT, SERVER_USER, SERVER_PASSWORD)
     ftp_client = ssh.open_sftp()
-    file_destiation = os.path.join(SERVER_FILE_DESTINATION, 'Calibre-Web TestSummary_' + TEST_OS + '.html')
-    ftp_client.put('./../../calibre-web/test/Calibre-Web TestSummary_' + TEST_OS + '.html', file_destiation)
+    file_destination = os.path.normpath(os.path.join(SERVER_FILE_DESTINATION, 'Calibre-Web TestSummary_' + TEST_OS + '.html')).replace('\\','/')
+    ftp_client.put('./../../calibre-web/test/Calibre-Web TestSummary_' + TEST_OS + '.html', file_destination)
     ftp_client.close()
 
 def poweroff(power):

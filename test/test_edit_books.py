@@ -428,7 +428,7 @@ class TestEditBooks(TestCase, ui_class):
         self.assertEqual(len(self.adv_search({u'custom_column_3': u'Yes'})), 0)
         self.get_book_details(5)
         self.check_element_on_page((By.ID, "edit_book")).click()
-        self.edit_book(custom_content={u'Custom Bool 1 Ä':u'Yes'})
+        self.edit_book(custom_content={u'Custom Bool 1 Ä': u'Yes'})
         vals = self.get_book_details(5)
         self.assertEqual(u'ok', vals['cust_columns'][0]['value'])
         self.assertEqual(len(self.adv_search({u'custom_column_3': u'No'})), 0)
@@ -438,7 +438,6 @@ class TestEditBooks(TestCase, ui_class):
         self.edit_book(custom_content={u'Custom Bool 1 Ä': u""})
         vals = self.get_book_details(5)
         self.assertEqual(0, len(vals['cust_columns']))
-
 
     def test_edit_custom_rating(self):
         self.assertEqual(len(self.adv_search({u'custom_column_1': u'3'})), 0)
@@ -458,7 +457,6 @@ class TestEditBooks(TestCase, ui_class):
         self.edit_book(custom_content={u'Custom Rating 人物': ''})
         vals = self.get_book_details(5)
         self.assertEqual(0, len(vals['cust_columns']))
-
 
     def test_edit_custom_single_select(self):
         self.assertEqual(len(self.adv_search({u'custom_column_9': u'人物'})), 0)
@@ -508,7 +506,6 @@ class TestEditBooks(TestCase, ui_class):
         self.edit_book(custom_content={r'Custom categories\|, 人物': ''})
         vals = self.get_book_details(5)
         self.assertEqual(0, len(vals['cust_columns']))
-
 
     # change comments, add comments, delete comments
     def test_edit_custom_float(self):

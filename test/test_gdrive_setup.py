@@ -48,8 +48,9 @@ class TestSetupGdrive(unittest.TestCase, ui_class):
                 os.unlink(gdauth)
 
             startup(cls, cls.py_version, {}, only_startup=True)
-        except Exception:
+        except Exception as e:
             try:
+                print(e)
                 cls.driver.quit()
                 cls.p.kill()
             except Exception:
@@ -57,11 +58,14 @@ class TestSetupGdrive(unittest.TestCase, ui_class):
 
     @classmethod
     def tearDownClass(cls):
-        cls.driver.get("http://127.0.0.1:8083")
-        cls.stop_calibre_web()
-        # close the browser window and stop calibre-web
-        cls.driver.quit()
-        cls.p.terminate()
+        try:
+            cls.driver.get("http://127.0.0.1:8083")
+            cls.stop_calibre_web()
+            # close the browser window and stop calibre-web
+            cls.driver.quit()
+            cls.p.terminate()
+        except Exception as e:
+            print(e)
 
         remove_dependency(cls.dependency)
 
@@ -81,7 +85,6 @@ class TestSetupGdrive(unittest.TestCase, ui_class):
             except PermissionError:
                 print('File delete failed')
         save_logfiles(cls.__name__)
-
 
 
     def test_config_gdrive(self):
