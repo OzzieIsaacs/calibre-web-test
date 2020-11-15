@@ -1,4 +1,5 @@
-config_files/
+/config_goodreads.py
+/config_test.py
 venv/
 outcome/
-
+/config_email.py

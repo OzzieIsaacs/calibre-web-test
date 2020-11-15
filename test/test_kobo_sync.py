@@ -28,7 +28,7 @@ class TestKoboSync(unittest.TestCase, ui_class):
 
         try:
             host = 'http://' + get_Host_IP() + ':8083'
-            startup(cls, cls.py_version, {'config_calibre_dir':TEST_DB, 'config_kobo_sync':1,
+            debug_startup(cls, cls.py_version, {'config_calibre_dir':TEST_DB, 'config_kobo_sync':1,
                                           'config_kobo_proxy':0}, host=host)
             cls.goto_page('user_setup')
             cls.check_element_on_page((By.ID, "config_create_kobo_token")).click()
@@ -47,14 +47,14 @@ class TestKoboSync(unittest.TestCase, ui_class):
     def tearDownClass(cls):
         cls.stop_calibre_web()
         cls.driver.quit()
-        cls.p.terminate()
+        # cls.p.terminate()
         # close the browser window and stop calibre-web
         remove_dependency(cls.json_line)
         save_logfiles(cls.__name__)
 
     def inital_sync(self):
         if TestKoboSync.syncToken:
-            return
+            return TestKoboSync.data
         # change book 5 to have unicode char in title author, description
         self.get_book_details(5)
         self.check_element_on_page((By.ID, "edit_book")).click()
@@ -114,6 +114,7 @@ class TestKoboSync(unittest.TestCase, ui_class):
         r = session.get(self.kobo_adress+'/v1/library/sync', params=params)
         self.assertEqual(r.status_code, 200)
         data = r.json()
+        TestKoboSync.data = data
         TestKoboSync.syncToken = {'x-kobo-synctoken': r.headers['x-kobo-synctoken']}
         self.assertEqual(len(data), 4, "4 Books should have valid kobo formats (epub, epub3, kebub)")
         self.assertEqual(data[0]['NewEntitlement']['BookMetadata']['DownloadUrls'][1]['Format'], 'EPUB')
@@ -179,6 +180,7 @@ class TestKoboSync(unittest.TestCase, ui_class):
         self.assertEqual(r.status_code, 200)
         self.assertEqual(r.json(), {})
         session.close()
+        return data
 
     def sync_kobo(self):
         changeSession = requests.session()
@@ -559,3 +561,21 @@ class TestKoboSync(unittest.TestCase, ui_class):
 
     def test_kobo_about(self):
         self.assertTrue(self.goto_page('nav_about'))
+
+    def test_book_download(self):
+        data = self.inital_sync()
+        downloadSession = requests.session()
+        r = downloadSession.get(self.kobo_adress+'/v1/initialization', headers=TestKoboSync.header)
+        self.assertEqual(r.status_code, 200)
+        params = {'Filter': 'All', 'DownloadUrlFilter': 'Generic,Android', 'PrioritizeRecentReads':'true'}
+        r = downloadSession.get(self.kobo_adress+'/v1/library/sync', params=params, headers=TestKoboSync.syncToken)
+        self.assertEqual(r.status_code, 200)
+        TestKoboSync.syncToken = {'x-kobo-synctoken': r.headers['x-kobo-synctoken']}
+        print(data[0]['NewEntitlement']['BookMetadata']['DownloadUrls'][1]['Url'])
+        download = downloadSession.get(data[0]['NewEntitlement']['BookMetadata']['DownloadUrls'][1]['Url'], headers=TestKoboSync.header)
+        self.assertEqual(200, download.status_code)
+        self.assertEqual('application/epub+zip', download.headers['Content-Type'])
+        downloadSession.close()
+
+
+
