@@ -25,24 +25,24 @@ if __name__ == '__main__':
     if power:
         print('!!!! PC will shutdown after tests finished !!!!')
 
-    while True:
-        try:
-            r = requests.get('http://localhost:4444/wd/hub/status').json()
-            result=True
-        except:
-            my_env = os.environ.copy()
-            my_env["PATH"] = SELENIUM_SERVER + ":" + my_env["PATH"]
-            print ('Selenium server not running, trying to start')
-            p = process_open(["java", "-jar", SELENIUM_SERVER], [2], my_env)
-            time.sleep(6)
-            result= False
-            retry +=1
-            if retry >3:
-                print ("Couldn't start Selenium server")
-                exit()
-        if result:
-            print("Selenium server successfully started")
-            break
+    #while True:
+    #    try:
+    #        r = requests.get('http://localhost:4444/wd/hub/status').json()
+    #        result=True
+    #    except:
+    #        my_env = os.environ.copy()
+    #        my_env["PATH"] = SELENIUM_SERVER + ":" + my_env["PATH"]
+    #        print ('Selenium server not running, trying to start')
+    #        p = process_open(["java", "-jar", SELENIUM_SERVER], [2], my_env)
+    #        time.sleep(6)
+    #        result= False
+    #        retry +=1
+    #        if retry >3:
+    # #           print ("Couldn't start Selenium server")
+    #            exit()
+    #    if result:
+    #        print("Selenium server successfully started")
+    #        break
 
     # check pip ist installed
     found = False
@@ -88,7 +88,7 @@ if __name__ == '__main__':
 
 
     requirements_file = os.path.join(CALIBRE_WEB_PATH, 'requirements.txt')
-    p = process_open([VENV_PYTHON, "-m", "pip", "install", "-r", requirements_file],(0,5))
+    p = process_open([VENV_PYTHON, "-m", "pip", "install", "-r", requirements_file], (0, 5))
     if os.name == 'nt':
         while p.poll() == None:
             p.stdout.readline()
