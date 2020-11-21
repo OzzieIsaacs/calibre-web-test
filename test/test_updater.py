@@ -27,8 +27,8 @@ class TestUpdater(unittest.TestCase, ui_class):
             cls.proxy.start()
             pem_file = os.path.join(os.path.expanduser('~'), '.mitmproxy', 'mitmproxy-ca-cert.pem')
             my_env = os.environ.copy()
-            my_env["http_proxy"] = 'http://127.0.0.1:8080'
-            my_env["https_proxy"] = 'https://127.0.0.1:8080'
+            my_env["http_proxy"] = 'http://localhost:8080'
+            my_env["https_proxy"] = 'https://localhost:8080'
             my_env["REQUESTS_CA_BUNDLE"] = pem_file
             startup(cls, cls.py_version, {'config_calibre_dir': TEST_DB}, env=my_env)
 
@@ -340,7 +340,7 @@ class TestUpdater(unittest.TestCase, ui_class):
         time.sleep(2)
         performUpdate = self.check_element_on_page((By.ID, "perform_update"))
         performUpdate.click()
-        time.sleep(10)
+        time.sleep(20)
         self.check_element_on_page((By.ID, "DialogFinished")).click()
         time.sleep(3)
         # cps files not writebale
