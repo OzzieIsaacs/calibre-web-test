@@ -29,3 +29,6 @@ build/hints.txt
 selenium
 
 /venv/
+*.key
+*.crt
+*.cert.pem
