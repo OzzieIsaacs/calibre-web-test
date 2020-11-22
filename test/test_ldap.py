@@ -156,7 +156,7 @@ class TestLdapLogin(unittest.TestCase, ui_class):
         message= self.check_element_on_page((By.ID, "flash_alert"))
         self.assertTrue(message)
         self.assertTrue('%s' in message.text)
-        # leave groupOject filter unequal praenthesis
+        # leave groupObject filter unequal praenthesis
         self.fill_basic_config({'config_ldap_group_object_filter': '(&(objectClass=groupofnames)(group=%s)'})
         message= self.check_element_on_page((By.ID, "flash_alert"))
         self.assertTrue(message)
@@ -167,11 +167,21 @@ class TestLdapLogin(unittest.TestCase, ui_class):
         self.fill_basic_config({'config_ldap_encryption': 'SSL'})
         self.assertTrue(self.check_element_on_page((By.ID, "flash_success")))
         time.sleep(BOOT_TIME)
-        self.fill_basic_config({'config_ldap_cert_path': 'nofile'})
+        self.fill_basic_config({'config_ldap_cacert_path': 'nofile'})
         message= self.check_element_on_page((By.ID, "flash_alert"))
         self.assertTrue(message)
-        self.assertTrue('Certificate Location' in message.text)
-        self.fill_basic_config({'config_ldap_cert_path': ''})
+        self.assertTrue('Location is not Valid' in message.text)
+        self.fill_basic_config({'config_ldap_cacert_path': '', 'config_ldap_cert_path': 'nofile'})
+        message= self.check_element_on_page((By.ID, "flash_alert"))
+        self.assertTrue(message)
+        self.assertTrue('Location is not Valid' in message.text)
+        self.fill_basic_config({'config_ldap_cert_path': '', 'config_ldap_key_path': 'nofile'})
+        message= self.check_element_on_page((By.ID, "flash_alert"))
+        self.assertTrue(message)
+        self.assertTrue('Location is not Valid' in message.text)
+        self.fill_basic_config({'config_ldap_cacert_path': '',
+                                'config_ldap_key_path': '',
+                                'config_ldap_cert_path': ''})
         self.assertTrue(self.check_element_on_page((By.ID, "flash_success")))
         time.sleep(BOOT_TIME)
         self.fill_basic_config({'config_ldap_encryption': 'None'})
@@ -223,16 +233,6 @@ class TestLdapLogin(unittest.TestCase, ui_class):
         # try login fallback password -> fail
         self.login('user0', '1234')
         self.assertTrue(self.check_element_on_page((By.ID, "flash_alert")))
-        # login as admin
-        '''self.login('admin','admin123')
-        # configure wrong setting
-        self.fill_basic_config({'config_ldap_user_object': '(uid=)'})
-        self.assertTrue(self.check_element_on_page((By.ID, "flash_alert")))
-        #logout
-        self.logout()
-        # try login
-        self.login('user0', 'terces')
-        self.assertTrue(self.check_element_on_page((By.ID, "flash_alert")))'''
 
         #login as admin
         self.login('admin','admin123')
@@ -551,7 +551,9 @@ class TestLdapLogin(unittest.TestCase, ui_class):
         self.login('admin', 'admin123')
         self.assertTrue(self.check_element_on_page((By.ID, "flash_warning")))
         # configure no certificate LDAP
-        self.fill_basic_config({'config_ldap_cert_path': ''})
+        self.fill_basic_config({'config_ldap_cacert_path': '',
+                                'config_ldap_key_path': '',
+                                'config_ldap_cert_path': ''})
         time.sleep(BOOT_TIME)
         # logout
         self.logout()
@@ -565,6 +567,9 @@ class TestLdapLogin(unittest.TestCase, ui_class):
         self.assertTrue(self.check_element_on_page((By.ID, "flash_success")))
         # stop ldap
         self.server.stopListen()
+        os.unlink(real_ca_file)
+        os.unlink(real_cert_file)
+        os.unlink(real_key_file)
 
 
     def test_LDAP_STARTTLS(self):
