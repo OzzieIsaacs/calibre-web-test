@@ -10,7 +10,7 @@ import requests
 from selenium.webdriver.common.by import By
 from selenium.webdriver.common.keys import Keys
 from helper_ui import ui_class
-from config_test import TEST_DB, base_path
+from config_test import TEST_DB, base_path, BOOT_TIME
 # from parameterized import parameterized_class
 from helper_func import startup, debug_startup, add_dependency, remove_dependency
 from helper_func import save_logfiles
@@ -688,11 +688,12 @@ class TestEditBooks(TestCase, ui_class):
 
     def test_upload_cover_hdd(self):
         self.fill_basic_config({'config_uploading': 1})
+        time.sleep(BOOT_TIME)
         self.get_book_details(5)
         self.check_element_on_page((By.ID, "edit_book")).click()
         jpegcover = os.path.join(base_path, 'files', 'cover.jpg')
         self.edit_book(content={'local_cover': jpegcover})
-        self.driver.refresh()
+        # self.driver.refresh()
         time.sleep(2)
         r = requests.session()
         payload = {'username': 'admin', 'password': 'admin123', 'submit':"", 'next':"/", "remember_me":"on"}
@@ -706,7 +707,7 @@ class TestEditBooks(TestCase, ui_class):
         bmpcover = os.path.join(base_path, 'files', 'cover.bmp')
         self.edit_book(content={'local_cover': bmpcover})
         self.assertTrue(self.check_element_on_page((By.CLASS_NAME, "alert")))
-        self.driver.refresh()
+        # self.driver.refresh()
         time.sleep(2)
         resp = r.get('http://127.0.0.1:8083/cover/5')
         with open(jpegcover, 'rb') as reader:
@@ -716,7 +717,7 @@ class TestEditBooks(TestCase, ui_class):
         self.check_element_on_page((By.ID, "edit_book")).click()
         pngcover = os.path.join(base_path, 'files', 'cover.png')
         self.edit_book(content={'local_cover': pngcover})
-        self.driver.refresh()
+        # self.driver.refresh()
         time.sleep(2)
         resp = r.get('http://127.0.0.1:8083/cover/5')
         self.assertAlmostEqual(20317, int(resp.headers['Content-Length']), delta=300)
@@ -725,13 +726,13 @@ class TestEditBooks(TestCase, ui_class):
         self.check_element_on_page((By.ID, "edit_book")).click()
         pngcover = os.path.join(base_path, 'files', 'cover.webp')
         self.edit_book(content={'local_cover': pngcover})
-        self.driver.refresh()
+        # self.driver.refresh()
         time.sleep(2)
         resp = r.get('http://127.0.0.1:8083/cover/5')
         self.assertAlmostEqual(17420, int(resp.headers['Content-Length']), delta=300)
         r.close()
         self.fill_basic_config({'config_uploading': 0})
-        self.assertTrue(False, "Browser-Cache Problem: Old Cover is displayed instead of New Cover")
+        self.assertTrue(False, "Really Check new covers")
 
     # check metadata recognition
     def test_upload_book_pdf(self):
@@ -774,7 +775,7 @@ class TestEditBooks(TestCase, ui_class):
         payload = {'username': 'admin', 'password': 'admin123', 'submit':"", 'next':"/", "remember_me":"on"}
         r.post('http://127.0.0.1:8083/login', data=payload)
         resp = r.get('http://127.0.0.1:8083' + details['cover'])
-        self.assertEqual('182574', resp.headers['Content-Length'])
+        self.assertEqual('19501', resp.headers['Content-Length'])
         self.fill_basic_config({'config_uploading': 0})
         r.close()
 
@@ -796,7 +797,7 @@ class TestEditBooks(TestCase, ui_class):
         payload = {'username': 'admin', 'password': 'admin123', 'submit':"", 'next':"/", "remember_me":"on"}
         r.post('http://127.0.0.1:8083/login', data=payload)
         resp = r.get('http://127.0.0.1:8083' + details['cover'])
-        self.assertEqual('182574', resp.headers['Content-Length'])
+        self.assertEqual('19501', resp.headers['Content-Length'])
         self.fill_basic_config({'config_uploading': 0})
         r.close()
 
@@ -817,7 +818,7 @@ class TestEditBooks(TestCase, ui_class):
         payload = {'username': 'admin', 'password': 'admin123', 'submit':"", 'next':"/", "remember_me":"on"}
         r.post('http://127.0.0.1:8083/login', data=payload)
         resp = r.get('http://127.0.0.1:8083' + details['cover'])
-        self.assertEqual('182574', resp.headers['Content-Length'])
+        self.assertEqual('19501', resp.headers['Content-Length'])
         self.fill_basic_config({'config_uploading': 0})
         r.close()
 
@@ -904,7 +905,7 @@ class TestEditBooks(TestCase, ui_class):
         payload = {'username': 'admin', 'password': 'admin123', 'submit':"", 'next':"/", "remember_me":"on"}
         r.post('http://127.0.0.1:8083/login', data=payload)
         resp = r.get('http://127.0.0.1:8083' + details['cover'])
-        self.assertEqual('182574', resp.headers['Content-Length'])
+        self.assertEqual('19501', resp.headers['Content-Length'])
         self.fill_basic_config({'config_uploading': 0})
         r.close()
 

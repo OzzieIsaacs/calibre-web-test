@@ -170,7 +170,7 @@ class TestSSL(unittest.TestCase, ui_class):
         self.assertTrue(self.check_element_on_page((By.ID, "flash_success")))
 
         # try to send
-        details = self.get_book_details(int(book_details['cover'].split('/')[-1]))
+        details = self.get_book_details(int(book_details['cover'].split('/')[-1].split('?')[0]))
         # check what happens
         self.assertFalse(details['kindlebtn'])
 
