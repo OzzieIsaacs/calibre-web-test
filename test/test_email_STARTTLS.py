@@ -27,8 +27,8 @@ class TestSTARTTLS(unittest.TestCase, ui_class):
             port=1026,
             only_ssl=False,
             startSSL=True,
-            certfile='files/ssl.crt',
-            keyfile='files/ssl.key',
+            certfile='files/server.crt',
+            keyfile='files/server.key',
             timeout=10
         )
         cls.email_server.start()

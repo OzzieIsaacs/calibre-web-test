@@ -1,6 +1,7 @@
 # -*- coding: utf-8 -*-
 
 import unittest
+import socket
 import time
 import re
 import os
@@ -503,15 +504,21 @@ class TestLdapLogin(unittest.TestCase, ui_class):
         # stop ldap
         self.server.stopListen()
 
-    @unittest.skip('Unknown how to test certificate')
+    # @unittest.skip('Unknown how to test certificate')
     def test_LDAP_SSL_CERTIFICATE(self):
         shutil.rmtree(os.path.join(CALIBRE_WEB_PATH, 'files'), ignore_errors=True)
-        src = os.path.join(base_path, 'files','ca.pem')
-        real_key_file = os.path.join(CALIBRE_WEB_PATH, 'files', 'ca.pem')
         os.makedirs(os.path.join(CALIBRE_WEB_PATH, 'files'))
-        shutil.copy(src, real_key_file)
+        for f in ['ca.cert.pem', 'client.crt', 'client.key']:
+            dest = os.path.join(CALIBRE_WEB_PATH, 'files', f)
+            src = os.path.join(base_path, 'files', f)
+            shutil.copy(src, dest)
+
+        real_ca_file = os.path.join(CALIBRE_WEB_PATH, 'files', 'ca.cert.pem')
+        real_cert_file = os.path.join(CALIBRE_WEB_PATH, 'files', 'client.crt')
+        real_key_file = os.path.join(CALIBRE_WEB_PATH, 'files', 'client.key')
+
         # configure ssl LDAP
-        self.fill_basic_config({'config_ldap_provider_url': '127.0.0.1',
+        self.fill_basic_config({'config_ldap_provider_url': socket.gethostname(),
                                 'config_ldap_port': '3268',
                                 'config_ldap_authentication': 'Simple',
                                 'config_ldap_dn': 'ou=people,dc=calibreweb,dc=com',
@@ -521,7 +528,9 @@ class TestLdapLogin(unittest.TestCase, ui_class):
                                 'config_ldap_group_object_filter': '',
                                 'config_ldap_openldap': 1,
                                 'config_ldap_encryption': 'SSL',
-                                'config_ldap_cert_path': real_key_file
+                                'config_ldap_cacert_path': real_ca_file,
+                                'config_ldap_cert_path': real_cert_file,
+                                'config_ldap_key_path': real_key_file
                                 })
         self.assertTrue(self.check_element_on_page((By.ID, "flash_success")))
         time.sleep(BOOT_TIME)
@@ -530,7 +539,7 @@ class TestLdapLogin(unittest.TestCase, ui_class):
         self.create_user('user0',{'email':'user0@exi.com','password':'1235'})
         self.assertTrue(self.check_element_on_page((By.ID, "flash_success")))
         # start SSl LDAP
-        # self.server.relisten(config=1, port=3268, encrypt="SSL", validate=True)
+        self.server.relisten(config=1, port=3268, encrypt="SSL", validate=True)
         # logout
         self.logout()
         # login as LDAP user

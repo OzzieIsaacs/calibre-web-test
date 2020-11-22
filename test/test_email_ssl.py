@@ -37,8 +37,8 @@ class TestSSL(unittest.TestCase, ui_class):
         cls.email_server = AIOSMTPServer(
             hostname='127.0.0.1',port=1027,
             only_ssl=True,
-            certfile='files/ssl.crt',
-            keyfile='files/ssl.key',
+            certfile='files/server.crt',
+            keyfile='files/server.key',
             timeout = 10
         )
 

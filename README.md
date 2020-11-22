@@ -20,10 +20,10 @@ Calibre-web-test
   test
 ```
 
-- selenium (https://selenium-release.storage.googleapis.com/3.141/selenium-server-standalone-3.141.59.jar) has to be located in subfolder selenium (configurable)
+- selenium [https://selenium-release.storage.googleapis.com/3.141/selenium-server-standalone-3.141.59.jar](https://selenium-release.storage.googleapis.com/3.141/selenium-server-standalone-3.141.59.jar) has to be located in subfolder selenium (configurable)
 - java has to be installed and in path
 
-- I'm doing my tests with Firefox, so geckodriver has to be installed and in path (https://github.com/mozilla/geckodriver/releases) and also Firefox itself
+- I'm doing my tests with Firefox, so geckodriver has to be installed and in path [https://github.com/mozilla/geckodriver/releases](https://github.com/mozilla/geckodriver/releases) and also Firefox itself
 
 - All dependencies listed in requirements.txt have to be installed
 
@@ -45,6 +45,7 @@ Calibre-web-test
 
 - Testing GDrive requires a fully setup gdrive setup, please place the corresponding client_secrets.json and gdrive_credentials in calibre-web/test/files folder
 
+- Tutorial for generating ssl files can be found here [https://www.golinuxcloud.com/create-certificate-authority-root-ca-linux](https://www.golinuxcloud.com/create-certificate-authority-root-ca-linux) and here [https://www.golinuxcloud.com/openssl-create-client-server-certificate](https://www.golinuxcloud.com/openssl-create-client-server-certificate)
 ## Start Testing
 
 Tests are running with python 3.6+ (better 3.7 as with 3.6 testing the e-mail startssl/ssl functionality will be skipped) by starting ./test/main.py (tests run for ca. 45min), tested on Linux Mint 19.3. \

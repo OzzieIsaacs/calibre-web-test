@@ -28,7 +28,7 @@ class TestKoboSync(unittest.TestCase, ui_class):
 
         try:
             host = 'http://' + get_Host_IP() + ':8083'
-            debug_startup(cls, cls.py_version, {'config_calibre_dir':TEST_DB, 'config_kobo_sync':1,
+            startup(cls, cls.py_version, {'config_calibre_dir':TEST_DB, 'config_kobo_sync':1,
                                           'config_kobo_proxy':0}, host=host)
             cls.goto_page('user_setup')
             cls.check_element_on_page((By.ID, "config_create_kobo_token")).click()
@@ -47,7 +47,7 @@ class TestKoboSync(unittest.TestCase, ui_class):
     def tearDownClass(cls):
         cls.stop_calibre_web()
         cls.driver.quit()
-        # cls.p.terminate()
+        cls.p.terminate()
         # close the browser window and stop calibre-web
         remove_dependency(cls.json_line)
         save_logfiles(cls.__name__)
@@ -66,8 +66,6 @@ class TestKoboSync(unittest.TestCase, ui_class):
                                 'series_index': '1.5',
                                 'tags': u'O0ü 执, kobok'
                                 })
-
-
         # generate payload for auth request
         payload = {
             "AffiliateName": "Kobo",
@@ -120,7 +118,7 @@ class TestKoboSync(unittest.TestCase, ui_class):
         self.assertEqual(data[0]['NewEntitlement']['BookMetadata']['DownloadUrls'][1]['Format'], 'EPUB')
         self.assertEqual(data[0]['NewEntitlement']['BookMetadata']['DownloadUrls'][1]['Size'], 6720)
         self.assertEqual(data[0]['NewEntitlement']['BookMetadata']['DownloadUrls'][1]['Url'],
-                         expectUrl + "/download/5/epub")
+                         self.kobo_adress + "/download/5/epub")
         self.assertEqual(data[0]['NewEntitlement']['BookMetadata']['Contributors'],
                          ['John Döe执', 'Mon Go'])
         self.assertEqual(data[0]['NewEntitlement']['BookMetadata']['CoverImageId'],
