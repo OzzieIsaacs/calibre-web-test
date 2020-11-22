@@ -1109,7 +1109,7 @@ class ui_class():
         tree = lxml.etree.parse(StringIO(html), parser)
 
         books = list()
-        b = tree.xpath("//*[@class='row']/div")
+        b = tree.xpath("//*[@class='row display-flex']/div")
         for book in b:
             ele = book.getchildren()
             # ele[0] -> cover
