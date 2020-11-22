@@ -30,8 +30,8 @@ class TestCoverEditBooks(TestCase, ui_class):
             cls.proxy.start()
             pem_file = os.path.join(os.path.expanduser('~'), '.mitmproxy', 'mitmproxy-ca-cert.pem')
             my_env = os.environ.copy()
-            my_env["http_proxy"] = 'http://127.0.0.1:8080'
-            my_env["https_proxy"] = 'https://127.0.0.1:8080'
+            my_env["http_proxy"] = 'http://localhost:8080'
+            my_env["https_proxy"] = 'https://localhost:8080'
             my_env["REQUESTS_CA_BUNDLE"] = pem_file
             # my_env["LANG"] = 'de_DE.UTF-8'
             startup(cls, cls.py_version, {'config_calibre_dir': TEST_DB, 'config_uploading': 1}, env=my_env)

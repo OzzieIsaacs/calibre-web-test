@@ -3,7 +3,10 @@ from mitmproxy.tools.dump import DumpMaster
 from mitmproxy import http
 
 from flask import Flask, Blueprint, request, send_from_directory
-from mitmproxy.addons import wsgiapp
+try:
+    from mitmproxy.addons import wsgiapp
+except ImportError:
+    from mitmproxy.addons import asgiapp as wsgiapp
 import threading
 import asyncio
 import json
