@@ -6,6 +6,8 @@ from unittest import TestCase, skip
 import os
 import time
 import requests
+from PIL import Image
+from diffimg import diff
 
 from selenium.webdriver.common.by import By
 from selenium.webdriver.common.keys import Keys
@@ -42,6 +44,19 @@ class TestEditBooks(TestCase, ui_class):
         cls.p.terminate()
         save_logfiles(cls.__name__)
 
+    def save_cover_screenshot(self, filename):
+        element = self.driver.find_element_by_tag_name('img')
+        location = element.location
+        size = element.size
+        self.driver.save_screenshot("page.png")
+        x = location['x']
+        y = location['y']
+        width = location['x'] + size['width']
+        height = location['y'] + size['height']
+        im = Image.open('page.png')
+        im = im.crop((int(x), int(y), int(width), int(height)))
+        im.save(filename)
+
     # goto Book 1
     # Change Title with unicode chars
     # save title, go to show books page
@@ -56,7 +71,7 @@ class TestEditBooks(TestCase, ui_class):
     # check title correct, check if book correct in order of a-z books
     # add files to folder of book
     # change title of book,
-    # check folder moves completly with all files
+    # check folder moves completely with all files
     # delete complete folder
     # change title of book
     # error metadata should occour
@@ -690,49 +705,47 @@ class TestEditBooks(TestCase, ui_class):
         self.fill_basic_config({'config_uploading': 1})
         time.sleep(BOOT_TIME)
         self.get_book_details(5)
+        self.save_cover_screenshot('original.png')
         self.check_element_on_page((By.ID, "edit_book")).click()
         jpegcover = os.path.join(base_path, 'files', 'cover.jpg')
         self.edit_book(content={'local_cover': jpegcover})
-        # self.driver.refresh()
         time.sleep(2)
-        r = requests.session()
-        payload = {'username': 'admin', 'password': 'admin123', 'submit':"", 'next':"/", "remember_me":"on"}
-        r.post('http://127.0.0.1:8083/login', data=payload)
-        resp = r.get('http://127.0.0.1:8083/cover/5')
-        with open(jpegcover, 'rb') as reader:
-            self.assertEqual(reader.read(), resp.content)
-
         self.get_book_details(5)
+        self.save_cover_screenshot('jpeg.png')
+        self.assertGreater(diff('original.png', 'jpeg.png', delete_diff_file=True), 0.02)
+        os.unlink('original.png')
+
         self.check_element_on_page((By.ID, "edit_book")).click()
         bmpcover = os.path.join(base_path, 'files', 'cover.bmp')
         self.edit_book(content={'local_cover': bmpcover})
         self.assertTrue(self.check_element_on_page((By.CLASS_NAME, "alert")))
-        # self.driver.refresh()
         time.sleep(2)
-        resp = r.get('http://127.0.0.1:8083/cover/5')
-        with open(jpegcover, 'rb') as reader:
-            self.assertEqual(reader.read(), resp.content)
-
         self.get_book_details(5)
+        self.save_cover_screenshot('bmp.png')
+        self.assertAlmostEqual(diff('bmp.png', 'jpeg.png', delete_diff_file=True), 0.0, delta=0.0001)
+        os.unlink('jpeg.png')
+
         self.check_element_on_page((By.ID, "edit_book")).click()
         pngcover = os.path.join(base_path, 'files', 'cover.png')
         self.edit_book(content={'local_cover': pngcover})
-        # self.driver.refresh()
         time.sleep(2)
-        resp = r.get('http://127.0.0.1:8083/cover/5')
-        self.assertAlmostEqual(20317, int(resp.headers['Content-Length']), delta=300)
-
         self.get_book_details(5)
+        self.save_cover_screenshot('png.png')
+        self.assertGreater(diff('bmp.png', 'png.png', delete_diff_file=True), 0.005)
+        os.unlink('bmp.png')
+
         self.check_element_on_page((By.ID, "edit_book")).click()
         pngcover = os.path.join(base_path, 'files', 'cover.webp')
         self.edit_book(content={'local_cover': pngcover})
-        # self.driver.refresh()
         time.sleep(2)
-        resp = r.get('http://127.0.0.1:8083/cover/5')
-        self.assertAlmostEqual(17420, int(resp.headers['Content-Length']), delta=300)
-        r.close()
+        self.get_book_details(5)
+        self.save_cover_screenshot('webp.png')
+        self.assertGreater(diff('webp.png', 'png.png', delete_diff_file=True), 0.005)
+        os.unlink('webp.png')
+        os.unlink('png.png')
+        os.unlink('page.png')
         self.fill_basic_config({'config_uploading': 0})
-        self.assertTrue(False, "Really Check new covers")
+        time.sleep(2)
 
     # check metadata recognition
     def test_upload_book_pdf(self):

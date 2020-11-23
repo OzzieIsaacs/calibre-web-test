@@ -8,6 +8,8 @@ psutil>=3.0.0
 public>=0.0.0
 pycurl>=7.19.0
 pyOpenSSL>=16.0.0
+Pillow >=7.1.0
+diffimg >=0.2.0
 
 # For running tests on helper
 Babel>=2.6.0
