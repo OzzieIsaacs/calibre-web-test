@@ -31,6 +31,20 @@ def calibre_path():
             return element
     return None
 
+def is_kepubify_not_present():
+    return kepubify_path() is None
+
+
+def kepubify_path():
+    if sys.platform == "win32":
+        kepubify_path = ["C:\\program files\\kepubify\\kepubify-windows-64Bit.exe",
+                        "C:\\program files(x86)\\kepubify\\kepubify-windows-64Bit.exe"]
+    else:
+        kepubify_path = ["/opt/kepubify/kepubify-linux-64bit", "/opt/kepubify/kepubify-linux-32bit"]
+    for element in kepubify_path:
+        if os.path.isfile(element):
+            return element
+    return None
 
 class MyMessage:
     def __init__(self, message_class=None):

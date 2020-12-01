@@ -13,8 +13,7 @@ from selenium.webdriver.common.by import By
 from selenium.webdriver.support.ui import Select
 from helper_ui import ui_class
 from config_test import CALIBRE_WEB_PATH, TEST_DB, base_path
-# from parameterized import parameterized_class
-from helper_func import startup, debug_startup
+from helper_func import startup
 from helper_func import save_logfiles, add_dependency, remove_dependency
 from helper_gdrive import prepare_gdrive, remove_gdrive, connect_gdrive, check_path_gdrive
 
@@ -24,7 +23,8 @@ WAIT_GDRIVE = 15
 @unittest.skipIf(not os.path.exists(os.path.join(base_path, "files", "client_secrets.json")) or
                  not os.path.exists(os.path.join(base_path, "files", "gdrive_credentials")),
                  "client_secrets.json and/or gdrive_credentials file is missing")
-class TestEbookConvertGDrive(unittest.TestCase, ui_class):
+@unittest.skipIf(helper_email_convert.is_calibre_not_present(), "Skipping convert, calibre not found")
+class TestEbookConvertCalibreGDrive(unittest.TestCase, ui_class):
     p=None
     driver = None
     dependency = ["oauth2client", "PyDrive", "PyYAML", "google-api-python-client", "httplib2", "Pillow", "lxml"]
@@ -74,6 +74,7 @@ class TestEbookConvertGDrive(unittest.TestCase, ui_class):
             startup(cls, cls.py_version, {'config_calibre_dir':TEST_DB,
                                           'config_use_google_drive': 1,
                                           'config_log_level': 'DEBUG',
+                                          'config_kepubifypath': '',
                                           'config_converterpath':helper_email_convert.calibre_path()},
                     only_metadata=True)
             cls.fill_basic_config({'config_google_drive_folder': 'test'})

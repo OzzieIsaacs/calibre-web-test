@@ -234,7 +234,7 @@ class ui_class():
                                            'config_2_oauth_client_id', 'config_2_oauth_client_secret'
                                            ]):
             opener.append(3)
-        if any(key in elements for key in ['config_ebookconverter', 'config_calibre',
+        if any(key in elements for key in ['config_ebookconverter', 'config_calibre', 'config_kepubifypath',
                                            'config_converterpath','config_rarfile_location']):
             opener.append(4)
 

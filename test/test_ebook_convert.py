@@ -17,7 +17,7 @@ from helper_func import save_logfiles
 
 
 @unittest.skipIf(helper_email_convert.is_calibre_not_present(), "Skipping convert, calibre not found")
-class TestEbookConvert(unittest.TestCase, ui_class):
+class TestEbookConvertCalibre(unittest.TestCase, ui_class):
     p = None
     driver = None
     email_server = None
@@ -37,6 +37,7 @@ class TestEbookConvert(unittest.TestCase, ui_class):
 
         try:
             startup(cls, cls.py_version, {'config_calibre_dir':TEST_DB,
+                                          'config_kepubifypath':'',
                                           'config_converterpath':helper_email_convert.calibre_path()})
 
             cls.edit_user('admin', {'email': 'a5@b.com', 'kindle_mail': 'a1@b.com'})
@@ -71,13 +72,14 @@ class TestEbookConvert(unittest.TestCase, ui_class):
     def test_convert_deactivate(self):
         self.fill_basic_config({'config_converterpath': ""})
         self.goto_page('nav_about')
-        self.assertFalse(self.check_element_on_page((By.XPATH, "//tr/th[text()='Calibre converter']/following::td[1]")))
+        element = self.check_element_on_page((By.XPATH, "//tr/th[text()='ebook converter']/following::td[1]"))
+        self.assertEqual(element.text, 'not installed')
         details = self.get_book_details(5)
         self.assertFalse(details['kindlebtn'])
         vals = self.get_convert_book(5)
         self.assertFalse(vals['btn_from'])
         self.assertFalse(vals['btn_to'])
-        self.fill_basic_config({'config_converterpath': ""})
+        # self.fill_basic_config({'config_converterpath': ""})
         self.fill_basic_config({'config_converterpath':helper_email_convert.calibre_path()})
 
     # Set excecutable to wrong exe and start convert
@@ -91,8 +93,11 @@ class TestEbookConvert(unittest.TestCase, ui_class):
         self.assertEqual(element.text, 'not installed')
         details = self.get_book_details(5)
         self.assertEqual(len(details['kindle']), 1)
-        # ToDo: check convert function
         vals = self.get_convert_book(5)
+        # ToDo: Buttons should be invisible and convert should not be possible
+        self.assertTrue(vals['btn_from'])
+        self.assertTrue(vals['btn_to'])
+
 
         # ToDo: change behavior convert should only be visible if ebookconverter has valid entry
         self.fill_basic_config({'config_converterpath':'/opt/calibre/kuku'})
