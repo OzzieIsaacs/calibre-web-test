@@ -9,6 +9,8 @@ import time
 import requests
 import shutil
 from helper_ui import ui_class
+from PIL import Image
+from diffimg import diff
 
 from config_test import CALIBRE_WEB_PATH, TEST_DB, BOOT_TIME, base_path
 from helper_func import add_dependency, remove_dependency, startup
@@ -103,6 +105,18 @@ class TestEditBooksOnGdrive(unittest.TestCase, ui_class):
 
         save_logfiles(cls.__name__)
 
+    def save_cover_screenshot(self, filename):
+        element = self.driver.find_element_by_tag_name('img')
+        location = element.location
+        size = element.size
+        self.driver.save_screenshot("page.png")
+        x = location['x']
+        y = location['y']
+        width = location['x'] + size['width']
+        height = location['y'] + size['height']
+        im = Image.open('page.png')
+        im = im.crop((int(x), int(y), int(width), int(height)))
+        im.save(filename)
 
     def test_edit_title(self):
         fs = connect_gdrive("test")
@@ -676,50 +690,48 @@ class TestEditBooksOnGdrive(unittest.TestCase, ui_class):
     def test_upload_cover_hdd(self):
         self.fill_basic_config({'config_uploading': 1})
         self.get_book_details(5)
+        self.save_cover_screenshot('original.png')
         self.check_element_on_page((By.ID, "edit_book")).click()
         jpegcover = os.path.join(base_path, 'files', 'cover.jpg')
         self.edit_book(content={'local_cover': jpegcover})
-        self.driver.refresh()
         time.sleep(2)
-        r = requests.session()
-        payload = {'username': 'admin', 'password': 'admin123', 'submit':"", 'next':"/", "remember_me":"on"}
-        r.post('http://127.0.0.1:8083/login', data=payload)
-        resp = r.get('http://127.0.0.1:8083/cover/5')
-        with open(jpegcover, 'rb') as reader:
-            self.assertEqual(reader.read(), resp.content)
-
         self.get_book_details(5)
+        self.save_cover_screenshot('jpeg.png')
+        self.assertGreater(diff('original.png', 'jpeg.png', delete_diff_file=True), 0.02)
+        os.unlink('original.png')
+
         self.check_element_on_page((By.ID, "edit_book")).click()
         bmpcover = os.path.join(base_path, 'files', 'cover.bmp')
         self.edit_book(content={'local_cover': bmpcover})
         self.assertTrue(self.check_element_on_page((By.CLASS_NAME, "alert")))
-        self.driver.refresh()
         time.sleep(2)
-        resp = r.get('http://127.0.0.1:8083/cover/5')
-        with open(jpegcover, 'rb') as reader:
-            self.assertEqual(reader.read(), resp.content)
+        self.save_cover_screenshot('bmp.png')
+        self.assertAlmostEqual(diff('bmp.png', 'jpeg.png', delete_diff_file=True), 0.0, delta=0.0001)
+        os.unlink('jpeg.png')
 
         self.get_book_details(5)
         self.check_element_on_page((By.ID, "edit_book")).click()
         pngcover = os.path.join(base_path, 'files', 'cover.png')
         self.edit_book(content={'local_cover': pngcover})
-        self.driver.refresh()
         time.sleep(2)
-        resp = r.get('http://127.0.0.1:8083/cover/5')
-        self.assertAlmostEqual(20317, int(resp.headers['Content-Length']), delta=300)
-
         self.get_book_details(5)
+        self.save_cover_screenshot('png.png')
+        self.assertGreater(diff('bmp.png', 'png.png', delete_diff_file=True), 0.005)
+        os.unlink('bmp.png')
+
         self.check_element_on_page((By.ID, "edit_book")).click()
         pngcover = os.path.join(base_path, 'files', 'cover.webp')
         self.edit_book(content={'local_cover': pngcover})
-        self.driver.refresh()
         time.sleep(5)
-        resp = r.get('http://127.0.0.1:8083/cover/5')
-        self.assertAlmostEqual(17420, int(resp.headers['Content-Length']), delta=300)
-        r.close()
-        self.fill_basic_config({'config_uploading': 0})
-        self.assertTrue(False, "Browser-Cache Problem: Old Cover is displayed instead of New Cover")
+        self.get_book_details(5)
+        self.save_cover_screenshot('webp.png')
+        self.assertGreater(diff('webp.png', 'png.png', delete_diff_file=True), 0.005)
+        os.unlink('webp.png')
+        os.unlink('png.png')
+        os.unlink('page.png')
 
+        self.fill_basic_config({'config_uploading': 0})
+        time.sleep(2)
 
     def test_upload_book_lit(self):
         self.fill_basic_config({'config_uploading':1})
@@ -738,7 +750,7 @@ class TestEditBooksOnGdrive(unittest.TestCase, ui_class):
         payload = {'username': 'admin', 'password': 'admin123', 'submit':"", 'next':"/", "remember_me":"on"}
         r.post('http://127.0.0.1:8083/login', data=payload)
         resp = r.get('http://127.0.0.1:8083' + details['cover'])
-        self.assertEqual('182574', resp.headers['Content-Length'])
+        self.assertEqual('19501', resp.headers['Content-Length'])
         self.fill_basic_config({'config_uploading': 0})
         r.close()
 

@@ -13,10 +13,12 @@ import venv
 from CalibreResult import CalibreResult
 from helper_environment import environment
 from helper_func import kill_dead_cps, finishing_notifier, poweroff
+from helper_certificate import generate_ssl_testing_files
 from subprocess import CalledProcessError
 
 
 if __name__ == '__main__':
+    generate_ssl_testing_files()
     sub_dependencys = ["Werkzeug", "Jinja2", "singledispatch"]
     result=False
     retry=0

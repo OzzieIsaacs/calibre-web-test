@@ -210,8 +210,8 @@ class TestCli(unittest.TestCase, ui_class):
         p.kill()
         shutil.rmtree(os.path.join(CALIBRE_WEB_PATH, 'hü lo'), ignore_errors=True)
         shutil.copytree('./files', os.path.join(CALIBRE_WEB_PATH, 'hü lo'))
-        real_crt_file = os.path.join(CALIBRE_WEB_PATH, 'hü lo', 'ssl.crt')
-        real_key_file = os.path.join(CALIBRE_WEB_PATH, 'hü lo', 'ssl.key')
+        real_crt_file = os.path.join(CALIBRE_WEB_PATH, 'hü lo', 'server.crt')
+        real_key_file = os.path.join(CALIBRE_WEB_PATH, 'hü lo', 'server.key')
         if sys.version_info < (3, 0):
             real_crt_file = real_crt_file.decode('UTF-8')
             real_key_file = real_key_file.decode('UTF-8')

@@ -223,7 +223,9 @@ class ui_class():
                                            'config_remote_login', 'config_use_goodreads', 'config_goodreads_api_key',
                                            'config_goodreads_api_secret', 'config_kobo_sync', 'config_kobo_proxy',
                                            'config_login_type', 'config_ldap_provider_url', 'config_ldap_port',
-                                           'config_ldap_encryption', 'config_ldap_cert_path', 'config_ldap_serv_username',
+                                           'config_ldap_encryption', 'config_ldap_cacert_path',
+                                           'config_ldap_cert_path', 'config_ldap_key_path',
+                                           'config_ldap_serv_username',
                                            'config_ldap_serv_password', 'config_ldap_dn', 'config_ldap_user_object',
                                            'config_ldap_group_object_filter', 'config_ldap_group_name',
                                            'config_ldap_group_members_field', 'config_ldap_openldap',
@@ -232,7 +234,7 @@ class ui_class():
                                            'config_2_oauth_client_id', 'config_2_oauth_client_secret'
                                            ]):
             opener.append(3)
-        if any(key in elements for key in ['config_ebookconverter', 'config_calibre',
+        if any(key in elements for key in ['config_ebookconverter', 'config_calibre', 'config_kepubifypath',
                                            'config_converterpath','config_rarfile_location']):
             opener.append(4)
 
@@ -1107,7 +1109,7 @@ class ui_class():
         tree = lxml.etree.parse(StringIO(html), parser)
 
         books = list()
-        b = tree.xpath("//*[@class='row']/div")
+        b = tree.xpath("//*[@class='row display-flex']/div")
         for book in b:
             ele = book.getchildren()
             # ele[0] -> cover

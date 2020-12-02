@@ -37,8 +37,8 @@ class TestSSL(unittest.TestCase, ui_class):
         cls.email_server = AIOSMTPServer(
             hostname='127.0.0.1',port=1027,
             only_ssl=True,
-            certfile='files/ssl.crt',
-            keyfile='files/ssl.key',
+            certfile='files/server.crt',
+            keyfile='files/server.key',
             timeout = 10
         )
 
@@ -170,7 +170,7 @@ class TestSSL(unittest.TestCase, ui_class):
         self.assertTrue(self.check_element_on_page((By.ID, "flash_success")))
 
         # try to send
-        details = self.get_book_details(int(book_details['cover'].split('/')[-1]))
+        details = self.get_book_details(int(book_details['cover'].split('/')[-1].split('?')[0]))
         # check what happens
         self.assertFalse(details['kindlebtn'])
 

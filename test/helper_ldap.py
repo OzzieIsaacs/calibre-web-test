@@ -246,10 +246,10 @@ member: uid=user13,ou=People,dc=calibreweb,dc=com
 
 def verifyCallback(__, x509, ___, ____, ok):
     if not ok:
-        print ('invalid cert from subject:', x509.get_subject())
+        # print ('invalid cert from subject:', x509.get_subject())
         return False
-    else:
-        print ("Certs are fine")
+    # else:
+        # print ("Certs are fine")
     return True
 
 
@@ -430,7 +430,7 @@ class TestLDAPServer(threading.Thread):
         cert = None
         tree = Tree(config)
         if encrypt is not None:
-            cert = ssl.DefaultOpenSSLContextFactory('./files/ssl.key', './files/ssl.crt')
+            cert = ssl.DefaultOpenSSLContextFactory('./files/server.key', './files/server.crt')
         if encrypt == 'TLS':
             tls = True
         factory = LDAPServerFactory(tree.db, tls, auth)
@@ -448,7 +448,7 @@ class TestLDAPServer(threading.Thread):
 
                 # Since we have self-signed certs we have to explicitly
                 # tell the server to trust them.
-                ctx.load_verify_locations('./files/ca.pem')
+                ctx.load_verify_locations('./files/ca.cert.pem')
 
             self.serv = reactor.listenSSL(port, factory, cert)
         else:
@@ -470,10 +470,7 @@ class TestLDAPServer(threading.Thread):
             e.addCallback(cbloseConnection)
             e.addErrback(cberrloseConnection)
             time.sleep(2)
-            '''try:
-                self.serv.loseConnection()
-            except Exception:
-                print('except1')'''
+
             try:
                 self.serv.connectionLost(reason=None)
             except Exception:
