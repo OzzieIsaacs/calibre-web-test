@@ -1102,6 +1102,31 @@ class ui_class():
 
         return books
 
+    def verify_order(self, page, index=-1, order=None):
+        if order is None:
+            order = {}
+        if page =="search":
+            list_elements = self.get_shelf_books_displayed()
+        else:
+            list_elements = self.goto_page(page)
+        if index >= 0:
+            if not len(list_elements):
+                list_elements = self.get_series_books_displayed()
+                list_elements[index]['ele'].click()
+            else:
+                list_elements[index].click()
+        for key, element in order.items():
+            self.check_element_on_page((By.ID, key)).click()
+            if page == "search":
+                books = self.get_shelf_books_displayed()
+            else:
+                books = self.goto_page(page)
+            for index, expected_result in enumerate(element):
+                if page == "search":
+                    book_id = int(books[index]['id'])
+                else:
+                    book_id = int(books[1][index]['id'])
+                self.assertEqual(book_id, expected_result, "Key sorting order wrong: " + key)
 
     def get_shelf_books_displayed(self):
         parser = lxml.etree.HTMLParser()

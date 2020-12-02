@@ -176,6 +176,16 @@ class TestCalibreWebVisibilitys(unittest.TestCase, ui_class):
         self.change_user({'show_128': 1})
         self.assertTrue(self.check_element_on_page((By.ID, "flash_success")))
         self.assertTrue(self.check_element_on_page((By.ID, "nav_rated")))
+        order = {'new': (10,),
+                 'old': (10,),
+                 'asc': (10,),
+                 'desc': (10,),
+                 'auth_az': (10,),
+                 'auth_za': (10,),
+                 'pub_new': (10,),
+                 'pub_old': (10,)
+                 }
+        self.verify_order("nav_rated", order=order)
 
     # Test if user can change visibility of sidebar view read and unread books
     def test_admin_change_visibility_read(self):
@@ -207,6 +217,16 @@ class TestCalibreWebVisibilitys(unittest.TestCase, ui_class):
                          self.check_element_on_page((By.XPATH, "//*[@class='discover load-more']/H2")).text)
         self.get_book_details(8)
         self.check_element_on_page((By.XPATH, "//*[@id='have_read_cb']")).click()
+        order = {'new': (13, 12, 11, 10),
+                 'old': (1, 3, 4, 5),
+                 'asc': (12, 13, 9, 10),
+                 'desc': (4, 5, 3, 7),
+                 'auth_az': (8, 1, 5, 7),
+                 'auth_za': (10, 4, 12, 3),
+                 'pub_new': (7, 5, 1, 3),
+                 'pub_old': (1, 3, 4, 8)
+                 }
+        self.verify_order("nav_unread", 0, order=order)
 
     # checks if admin can change user language
     def test_admin_change_visibility_language(self):
@@ -217,6 +237,16 @@ class TestCalibreWebVisibilitys(unittest.TestCase, ui_class):
         self.change_user({'show_2': 1})
         self.assertTrue(self.check_element_on_page((By.ID, "flash_success")))
         self.assertTrue(self.check_element_on_page((By.ID, "nav_lang")))
+        order = {'new': (10, 9, 5, 1),
+                 'old': (1, 5, 9, 10),
+                 'asc': (9, 10, 1, 5),
+                 'desc': (5, 1, 10, 9),
+                 'auth_az': (1, 5, 9, 10),
+                 'auth_za': (10, 9, 5, 1),
+                 'pub_new': (5, 1, 9, 10),
+                 'pub_old': (1, 9, 10, 5)
+                 }
+        self.verify_order("nav_lang", 0, order=order)
 
     # checks if admin can change hot books
     def test_admin_change_visibility_hot(self):
@@ -227,6 +257,15 @@ class TestCalibreWebVisibilitys(unittest.TestCase, ui_class):
         self.change_user({'show_16': 1})
         self.assertTrue(self.check_element_on_page((By.ID, "flash_success")))
         self.assertTrue(self.check_element_on_page((By.ID, "nav_hot")))
+        order = {'new': (1, 2, 3, 4, 5, 6),
+                 'old': (1, 2, 3, 4, 5, 6),
+                 'asc': (1, 2, 3, 4, 5, 6),
+                 'desc': (1, 2, 3, 4, 5, 6),
+                 'auth_az': (1, 2, 3, 4, 5, 6),
+                 'auth_za': (1, 2, 3, 4, 5, 6),
+                 'pub_new': (1, 2, 3, 4, 5, 6),
+                 'pub_old': (1, 2, 3, 4, 5, 6)
+                 }
 
     # checks if admin can change random books
     def test_admin_change_visibility_random(self):
@@ -249,6 +288,18 @@ class TestCalibreWebVisibilitys(unittest.TestCase, ui_class):
         self.change_user({'show_4': 1})
         self.assertTrue(self.check_element_on_page((By.ID, "flash_success")))
         self.assertTrue(self.check_element_on_page((By.ID, "nav_serie")))
+        order = {'new': (7, 3),
+                 'old': (3, 7),
+                 'asc': (7, 3),
+                 'desc': (3, 7),
+                 'auth_az': (7, 3),
+                 'auth_za': (3, 7),
+                 'pub_new': (7, 3),
+                 'pub_old': (3, 7),
+                 'series_asc': (3, 7),
+                 'series_desc': (7, 3)
+                 }
+        self.verify_order("nav_serie", 0, order=order)
 
     # checks if admin can change publisher
     def test_admin_change_visibility_publisher(self):
@@ -259,6 +310,16 @@ class TestCalibreWebVisibilitys(unittest.TestCase, ui_class):
         self.change_user({'show_4096': 1})
         self.assertTrue(self.check_element_on_page((By.ID, "flash_success")))
         self.assertTrue(self.check_element_on_page((By.ID, "nav_publisher")))
+        order = {'new': (5,),
+                 'old': (5,),
+                 'asc': (5,),
+                 'desc': (5,),
+                 'auth_az': (5,),
+                 'auth_za': (5,),
+                 'pub_new': (5,),
+                 'pub_old': (5,),
+                 }
+        self.verify_order("nav_publisher", 0, order=order)
 
     # checks if admin can change ratings
     def test_admin_change_visibility_rating(self):
@@ -269,6 +330,16 @@ class TestCalibreWebVisibilitys(unittest.TestCase, ui_class):
         self.change_user({'show_8192': 1})
         self.assertTrue(self.check_element_on_page((By.ID, "flash_success")))
         self.assertTrue(self.check_element_on_page((By.ID, "nav_rate")))
+        order = {'new': (7,),
+                 'old': (7,),
+                 'asc': (7,),
+                 'desc': (7,),
+                 'auth_az': (7,),
+                 'auth_za': (7,),
+                 'pub_new': (7,),
+                 'pub_old': (7,),
+                 }
+        self.verify_order("nav_rate", 0, order=order)
 
     # checks if admin can change fileFormats
     def test_admin_change_visibility_file_formats(self):
@@ -279,6 +350,16 @@ class TestCalibreWebVisibilitys(unittest.TestCase, ui_class):
         self.change_user({'show_16384': 1})
         self.assertTrue(self.check_element_on_page((By.ID, "flash_success")))
         self.assertTrue(self.check_element_on_page((By.ID, "nav_format")))
+        order = {'new': (10, 9, 8, 5),
+                 'old': (5, 8, 9, 10),
+                 'asc': (9, 10, 8, 5),
+                 'desc': (5, 8, 10, 9),
+                 'auth_az': (8, 5, 9, 10),
+                 'auth_za': (10, 9, 5, 8),
+                 'pub_new': (5, 8, 9, 10),
+                 'pub_old': (8, 9, 10, 5)  # books 8,9,10 are all of same date (0101) -> 2nd order according to id in database
+                 }
+        self.verify_order("nav_format", 1, order=order)
 
     # checks if admin can change fileFormats
     def test_admin_change_visibility_archived(self):
@@ -291,7 +372,7 @@ class TestCalibreWebVisibilitys(unittest.TestCase, ui_class):
         self.assertTrue(self.check_element_on_page((By.ID, "nav_archived")))
 
     # checks if admin can change author
-    # testcase always failed for unknown reason, therefor sleep calls ToDo: Why failed??
+    # testcase always failed for unknown reason, therefore sleep calls ToDo: Why failed??
     def test_admin_change_visibility_authors(self):
         # maybe button not visible, and therefore click isn't working?
         time.sleep(5)
@@ -306,6 +387,14 @@ class TestCalibreWebVisibilitys(unittest.TestCase, ui_class):
         self.change_user({'show_64': 1})
         self.assertTrue(self.check_element_on_page((By.ID, "flash_success")))
         self.assertTrue(self.check_element_on_page((By.ID, "nav_author")))
+        order = {'new': (7, 5),
+                 'old': (5, 7),
+                 'asc': (7, 5),
+                 'desc': (5, 7),
+                 'pub_new': (7, 5),
+                 'pub_old': (5, 7)
+                 }
+        self.verify_order("nav_author", 2, order=order)
 
     # checks if admin can change categories
     def test_admin_change_visibility_category(self):
@@ -378,6 +467,32 @@ class TestCalibreWebVisibilitys(unittest.TestCase, ui_class):
         self.search('Hallo')
         field = self.check_element_on_page((By.ID, "query"))
         self.assertEqual('Hallo', field.get_attribute('value'))
+
+    def test_search_order(self):
+        self.search('book')
+        order = {'new': (13, 12, 11, 10),
+                 'old': (5, 8, 9, 10),
+                 'asc': (12, 13, 9, 10),
+                 'desc': (5, 11, 8, 10),
+                 'auth_az': (8, 5, 11, 13),
+                 'auth_za': (10, 12, 9, 13),
+                 'pub_new': (5, 8 , 9, 10),
+                 'pub_old': (8, 9, 10, 11)
+                 }
+        self.verify_order("search", order=order)
+        self.search('book')
+        order = {'new': (13, 12, 11, 10),
+                 'old': (5, 8, 9, 10),
+                 'asc': (12, 13, 9, 10),
+                 'desc': (5, 11, 8, 10),
+                 'auth_az': (8, 5, 11, 13),
+                 'auth_za': (10, 12, 9, 13),
+                 'pub_new': (5, 8 , 9, 10),
+                 'pub_old': (8, 9, 10, 11)
+                 }
+        self.verify_order("search", order=order)
+
+
 
     def test_search_functions(self):
         r = requests.session()
@@ -846,151 +961,11 @@ class TestCalibreWebVisibilitys(unittest.TestCase, ui_class):
 
     def test_save_views_recent(self):
         self.goto_page('nav_new')
-        self.check_element_on_page((By.ID, "new")).click()
-        books=self.get_books_displayed()
-        self.assertEqual(books[1][0]['id'], '13')
-        self.check_element_on_page((By.ID, "old")).click()
-        books=self.get_books_displayed()
-        self.assertEqual(books[1][0]['id'], '1')
-        self.check_element_on_page((By.ID, "asc")).click()
-        books=self.get_books_displayed()
-        self.assertEqual(books[1][0]['id'], '12')
-        self.check_element_on_page((By.ID, "pub_new")).click()
-        books=self.get_books_displayed()
-        self.assertEqual(books[1][0]['id'], '7')
-        self.check_element_on_page((By.ID, "pub_old")).click()
-        books=self.get_books_displayed()
-        self.assertEqual(books[1][0]['id'], '1')
         self.check_element_on_page((By.ID, "desc")).click()
-        books=self.get_books_displayed()
+        books = self.get_books_displayed()
         self.assertEqual(books[1][0]['id'], '4')
         self.goto_page('nav_hot')
         time.sleep(2)
         self.goto_page('nav_new')
-        books=self.get_books_displayed()
-        self.assertEqual(books[1][0]['id'], '4')
-
-    @unittest.skip("ToDo")
-    def test_save_views_unread(self):
-        self.goto_page('nav_unread')
-        self.check_element_on_page((By.ID, "new")).click()
-        books = self.get_books_displayed()
-        self.assertEqual(books[1][0]['id'], '13')
-        self.check_element_on_page((By.ID, "old")).click()
-        books = self.get_books_displayed()
-        self.assertEqual(books[1][0]['id'], '1')
-        self.check_element_on_page((By.ID, "asc")).click()
-        books = self.get_books_displayed()
-        self.assertEqual(books[1][0]['id'], '12')
-        self.check_element_on_page((By.ID, "pub_new")).click()
-        books = self.get_books_displayed()
-        self.assertEqual(books[1][0]['id'], '7')
-        self.check_element_on_page((By.ID, "pub_old")).click()
-        books = self.get_books_displayed()
-        self.assertEqual(books[1][0]['id'], '1')
-        self.check_element_on_page((By.ID, "desc")).click()
         books = self.get_books_displayed()
         self.assertEqual(books[1][0]['id'], '4')
-
-    @unittest.skip("ToDo")
-    def test_save_views_series(self):
-        # Todo
-        list_elements = self.goto_page('nav_serie')
-        if not len(list_elements):
-            self.check_element_on_page((By.ID, "list-button")).click()
-            list_elements = self.get_series_books_displayed()
-        self.assertEqual(list_elements[0][0].text, 'Loko')
-        self.check_element_on_page((By.ID, "desc")).click()
-        list_elements = self.driver.find_elements_by_xpath("//*[contains(@id, 'list_')]")
-        self.assertEqual(list_elements[0][0].text, 'Djüngel')
-        list_elements[0][0].click()
-        books = self.get_books_displayed()
-        self.assertEqual(books[1][0]['id'], '3')
-        self.check_element_on_page((By.ID, "new")).click()
-        books=self.get_books_displayed()
-        self.assertEqual(books[1][0]['id'], '3')
-        self.check_element_on_page((By.ID, "old")).click()
-        self.assertEqual(books[1][0]['id'], '1')
-        books=self.get_books_displayed()
-        self.check_element_on_page((By.ID, "asc")).click()
-        books=self.get_books_displayed()
-        self.assertEqual(books[1][0]['id'], '12')
-        self.check_element_on_page((By.ID, "pub_new")).click()
-        books=self.get_books_displayed()
-        self.assertEqual(books[1][0]['id'], '7')
-        self.check_element_on_page((By.ID, "pub_old")).click()
-        books=self.get_books_displayed()
-        self.assertEqual(books[1][0]['id'], '1')
-        self.check_element_on_page((By.ID, "desc")).click()
-        books=self.get_books_displayed()
-        self.assertEqual(books[1][0]['id'], '4')
-
-    @unittest.skip("ToDo")
-    def test_save_views_authors(self):
-        # Todo
-        self.goto_page('nav_author')
-        self.check_element_on_page((By.ID, "new")).click()
-        books=self.get_books_displayed()
-        self.assertEqual(books[1][0]['id'], '13')
-        self.check_element_on_page((By.ID, "old")).click()
-        self.assertEqual(books[1][0]['id'], '1')
-        books=self.get_books_displayed()
-        self.check_element_on_page((By.ID, "asc")).click()
-        books=self.get_books_displayed()
-        self.assertEqual(books[1][0]['id'], '12')
-        self.check_element_on_page((By.ID, "pub_new")).click()
-        books=self.get_books_displayed()
-        self.assertEqual(books[1][0]['id'], '7')
-        self.check_element_on_page((By.ID, "pub_old")).click()
-        books=self.get_books_displayed()
-        self.assertEqual(books[1][0]['id'], '1')
-        self.check_element_on_page((By.ID, "desc")).click()
-        books=self.get_books_displayed()
-        self.assertEqual(books[1][0]['id'], '4')
-
-    @unittest.skip("ToDo")
-    def test_save_views_lang(self):
-        # Todo
-        self.goto_page('nav_lang')
-        self.check_element_on_page((By.ID, "new")).click()
-        books=self.get_books_displayed()
-        self.assertEqual(books[1][0]['id'], '13')
-        self.check_element_on_page((By.ID, "old")).click()
-        self.assertEqual(books[1][0]['id'], '1')
-        books=self.get_books_displayed()
-        self.check_element_on_page((By.ID, "asc")).click()
-        books=self.get_books_displayed()
-        self.assertEqual(books[1][0]['id'], '12')
-        self.check_element_on_page((By.ID, "pub_new")).click()
-        books=self.get_books_displayed()
-        self.assertEqual(books[1][0]['id'], '7')
-        self.check_element_on_page((By.ID, "pub_old")).click()
-        books=self.get_books_displayed()
-        self.assertEqual(books[1][0]['id'], '1')
-        self.check_element_on_page((By.ID, "desc")).click()
-        books=self.get_books_displayed()
-        self.assertEqual(books[1][0]['id'], '4')
-
-    @unittest.skip("ToDo")
-    def test_save_views_formats(self):
-        # Todo
-        self.goto_page('nav_formats')
-        self.check_element_on_page((By.ID, "new")).click()
-        books=self.get_books_displayed()
-        self.assertEqual(books[1][0]['id'], '13')
-        self.check_element_on_page((By.ID, "old")).click()
-        self.assertEqual(books[1][0]['id'], '1')
-        books=self.get_books_displayed()
-        self.check_element_on_page((By.ID, "asc")).click()
-        books=self.get_books_displayed()
-        self.assertEqual(books[1][0]['id'], '12')
-        self.check_element_on_page((By.ID, "pub_new")).click()
-        books=self.get_books_displayed()
-        self.assertEqual(books[1][0]['id'], '7')
-        self.check_element_on_page((By.ID, "pub_old")).click()
-        books=self.get_books_displayed()
-        self.assertEqual(books[1][0]['id'], '1')
-        self.check_element_on_page((By.ID, "desc")).click()
-        books=self.get_books_displayed()
-        self.assertEqual(books[1][0]['id'], '4')
-

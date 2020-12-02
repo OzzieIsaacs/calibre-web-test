@@ -644,7 +644,31 @@ class TestEditAdditionalBooks(TestCase, ui_class):
         self.edit_user('user2', {'delete': 1})
         # ToDo: Test book delete rights on book list
 
+    def test_title_sort(self):
+        self.edit_book(3, content={'book_title': u'The Audiobok'})
+        self.edit_book(1, content={'book_title': u'A bok'})
+        self.search('bok')
+        order = {'asc': (3, 1)}  # Audiobok, The is before bok, A
+        self.verify_order("search", order=order)
 
+        self.edit_book(3, content={'book_title': u'A Audiobok'})
+        self.edit_book(1, content={'book_title': u'The bok'})
+        self.search('bok')
+        order = {'asc': (3, 1)}  # Audiobok, A is before bok, The
+        self.verify_order("search", order=order)
+
+        self.fill_view_config({'config_title_regex': '^(Beta)\s+'})
+        self.assertTrue(self.check_element_on_page((By.ID, "flash_success")))
+        self.edit_book(3, content={'book_title': u'Beta Audiobok'})
+        self.edit_book(1, content={'book_title': u'A bok'})
+        self.search('bok')
+        order = {'asc': (1, 3)}  # A bok is before Audiobook, Beta
+        self.verify_order("search", order=order)
+
+        self.edit_book(1, content={'book_title': u'Der Buchtitel'})
+        self.edit_book(3, content={'book_title': u'Comicdemo'})
+        self.fill_view_config({'config_title_regex':
+                                   '^(A|The|An|Der|Die|Das|Den|Ein|Eine|Einen|Dem|Des|Einem|Eines)\s+'})
 
 
 
