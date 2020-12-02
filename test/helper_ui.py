@@ -1120,7 +1120,7 @@ class ui_class():
             if page == "search":
                 books = self.get_shelf_books_displayed()
             else:
-                books = self.goto_page(page)
+                books = self.get_books_displayed()
             for index, expected_result in enumerate(element):
                 if page == "search":
                     book_id = int(books[index]['id'])

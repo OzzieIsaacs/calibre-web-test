@@ -646,13 +646,17 @@ class TestEditAdditionalBooks(TestCase, ui_class):
 
     def test_title_sort(self):
         self.edit_book(3, content={'book_title': u'The Audiobok'})
+        time.sleep(3)
         self.edit_book(1, content={'book_title': u'A bok'})
+        time.sleep(3)
         self.search('bok')
         order = {'asc': (3, 1)}  # Audiobok, The is before bok, A
         self.verify_order("search", order=order)
 
         self.edit_book(3, content={'book_title': u'A Audiobok'})
+        time.sleep(3)
         self.edit_book(1, content={'book_title': u'The bok'})
+        time.sleep(3)
         self.search('bok')
         order = {'asc': (3, 1)}  # Audiobok, A is before bok, The
         self.verify_order("search", order=order)
@@ -660,7 +664,9 @@ class TestEditAdditionalBooks(TestCase, ui_class):
         self.fill_view_config({'config_title_regex': '^(Beta)\s+'})
         self.assertTrue(self.check_element_on_page((By.ID, "flash_success")))
         self.edit_book(3, content={'book_title': u'Beta Audiobok'})
+        time.sleep(3)
         self.edit_book(1, content={'book_title': u'A bok'})
+        time.sleep(3)
         self.search('bok')
         order = {'asc': (1, 3)}  # A bok is before Audiobook, Beta
         self.verify_order("search", order=order)

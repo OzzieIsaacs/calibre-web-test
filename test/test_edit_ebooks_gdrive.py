@@ -835,5 +835,4 @@ class TestEditBooksOnGdrive(unittest.TestCase, ui_class):
         time.sleep(5)
         # check book series content changed back
         book = self.get_book_details(5)
-        self.assertEqual(book['series'], '')
-
+        self.assertNotIn('series', book)
