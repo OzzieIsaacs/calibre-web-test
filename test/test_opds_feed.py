@@ -382,6 +382,16 @@ class TestOPDSFeed(unittest.TestCase, ui_class):
         self.login("admin", "admin123")
         self.fill_view_config({'config_books_per_page': 30})
 
+    def test_opds_unicode_user(self):
+        self.login("admin", "admin123")
+        self.create_user('一执', {'email': 'a8@b.com', 'password':'1234'})
+        self.logout()
+        r = requests.get('http://127.0.0.1:8083/opds', auth=('一执'.encode('utf-8'), '1234'))
+        self.assertEqual(200, r.status_code)
+        self.login("admin", "admin123")
+        self.edit_user('admin', {'delete': 1})
+        self.logout()
+
     def test_opds_cover(self):
         r = requests.get('http://127.0.0.1:8083/opds', auth=('admin', 'admin123'))
         self.assertEqual(200, r.status_code)

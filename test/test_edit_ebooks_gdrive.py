@@ -776,7 +776,6 @@ class TestEditBooksOnGdrive(unittest.TestCase, ui_class):
         r.close()
         # ToDo: Check folder are right
 
-
     # download of books
     def test_download_book(self):
         self.goto_page('nav_download')
@@ -803,3 +802,38 @@ class TestEditBooksOnGdrive(unittest.TestCase, ui_class):
         self.goto_page('nav_download')
         number_books = self.get_books_displayed()
         self.assertEqual(1, len(number_books[1]))
+
+    # download of books
+    def test_watch_metadata(self):
+        # enable watch metadata
+        self.goto_page("basic_config")
+        button = self.check_element_on_page((By.ID, "enable_gdrive_watch"))
+        self.assertTrue(button)
+        button.click()
+        time.sleep(2)
+        self.assertTrue(self.check_element_on_page((By.ID, "config_google_drive_watch_changes_response")))
+        # Check revoke is working
+        revoke = self.check_element_on_page((By.ID, "watch_revoke"))
+        self.assertTrue(revoke)
+        revoke.click()
+        time.sleep(2)
+        button = self.check_element_on_page((By.ID, "enable_gdrive_watch"))
+        self.assertTrue(button)
+        button.click()
+        time.sleep(2)
+        # change book series content
+        self.edit_book(5, content={'series':'test'})
+        time.sleep(5)
+        book = self.get_book_details(5)
+        self.assertEqual(book['series'], 'test')
+        # upload new metadata.db from outside
+        fs = connect_gdrive("test")
+        metadata = open(os.path.join(base_path, 'Calibre_db', 'metadata.db'), 'rb')
+        fs.upload(os.path.join('test', 'metadata.db'), metadata)
+        metadata.close()
+        # wait a bit
+        time.sleep(5)
+        # check book series content changed back
+        book = self.get_book_details(5)
+        self.assertEqual(book['series'], '')
+
