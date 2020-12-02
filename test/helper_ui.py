@@ -1117,9 +1117,16 @@ class ui_class():
                 list_elements[index].click()
         for key, element in order.items():
             self.check_element_on_page((By.ID, key)).click()
-            books = self.get_books_displayed()
+            if page == "search":
+                books = self.get_shelf_books_displayed()
+            else:
+                books = self.goto_page(page)
             for index, expected_result in enumerate(element):
-                self.assertEqual(int(books[1][index]['id']), expected_result, "Key sorting order wrong: " + key)
+                if page == "search":
+                    book_id = int(books[index]['id'])
+                else:
+                    book_id = int(books[1][index]['id'])
+                self.assertEqual(book_id, expected_result, "Key sorting order wrong: " + key)
 
     def get_shelf_books_displayed(self):
         parser = lxml.etree.HTMLParser()
