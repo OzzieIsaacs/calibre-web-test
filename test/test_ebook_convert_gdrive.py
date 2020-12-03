@@ -18,7 +18,7 @@ from helper_func import save_logfiles, add_dependency, remove_dependency
 from helper_gdrive import prepare_gdrive, remove_gdrive, connect_gdrive, check_path_gdrive
 
 
-WAIT_GDRIVE = 15
+WAIT_GDRIVE = 20
 
 @unittest.skipIf(not os.path.exists(os.path.join(base_path, "files", "client_secrets.json")) or
                  not os.path.exists(os.path.join(base_path, "files", "gdrive_credentials")),

@@ -6,7 +6,8 @@ from fs.errors import ResourceNotFound
 
 import json
 import os
-from config_test import base_path, TEST_DB
+from config_test import base_path
+
 
 def get_credentials():
     with open(os.path.join(base_path, 'files', 'gdrive_credentials'), 'r') as f:
@@ -14,10 +15,11 @@ def get_credentials():
     tokens = json.loads(fs_content)
 
     return Credentials(tokens['access_token'],
-                              refresh_token=tokens['refresh_token'],
-                              token_uri="https://www.googleapis.com/oauth2/v4/token",
-                              client_id=tokens['client_id'],
-                              client_secret=tokens['client_secret'])
+                       refresh_token=tokens['refresh_token'],
+                       token_uri="https://www.googleapis.com/oauth2/v4/token",
+                       client_id=tokens['client_id'],
+                       client_secret=tokens['client_secret'])
+
 
 def prepare_gdrive():
     print("Preparing GDrive")
@@ -32,14 +34,13 @@ def prepare_gdrive():
 
     # copy database from local to gdrive
     test = fs.makedir('test')
-    copy_fs(OSFS('./Calibre_db'), test) # GoogleDriveFS(credentials=get_credentials(), rootId=root_id))
+    copy_fs(OSFS('./Calibre_db'), test)
     fs.close()
 
 
 def remove_gdrive():
     pass
-    #fs = _remove_gdrive()
-    #fs.close()
+
 
 def connect_gdrive(path):
     credentials = get_credentials()
@@ -49,6 +50,7 @@ def connect_gdrive(path):
     else:
         fs.close()
         return False
+
 
 def check_path_gdrive(fs, path):
     try:
@@ -68,5 +70,3 @@ def _remove_gdrive():
         # old path not found on googledrive
         pass
     return fs
-
-# prepare_gdrive()

@@ -37,13 +37,9 @@ page['nav_download'] = {'check': (By.TAG_NAME, "h2"), 'click': [(By.ID, "nav_dow
 page['nav_list'] = {'check': (By.ID, "merge_books"), 'click': [(By.ID, "nav_list")]}
 page['nav_about'] = {'check': (By.ID, "stats"), 'click': [(By.ID, "nav_about")]}
 page['nav_rated'] = {'check': None, 'click': [(By.ID, "nav_rated")]}
-page['nav_read'] = {'check': None, 'click': [(By.ID, "nav_read")]}
-page['nav_unread'] = {'check': None, 'click': [(By.ID, "nav_unread")]}
-page['nav_archived'] = {'check': None, 'click': [(By.ID, "nav_archived")]}
-page['nav_sort_old'] = {'check': None, 'click': [(By.ID, "nav_sort"), (By.ID, "nav_sort_old")]}
-page['nav_sort_new'] = {'check': None, 'click': [(By.ID, "nav_sort"), (By.ID, "nav_sort_new")]}
-page['nav_sort_asc'] = {'check': None, 'click': [(By.ID, "nav_sort"), (By.ID, "nav_sort_asc")]}
-page['nav_sort_desc'] = {'check': None, 'click': [(By.ID, "nav_sort"), (By.ID, "nav_sort_desc")]}
+page['nav_read'] = {'check': (By.CLASS_NAME, "read"), 'click': [(By.ID, "nav_read")]}
+page['nav_unread'] = {'check': (By.CLASS_NAME, "unread"), 'click': [(By.ID, "nav_unread")]}
+page['nav_archived'] = {'check': (By.CLASS_NAME, "archived"), 'click': [(By.ID, "nav_archived")]}
 page['basic_config'] = {'check': (By.ID, "config_calibre_dir"),
                         'click': [(By.ID, "top_admin"), (By.ID, "basic_config")]}
 page['view_config'] = {'check': None, 'click': [(By.ID, "top_admin"), (By.ID, "view_config")]}
@@ -1109,6 +1105,7 @@ class ui_class():
             list_elements = self.get_shelf_books_displayed()
         else:
             list_elements = self.goto_page(page)
+        time.sleep(2)
         if index >= 0:
             if not len(list_elements):
                 list_elements = self.get_series_books_displayed()

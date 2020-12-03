@@ -12,15 +12,15 @@ from helper_ui import ui_class
 from PIL import Image
 from diffimg import diff
 
-from config_test import CALIBRE_WEB_PATH, TEST_DB, BOOT_TIME, base_path
+from config_test import CALIBRE_WEB_PATH, TEST_DB, base_path
 from helper_func import add_dependency, remove_dependency, startup
 from helper_func import save_logfiles
-from helper_gdrive import prepare_gdrive, remove_gdrive, connect_gdrive, check_path_gdrive
+from helper_gdrive import prepare_gdrive, connect_gdrive, check_path_gdrive
+
+
+WAIT_GDRIVE = 20
+
 # test editing books on gdrive
-
-
-WAIT_GDRIVE = 15
-
 @unittest.skipIf(not os.path.exists(os.path.join(base_path, "files", "client_secrets.json")) or
                  not os.path.exists(os.path.join(base_path, "files", "gdrive_credentials")),
                  "client_secrets.json and/or gdrive_credentials file is missing")
@@ -135,9 +135,7 @@ class TestEditBooksOnGdrive(unittest.TestCase, ui_class):
         # file operation
         fout = io.BytesIO()
         fout.write(os.urandom(124))
-        #with open(os.path.join(TEST_DB, values['author'][0], 'O0u Zhi (4)', 'test.dum'), 'wb') as fout:
-        # fout.write(os.urandom(124))
-        fs.upload(os.path.join('test', values['author'][0], 'O0u Zhi (4)', 'test.dum'), fout)
+        fs.upload(os.path.join('test', values['author'][0], 'O0u Zhi (4)', 'test.dum').replace('\\','/'), fout)
         fout.close()
         self.edit_book(content={'book_title': u' O0ü 执'}, detail_v=True)
         time.sleep(WAIT_GDRIVE)
@@ -312,7 +310,7 @@ class TestEditBooksOnGdrive(unittest.TestCase, ui_class):
         self.check_element_on_page((By.ID, "edit_book")).click()
 
         self.edit_book(content={'bookAuthor': 'Sigurd Lindgren'}, detail_v=True)
-        time.sleep(11)
+        time.sleep(WAIT_GDRIVE)
         self.check_element_on_page((By.ID, 'flash_success'))
         author = self.check_element_on_page((By.ID, "bookAuthor")).get_attribute('value')
         self.assertEqual(u'Sigurd Lindgren', author)
@@ -322,7 +320,7 @@ class TestEditBooksOnGdrive(unittest.TestCase, ui_class):
 
         # self.assertTrue(os.path.isdir(os.path.join(TEST_DB, author, 'book8 (8)')))
         self.edit_book(content={'bookAuthor': 'Sigurd Lindgren&Leo Baskerville'}, detail_v=True)
-        time.sleep(11)
+        time.sleep(WAIT_GDRIVE)
         self.check_element_on_page((By.ID, 'flash_success'))
         new_book_path = os.path.join('test',  'Sigurd Lindgren', 'book8 (8)').replace('\\','/')
         gdrive_path = check_path_gdrive(fs, new_book_path)
@@ -334,7 +332,7 @@ class TestEditBooksOnGdrive(unittest.TestCase, ui_class):
         author = self.check_element_on_page((By.ID, "bookAuthor"))
         self.assertEqual(u'Sigurd Lindgren & Leo Baskerville', author.get_attribute('value'))
         self.edit_book(content={'bookAuthor': ' Leo Baskerville & Sigurd Lindgren '}, detail_v=True)
-        time.sleep(11)
+        time.sleep(WAIT_GDRIVE)
         self.check_element_on_page((By.ID, 'flash_success'))
 
         new_book_path = os.path.join('test',  'Leo Baskerville', 'book8 (8)').replace('\\','/')
@@ -694,7 +692,7 @@ class TestEditBooksOnGdrive(unittest.TestCase, ui_class):
         self.check_element_on_page((By.ID, "edit_book")).click()
         jpegcover = os.path.join(base_path, 'files', 'cover.jpg')
         self.edit_book(content={'local_cover': jpegcover})
-        time.sleep(2)
+        time.sleep(5)
         self.get_book_details(5)
         self.save_cover_screenshot('jpeg.png')
         self.assertGreater(diff('original.png', 'jpeg.png', delete_diff_file=True), 0.02)
@@ -704,7 +702,7 @@ class TestEditBooksOnGdrive(unittest.TestCase, ui_class):
         bmpcover = os.path.join(base_path, 'files', 'cover.bmp')
         self.edit_book(content={'local_cover': bmpcover})
         self.assertTrue(self.check_element_on_page((By.CLASS_NAME, "alert")))
-        time.sleep(2)
+        time.sleep(5)
         self.save_cover_screenshot('bmp.png')
         self.assertAlmostEqual(diff('bmp.png', 'jpeg.png', delete_diff_file=True), 0.0, delta=0.0001)
         os.unlink('jpeg.png')
@@ -713,7 +711,7 @@ class TestEditBooksOnGdrive(unittest.TestCase, ui_class):
         self.check_element_on_page((By.ID, "edit_book")).click()
         pngcover = os.path.join(base_path, 'files', 'cover.png')
         self.edit_book(content={'local_cover': pngcover})
-        time.sleep(2)
+        time.sleep(5)
         self.get_book_details(5)
         self.save_cover_screenshot('png.png')
         self.assertGreater(diff('bmp.png', 'png.png', delete_diff_file=True), 0.005)
@@ -810,17 +808,17 @@ class TestEditBooksOnGdrive(unittest.TestCase, ui_class):
         button = self.check_element_on_page((By.ID, "enable_gdrive_watch"))
         self.assertTrue(button)
         button.click()
-        time.sleep(2)
+        time.sleep(5)
         self.assertTrue(self.check_element_on_page((By.ID, "config_google_drive_watch_changes_response")))
         # Check revoke is working
         revoke = self.check_element_on_page((By.ID, "watch_revoke"))
         self.assertTrue(revoke)
         revoke.click()
-        time.sleep(2)
+        time.sleep(5)
         button = self.check_element_on_page((By.ID, "enable_gdrive_watch"))
         self.assertTrue(button)
         button.click()
-        time.sleep(2)
+        time.sleep(5)
         # change book series content
         self.edit_book(5, content={'series':'test'})
         time.sleep(5)
@@ -829,10 +827,10 @@ class TestEditBooksOnGdrive(unittest.TestCase, ui_class):
         # upload new metadata.db from outside
         fs = connect_gdrive("test")
         metadata = open(os.path.join(base_path, 'Calibre_db', 'metadata.db'), 'rb')
-        fs.upload(os.path.join('test', 'metadata.db'), metadata)
+        fs.upload(os.path.join('test', 'metadata.db').replace('\\','/'), metadata)
         metadata.close()
         # wait a bit
-        time.sleep(5)
+        time.sleep(10)
         # check book series content changed back
         book = self.get_book_details(5)
         self.assertNotIn('series', book)

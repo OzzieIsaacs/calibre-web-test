@@ -226,7 +226,7 @@ class TestCalibreWebVisibilitys(unittest.TestCase, ui_class):
                  'pub_new': (7, 5, 1, 3),
                  'pub_old': (1, 3, 4, 8)
                  }
-        self.verify_order("nav_unread", 0, order=order)
+        self.verify_order("nav_unread", order=order)
 
     # checks if admin can change user language
     def test_admin_change_visibility_language(self):
