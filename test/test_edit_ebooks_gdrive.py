@@ -12,13 +12,11 @@ from helper_ui import ui_class
 from PIL import Image
 from diffimg import diff
 
-from config_test import CALIBRE_WEB_PATH, TEST_DB, base_path
+from config_test import CALIBRE_WEB_PATH, TEST_DB, base_path, WAIT_GDRIVE
 from helper_func import add_dependency, remove_dependency, startup
 from helper_func import save_logfiles
 from helper_gdrive import prepare_gdrive, connect_gdrive, check_path_gdrive
 
-
-WAIT_GDRIVE = 20
 
 # test editing books on gdrive
 @unittest.skipIf(not os.path.exists(os.path.join(base_path, "files", "client_secrets.json")) or

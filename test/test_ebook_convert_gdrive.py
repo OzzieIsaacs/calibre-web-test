@@ -12,13 +12,11 @@ import helper_email_convert
 from selenium.webdriver.common.by import By
 from selenium.webdriver.support.ui import Select
 from helper_ui import ui_class
-from config_test import CALIBRE_WEB_PATH, TEST_DB, base_path
+from config_test import CALIBRE_WEB_PATH, TEST_DB, base_path, WAIT_GDRIVE
 from helper_func import startup
 from helper_func import save_logfiles, add_dependency, remove_dependency
-from helper_gdrive import prepare_gdrive, remove_gdrive, connect_gdrive, check_path_gdrive
+from helper_gdrive import prepare_gdrive, connect_gdrive
 
-
-WAIT_GDRIVE = 20
 
 @unittest.skipIf(not os.path.exists(os.path.join(base_path, "files", "client_secrets.json")) or
                  not os.path.exists(os.path.join(base_path, "files", "gdrive_credentials")),
