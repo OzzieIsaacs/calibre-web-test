@@ -773,6 +773,8 @@ class TestLdapLogin(unittest.TestCase, ui_class):
                                 })
         self.assertTrue(self.check_element_on_page((By.ID, "flash_success")))
         time.sleep(BOOT_TIME)
+        self.edit_user('admin', {'download_role': 0})
+        time.sleep(3)
         # start ldap
         self.server.relisten(config=2, port=3268, encrypt=None)
         # create new user
@@ -789,12 +791,39 @@ class TestLdapLogin(unittest.TestCase, ui_class):
         r = requests.get('http://127.0.0.1:8083/opds', auth=('执一'.encode('utf-8'), 'eekretsay'))
         self.assertEqual(200, r.status_code)
         elements = self.get_opds_index(r.text)
-        r = requests.get('http://127.0.0.1:8083' + elements['Recently added Books']['link'], auth=('执一'.encode('utf-8'), 'eekretsay'))
+        r = requests.get('http://127.0.0.1:8083' + elements['Recently added Books']['link'],
+                         auth=('执一'.encode('utf-8'), 'eekretsay'))
         entries = self.get_opds_feed(r.text)
         # check download book
-        r = requests.get('http://127.0.0.1:8083' + entries['elements'][0]['download'], auth=('执一'.encode('utf-8'), 'eekretsay'))
+        r = requests.get('http://127.0.0.1:8083' + entries['elements'][0]['download'],
+                         auth=('执一'.encode('utf-8'), 'eekretsay'))
         self.assertEqual(len(r.content), 28590)
         self.assertEqual(r.headers['Content-Type'], 'application/pdf')
+
+        # create cookies by logging in to admin account and try to download book again
+        req_session = requests.session()
+        payload = {'username': 'admin', 'password': 'admin123', 'submit': "", 'next': "/", "remember_me": "on"}
+        req_session.post('http://127.0.0.1:8083/login', data=payload)
+        # admin is logged in via cookies, admin is not allowed to download, no auth credentials provided
+        r = req_session.get('http://127.0.0.1:8083' + entries['elements'][0]['download'])
+        self.assertEqual(401, r.status_code)
+        # admin is logged in via cookies, admin is not allowed to download, auth credentials for user provided
+        r = req_session.get('http://127.0.0.1:8083' + entries['elements'][0]['download'],
+                            auth=('执一'.encode('utf-8'), 'eekretsay'))
+        self.assertEqual(200, r.status_code)
+
+        # logout admin account, cookies now invalid,
+        # now login is done via not existing basic header, means no login, guest account is deactivated
+        req_session.get('http://127.0.0.1:8083/logout')
+        r = req_session.get('http://127.0.0.1:8083' + entries['elements'][0]['download'])
+        self.assertEqual(401, r.status_code)
+        # auth credentials for user provided, invalid cookies
+        r = req_session.get('http://127.0.0.1:8083' + entries['elements'][0]['download'],
+                            auth=('执一'.encode('utf-8'), 'eekretsay'))
+        self.assertEqual(200, r.status_code)
+        # Close session, delete cookies
+        req_session.close()
+
         # login admin and remove download role from 执一
         self.login("admin", "admin123")
         self.assertTrue(self.check_element_on_page((By.ID, "flash_warning")))
@@ -802,7 +831,8 @@ class TestLdapLogin(unittest.TestCase, ui_class):
         self.assertTrue(self.check_element_on_page((By.ID, "flash_success")))
         self.logout()
         # try to download book without download rights
-        r = requests.get('http://127.0.0.1:8083'+ entries['elements'][0]['download'], auth=('执一'.encode('utf-8'), 'terces'))
+        r = requests.get('http://127.0.0.1:8083'+ entries['elements'][0]['download'],
+                         auth=('执一'.encode('utf-8'), 'terces'))
         self.assertEqual(401, r.status_code)
         # stop ldap
         self.server.stopListen()
@@ -810,6 +840,9 @@ class TestLdapLogin(unittest.TestCase, ui_class):
         # try to login without ldap reachable
         r = requests.get('http://127.0.0.1:8083/opds', auth=('执一'.encode('utf-8'), 'eekretsay'))
         self.assertEqual(424, r.status_code)
+        # user is logged in via cookies, admin is not allowed to download
+        r = req_session.get('http://127.0.0.1:8083' + entries['elements'][0]['download'])
+        self.assertEqual(401, r.status_code)
 
         # login admin and delete user0
         self.login("admin", "admin123")
@@ -832,17 +865,87 @@ class TestLdapLogin(unittest.TestCase, ui_class):
         # enable anonymous browsing
         self.fill_basic_config({'config_anonbrowse': 1})
         time.sleep(BOOT_TIME)
+        self.edit_user('Guest', {'download_role': 1})
+        self.edit_user('admin', {'download_role': 0})
         # start ldap
         self.server.relisten(config=2, port=3268, encrypt=None)
-
-
         self.logout()
+        # access opds feed
         r = requests.get('http://127.0.0.1:8083/opds')
         self.assertEqual(200, r.status_code)
         elements = self.get_opds_index(r.text)
+        # check download from guest account is possible
+        r = requests.get('http://127.0.0.1:8083' + elements['Recently added Books']['link'])
+        entries = self.get_opds_feed(r.text)
+        r = requests.get('http://127.0.0.1:8083' + entries['elements'][0]['download'])
+        self.assertEqual(200, r.status_code)
+        self.assertEqual(len(r.content), 28590)
+        self.assertEqual(r.headers['Content-Type'], 'application/pdf')
+        # create cookies by logging in to admin account and try to download book again
+        req_session = requests.session()
+        payload = {'username': 'admin', 'password': 'admin123', 'submit': "", 'next': "/", "remember_me": "on"}
+        req_session.post('http://127.0.0.1:8083/login', data=payload)
+        r = req_session.get('http://127.0.0.1:8083' + entries['elements'][0]['download'])
+        # logged in via cookies from admin account -> admin is not allowed to download
+        self.assertEqual(403, r.status_code)
+        # logout admin account, cookies now invalid,
+        # now login is done via basic header, means no login, guest account can download
+        req_session.get('http://127.0.0.1:8083/logout')
+        r = req_session.get('http://127.0.0.1:8083' + entries['elements'][0]['download'])
+        self.assertEqual(200, r.status_code)
+        # Close session, delete cookies
+        req_session.close()
+        # Remove download role from guest account
+        self.login("admin", "admin123")
+        self.edit_user('Guest', {'download_role': 0})
+        time.sleep(3)
+        self.logout()
+        # try download from guest account, fails
+        r = requests.get('http://127.0.0.1:8083' + entries['elements'][0]['download'])
+        self.assertEqual(403, r.status_code)
+        # create cookies by logging in to admin account and try to download book again
+        req_session = requests.session()
+        payload = {'username': 'admin', 'password': 'admin123', 'submit': "", 'next': "/", "remember_me": "on"}
+        req_session.post('http://127.0.0.1:8083/login', data=payload)
+        # user is logged in via cookies, admin is not allowed to download
+        r = req_session.get('http://127.0.0.1:8083' + entries['elements'][0]['download'])
+        self.assertEqual(403, r.status_code)
+        # logout admin account, cookies now invalid,
+        # now login is done via not existing basic header, means no login, guest account also not allowed to download
+        req_session.get('http://127.0.0.1:8083/logout')
+        r = req_session.get('http://127.0.0.1:8083' + entries['elements'][0]['download'])
+        self.assertEqual(403, r.status_code)
+        # Close session, delete cookies
+        req_session.close()
+        self.login("admin", "admin123")
+        self.edit_user('Guest', {'download_role': 1})
+        self.edit_user('admin', {'download_role': 1})
+        time.sleep(3)
+        self.logout()
+        # try download with invalid credentials
+        r = requests.get('http://127.0.0.1:8083/opds/', auth=('admin', 'admin131'))
+        self.assertEqual(403, r.status_code)
+        # try download with invalid credentials
+        r = requests.get('http://127.0.0.1:8083/opds/', auth=('hudo', 'admin123'))
+        self.assertEqual(403, r.status_code)
 
+        # reset everything back to default
         self.login("admin", "admin123")
         self.fill_basic_config({'config_anonbrowse': 0})
+        time.sleep(BOOT_TIME)
+        self.edit_user('admin', {'download_role': 1})
+        time.sleep(3)
+        # try download from guest account, fails
+        r = requests.get('http://127.0.0.1:8083' + entries['elements'][0]['download'])
+        self.assertEqual(403, r.status_code)
+        # try download with invalid credentials
+        r = requests.get('http://127.0.0.1:8083/opds/', auth=('admin', 'admin131'))
+        self.assertEqual(403, r.status_code)
+        # try download with invalid credentials
+        r = requests.get('http://127.0.0.1:8083/opds/', auth=('hudo', 'admin123'))
+        self.assertEqual(403, r.status_code)
+
+
 
     def test_ldap_kobo_sync(self):
         self.fill_basic_config({'config_ldap_provider_url': '127.0.0.1',
