@@ -251,6 +251,64 @@ class TestLdapLogin(unittest.TestCase, ui_class):
         self.login('admin','admin123')
         self.assertTrue(self.check_element_on_page((By.ID, "flash_warning")))
 
+    def test_LDAP_import_memberfield(self):
+        self.fill_basic_config({'config_ldap_provider_url': '127.0.0.1',
+                                'config_ldap_port': '3268',
+                                'config_ldap_authentication': 'Simple',
+                                'config_ldap_dn': 'dc=calibreweb,dc=com',
+                                'config_ldap_serv_username': 'cn=root,dc=calibreweb,dc=com',
+                                'config_ldap_serv_password': 'secret',
+                                'config_ldap_user_object': '(uid=%s)',
+                                'config_ldap_group_object_filter': '',
+                                'config_ldap_openldap': 1,
+                                'config_ldap_encryption': 'None'
+                                })
+        self.assertTrue(self.check_element_on_page((By.ID, "flash_success")))
+        time.sleep(BOOT_TIME)
+        # stop/start ldap with missing user, wrong entry (no uid field, wrong dn field)
+        self.server.relisten(config=5, port=3268, encrypt=None)
+        # print('new setup config 4')
+        self.fill_basic_config({'config_ldap_group_object_filter': '(& (objectclass=groupofnames)(cn=%s))',
+                                'config_ldap_group_members_field':'member',
+                                'config_ldap_group_name':'cps'})
+        self.assertTrue(self.check_element_on_page((By.ID, "flash_success")))
+        time.sleep(BOOT_TIME)
+        # start import -> error
+        self.goto_page('admin_setup')
+        imprt = self.check_element_on_page((By.ID, "import_ldap_users"))
+        self.assertTrue(imprt)
+        imprt.click()
+        time.sleep(3)
+        self.assertTrue('0 User' in self.check_element_on_page((By.ID, "DialogContent")).text)
+        self.check_element_on_page((By.ID, "DialogFinished")).click()
+        time.sleep(2)
+        self.fill_basic_config({'ldap_import_user_filter': 'Custom Filter',
+                                'config_ldap_member_user_object':'member'})
+        self.assertTrue(self.check_element_on_page((By.ID, "flash_alert")))
+        self.fill_basic_config({'ldap_import_user_filter': 'Custom Filter',
+                                'config_ldap_member_user_object': 'member=((%s)'})
+        self.assertTrue(self.check_element_on_page((By.ID, "flash_alert")))
+        self.fill_basic_config({'ldap_import_user_filter': 'Custom Filter',
+                                'config_ldap_member_user_object': 'sAMAccountName=%s'})
+        self.assertTrue(self.check_element_on_page((By.ID, "flash_success")))
+        time.sleep(BOOT_TIME)
+        # start import -> success
+        self.goto_page('admin_setup')
+        imprt = self.check_element_on_page((By.ID, "import_ldap_users"))
+        self.assertTrue(imprt)
+        imprt.click()
+        time.sleep(3)
+        self.assertTrue('1 User Successfully Imported' in self.check_element_on_page((By.ID, "DialogContent")).text)
+        self.check_element_on_page((By.ID, "DialogFinished")).click()
+        time.sleep(2)
+        # Check email adresses are correct imported
+        User1rights = self.get_user_settings('user12')
+        self.assertEqual(User1rights['kindle_mail'],'user12@gamma.org')
+        self.assertEqual(User1rights['email'], 'user12@beta.com')
+        # stop ldap
+        self.server.stopListen()
+
+
     def test_LDAP_import(self):
         # configure LDAP
         # ToDo: configuration of different authentication settings
@@ -455,7 +513,8 @@ class TestLdapLogin(unittest.TestCase, ui_class):
         self.assertTrue('One LDAP User' in self.check_element_on_page((By.ID, "DialogContent")).text)
         self.check_element_on_page((By.ID, "DialogFinished")).click()
         time.sleep(2)
-
+        # stop ldap
+        self.server.stopListen()
 
     def test_LDAP_SSL(self):
         # configure ssl LDAP

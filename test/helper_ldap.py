@@ -244,6 +244,54 @@ member: uid=user13,ou=People,dc=calibreweb,dc=com
 
 """
 
+config5 = b"""\
+dn: dc=com
+dc: com
+objectClass: dcObject
+
+dn: dc=calibreweb,dc=com
+dc: calibreweb
+objectClass: dcObject
+objectClass: organization
+
+dn: ou=people,dc=calibreweb,dc=com
+objectClass: organizationalUnit
+ou: people
+
+dn: cn=root,dc=calibreweb,dc=com
+cn: root
+gn: root
+mail: admin@calibreweb.com
+objectclass: top
+objectclass: person
+objectClass: inetOrgPerson
+sn: admin
+userPassword: secret
+
+dn: uid=user12,ou=people,dc=calibreweb,dc=com
+objectClass: person
+objectClass: organizationalPerson
+objectClass: inetOrgPerson
+mail: user12@gamma.org
+mail: user12@beta.com
+uid: user12
+gn: John1
+sn: Doe1
+userPassword: terces
+
+#Generic groups
+dn: ou=groups,dc=calibreweb,dc=com
+objectclass:organizationalunit
+ou: groups
+
+# create the cps entry
+dn: cn=cps,ou=groups,dc=calibreweb,dc=com
+objectclass: groupofnames
+cn: cps
+member: sAMAccountName=user12,ou=People,dc=calibreb,dc=com
+
+"""
+
 def verifyCallback(__, x509, ___, ____, ok):
     if not ok:
         # print ('invalid cert from subject:', x509.get_subject())
@@ -266,6 +314,8 @@ class Tree(object):
             ldif = config3
         if config == 4:
             ldif = config4
+        if config == 5:
+            ldif = config5
         self.f = BytesIO(ldif)
         d = fromLDIFFile(self.f)
         d.addCallback(self.ldifRead)

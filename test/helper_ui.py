@@ -206,7 +206,7 @@ class ui_class():
                       'config_access_log', 'config_kobo_sync', 'config_kobo_proxy', 'config_ldap_openldap',
                       'config_use_goodreads', 'config_register_email', 'config_use_google_drive']
         options = ['config_log_level', 'config_google_drive_folder', 'config_updatechannel', 'config_login_type',
-                   'config_ldap_encryption', 'config_ldap_authentication']
+                   'config_ldap_encryption', 'config_ldap_authentication', 'ldap_import_user_filter']
         selects = ['config_ebookconverter']
         # depending on elements open accordions or not
         if any(key in elements for key in ['config_port', 'config_certfile','config_keyfile', 'config_updatechannel']):
@@ -221,11 +221,11 @@ class ui_class():
                                            'config_login_type', 'config_ldap_provider_url', 'config_ldap_port',
                                            'config_ldap_encryption', 'config_ldap_cacert_path',
                                            'config_ldap_cert_path', 'config_ldap_key_path',
-                                           'config_ldap_serv_username',
+                                           'config_ldap_serv_username', 'ldap_import_user_filter'
                                            'config_ldap_serv_password', 'config_ldap_dn', 'config_ldap_user_object',
                                            'config_ldap_group_object_filter', 'config_ldap_group_name',
                                            'config_ldap_group_members_field', 'config_ldap_openldap',
-                                           'config_ldap_authentication',
+                                           'config_ldap_authentication', 'config_ldap_member_user_object',
                                            'config_1_oauth_client_id', 'config_1_oauth_client_secret',
                                            'config_2_oauth_client_id', 'config_2_oauth_client_secret'
                                            ]):
