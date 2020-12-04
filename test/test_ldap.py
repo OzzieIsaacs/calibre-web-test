@@ -55,6 +55,11 @@ class TestLdapLogin(unittest.TestCase, ui_class):
             cls.server.stopListen()
         except Exception as e:
             print(e)
+        if not cls.check_user_logged_in('admin'):
+            try:
+                cls.driver.get("http://127.0.0.1:8083")
+            except:
+                pass
 
     def inital_sync(self, kobo_adress):
         # generate payload for auth request
@@ -259,20 +264,16 @@ class TestLdapLogin(unittest.TestCase, ui_class):
                                 'config_ldap_serv_username': 'cn=root,dc=calibreweb,dc=com',
                                 'config_ldap_serv_password': 'secret',
                                 'config_ldap_user_object': '(sAMAccountName=%s)',
-                                'config_ldap_group_object_filter': '',
+                                'config_ldap_group_object_filter': '(& (objectclass=groupofnames)(cn=%s))',
                                 'config_ldap_openldap': 1,
-                                'config_ldap_encryption': 'None'
+                                'config_ldap_encryption': 'None',
+                                'config_ldap_group_members_field': 'member',
+                                'config_ldap_group_name': 'cps'
                                 })
         self.assertTrue(self.check_element_on_page((By.ID, "flash_success")))
         time.sleep(BOOT_TIME)
         # stop/start ldap with missing user, wrong entry (no uid field, wrong dn field)
         self.server.relisten(config=5, port=3268, encrypt=None)
-        # print('new setup config 4')
-        self.fill_basic_config({'config_ldap_group_object_filter': '(& (objectclass=groupofnames)(cn=%s))',
-                                'config_ldap_group_members_field':'member',
-                                'config_ldap_group_name':'cps'})
-        self.assertTrue(self.check_element_on_page((By.ID, "flash_success")))
-        time.sleep(BOOT_TIME)
         # start import -> error
         self.goto_page('admin_setup')
         imprt = self.check_element_on_page((By.ID, "import_ldap_users"))
@@ -289,7 +290,7 @@ class TestLdapLogin(unittest.TestCase, ui_class):
                                 'config_ldap_member_user_object': 'member=((%s)'})
         self.assertTrue(self.check_element_on_page((By.ID, "flash_alert")))
         self.fill_basic_config({'ldap_import_user_filter': 'Custom Filter',
-                                'config_ldap_member_user_object': 'uid=%s'})
+                                'config_ldap_member_user_object': 'cn=%s'})
         self.assertTrue(self.check_element_on_page((By.ID, "flash_success")))
         time.sleep(BOOT_TIME)
         # start import -> success
@@ -302,10 +303,10 @@ class TestLdapLogin(unittest.TestCase, ui_class):
         self.check_element_on_page((By.ID, "DialogFinished")).click()
         time.sleep(2)
         # Check email adresses are correct imported
-        User1rights = self.get_user_settings('Hugo')
+        User1rights = self.get_user_settings('user12')
         self.assertEqual(User1rights['kindle_mail'],'user12@gamma.org')
         self.assertEqual(User1rights['email'], 'user12@beta.com')
-        self.edit_user('Hugo', {'delete': 1})
+        self.edit_user('user12', {'delete': 1})
         # stop ldap
         self.server.stopListen()
 
@@ -379,7 +380,7 @@ class TestLdapLogin(unittest.TestCase, ui_class):
         time.sleep(3)
         self.assertTrue('No user' in self.check_element_on_page((By.ID, "DialogContent")).text)
         self.check_element_on_page((By.ID, "DialogFinished")).click()
-        time.sleep(2)
+        time.sleep(3)
         # start import -> all user imported
         self.fill_basic_config({'config_ldap_group_name':'cps','config_ldap_group_members_field':'member'})
         self.assertTrue(self.check_element_on_page((By.ID, "flash_success")))
@@ -394,7 +395,7 @@ class TestLdapLogin(unittest.TestCase, ui_class):
         time.sleep(2)
 
         userlist = self.get_user_list()
-        self.assertEqual(len(userlist),3)
+        self.assertEqual(len(userlist), 3)
         users = ['执一','Mümmy 7']
         self.assertTrue(all(elem in userlist for elem in users))
 
@@ -430,7 +431,7 @@ class TestLdapLogin(unittest.TestCase, ui_class):
         self.assertTrue(imprt)
         imprt.click()
         time.sleep(3)
-        self.assertTrue('Failed to Create' in self.check_element_on_page((By.ID, "DialogContent")).text)
+        self.assertTrue('0 User' in self.check_element_on_page((By.ID, "DialogContent")).text)
         self.check_element_on_page((By.ID, "DialogFinished")).click()
         time.sleep(2)
         # check access right of user still match changed rights
@@ -486,6 +487,8 @@ class TestLdapLogin(unittest.TestCase, ui_class):
         self.assertTrue('One LDAP User' in self.check_element_on_page((By.ID, "DialogContent")).text)
         self.check_element_on_page((By.ID, "DialogFinished")).click()
         time.sleep(2)
+        User1rights = self.get_user_settings('user122')
+        self.assertEqual(User1rights['email'], 'user122@email.com')
 
         # connect with wrong encryption
         self.fill_basic_config({'config_ldap_encryption':'SSL'})
@@ -514,8 +517,6 @@ class TestLdapLogin(unittest.TestCase, ui_class):
         self.assertTrue('One LDAP User' in self.check_element_on_page((By.ID, "DialogContent")).text)
         self.check_element_on_page((By.ID, "DialogFinished")).click()
         time.sleep(2)
-        # stop ldap
-        self.server.stopListen()
 
     def test_LDAP_SSL(self):
         # configure ssl LDAP
@@ -561,8 +562,6 @@ class TestLdapLogin(unittest.TestCase, ui_class):
         self.assertTrue(self.check_element_on_page((By.ID, "flash_warning")))
         self.edit_user('user0', {'delete': 1})
         self.assertTrue(self.check_element_on_page((By.ID, "flash_success")))
-        # stop ldap
-        self.server.stopListen()
 
     # @unittest.skip('Unknown how to test certificate')
     def test_LDAP_SSL_CERTIFICATE(self):
@@ -630,7 +629,6 @@ class TestLdapLogin(unittest.TestCase, ui_class):
         os.unlink(real_ca_file)
         os.unlink(real_cert_file)
         os.unlink(real_key_file)
-
 
     def test_LDAP_STARTTLS(self):
         # configure LDAP STARTTLS
@@ -735,8 +733,6 @@ class TestLdapLogin(unittest.TestCase, ui_class):
         self.assertTrue(self.check_element_on_page((By.ID, "flash_warning")))
         self.edit_user('user0', {'delete': 1})
         self.assertTrue(self.check_element_on_page((By.ID, "flash_success")))
-        # stop ldap
-        self.server.stopListen()
 
     def test_ldap_about(self):
         self.assertTrue(self.goto_page('nav_about'))
@@ -817,8 +813,6 @@ class TestLdapLogin(unittest.TestCase, ui_class):
         self.assertTrue(self.check_element_on_page((By.ID, "flash_warning")))
         self.edit_user('user0', {'delete': 1})
         self.assertTrue(self.check_element_on_page((By.ID, "flash_success")))
-        # stop ldap
-        self.server.stopListen()
 
     def test_ldap_opds_download_book(self):
         self.fill_basic_config({'config_ldap_provider_url': '127.0.0.1',
@@ -1005,8 +999,6 @@ class TestLdapLogin(unittest.TestCase, ui_class):
         r = requests.get('http://127.0.0.1:8083/opds/', auth=('hudo', 'admin123'))
         self.assertEqual(401, r.status_code)
 
-
-
     def test_ldap_kobo_sync(self):
         self.fill_basic_config({'config_ldap_provider_url': '127.0.0.1',
                                 'config_ldap_port': '3268',
@@ -1043,5 +1035,3 @@ class TestLdapLogin(unittest.TestCase, ui_class):
         self.login("admin", "admin123")
         self.edit_user('执一', {'delete': 1})
         self.fill_basic_config({'config_kobo_sync': 0})
-
-

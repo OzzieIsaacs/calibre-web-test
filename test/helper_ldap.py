@@ -268,14 +268,14 @@ objectClass: inetOrgPerson
 sn: admin
 userPassword: secret
 
-dn: uid=user12,ou=people,dc=calibreweb,dc=com
+dn: cn=John1 Doe1,ou=people,dc=calibreweb,dc=com
 objectClass: person
 objectClass: organizationalPerson
 objectClass: inetOrgPerson
 mail: user12@gamma.org
 mail: user12@beta.com
-uid: user12
-sAMAccountName: Hugo
+sAMAccountName: user12
+cn: John1 Doe1
 gn: John1
 sn: Doe1
 userPassword: terces
@@ -289,7 +289,7 @@ ou: groups
 dn: cn=cps,ou=groups,dc=calibreweb,dc=com
 objectclass: groupofnames
 cn: cps
-member: uid=user12,ou=People,dc=calibreb,dc=com
+member: cn=John1 Doe1,ou=People,dc=calibreb,dc=com
 
 """
 
