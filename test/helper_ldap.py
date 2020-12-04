@@ -275,6 +275,7 @@ objectClass: inetOrgPerson
 mail: user12@gamma.org
 mail: user12@beta.com
 uid: user12
+sAMAccountName: Hugo
 gn: John1
 sn: Doe1
 userPassword: terces
@@ -288,7 +289,7 @@ ou: groups
 dn: cn=cps,ou=groups,dc=calibreweb,dc=com
 objectclass: groupofnames
 cn: cps
-member: sAMAccountName=user12,ou=People,dc=calibreb,dc=com
+member: uid=user12,ou=People,dc=calibreb,dc=com
 
 """
 

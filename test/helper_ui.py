@@ -363,6 +363,8 @@ class ui_class():
             cls.goto_page('admin_setup')
         except:
             cls.driver.get("http://127.0.0.1:8083")
+            if not cls.check_user_logged_in("admin",True):
+                cls.login('admin','admin123')
             cls.goto_page('admin_setup')
         cls.driver.find_element_by_id('admin_stop').click()
         element = cls.check_element_on_page((By.ID, "shutdown"))
@@ -1111,7 +1113,10 @@ class ui_class():
                 list_elements = self.get_series_books_displayed()
                 list_elements[index]['ele'].click()
             else:
-                list_elements[index].click()
+                if page == "nav_rate":
+                    list_elements[index].find_element_by_xpath('..').click()
+                else:
+                    list_elements[index].click()
         for key, element in order.items():
             self.check_element_on_page((By.ID, key)).click()
             if page == "search":
@@ -1345,6 +1350,7 @@ class ui_class():
     def edit_book(cls, id=-1, content=dict(), custom_content=dict(), detail_v=False, root_url='http://127.0.0.1:8083'):
         if id>0:
             cls.driver.get(root_url + "/admin/book/"+str(id))
+            time.sleep(2)
         cls.check_element_on_page((By.ID,"book_edit_frm"))
 
         if custom_content:

@@ -14,10 +14,6 @@ opds feed tests
 '''
 
 
-'''@parameterized_class([
-   { "py_version": u'/usr/bin/python'},
-   { "py_version": u'/usr/bin/python3'},
-],names=('Python27','Python36'))'''
 class TestOPDSFeed(unittest.TestCase, ui_class):
     p=None
     driver = None
@@ -166,25 +162,25 @@ class TestOPDSFeed(unittest.TestCase, ui_class):
         self.edit_user('admin', {'download_role': 1})
         time.sleep(3)
         self.logout()
-        # try download with invalid credentials
+        # try download with invalid credentials, using anonymous browsing
         r = requests.get('http://127.0.0.1:8083/opds/', auth=('admin', 'admin131'))
-        self.assertEqual(403, r.status_code)
-        # try download with invalid credentials
+        self.assertEqual(200, r.status_code)
+        # try download with invalid credentials, using anonymous browsing
         r = requests.get('http://127.0.0.1:8083/opds/', auth=('hudo', 'admin123'))
-        self.assertEqual(403, r.status_code)
+        self.assertEqual(200, r.status_code)
         self.login("admin", "admin123")
         self.fill_basic_config({'config_anonbrowse': 0})
         time.sleep(BOOT_TIME)
         self.logout()
         # try download from guest account, fails
         r = requests.get('http://127.0.0.1:8083' + entries['elements'][0]['download'])
-        self.assertEqual(403, r.status_code)
+        self.assertEqual(401, r.status_code)
         # try download with invalid credentials
         r = requests.get('http://127.0.0.1:8083/opds/', auth=('admin', 'admin131'))
-        self.assertEqual(403, r.status_code)
+        self.assertEqual(401, r.status_code)
         # try download with invalid credentials
         r = requests.get('http://127.0.0.1:8083/opds/', auth=('hudo', 'admin123'))
-        self.assertEqual(403, r.status_code)
+        self.assertEqual(401, r.status_code)
 
 
 

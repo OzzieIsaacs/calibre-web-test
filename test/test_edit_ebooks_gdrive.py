@@ -121,6 +121,7 @@ class TestEditBooksOnGdrive(unittest.TestCase, ui_class):
         self.get_book_details(4)
         self.check_element_on_page((By.ID, "edit_book")).click()
         self.edit_book(content={'book_title': u'O0ü 执'})
+        time.sleep(WAIT_GDRIVE)
         values = self.get_book_details()
         self.assertEqual(u'O0ü 执', values['title'])
         new_book_path = os.path.join('test', values['author'][0], 'O0u Zhi (4)').replace('\\','/')
@@ -175,6 +176,7 @@ class TestEditBooksOnGdrive(unittest.TestCase, ui_class):
 
         self.check_element_on_page((By.ID, "edit_book")).click()
         self.edit_book(content={'book_title': 'The camicdemo'})
+        time.sleep(WAIT_GDRIVE)
         values = self.get_book_details()
         # os.path.join(TEST_DB, values['author'][0], 'The camicdemo')
         self.assertEqual('The camicdemo', values['title'])
@@ -190,6 +192,7 @@ class TestEditBooksOnGdrive(unittest.TestCase, ui_class):
         self.get_book_details(4)
         self.check_element_on_page((By.ID, "edit_book")).click()
         self.edit_book(content={'book_title': u'Not found'})
+        time.sleep(WAIT_GDRIVE)
         self.check_element_on_page((By.ID, 'flash_alert'))
         title = self.check_element_on_page((By.ID, "book_title"))
         # calibre strips spaces in the end
@@ -218,11 +221,13 @@ class TestEditBooksOnGdrive(unittest.TestCase, ui_class):
         title = self.check_element_on_page((By.ID, "book_title"))
         self.assertEqual(u'Pipo|;.:', title.get_attribute('value'))
         self.edit_book(content={'book_title': u'Very long extra super turbo cool title without any issue of displaying including ö utf-8 characters'})
+        time.sleep(WAIT_GDRIVE)
         ele = self.check_element_on_page((By.ID, "title"))
         self.assertEqual(ele.text, u'Very long extra super turbo cool title without any issue of ...')
         time.sleep(WAIT_GDRIVE)
         self.check_element_on_page((By.ID, "edit_book")).click()
         self.edit_book(content={'book_title': u'book6'})
+        time.sleep(WAIT_GDRIVE)
 
 
     # goto Book 2
@@ -266,6 +271,7 @@ class TestEditBooksOnGdrive(unittest.TestCase, ui_class):
         self.get_book_details(8)
         self.check_element_on_page((By.ID, "edit_book")).click()
         self.edit_book(content={'bookAuthor':u'O0ü 执'})
+        time.sleep(WAIT_GDRIVE)
         values = self.get_book_details()
         self.assertEqual(u'O0ü 执', values['author'][0])
         new_book_path = os.path.join('test', 'O0u Zhi', 'book8 (8)').replace('\\','/')
@@ -288,6 +294,7 @@ class TestEditBooksOnGdrive(unittest.TestCase, ui_class):
         self.assertTrue(gdrive_path)
 
         self.edit_book(content={'bookAuthor':''})
+        time.sleep(WAIT_GDRIVE)
         values = self.get_book_details()
         # os.path.join(TEST_DB, 'Unknown', 'book8 (8)')
         self.assertEqual('Unknown', values['author'][0])
@@ -299,6 +306,7 @@ class TestEditBooksOnGdrive(unittest.TestCase, ui_class):
         self.check_element_on_page((By.ID, "edit_book")).click()
         # Check authorsort
         self.edit_book(content={'bookAuthor':'Marco, Lulu de'})
+        time.sleep(WAIT_GDRIVE)
         values = self.get_book_details()
         # os.path.join(TEST_DB, values['author'][0], 'book8 (8)')
         self.assertEqual(values['author'][0], 'Marco, Lulu de')
@@ -353,6 +361,7 @@ class TestEditBooksOnGdrive(unittest.TestCase, ui_class):
         self.get_book_details(8)
         self.check_element_on_page((By.ID, "edit_book")).click()
         self.edit_book(content={'bookAuthor': u'Not found'})
+        time.sleep(WAIT_GDRIVE)
         self.check_element_on_page((By.ID, 'flash_alert'))
         author = self.check_element_on_page((By.ID, "bookAuthor"))
         self.assertEqual('Pipo, Pipe', author.get_attribute('value'))

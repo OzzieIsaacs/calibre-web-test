@@ -258,7 +258,7 @@ class TestLdapLogin(unittest.TestCase, ui_class):
                                 'config_ldap_dn': 'dc=calibreweb,dc=com',
                                 'config_ldap_serv_username': 'cn=root,dc=calibreweb,dc=com',
                                 'config_ldap_serv_password': 'secret',
-                                'config_ldap_user_object': '(uid=%s)',
+                                'config_ldap_user_object': '(sAMAccountName=%s)',
                                 'config_ldap_group_object_filter': '',
                                 'config_ldap_openldap': 1,
                                 'config_ldap_encryption': 'None'
@@ -289,7 +289,7 @@ class TestLdapLogin(unittest.TestCase, ui_class):
                                 'config_ldap_member_user_object': 'member=((%s)'})
         self.assertTrue(self.check_element_on_page((By.ID, "flash_alert")))
         self.fill_basic_config({'ldap_import_user_filter': 'Custom Filter',
-                                'config_ldap_member_user_object': 'sAMAccountName=%s'})
+                                'config_ldap_member_user_object': 'uid=%s'})
         self.assertTrue(self.check_element_on_page((By.ID, "flash_success")))
         time.sleep(BOOT_TIME)
         # start import -> success
@@ -302,9 +302,10 @@ class TestLdapLogin(unittest.TestCase, ui_class):
         self.check_element_on_page((By.ID, "DialogFinished")).click()
         time.sleep(2)
         # Check email adresses are correct imported
-        User1rights = self.get_user_settings('user12')
+        User1rights = self.get_user_settings('Hugo')
         self.assertEqual(User1rights['kindle_mail'],'user12@gamma.org')
         self.assertEqual(User1rights['email'], 'user12@beta.com')
+        self.edit_user('Hugo', {'delete': 1})
         # stop ldap
         self.server.stopListen()
 
@@ -981,12 +982,12 @@ class TestLdapLogin(unittest.TestCase, ui_class):
         self.edit_user('admin', {'download_role': 1})
         time.sleep(3)
         self.logout()
-        # try download with invalid credentials
+        # try download with invalid credentials -> annoymous role is taken, download granted
         r = requests.get('http://127.0.0.1:8083/opds/', auth=('admin', 'admin131'))
-        self.assertEqual(403, r.status_code)
-        # try download with invalid credentials
+        self.assertEqual(200, r.status_code)
+        # try download with valid credentials
         r = requests.get('http://127.0.0.1:8083/opds/', auth=('hudo', 'admin123'))
-        self.assertEqual(403, r.status_code)
+        self.assertEqual(200, r.status_code)
 
         # reset everything back to default
         self.login("admin", "admin123")
@@ -996,13 +997,13 @@ class TestLdapLogin(unittest.TestCase, ui_class):
         time.sleep(3)
         # try download from guest account, fails
         r = requests.get('http://127.0.0.1:8083' + entries['elements'][0]['download'])
-        self.assertEqual(403, r.status_code)
+        self.assertEqual(401, r.status_code)
         # try download with invalid credentials
         r = requests.get('http://127.0.0.1:8083/opds/', auth=('admin', 'admin131'))
-        self.assertEqual(403, r.status_code)
+        self.assertEqual(401, r.status_code)
         # try download with invalid credentials
         r = requests.get('http://127.0.0.1:8083/opds/', auth=('hudo', 'admin123'))
-        self.assertEqual(403, r.status_code)
+        self.assertEqual(401, r.status_code)
 
 
 
