@@ -63,6 +63,7 @@ class TestEditBooksOnGdrive(unittest.TestCase, ui_class):
                     {'config_calibre_dir': TEST_DB,'config_use_google_drive':1 },
                     only_metadata=True)
             cls.fill_basic_config({'config_google_drive_folder':'test'})
+            time.sleep(2)
         except Exception as e:
             try:
                 print(e)
@@ -841,3 +842,12 @@ class TestEditBooksOnGdrive(unittest.TestCase, ui_class):
         # check book series content changed back
         book = self.get_book_details(5)
         self.assertNotIn('series', book)
+        self.goto_page("basic_config")
+        time.sleep(5)
+        self.assertTrue(self.check_element_on_page((By.ID, "config_google_drive_watch_changes_response")))
+        # Check revoke is working
+        revoke = self.check_element_on_page((By.ID, "watch_revoke"))
+        self.assertTrue(revoke)
+        revoke.click()
+        time.sleep(5)
+
