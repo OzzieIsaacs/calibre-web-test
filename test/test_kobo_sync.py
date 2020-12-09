@@ -6,6 +6,7 @@ import re
 import time
 import unittest
 import requests
+import json
 
 from helper_ui import ui_class
 from config_test import TEST_DB, VENV_PYTHON, CALIBRE_WEB_PATH, base_path
@@ -57,7 +58,7 @@ class TestKoboSync(unittest.TestCase, ui_class):
         if TestKoboSync.syncToken:
             return TestKoboSync.data
         # change book 5 to have unicode char in title author, description
-        self.get_book_details(5)
+        '''self.get_book_details(5)
         self.check_element_on_page((By.ID, "edit_book")).click()
         self.edit_book(content={'description':u'b物',
                                 'bookAuthor':u'John Döe执 & Mon Go',
@@ -66,7 +67,7 @@ class TestKoboSync(unittest.TestCase, ui_class):
                                 'series': u'O0ü 执',
                                 'series_index': '1.5',
                                 'tags': u'O0ü 执, kobok'
-                                })
+                                })'''
         # generate payload for auth request
         payload = {
             "AffiliateName": "Kobo",
@@ -110,8 +111,19 @@ class TestKoboSync(unittest.TestCase, ui_class):
         # perform sync request
         bood_uuid = '8f1b72c1-e9a4-4212-b538-8e4f4837d201'
         params = {'Filter': 'All', 'DownloadUrlFilter': 'Generic,Android', 'PrioritizeRecentReads':'true'}
-        r = session.get(self.kobo_adress+'/v1/library/sync', params=params)
-        self.assertEqual(r.status_code, 200)
+        while True:
+            r = session.get(self.kobo_adress+'/v1/library/sync', params=params, headers=TestKoboSync.syncToken)
+            self.assertEqual(r.status_code, 200)
+            data = r.json()
+            TestKoboSync.data = data
+            TestKoboSync.syncToken = {'x-kobo-synctoken': r.headers['x-kobo-synctoken']}
+            for element in r.json():
+                if 'NewEntitlement' in element:
+                    print(element['NewEntitlement']['BookMetadata']['Title'])
+
+            if not 'x-kobo-sync' in r.headers:
+                break
+        print('finished')
         data = r.json()
         TestKoboSync.data = data
         TestKoboSync.syncToken = {'x-kobo-synctoken': r.headers['x-kobo-synctoken']}

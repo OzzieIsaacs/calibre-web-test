@@ -931,6 +931,9 @@ class TestCalibreWebVisibilitys(unittest.TestCase, ui_class):
         # check book with archive set is accessible
         details = self.get_book_details(5)
         self.assertEqual('testbook', details['title'])
+        # try to edit book
+        self.check_element_on_page((By.ID, "edit_book")).click()
+        self.assertTrue(self.check_element_on_page((By.ID, "book_title")))
         # check right cover of book is visible
         r = requests.session()
         payload = {'username': 'admin', 'password': 'admin123', 'submit': "", 'next': "/", "remember_me": "on"}
