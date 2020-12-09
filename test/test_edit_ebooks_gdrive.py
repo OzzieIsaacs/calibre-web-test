@@ -25,7 +25,7 @@ from helper_gdrive import prepare_gdrive, connect_gdrive, check_path_gdrive
 class TestEditBooksOnGdrive(unittest.TestCase, ui_class):
     p=None
     driver = None
-    dependency = ["oauth2client", "PyDrive", "PyYAML", "google-api-python-client", "httplib2", "lxml"]
+    dependency = ["oauth2client", "PyDrive2", "PyYAML", "google-api-python-client", "httplib2", "lxml"]
 
     @classmethod
     def setUpClass(cls):

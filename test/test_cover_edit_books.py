@@ -10,11 +10,10 @@ import requests
 from selenium.webdriver.common.by import By
 from helper_ui import ui_class
 from config_test import TEST_DB
-# from parameterized import parameterized_class
 from helper_func import startup, debug_startup, add_dependency, remove_dependency
 from helper_proxy import Proxy, val
 from helper_func import save_logfiles
-
+from diffimg import diff
 
 class TestCoverEditBooks(TestCase, ui_class):
     p = None
@@ -22,7 +21,6 @@ class TestCoverEditBooks(TestCase, ui_class):
 
     @classmethod
     def setUpClass(cls):
-        add_dependency(cls.dependencys, cls.__name__)
 
         try:
             cls.proxy = Proxy()
@@ -42,7 +40,6 @@ class TestCoverEditBooks(TestCase, ui_class):
 
     @classmethod
     def tearDownClass(cls):
-        remove_dependency(cls.dependencys)
         cls.stop_calibre_web()
         cls.driver.quit()
         cls.proxy.stop_proxy()
@@ -59,37 +56,57 @@ class TestCoverEditBooks(TestCase, ui_class):
         self.check_element_on_page((By.ID, "edit_book")).click()
         self.edit_book(content={'cover_url': u'https://api.github.com/repos/janeczku/calibre-web/cover/test.jpg'})
         self.assertTrue("Error Downloading Cover" in self.check_element_on_page((By.ID, "flash_alert")).text)
-        #val.set_type(['GeneralError'])
-        #self.check_element_on_page((By.ID, "edit_book")).click()
-        #self.edit_book(content={'cover_url': u'https://api.github.com/repos/janeczku/calibre-web/cover/test.jpg'})
-        #self.assertTrue("Error Downloading Cover" in self.check_element_on_page((By.ID, "flash_alert")).text)
-        r = requests.session()
-        payload = {'username': 'admin', 'password': 'admin123', 'submit':"", 'next':"/", "remember_me":"on"}
-        r.post('http://127.0.0.1:8083/login', data=payload)
+        #r = requests.session()
+        #payload = {'username': 'admin', 'password': 'admin123', 'submit':"", 'next':"/", "remember_me":"on"}
+        #r.post('http://127.0.0.1:8083/login', data=payload)
+        self.save_cover_screenshot('original.png')
         self.check_element_on_page((By.ID, "edit_book")).click()
         self.edit_book(content={'cover_url': u'https://api.github.com/repos/janeczku/calibre-web/cover/test.jpg'})
         self.assertFalse(self.check_element_on_page((By.ID, 'flash_alert')))
-        resp = r.get('http://127.0.0.1:8083/cover/8')
-        self.assertAlmostEqual(15938, int(resp.headers['Content-Length']), delta=300)
+        self.save_cover_screenshot('jpg.png')
+        self.assertGreater(diff('original.png', 'jpg.png', delete_diff_file=True), 0.03)
+        os.unlink('original.png')
+        #resp = r.get('http://127.0.0.1:8083/cover/8')
+        #self.assertAlmostEqual(15938, int(resp.headers['Content-Length']), delta=300)
         self.check_element_on_page((By.ID, "edit_book")).click()
         self.edit_book(content={'cover_url': u'https://api.github.com/repos/janeczku/calibre-web/cover/test.webp'})
         self.assertFalse(self.check_element_on_page((By.ID, 'flash_alert')))
-        resp = r.get('http://127.0.0.1:8083/cover/8')
-        self.assertAlmostEqual(17420, int(resp.headers['Content-Length']), delta=300)
+        # resp = r.get('http://127.0.0.1:8083/cover/8')
+        self.save_cover_screenshot('web.png')
+        self.assertGreater(diff('web.png', 'jpg.png', delete_diff_file=True), 0.007)
+        # self.assertAlmostEqual(17420, int(resp.headers['Content-Length']), delta=300)
         self.check_element_on_page((By.ID, "edit_book")).click()
         self.edit_book(content={'cover_url': u'https://api.github.com/repos/janeczku/calibre-web/cover/test.png'})
         self.assertFalse(self.check_element_on_page((By.ID, 'flash_alert')))
-        resp = r.get('http://127.0.0.1:8083/cover/8')
-        self.assertAlmostEqual(20317, int(resp.headers['Content-Length']), delta=300)
-        r.close()
+        #resp = r.get('http://127.0.0.1:8083/cover/8')
+        #self.assertAlmostEqual(20317, int(resp.headers['Content-Length']), delta=300)
+        #r.close()
+        self.save_cover_screenshot('png.png')
+        self.assertGreater(diff('web.png', 'png.png', delete_diff_file=True), 0.01)
+        os.unlink('web.png')
         self.check_element_on_page((By.ID, "edit_book")).click()
         self.edit_book(content={'cover_url': u'https://api.github.com/repos/janeczku/calibre-web/cover/test.bmp'})
-        self.assertTrue(self.check_element_on_page((By.ID, 'flash_alert')))
+        self.assertFalse(self.check_element_on_page((By.ID, 'flash_alert')))
+        self.save_cover_screenshot('bmp.png')
+        self.assertGreater(diff('bmp.png', 'png.png', delete_diff_file=True), 0.006)
+        os.unlink('png.png')
         self.check_element_on_page((By.ID, "edit_book")).click()
         self.edit_book(content={'cover_url': u'https://api.github.com/repos/janeczku/calibre-web/cover/test.jol'})
         # Check if file content is detected correct
-        self.assertTrue(self.check_element_on_page((By.ID, 'flash_alert')), "BMP file is not detected")
+        self.assertFalse(self.check_element_on_page((By.ID, 'flash_alert')), "BMP file is not detected")
+        self.save_cover_screenshot('bmp2.png')
+        self.assertAlmostEqual(diff('bmp.png', 'bmp2.png', delete_diff_file=True), 0.0, delta=0.0001)
+        os.unlink('bmp2.png')
+        os.unlink('bmp.png')
         self.check_element_on_page((By.ID, "edit_book")).click()
         self.edit_book(content={'cover_url': u'https://api.github.com/repos/janeczku/calibre-web/cover/test.brk'})
         self.assertTrue(self.check_element_on_page((By.ID, 'flash_alert')))
-        self.assertTrue(False, "Browser-Cache Problem: Old Cover is displayed instead of New Cover")
+        self.check_element_on_page((By.ID, "edit_book")).click()
+        self.edit_book(content={'cover_url': u'https://api.github.com/repos/janeczku/calibre-web/cover/test.jpg?size=500'})
+        self.assertFalse(self.check_element_on_page((By.ID, 'flash_alert')))
+        self.save_cover_screenshot('last.png')
+        self.assertAlmostEqual(diff('last.png', 'jpg.png', delete_diff_file=True), 0.0, delta=0.0001,
+                               msg="Browser-Cache Problem: Old Cover is displayed instead of New Cover")
+        os.unlink('last.png')
+        os.unlink('jpg.png')
+        os.unlink('page.png')

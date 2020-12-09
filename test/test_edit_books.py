@@ -6,14 +6,12 @@ from unittest import TestCase, skip
 import os
 import time
 import requests
-from PIL import Image
 from diffimg import diff
 
 from selenium.webdriver.common.by import By
 from selenium.webdriver.common.keys import Keys
 from helper_ui import ui_class
 from config_test import TEST_DB, base_path, BOOT_TIME
-# from parameterized import parameterized_class
 from helper_func import startup, debug_startup, add_dependency, remove_dependency
 from helper_func import save_logfiles
 
@@ -43,19 +41,6 @@ class TestEditBooks(TestCase, ui_class):
         cls.driver.quit()
         cls.p.terminate()
         save_logfiles(cls.__name__)
-
-    def save_cover_screenshot(self, filename):
-        element = self.driver.find_element_by_tag_name('img')
-        location = element.location
-        size = element.size
-        self.driver.save_screenshot("page.png")
-        x = location['x']
-        y = location['y']
-        width = location['x'] + size['width']
-        height = location['y'] + size['height']
-        im = Image.open('page.png')
-        im = im.crop((int(x), int(y), int(width), int(height)))
-        im.save(filename)
 
     # goto Book 1
     # Change Title with unicode chars

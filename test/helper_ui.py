@@ -8,6 +8,7 @@ from selenium.common.exceptions import TimeoutException
 from config_test import PY_BIN, BOOT_TIME
 import time
 import lxml.etree
+from PIL import Image
 try:
     from StringIO import StringIO
 except ImportError:
@@ -1416,6 +1417,19 @@ class ui_class():
         submit = cls.check_element_on_page((By.ID, "submit"))
         submit.click()
         return
+
+    def save_cover_screenshot(self, filename):
+        element = self.driver.find_element_by_tag_name('img')
+        location = element.location
+        size = element.size
+        self.driver.save_screenshot("page.png")
+        x = location['x']
+        y = location['y']
+        width = location['x'] + size['width']
+        height = location['y'] + size['height']
+        im = Image.open('page.png')
+        im = im.crop((int(x), int(y), int(width), int(height)))
+        im.save(filename)
 
     def add_identifier(self, key, value):
         add_button = self.check_element_on_page((By.ID, "add-identifier-line"))
