@@ -195,7 +195,7 @@ class TestEbookConvertGDriveKepubify(unittest.TestCase, ui_class):
         ret = self.check_tasks()
         self.assertEqual(memory + 1, len(ret))
 
-        # Check reconvert denied
+        # Check reconvert denied, but task succeded
         vals = self.get_convert_book(8)
         select = Select(vals['btn_from'])
         select.select_by_visible_text('EPUB')
@@ -204,6 +204,6 @@ class TestEbookConvertGDriveKepubify(unittest.TestCase, ui_class):
         self.driver.find_element_by_id("btn-book-convert").click()
         self.assertTrue(self.check_element_on_page((By.ID, "flash_success")))
         time.sleep(WAIT_GDRIVE*2)
-        ret2 = self.check_tasks()
-        self.assertEqual(len(ret), len(ret2), "Reconvert of book started")
-        # self.assertEqual(ret[-1]['result'], 'Finished')
+        ret = self.check_tasks()
+        # self.assertEqual(len(ret), len(ret2), "Reconvert of book started")
+        self.assertEqual(ret[-1]['result'], 'Finished')
