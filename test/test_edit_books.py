@@ -703,11 +703,11 @@ class TestEditBooks(TestCase, ui_class):
         self.check_element_on_page((By.ID, "edit_book")).click()
         bmpcover = os.path.join(base_path, 'files', 'cover.bmp')
         self.edit_book(content={'local_cover': bmpcover})
-        self.assertTrue(self.check_element_on_page((By.CLASS_NAME, "alert")))
+        self.assertFalse(self.check_element_on_page((By.CLASS_NAME, "alert")))
         time.sleep(2)
         self.get_book_details(5)
         self.save_cover_screenshot('bmp.png')
-        self.assertAlmostEqual(diff('bmp.png', 'jpeg.png', delete_diff_file=True), 0.0, delta=0.0001)
+        self.assertGreater(diff('bmp.png', 'jpeg.png', delete_diff_file=True), 0.006)
         os.unlink('jpeg.png')
 
         self.check_element_on_page((By.ID, "edit_book")).click()

@@ -28,9 +28,14 @@ class TestAnonymous(unittest.TestCase, ui_class):
 
     def tearDown(self):
         if not self.check_user_logged_in('admin'):
-            self.logout()
+            try:
+                self.logout()
+            except:
+                self.driver.get("http://127.0.0.1:8083")
+                self.logout()
             self.check_element_on_page((By.ID, "top_user")).click()
             self.login('admin', 'admin123')
+
 
     def test_guest_about(self):
         self.logout()
