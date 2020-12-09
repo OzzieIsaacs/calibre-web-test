@@ -37,13 +37,9 @@ page['nav_download'] = {'check': (By.TAG_NAME, "h2"), 'click': [(By.ID, "nav_dow
 page['nav_list'] = {'check': (By.ID, "merge_books"), 'click': [(By.ID, "nav_list")]}
 page['nav_about'] = {'check': (By.ID, "stats"), 'click': [(By.ID, "nav_about")]}
 page['nav_rated'] = {'check': None, 'click': [(By.ID, "nav_rated")]}
-page['nav_read'] = {'check': None, 'click': [(By.ID, "nav_read")]}
-page['nav_unread'] = {'check': None, 'click': [(By.ID, "nav_unread")]}
-page['nav_archived'] = {'check': None, 'click': [(By.ID, "nav_archived")]}
-page['nav_sort_old'] = {'check': None, 'click': [(By.ID, "nav_sort"), (By.ID, "nav_sort_old")]}
-page['nav_sort_new'] = {'check': None, 'click': [(By.ID, "nav_sort"), (By.ID, "nav_sort_new")]}
-page['nav_sort_asc'] = {'check': None, 'click': [(By.ID, "nav_sort"), (By.ID, "nav_sort_asc")]}
-page['nav_sort_desc'] = {'check': None, 'click': [(By.ID, "nav_sort"), (By.ID, "nav_sort_desc")]}
+page['nav_read'] = {'check': (By.CLASS_NAME, "read"), 'click': [(By.ID, "nav_read")]}
+page['nav_unread'] = {'check': (By.CLASS_NAME, "unread"), 'click': [(By.ID, "nav_unread")]}
+page['nav_archived'] = {'check': (By.CLASS_NAME, "archived"), 'click': [(By.ID, "nav_archived")]}
 page['basic_config'] = {'check': (By.ID, "config_calibre_dir"),
                         'click': [(By.ID, "top_admin"), (By.ID, "basic_config")]}
 page['view_config'] = {'check': None, 'click': [(By.ID, "top_admin"), (By.ID, "view_config")]}
@@ -210,7 +206,7 @@ class ui_class():
                       'config_access_log', 'config_kobo_sync', 'config_kobo_proxy', 'config_ldap_openldap',
                       'config_use_goodreads', 'config_register_email', 'config_use_google_drive']
         options = ['config_log_level', 'config_google_drive_folder', 'config_updatechannel', 'config_login_type',
-                   'config_ldap_encryption', 'config_ldap_authentication']
+                   'config_ldap_encryption', 'config_ldap_authentication', 'ldap_import_user_filter']
         selects = ['config_ebookconverter']
         # depending on elements open accordions or not
         if any(key in elements for key in ['config_port', 'config_certfile','config_keyfile', 'config_updatechannel']):
@@ -225,11 +221,11 @@ class ui_class():
                                            'config_login_type', 'config_ldap_provider_url', 'config_ldap_port',
                                            'config_ldap_encryption', 'config_ldap_cacert_path',
                                            'config_ldap_cert_path', 'config_ldap_key_path',
-                                           'config_ldap_serv_username',
+                                           'config_ldap_serv_username', 'ldap_import_user_filter'
                                            'config_ldap_serv_password', 'config_ldap_dn', 'config_ldap_user_object',
                                            'config_ldap_group_object_filter', 'config_ldap_group_name',
                                            'config_ldap_group_members_field', 'config_ldap_openldap',
-                                           'config_ldap_authentication',
+                                           'config_ldap_authentication', 'config_ldap_member_user_object',
                                            'config_1_oauth_client_id', 'config_1_oauth_client_secret',
                                            'config_2_oauth_client_id', 'config_2_oauth_client_secret'
                                            ]):
@@ -367,6 +363,8 @@ class ui_class():
             cls.goto_page('admin_setup')
         except:
             cls.driver.get("http://127.0.0.1:8083")
+            if not cls.check_user_logged_in("admin",True):
+                cls.login('admin','admin123')
             cls.goto_page('admin_setup')
         cls.driver.find_element_by_id('admin_stop').click()
         element = cls.check_element_on_page((By.ID, "shutdown"))
@@ -1109,18 +1107,22 @@ class ui_class():
             list_elements = self.get_shelf_books_displayed()
         else:
             list_elements = self.goto_page(page)
+        time.sleep(2)
         if index >= 0:
             if not len(list_elements):
                 list_elements = self.get_series_books_displayed()
                 list_elements[index]['ele'].click()
             else:
-                list_elements[index].click()
+                if page == "nav_rate":
+                    list_elements[index].find_element_by_xpath('..').click()
+                else:
+                    list_elements[index].click()
         for key, element in order.items():
             self.check_element_on_page((By.ID, key)).click()
             if page == "search":
                 books = self.get_shelf_books_displayed()
             else:
-                books = self.goto_page(page)
+                books = self.get_books_displayed()
             for index, expected_result in enumerate(element):
                 if page == "search":
                     book_id = int(books[index]['id'])
@@ -1348,6 +1350,7 @@ class ui_class():
     def edit_book(cls, id=-1, content=dict(), custom_content=dict(), detail_v=False, root_url='http://127.0.0.1:8083'):
         if id>0:
             cls.driver.get(root_url + "/admin/book/"+str(id))
+            time.sleep(2)
         cls.check_element_on_page((By.ID,"book_edit_frm"))
 
         if custom_content:

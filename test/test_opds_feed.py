@@ -4,10 +4,9 @@
 import unittest
 from selenium.webdriver.common.by import By
 from helper_ui import ui_class, RESTRICT_TAG_ME
-from config_test import TEST_DB
+from config_test import TEST_DB, BOOT_TIME
 import requests
 from helper_func import startup, debug_startup
-# from .parameterized import parameterized_class
 import time
 from helper_func import save_logfiles
 '''
@@ -15,10 +14,6 @@ opds feed tests
 '''
 
 
-'''@parameterized_class([
-   { "py_version": u'/usr/bin/python'},
-   { "py_version": u'/usr/bin/python3'},
-],names=('Python27','Python36'))'''
 class TestOPDSFeed(unittest.TestCase, ui_class):
     p=None
     driver = None
@@ -81,10 +76,12 @@ class TestOPDSFeed(unittest.TestCase, ui_class):
         r = requests.get('http://127.0.0.1:8083' + elements['Ratings']['link'], auth=('admin', 'admin123'))
         self.assertEqual(200, r.status_code)
 
-
     def test_opds_guest_user(self):
         self.login("admin", "admin123")
         self.fill_basic_config({'config_anonbrowse': 1})
+        time.sleep(BOOT_TIME)
+        self.edit_user('Guest', {'download_role': 1})
+        self.edit_user('admin', {'download_role': 0})
         time.sleep(3)
         self.logout()
         r = requests.get('http://127.0.0.1:8083/opds')
@@ -116,10 +113,75 @@ class TestOPDSFeed(unittest.TestCase, ui_class):
         self.assertEqual(200, r.status_code)
         self.assertFalse('Read Books' in elements)
         self.assertFalse('Unread Books' in elements)
+        # check download from guest account is possible
+        r = requests.get('http://127.0.0.1:8083' + elements['Recently added Books']['link'])
+        entries = self.get_opds_feed(r.text)
+        r = requests.get('http://127.0.0.1:8083' + entries['elements'][0]['download'])
+        self.assertEqual(200, r.status_code)
+        self.assertEqual(len(r.content), 28590)
+        self.assertEqual(r.headers['Content-Type'], 'application/pdf')
+        # create cookies by logging in to admin account and try to download book again
+        req_session = requests.session()
+        payload = {'username': 'admin', 'password': 'admin123', 'submit': "", 'next': "/", "remember_me": "on"}
+        req_session.post('http://127.0.0.1:8083/login', data=payload)
+        r = req_session.get('http://127.0.0.1:8083' + entries['elements'][0]['download'])
+        # logged in via cookies from admin account -> admin is not allowed to download
+        self.assertEqual(403, r.status_code)
+        # logout admin account, cookies now invalid,
+        # now login is done via basic header, means no login, guest account can download
+        req_session.get('http://127.0.0.1:8083/logout')
+        r = req_session.get('http://127.0.0.1:8083' + entries['elements'][0]['download'])
+        self.assertEqual(200, r.status_code)
+        # Close session, delete cookies
+        req_session.close()
+        # Remove download role from guest account
         self.login("admin", "admin123")
-        self.fill_basic_config({'config_anonbrowse': 0})
+        self.edit_user('Guest', {'download_role': 0})
         time.sleep(3)
         self.logout()
+        # try download from guest account, fails
+        r = requests.get('http://127.0.0.1:8083' + entries['elements'][0]['download'])
+        self.assertEqual(403, r.status_code)
+        # create cookies by logging in to admin account and try to download book again
+        req_session = requests.session()
+        payload = {'username': 'admin', 'password': 'admin123', 'submit': "", 'next': "/", "remember_me": "on"}
+        req_session.post('http://127.0.0.1:8083/login', data=payload)
+        # user is logged in via cookies, admin is not allowed to download
+        r = req_session.get('http://127.0.0.1:8083' + entries['elements'][0]['download'])
+        self.assertEqual(403, r.status_code)
+        # logout admin account, cookies now invalid,
+        # now login is done via not existing basic header, means no login, guest account also not allowed to download
+        req_session.get('http://127.0.0.1:8083/logout')
+        r = req_session.get('http://127.0.0.1:8083' + entries['elements'][0]['download'])
+        self.assertEqual(403, r.status_code)
+        # Close session, delete cookies
+        req_session.close()
+        # reset everything back to default
+        self.login("admin", "admin123")
+        self.edit_user('Guest', {'download_role': 1})
+        self.edit_user('admin', {'download_role': 1})
+        time.sleep(3)
+        self.logout()
+        # try download with invalid credentials, using anonymous browsing
+        r = requests.get('http://127.0.0.1:8083/opds/', auth=('admin', 'admin131'))
+        self.assertEqual(200, r.status_code)
+        # try download with invalid credentials, using anonymous browsing
+        r = requests.get('http://127.0.0.1:8083/opds/', auth=('hudo', 'admin123'))
+        self.assertEqual(200, r.status_code)
+        self.login("admin", "admin123")
+        self.fill_basic_config({'config_anonbrowse': 0})
+        time.sleep(BOOT_TIME)
+        self.logout()
+        # try download from guest account, fails
+        r = requests.get('http://127.0.0.1:8083' + entries['elements'][0]['download'])
+        self.assertEqual(401, r.status_code)
+        # try download with invalid credentials
+        r = requests.get('http://127.0.0.1:8083/opds/', auth=('admin', 'admin131'))
+        self.assertEqual(401, r.status_code)
+        # try download with invalid credentials
+        r = requests.get('http://127.0.0.1:8083/opds/', auth=('hudo', 'admin123'))
+        self.assertEqual(401, r.status_code)
+
 
 
     def test_opds_random(self):
@@ -381,6 +443,16 @@ class TestOPDSFeed(unittest.TestCase, ui_class):
         self.assertEqual(entries['links'][4].attrib['href'], '/opds/new?offset=4')
         self.login("admin", "admin123")
         self.fill_view_config({'config_books_per_page': 30})
+
+    def test_opds_unicode_user(self):
+        self.login("admin", "admin123")
+        self.create_user('一执', {'email': 'a8@b.com', 'password':'1234'})
+        self.logout()
+        r = requests.get('http://127.0.0.1:8083/opds', auth=('一执'.encode('utf-8'), '1234'))
+        self.assertEqual(200, r.status_code)
+        self.login("admin", "admin123")
+        self.edit_user('admin', {'delete': 1})
+        self.logout()
 
     def test_opds_cover(self):
         r = requests.get('http://127.0.0.1:8083/opds', auth=('admin', 'admin123'))

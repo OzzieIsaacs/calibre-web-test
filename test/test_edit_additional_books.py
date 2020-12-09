@@ -1,7 +1,6 @@
 #!/usr/bin/env python
 # -*- coding: utf-8 -*-
 
-
 from unittest import TestCase
 import os
 import unittest
@@ -20,7 +19,7 @@ from helper_func import save_logfiles
 class TestEditAdditionalBooks(TestCase, ui_class):
     p = None
     driver = None
-    dependencys = ['Pillow', 'lxml', 'git|comicapi', 'rarfile']
+    dependencys = ['lxml', 'git|comicapi', 'rarfile']
 
     @classmethod
     def setUpClass(cls):
@@ -646,26 +645,29 @@ class TestEditAdditionalBooks(TestCase, ui_class):
 
     def test_title_sort(self):
         self.edit_book(3, content={'book_title': u'The Audiobok'})
-        self.edit_book(1, content={'book_title': u'A bok'})
+        self.edit_book(13, content={'book_title': u'A bok'})
         self.search('bok')
-        order = {'asc': (3, 1)}  # Audiobok, The is before bok, A
+        time.sleep(2)
+        order = {'asc': (3, 13)}  # Audiobok, The is before bok, A
         self.verify_order("search", order=order)
 
         self.edit_book(3, content={'book_title': u'A Audiobok'})
-        self.edit_book(1, content={'book_title': u'The bok'})
+        self.edit_book(13, content={'book_title': u'The bok'})
         self.search('bok')
-        order = {'asc': (3, 1)}  # Audiobok, A is before bok, The
+        time.sleep(2)
+        order = {'asc': (3, 13)}  # Audiobok, A is before bok, The
         self.verify_order("search", order=order)
 
         self.fill_view_config({'config_title_regex': '^(Beta)\s+'})
         self.assertTrue(self.check_element_on_page((By.ID, "flash_success")))
         self.edit_book(3, content={'book_title': u'Beta Audiobok'})
-        self.edit_book(1, content={'book_title': u'A bok'})
+        self.edit_book(13, content={'book_title': u'A bok'})
         self.search('bok')
-        order = {'asc': (1, 3)}  # A bok is before Audiobook, Beta
+        time.sleep(2)
+        order = {'asc': (13, 3)}  # A bok is before Audiobook, Beta
         self.verify_order("search", order=order)
 
-        self.edit_book(1, content={'book_title': u'Der Buchtitel'})
+        self.edit_book(13, content={'book_title': u'book11'})
         self.edit_book(3, content={'book_title': u'Comicdemo'})
         self.fill_view_config({'config_title_regex':
                                    '^(A|The|An|Der|Die|Das|Den|Ein|Eine|Einen|Dem|Des|Einem|Eines)\s+'})

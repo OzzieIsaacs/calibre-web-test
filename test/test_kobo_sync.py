@@ -1,3 +1,4 @@
+#!/usr/bin/env python
 # -*- coding: utf-8 -*-
 
 import os
@@ -5,6 +6,7 @@ import re
 import time
 import unittest
 import requests
+import json
 
 from helper_ui import ui_class
 from config_test import TEST_DB, VENV_PYTHON, CALIBRE_WEB_PATH, base_path
@@ -109,36 +111,48 @@ class TestKoboSync(unittest.TestCase, ui_class):
         # perform sync request
         bood_uuid = '8f1b72c1-e9a4-4212-b538-8e4f4837d201'
         params = {'Filter': 'All', 'DownloadUrlFilter': 'Generic,Android', 'PrioritizeRecentReads':'true'}
-        r = session.get(self.kobo_adress+'/v1/library/sync', params=params)
-        self.assertEqual(r.status_code, 200)
-        data = r.json()
-        TestKoboSync.data = data
-        TestKoboSync.syncToken = {'x-kobo-synctoken': r.headers['x-kobo-synctoken']}
+        data = {}
+        while True:
+            r = session.get(self.kobo_adress+'/v1/library/sync', params=params, headers=TestKoboSync.syncToken)
+            self.assertEqual(r.status_code, 200)
+            new_data = r.json()
+            TestKoboSync.data = data
+            TestKoboSync.syncToken = {'x-kobo-synctoken': r.headers['x-kobo-synctoken']}
+            #for element in r.json():
+            # if 'NewEntitlement' in element:
+            # print(element['NewEntitlement']['BookMetadata']['Title'])
+            if not 'x-kobo-sync' in r.headers:
+                break
+            data = new_data
+        # print('finished')
+        # data = r.json()
+        #TestKoboSync.data = data
+        #TestKoboSync.syncToken = {'x-kobo-synctoken': r.headers['x-kobo-synctoken']}
         self.assertEqual(len(data), 4, "4 Books should have valid kobo formats (epub, epub3, kebub)")
-        self.assertEqual(data[0]['NewEntitlement']['BookMetadata']['DownloadUrls'][1]['Format'], 'EPUB')
-        self.assertEqual(data[0]['NewEntitlement']['BookMetadata']['DownloadUrls'][1]['Size'], 6720)
-        self.assertEqual(data[0]['NewEntitlement']['BookMetadata']['DownloadUrls'][1]['Url'],
+        self.assertEqual(data[3]['NewEntitlement']['BookMetadata']['DownloadUrls'][1]['Format'], 'EPUB')
+        self.assertEqual(data[3]['NewEntitlement']['BookMetadata']['DownloadUrls'][1]['Size'], 6720)
+        self.assertEqual(data[3]['NewEntitlement']['BookMetadata']['DownloadUrls'][1]['Url'],
                          self.kobo_adress + "/download/5/epub")
-        self.assertEqual(data[0]['NewEntitlement']['BookMetadata']['Contributors'],
+        self.assertEqual(data[3]['NewEntitlement']['BookMetadata']['Contributors'],
                          ['John Döe执', 'Mon Go'])
-        self.assertEqual(data[0]['NewEntitlement']['BookMetadata']['CoverImageId'],
+        self.assertEqual(data[3]['NewEntitlement']['BookMetadata']['CoverImageId'],
                          bood_uuid)
-        self.assertEqual('<p>b物</p>', data[0]['NewEntitlement']['BookMetadata']['Description'])
-        self.assertEqual(data[0]['NewEntitlement']['BookMetadata']['Language'],
+        self.assertEqual('<p>b物</p>', data[3]['NewEntitlement']['BookMetadata']['Description'])
+        self.assertEqual(data[3]['NewEntitlement']['BookMetadata']['Language'],
                          'en')
-        self.assertEqual(data[0]['NewEntitlement']['BookMetadata']['Series']['Name'],
+        self.assertEqual(data[3]['NewEntitlement']['BookMetadata']['Series']['Name'],
                          'O0ü 执')
-        self.assertEqual(data[0]['NewEntitlement']['BookMetadata']['Series']['NumberFloat'],
+        self.assertEqual(data[3]['NewEntitlement']['BookMetadata']['Series']['NumberFloat'],
                          1.5)
         # ToDo: What shall it look like?
         #self.assertEqual(data[0]['NewEntitlement']['BookMetadata']['Series']['Number'], 1)
         # ToDo What to expect
         # self.assertEqual(data[0]['NewEntitlement']['BookMetadata']['PublicationDate'], '2017-01-19 00:00:00')
-        self.assertEqual(data[0]['NewEntitlement']['BookMetadata']['Publisher']['Name'],
+        self.assertEqual(data[3]['NewEntitlement']['BookMetadata']['Publisher']['Name'],
                          'Publish执')
-        self.assertEqual(data[0]['NewEntitlement']['BookMetadata']['Title'],
+        self.assertEqual(data[3]['NewEntitlement']['BookMetadata']['Title'],
                          'testbook执')
-        self.assertEqual(data[0]['NewEntitlement']['BookEntitlement']['Created'],
+        self.assertEqual(data[3]['NewEntitlement']['BookEntitlement']['Created'],
                          '2017-01-20T20:00:15Z') # 'Tue, 05 Jul 2016 19:30:06 GMT'
         # check none series index is filled with number
         self.assertEqual(data[2]['NewEntitlement']['BookMetadata']['Series']['Number'], 1)
@@ -185,10 +199,21 @@ class TestKoboSync(unittest.TestCase, ui_class):
         r = changeSession.get(self.kobo_adress+'/v1/initialization', headers=TestKoboSync.header)
         self.assertEqual(r.status_code, 200)
         params = {'Filter': 'All', 'DownloadUrlFilter': 'Generic,Android', 'PrioritizeRecentReads':'true'}
-        r = changeSession.get(self.kobo_adress+'/v1/library/sync', params=params, headers=TestKoboSync.syncToken)
-        self.assertEqual(r.status_code, 200)
-        TestKoboSync.syncToken = {'x-kobo-synctoken': r.headers['x-kobo-synctoken']}
-        data = r.json()
+        data = {}
+        index = 0
+        while True:
+            r = changeSession.get(self.kobo_adress+'/v1/library/sync', params=params, headers=TestKoboSync.syncToken)
+            self.assertEqual(r.status_code, 200)
+            new_data = r.json()
+            TestKoboSync.data = data
+            TestKoboSync.syncToken = {'x-kobo-synctoken': r.headers['x-kobo-synctoken']}
+            if not 'x-kobo-sync' in r.headers:
+                if not index:
+                    TestKoboSync.data = new_data
+                    data = new_data
+                break
+            index += 1
+            data = new_data
         changeSession.close()
         return data
 
@@ -254,6 +279,7 @@ class TestKoboSync(unittest.TestCase, ui_class):
         self.get_book_details(5)
         self.check_element_on_page((By.ID, "edit_book")).click()
         self.edit_book(content={'book_title': u'testbook1'})
+        time.sleep(2)
 
         # sync and get this book as changed entitlement instead of new one
         data = self.sync_kobo()
@@ -261,6 +287,10 @@ class TestKoboSync(unittest.TestCase, ui_class):
         self.assertTrue('ChangedEntitlement' in data[0])
         self.assertEqual(data[0]['ChangedEntitlement']['BookMetadata']['Title'],
                          'testbook1')
+
+        # sync and no book
+        data = self.sync_kobo()
+        self.assertEqual(0, len(data))
 
 
     def test_sync_shelf(self):
@@ -543,7 +573,6 @@ class TestKoboSync(unittest.TestCase, ui_class):
         r = newSession.put(self.kobo_adress + '/v1/library/8f1b72c1-e9a4-4212-b538-8e4f4837d201/state',
                            json=postData)
         self.assertEqual(400, r.status_code)
-
 
         newSession.close()
 

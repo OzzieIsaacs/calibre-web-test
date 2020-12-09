@@ -386,7 +386,10 @@ def result_upload(TEST_OS):
 
 def poweroff(power):
     if power:
-        os.system('shutdown -P')
+        if os.name == 'nt':
+            os.system('shutdown /s')
+        else:
+            os.system('shutdown -P')
         time.sleep(12)
 
 

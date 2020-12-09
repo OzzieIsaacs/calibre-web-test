@@ -13,10 +13,12 @@ if os.name == 'nt':
     VENV_PYTHON = os.path.join(VENV_PATH, 'Scripts', 'python.exe')
     LDAP_WHL = os.path.abspath(os.path.join(base_path, '..', 'selenium', 'python_ldap-3.3.1-cp38-cp38-win32.whl'))
     TEST_OS = 'Windows'
+    WAIT_GDRIVE = 20
 else:
     VENV_PYTHON = os.path.join(VENV_PATH, 'bin', 'python3')
     LDAP_WHL = None
     TEST_OS = 'Linux'
+    WAIT_GDRIVE = 15
 
 if sys.version_info < (3, 0):
     TEST_DB = os.path.abspath(os.path.join(base_path, '..', '..', 'Dokumente', 'tüst db')).decode('UTF-8')

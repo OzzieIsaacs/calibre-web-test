@@ -21,7 +21,7 @@ from helper_func import save_logfiles
 class TestEditBooks(TestCase, ui_class):
     p = None
     driver = None
-    dependencys = ['Pillow', 'lxml']
+    dependencys = ['lxml']
     # py_version = u'/usr/bin/python3'
 
     @classmethod

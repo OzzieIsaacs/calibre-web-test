@@ -55,6 +55,11 @@ class TestLdapLogin(unittest.TestCase, ui_class):
             cls.server.stopListen()
         except Exception as e:
             print(e)
+        if not cls.check_user_logged_in('admin'):
+            try:
+                cls.driver.get("http://127.0.0.1:8083")
+            except:
+                pass
 
     def inital_sync(self, kobo_adress):
         # generate payload for auth request
@@ -251,6 +256,61 @@ class TestLdapLogin(unittest.TestCase, ui_class):
         self.login('admin','admin123')
         self.assertTrue(self.check_element_on_page((By.ID, "flash_warning")))
 
+    def test_LDAP_import_memberfield(self):
+        self.fill_basic_config({'config_ldap_provider_url': '127.0.0.1',
+                                'config_ldap_port': '3268',
+                                'config_ldap_authentication': 'Simple',
+                                'config_ldap_dn': 'dc=calibreweb,dc=com',
+                                'config_ldap_serv_username': 'cn=root,dc=calibreweb,dc=com',
+                                'config_ldap_serv_password': 'secret',
+                                'config_ldap_user_object': '(sAMAccountName=%s)',
+                                'config_ldap_group_object_filter': '(& (objectclass=groupofnames)(cn=%s))',
+                                'config_ldap_openldap': 1,
+                                'config_ldap_encryption': 'None',
+                                'config_ldap_group_members_field': 'member',
+                                'config_ldap_group_name': 'cps'
+                                })
+        self.assertTrue(self.check_element_on_page((By.ID, "flash_success")))
+        time.sleep(BOOT_TIME)
+        # stop/start ldap with missing user, wrong entry (no uid field, wrong dn field)
+        self.server.relisten(config=5, port=3268, encrypt=None)
+        # start import -> error
+        self.goto_page('admin_setup')
+        imprt = self.check_element_on_page((By.ID, "import_ldap_users"))
+        self.assertTrue(imprt)
+        imprt.click()
+        time.sleep(3)
+        self.assertTrue('0 User' in self.check_element_on_page((By.ID, "DialogContent")).text)
+        self.check_element_on_page((By.ID, "DialogFinished")).click()
+        time.sleep(2)
+        self.fill_basic_config({'ldap_import_user_filter': 'Custom Filter',
+                                'config_ldap_member_user_object':'member'})
+        self.assertTrue(self.check_element_on_page((By.ID, "flash_alert")))
+        self.fill_basic_config({'ldap_import_user_filter': 'Custom Filter',
+                                'config_ldap_member_user_object': 'member=((%s)'})
+        self.assertTrue(self.check_element_on_page((By.ID, "flash_alert")))
+        self.fill_basic_config({'ldap_import_user_filter': 'Custom Filter',
+                                'config_ldap_member_user_object': 'cn=%s'})
+        self.assertTrue(self.check_element_on_page((By.ID, "flash_success")))
+        time.sleep(BOOT_TIME)
+        # start import -> success
+        self.goto_page('admin_setup')
+        imprt = self.check_element_on_page((By.ID, "import_ldap_users"))
+        self.assertTrue(imprt)
+        imprt.click()
+        time.sleep(3)
+        self.assertTrue('1 User Successfully Imported' in self.check_element_on_page((By.ID, "DialogContent")).text)
+        self.check_element_on_page((By.ID, "DialogFinished")).click()
+        time.sleep(2)
+        # Check email adresses are correct imported
+        User1rights = self.get_user_settings('user12')
+        self.assertEqual(User1rights['kindle_mail'],'user12@gamma.org')
+        self.assertEqual(User1rights['email'], 'user12@beta.com')
+        self.edit_user('user12', {'delete': 1})
+        # stop ldap
+        self.server.stopListen()
+
+
     def test_LDAP_import(self):
         # configure LDAP
         # ToDo: configuration of different authentication settings
@@ -320,7 +380,7 @@ class TestLdapLogin(unittest.TestCase, ui_class):
         time.sleep(3)
         self.assertTrue('No user' in self.check_element_on_page((By.ID, "DialogContent")).text)
         self.check_element_on_page((By.ID, "DialogFinished")).click()
-        time.sleep(2)
+        time.sleep(3)
         # start import -> all user imported
         self.fill_basic_config({'config_ldap_group_name':'cps','config_ldap_group_members_field':'member'})
         self.assertTrue(self.check_element_on_page((By.ID, "flash_success")))
@@ -335,7 +395,7 @@ class TestLdapLogin(unittest.TestCase, ui_class):
         time.sleep(2)
 
         userlist = self.get_user_list()
-        self.assertEqual(len(userlist),3)
+        self.assertEqual(len(userlist), 3)
         users = ['执一','Mümmy 7']
         self.assertTrue(all(elem in userlist for elem in users))
 
@@ -371,7 +431,7 @@ class TestLdapLogin(unittest.TestCase, ui_class):
         self.assertTrue(imprt)
         imprt.click()
         time.sleep(3)
-        self.assertTrue('Failed to Create' in self.check_element_on_page((By.ID, "DialogContent")).text)
+        self.assertTrue('0 User' in self.check_element_on_page((By.ID, "DialogContent")).text)
         self.check_element_on_page((By.ID, "DialogFinished")).click()
         time.sleep(2)
         # check access right of user still match changed rights
@@ -427,6 +487,8 @@ class TestLdapLogin(unittest.TestCase, ui_class):
         self.assertTrue('One LDAP User' in self.check_element_on_page((By.ID, "DialogContent")).text)
         self.check_element_on_page((By.ID, "DialogFinished")).click()
         time.sleep(2)
+        User1rights = self.get_user_settings('user122')
+        self.assertEqual(User1rights['email'], 'user122@email.com')
 
         # connect with wrong encryption
         self.fill_basic_config({'config_ldap_encryption':'SSL'})
@@ -455,7 +517,6 @@ class TestLdapLogin(unittest.TestCase, ui_class):
         self.assertTrue('One LDAP User' in self.check_element_on_page((By.ID, "DialogContent")).text)
         self.check_element_on_page((By.ID, "DialogFinished")).click()
         time.sleep(2)
-
 
     def test_LDAP_SSL(self):
         # configure ssl LDAP
@@ -501,8 +562,6 @@ class TestLdapLogin(unittest.TestCase, ui_class):
         self.assertTrue(self.check_element_on_page((By.ID, "flash_warning")))
         self.edit_user('user0', {'delete': 1})
         self.assertTrue(self.check_element_on_page((By.ID, "flash_success")))
-        # stop ldap
-        self.server.stopListen()
 
     # @unittest.skip('Unknown how to test certificate')
     def test_LDAP_SSL_CERTIFICATE(self):
@@ -570,7 +629,6 @@ class TestLdapLogin(unittest.TestCase, ui_class):
         os.unlink(real_ca_file)
         os.unlink(real_cert_file)
         os.unlink(real_key_file)
-
 
     def test_LDAP_STARTTLS(self):
         # configure LDAP STARTTLS
@@ -675,8 +733,6 @@ class TestLdapLogin(unittest.TestCase, ui_class):
         self.assertTrue(self.check_element_on_page((By.ID, "flash_warning")))
         self.edit_user('user0', {'delete': 1})
         self.assertTrue(self.check_element_on_page((By.ID, "flash_success")))
-        # stop ldap
-        self.server.stopListen()
 
     def test_ldap_about(self):
         self.assertTrue(self.goto_page('nav_about'))
@@ -757,8 +813,6 @@ class TestLdapLogin(unittest.TestCase, ui_class):
         self.assertTrue(self.check_element_on_page((By.ID, "flash_warning")))
         self.edit_user('user0', {'delete': 1})
         self.assertTrue(self.check_element_on_page((By.ID, "flash_success")))
-        # stop ldap
-        self.server.stopListen()
 
     def test_ldap_opds_download_book(self):
         self.fill_basic_config({'config_ldap_provider_url': '127.0.0.1',
@@ -773,6 +827,8 @@ class TestLdapLogin(unittest.TestCase, ui_class):
                                 })
         self.assertTrue(self.check_element_on_page((By.ID, "flash_success")))
         time.sleep(BOOT_TIME)
+        self.edit_user('admin', {'download_role': 0})
+        time.sleep(3)
         # start ldap
         self.server.relisten(config=2, port=3268, encrypt=None)
         # create new user
@@ -789,12 +845,39 @@ class TestLdapLogin(unittest.TestCase, ui_class):
         r = requests.get('http://127.0.0.1:8083/opds', auth=('执一'.encode('utf-8'), 'eekretsay'))
         self.assertEqual(200, r.status_code)
         elements = self.get_opds_index(r.text)
-        r = requests.get('http://127.0.0.1:8083' + elements['Recently added Books']['link'], auth=('执一'.encode('utf-8'), 'eekretsay'))
+        r = requests.get('http://127.0.0.1:8083' + elements['Recently added Books']['link'],
+                         auth=('执一'.encode('utf-8'), 'eekretsay'))
         entries = self.get_opds_feed(r.text)
         # check download book
-        r = requests.get('http://127.0.0.1:8083' + entries['elements'][0]['download'], auth=('执一'.encode('utf-8'), 'eekretsay'))
+        r = requests.get('http://127.0.0.1:8083' + entries['elements'][0]['download'],
+                         auth=('执一'.encode('utf-8'), 'eekretsay'))
         self.assertEqual(len(r.content), 28590)
         self.assertEqual(r.headers['Content-Type'], 'application/pdf')
+
+        # create cookies by logging in to admin account and try to download book again
+        req_session = requests.session()
+        payload = {'username': 'admin', 'password': 'admin123', 'submit': "", 'next': "/", "remember_me": "on"}
+        req_session.post('http://127.0.0.1:8083/login', data=payload)
+        # admin is logged in via cookies, admin is not allowed to download, no auth credentials provided
+        r = req_session.get('http://127.0.0.1:8083' + entries['elements'][0]['download'])
+        self.assertEqual(401, r.status_code)
+        # admin is logged in via cookies, admin is not allowed to download, auth credentials for user provided
+        r = req_session.get('http://127.0.0.1:8083' + entries['elements'][0]['download'],
+                            auth=('执一'.encode('utf-8'), 'eekretsay'))
+        self.assertEqual(200, r.status_code)
+
+        # logout admin account, cookies now invalid,
+        # now login is done via not existing basic header, means no login, guest account is deactivated
+        req_session.get('http://127.0.0.1:8083/logout')
+        r = req_session.get('http://127.0.0.1:8083' + entries['elements'][0]['download'])
+        self.assertEqual(401, r.status_code)
+        # auth credentials for user provided, invalid cookies
+        r = req_session.get('http://127.0.0.1:8083' + entries['elements'][0]['download'],
+                            auth=('执一'.encode('utf-8'), 'eekretsay'))
+        self.assertEqual(200, r.status_code)
+        # Close session, delete cookies
+        req_session.close()
+
         # login admin and remove download role from 执一
         self.login("admin", "admin123")
         self.assertTrue(self.check_element_on_page((By.ID, "flash_warning")))
@@ -802,7 +885,8 @@ class TestLdapLogin(unittest.TestCase, ui_class):
         self.assertTrue(self.check_element_on_page((By.ID, "flash_success")))
         self.logout()
         # try to download book without download rights
-        r = requests.get('http://127.0.0.1:8083'+ entries['elements'][0]['download'], auth=('执一'.encode('utf-8'), 'terces'))
+        r = requests.get('http://127.0.0.1:8083'+ entries['elements'][0]['download'],
+                         auth=('执一'.encode('utf-8'), 'terces'))
         self.assertEqual(401, r.status_code)
         # stop ldap
         self.server.stopListen()
@@ -810,6 +894,9 @@ class TestLdapLogin(unittest.TestCase, ui_class):
         # try to login without ldap reachable
         r = requests.get('http://127.0.0.1:8083/opds', auth=('执一'.encode('utf-8'), 'eekretsay'))
         self.assertEqual(424, r.status_code)
+        # user is logged in via cookies, admin is not allowed to download
+        r = req_session.get('http://127.0.0.1:8083' + entries['elements'][0]['download'])
+        self.assertEqual(401, r.status_code)
 
         # login admin and delete user0
         self.login("admin", "admin123")
@@ -832,17 +919,85 @@ class TestLdapLogin(unittest.TestCase, ui_class):
         # enable anonymous browsing
         self.fill_basic_config({'config_anonbrowse': 1})
         time.sleep(BOOT_TIME)
+        self.edit_user('Guest', {'download_role': 1})
+        self.edit_user('admin', {'download_role': 0})
         # start ldap
         self.server.relisten(config=2, port=3268, encrypt=None)
-
-
         self.logout()
+        # access opds feed
         r = requests.get('http://127.0.0.1:8083/opds')
         self.assertEqual(200, r.status_code)
         elements = self.get_opds_index(r.text)
+        # check download from guest account is possible
+        r = requests.get('http://127.0.0.1:8083' + elements['Recently added Books']['link'])
+        entries = self.get_opds_feed(r.text)
+        r = requests.get('http://127.0.0.1:8083' + entries['elements'][0]['download'])
+        self.assertEqual(200, r.status_code)
+        self.assertEqual(len(r.content), 28590)
+        self.assertEqual(r.headers['Content-Type'], 'application/pdf')
+        # create cookies by logging in to admin account and try to download book again
+        req_session = requests.session()
+        payload = {'username': 'admin', 'password': 'admin123', 'submit': "", 'next': "/", "remember_me": "on"}
+        req_session.post('http://127.0.0.1:8083/login', data=payload)
+        r = req_session.get('http://127.0.0.1:8083' + entries['elements'][0]['download'])
+        # logged in via cookies from admin account -> admin is not allowed to download
+        self.assertEqual(403, r.status_code)
+        # logout admin account, cookies now invalid,
+        # now login is done via basic header, means no login, guest account can download
+        req_session.get('http://127.0.0.1:8083/logout')
+        r = req_session.get('http://127.0.0.1:8083' + entries['elements'][0]['download'])
+        self.assertEqual(200, r.status_code)
+        # Close session, delete cookies
+        req_session.close()
+        # Remove download role from guest account
+        self.login("admin", "admin123")
+        self.edit_user('Guest', {'download_role': 0})
+        time.sleep(3)
+        self.logout()
+        # try download from guest account, fails
+        r = requests.get('http://127.0.0.1:8083' + entries['elements'][0]['download'])
+        self.assertEqual(403, r.status_code)
+        # create cookies by logging in to admin account and try to download book again
+        req_session = requests.session()
+        payload = {'username': 'admin', 'password': 'admin123', 'submit': "", 'next': "/", "remember_me": "on"}
+        req_session.post('http://127.0.0.1:8083/login', data=payload)
+        # user is logged in via cookies, admin is not allowed to download
+        r = req_session.get('http://127.0.0.1:8083' + entries['elements'][0]['download'])
+        self.assertEqual(403, r.status_code)
+        # logout admin account, cookies now invalid,
+        # now login is done via not existing basic header, means no login, guest account also not allowed to download
+        req_session.get('http://127.0.0.1:8083/logout')
+        r = req_session.get('http://127.0.0.1:8083' + entries['elements'][0]['download'])
+        self.assertEqual(403, r.status_code)
+        # Close session, delete cookies
+        req_session.close()
+        self.login("admin", "admin123")
+        self.edit_user('Guest', {'download_role': 1})
+        self.edit_user('admin', {'download_role': 1})
+        time.sleep(3)
+        self.logout()
+        # try download with invalid credentials -> annoymous role is taken, download granted
+        r = requests.get('http://127.0.0.1:8083/opds/', auth=('admin', 'admin131'))
+        self.assertEqual(200, r.status_code)
+        # try download with valid credentials
+        r = requests.get('http://127.0.0.1:8083/opds/', auth=('hudo', 'admin123'))
+        self.assertEqual(200, r.status_code)
 
+        # reset everything back to default
         self.login("admin", "admin123")
         self.fill_basic_config({'config_anonbrowse': 0})
+        time.sleep(BOOT_TIME)
+        self.edit_user('admin', {'download_role': 1})
+        time.sleep(3)
+        # try download from guest account, fails
+        r = requests.get('http://127.0.0.1:8083' + entries['elements'][0]['download'])
+        self.assertEqual(401, r.status_code)
+        # try download with invalid credentials
+        r = requests.get('http://127.0.0.1:8083/opds/', auth=('admin', 'admin131'))
+        self.assertEqual(401, r.status_code)
+        # try download with invalid credentials
+        r = requests.get('http://127.0.0.1:8083/opds/', auth=('hudo', 'admin123'))
+        self.assertEqual(401, r.status_code)
 
     def test_ldap_kobo_sync(self):
         self.fill_basic_config({'config_ldap_provider_url': '127.0.0.1',
@@ -880,5 +1035,3 @@ class TestLdapLogin(unittest.TestCase, ui_class):
         self.login("admin", "admin123")
         self.edit_user('执一', {'delete': 1})
         self.fill_basic_config({'config_kobo_sync': 0})
-
-

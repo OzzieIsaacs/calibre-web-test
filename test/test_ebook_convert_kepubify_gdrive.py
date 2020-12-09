@@ -5,20 +5,16 @@ import unittest
 import os
 import time
 import shutil
-import io
 
-from helper_email_convert import AIOSMTPServer
 import helper_email_convert
 from selenium.webdriver.common.by import By
 from selenium.webdriver.support.ui import Select
 from helper_ui import ui_class
-from config_test import CALIBRE_WEB_PATH, TEST_DB, base_path
+from config_test import CALIBRE_WEB_PATH, TEST_DB, base_path, WAIT_GDRIVE
 from helper_func import startup
 from helper_func import save_logfiles, add_dependency, remove_dependency
-from helper_gdrive import prepare_gdrive, remove_gdrive, connect_gdrive, check_path_gdrive
+from helper_gdrive import prepare_gdrive
 
-
-WAIT_GDRIVE = 15
 
 @unittest.skipIf(not os.path.exists(os.path.join(base_path, "files", "client_secrets.json")) or
                  not os.path.exists(os.path.join(base_path, "files", "gdrive_credentials")),
@@ -27,7 +23,7 @@ WAIT_GDRIVE = 15
 class TestEbookConvertGDriveKepubify(unittest.TestCase, ui_class):
     p = None
     driver = None
-    dependency = ["oauth2client", "PyDrive", "PyYAML", "google-api-python-client", "httplib2", "Pillow", "lxml"]
+    dependency = ["oauth2client", "PyDrive", "PyYAML", "google-api-python-client", "httplib2", "lxml"]
     email_server = None
 
     @classmethod
@@ -199,7 +195,7 @@ class TestEbookConvertGDriveKepubify(unittest.TestCase, ui_class):
         ret = self.check_tasks()
         self.assertEqual(memory + 1, len(ret))
 
-        # Check reconvert possible
+        # Check reconvert denied, but task succeded
         vals = self.get_convert_book(8)
         select = Select(vals['btn_from'])
         select.select_by_visible_text('EPUB')
@@ -209,4 +205,5 @@ class TestEbookConvertGDriveKepubify(unittest.TestCase, ui_class):
         self.assertTrue(self.check_element_on_page((By.ID, "flash_success")))
         time.sleep(WAIT_GDRIVE*2)
         ret = self.check_tasks()
+        # self.assertEqual(len(ret), len(ret2), "Reconvert of book started")
         self.assertEqual(ret[-1]['result'], 'Finished')

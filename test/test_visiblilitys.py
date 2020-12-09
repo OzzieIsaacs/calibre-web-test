@@ -226,7 +226,7 @@ class TestCalibreWebVisibilitys(unittest.TestCase, ui_class):
                  'pub_new': (7, 5, 1, 3),
                  'pub_old': (1, 3, 4, 8)
                  }
-        self.verify_order("nav_unread", 0, order=order)
+        self.verify_order("nav_unread", order=order)
 
     # checks if admin can change user language
     def test_admin_change_visibility_language(self):
@@ -931,6 +931,9 @@ class TestCalibreWebVisibilitys(unittest.TestCase, ui_class):
         # check book with archive set is accessible
         details = self.get_book_details(5)
         self.assertEqual('testbook', details['title'])
+        # try to edit book
+        self.check_element_on_page((By.ID, "edit_book")).click()
+        self.assertTrue(self.check_element_on_page((By.ID, "book_title")))
         # check right cover of book is visible
         r = requests.session()
         payload = {'username': 'admin', 'password': 'admin123', 'submit': "", 'next': "/", "remember_me": "on"}
