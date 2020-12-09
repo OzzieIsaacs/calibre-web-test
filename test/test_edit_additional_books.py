@@ -19,7 +19,7 @@ from helper_func import save_logfiles
 class TestEditAdditionalBooks(TestCase, ui_class):
     p = None
     driver = None
-    dependencys = ['Pillow', 'lxml', 'git|comicapi', 'rarfile']
+    dependencys = ['lxml', 'git|comicapi', 'rarfile']
 
     @classmethod
     def setUpClass(cls):

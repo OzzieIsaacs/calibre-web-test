@@ -19,7 +19,6 @@ from helper_func import save_logfiles
 class TestCoverEditBooks(TestCase, ui_class):
     p = None
     driver = None
-    dependencys = ['Pillow']
 
     @classmethod
     def setUpClass(cls):
