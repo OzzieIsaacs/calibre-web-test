@@ -332,7 +332,7 @@ def unrar_path():
 def is_unrar_not_present():
     return unrar_path() is None
 
-def save_logfiles(module_name):
+def save_logfiles(inst, module_name):
     if not os.path.isdir(os.path.join(base_path, 'outcome')):
         os.makedirs(os.path.join(base_path, 'outcome'))
     datestamp = datetime.datetime.now().strftime('%Y%m%d%H%M%S')
@@ -344,6 +344,9 @@ def save_logfiles(module_name):
         src = os.path.join(CALIBRE_WEB_PATH, file)
         dest = os.path.join(outdir, file)
         if os.path.exists(src):
+            with open(src) as fc:
+                if "Traceback" in fc.read():
+                    inst.assertFalse(True,"Exception in File {}".format(file))
             shutil.move(src,dest)
 
 def finishing_notifier():

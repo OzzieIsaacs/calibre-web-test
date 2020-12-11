@@ -102,7 +102,7 @@ class TestEditBooksOnGdrive(unittest.TestCase, ui_class):
             except PermissionError:
                 print('client_secrets.json delete failed')
 
-        save_logfiles(cls.__name__)
+        'save_logfiles(cls, cls.__name__)
 
     def save_cover_screenshot(self, filename):
         element = self.driver.find_element_by_tag_name('img')

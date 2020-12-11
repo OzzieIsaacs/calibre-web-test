@@ -60,7 +60,7 @@ class TestEbookConvertCalibre(unittest.TestCase, ui_class):
         cls.driver.quit()
         cls.p.terminate()
         time.sleep(2)
-        save_logfiles(cls.__name__)
+        save_logfiles(cls, cls.__name__)
 
     def tearDown(self):
         if not self.check_user_logged_in('admin'):

@@ -47,7 +47,7 @@ class TestLdapLogin(unittest.TestCase, ui_class):
         cls.driver.quit()
         # close the browser window and stop calibre-web
         remove_dependency(cls.dep_line)
-        save_logfiles(cls.__name__)
+        'save_logfiles(cls, cls.__name__)
 
     @classmethod
     def tearDown(cls):

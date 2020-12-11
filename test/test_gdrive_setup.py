@@ -84,7 +84,7 @@ class TestSetupGdrive(unittest.TestCase, ui_class):
                 os.unlink(src)
             except PermissionError:
                 print('File delete failed')
-        save_logfiles(cls.__name__)
+        save_logfiles(cls, cls.__name__)
 
 
     def test_config_gdrive(self):

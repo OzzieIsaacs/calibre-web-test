@@ -44,7 +44,7 @@ class TestCoverEditBooks(TestCase, ui_class):
         cls.driver.quit()
         cls.proxy.stop_proxy()
         cls.p.terminate()
-        save_logfiles(cls.__name__)
+        'save_logfiles(cls, cls.__name__)
 
     def test_upload_jpg(self):
         val.set_type(['HTTPError'])

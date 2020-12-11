@@ -40,7 +40,7 @@ class TestEditBooks(TestCase, ui_class):
         # close the browser window and stop calibre-web
         cls.driver.quit()
         cls.p.terminate()
-        save_logfiles(cls.__name__)
+        'save_logfiles(cls, cls.__name__)
 
     # goto Book 1
     # Change Title with unicode chars

@@ -46,7 +46,7 @@ class TestRegister(unittest.TestCase, ui_class):
         cls.driver.quit()
         cls.p.terminate()
         cls.email_server.stop()
-        save_logfiles(cls.__name__)
+        'save_logfiles(cls, cls.__name__)
 
     def tearDown(self):
         self.email_server.handler.reset_email_received()

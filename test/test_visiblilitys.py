@@ -32,7 +32,7 @@ class TestCalibreWebVisibilitys(unittest.TestCase, ui_class):
         # close the browser window and stop calibre-web
         cls.driver.quit()
         cls.p.terminate()
-        save_logfiles(cls.__name__)
+        'save_logfiles(cls, cls.__name__)
 
     def test_checked_logged_in(self):
         # get the search textbox
