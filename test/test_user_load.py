@@ -55,7 +55,15 @@ class TestUserLoad(TestCase, ui_class):
 
     @classmethod
     def tearDownClass(cls):
-        cls.stop_calibre_web()
+        try:
+            cls.stop_calibre_web()
+        except:
+            cls.driver.get("http://127.0.0.1:8083")
+            time.sleep()
+            try:
+                cls.stop_calibre_web()
+            except:
+                pass
         # close the browser window and stop calibre-web
         cls.driver.quit()
         cls.p.terminate()
@@ -67,7 +75,7 @@ class TestUserLoad(TestCase, ui_class):
     # change no of books per page to 5
     # goto page 2 check content
     def test_user_change_vis(self):
-        user_count = 100
+        user_count = 30
         r = requests.session()
         payload = {'username': 'admin', 'password': 'admin123', 'submit': "", 'next': "/"}
         r.post('http://127.0.0.1:8083/login', data=payload)
@@ -96,4 +104,3 @@ class TestUserLoad(TestCase, ui_class):
         for i in range(0, user_count):
             threading.Thread(target=user_change, args=('user'+str(i),)).start()
         time.sleep(400)
-        print('Hallo')

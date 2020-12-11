@@ -73,7 +73,7 @@ class TestCoverEditBooks(TestCase, ui_class):
         self.assertFalse(self.check_element_on_page((By.ID, 'flash_alert')))
         # resp = r.get('http://127.0.0.1:8083/cover/8')
         self.save_cover_screenshot('web.png')
-        self.assertGreater(diff('web.png', 'jpg.png', delete_diff_file=True), 0.007)
+        self.assertGreater(diff('web.png', 'jpg.png', delete_diff_file=True), 0.005)
         # self.assertAlmostEqual(17420, int(resp.headers['Content-Length']), delta=300)
         self.check_element_on_page((By.ID, "edit_book")).click()
         self.edit_book(content={'cover_url': u'https://api.github.com/repos/janeczku/calibre-web/cover/test.png'})

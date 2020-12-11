@@ -35,7 +35,15 @@ class TestUpdater(unittest.TestCase, ui_class):
     @classmethod
     def tearDownClass(cls):
         # close the browser window and stop calibre-web
-        cls.stop_calibre_web()
+        try:
+            cls.stop_calibre_web()
+        except:
+            cls.driver.get("http://127.0.0.1:8083")
+            time.sleep()
+            try:
+                cls.stop_calibre_web()
+            except:
+                pass
         cls.driver.quit()
         cls.proxy.stop_proxy()
         cls.p.terminate()
@@ -49,6 +57,7 @@ class TestUpdater(unittest.TestCase, ui_class):
                 self.logout()
             except:
                 self.driver.get("http://127.0.0.1:8083")
+                time.sleep(3)
                 self.logout()
             self.login('admin', 'admin123')
 
@@ -292,7 +301,7 @@ class TestUpdater(unittest.TestCase, ui_class):
         self.assertTrue(updater)
         updater.click()
         val.set_type(['HTTPError'])
-        time.sleep(3)
+        time.sleep(4)
         performUpdate = self.check_element_on_page((By.ID, "perform_update"))
         self.assertTrue(performUpdate)
         performUpdate.click()
