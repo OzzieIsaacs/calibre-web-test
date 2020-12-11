@@ -344,7 +344,7 @@ def save_logfiles(module_name):
         src = os.path.join(CALIBRE_WEB_PATH, file)
         dest = os.path.join(outdir, file)
         if os.path.exists(src):
-            shutil.copy(src,dest)
+            shutil.move(src,dest)
 
 def finishing_notifier():
     try:
