@@ -52,7 +52,7 @@ class TestKoboSync(unittest.TestCase, ui_class):
         cls.p.terminate()
         # close the browser window and stop calibre-web
         remove_dependency(cls.json_line)
-        'save_logfiles(cls, cls.__name__)
+        save_logfiles(cls, cls.__name__)
 
     def inital_sync(self):
         if TestKoboSync.syncToken:

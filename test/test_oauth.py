@@ -35,7 +35,7 @@ class TestOAuthLogin(unittest.TestCase, ui_class):
         cls.driver.quit()
         # close the browser window and stop calibre-web
         remove_dependency(cls.dep_line)
-        'save_logfiles(cls, cls.__name__)
+        save_logfiles(cls, cls.__name__)
 
 
     def test_visible_oauth(self):

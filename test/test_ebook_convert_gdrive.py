@@ -121,7 +121,7 @@ class TestEbookConvertCalibreGDrive(unittest.TestCase, ui_class):
             except PermissionError:
                 print('client_secrets.json delete failed')
 
-        'save_logfiles(cls, cls.__name__)
+        save_logfiles(cls, cls.__name__)
 
     def tearDown(self):
         if not self.check_user_logged_in('admin'):

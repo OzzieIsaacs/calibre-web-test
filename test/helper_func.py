@@ -333,6 +333,7 @@ def is_unrar_not_present():
     return unrar_path() is None
 
 def save_logfiles(inst, module_name):
+    result = False
     if not os.path.isdir(os.path.join(base_path, 'outcome')):
         os.makedirs(os.path.join(base_path, 'outcome'))
     datestamp = datetime.datetime.now().strftime('%Y%m%d%H%M%S')
@@ -346,8 +347,9 @@ def save_logfiles(inst, module_name):
         if os.path.exists(src):
             with open(src) as fc:
                 if "Traceback" in fc.read():
-                    inst.assertFalse(True,"Exception in File {}".format(file))
+                    result = file
             shutil.move(src,dest)
+    inst.assertFalse(result,"Exception in File {}".format(result))
 
 def finishing_notifier():
     try:

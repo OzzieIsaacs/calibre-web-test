@@ -38,7 +38,7 @@ class TestLogin(unittest.TestCase, ui_class):
             os.unlink(os.path.join(CALIBRE_WEB_PATH, 'cps', 'static', 'robots.txt'))
         except:
             pass
-        'save_logfiles(cls, cls.__name__)
+        save_logfiles(cls, cls.__name__)
 
     def tearDown(self):
         if self.check_user_logged_in('', True):

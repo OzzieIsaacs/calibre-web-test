@@ -28,7 +28,7 @@ class TestUserTemplate(unittest.TestCase, ui_class):
         # close the browser window and stop calibre-web
         cls.driver.quit()
         cls.p.terminate()
-        'save_logfiles(cls, cls.__name__)
+        save_logfiles(cls, cls.__name__)
 
     def tearDown(self):
         if not self.check_user_logged_in('admin'):

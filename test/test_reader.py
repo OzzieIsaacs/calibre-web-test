@@ -43,7 +43,7 @@ class TestReader(unittest.TestCase, ui_class):
         cls.p.terminate()
         # close the browser window and stop calibre-web
         # remove_dependency(cls.dependency)
-        'save_logfiles(cls, cls.__name__)
+        save_logfiles(cls, cls.__name__)
 
 
     def test_txt_reader(self):

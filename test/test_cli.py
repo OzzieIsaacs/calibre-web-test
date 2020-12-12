@@ -45,7 +45,7 @@ class TestCli(unittest.TestCase, ui_class):
             shutil.rmtree(os.path.join(CALIBRE_WEB_PATH, u'hü lo'), ignore_errors=True)
         except Exception:
             pass
-        'save_logfiles(cls, cls.__name__)
+        save_logfiles(cls, cls.__name__)
 
     def test_cli_different_folder(self):
         os.chdir(CALIBRE_WEB_PATH)
