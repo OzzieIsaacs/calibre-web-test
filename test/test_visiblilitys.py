@@ -578,7 +578,7 @@ class TestCalibreWebVisibilitys(unittest.TestCase, ui_class):
         shelfs = self.list_shelfs()
         shelfs[0]['ele'].click()
         self.check_element_on_page((By.ID, "delete_shelf")).click()
-        self.check_element_on_page((By.ID, "confirm")).click()
+        self.check_element_on_page((By.ID, "delete_confirm")).click()
 
     def test_allow_tags(self):
         self.create_shelf('allow', False)
@@ -660,7 +660,7 @@ class TestCalibreWebVisibilitys(unittest.TestCase, ui_class):
         shelfs[0]['ele'].click()
         self.check_element_on_page((By.ID, "delete_shelf")).click()
         time.sleep(1)
-        self.check_element_on_page((By.ID, "confirm")).click()
+        self.check_element_on_page((By.ID, "delete_confirm")).click()
 
     def test_restrict_columns(self):
         self.edit_book(10, custom_content={"Custom Text 人物 *'()&": 'test'})
@@ -910,7 +910,7 @@ class TestCalibreWebVisibilitys(unittest.TestCase, ui_class):
         # delete Shelf
         self.list_shelfs(u'Author')['ele'].click()
         self.check_element_on_page((By.ID, "delete_shelf")).click()
-        self.check_element_on_page((By.ID, "confirm")).click()
+        self.check_element_on_page((By.ID, "delete_confirm")).click()
         self.fill_view_config({'config_authors_max': "0"})
         result = self.search('Yang')
         self.assertEqual(len(result[0]['author']), 4)

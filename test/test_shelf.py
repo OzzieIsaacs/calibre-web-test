@@ -51,7 +51,7 @@ class TestShelf(unittest.TestCase, ui_class):
                     sl = self.list_shelfs(shelf['name']) #.rstrip(' (Public)'))
                     sl['ele'].click()
                     self.check_element_on_page((By.ID, "delete_shelf")).click()
-                    self.check_element_on_page((By.ID, "confirm")).click()
+                    self.check_element_on_page((By.ID, "delete_confirm")).click()
             except:
                 pass
 
@@ -91,7 +91,7 @@ class TestShelf(unittest.TestCase, ui_class):
         # go to shelf page
         self.list_shelfs(u'Pü 执')['ele'].click()
         self.check_element_on_page((By.ID, "delete_shelf")).click()
-        self.check_element_on_page((By.ID, "confirm")).click()
+        self.check_element_on_page((By.ID, "delete_confirm")).click()
         # shelf is gone
         self.assertFalse(len(self.list_shelfs()))
 
@@ -118,7 +118,6 @@ class TestShelf(unittest.TestCase, ui_class):
         self.assertTrue(self.check_element_on_page((By.XPATH, "//*[@id='remove-from-shelves']//a")))
         # goto shelf
         self.list_shelfs(u'Gü 执 (Public)')['ele'].click()
-        # self.check_element_on_page((By.XPATH, "//a/span[@class='glyphicon glyphicon-list']")).click()
         self.check_element_on_page((By.ID, "delete_shelf"))
         shelf_books = self.get_shelf_books_displayed()
         # No random books displayed, 2 books in shelf
@@ -292,7 +291,7 @@ class TestShelf(unittest.TestCase, ui_class):
         self.list_shelfs('shelf_private (Public)')['ele'].click()
         del_shelf = self.check_element_on_page((By.ID, "delete_shelf"))
         del_shelf.click()
-        self.check_element_on_page((By.ID, "confirm")).click()
+        self.check_element_on_page((By.ID, "delete_confirm")).click()
         self.logout()
         self.login('admin','admin123')
         self.assertTrue(self.list_shelfs('shelf_public'))
@@ -362,7 +361,7 @@ class TestShelf(unittest.TestCase, ui_class):
         self.assertEqual(len(shelf_books), 2)
         del_shelf = self.check_element_on_page((By.ID, "delete_shelf"))
         del_shelf.click()
-        self.check_element_on_page((By.ID, "confirm")).click()
+        self.check_element_on_page((By.ID, "delete_confirm")).click()
 
 
     # Change database
@@ -430,4 +429,4 @@ class TestShelf(unittest.TestCase, ui_class):
         self.list_shelfs(u'anon')['ele'].click()
         del_shelf = self.check_element_on_page((By.ID, "delete_shelf"))
         del_shelf.click()
-        self.check_element_on_page((By.ID, "confirm")).click()
+        self.check_element_on_page((By.ID, "delete_confirm")).click()

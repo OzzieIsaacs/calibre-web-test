@@ -869,6 +869,15 @@ class ui_class():
         process_selects = dict()
         process_checkboxes = dict()
         process_text = dict()
+        if 'delete' in config:
+            if 'delete' == 1:
+                time.sleep(1)
+                cls.driver.find_element_by_id('btndeluser').click()
+                time.sleep(1)
+                cls.driver.find_element_by_id('delete_confirm').click()
+                time.sleep(2)
+                return
+
         # check if checkboxes are in list and seperate lists
         if 'resend_password' in config:
             ele = cls.driver.find_element_by_id('resend_password')
