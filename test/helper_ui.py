@@ -917,7 +917,7 @@ class ui_class():
             ele.send_keys(config[key])
 
         # finally submit settings
-        cls.driver.find_element_by_id("submit").click()
+        cls.driver.find_element_by_id("user_submit").click()
 
 
     @classmethod
