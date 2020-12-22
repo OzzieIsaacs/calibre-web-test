@@ -442,7 +442,7 @@ class TestKoboSync(unittest.TestCase, ui_class):
         for shelf in shelfs:
             self.list_shelfs(shelf['name'])['ele'].click()
             self.check_element_on_page((By.ID, "delete_shelf")).click()
-            self.check_element_on_page((By.ID, "delete_confirm")).click()
+            self.check_element_on_page((By.ID, "btnConfirmYes")).click()
 
         # final sync
         time.sleep(2)
@@ -512,7 +512,7 @@ class TestKoboSync(unittest.TestCase, ui_class):
         for shelf in shelfs:
             self.list_shelfs(shelf['name'])['ele'].click()
             self.check_element_on_page((By.ID, "delete_shelf")).click()
-            self.check_element_on_page((By.ID, "delete_confirm")).click()
+            self.check_element_on_page((By.ID, "btnConfirmYes")).click()
         time.sleep(2)
         # final sync
         self.sync_kobo()
@@ -580,7 +580,7 @@ class TestKoboSync(unittest.TestCase, ui_class):
         for shelf in shelfs:
             self.list_shelfs(shelf['name'])['ele'].click()
             self.check_element_on_page((By.ID, "delete_shelf")).click()
-            self.check_element_on_page((By.ID, "delete_confirm")).click()
+            self.check_element_on_page((By.ID, "btnConfirmYes")).click()
 
         # final sync
         time.sleep(2)

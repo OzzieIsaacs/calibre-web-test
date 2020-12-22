@@ -591,6 +591,6 @@ class TestOPDSFeed(unittest.TestCase, ui_class):
         self.assertEqual(entries['elements'][0]['title'], 'book11')
         self.list_shelfs(u'Pü 执')['ele'].click()
         self.check_element_on_page((By.ID, "delete_shelf")).click()
-        self.check_element_on_page((By.ID, "delete_confirm")).click()
+        self.check_element_on_page((By.ID, "btnConfirmYes")).click()
         self.logout()
         time.sleep(2)
