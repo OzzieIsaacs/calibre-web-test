@@ -50,7 +50,9 @@ class TestShelf(unittest.TestCase, ui_class):
                 sl = self.list_shelfs(shelf['name']) #.rstrip(' (Public)'))
                 sl['ele'].click()
                 self.check_element_on_page((By.ID, "delete_shelf")).click()
+                time.sleep(1)
                 self.check_element_on_page((By.ID, "btnConfirmYes")).click()
+                time.sleep(1)
         except:
             pass
 
