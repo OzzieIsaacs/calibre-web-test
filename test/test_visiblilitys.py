@@ -99,7 +99,7 @@ class TestCalibreWebVisibilitys(unittest.TestCase, ui_class):
         self.driver.find_element_by_id("top_user").click()
         self.check_element_on_page((By.ID, "email"))
         # WebDriverWait(self.driver, 5).until(EC.presence_of_element_located((By.ID, "email")))
-        submit = self.driver.find_element_by_id("submit")
+        submit = self.driver.find_element_by_id("user_submit")
         self.driver.find_element_by_id("email").clear()
         self.driver.find_element_by_id("email").send_keys("alfa@web.de")
         submit.click()
