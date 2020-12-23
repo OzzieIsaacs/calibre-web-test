@@ -190,7 +190,7 @@ class ui_class():
         cls.driver.find_element_by_id("top_user").click()
         WebDriverWait(cls.driver, 5).until(EC.presence_of_element_located((By.ID, "password")))
         cls.driver.find_element_by_id("password").send_keys(new_passwd)
-        cls.driver.find_element_by_id("submit").click()
+        cls.driver.find_element_by_id("user_submit").click()
         return cls.check_element_on_page((By.ID, "flash_success"))
 
     @classmethod
@@ -404,8 +404,8 @@ class ui_class():
                 go = va.getchildren()[0].getchildren()[0]
                 id = go.attrib['data-pk']
                 delButton = self.driver.find_element_by_css_selector("a[data-pk='"+id+"']")
-                editButton = self.driver.find_element_by_css_selector("a[data-domain-id='"+id+"']")
-                val.append({'domain':go.text, 'delete': delButton, 'edit':editButton, 'id':id})
+                editButton = self.driver.find_element_by_css_selector("a[data-value='"+id+"']")
+                val.append({'domain':go.text, 'delete': delButton, 'edit':editButton, 'id': id})
             except IndexError:
                 pass
         return val
@@ -439,14 +439,14 @@ class ui_class():
             table_id = 'domain-deny-table'
         if not self.check_element_on_page((By.ID, table_id)):
             return False
-        deleteButton = self.check_element_on_page((By.CSS_SELECTOR, "a[data-domain-id='" + id + "']"))
+        deleteButton = self.check_element_on_page((By.CSS_SELECTOR, "a[data-value='" + id + "']"))
         if not deleteButton:
             return False
         deleteButton.click()
         if accept:
-            submit = self.check_element_on_page((By.ID, "btndeletedomain"))
+            submit = self.check_element_on_page((By.ID, "btnConfirmYes"))
         else:
-            submit = self.check_element_on_page((By.ID, "btncancel"))
+            submit = self.check_element_on_page((By.ID, "btnConfirmNo"))
         submit.click()
         time.sleep(2)
 
@@ -780,7 +780,7 @@ class ui_class():
             select.select_by_visible_text(process_selects[key])
 
         # finally submit settings
-        cls.driver.find_element_by_id("submit").click()
+        cls.driver.find_element_by_id("user_submit").click()
 
 
     def create_shelf(self, name, public=False):
@@ -836,7 +836,7 @@ class ui_class():
                     public_shelf.click()
                 else:
                     return False
-            submit = self.check_element_on_page((By.ID, 'submit'))
+            submit = self.check_element_on_page((By.ID, 'user_submit'))
             if submit:
                 submit.click()
                 return True

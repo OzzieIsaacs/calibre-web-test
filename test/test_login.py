@@ -439,5 +439,6 @@ class TestLogin(unittest.TestCase, ui_class):
                    "remember_me": "on"
                    }
         resp = r.post('http://127.0.0.1:8083/login', data=payload)
-        self.assertEqual(resp.status_code, 200)
+        # Remote token not fond so redirect after login puts us to 403 page
+        self.assertEqual(resp.status_code, 403)
         r.close()

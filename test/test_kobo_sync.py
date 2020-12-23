@@ -325,7 +325,7 @@ class TestKoboSync(unittest.TestCase, ui_class):
         # delete private shelf
         self.list_shelfs(u'adminShelf')['ele'].click()
         self.check_element_on_page((By.ID, "delete_shelf")).click()
-        self.check_element_on_page((By.ID, "confirm")).click()
+        self.check_element_on_page((By.ID, "btnConfirmYes")).click()
         data = self.sync_kobo()
         self.assertEqual(1, len(data))
         self.assertTrue('Id' in data[0]['DeletedTag']['Tag'])
