@@ -407,3 +407,9 @@ class TestShelf(unittest.TestCase, ui_class):
     def test_shelf_database_change(self):
         self.create_shelf('order', False)
         self.assertTrue(self.check_element_on_page((By.ID, "flash_success")))
+
+    # Change database
+    @unittest.skip("Change Database Not Implemented")
+    def test_shelf_database_change(self):
+        self.create_shelf('order', False)
+        self.assertTrue(self.check_element_on_page((By.ID, "flash_success")))

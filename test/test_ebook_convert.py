@@ -359,6 +359,27 @@ class TestEbookConvertCalibre(unittest.TestCase, ui_class):
         self.login('admin', 'admin123')
         ret = self.check_tasks()
         self.assertEqual(memory + 1, len(ret))
+        # create shelf
+        self.create_shelf('bookFORMAT', False)
+        # add book 7,1 to shelf
+        self.get_book_details(7)
+        self.check_element_on_page((By.ID, "add-to-shelf")).click()
+        self.check_element_on_page((By.XPATH, "//ul[@id='add-to-shelves']/li/a[contains(.,'bookFORMAT')]")).click()
+        self.get_book_details(1)
+        self.check_element_on_page((By.ID, "add-to-shelf")).click()
+        self.check_element_on_page((By.XPATH, "//ul[@id='add-to-shelves']/li/a[contains(.,'bookFORMAT')]")).click()
+        # goto simple downloadpage
+        self.list_shelfs('bookFORMAT')['ele'].click()
+        shelf_down = self.check_element_on_page((By.ID, "shelf_down"))
+        self.assertTrue(shelf_down)
+        shelf_down.click()
+        # check download butons for book1 and 7
+        formats7 = self.driver.find_elements_by_xpath("//*[starts-with(@id,'btnGroupDrop7')]")
+        self.assertTrue(len(formats7), 9)
+        formats1 = self.driver.find_elements_by_xpath("//*[starts-with(@id,'btnGroupDrop1')]")
+        self.assertTrue(len(formats1), 1)
+        self.driver.get("http://127.0.0.1:8083/")
+        self.delete_shelf('bookFORMAT')
 
 
     # start conversion of epub -> mobi
