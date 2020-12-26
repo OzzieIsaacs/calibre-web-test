@@ -12,10 +12,6 @@ import requests
 from helper_func import save_logfiles
 
 
-'''@parameterized_class([
-   { "py_version": u'/usr/bin/python'},
-   { "py_version": u'/usr/bin/python3'},
-],names=('Python27','Python36'))'''
 class TestShelf(unittest.TestCase, ui_class):
     p=None
     driver = None
@@ -47,12 +43,7 @@ class TestShelf(unittest.TestCase, ui_class):
             return
         try:
             for shelf in shelfs:
-                sl = self.list_shelfs(shelf['name']) #.rstrip(' (Public)'))
-                sl['ele'].click()
-                self.check_element_on_page((By.ID, "delete_shelf")).click()
-                time.sleep(1)
-                self.check_element_on_page((By.ID, "btnConfirmYes")).click()
-                time.sleep(1)
+                self.delete_shelf(shelf['name'])
         except:
             pass
 
@@ -90,9 +81,6 @@ class TestShelf(unittest.TestCase, ui_class):
         self.logout()
         self.login('admin','admin123')
         # go to shelf page
-        self.list_shelfs(u'Pü 执')['ele'].click()
-        self.check_element_on_page((By.ID, "delete_shelf")).click()
-        self.check_element_on_page((By.ID, "btnConfirmYes")).click()
         # shelf is gone
         self.assertFalse(len(self.list_shelfs()))
 
@@ -221,7 +209,6 @@ class TestShelf(unittest.TestCase, ui_class):
         shelf_books = self.get_books_displayed()
 
     # Add muliple books to shelf and arrange the order
-    @unittest.skip
     def test_arrange_shelf(self):
         # coding = utf-8
         self.create_shelf('order', True)
@@ -289,10 +276,7 @@ class TestShelf(unittest.TestCase, ui_class):
         self.logout()
         # logout and try to create another shelf with same name, even if user can't see shelfs name
         self.login('shelf','123')
-        self.list_shelfs('shelf_private (Public)')['ele'].click()
-        del_shelf = self.check_element_on_page((By.ID, "delete_shelf"))
-        del_shelf.click()
-        self.check_element_on_page((By.ID, "btnConfirmYes")).click()
+        self.delete_shelf('shelf_private (Public)')
         self.logout()
         self.login('admin','admin123')
         self.assertTrue(self.list_shelfs('shelf_public'))
@@ -303,7 +287,6 @@ class TestShelf(unittest.TestCase, ui_class):
         self.assertTrue(self.check_element_on_page((By.ID, "flash_success")))
         self.assertTrue(self.list_shelfs('Halllalalalal1l1ll2332434llsfllsdfgls[..]'))
 
-    #
     def test_shelf_action_non_shelf_edit_role(self):
         # remove edit role from admin account
         self.edit_user('admin', {'edit_shelf_role': 0, 'email': 'e@fe.de'})
@@ -360,16 +343,7 @@ class TestShelf(unittest.TestCase, ui_class):
         self.list_shelfs('search')['ele'].click()
         shelf_books = self.get_shelf_books_displayed()
         self.assertEqual(len(shelf_books), 2)
-        del_shelf = self.check_element_on_page((By.ID, "delete_shelf"))
-        del_shelf.click()
-        self.check_element_on_page((By.ID, "btnConfirmYes")).click()
-
-
-    # Change database
-    @unittest.skip("Change Database Not Implemented")
-    def test_shelf_database_change(self):
-        self.create_shelf('order', False)
-        self.assertTrue(self.check_element_on_page((By.ID, "flash_success")))
+        self.delete_shelf()
 
     def test_shelf_anonymous(self):
         # Enable Anonymous browsing and create shelf
@@ -426,8 +400,10 @@ class TestShelf(unittest.TestCase, ui_class):
         self.driver.get('http://127.0.0.1:8083/shelf/' + anon_shelf[0]['id'])
         self.assertEqual(self.driver.title, u'Calibre-Web | Login')
         self.login('admin', 'admin123')
+        self.delete_shelf(u'anon')
 
-        self.list_shelfs(u'anon')['ele'].click()
-        del_shelf = self.check_element_on_page((By.ID, "delete_shelf"))
-        del_shelf.click()
-        self.check_element_on_page((By.ID, "btnConfirmYes")).click()
+    # Change database
+    @unittest.skip("Change Database Not Implemented")
+    def test_shelf_database_change(self):
+        self.create_shelf('order', False)
+        self.assertTrue(self.check_element_on_page((By.ID, "flash_success")))

@@ -842,6 +842,14 @@ class ui_class():
                 return True
         return False
 
+    def delete_shelf(self, name=None):
+        if name:
+            self.list_shelfs(name)['ele'].click()
+        self.check_element_on_page((By.ID, "delete_shelf")).click()
+        self.check_element_on_page((By.ID, "btnConfirmYes")).click()
+        time.sleep(1)
+        return
+
 
     @classmethod
     def create_user(cls, name, config):
