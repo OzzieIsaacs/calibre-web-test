@@ -291,8 +291,6 @@ class TestCli(unittest.TestCase, ui_class):
         time.sleep(3)
         p.poll()
 
-    # @unittest.expectedFailure
-    # @unittest.skip("Not Implemented")
     # start calibre-web in process A.
     # Start calibre-web in process B.
     # Check process B terminates with exit code 1
@@ -312,3 +310,53 @@ class TestCli(unittest.TestCase, ui_class):
         p1.terminate()
         time.sleep(3)
         p1.poll()
+
+    # start calibre-web in process A.
+    # Start calibre-web in process B.
+    # Check process B terminates with exit code 1
+    # stop process A
+    def test_settingsdb_not_writeable(self):
+        # check unconfigured database
+        os.chdir(CALIBRE_WEB_PATH)
+        p1 = process_open([self.py_version, u'cps.py'], [1])
+        time.sleep(BOOT_TIME)
+        p1.terminate()
+        time.sleep(BOOT_TIME)
+        p1.poll()
+        os.chmod("app.db", 0o400)
+        p2 = process_open([self.py_version, u'cps.py'], [1])
+        time.sleep(BOOT_TIME)
+        result = p2.poll()
+        if result is None:
+            p2.terminate()
+            p2.poll()
+            self.assertTrue('2nd process not terminated, port is already in use')
+        self.assertEqual(result, 2)
+        os.chmod("app.db", 0o644)
+        # configure and check again
+        p1 = process_open([self.py_version, u'cps.py'], [1])
+        time.sleep(BOOT_TIME)
+        try:
+            # navigate to the application home page
+            self.driver.get("http://127.0.0.1:8083")
+
+            # Wait for config screen to show up
+            self.fill_initial_config({'config_calibre_dir': TEST_DB})
+
+            # wait for cw to reboot
+            time.sleep(BOOT_TIME)
+        except Exception:
+            self.assertFalse(True, "Inital config failed with on test nonwriteable database")
+        p1.terminate()
+        time.sleep(BOOT_TIME)
+        p1.poll()
+        os.chmod("app.db", 0o400)
+        p2 = process_open([self.py_version, u'cps.py'], [1])
+        time.sleep(BOOT_TIME)
+        result = p2.poll()
+        if result is None:
+            p2.terminate()
+            p2.poll()
+            self.assertTrue('2nd process not terminated, port is already in use')
+        self.assertEqual(result, 2)
+        os.chmod("app.db", 0o644)
