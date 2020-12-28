@@ -1596,14 +1596,15 @@ class ui_class():
     def adv_search(self, term_dict, get=False):
         if self.goto_page('adv_search'):
             if get:
-                inc_tags = self.driver.find_elements_by_xpath("//label[starts-with(@id, 'tag_')]")
-                exc_tags = self.driver.find_elements_by_xpath("//label[starts-with(@id, 'exclude_tag')]")
-                inc_series = self.driver.find_elements_by_xpath("//label[starts-with(@id, 'serie_')]")
-                exc_series = self.driver.find_elements_by_xpath("//label[starts-with(@id, 'exclude_serie')]")
-                inc_languages = self.driver.find_elements_by_xpath("//label[starts-with(@id, 'language_')]")
-                exc_languages = self.driver.find_elements_by_xpath("//label[starts-with(@id, 'exclude_language')]")
-                inc_extensions = self.driver.find_elements_by_xpath("//label[starts-with(@id, 'extension_')]")
-                exc_extensions = self.driver.find_elements_by_xpath("//label[starts-with(@id, 'exclude_extension')]")
+                inc_tags = self.driver.find_elements_by_xpath("//select[@id='include_tag']/option")
+                # before: self.driver.find_elements_by_xpath("//label[starts-with(@id, 'tag_')]")
+                exc_tags = self.driver.find_elements_by_xpath("//select[@id='exclude_tag']/option")
+                inc_series = self.driver.find_elements_by_xpath("//select[@id='include_serie']/option")
+                exc_series = self.driver.find_elements_by_xpath("//select[@id='exclude_serie']/option")
+                inc_languages = self.driver.find_elements_by_xpath("//select[@id='include_language']/option")
+                exc_languages = self.driver.find_elements_by_xpath("//select[@id='exclude_language']/option")
+                inc_extensions = self.driver.find_elements_by_xpath("//select[@id='include_extension']/option")
+                exc_extensions = self.driver.find_elements_by_xpath("//select[@id='exclude_extension']/option")
 
                 cust_columns = self.driver.find_elements_by_xpath("//label[starts-with(@for, 'custom_')]")
                 ret = dict()
