@@ -115,7 +115,7 @@ def debug_startup(inst, __, ___, login=True, host="http://127.0.0.1:8083", env=N
 
 
 def startup(inst, pyVersion, config, login=True, host="http://127.0.0.1:8083",
-            env=None, only_startup=False, only_metadata=False):
+            env=None, parameter="", work_path=None, only_startup=False, only_metadata=False):
     print("\n%s - %s: " % (inst.py_version, inst.__name__))
     try:
         os.remove(os.path.join(CALIBRE_WEB_PATH, 'app.db'))
@@ -154,14 +154,14 @@ def startup(inst, pyVersion, config, login=True, host="http://127.0.0.1:8083",
             shutil.copy('./Calibre_db/metadata.db', os.path.join(TEST_DB, 'metadata.db'))
         except FileExistsError:
             print('Metadata.db already present, might not be a clean version')
-    inst.p = process_open([pyVersion, os.path.join(CALIBRE_WEB_PATH, u'cps.py')], [1], sout=None, env=env)
+    inst.p = process_open([pyVersion, os.path.join(CALIBRE_WEB_PATH, u'cps.py'), parameter], [1], sout=None, env=env, cwd=work_path)
     # create a new Firefox session
     inst.driver = webdriver.Firefox()
     # inst.driver = webdriver.Chrome()
     time.sleep(BOOT_TIME)
     if inst.p.poll():
         kill_old_cps()
-        inst.p = process_open([pyVersion, os.path.join(CALIBRE_WEB_PATH, u'cps.py')], [1], sout=None, env=env)
+        inst.p = process_open([pyVersion, os.path.join(CALIBRE_WEB_PATH, u'cps.py'), parameter], [1], sout=None, env=env, cwd=work_path)
         print('Calibre-Web restarted...')
         time.sleep(BOOT_TIME)
 

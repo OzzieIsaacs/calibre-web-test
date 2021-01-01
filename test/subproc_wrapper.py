@@ -6,7 +6,7 @@ import os
 import sys
 
 
-def process_open(command, quotes=[], env=None, sout=subprocess.PIPE, serr=subprocess.PIPE):
+def process_open(command, quotes=[], env=None, sout=subprocess.PIPE, serr=subprocess.PIPE, cwd=None):
     # Linux py2.7 encode as list without quotes no empty element for parameters
     # linux py3.x no encode and as list without quotes no empty element for parameters
     # windows py2.7 encode as string with quotes empty element for parameters is okay
@@ -25,4 +25,10 @@ def process_open(command, quotes=[], env=None, sout=subprocess.PIPE, serr=subpro
         else:
             exc_command = [x for x in command]
 
-    return subprocess.Popen(exc_command, shell=False, stdout=sout, stderr=serr, universal_newlines=True, env=env)
+    return subprocess.Popen(exc_command,
+                            shell=False,
+                            stdout=sout,
+                            stderr=serr,
+                            universal_newlines=True,
+                            env=env,
+                            cwd=cwd)

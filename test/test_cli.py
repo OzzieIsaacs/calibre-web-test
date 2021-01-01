@@ -94,6 +94,8 @@ class TestCli(unittest.TestCase, ui_class):
         self.driver.get("http://127.0.0.1:8083")
 
         # Wait for config screen to show up
+        self.check_element_on_page((By.ID, "config_calibre_dir"))
+        self.assertFalse(self.check_element_on_page((By.ID, "calibre_modal_path")))
         self.fill_initial_config({'config_calibre_dir': TEST_DB})
 
         # wait for cw to reboot
