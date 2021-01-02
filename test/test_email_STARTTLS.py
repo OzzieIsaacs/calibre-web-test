@@ -54,7 +54,7 @@ class TestSTARTTLS(unittest.TestCase, ui_class):
         cls.p.terminate()
         cls.email_server.stop()
         time.sleep(2)
-        save_logfiles(cls.__name__)
+        save_logfiles(cls, cls.__name__)
 
     # start sending e-mail
     # check email received

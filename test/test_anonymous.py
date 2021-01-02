@@ -9,7 +9,6 @@ from helper_func import startup
 from helper_func import save_logfiles
 
 
-
 class TestAnonymous(unittest.TestCase, ui_class):
     p = None
     driver = None
@@ -24,13 +23,18 @@ class TestAnonymous(unittest.TestCase, ui_class):
         # close the browser window and stop calibre-web
         cls.driver.quit()
         cls.p.terminate()
-        save_logfiles(cls.__name__)
+        save_logfiles(cls, cls.__name__)
 
     def tearDown(self):
         if not self.check_user_logged_in('admin'):
-            self.logout()
+            try:
+                self.logout()
+            except:
+                self.driver.get("http://127.0.0.1:8083")
+                self.logout()
             self.check_element_on_page((By.ID, "top_user")).click()
             self.login('admin', 'admin123')
+
 
     def test_guest_about(self):
         self.logout()

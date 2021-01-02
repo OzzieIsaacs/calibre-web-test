@@ -6,6 +6,7 @@ from fs.errors import ResourceNotFound
 
 import json
 import os
+import time
 from config_test import base_path
 
 
@@ -28,6 +29,7 @@ def prepare_gdrive():
     try:
         test = fs.getinfo('test')
         fs.removetree('test')
+        time.sleep(5)
     except ResourceNotFound:
         # old path not found on googledrive
         pass

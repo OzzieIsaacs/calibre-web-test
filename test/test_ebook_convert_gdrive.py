@@ -25,7 +25,7 @@ from helper_gdrive import prepare_gdrive, connect_gdrive
 class TestEbookConvertCalibreGDrive(unittest.TestCase, ui_class):
     p=None
     driver = None
-    dependency = ["oauth2client", "PyDrive", "PyYAML", "google-api-python-client", "httplib2", "lxml"]
+    dependency = ["oauth2client", "PyDrive2", "PyYAML", "google-api-python-client", "httplib2", "lxml"]
     email_server = None
 
     @classmethod
@@ -121,7 +121,7 @@ class TestEbookConvertCalibreGDrive(unittest.TestCase, ui_class):
             except PermissionError:
                 print('client_secrets.json delete failed')
 
-        save_logfiles(cls.__name__)
+        save_logfiles(cls, cls.__name__)
 
     def tearDown(self):
         if not self.check_user_logged_in('admin'):

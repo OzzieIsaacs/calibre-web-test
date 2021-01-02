@@ -19,7 +19,7 @@ from helper_func import save_logfiles
 class TestSetupGdrive(unittest.TestCase, ui_class):
     p=None
     driver = None
-    dependency = ["oauth2client", "PyDrive", "PyYAML", "google-api-python-client", "httplib2"]
+    dependency = ["oauth2client", "PyDrive2", "PyYAML", "google-api-python-client", "httplib2"]
 
     @classmethod
     def setUpClass(cls):
@@ -84,7 +84,7 @@ class TestSetupGdrive(unittest.TestCase, ui_class):
                 os.unlink(src)
             except PermissionError:
                 print('File delete failed')
-        save_logfiles(cls.__name__)
+        save_logfiles(cls, cls.__name__)
 
 
     def test_config_gdrive(self):
@@ -156,22 +156,8 @@ class TestSetupGdrive(unittest.TestCase, ui_class):
         time.sleep(1)
         self.assertTrue(auth_button)
         auth_button.click()
-        g_login = self.check_element_on_page((By.ID, "identifierId"))        
+        g_login = self.check_element_on_page((By.ID, "identifierId"))
         self.assertTrue(g_login)
-
-
-
-
-
-
-
-
-
-
-
-
-
-
 
     def edit_author(self):
         self.assertIsNone('Not Implemented')

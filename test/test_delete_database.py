@@ -29,7 +29,7 @@ class TestDeleteDatabase(TestCase, ui_class):
         # close the browser window and stop calibre-web
         cls.driver.quit()
         cls.p.terminate()
-        save_logfiles(cls.__name__)
+        save_logfiles(cls, cls.__name__)
 
     def test_delete_books_in_database(self):
         self.delete_book(1)

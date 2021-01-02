@@ -115,7 +115,7 @@ def debug_startup(inst, __, ___, login=True, host="http://127.0.0.1:8083", env=N
 
 
 def startup(inst, pyVersion, config, login=True, host="http://127.0.0.1:8083",
-            env=None, only_startup=False, only_metadata=False):
+            env=None, parameter=None, work_path=None, only_startup=False, only_metadata=False):
     print("\n%s - %s: " % (inst.py_version, inst.__name__))
     try:
         os.remove(os.path.join(CALIBRE_WEB_PATH, 'app.db'))
@@ -145,7 +145,7 @@ def startup(inst, pyVersion, config, login=True, host="http://127.0.0.1:8083",
     shutil.rmtree(TEST_DB, ignore_errors=True)
     if not only_metadata:
         try:
-            shutil.copytree('./Calibre_db', TEST_DB)
+            shutil.copytree(os.path.join(base_path, 'Calibre_db'), TEST_DB)
         except FileExistsError:
             print('Test DB already present, might not be a clean version')
     else:
@@ -154,14 +154,14 @@ def startup(inst, pyVersion, config, login=True, host="http://127.0.0.1:8083",
             shutil.copy('./Calibre_db/metadata.db', os.path.join(TEST_DB, 'metadata.db'))
         except FileExistsError:
             print('Metadata.db already present, might not be a clean version')
-    inst.p = process_open([pyVersion, os.path.join(CALIBRE_WEB_PATH, u'cps.py')], [1], sout=None, env=env)
+    inst.p = process_open([pyVersion, os.path.join(CALIBRE_WEB_PATH, u'cps.py'), parameter], [1], sout=None, env=env, cwd=work_path)
     # create a new Firefox session
     inst.driver = webdriver.Firefox()
     # inst.driver = webdriver.Chrome()
     time.sleep(BOOT_TIME)
     if inst.p.poll():
         kill_old_cps()
-        inst.p = process_open([pyVersion, os.path.join(CALIBRE_WEB_PATH, u'cps.py')], [1], sout=None, env=env)
+        inst.p = process_open([pyVersion, os.path.join(CALIBRE_WEB_PATH, u'cps.py'), parameter], [1], sout=None, env=env, cwd=work_path)
         print('Calibre-Web restarted...')
         time.sleep(BOOT_TIME)
 
@@ -332,7 +332,8 @@ def unrar_path():
 def is_unrar_not_present():
     return unrar_path() is None
 
-def save_logfiles(module_name):
+def save_logfiles(inst, module_name):
+    result = ""
     if not os.path.isdir(os.path.join(base_path, 'outcome')):
         os.makedirs(os.path.join(base_path, 'outcome'))
     datestamp = datetime.datetime.now().strftime('%Y%m%d%H%M%S')
@@ -344,7 +345,11 @@ def save_logfiles(module_name):
         src = os.path.join(CALIBRE_WEB_PATH, file)
         dest = os.path.join(outdir, file)
         if os.path.exists(src):
-            shutil.copy(src,dest)
+            with open(src) as fc:
+                if "Traceback" in fc.read():
+                    result = file
+            shutil.move(src,dest)
+    inst.assertTrue(result == "", "Exception in File {}".format(result))
 
 def finishing_notifier():
     try:

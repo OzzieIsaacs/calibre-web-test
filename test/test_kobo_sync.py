@@ -52,7 +52,7 @@ class TestKoboSync(unittest.TestCase, ui_class):
         cls.p.terminate()
         # close the browser window and stop calibre-web
         remove_dependency(cls.json_line)
-        save_logfiles(cls.__name__)
+        save_logfiles(cls, cls.__name__)
 
     def inital_sync(self):
         if TestKoboSync.syncToken:
@@ -323,9 +323,7 @@ class TestKoboSync(unittest.TestCase, ui_class):
         data = self.sync_kobo()
         self.assertEqual(0, len(data))
         # delete private shelf
-        self.list_shelfs(u'adminShelf')['ele'].click()
-        self.check_element_on_page((By.ID, "delete_shelf")).click()
-        self.check_element_on_page((By.ID, "confirm")).click()
+        self.delete_shelf("adminShelf")
         data = self.sync_kobo()
         self.assertEqual(1, len(data))
         self.assertTrue('Id' in data[0]['DeletedTag']['Tag'])
@@ -440,10 +438,7 @@ class TestKoboSync(unittest.TestCase, ui_class):
         self.edit_user('user0', {'delete': 1})
         shelfs = self.list_shelfs()
         for shelf in shelfs:
-            self.list_shelfs(shelf['name'])['ele'].click()
-            self.check_element_on_page((By.ID, "delete_shelf")).click()
-            self.check_element_on_page((By.ID, "confirm")).click()
-
+            self.delete_shelf(shelf['name'])
         # final sync
         time.sleep(2)
         self.sync_kobo()
@@ -510,9 +505,7 @@ class TestKoboSync(unittest.TestCase, ui_class):
 
         shelfs = self.list_shelfs()
         for shelf in shelfs:
-            self.list_shelfs(shelf['name'])['ele'].click()
-            self.check_element_on_page((By.ID, "delete_shelf")).click()
-            self.check_element_on_page((By.ID, "confirm")).click()
+            self.delete_shelf(shelf['name'])
         time.sleep(2)
         # final sync
         self.sync_kobo()
@@ -578,9 +571,7 @@ class TestKoboSync(unittest.TestCase, ui_class):
 
         shelfs = self.list_shelfs()
         for shelf in shelfs:
-            self.list_shelfs(shelf['name'])['ele'].click()
-            self.check_element_on_page((By.ID, "delete_shelf")).click()
-            self.check_element_on_page((By.ID, "confirm")).click()
+            self.delete_shelf(shelf['name'])
 
         # final sync
         time.sleep(2)
@@ -603,6 +594,3 @@ class TestKoboSync(unittest.TestCase, ui_class):
         self.assertEqual(200, download.status_code)
         self.assertEqual('application/epub+zip', download.headers['Content-Type'])
         downloadSession.close()
-
-
-

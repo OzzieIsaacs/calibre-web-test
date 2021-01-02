@@ -27,25 +27,6 @@ if __name__ == '__main__':
     if power:
         print('!!!! PC will shutdown after tests finished !!!!')
 
-    #while True:
-    #    try:
-    #        r = requests.get('http://localhost:4444/wd/hub/status').json()
-    #        result=True
-    #    except:
-    #        my_env = os.environ.copy()
-    #        my_env["PATH"] = SELENIUM_SERVER + ":" + my_env["PATH"]
-    #        print ('Selenium server not running, trying to start')
-    #        p = process_open(["java", "-jar", SELENIUM_SERVER], [2], my_env)
-    #        time.sleep(6)
-    #        result= False
-    #        retry +=1
-    #        if retry >3:
-    # #           print ("Couldn't start Selenium server")
-    #            exit()
-    #    if result:
-    #        print("Selenium server successfully started")
-    #        break
-
     # check pip ist installed
     found = False
     python_exe = ""
@@ -77,15 +58,14 @@ if __name__ == '__main__':
         exit()
 
     # generate virtual environment
-    if os.name != 'nt':
-
-        try:
-            venv.create(VENV_PATH, clear=True, with_pip=True)
-        except CalledProcessError:
-            venv.create(VENV_PATH, system_site_packages =True, with_pip=False)
-    else:
-        p = process_open([python, "-m", "venv", "--upgrade", VENV_PATH])
-        p.wait()
+    try:
+        venv.create(VENV_PATH, clear=True, with_pip=True)
+    except CalledProcessError:
+        print("Error Creating virtual environment")
+        venv.create(VENV_PATH, system_site_packages =True, with_pip=False)
+    # else:
+    #    p = process_open([python, "-m", "venv", "--upgrade", VENV_PATH])
+    #    p.wait()
     print("Creating virtual environment for testing")
 
 

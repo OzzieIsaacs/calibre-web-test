@@ -8,6 +8,7 @@ from selenium.common.exceptions import TimeoutException
 from config_test import PY_BIN, BOOT_TIME
 import time
 import lxml.etree
+from PIL import Image
 try:
     from StringIO import StringIO
 except ImportError:
@@ -189,7 +190,7 @@ class ui_class():
         cls.driver.find_element_by_id("top_user").click()
         WebDriverWait(cls.driver, 5).until(EC.presence_of_element_located((By.ID, "password")))
         cls.driver.find_element_by_id("password").send_keys(new_passwd)
-        cls.driver.find_element_by_id("submit").click()
+        cls.driver.find_element_by_id("user_submit").click()
         return cls.check_element_on_page((By.ID, "flash_success"))
 
     @classmethod
@@ -403,8 +404,8 @@ class ui_class():
                 go = va.getchildren()[0].getchildren()[0]
                 id = go.attrib['data-pk']
                 delButton = self.driver.find_element_by_css_selector("a[data-pk='"+id+"']")
-                editButton = self.driver.find_element_by_css_selector("a[data-domain-id='"+id+"']")
-                val.append({'domain':go.text, 'delete': delButton, 'edit':editButton, 'id':id})
+                editButton = self.driver.find_element_by_css_selector("a[data-value='"+id+"']")
+                val.append({'domain':go.text, 'delete': delButton, 'edit':editButton, 'id': id})
             except IndexError:
                 pass
         return val
@@ -438,14 +439,14 @@ class ui_class():
             table_id = 'domain-deny-table'
         if not self.check_element_on_page((By.ID, table_id)):
             return False
-        deleteButton = self.check_element_on_page((By.CSS_SELECTOR, "a[data-domain-id='" + id + "']"))
+        deleteButton = self.check_element_on_page((By.CSS_SELECTOR, "a[data-value='" + id + "']"))
         if not deleteButton:
             return False
         deleteButton.click()
         if accept:
-            submit = self.check_element_on_page((By.ID, "btndeletedomain"))
+            submit = self.check_element_on_page((By.ID, "btnConfirmYes"))
         else:
-            submit = self.check_element_on_page((By.ID, "btncancel"))
+            submit = self.check_element_on_page((By.ID, "btnConfirmNo"))
         submit.click()
         time.sleep(2)
 
@@ -779,7 +780,7 @@ class ui_class():
             select.select_by_visible_text(process_selects[key])
 
         # finally submit settings
-        cls.driver.find_element_by_id("submit").click()
+        cls.driver.find_element_by_id("user_submit").click()
 
 
     def create_shelf(self, name, public=False):
@@ -835,11 +836,19 @@ class ui_class():
                     public_shelf.click()
                 else:
                     return False
-            submit = self.check_element_on_page((By.ID, 'submit'))
+            submit = self.check_element_on_page((By.ID, 'user_submit'))
             if submit:
                 submit.click()
                 return True
         return False
+
+    def delete_shelf(self, name=None):
+        if name:
+            self.list_shelfs(name)['ele'].click()
+        self.check_element_on_page((By.ID, "delete_shelf")).click()
+        self.check_element_on_page((By.ID, "btnConfirmYes")).click()
+        time.sleep(1)
+        return
 
 
     @classmethod
@@ -868,6 +877,15 @@ class ui_class():
         process_selects = dict()
         process_checkboxes = dict()
         process_text = dict()
+        if 'delete' in config:
+            if config['delete'] == 1:
+                time.sleep(1)
+                cls.driver.find_element_by_id('btndeluser').click()
+                time.sleep(1)
+                cls.driver.find_element_by_id('btnConfirmYes').click()
+                time.sleep(2)
+                return
+
         # check if checkboxes are in list and seperate lists
         if 'resend_password' in config:
             ele = cls.driver.find_element_by_id('resend_password')
@@ -907,7 +925,7 @@ class ui_class():
             ele.send_keys(config[key])
 
         # finally submit settings
-        cls.driver.find_element_by_id("submit").click()
+        cls.driver.find_element_by_id("user_submit").click()
 
 
     @classmethod
@@ -1026,7 +1044,7 @@ class ui_class():
             meta=ele[1].getchildren()
             book_r = dict()
             book_r['link'] = ele[0].getchildren()[0].attrib['href']
-            book_r['ele'] = cls.check_element_on_page((By.XPATH,"//a[@href='"+book_r['link']+"']/img"))
+            book_r['ele'] = cls.check_element_on_page((By.XPATH,"//a[@href='"+book_r['link']+"']//img"))
             book_r['id'] = book_r['link'][6:]
             book_r['title']= meta[0].getchildren()[0].text
             authors = meta[1].getchildren()
@@ -1054,7 +1072,7 @@ class ui_class():
             bk = dict()
             bk['link'] = ele[0].getchildren()[0].attrib['href']
             bk['id'] = bk['link'][6:]
-            bk['ele'] = cls.check_element_on_page((By.XPATH,"//a[@href='"+bk['link']+"']/img"))
+            bk['ele'] = cls.check_element_on_page((By.XPATH,"//a[@href='"+bk['link']+"']//img"))
             bk['title']= meta[0].getchildren()[0].text
             authors = meta[1].getchildren()
             bk['author'] = [a.text for a in authors if a.text != '&' and a.attrib.get('class') != 'author-name author-hidden']
@@ -1081,6 +1099,11 @@ class ui_class():
 
     @classmethod
     def get_series_books_displayed(cls):
+        # expects grid view
+        #grid = cls.check_element_on_page((By.ID, "list-button"))
+        #if grid:
+        #    grid.click()
+        #    cls.check_element_on_page((By.ID, "grid-button"))
         parser = lxml.etree.HTMLParser()
         html = cls.driver.page_source
 
@@ -1092,9 +1115,9 @@ class ui_class():
             # ele[0] -> cover
             meta=ele[1].getchildren()
             bk = dict()
-            bk['link'] = ele[0].getchildren()[0].attrib['href']
+            bk['link'] = ele[1].getchildren()[0].attrib['href']
             bk['id'] = bk['link'].split('/')[-1]
-            bk['ele'] = cls.check_element_on_page((By.XPATH,"//a[@href='"+bk['link']+"']/img"))
+            bk['ele'] = cls.check_element_on_page((By.XPATH,"//a[@href='"+bk['link']+"']//img"))
             bk['title']= meta[0].getchildren()[0].text
             books.append(bk)
 
@@ -1144,7 +1167,7 @@ class ui_class():
             bk = dict()
             bk['link'] = ele[0].getchildren()[0].attrib['href']
             bk['id'] = bk['link'][6:]
-            bk['ele'] = self.check_element_on_page((By.XPATH,"//a[@href='"+bk['link']+"']/img"))
+            bk['ele'] = self.check_element_on_page((By.XPATH,"//a[@href='"+bk['link']+"']//img"))
             bk['title']= meta[0].getchildren()[0].text
             authors = meta[1].getchildren()
             bk['author'] = [a.text for a in authors if a.text != '&' and a.attrib.get('class') != 'author-name author-hidden']
@@ -1417,6 +1440,19 @@ class ui_class():
         submit.click()
         return
 
+    def save_cover_screenshot(self, filename):
+        element = self.driver.find_element_by_tag_name('img')
+        location = element.location
+        size = element.size
+        self.driver.save_screenshot("page.png")
+        x = location['x']
+        y = location['y']
+        width = location['x'] + size['width']
+        height = location['y'] + size['height']
+        im = Image.open('page.png')
+        im = im.crop((int(x), int(y), int(width), int(height)))
+        im.save(filename)
+
     def add_identifier(self, key, value):
         add_button = self.check_element_on_page((By.ID, "add-identifier-line"))
         if not add_button:
@@ -1565,14 +1601,15 @@ class ui_class():
     def adv_search(self, term_dict, get=False):
         if self.goto_page('adv_search'):
             if get:
-                inc_tags = self.driver.find_elements_by_xpath("//label[starts-with(@id, 'tag_')]")
-                exc_tags = self.driver.find_elements_by_xpath("//label[starts-with(@id, 'exclude_tag')]")
-                inc_series = self.driver.find_elements_by_xpath("//label[starts-with(@id, 'serie_')]")
-                exc_series = self.driver.find_elements_by_xpath("//label[starts-with(@id, 'exclude_serie')]")
-                inc_languages = self.driver.find_elements_by_xpath("//label[starts-with(@id, 'language_')]")
-                exc_languages = self.driver.find_elements_by_xpath("//label[starts-with(@id, 'exclude_language')]")
-                inc_extensions = self.driver.find_elements_by_xpath("//label[starts-with(@id, 'extension_')]")
-                exc_extensions = self.driver.find_elements_by_xpath("//label[starts-with(@id, 'exclude_extension')]")
+                inc_tags = self.driver.find_elements_by_xpath("//select[@id='include_tag']/option")
+                # before: self.driver.find_elements_by_xpath("//label[starts-with(@id, 'tag_')]")
+                exc_tags = self.driver.find_elements_by_xpath("//select[@id='exclude_tag']/option")
+                inc_series = self.driver.find_elements_by_xpath("//select[@id='include_serie']/option")
+                exc_series = self.driver.find_elements_by_xpath("//select[@id='exclude_serie']/option")
+                inc_languages = self.driver.find_elements_by_xpath("//select[@id='include_language']/option")
+                exc_languages = self.driver.find_elements_by_xpath("//select[@id='exclude_language']/option")
+                inc_extensions = self.driver.find_elements_by_xpath("//select[@id='include_extension']/option")
+                exc_extensions = self.driver.find_elements_by_xpath("//select[@id='exclude_extension']/option")
 
                 cust_columns = self.driver.find_elements_by_xpath("//label[starts-with(@for, 'custom_')]")
                 ret = dict()

@@ -32,7 +32,7 @@ class TestCalibreWebVisibilitys(unittest.TestCase, ui_class):
         # close the browser window and stop calibre-web
         cls.driver.quit()
         cls.p.terminate()
-        save_logfiles(cls.__name__)
+        save_logfiles(cls, cls.__name__)
 
     def test_checked_logged_in(self):
         # get the search textbox
@@ -99,7 +99,7 @@ class TestCalibreWebVisibilitys(unittest.TestCase, ui_class):
         self.driver.find_element_by_id("top_user").click()
         self.check_element_on_page((By.ID, "email"))
         # WebDriverWait(self.driver, 5).until(EC.presence_of_element_located((By.ID, "email")))
-        submit = self.driver.find_element_by_id("submit")
+        submit = self.driver.find_element_by_id("user_submit")
         self.driver.find_element_by_id("email").clear()
         self.driver.find_element_by_id("email").send_keys("alfa@web.de")
         submit.click()
@@ -575,10 +575,7 @@ class TestCalibreWebVisibilitys(unittest.TestCase, ui_class):
         close = self.check_element_on_page((By.ID, "restrict_close"))
         close.click()
         time.sleep(2)
-        shelfs = self.list_shelfs()
-        shelfs[0]['ele'].click()
-        self.check_element_on_page((By.ID, "delete_shelf")).click()
-        self.check_element_on_page((By.ID, "confirm")).click()
+        self.delete_shelf("restrict")
 
     def test_allow_tags(self):
         self.create_shelf('allow', False)
@@ -656,11 +653,8 @@ class TestCalibreWebVisibilitys(unittest.TestCase, ui_class):
         close = self.check_element_on_page((By.ID, "restrict_close"))
         close.click()
         time.sleep(2)
-        shelfs = self.list_shelfs()
-        shelfs[0]['ele'].click()
-        self.check_element_on_page((By.ID, "delete_shelf")).click()
-        time.sleep(1)
-        self.check_element_on_page((By.ID, "confirm")).click()
+        self.delete_shelf(u'allow')
+
 
     def test_restrict_columns(self):
         self.edit_book(10, custom_content={"Custom Text 人物 *'()&": 'test'})
@@ -908,9 +902,7 @@ class TestCalibreWebVisibilitys(unittest.TestCase, ui_class):
         self.assertEqual(result[0]['author'][2], '(...)')
 
         # delete Shelf
-        self.list_shelfs(u'Author')['ele'].click()
-        self.check_element_on_page((By.ID, "delete_shelf")).click()
-        self.check_element_on_page((By.ID, "confirm")).click()
+        self.delete_shelf(u'Author')
         self.fill_view_config({'config_authors_max': "0"})
         result = self.search('Yang')
         self.assertEqual(len(result[0]['author']), 4)

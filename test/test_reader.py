@@ -43,7 +43,7 @@ class TestReader(unittest.TestCase, ui_class):
         cls.p.terminate()
         # close the browser window and stop calibre-web
         # remove_dependency(cls.dependency)
-        save_logfiles(cls.__name__)
+        save_logfiles(cls, cls.__name__)
 
 
     def test_txt_reader(self):
@@ -174,10 +174,11 @@ class TestReader(unittest.TestCase, ui_class):
         time.sleep(2)
         title_item = self.check_element_on_page((By.XPATH, "//ul[@class='sm2-playlist-bd']/li"))
         self.assertTrue(title_item)
-        if title_item.text.startswith("✖ ✖") and os.name != 'nt':
+        if title_item.text.startswith("✖ ✖") and os.name == 'nt':
             self.assertEqual(title, title_item.text,
                              "May fail due to inactive sound output on Windows Remotedesktop connection")
-        self.assertEqual(title, title_item.text)
+        else:
+            self.assertEqual(title, title_item.text)
         duration_item = self.check_element_on_page((By.CLASS_NAME, "sm2-inline-duration"))
         self.assertTrue(duration_item)
         self.assertEqual(duration, duration_item.text)

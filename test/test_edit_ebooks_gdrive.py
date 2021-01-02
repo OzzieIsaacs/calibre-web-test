@@ -25,7 +25,7 @@ from helper_gdrive import prepare_gdrive, connect_gdrive, check_path_gdrive
 class TestEditBooksOnGdrive(unittest.TestCase, ui_class):
     p=None
     driver = None
-    dependency = ["oauth2client", "PyDrive", "PyYAML", "google-api-python-client", "httplib2", "lxml"]
+    dependency = ["oauth2client", "PyDrive2", "PyYAML", "google-api-python-client", "httplib2", "lxml"]
 
     @classmethod
     def setUpClass(cls):
@@ -102,7 +102,7 @@ class TestEditBooksOnGdrive(unittest.TestCase, ui_class):
             except PermissionError:
                 print('client_secrets.json delete failed')
 
-        save_logfiles(cls.__name__)
+        save_logfiles(cls, cls.__name__)
 
     def save_cover_screenshot(self, filename):
         element = self.driver.find_element_by_tag_name('img')
@@ -702,6 +702,7 @@ class TestEditBooksOnGdrive(unittest.TestCase, ui_class):
         self.edit_book(content={'local_cover': jpegcover})
         time.sleep(5)
         self.get_book_details(5)
+        time.sleep(5)
         self.save_cover_screenshot('jpeg.png')
         self.assertGreater(diff('original.png', 'jpeg.png', delete_diff_file=True), 0.02)
         os.unlink('original.png')
@@ -709,18 +710,19 @@ class TestEditBooksOnGdrive(unittest.TestCase, ui_class):
         self.check_element_on_page((By.ID, "edit_book")).click()
         bmpcover = os.path.join(base_path, 'files', 'cover.bmp')
         self.edit_book(content={'local_cover': bmpcover})
-        self.assertTrue(self.check_element_on_page((By.CLASS_NAME, "alert")))
+        self.assertFalse(self.check_element_on_page((By.CLASS_NAME, "alert")))
         time.sleep(5)
         self.save_cover_screenshot('bmp.png')
-        self.assertAlmostEqual(diff('bmp.png', 'jpeg.png', delete_diff_file=True), 0.0, delta=0.0001)
+        self.assertGreater(diff('bmp.png', 'jpeg.png', delete_diff_file=True), 0.006)
         os.unlink('jpeg.png')
-
         self.get_book_details(5)
+        time.sleep(5)
         self.check_element_on_page((By.ID, "edit_book")).click()
         pngcover = os.path.join(base_path, 'files', 'cover.png')
         self.edit_book(content={'local_cover': pngcover})
         time.sleep(5)
         self.get_book_details(5)
+        time.sleep(5)
         self.save_cover_screenshot('png.png')
         self.assertGreater(diff('bmp.png', 'png.png', delete_diff_file=True), 0.005)
         os.unlink('bmp.png')
@@ -730,6 +732,7 @@ class TestEditBooksOnGdrive(unittest.TestCase, ui_class):
         self.edit_book(content={'local_cover': pngcover})
         time.sleep(5)
         self.get_book_details(5)
+        time.sleep(5)
         self.save_cover_screenshot('webp.png')
         self.assertGreater(diff('webp.png', 'png.png', delete_diff_file=True), 0.005)
         os.unlink('webp.png')

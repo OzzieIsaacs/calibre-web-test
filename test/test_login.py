@@ -6,12 +6,13 @@ from selenium.webdriver.common.by import By
 from selenium.common.exceptions import WebDriverException
 import re
 from helper_ui import ui_class
-from config_test import TEST_DB, CALIBRE_WEB_PATH
+from config_test import TEST_DB, CALIBRE_WEB_PATH, BOOT_TIME
 from helper_func import startup, check_response_language_header, curl_available, digest_login
 import requests
 import os
 import time
 from helper_func import save_logfiles
+
 
 
 class TestLogin(unittest.TestCase, ui_class):
@@ -38,7 +39,7 @@ class TestLogin(unittest.TestCase, ui_class):
             os.unlink(os.path.join(CALIBRE_WEB_PATH, 'cps', 'static', 'robots.txt'))
         except:
             pass
-        save_logfiles(cls.__name__)
+        save_logfiles(cls, cls.__name__)
 
     def tearDown(self):
         if self.check_user_logged_in('', True):
@@ -176,6 +177,10 @@ class TestLogin(unittest.TestCase, ui_class):
         self.assertEqual(self.fail_access_page("http://127.0.0.1:8083/admin"), 1)
         self.assertEqual(self.fail_access_page("http://127.0.0.1:8083/"), 1)
         self.assertEqual(self.fail_access_page("http://127.0.0.1:8083/import_ldap_users"), 1)
+        self.assertEqual(self.fail_access_page("http://127.0.0.1:8083/admin/logdownload/1"), 1)
+        self.assertEqual(self.fail_access_page("http://127.0.0.1:8083/admin/debug"), 1)
+        self.assertEqual(self.fail_access_page("http://127.0.0.1:8083/ajax/log/0"), 1)
+        self.assertEqual(self.fail_access_page("http://127.0.0.1:8083/admin/resetpassword/0"), 1)
 
     # login with admin
     # create new user, leave password empty
@@ -387,3 +392,53 @@ class TestLogin(unittest.TestCase, ui_class):
         self.assertTrue(self.check_element_on_page((By.ID, "flash_success")))
         self.assertTrue(self.check_element_on_page((By.ID, "kindle_mail")))
         self.logout()
+
+    def test_magic_remote_login(self):
+        self.login('admin', 'admin123')
+        self.assertTrue(self.check_element_on_page((By.ID, "flash_success")))
+        self.fill_basic_config({"config_remote_login":1})
+        time.sleep(BOOT_TIME)
+        self.logout()
+        remote = self.check_element_on_page((By.ID, "remote_login"))
+        self.assertTrue(remote)
+        remote.click()
+        verify_element = self.check_element_on_page((By.ID, "verify_url"))
+        self.assertTrue(verify_element)
+        verifiy_url = "/" + verify_element.text.lstrip('http://127.0.0.1:8083')
+        r = requests.session()
+        payload = {'username': 'admin',
+                   'password': 'admin123',
+                   'submit': "",
+                   'next': verifiy_url,
+                   "remember_me": "on"
+                   }
+        resp = r.post('http://127.0.0.1:8083/login', data=payload)
+        self.assertEqual(resp.status_code, 200)
+        r.close()
+        time.sleep(5)
+        self.assertTrue(self.check_element_on_page((By.ID, "flash_success")))
+        # reuse token without problem
+        r = requests.session()
+        payload = {'username': 'admin',
+                   'password': 'admin123',
+                   'submit': "",
+                   'next': verifiy_url,
+                   "remember_me": "on"
+                   }
+        resp = r.post('http://127.0.0.1:8083/login', data=payload)
+        self.assertEqual(resp.status_code, 200)
+        r.close()
+        self.fill_basic_config({"config_remote_login": 0})
+        time.sleep(BOOT_TIME)
+        self.logout()
+        r = requests.session()
+        payload = {'username': 'admin',
+                   'password': 'admin123',
+                   'submit': "",
+                   'next': verifiy_url,
+                   "remember_me": "on"
+                   }
+        resp = r.post('http://127.0.0.1:8083/login', data=payload)
+        # Remote token not fond so redirect after login puts us to 403 page
+        self.assertEqual(resp.status_code, 403)
+        r.close()

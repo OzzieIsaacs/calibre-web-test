@@ -32,7 +32,7 @@ class TestOPDSFeed(unittest.TestCase, ui_class):
         # close the browser window and stop calibre-web
         cls.driver.quit()
         cls.p.terminate()
-        save_logfiles(cls.__name__)
+        save_logfiles(cls, cls.__name__)
 
     def tearDown(self):
         if self.check_user_logged_in('admin'):
@@ -589,8 +589,6 @@ class TestOPDSFeed(unittest.TestCase, ui_class):
         self.assertEqual(200, r.status_code)
         entries = self.get_opds_feed(r.text)
         self.assertEqual(entries['elements'][0]['title'], 'book11')
-        self.list_shelfs(u'Pü 执')['ele'].click()
-        self.check_element_on_page((By.ID, "delete_shelf")).click()
-        self.check_element_on_page((By.ID, "confirm")).click()
+        self.delete_shelf(u'Pü 执')
         self.logout()
         time.sleep(2)

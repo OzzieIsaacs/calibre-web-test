@@ -2,8 +2,9 @@
 
 ## Prerequisites
 
-- Installed python3 accessible with the command "python3"
-- installed calibre desktop program v3.48
+- Installed python3 accessible with the command "python3" (tests currently done using python3.8.x Windows10 and LinuxMint20)
+- installed calibre desktop program (optional)
+- installed kepubify program (optional)
 - for installing ldap requirements libsasl2-dev and libldap2-dev have to be installed (debian distro lib-names)
 - Calibre-web-test has to be located on the same folder level as calibre-web
 e.g.
@@ -20,9 +21,6 @@ Calibre-web-test
   test
 ```
 
-- selenium [https://selenium-release.storage.googleapis.com/3.141/selenium-server-standalone-3.141.59.jar](https://selenium-release.storage.googleapis.com/3.141/selenium-server-standalone-3.141.59.jar) has to be located in subfolder selenium (configurable)
-- java has to be installed and in path
-
 - I'm doing my tests with Firefox, so geckodriver has to be installed and in path [https://github.com/mozilla/geckodriver/releases](https://github.com/mozilla/geckodriver/releases) and also Firefox itself
 
 - All dependencies listed in requirements.txt have to be installed
@@ -31,29 +29,30 @@ Calibre-web-test
 
 - tests are only running with tornado as wsgi server
 
-- install Calibre as conversion tool (if running from within pycharm debugger version 3.48 at most, as Calibre 4.x crash during conversion in this configuration)
+- install Calibre as conversion tool (if running from within pycharm debugger no 4.xx version, 3.xx and 5.xx are fine to use, as Calibre 4.x crash during conversion in this configuration)
 
 - Copy files from ./test/config_files to /test, configure folder names in file ./test/config_test.py
 
-- optional: for testing of goodreads you need a goodreads account with the corresponding api-key, the credentials have to be added in config_goodreads.py
+- optional: For testing of goodreads you need a goodreads account with the corresponding api-key, the credentials have to be added in config_goodreads.py
 
-- After finishing all tests an email can be send out, the password for the e-mail account and the location of the result file (accessible via ssh) can be stored using keyring (https://pypi.org/project/keyring/), configuration options are stored in config_email
+- optional: Testing GDrive requires a fully setup gdrive setup, please place the corresponding client_secrets.json and gdrive_credentials in calibre-web/test/files folder
+
+- After finishing all tests an email can be send out, the password for the e-mail account and the location of the result file (accessible via ssh on a server) can be stored using keyring (https://pypi.org/project/keyring/), configuration options are stored in config_email
 
 - Installing on Windows requires pycurl which can be installed using wheel in a virtual environment (download from here: https://www.lfd.uci.edu/~gohlke/pythonlibs/)
 
 - Testing LDAP on windows requires the installation of python-ldap in the tested environment, therefore you need the corresponding wheel and you have to point to the file in config_test.py (variable LDAP_WHL)   
 
-- Testing GDrive requires a fully setup gdrive setup, please place the corresponding client_secrets.json and gdrive_credentials in calibre-web/test/files folder
+- SSL Files for testing will be automatically generated. A Tutorial for generating ssl files can be found here [https://www.golinuxcloud.com/create-certificate-authority-root-ca-linux](https://www.golinuxcloud.com/create-certificate-authority-root-ca-linux) and here [https://www.golinuxcloud.com/openssl-create-client-server-certificate](https://www.golinuxcloud.com/openssl-create-client-server-certificate)
 
-- Tutorial for generating ssl files can be found here [https://www.golinuxcloud.com/create-certificate-authority-root-ca-linux](https://www.golinuxcloud.com/create-certificate-authority-root-ca-linux) and here [https://www.golinuxcloud.com/openssl-create-client-server-certificate](https://www.golinuxcloud.com/openssl-create-client-server-certificate)
 ## Start Testing
 
 Tests are running with python 3.6+ (better 3.7 as with 3.6 testing the e-mail startssl/ssl functionality will be skipped) by starting ./test/main.py (tests run for ca. 45min), tested on Linux Mint 19.3. \
 Calibre-web's app.db and logfiles will be overwritten.\
-The testresult is written to the file "calibre-web/test/Calibre-Web TestSummary.html"
+The testresult is written to the file "calibre-web/test/Calibre-Web TestSummary_xxx.html" (xxx for windows or Linux, MacOS is untested)
 
 Hints for using pyCharm: 
-It's recommended to have gevent compatible debugging set to **no** and also **do not attach to subprocess** (created trouble in combination with email sending)
+It's recommended to have gevent compatible debugging set to **no** and also **do not attach to subprocess** (created trouble in combination with email sending). Due to a bug in pycharm the patch from here https://youtrack.jetbrains.com/issue/PY-43411?IssueComments has to be applied for testing on windows (and maybe also for MacOS)
 
 ### Compiling Language files
 

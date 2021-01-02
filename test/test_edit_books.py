@@ -6,14 +6,12 @@ from unittest import TestCase, skip
 import os
 import time
 import requests
-from PIL import Image
 from diffimg import diff
 
 from selenium.webdriver.common.by import By
 from selenium.webdriver.common.keys import Keys
 from helper_ui import ui_class
 from config_test import TEST_DB, base_path, BOOT_TIME
-# from parameterized import parameterized_class
 from helper_func import startup, debug_startup, add_dependency, remove_dependency
 from helper_func import save_logfiles
 
@@ -42,20 +40,7 @@ class TestEditBooks(TestCase, ui_class):
         # close the browser window and stop calibre-web
         cls.driver.quit()
         cls.p.terminate()
-        save_logfiles(cls.__name__)
-
-    def save_cover_screenshot(self, filename):
-        element = self.driver.find_element_by_tag_name('img')
-        location = element.location
-        size = element.size
-        self.driver.save_screenshot("page.png")
-        x = location['x']
-        y = location['y']
-        width = location['x'] + size['width']
-        height = location['y'] + size['height']
-        im = Image.open('page.png')
-        im = im.crop((int(x), int(y), int(width), int(height)))
-        im.save(filename)
+        save_logfiles(cls, cls.__name__)
 
     # goto Book 1
     # Change Title with unicode chars
@@ -469,6 +454,13 @@ class TestEditBooks(TestCase, ui_class):
         self.assertEqual(len(self.adv_search({u'custom_column_1': u'3'})), 1)
         self.get_book_details(5)
         self.check_element_on_page((By.ID, "edit_book")).click()
+        self.edit_book(custom_content={u'Custom Rating 人物':'3.5'})
+        vals = self.get_book_details(5)
+        self.assertEqual('3.5', vals['cust_columns'][0]['value'])
+        self.assertEqual(len(self.adv_search({u'custom_column_1': u'3'})), 0)
+        self.assertEqual(len(self.adv_search({u'custom_column_1': u'3.5'})), 1)
+        self.get_book_details(5)
+        self.check_element_on_page((By.ID, "edit_book")).click()
         self.edit_book(custom_content={u'Custom Rating 人物': ''})
         vals = self.get_book_details(5)
         self.assertEqual(0, len(vals['cust_columns']))
@@ -709,7 +701,7 @@ class TestEditBooks(TestCase, ui_class):
         self.check_element_on_page((By.ID, "edit_book")).click()
         jpegcover = os.path.join(base_path, 'files', 'cover.jpg')
         self.edit_book(content={'local_cover': jpegcover})
-        time.sleep(2)
+        time.sleep(5)
         self.get_book_details(5)
         self.save_cover_screenshot('jpeg.png')
         self.assertGreater(diff('original.png', 'jpeg.png', delete_diff_file=True), 0.02)
@@ -718,17 +710,17 @@ class TestEditBooks(TestCase, ui_class):
         self.check_element_on_page((By.ID, "edit_book")).click()
         bmpcover = os.path.join(base_path, 'files', 'cover.bmp')
         self.edit_book(content={'local_cover': bmpcover})
-        self.assertTrue(self.check_element_on_page((By.CLASS_NAME, "alert")))
-        time.sleep(2)
+        self.assertFalse(self.check_element_on_page((By.CLASS_NAME, "alert")))
+        time.sleep(5)
         self.get_book_details(5)
         self.save_cover_screenshot('bmp.png')
-        self.assertAlmostEqual(diff('bmp.png', 'jpeg.png', delete_diff_file=True), 0.0, delta=0.0001)
+        self.assertGreater(diff('bmp.png', 'jpeg.png', delete_diff_file=True), 0.003)
         os.unlink('jpeg.png')
 
         self.check_element_on_page((By.ID, "edit_book")).click()
         pngcover = os.path.join(base_path, 'files', 'cover.png')
         self.edit_book(content={'local_cover': pngcover})
-        time.sleep(2)
+        time.sleep(5)
         self.get_book_details(5)
         self.save_cover_screenshot('png.png')
         self.assertGreater(diff('bmp.png', 'png.png', delete_diff_file=True), 0.005)
@@ -737,7 +729,7 @@ class TestEditBooks(TestCase, ui_class):
         self.check_element_on_page((By.ID, "edit_book")).click()
         pngcover = os.path.join(base_path, 'files', 'cover.webp')
         self.edit_book(content={'local_cover': pngcover})
-        time.sleep(2)
+        time.sleep(5)
         self.get_book_details(5)
         self.save_cover_screenshot('webp.png')
         self.assertGreater(diff('webp.png', 'png.png', delete_diff_file=True), 0.005)
@@ -745,7 +737,7 @@ class TestEditBooks(TestCase, ui_class):
         os.unlink('png.png')
         os.unlink('page.png')
         self.fill_basic_config({'config_uploading': 0})
-        time.sleep(2)
+        time.sleep(5)
 
     # check metadata recognition
     def test_upload_book_pdf(self):

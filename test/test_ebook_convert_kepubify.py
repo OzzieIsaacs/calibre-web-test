@@ -45,7 +45,7 @@ class TestEbookConvertKepubify(unittest.TestCase, ui_class):
         except Exception as e:
             print(e)
         time.sleep(2)
-        save_logfiles(cls.__name__)
+        save_logfiles(cls, cls.__name__)
 
     def tearDown(self):
         if not self.check_user_logged_in('admin'):
@@ -86,7 +86,7 @@ class TestEbookConvertKepubify(unittest.TestCase, ui_class):
         self.goto_page('nav_about')
         element = self.check_element_on_page((By.XPATH, "//tr/th[text()='kepubify']/following::td[1]"))
         self.assertEqual(element.text, 'Execution permissions missing')
-        self.fill_basic_config({'config_kepubifypath': helper_email_convert.calibre_path()})
+        self.fill_basic_config({'config_kepubifypath': helper_email_convert.kepubify_path()})
 
     # convert epub to kepub
     # try start conversion of mobi -> not visible
