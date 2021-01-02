@@ -112,7 +112,7 @@ class TestUpdater(unittest.TestCase, ui_class):
                 except:
                     pass
         try:
-            os.remove(os.path.join('cps_copy.zip'))
+            os.remove(os.path.join(os.getcwd(),'cps_copy.zip'))
         except Exception:
             pass
 
