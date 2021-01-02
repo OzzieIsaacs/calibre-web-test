@@ -1044,7 +1044,7 @@ class ui_class():
             meta=ele[1].getchildren()
             book_r = dict()
             book_r['link'] = ele[0].getchildren()[0].attrib['href']
-            book_r['ele'] = cls.check_element_on_page((By.XPATH,"//a[@href='"+book_r['link']+"']/img"))
+            book_r['ele'] = cls.check_element_on_page((By.XPATH,"//a[@href='"+book_r['link']+"']//img"))
             book_r['id'] = book_r['link'][6:]
             book_r['title']= meta[0].getchildren()[0].text
             authors = meta[1].getchildren()
@@ -1072,7 +1072,7 @@ class ui_class():
             bk = dict()
             bk['link'] = ele[0].getchildren()[0].attrib['href']
             bk['id'] = bk['link'][6:]
-            bk['ele'] = cls.check_element_on_page((By.XPATH,"//a[@href='"+bk['link']+"']/img"))
+            bk['ele'] = cls.check_element_on_page((By.XPATH,"//a[@href='"+bk['link']+"']//img"))
             bk['title']= meta[0].getchildren()[0].text
             authors = meta[1].getchildren()
             bk['author'] = [a.text for a in authors if a.text != '&' and a.attrib.get('class') != 'author-name author-hidden']
@@ -1099,6 +1099,11 @@ class ui_class():
 
     @classmethod
     def get_series_books_displayed(cls):
+        # expects grid view
+        #grid = cls.check_element_on_page((By.ID, "list-button"))
+        #if grid:
+        #    grid.click()
+        #    cls.check_element_on_page((By.ID, "grid-button"))
         parser = lxml.etree.HTMLParser()
         html = cls.driver.page_source
 
@@ -1110,9 +1115,9 @@ class ui_class():
             # ele[0] -> cover
             meta=ele[1].getchildren()
             bk = dict()
-            bk['link'] = ele[0].getchildren()[0].attrib['href']
+            bk['link'] = ele[1].getchildren()[0].attrib['href']
             bk['id'] = bk['link'].split('/')[-1]
-            bk['ele'] = cls.check_element_on_page((By.XPATH,"//a[@href='"+bk['link']+"']/img"))
+            bk['ele'] = cls.check_element_on_page((By.XPATH,"//a[@href='"+bk['link']+"']//img"))
             bk['title']= meta[0].getchildren()[0].text
             books.append(bk)
 

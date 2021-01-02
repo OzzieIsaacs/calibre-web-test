@@ -11,7 +11,7 @@ import shutil
 from helper_ui import ui_class
 from helper_func import get_Host_IP
 from subproc_wrapper import process_open
-from config_test import CALIBRE_WEB_PATH, TEST_DB, BOOT_TIME
+from config_test import CALIBRE_WEB_PATH, TEST_DB, BOOT_TIME, base_path
 import re
 import sys
 from helper_func import save_logfiles
@@ -362,3 +362,4 @@ class TestCli(unittest.TestCase, ui_class):
             self.assertTrue('2nd process not terminated, port is already in use')
         self.assertEqual(result, 2)
         os.chmod("app.db", 0o644)
+        os.chdir(base_path)

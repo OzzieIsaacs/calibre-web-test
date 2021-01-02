@@ -9,7 +9,6 @@ from helper_func import startup
 from helper_func import save_logfiles
 
 
-
 class TestAnonymous(unittest.TestCase, ui_class):
     p = None
     driver = None

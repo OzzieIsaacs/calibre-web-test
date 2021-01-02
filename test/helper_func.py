@@ -115,7 +115,7 @@ def debug_startup(inst, __, ___, login=True, host="http://127.0.0.1:8083", env=N
 
 
 def startup(inst, pyVersion, config, login=True, host="http://127.0.0.1:8083",
-            env=None, parameter="", work_path=None, only_startup=False, only_metadata=False):
+            env=None, parameter=None, work_path=None, only_startup=False, only_metadata=False):
     print("\n%s - %s: " % (inst.py_version, inst.__name__))
     try:
         os.remove(os.path.join(CALIBRE_WEB_PATH, 'app.db'))
@@ -145,7 +145,7 @@ def startup(inst, pyVersion, config, login=True, host="http://127.0.0.1:8083",
     shutil.rmtree(TEST_DB, ignore_errors=True)
     if not only_metadata:
         try:
-            shutil.copytree('./Calibre_db', TEST_DB)
+            shutil.copytree(os.path.join(base_path, 'Calibre_db'), TEST_DB)
         except FileExistsError:
             print('Test DB already present, might not be a clean version')
     else:

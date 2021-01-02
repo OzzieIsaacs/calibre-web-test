@@ -216,6 +216,7 @@ class TestEditAdditionalBooks(TestCase, ui_class):
     @unittest.skipIf(os.name == 'nt', 'writeonly database on windows is not checked')
     def test_writeonly_path(self):
         self.fill_basic_config({'config_rarfile_location': unrar_path()})
+        time.sleep(BOOT_TIME)
         self.goto_page('nav_new')
         number_books = self.get_books_displayed()
         self.fill_view_config({'config_read_column': "Custom Bool 1 Ä"})

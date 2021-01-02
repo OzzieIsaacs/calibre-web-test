@@ -80,7 +80,8 @@ class TestShelf(unittest.TestCase, ui_class):
         self.assertTrue(len(self.list_shelfs()))
         self.logout()
         self.login('admin','admin123')
-        # go to shelf page
+        # go to shelf page and delete shelf
+        self.delete_shelf('Pü 执')
         # shelf is gone
         self.assertFalse(len(self.list_shelfs()))
 

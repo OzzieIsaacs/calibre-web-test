@@ -159,20 +159,6 @@ class TestSetupGdrive(unittest.TestCase, ui_class):
         g_login = self.check_element_on_page((By.ID, "identifierId"))
         self.assertTrue(g_login)
 
-
-
-
-
-
-
-
-
-
-
-
-
-
-
     def edit_author(self):
         self.assertIsNone('Not Implemented')
 
