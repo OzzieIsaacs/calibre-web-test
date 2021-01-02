@@ -31,6 +31,8 @@ class TestUpdater(unittest.TestCase, ui_class):
             my_env["https_proxy"] = 'https://localhost:8080'
             my_env["REQUESTS_CA_BUNDLE"] = pem_file
             startup(cls, cls.py_version, {'config_calibre_dir': TEST_DB}, env=my_env)
+        else:
+            cls.assert_("Target Directory present")
 
     @classmethod
     def tearDownClass(cls):
@@ -128,7 +130,7 @@ class TestUpdater(unittest.TestCase, ui_class):
         version1 = [version[0], version[1], version[2]]
         val.set_Version([version3, version2, version1])
         val.set_type(['Timeout'])
-        self.check_updater('Timeout',  "alert", 11)
+        self.check_updater('Timeout',  "alert", 13)
         val.set_type(['HTTPError'])
         self.check_updater('404',  "alert")
         val.set_type(['ConnectionError'])
@@ -210,7 +212,7 @@ class TestUpdater(unittest.TestCase, ui_class):
         # self.assertEqual(update_table[0],'')  # ToDo Check current version correct
         self.assertEqual(update_table[1].text, 'Current version')
         val.set_type(['Timeout'])
-        self.check_updater('Timeout', "alert", 11)
+        self.check_updater('Timeout', "alert", 13)
 
         val.set_type(['HTTPError'])
         self.check_updater('404', "alert")
@@ -238,7 +240,7 @@ class TestUpdater(unittest.TestCase, ui_class):
         # self.assertEqual(update_table[0],'')  # ToDo Check current version correct
         self.assertEqual(update_table[1].text, 'Current version')
         val.set_type([None, 'Timeout'])
-        self.check_updater('Timeout', "alert", 11)
+        self.check_updater('Timeout', "alert", 13)
 
         val.set_type([None, 'HTTPError'])
         self.check_updater('404', "alert")
@@ -296,10 +298,11 @@ class TestUpdater(unittest.TestCase, ui_class):
         val.set_Version([version3, version2, version1])
         self.goto_page('admin_setup')
         val.set_type([None])
-        time.sleep(3)
+        time.sleep(5)
         updater = self.check_element_on_page((By.ID, "check_for_update"))
         self.assertTrue(updater)
         updater.click()
+        time.sleep(5)
         val.set_type(['HTTPError'])
         time.sleep(4)
         performUpdate = self.check_element_on_page((By.ID, "perform_update"))
@@ -310,29 +313,31 @@ class TestUpdater(unittest.TestCase, ui_class):
         self.check_element_on_page((By.ID, "DialogFinished")).click()
         time.sleep(3)
         val.set_type([None])
+        time.sleep(5)
         updater = self.check_element_on_page((By.ID, "check_for_update"))
         self.assertTrue(updater)
         updater.click()
+        time.sleep(5)
         val.set_type(['ConnectionError'])
-        time.sleep(0.8)
+        time.sleep(5)
         performUpdate = self.check_element_on_page((By.ID, "perform_update"))
         self.assertTrue(performUpdate)
         performUpdate.click()
-        time.sleep(3)
+        time.sleep(5)
         self.assertTrue('Connection' in self.check_element_on_page((By.ID, "DialogContent")).text)
         self.check_element_on_page((By.ID, "DialogFinished")).click()
         time.sleep(3)
-
         val.set_type([None])
+        time.sleep(5)
         updater = self.check_element_on_page((By.ID, "check_for_update"))
         self.assertTrue(updater)
         updater.click()
         val.set_type(['GeneralError'])
-        time.sleep(0.5)
+        time.sleep(4)
         performUpdate = self.check_element_on_page((By.ID, "perform_update"))
         self.assertTrue(performUpdate)
         performUpdate.click()
-        time.sleep(3)
+        time.sleep(5)
         self.assertTrue('General' in self.check_element_on_page((By.ID, "DialogContent")).text)
         self.check_element_on_page((By.ID, "DialogFinished")).click()
         time.sleep(3)

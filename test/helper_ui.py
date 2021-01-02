@@ -1167,7 +1167,7 @@ class ui_class():
             bk = dict()
             bk['link'] = ele[0].getchildren()[0].attrib['href']
             bk['id'] = bk['link'][6:]
-            bk['ele'] = self.check_element_on_page((By.XPATH,"//a[@href='"+bk['link']+"']/img"))
+            bk['ele'] = self.check_element_on_page((By.XPATH,"//a[@href='"+bk['link']+"']//img"))
             bk['title']= meta[0].getchildren()[0].text
             authors = meta[1].getchildren()
             bk['author'] = [a.text for a in authors if a.text != '&' and a.attrib.get('class') != 'author-name author-hidden']
