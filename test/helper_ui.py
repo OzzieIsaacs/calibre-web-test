@@ -879,9 +879,9 @@ class ui_class():
         process_text = dict()
         if 'delete' in config:
             if config['delete'] == 1:
-                time.sleep(1)
+                time.sleep(2)
                 cls.driver.find_element_by_id('btndeluser').click()
-                time.sleep(1)
+                time.sleep(2)
                 cls.driver.find_element_by_id('btnConfirmYes').click()
                 time.sleep(2)
                 return

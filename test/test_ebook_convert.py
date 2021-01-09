@@ -51,6 +51,7 @@ class TestEbookConvertCalibre(unittest.TestCase, ui_class):
 
     @classmethod
     def tearDownClass(cls):
+        cls.driver.get("http://127.0.0.1:8083")
         cls.email_server.stop()
         try:
             cls.stop_calibre_web()

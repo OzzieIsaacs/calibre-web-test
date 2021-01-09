@@ -71,6 +71,7 @@ class TestEbookConvertGDriveKepubify(unittest.TestCase, ui_class):
     def tearDownClass(cls):
         try:
             # close the browser window and stop calibre-web
+            cls.driver.get("http://127.0.0.1:8083")
             cls.stop_calibre_web()
             cls.driver.quit()
             cls.p.terminate()

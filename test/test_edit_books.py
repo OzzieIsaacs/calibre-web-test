@@ -36,6 +36,7 @@ class TestEditBooks(TestCase, ui_class):
     @classmethod
     def tearDownClass(cls):
         remove_dependency(cls.dependencys)
+        cls.driver.get("http://127.0.0.1:8083")
         cls.stop_calibre_web()
         # close the browser window and stop calibre-web
         cls.driver.quit()
@@ -742,7 +743,7 @@ class TestEditBooks(TestCase, ui_class):
     # check metadata recognition
     def test_upload_book_pdf(self):
         self.fill_basic_config({'config_uploading':1})
-        time.sleep(3)
+        time.sleep(BOOT_TIME)
         self.goto_page('nav_new')
         upload_file = os.path.join(base_path, 'files', 'book.pdf')
         upload = self.check_element_on_page((By.ID, 'btn-upload'))
@@ -764,7 +765,7 @@ class TestEditBooks(TestCase, ui_class):
     # check metadata recognition
     def test_upload_book_fb2(self):
         self.fill_basic_config({'config_uploading':1})
-        time.sleep(3)
+        time.sleep(BOOT_TIME)
         self.goto_page('nav_new')
         upload_file = os.path.join(base_path, 'files', 'book.fb2')
         upload = self.check_element_on_page((By.ID, 'btn-upload'))
@@ -786,7 +787,7 @@ class TestEditBooks(TestCase, ui_class):
 
     def test_upload_book_lit(self):
         self.fill_basic_config({'config_uploading':1})
-        time.sleep(3)
+        time.sleep(BOOT_TIME)
         self.goto_page('nav_new')
         upload_file = os.path.join(base_path, 'files', 'book.lit')
         upload = self.check_element_on_page((By.ID, 'btn-upload'))
@@ -808,7 +809,7 @@ class TestEditBooks(TestCase, ui_class):
 
     def test_upload_book_mobi(self):
         self.fill_basic_config({'config_uploading':1})
-        time.sleep(3)
+        time.sleep(BOOT_TIME)
         self.goto_page('nav_new')
         upload_file = os.path.join(base_path, 'files', 'book.mobi')
         upload = self.check_element_on_page((By.ID, 'btn-upload'))
@@ -830,7 +831,7 @@ class TestEditBooks(TestCase, ui_class):
 
     def test_upload_book_epub(self):
         self.fill_basic_config({'config_uploading':1})
-        time.sleep(3)
+        time.sleep(BOOT_TIME)
         self.goto_page('nav_new')
         upload_file = os.path.join(base_path, 'files', 'book.epub')
         upload = self.check_element_on_page((By.ID, 'btn-upload'))
@@ -851,7 +852,7 @@ class TestEditBooks(TestCase, ui_class):
 
     def test_upload_book_cbz(self):
         self.fill_basic_config({'config_uploading':1})
-        time.sleep(3)
+        time.sleep(BOOT_TIME)
         self.goto_page('nav_new')
         upload_file = os.path.join(base_path, 'files', 'book.cbz')
         upload = self.check_element_on_page((By.ID, 'btn-upload'))
@@ -873,7 +874,7 @@ class TestEditBooks(TestCase, ui_class):
 
     def test_upload_book_cbt(self):
         self.fill_basic_config({'config_uploading':1})
-        time.sleep(3)
+        time.sleep(BOOT_TIME)
         self.goto_page('nav_new')
         upload_file = os.path.join(base_path, 'files', 'book.cbt')
         upload = self.check_element_on_page((By.ID, 'btn-upload'))
@@ -895,7 +896,7 @@ class TestEditBooks(TestCase, ui_class):
 
     def test_upload_book_cbr(self):
         self.fill_basic_config({'config_uploading':1})
-        time.sleep(3)
+        time.sleep(BOOT_TIME)
         self.goto_page('nav_new')
         upload_file = os.path.join(base_path, 'files', 'book.cbr')
         upload = self.check_element_on_page((By.ID, 'btn-upload'))

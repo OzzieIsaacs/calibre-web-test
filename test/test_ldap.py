@@ -42,6 +42,7 @@ class TestLdapLogin(unittest.TestCase, ui_class):
     @classmethod
     def tearDownClass(cls):
         cls.server.stop_LdapServer()
+        cls.driver.get("http://127.0.0.1:8083")
         cls.stop_calibre_web()
         cls.p.terminate()
         cls.driver.quit()

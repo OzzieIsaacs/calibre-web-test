@@ -38,6 +38,7 @@ class TestGoodreads(unittest.TestCase, ui_class):
 
     @classmethod
     def tearDownClass(cls):
+        cls.driver.get("http://127.0.0.1:8083")
         cls.stop_calibre_web()
         cls.driver.quit()
         cls.p.terminate()

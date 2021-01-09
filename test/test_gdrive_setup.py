@@ -15,7 +15,9 @@ from helper_func import save_logfiles
 # test editing books on gdrive
 
 
-# @unittest.skip("Not Implemented")
+@unittest.skipIf(not os.path.exists(os.path.join(base_path, "files", "client_secrets.json")) or
+                 not os.path.exists(os.path.join(base_path, "files", "gdrive_credentials")),
+                 "client_secrets.json and/or gdrive_credentials file is missing")
 class TestSetupGdrive(unittest.TestCase, ui_class):
     p=None
     driver = None
@@ -25,7 +27,7 @@ class TestSetupGdrive(unittest.TestCase, ui_class):
     def setUpClass(cls):
         add_dependency(cls.dependency, cls.__name__)
 
-        # remove slient_secrets.file
+        # remove client_secrets.file
         try:
             dst = os.path.join(CALIBRE_WEB_PATH, "client_secrets.json")
             if os.path.exists(dst):
