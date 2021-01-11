@@ -41,9 +41,11 @@ class TestLdapLogin(unittest.TestCase, ui_class):
 
     @classmethod
     def tearDownClass(cls):
-        cls.server.stop_LdapServer()
         cls.driver.get("http://127.0.0.1:8083")
+        if not cls.check_user_logged_in('admin'):
+            cls.login('admin','admin123')
         cls.stop_calibre_web()
+        cls.server.stop_LdapServer()
         cls.p.terminate()
         cls.driver.quit()
         # close the browser window and stop calibre-web
