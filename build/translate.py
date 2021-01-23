@@ -30,7 +30,7 @@ workdir = os.getcwd()
 os.chdir(FILEPATH)
 
 # Extract all messages from the source code and create a template file
-p = subprocess.Popen("pybabel extract --no-wrap -F babel.cfg -o messages.pot cps"
+p = subprocess.Popen("pybabel extract -k _extract --no-wrap -F babel.cfg -o messages.pot cps"
                      ,shell=True,stdout=subprocess.PIPE, stdin=subprocess.PIPE)
 p.wait()
 
@@ -99,10 +99,6 @@ for file in glob.glob1("./translations", "*.po"):
                 msg.id = 'Pashto'
             if msg.id.lower() in lang_keys:
                 lCode = need_iso['name_map'][msg.id.lower()]
-                # del need_iso['name_map'][msg.id.lower()]
-
-            # lCode = msg.auto_comments[0][9:]
-            # if lCode in need_iso['codes3t']:
                 if msg.string:
                     iso_translations[lCode] = msg.string
                 else:
