@@ -30,7 +30,7 @@ workdir = os.getcwd()
 os.chdir(FILEPATH)
 
 # Extract all messages from the source code and create a template file
-p = subprocess.Popen("pybabel extract --no-wrap -F babel.cfg -o messages.pot cps"
+p = subprocess.Popen("pybabel extract -k _extract --no-wrap -F babel.cfg -o messages.pot cps"
                      ,shell=True,stdout=subprocess.PIPE, stdin=subprocess.PIPE)
 p.wait()
 
@@ -93,28 +93,28 @@ for file in glob.glob1("./translations", "*.po"):
     translation_list.append("| {} | {} of strings {} translated |".format(lang_name, count, allMsg))
     print("{} language: {} of strings {} translated".format(lang_name, count, allMsg))
     iso_translations = dict()
+    # Fill missing translation names with english names
     for msg in LanguageTranslation:
         if msg.id:
             if msg.id.lower() == 'pushto':
                 msg.id = 'Pashto'
             if msg.id.lower() in lang_keys:
                 lCode = need_iso['name_map'][msg.id.lower()]
-                # del need_iso['name_map'][msg.id.lower()]
-
-            # lCode = msg.auto_comments[0][9:]
-            # if lCode in need_iso['codes3t']:
                 if msg.string:
                     iso_translations[lCode] = msg.string
                 else:
+                    # print("{}: Translation {} - id: {}".format(lang_name, lCode, msg.id))
                     iso_translations[lCode] = msg.id
     out_iso[langcode]=iso_translations
 
+#for msg in LanguageTranslation:
+#    if msg.id:
+#        lCode = msg.auto_comments[0][9:]
+#        if lCode in need_iso['codes3t']:
+#            print("End? {}: Translation {} - id: {}".format(lang_name, lCode, msg.id))
+#            iso_translations[lCode] = msg.id
+
 # Add English to the translation table
-for msg in LanguageTranslation:
-    if msg.id:
-        lCode = msg.auto_comments[0][9:]
-        if lCode in need_iso['codes3t']:
-            iso_translations[lCode] = msg.id
 out_iso['en'] = iso_translations
 
 header = '''# -*- coding: utf-8 -*-
