@@ -205,7 +205,8 @@ class ui_class():
         # special handling for checkboxes
         checkboxes = ['config_uploading', 'config_anonbrowse', 'config_public_reg', 'config_remote_login',
                       'config_access_log', 'config_kobo_sync', 'config_kobo_proxy', 'config_ldap_openldap',
-                      'config_use_goodreads', 'config_register_email', 'config_use_google_drive']
+                      'config_use_goodreads', 'config_register_email', 'config_use_google_drive',
+                      'config_allow_reverse_proxy_header_login']
         options = ['config_log_level', 'config_google_drive_folder', 'config_updatechannel', 'config_login_type',
                    'config_ldap_encryption', 'config_ldap_authentication', 'ldap_import_user_filter']
         selects = ['config_ebookconverter']
@@ -228,7 +229,9 @@ class ui_class():
                                            'config_ldap_group_members_field', 'config_ldap_openldap',
                                            'config_ldap_authentication', 'config_ldap_member_user_object',
                                            'config_1_oauth_client_id', 'config_1_oauth_client_secret',
-                                           'config_2_oauth_client_id', 'config_2_oauth_client_secret'
+                                           'config_2_oauth_client_id', 'config_2_oauth_client_secret',
+                                           'config_allow_reverse_proxy_header_login',
+                                           'config_reverse_proxy_login_header_name'
                                            ]):
             opener.append(3)
         if any(key in elements for key in ['config_ebookconverter', 'config_calibre', 'config_kepubifypath',

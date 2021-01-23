@@ -51,9 +51,9 @@ translation_list = list()
 langcode_list = list()
 
 lang_keys = need_iso['name_map'].keys()
+eng_translations = dict()
 
-
-for file in glob.glob1("./translations", "*.po"):
+for file in sorted(glob.glob1("./translations", "*.po")):
     langcode=file[23:-3]
     langcode_list.append(langcode)
     # Remove old content from po file
@@ -93,6 +93,7 @@ for file in glob.glob1("./translations", "*.po"):
     translation_list.append("| {} | {} of strings {} translated |".format(lang_name, count, allMsg))
     print("{} language: {} of strings {} translated".format(lang_name, count, allMsg))
     iso_translations = dict()
+    # Add missing translated language names to translation
     for msg in LanguageTranslation:
         if msg.id:
             if msg.id.lower() == 'pushto':
@@ -103,15 +104,15 @@ for file in glob.glob1("./translations", "*.po"):
                     iso_translations[lCode] = msg.string
                 else:
                     iso_translations[lCode] = msg.id
-    out_iso[langcode]=iso_translations
+            # spanish translation is complete
+            if langcode == "es":
+                lCode = msg.auto_comments[0][9:]
+                if lCode in need_iso['codes3t']:
+                    eng_translations[lCode] = msg.id
+    out_iso[langcode] = iso_translations
 
 # Add English to the translation table
-for msg in LanguageTranslation:
-    if msg.id:
-        lCode = msg.auto_comments[0][9:]
-        if lCode in need_iso['codes3t']:
-            iso_translations[lCode] = msg.id
-out_iso['en'] = iso_translations
+out_iso['en'] = eng_translations
 
 header = '''# -*- coding: utf-8 -*-
 

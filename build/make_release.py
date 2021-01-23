@@ -9,8 +9,6 @@ import subprocess
 import codecs
 import re
 
-# test = get_releases('ozzieisaacs/calibre-web')
-# print(test)
 
 def change_homeconfig(targetfile, value):
     with codecs.open(targetfile, 'r') as fp:
