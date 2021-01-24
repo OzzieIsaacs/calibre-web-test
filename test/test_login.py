@@ -321,14 +321,14 @@ class TestLogin(unittest.TestCase, ui_class):
                                                        '<label for="username">Username</label>'),
                         'Locale detect with only "*" failed')
 
-    # CHek that digest Authentication header doesn't crash the application
+    # Check that digest Authentication header doesn't crash the application
     @unittest.skipIf(not curl_available, "Skipping auth_login, pycurl not available")
     def test_digest_login(self):
         url = 'http://127.0.0.1:8083/login'
         self.assertTrue(digest_login(url, 200))
 
-    # CHek that digest Authentication header doesn't crash the application
-    # @unittest.skipIf(not curl_available, "Skipping auth_login, pycurl not available")
+    # Check proxy login
+    # ToDO: Proxy Login with acitvated anonymous browsing
     def test_proxy_login(self):
         self.driver.get("http://127.0.0.1:8083/login")
         self.login('admin', 'admin123')

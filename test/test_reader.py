@@ -56,6 +56,7 @@ class TestReader(unittest.TestCase, ui_class):
         if len(new_handle) != 1:
             self.assertFalse('Not exactly one new tab was opened')
         self.driver.switch_to.window(new_handle[0])
+        time.sleep(3)
         content = self.check_element_on_page((By.ID, "content"))
         self.assertTrue(content)
         self.assertTrue('hörte' in content.text, 'Encoding of textfile viewer is not respected properly')
