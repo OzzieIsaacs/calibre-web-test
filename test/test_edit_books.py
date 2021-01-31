@@ -128,7 +128,7 @@ class TestEditBooks(TestCase, ui_class):
         self.assertEqual(u'Pipo|;.:', title.get_attribute('value'))
         self.edit_book(content={'book_title': u'Very long extra super turbo cool title without any issue of displaying including ö utf-8 characters'})
         ele = self.check_element_on_page((By.ID, "title"))
-        self.assertEqual(ele.text, u'Very long extra super turbo cool title without any issue of ...')
+        self.assertEqual(ele.text, u'Very long extra super turbo cool title without any issue of displaying including ö utf-8 characters')
         self.check_element_on_page((By.ID, "edit_book")).click()
         self.edit_book(content={'book_title': u'book6'})
 
