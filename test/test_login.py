@@ -412,7 +412,7 @@ class TestLogin(unittest.TestCase, ui_class):
         r.close()
         r = requests.session()
         site = r.get('http://127.0.0.1:8083', cookies={'remember_token': remember})
-        self.assertTrue(re.search("Calibre-Web | Recently Added Books", site.content.decode('utf-8')))
+        self.assertTrue(re.search("Calibre-Web | Books", site.content.decode('utf-8')))
         cover = r.get('http://127.0.0.1:8083/cover/8')
         self.assertEqual('21896', cover.headers['Content-Length'])
         r.get('http://127.0.0.1:8083/logout')
