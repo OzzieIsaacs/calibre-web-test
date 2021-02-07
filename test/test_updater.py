@@ -41,7 +41,7 @@ class TestUpdater(unittest.TestCase, ui_class):
             cls.stop_calibre_web()
         except:
             cls.driver.get("http://127.0.0.1:8083")
-            time.sleep()
+            time.sleep(2)
             try:
                 cls.stop_calibre_web()
             except:

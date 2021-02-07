@@ -151,6 +151,7 @@ class TestEbookConvertKepubify(unittest.TestCase, ui_class):
         select = Select(vals['btn_to'])
         select.select_by_visible_text('KEPUB')
         self.driver.find_element_by_id("btn-book-convert").click()
+        time.sleep(1)
         self.assertTrue(self.check_element_on_page((By.ID, "flash_success")))
         time.sleep(5)
         ret = self.check_tasks()

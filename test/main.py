@@ -6,7 +6,7 @@ import re
 import time
 import requests
 from subproc_wrapper import process_open
-from config_test import SELENIUM_SERVER, CALIBRE_WEB_PATH, VENV_PATH, VENV_PYTHON, TEST_OS
+from config_test import CALIBRE_WEB_PATH, VENV_PATH, VENV_PYTHON, TEST_OS
 import unittest
 import sys
 import venv
@@ -30,7 +30,7 @@ if __name__ == '__main__':
     # check pip ist installed
     found = False
     python_exe = ""
-    pversion = ["python3.7", "python3.8", "python3", "c:\\python38\\python.exe", "c:\\python37\\python.exe"]
+    pversion = ["python3.8", "python3", "c:\\python38\\python.exe", "c:\\python39\\python.exe"]
     for python in pversion:
         try:
             p = process_open([python, "-m", "pip", "-V"])

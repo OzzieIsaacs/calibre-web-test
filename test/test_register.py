@@ -2,6 +2,7 @@
 # -*- coding: utf-8 -*-
 
 from helper_email_convert import AIOSMTPServer
+from selenium.webdriver.common.by import By
 from config_test import TEST_DB
 from helper_func import startup, wait_Email_received
 # from parameterized import parameterized_class
@@ -9,6 +10,7 @@ import unittest
 from helper_ui import ui_class
 import time
 from helper_func import save_logfiles
+import requests
 
 
 class TestRegister(unittest.TestCase, ui_class):
@@ -40,6 +42,7 @@ class TestRegister(unittest.TestCase, ui_class):
 
     @classmethod
     def tearDownClass(cls):
+        cls.driver.get("http://127.0.0.1:8083")
         cls.login('admin', 'admin123')
         cls.stop_calibre_web()
         # close the browser window and stop calibre-web
@@ -57,6 +60,7 @@ class TestRegister(unittest.TestCase, ui_class):
     def test_register_no_server(self):
         if not self.check_user_logged_in('admin', True):
             self.login('admin', 'admin123')
+            self.assertTrue(self.check_element_on_page((By.ID, "flash_success")))
         self.setup_server(False, {'mail_server':'mail.example.org'})
         self.logout()
         self.assertEqual(u'flash_alert',self.register(u'noserver','alo@de.org'))
@@ -67,6 +71,7 @@ class TestRegister(unittest.TestCase, ui_class):
     def test_limit_domain(self):
         if not self.check_user_logged_in('admin', True):
             self.login('admin', 'admin123')
+            self.assertTrue(self.check_element_on_page((By.ID, "flash_success")))
         self.goto_page('mail_server')
         a_domains = self.list_domains(allow=True)
         self.assertEqual(a_domains[0]['domain'],'*.*')
@@ -157,6 +162,7 @@ class TestRegister(unittest.TestCase, ui_class):
             self.logout()
         self.goto_page('unlogged_login')
         self.login('admin','admin123')
+        self.assertTrue(self.check_element_on_page((By.ID, "flash_success")))
         self.fill_view_config({'passwd_role': 1})
         self.logout()
         self.assertEqual(u'flash_success',self.register(u'upasswd','passwd@de.com'))
@@ -187,6 +193,7 @@ class TestRegister(unittest.TestCase, ui_class):
     def test_forgot_password(self):
         if not self.check_user_logged_in('admin', True):
             self.login('admin', 'admin123')
+            self.assertTrue(self.check_element_on_page((By.ID, "flash_success")))
         self.email_server.handler.reset_email_received()
         self.create_user('forget', {'passwd_role': 0, 'password': '123', 'email': 'alfa@b.com'})
         self.logout()
@@ -203,6 +210,7 @@ class TestRegister(unittest.TestCase, ui_class):
     def test_registering_only_email(self):
         if not self.check_user_logged_in('admin',True):
             self.login('admin', 'admin123')
+            self.assertTrue(self.check_element_on_page((By.ID, "flash_success")))
         self.fill_basic_config({'config_register_email': 1})
         self.logout()
         self.assertEqual(u'flash_success', self.register(u'','hujh@de.de'))
@@ -213,6 +221,39 @@ class TestRegister(unittest.TestCase, ui_class):
         self.assertTrue(self.login(user, passw))
         self.logout()
         self.login('admin', 'admin123')
+        self.assertTrue(self.check_element_on_page((By.ID, "flash_success")))
         self.fill_basic_config({'config_register_email': 0})
         self.logout()
+
+    def test_illegal_email(self):
+        r = requests.session()
+        payload = {'nickname': 'user0 negativ', 'email': '1234'}
+        resp = r.post('http://127.0.0.1:8083/register', data=payload)
+        self.assertTrue("flash_alert" in resp.text)
+        payload = {'email': '1234@gr.de'}
+        resp = r.post('http://127.0.0.1:8083/register', data=payload)
+        self.assertTrue("flash_alert" in resp.text)
+        payload = {'nickname': 'user0 negativ'}
+        resp = r.post('http://127.0.0.1:8083/register', data=payload)
+        self.assertTrue("flash_alert" in resp.text)
+        payload = {'nickname': '/etc/./passwd', 'email': '/etc/./passwd'}
+        resp = r.post('http://127.0.0.1:8083/register', data=payload)
+        self.assertTrue("flash_alert" in resp.text)
+        payload = {"nickname": "abc123@mycom.com'\"[]()", 'email': "abc123@mycom.com'\"[]()"}
+        resp = r.post('http://127.0.0.1:8083/register', data=payload)
+        self.assertTrue("flash_alert" in resp.text)
+        payload = {"nickname": "abc123@mycom.com anD 1028=1028", 'email': "abc123@mycom.com anD 1028=1028"}
+        resp = r.post('http://127.0.0.1:8083/register', data=payload)
+        self.assertTrue("flash_alert" in resp.text)
+        payload = {"nickname": "abc123@myc@om.com", 'email': "abc123@myc@om.com"}
+        resp = r.post('http://127.0.0.1:8083/register', data=payload)
+        self.assertTrue("flash_alert" in resp.text)
+        payload = {"nickname": "1234456", 'email': "1@2.3"}
+        resp = r.post('http://127.0.0.1:8083/register', data=payload)
+        self.assertTrue("flash_success" in resp.text)
+        payload = {"nickname": "9dsfaf", 'email': "ü执1@ü执1.3"}
+        resp = r.post('http://127.0.0.1:8083/register', data=payload)
+        self.assertTrue("flash_success" in resp.text)
+
+
 

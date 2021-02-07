@@ -13,7 +13,7 @@ from helper_func import save_logfiles
 
 
 class TestShelf(unittest.TestCase, ui_class):
-    p=None
+    p = None
     driver = None
 
     @classmethod
@@ -22,12 +22,13 @@ class TestShelf(unittest.TestCase, ui_class):
             startup(cls, cls.py_version,{'config_calibre_dir':TEST_DB})
             cls.create_user('shelf', {'edit_shelf_role':1, 'password':'123', 'email':'a@b.com'})
             cls.edit_user('admin',{'edit_shelf_role':1, 'email':'e@fe.de'})
-        except:
+        except Exception:
             cls.driver.quit()
             cls.p.terminate()
 
     @classmethod
     def tearDownClass(cls):
+        cls.driver.get("http://127.0.0.1:8083")
         cls.stop_calibre_web()
         # close the browser window and stop calibre-web
         cls.driver.quit()
@@ -44,7 +45,7 @@ class TestShelf(unittest.TestCase, ui_class):
         try:
             for shelf in shelfs:
                 self.delete_shelf(shelf['name'])
-        except:
+        except Exception:
             pass
 
     def test_private_shelf(self):

@@ -19,6 +19,7 @@ class TestAnonymous(unittest.TestCase, ui_class):
 
     @classmethod
     def tearDownClass(cls):
+        cls.driver.get("http://127.0.0.1:8083")
         cls.stop_calibre_web()
         # close the browser window and stop calibre-web
         cls.driver.quit()

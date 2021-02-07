@@ -224,7 +224,7 @@ class TestEditBooksOnGdrive(unittest.TestCase, ui_class):
         self.edit_book(content={'book_title': u'Very long extra super turbo cool title without any issue of displaying including ö utf-8 characters'})
         time.sleep(WAIT_GDRIVE)
         ele = self.check_element_on_page((By.ID, "title"))
-        self.assertEqual(ele.text, u'Very long extra super turbo cool title without any issue of ...')
+        self.assertEqual(ele.text, u'Very long extra super turbo cool title without any issue of displaying including ö utf-8 characters')
         time.sleep(WAIT_GDRIVE)
         self.check_element_on_page((By.ID, "edit_book")).click()
         self.edit_book(content={'book_title': u'book6'})

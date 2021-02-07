@@ -19,7 +19,7 @@ from helper_func import save_logfiles
 class TestEditAdditionalBooks(TestCase, ui_class):
     p = None
     driver = None
-    dependencys = ['lxml', 'git|comicapi', 'rarfile']
+    dependencys = ['lxml', 'comicapi', 'rarfile']
 
     @classmethod
     def setUpClass(cls):
@@ -35,6 +35,7 @@ class TestEditAdditionalBooks(TestCase, ui_class):
     @classmethod
     def tearDownClass(cls):
         remove_dependency(cls.dependencys)
+        cls.driver.get("http://127.0.0.1:8083")
         cls.stop_calibre_web()
         # close the browser window and stop calibre-web
         cls.driver.quit()
@@ -103,7 +104,7 @@ class TestEditAdditionalBooks(TestCase, ui_class):
     # limit upload formats to FB2 -> upload fb2 allowed
     def test_change_upload_formats(self):
         self.fill_basic_config({'config_uploading': 1, 'config_upload_formats': 'epub'})
-        time.sleep(3)
+        time.sleep(BOOT_TIME)
         self.goto_page('nav_new')
         upload_file = os.path.join(base_path, 'files', 'book.pdf')
         upload = self.check_element_on_page((By.ID, 'btn-upload'))

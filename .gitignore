@@ -8,6 +8,7 @@ __pycache__/
 .Python
 env/
 eggs/
+test/files/
 .eggs/
 *.egg-info/
 .installed.cfg

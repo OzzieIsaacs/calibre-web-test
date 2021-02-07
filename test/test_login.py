@@ -321,11 +321,66 @@ class TestLogin(unittest.TestCase, ui_class):
                                                        '<label for="username">Username</label>'),
                         'Locale detect with only "*" failed')
 
-    # CHek that digest Authentication header doesn't crash the application
+    # Check that digest Authentication header doesn't crash the application
     @unittest.skipIf(not curl_available, "Skipping auth_login, pycurl not available")
     def test_digest_login(self):
         url = 'http://127.0.0.1:8083/login'
         self.assertTrue(digest_login(url, 200))
+
+    # Check proxy login
+    # ToDO: Proxy Login with acitvated anonymous browsing
+    def test_proxy_login(self):
+        self.driver.get("http://127.0.0.1:8083/login")
+        self.login('admin', 'admin123')
+        self.fill_basic_config({'config_allow_reverse_proxy_header_login': 1 })
+        time.sleep(3)
+        self.assertTrue(self.check_element_on_page((By.ID, "flash_success")))
+        # login not possible with empty header or with "X-LOGIN" header
+        r = requests.session()
+        resp = r.get("http://127.0.0.1:8083/")
+        self.assertEqual(resp.status_code, 200)
+        self.assertTrue("Calibre-Web | login" in resp.text)
+        r.headers['X-LOGIN'] = ""
+        resp = r.get("http://127.0.0.1:8083/")
+        self.assertEqual(resp.status_code, 200)
+        self.assertTrue("Calibre-Web | login" in resp.text)
+        r.close()
+        # set 'config_reverse_proxy_login_header_name': "X-LOGIN"'''
+        self.fill_basic_config({'config_reverse_proxy_login_header_name': "X-LOGIN" })
+        self.assertTrue(self.check_element_on_page((By.ID, "flash_success")))
+        self.logout()
+        r = requests.session()
+        r.headers['X-LOGIN'] = ""
+        resp = r.get("http://127.0.0.1:8083/")
+        self.assertEqual(resp.status_code, 200)
+        self.assertTrue("Calibre-Web | login" in resp.text)
+        # login with X-LOGIN wrong user -> no login
+        r.headers['X-LOGIN'] = "admini"
+        resp = r.get("http://127.0.0.1:8083/")
+        self.assertEqual(resp.status_code, 200)
+        self.assertTrue("Calibre-Web | login" in resp.text)
+
+        # login with X-LoGiN -> login
+        r.headers['X-LoGiN'] = "admin"
+        resp = r.get("http://127.0.0.1:8083/")
+        self.assertEqual(resp.status_code, 200)
+        self.assertFalse("Calibre-Web | login" in resp.text)
+        r.close()
+
+        # login with X-LOGIN -> login
+        r = requests.session()
+        r.headers['X-LOGIN'] = "admin"
+        resp = r.get("http://127.0.0.1:8083/logout")
+        self.assertEqual(resp.status_code, 200)
+        self.assertFalse("Calibre-Web | login" in resp.text)
+        r.close()
+        # ToDo: Additional test with reverse proxy
+        self.assertTrue(self.login('admin', 'admin123'))
+        self.fill_basic_config({'config_allow_reverse_proxy_header_login': 0})
+        time.sleep(3)
+        self.logout()
+
+
 
     def test_login_rename_user(self):
         self.driver.get("http://127.0.0.1:8083/login")
@@ -357,7 +412,7 @@ class TestLogin(unittest.TestCase, ui_class):
         r.close()
         r = requests.session()
         site = r.get('http://127.0.0.1:8083', cookies={'remember_token': remember})
-        self.assertTrue(re.search("Calibre-Web | Recently Added Books", site.content.decode('utf-8')))
+        self.assertTrue(re.search("Calibre-Web | Books", site.content.decode('utf-8')))
         cover = r.get('http://127.0.0.1:8083/cover/8')
         self.assertEqual('21896', cover.headers['Content-Length'])
         r.get('http://127.0.0.1:8083/logout')

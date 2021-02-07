@@ -38,6 +38,7 @@ class TestReader(unittest.TestCase, ui_class):
     @classmethod
     def tearDownClass(cls):
         cls.driver.switch_to.window(cls.current_handle)
+        cls.driver.get("http://127.0.0.1:8083")
         cls.stop_calibre_web()
         cls.driver.quit()
         cls.p.terminate()
@@ -55,6 +56,7 @@ class TestReader(unittest.TestCase, ui_class):
         if len(new_handle) != 1:
             self.assertFalse('Not exactly one new tab was opened')
         self.driver.switch_to.window(new_handle[0])
+        time.sleep(3)
         content = self.check_element_on_page((By.ID, "content"))
         self.assertTrue(content)
         self.assertTrue('hörte' in content.text, 'Encoding of textfile viewer is not respected properly')

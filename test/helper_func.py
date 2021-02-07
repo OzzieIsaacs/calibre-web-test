@@ -263,7 +263,7 @@ def add_dependency(name, testclass_name):
                 break
 
     for indx, element in enumerate(element_version):
-        with process_open([VENV_PYTHON, "-m", "pip", "install", element], (0, 5)) as r:
+        with process_open([VENV_PYTHON, "-m", "pip", "install", element], (0, 4)) as r:
             if os.name == 'nt':
                 while r.poll() == None:
                     r.stdout.readline()

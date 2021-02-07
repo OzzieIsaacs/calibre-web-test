@@ -71,6 +71,7 @@ class TestEbookConvertGDriveKepubify(unittest.TestCase, ui_class):
     def tearDownClass(cls):
         try:
             # close the browser window and stop calibre-web
+            cls.driver.get("http://127.0.0.1:8083")
             cls.stop_calibre_web()
             cls.driver.quit()
             cls.p.terminate()
@@ -162,6 +163,7 @@ class TestEbookConvertGDriveKepubify(unittest.TestCase, ui_class):
         self.assertEqual(len(select.options), 2)
         select.select_by_visible_text('KEPUB')
         self.driver.find_element_by_id("btn-book-convert").click()
+        time.sleep(1)
         self.assertTrue(self.check_element_on_page((By.ID, "flash_success")))
         time.sleep(WAIT_GDRIVE)
 
@@ -185,6 +187,7 @@ class TestEbookConvertGDriveKepubify(unittest.TestCase, ui_class):
         self.assertEqual(len(select.options), 2)
         select.select_by_visible_text('KEPUB')
         self.driver.find_element_by_id("btn-book-convert").click()
+        time.sleep(1)
         self.assertTrue(self.check_element_on_page((By.ID, "flash_success")))
         time.sleep(WAIT_GDRIVE*2)
         ret = self.check_tasks()
@@ -202,6 +205,7 @@ class TestEbookConvertGDriveKepubify(unittest.TestCase, ui_class):
         select = Select(vals['btn_to'])
         select.select_by_visible_text('KEPUB')
         self.driver.find_element_by_id("btn-book-convert").click()
+        time.sleep(1)
         self.assertTrue(self.check_element_on_page((By.ID, "flash_success")))
         time.sleep(WAIT_GDRIVE*2)
         ret = self.check_tasks()

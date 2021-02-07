@@ -5,7 +5,7 @@ import sys
 
 base_path = os.path.dirname(os.path.abspath(__file__))
 
-SELENIUM_SERVER = os.path.join(base_path, '..', 'selenium', 'selenium-server-standalone-3.141.59.jar')
+# SELENIUM_SERVER = os.path.join(base_path, '..', 'selenium', 'selenium-server-standalone-3.141.59.jar')
 CALIBRE_WEB_PATH = os.path.abspath(os.path.join(base_path, '..', '..', 'calibre-web'))
 VENV_PATH = os.path.join(CALIBRE_WEB_PATH, 'venv')
 
