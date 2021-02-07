@@ -54,9 +54,18 @@ The testresult is written to the file "calibre-web/test/Calibre-Web TestSummary_
 Hints for using pyCharm: 
 It's recommended to have gevent compatible debugging set to **no** and also **do not attach to subprocess** (created trouble in combination with email sending). Due to a bug in pycharm the patch from here https://youtrack.jetbrains.com/issue/PY-43411?IssueComments has to be applied for testing on windows (and maybe also for MacOS)
 
-### Compiling Language files
+# Compiling Language files
 
 The script translate.py in the build folder is used for generating the binary translation files (.mo) and also to generate the language name translation table file 'iso_language_names.py' in the calibre-web cps folder. The script runs under python 3 (3.6 and 3.7 tested).\
 The used languages were taken from the file iso639.calibre_msgpack. This is a magically (can't remember how I did it) shrinked file from the Calibre resoucres directory. The original file has over 7000 languages in it. Somewhere in the Calibre code there is a routine which is extracting several language names from this file (the 400 remaining), all other languages are not supported by calibre (at least at the time I created the file). By increasing the number of supported languages to the 7000, the speed of the language typeahead drops to nearly zero.
 The language translations are taken from Calibre's iso639 folder in the transifex translation project. By adding up a new language the corresponding file has to be grabbed from this project. Before it can be used the timezonemarker in the header has to be changed from +MDT to +000.
 
+# Build package files and executables
+
+Edit the file config.py in the build filder and change the pathnames to the correct ones for you installation
+
+For builing the exe installer on Windows, use Inno Setup, which can be downloaded from here https://jrsoftware.org/isinfo.php
+
+Execute the build script make_release.py in the build folder, there will be a dist subfolder in calibre-web folder containing the sourcefile and the wheel file for publishing it on pypi
+Furthermore there will be a new folder executable containing the executable files for the current platform. On Windows you need to have the precompilied binaries for python Levenshtein and python-ldap on your harddrive and point to them in the config file
+On Windows you can start the installer packaging afterwards  using innosetup, by using the installer_script_windows.iss script file

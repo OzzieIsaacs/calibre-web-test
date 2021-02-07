@@ -7,6 +7,8 @@ from config_test import TEST_DB
 from helper_func import startup, debug_startup, add_dependency, remove_dependency
 from selenium.webdriver.common.by import By
 from helper_func import save_logfiles
+import os
+
 try:
     from config_goodreads import GOODREADS_API_KEY, GOODREADS_API_SECRET
     if GOODREADS_API_KEY !='' and GOODREADS_API_SECRET !='':
@@ -22,7 +24,11 @@ class TestGoodreads(unittest.TestCase, ui_class):
 
     p = None
     driver = None
-    dependency = ["goodreads", "python-Levenshteinf"]
+    if os.name == 'nt':
+        dependency = ["goodreads", "local|LEVENSHTEIN_WHL|python-Levenshtein"]
+    else:
+        dependency = ["goodreads", "python-Levenshtein"]
+
 
     @classmethod
     def setUpClass(cls):
