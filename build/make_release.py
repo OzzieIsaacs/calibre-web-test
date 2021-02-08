@@ -16,6 +16,14 @@ from helper_environment import environment, add_dependency
 
 
 def change_config(targetfile, config, value):
+    if config == "HOME_CONFIG":
+        home_file = os.path.join(os.path.dirname(targetfile), ".HOMEDIR")
+        if value == 'False':
+            if os.path.isfile(home_file):
+                os.remove(home_file)
+        else:
+            open(home_file, 'w').close()
+        return
     with codecs.open(targetfile, 'r') as fp:
         file = fp.read()
     replaced = re.sub("(" + config + "\s+=\s+)(.*)", r"\1" + value, file)
