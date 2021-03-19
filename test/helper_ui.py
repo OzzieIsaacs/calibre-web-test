@@ -1218,10 +1218,13 @@ class ui_class():
 
     @classmethod
     def get_book_details(cls,id=-1,root_url="http://127.0.0.1:8083"):
-        if id>0:
-            cls.driver.get(root_url + "/book/"+str(id))
-        cls.check_element_on_page((By.TAG_NAME,"h2"))
         ret = dict()
+        if id > 0:
+            cls.driver.get(root_url + "/book/" + str(id))
+            ret['id'] = id
+        else:
+            ret['id'] = int(cls.driver.current_url.split("/")[-1])
+        cls.check_element_on_page((By.TAG_NAME,"h2"))
         try:
             parser = lxml.etree.HTMLParser()
             html = cls.driver.page_source
@@ -1263,13 +1266,25 @@ class ui_class():
             comment = tree.find("//*[@class='comments']")
             ret['comment'] = ''
             if comment is not None:
-                try:
-                    for ele in comment.getchildren()[1:]:
-                        ret['comment'] += ele.text
-                except:
-                    for ele in comment.getchildren()[1].getchildren():
-                        if ele.text:
-                            ret['comment'] += ele.text
+                if len(comment.getchildren()) == 1:
+                    ret['comment'] = comment.getchildren()[0].tail.strip()
+                else:
+                    comm = tree.xpath("//*[@class='comments']/h3/following-sibling::*")
+                    if comm[0].getchildren():
+                        for ele in comm[0].getchildren():
+                            if isinstance(ele.text,str):
+                                ret['comment'] += ele.text.strip()
+                    else:
+                        for ele in comm:
+                            if isinstance(ele.text, str):
+                                ret['comment'] += ele.text.strip()
+                #try:
+                #    for ele in comment.getchildren():
+                #        ret['comment'] += ele.tail.strip()
+                #except:
+                #    for ele in comment.getchildren()[1].getchildren():
+                #        if ele.text:
+                #            ret['comment'] += ele.text
 
             add_shelf = tree.findall("//*[@id='add-to-shelves']//a")
             ret['add_shelf'] = [sh.text.strip().lstrip() for sh in add_shelf]

@@ -49,9 +49,14 @@ class TestReader(unittest.TestCase, ui_class):
 
     def test_txt_reader(self):
         self.get_book_details(1)
-        self.check_element_on_page((By.ID, "read-in-browser")).click()
+        self.assertFalse(self.check_element_on_page((By.ID, "read-in-browser")))
         current_handles = self.driver.window_handles
-        self.check_element_on_page((By.XPATH, "//ul[@aria-labelledby='read-in-browser']/li/a[contains(.,'txt')]")).click()
+        read_button = self.check_element_on_page((By.ID, "readbtn"))
+        self.assertTrue("txt" in read_button.text)
+        read_button.click()
+        #self.check_element_on_page((By.ID, "read-in-browser")).click()
+        #current_handles = self.driver.window_handles
+        #self.check_element_on_page((By.XPATH, "//ul[@aria-labelledby='read-in-browser']/li/a[contains(.,'txt')]")).click()
         new_handle = [x for x in self.driver.window_handles if x not in current_handles]
         if len(new_handle) != 1:
             self.assertFalse('Not exactly one new tab was opened')
@@ -63,9 +68,14 @@ class TestReader(unittest.TestCase, ui_class):
 
     def test_epub_reader(self):
         self.get_book_details(8)
-        self.check_element_on_page((By.ID, "read-in-browser")).click()
+        self.assertFalse(self.check_element_on_page((By.ID, "read-in-browser")))
         current_handles = self.driver.window_handles
-        self.check_element_on_page((By.XPATH, "//ul[@aria-labelledby='read-in-browser']/li/a[contains(.,'epub')]")).click()
+        read_button = self.check_element_on_page((By.ID, "readbtn"))
+        self.assertTrue("epub" in read_button.text)
+        read_button.click()
+        #self.check_element_on_page((By.ID, "read-in-browser")).click()
+        #current_handles = self.driver.window_handles
+        #self.check_element_on_page((By.XPATH, "//ul[@aria-labelledby='read-in-browser']/li/a[contains(.,'epub')]")).click()
         new_handle = [x for x in self.driver.window_handles if x not in current_handles]
         if len(new_handle) != 1:
             self.assertFalse('Not exactly one new tab was opened')
@@ -82,14 +92,20 @@ class TestReader(unittest.TestCase, ui_class):
         self.edit_user('admin', {'viewer_role': 0})
         self.get_book_details(8)
         self.assertFalse(self.check_element_on_page((By.ID, "read-in-browser")))
+        self.assertFalse(self.check_element_on_page((By.ID, "readbtn")))
         self.edit_user('admin', {'viewer_role': 1})
 
 
     def test_pdf_reader(self):
         self.get_book_details(13)
-        self.check_element_on_page((By.ID, "read-in-browser")).click()
+        self.assertFalse(self.check_element_on_page((By.ID, "read-in-browser")))
         current_handles = self.driver.window_handles
-        self.check_element_on_page((By.XPATH, "//ul[@aria-labelledby='read-in-browser']/li/a[contains(.,'pdf')]")).click()
+        read_button = self.check_element_on_page((By.ID, "readbtn"))
+        self.assertTrue("pdf" in read_button.text)
+        read_button.click()
+        #self.check_element_on_page((By.ID, "read-in-browser")).click()
+        #current_handles = self.driver.window_handles
+        #self.check_element_on_page((By.XPATH, "//ul[@aria-labelledby='read-in-browser']/li/a[contains(.,'pdf')]")).click()
         new_handle = [x for x in self.driver.window_handles if x not in current_handles]
         if len(new_handle) != 1:
             self.assertFalse('Not exactly one new tab was opened')
@@ -105,9 +121,14 @@ class TestReader(unittest.TestCase, ui_class):
         self.edit_user('Guest', {'viewer_role': 1})
         self.logout()
         self.get_book_details(13)
-        self.check_element_on_page((By.ID, "read-in-browser")).click()
+        self.assertFalse(self.check_element_on_page((By.ID, "read-in-browser")))
         current_handles = self.driver.window_handles
-        self.check_element_on_page((By.XPATH, "//ul[@aria-labelledby='read-in-browser']/li/a[contains(.,'pdf')]")).click()
+        read_button = self.check_element_on_page((By.ID, "readbtn"))
+        self.assertTrue("pdf" in read_button.text)
+        read_button.click()
+        #self.check_element_on_page((By.ID, "read-in-browser")).click()
+        #current_handles = self.driver.window_handles
+        #self.check_element_on_page((By.XPATH, "//ul[@aria-labelledby='read-in-browser']/li/a[contains(.,'pdf')]")).click()
         new_handle = [x for x in self.driver.window_handles if x not in current_handles]
         if len(new_handle) != 1:
             self.assertFalse('Not exactly one new tab was opened')
@@ -122,9 +143,13 @@ class TestReader(unittest.TestCase, ui_class):
         self.edit_user('Guest', {'download_role': 1})
         self.logout()
         self.get_book_details(13)
-        self.check_element_on_page((By.ID, "read-in-browser")).click()
+        self.assertFalse(self.check_element_on_page((By.ID, "read-in-browser")))
         current_handles = self.driver.window_handles
-        self.check_element_on_page((By.XPATH, "//ul[@aria-labelledby='read-in-browser']/li/a[contains(.,'pdf')]")).click()
+        read_button = self.check_element_on_page((By.ID, "readbtn"))
+        self.assertTrue("pdf" in read_button.text)
+        read_button.click()
+        #self.check_element_on_page((By.ID, "read-in-browser")).click()
+        #self.check_element_on_page((By.XPATH, "//ul[@aria-labelledby='read-in-browser']/li/a[contains(.,'pdf')]")).click()
         new_handle = [x for x in self.driver.window_handles if x not in current_handles]
         if len(new_handle) != 1:
             self.assertFalse('Not exactly one new tab was opened')
@@ -142,9 +167,12 @@ class TestReader(unittest.TestCase, ui_class):
 
     def test_comic_reader(self):
         self.get_book_details(3)
-        self.check_element_on_page((By.ID, "read-in-browser")).click()
+        self.assertFalse(self.check_element_on_page((By.ID, "read-in-browser")))
         current_handles = self.driver.window_handles
-        self.check_element_on_page((By.XPATH, "//ul[@aria-labelledby='read-in-browser']/li/a[contains(.,'cbr')]")).click()
+        read_button = self.check_element_on_page((By.ID, "readbtn"))
+        self.assertTrue("cbr" in read_button.text)
+        read_button.click()
+        # self.check_element_on_page((By.XPATH, "//ul[@aria-labelledby='read-in-browser']/li/a[contains(.,'cbr')]")).click()
         new_handle = [x for x in self.driver.window_handles if x not in current_handles]
         if len(new_handle) != 1:
             self.assertFalse('Not exactly one new tab was opened')
@@ -161,10 +189,14 @@ class TestReader(unittest.TestCase, ui_class):
         time.sleep(2)
         self.check_element_on_page((By.ID, 'edit_cancel')).click()
         details = self.get_book_details()
-        self.check_element_on_page((By.ID, "listen-in-browser")).click()
+        self.assertFalse(self.check_element_on_page((By.ID, "listen-in-browser")))
+        #self.check_element_on_page((By.ID, "listen-in-browser")).click()
         current_handles = self.driver.window_handles
-        self.check_element_on_page((By.XPATH,
-                                    "//ul[@aria-labelledby='listen-in-browser']/li/a[contains(.,'" + os.path.splitext(file_name)[1][1:] + "')]")).click()
+        listen_button = self.check_element_on_page((By.ID, "listenbtn"))
+        self.assertTrue(os.path.splitext(file_name)[1][1:] in listen_button.text)
+        listen_button.click()
+        #self.check_element_on_page((By.XPATH,
+        #                            "//ul[@aria-labelledby='listen-in-browser']/li/a[contains(.,'" + os.path.splitext(file_name)[1][1:] + "')]")).click()
         new_handle = [x for x in self.driver.window_handles if x not in current_handles]
         if len(new_handle) != 1:
             self.assertFalse('Not exactly one new tab was opened')

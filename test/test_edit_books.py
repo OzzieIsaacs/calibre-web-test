@@ -775,8 +775,8 @@ class TestEditBooks(TestCase, ui_class):
         self.check_element_on_page((By.ID, 'edit_cancel')).click()
         time.sleep(2)
         details = self.get_book_details()
-        self.assertEqual('book', details['title'])
-        self.assertEqual('Unknown', details['author'][0])
+        self.assertEqual('book55 - Lul执 de Marco', details['title'])
+        self.assertEqual('Oli  Köli', details['author'][0])
         r = requests.session()
         payload = {'username': 'admin', 'password': 'admin123', 'submit':"", 'next':"/", "remember_me":"on"}
         r.post('http://127.0.0.1:8083/login', data=payload)

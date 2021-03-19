@@ -44,7 +44,7 @@ class TestDeleteDatabase(TestCase, ui_class):
         self.delete_book(11)
         self.delete_book(12)
         self.delete_book(13)
-        books = self.get_books_displayed()
+        books = self.get_books_displayed()  # ToDo: None Element has no attribute strip
         self.assertEqual(0, len(books[0]))
         self.assertEqual(0, len(books[1]))
         self.assertEqual(len(self.adv_search({'book_title': 'book10'})), 0)
