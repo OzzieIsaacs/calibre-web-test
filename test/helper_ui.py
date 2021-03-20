@@ -1628,6 +1628,8 @@ class ui_class():
                 exc_languages = self.driver.find_elements_by_xpath("//select[@id='exclude_language']/option")
                 inc_extensions = self.driver.find_elements_by_xpath("//select[@id='include_extension']/option")
                 exc_extensions = self.driver.find_elements_by_xpath("//select[@id='exclude_extension']/option")
+                inc_shelf = self.driver.find_elements_by_xpath("//select[@id='include_shelf']/option")
+                exc_shelf = self.driver.find_elements_by_xpath("//select[@id='exclude_shelf']/option")
 
                 cust_columns = self.driver.find_elements_by_xpath("//label[starts-with(@for, 'custom_')]")
                 ret = dict()
@@ -1643,23 +1645,30 @@ class ui_class():
                         'exclude_language': exc_languages,
                         'include_extension': inc_extensions,
                         'exclude_extension': exc_extensions,
+                        'include_shelf': inc_shelf,
+                        'exclude_shelf': exc_shelf,
                         'cust_columns': ret
                         }
             else:
                 text_inputs = ['book_title', 'bookAuthor', 'publisher', 'comment', 'custom_column_8',
                                'custom_column_10', 'custom_column_1', 'custom_column_6', 'custom_column_4']
                 selects = ['custom_column_9', 'custom_column_3']
+                multi_selects = ['include_tag', 'exclude_tag', 'include_serie',
+                                'exclude_serie', 'include_language', 'exclude_language', 'include_extension',
+                                'exclude_extension', 'include_shelf', 'exclude_shelf']
                 process_text = dict()
                 process_checkboxes = dict()
                 process_select = dict()
+                process_mulitselect = dict()
 
-                # check if checkboxes are in list and seperate lists
-
+                # check if checkboxes are in list and separate lists
                 for element, key in enumerate(term_dict):
                     if key in text_inputs:
                         process_text[key] = term_dict[key]
                     elif key in selects:
                         process_select[key] = term_dict[key]
+                    elif key in multi_selects:
+                        process_mulitselect[key] = term_dict[key]
                     else:
                         process_checkboxes[key] = term_dict[key]
 
@@ -1671,6 +1680,17 @@ class ui_class():
                 for element, key in enumerate(process_select):
                     select = Select(self.driver.find_element_by_id(key))
                     select.select_by_visible_text(process_select[key])
+
+                for element, key in enumerate(process_mulitselect):
+                    button = self.driver.find_element(By.XPATH, "//select[@id='"+key+"']/following-sibling::button")
+                    button.click()
+                    ele = self.driver.find_elements(By.XPATH,
+                                              "//select[@id='" + key + "']/following-sibling::div//a[@role='option']")
+                    for e in ele:
+                        if e.text == process_mulitselect[key]:
+                            e.click()
+                            break
+                    #select.select_by_visible_text(process_mulitselect[key])
 
                 for element, key in enumerate(process_checkboxes):
                     ele = self.driver.find_element(By.XPATH,

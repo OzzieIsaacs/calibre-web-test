@@ -208,7 +208,7 @@ class TestShelf(unittest.TestCase, ui_class):
         self.check_element_on_page((By.XPATH, "//ul[@id='add-to-shelves']/li/a[contains(.,'Delete')]")).click()
         # ToDo: Delete Book
         self.list_shelfs('Delete')['ele'].click()
-        shelf_books = self.get_books_displayed()
+        self.get_books_displayed()
 
     # Add muliple books to shelf and arrange the order
     def test_arrange_shelf(self):
@@ -410,8 +410,21 @@ class TestShelf(unittest.TestCase, ui_class):
         self.create_shelf('order', False)
         self.assertTrue(self.check_element_on_page((By.ID, "flash_success")))
 
-    # Change database
-    @unittest.skip("Change Database Not Implemented")
-    def test_shelf_database_change(self):
-        self.create_shelf('order', False)
+    def test_adv_search_shelf(self):
+        self.create_shelf('Search', False)
         self.assertTrue(self.check_element_on_page((By.ID, "flash_success")))
+        # add books to shelf
+        self.goto_page('nav_new')
+        self.get_book_details(3)
+        self.check_element_on_page((By.ID, "add-to-shelf")).click()
+        self.check_element_on_page((By.XPATH, "//ul[@id='add-to-shelves']/li/a[contains(.,'Search')]")).click()
+        self.get_book_details(11)
+        self.check_element_on_page((By.ID, "add-to-shelf")).click()
+        self.check_element_on_page((By.XPATH, "//ul[@id='add-to-shelves']/li/a[contains(.,'Search')]")).click()
+        self.get_book_details(12)
+        self.check_element_on_page((By.ID, "add-to-shelf")).click()
+        self.check_element_on_page((By.XPATH, "//ul[@id='add-to-shelves']/li/a[contains(.,'Search')]")).click()
+        self.assertEqual(len(self.adv_search({u'include_shelf': u'Search', 'book_title': 'book'})), 2)
+        self.assertEqual(len(self.adv_search({u'exclude_shelf': u'Search', 'book_title': 'book'})), 5)
+        self.assertEqual(len(self.adv_search({u'include_shelf': u'Search', 'include_serie': 'Djüngel'})), 1)
+        self.assertEqual(len(self.adv_search({u'include_shelf': u'Search', 'include_tag': 'Gênot'})), 2)
