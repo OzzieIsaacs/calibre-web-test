@@ -16,6 +16,14 @@ from helper_environment import environment, add_dependency
 
 
 def change_config(targetfile, config, value):
+    if config == "HOME_CONFIG":
+        home_file = os.path.join(os.path.dirname(targetfile), ".HOMEDIR")
+        if value == 'False':
+            if os.path.isfile(home_file):
+                os.remove(home_file)
+        else:
+            open(home_file, 'w').close()
+        return
     with codecs.open(targetfile, 'r') as fp:
         file = fp.read()
     replaced = re.sub("(" + config + "\s+=\s+)(.*)", r"\1" + value, file)
@@ -142,11 +150,11 @@ except CalledProcessError:
 print("Adding dependencies for executable from requirements file")
 requirements_file = os.path.join(FILEPATH, 'requirements.txt')
 p = process_open([VENV_PYTHON, "-m", "pip", "install", "-r", requirements_file], (0, 5))
-if os.name == 'nt':
-    while p.poll() == None:
-        print(p.stdout.readline())
-else:
-    p.wait()
+#if os.name == 'nt':
+while p.poll() == None:
+    print(p.stdout.readline().strip("\n"))
+#else:
+#    p.wait()
 
 # Adding precompiled dependencies for Windows
 if os.name == "nt":
@@ -157,15 +165,32 @@ if os.name == "nt":
 print("Adding dependencies for executable from optional_requirements file")
 optional_requirements_file = os.path.join(FILEPATH, 'optional-requirements.txt')
 p = process_open([VENV_PYTHON, "-m", "pip", "install", "-r", optional_requirements_file], (0, 5))
-if os.name == 'nt':
-    while p.poll() == None:
-        print(p.stdout.readline())
-else:
-    p.wait()
+#if os.name == 'nt':
+while p.poll() == None:
+    print(p.stdout.readline().strip("\n"))
+#else:
+#    p.wait()
+
 
 print("Starting build of executable via PyInstaller")
+if os.name == "nt":
+    sep = ";"
+else:
+    sep = ":"
+
 pyinst_path = os.path.join(os.path.dirname(sys.executable), pyinst)
-p = subprocess.Popen(pyinst_path +" __init__.py -i cps/static/favicon.ico -n calibreweb --add-data cps/static;cps/static --add-data cps/templates;cps/templates --add-data cps/translations;cps/translations --add-data " + FILEPATH + "/venv/lib/site-packages/google_api_python_client-1.12.8.dist-info;google_api_python_client-1.12.8.dist-info",
+google_api_path = glob.glob(os.path.join(FILEPATH,"venv","lib/**/site-packages/google_api_python*"))
+
+if len(google_api_path) != 1:
+    print('More than one google_api_python directory found exiting')
+    os.exit(1)
+p = subprocess.Popen(pyinst_path + " __init__.py "
+                                   "-i cps/static/favicon.ico "
+                                   "-n calibreweb "
+                                   "--add-data cps/static" + sep + "cps/static "
+                                   "--add-data cps/templates" + sep + "cps/templates "
+                                   "--add-data cps/translations" + sep + "cps/translations "
+                                   "--add-data " + google_api_path[0] + sep + os.path.basename(google_api_path[0]),
                      shell=True,
                      stdout=subprocess.PIPE,
                      stdin=subprocess.PIPE)

@@ -62,7 +62,7 @@ The language translations are taken from Calibre's iso639 folder in the transife
 
 # Build package files and executables
 
-Edit the file config.py in the build filder and change the pathnames to the correct ones for you installation
+Edit the file config.py in the build folder and change the pathnames to the correct ones for you installation
 
 For builing the exe installer on Windows, use Inno Setup, which can be downloaded from here https://jrsoftware.org/isinfo.php
 

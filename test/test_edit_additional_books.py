@@ -42,6 +42,13 @@ class TestEditAdditionalBooks(TestCase, ui_class):
         cls.p.terminate()
         save_logfiles(cls, cls.__name__)
 
+    def check_identifier(self, result, key, name, value, only_value=False):
+        identifier = [sub[key] for sub in result['identifier'] if key in sub]
+        self.assertTrue(len(identifier))
+        if not only_value:
+            self.assertTrue(name in identifier[0])
+        self.assertTrue(value in identifier[0])
+
     def test_upload_metadata_cbr(self):
         self.fill_basic_config({'config_uploading': 1})
         time.sleep(3)
@@ -450,62 +457,24 @@ class TestEditAdditionalBooks(TestCase, ui_class):
         self.add_identifier('kObo', 'mnopqrst')
         self.add_identifier('url', '987654')
         self.add_identifier('AMaZON_DE', 'a1b2c3')
+        self.add_identifier('kurl', '9876ä4')
+        self.add_identifier('knöffi', 'http://susi.com/huhu')
         self.check_element_on_page((By.ID, "submit")).click()
         result = self.get_book_details()
 
-        identifier = [sub['Amazon'] for sub in result['identifier'] if 'Amazon' in sub]
-        self.assertTrue(len(identifier))
-        self.assertTrue('amazon.com' in identifier[0])
-        self.assertTrue('123456' in identifier[0])
-
-        identifier = [sub['ISBN'] for sub in result['identifier'] if 'ISBN' in sub]
-        self.assertTrue(len(identifier))
-        self.assertTrue('worldcat' in identifier[0])
-        self.assertTrue('897654' in identifier[0])
-
-        identifier = [sub['DOI'] for sub in result['identifier'] if 'DOI' in sub]
-        self.assertTrue(len(result))
-        self.assertTrue('doi.org' in identifier[0])
-        self.assertTrue('abcdef' in identifier[0])
-
-        identifier = [sub['Goodreads'] for sub in result['identifier'] if 'Goodreads' in sub]
-        self.assertTrue(len(result))
-        self.assertTrue('goodreads' in identifier[0])
-        self.assertTrue('fedcba' in identifier[0])
-
-        identifier = [sub['Google Books'] for sub in result['identifier'] if 'Google Books' in sub]
-        self.assertTrue(len(identifier))
-        self.assertTrue('books.google' in identifier[0])
-        self.assertTrue('xyz' in identifier[0])
-
-        identifier = [sub['Lubimyczytac'] for sub in result['identifier'] if 'Lubimyczytac' in sub]
-        self.assertTrue(len(identifier))
-        self.assertTrue('lubimyczytac' in identifier[0])
-        self.assertTrue('jikuz' in identifier[0])
-
-        identifier = [sub['asin'] for sub in result['identifier'] if 'asin' in sub]
-        self.assertTrue(len(identifier))
-        self.assertTrue('amazon' in identifier[0])
-        self.assertTrue('abc123' in identifier[0])
-
-        identifier = [sub['Douban'] for sub in result['identifier'] if 'Douban' in sub]
-        self.assertTrue(len(result))
-        self.assertTrue('douban' in identifier[0])
-        self.assertTrue('123abc' in identifier[0])
-
-        identifier = [sub['Kobo'] for sub in result['identifier'] if 'Kobo' in sub]
-        self.assertTrue(len(identifier))
-        self.assertTrue('kobo' in identifier[0])
-        self.assertTrue('mnopqrst' in identifier[0])
-
-        identifier = [sub['url'] for sub in result['identifier'] if 'url' in sub]
-        self.assertTrue(len(identifier))
-        self.assertTrue('987654' in identifier[0])
-
-        identifier = [sub['Amazon.de'] for sub in result['identifier'] if 'Amazon.de' in sub]
-        self.assertTrue(len(identifier))
-        self.assertTrue('amazon.de' in identifier[0])
-        self.assertTrue('a1b2c3' in identifier[0])
+        self.check_identifier(result, 'Amazon', 'amazon.com', '123456')
+        self.check_identifier(result, 'ISBN', 'worldcat', '897654')
+        self.check_identifier(result, 'DOI', 'doi.org', 'abcdef')
+        self.check_identifier(result, 'Goodreads', 'goodreads', 'fedcba')
+        self.check_identifier(result, 'Google Books', 'books.google', 'xyz')
+        self.check_identifier(result, 'Lubimyczytac', 'lubimyczytac', 'jikuz')
+        self.check_identifier(result, 'asin', 'amazon', 'abc123')
+        self.check_identifier(result, 'Douban', 'douban', '123abc')
+        self.check_identifier(result, 'Kobo', 'kobo', 'mnopqrst')
+        self.check_identifier(result, 'url', '', '987654', True)
+        self.check_identifier(result, 'kurl', '', '9876ä4', True)
+        self.check_identifier(result, 'knöffi', '', 'http://susi.com/huhu', True)
+        self.check_identifier(result, 'Amazon.de', 'amazon.de', 'a1b2c3', True)
 
         self.check_element_on_page((By.ID, "edit_book")).click()
         self.delete_identifier('aMazon')
@@ -519,7 +488,11 @@ class TestEditAdditionalBooks(TestCase, ui_class):
         self.delete_identifier('kObo')
         self.delete_identifier('url')
         self.delete_identifier('AMaZON_DE')
+        self.delete_identifier('kurl')
+        self.delete_identifier('knöffi')
         self.check_element_on_page((By.ID, "submit")).click()
+        final_length = len(self.get_book_details(4)['identifier'])
+        self.assertEqual(final_length, reference_length)
 
     def test_upload_edit_role(self):
         self.fill_basic_config({'config_uploading': 1})
