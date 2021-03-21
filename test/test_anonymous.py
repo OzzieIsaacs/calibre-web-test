@@ -311,7 +311,7 @@ class TestAnonymous(unittest.TestCase, ui_class):
     def test_guest_restricted_settings_visibility(self):
         rights = self.get_user_settings('Guest')
         self.assertIsNone(rights['show_512'])
-        self.assertIsNone(rights['nickname'])
+        self.assertIsNone(rights['name'])
         self.assertIsNone(rights['show_256'])
         self.assertIsNone(rights['show_32768'])
         self.assertIsNone(rights['show_65536'])

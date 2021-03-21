@@ -532,11 +532,11 @@ class TestUserTemplate(unittest.TestCase, ui_class):
     def test_ui_language_settings(self):
         self.edit_user('admin', {'locale': 'Deutsch'})
         self.goto_page('user_setup')
-        username = self.check_element_on_page((By.XPATH, '//label[@for="nickname"]'))
+        username = self.check_element_on_page((By.XPATH, '//label[@for="name"]'))
         self.assertEqual(username.text, 'Benutzername')
         self.change_visibility_me({'locale': 'English'})
         self.goto_page('user_setup')
-        username = self.check_element_on_page((By.XPATH, '//label[@for="nickname"]'))
+        username = self.check_element_on_page((By.XPATH, '//label[@for="name"]'))
         self.assertEqual(username.text, 'Username')
 
     def test_limit_book_languages(self):

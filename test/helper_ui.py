@@ -48,7 +48,7 @@ page['mail_server'] = {'check': (By.ID, "mail_server"), 'click': [(By.ID, "top_a
 page['admin_setup'] = {'check': (By.ID, "admin_edit_email"), 'click': [(By.ID, "top_admin")]}
 page['user_setup'] = {'check': (By.ID, "kindle_mail"), 'click': [(By.ID, "top_user")]}
 page['create_shelf'] = {'check': (By.ID, "title"), 'click': [(By.ID, "nav_createshelf")]}
-page['create_user'] = {'check': (By.ID, "nickname"), 'click': [(By.ID, "top_admin"), (By.ID, "admin_new_user")]}
+page['create_user'] = {'check': (By.ID, "name"), 'click': [(By.ID, "top_admin"), (By.ID, "admin_new_user")]}
 page['register'] = {'check': (By.ID, "email"), 'click': [(By.ID, "register")]}
 page['tasks'] = {'check': (By.TAG_NAME, "h2"), 'click': [(By.ID, "top_tasks")]}
 page['login'] = {'check': (By.NAME, "username"), 'click': [(By.ID, "logout")]}
@@ -97,7 +97,7 @@ class ui_class():
     def register(cls, user, email):
         cls.goto_page('register')
         if user != '':
-            username = cls.driver.find_element_by_name("nickname")
+            username = cls.driver.find_element_by_name("name")
             username.send_keys(user)
         emailfield = cls.driver.find_element_by_name("email")
         submit = cls.driver.find_element_by_id("submit")
@@ -663,11 +663,11 @@ class ui_class():
                     return False
                 else:
                     user_settings=dict()
-                    element = self.check_element_on_page((By.ID, "nickname"))
+                    element = self.check_element_on_page((By.ID, "name"))
                     if element:
-                        user_settings['nickname'] = element.get_attribute('value')
+                        user_settings['name'] = element.get_attribute('value')
                     else:
-                        user_settings['nickname'] = None
+                        user_settings['name'] = None
                     user_settings['email'] = self.check_element_on_page((By.ID, "email")).get_attribute('value')
                     user_settings['kindle_mail'] = self.check_element_on_page((By.ID, "kindle_mail")).get_attribute('value')
                     element = self.check_element_on_page((By.ID, "locale"))
@@ -857,7 +857,7 @@ class ui_class():
     @classmethod
     def create_user(cls, name, config):
         if name:
-            config['nickname'] = name
+            config['name'] = name
         cls.goto_page('create_user')
         return cls.change_user(config)
 
@@ -876,7 +876,7 @@ class ui_class():
             'show_32','show_512', 'show_16', 'show_128', 'show_2', 'show_4',
             'show_8', 'show_64', 'show_256', 'Show_detail_random' '''
         selects = ['locale', 'default_language']
-        text_inputs = ['kindle_mail','email', 'password', 'nickname']
+        text_inputs = ['kindle_mail','email', 'password', 'name']
         process_selects = dict()
         process_checkboxes = dict()
         process_text = dict()

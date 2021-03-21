@@ -227,31 +227,31 @@ class TestRegister(unittest.TestCase, ui_class):
 
     def test_illegal_email(self):
         r = requests.session()
-        payload = {'nickname': 'user0 negativ', 'email': '1234'}
+        payload = {'name': 'user0 negativ', 'email': '1234'}
         resp = r.post('http://127.0.0.1:8083/register', data=payload)
         self.assertTrue("flash_alert" in resp.text)
         payload = {'email': '1234@gr.de'}
         resp = r.post('http://127.0.0.1:8083/register', data=payload)
         self.assertTrue("flash_alert" in resp.text)
-        payload = {'nickname': 'user0 negativ'}
+        payload = {'name': 'user0 negativ'}
         resp = r.post('http://127.0.0.1:8083/register', data=payload)
         self.assertTrue("flash_alert" in resp.text)
-        payload = {'nickname': '/etc/./passwd', 'email': '/etc/./passwd'}
+        payload = {'name': '/etc/./passwd', 'email': '/etc/./passwd'}
         resp = r.post('http://127.0.0.1:8083/register', data=payload)
         self.assertTrue("flash_alert" in resp.text)
-        payload = {"nickname": "abc123@mycom.com'\"[]()", 'email': "abc123@mycom.com'\"[]()"}
+        payload = {"name": "abc123@mycom.com'\"[]()", 'email': "abc123@mycom.com'\"[]()"}
         resp = r.post('http://127.0.0.1:8083/register', data=payload)
         self.assertTrue("flash_alert" in resp.text)
-        payload = {"nickname": "abc123@mycom.com anD 1028=1028", 'email': "abc123@mycom.com anD 1028=1028"}
+        payload = {"name": "abc123@mycom.com anD 1028=1028", 'email': "abc123@mycom.com anD 1028=1028"}
         resp = r.post('http://127.0.0.1:8083/register', data=payload)
         self.assertTrue("flash_alert" in resp.text)
-        payload = {"nickname": "abc123@myc@om.com", 'email': "abc123@myc@om.com"}
+        payload = {"name": "abc123@myc@om.com", 'email': "abc123@myc@om.com"}
         resp = r.post('http://127.0.0.1:8083/register', data=payload)
         self.assertTrue("flash_alert" in resp.text)
-        payload = {"nickname": "1234456", 'email': "1@2.3"}
+        payload = {"name": "1234456", 'email': "1@2.3"}
         resp = r.post('http://127.0.0.1:8083/register', data=payload)
         self.assertTrue("flash_success" in resp.text)
-        payload = {"nickname": "9dsfaf", 'email': "ü执1@ü执1.3"}
+        payload = {"name": "9dsfaf", 'email': "ü执1@ü执1.3"}
         resp = r.post('http://127.0.0.1:8083/register', data=payload)
         self.assertTrue("flash_success" in resp.text)
 
