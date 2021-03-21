@@ -937,22 +937,29 @@ class ui_class():
         parser = lxml.etree.HTMLParser()
         try:
             tree = lxml.etree.fromstring(text.encode('utf-8'), parser)
-            # tree = lxml.etree.parse(StringIO(text), parser)
+            ret['updated'] = tree.xpath("/html/body/feed/updated")[0].text
+            links= tree.xpath("/html/body/feed/link")
+            ret['links'] = links
+            for link in links:
+                if link.attrib['rel'] == "self":
+                    ret['self_link'] = link.attrib['href']
+                if link.attrib['rel'] == "start":
+                    ret['start_link'] = link.attrib['href']
+                if link.attrib['rel'] == "search" and link.attrib['type'] == "application/opensearchdescription+xml":
+                    ret['osd_link'] = link.attrib['href']
+                if link.attrib['rel'] == "search" and link.attrib['type'] == "application/atom+xml":
+                    ret['search_link'] = link.attrib['href']
             ret['title'] = tree.xpath("/html/body/feed/title")[0].text
             ret['id'] = tree.xpath("/html/body/feed/id")[0].text
-            ret['links'] = tree.xpath("/html/body/feed/link")
             ret['update'] = tree.xpath("/html/body/feed/updated")[0].text
             ret['author'] = tree.xpath("/html/body/feed/author/name")[0].text
             ret['uri'] = tree.xpath("/html/body/feed/author/uri")[0].text
-            # ret['entries'] = list()
             for element in tree.xpath("/html/body/feed/entry"):
                 el = dict()
                 el['link'] = element.find('link').attrib['href']
                 el['id'] = element.find('id').text
                 el['updated'] = element.find('updated').text
                 el['content'] = element.find('content').text
-                # el['title'] = element.find('title').text
-                # ret['entries'].append(el)
                 ret[element.find('title').text] = el
         except:
             pass
@@ -968,7 +975,25 @@ class ui_class():
             # tree = lxml.etree.parse(StringIO(text.encode('utf-8')), parser)
             ret['title'] = tree.xpath("/html/body/feed/title")[0].text
             ret['id'] = tree.xpath("/html/body/feed/id")[0].text
-            ret['links'] = tree.xpath("/html/body/feed/link")
+            links= tree.xpath("/html/body/feed/link")
+            ret['links'] = links
+            for link in links:
+                if link.attrib['rel'] == "self":
+                    ret['self_link'] = link.attrib['href']
+                if link.attrib['rel'] == "start":
+                    ret['start_link'] = link.attrib['href']
+                if link.attrib['rel'] == "up":
+                    ret['up_link'] = link.attrib['href']
+                if link.attrib['rel'] == "first":
+                    ret['first_link'] = link.attrib['href']
+                if link.attrib['rel'] == "next":
+                    ret['next_link'] = link.attrib['href']
+                if link.attrib['rel'] == "previous":
+                    ret['previous_link'] = link.attrib['href']
+                if link.attrib['rel'] == "search" and link.attrib['type'] == "application/opensearchdescription+xml":
+                    ret['osd_link'] = link.attrib['href']
+                if link.attrib['rel'] == "search" and link.attrib['type'] == "application/atom+xml":
+                    ret['search_link'] = link.attrib['href']
             ret['update'] = tree.xpath("/html/body/feed/updated")[0].text
             ret['author'] = tree.xpath("/html/body/feed/author/name")[0].text
             ret['uri'] = tree.xpath("/html/body/feed/author/uri")[0].text
