@@ -447,9 +447,9 @@ class ui_class():
             return False
         deleteButton.click()
         if accept:
-            submit = self.check_element_on_page((By.ID, "btnConfirmYes"))
+            submit = self.check_element_on_page((By.ID, "btnConfirmYes-GeneralDeleteModal"))
         else:
-            submit = self.check_element_on_page((By.ID, "btnConfirmNo"))
+            submit = self.check_element_on_page((By.ID, "btnConfirmNo-GeneralDeleteModal"))
         submit.click()
         time.sleep(2)
 
@@ -849,7 +849,7 @@ class ui_class():
         if name:
             self.list_shelfs(name)['ele'].click()
         self.check_element_on_page((By.ID, "delete_shelf")).click()
-        self.check_element_on_page((By.ID, "btnConfirmYes")).click()
+        self.check_element_on_page((By.ID, "btnConfirmYes-GeneralDeleteModal")).click()
         time.sleep(1)
         return
 
@@ -885,7 +885,7 @@ class ui_class():
                 time.sleep(2)
                 cls.driver.find_element_by_id('btndeluser').click()
                 time.sleep(2)
-                cls.driver.find_element_by_id('btnConfirmYes').click()
+                cls.driver.find_element_by_id('btnConfirmYes-GeneralDeleteModal').click()
                 time.sleep(2)
                 return
 
