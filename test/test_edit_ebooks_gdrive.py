@@ -787,9 +787,8 @@ class TestEditBooksOnGdrive(unittest.TestCase, ui_class):
 
     # download of books
     def test_download_book(self):
-        self.goto_page('nav_download')
-        number_books = self.get_books_displayed()
-        self.assertEqual(0, len(number_books[1]))
+        list_element = self.goto_page('nav_download')
+        self.assertEqual(len(list_element), 0)
         self.get_book_details(5)
         element = self.check_element_on_page((By.XPATH, "//*[starts-with(@id,'btnGroupDrop')]"))
         download_link = element.get_attribute("href")
@@ -808,7 +807,9 @@ class TestEditBooksOnGdrive(unittest.TestCase, ui_class):
         self.assertNotIn('download', book)
         self.edit_user('admin', {'download_role': 1})
         r.close()
-        self.goto_page('nav_download')
+        list_element = self.goto_page('nav_download')
+        self.assertEqual(len(list_element),1)
+        list_element[0].click()
         number_books = self.get_books_displayed()
         self.assertEqual(1, len(number_books[1]))
 

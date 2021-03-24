@@ -828,6 +828,7 @@ class TestLdapLogin(unittest.TestCase, ui_class):
                                 'config_ldap_group_object_filter': '',
                                 'config_ldap_openldap': 1
                                 })
+        time.sleep(1)
         self.assertTrue(self.check_element_on_page((By.ID, "flash_success")))
         time.sleep(BOOT_TIME)
         self.edit_user('admin', {'download_role': 0})
@@ -917,6 +918,7 @@ class TestLdapLogin(unittest.TestCase, ui_class):
                                 'config_ldap_group_object_filter': '',
                                 'config_ldap_openldap': 1
                                 })
+        time.sleep(1)
         self.assertTrue(self.check_element_on_page((By.ID, "flash_success")))
         time.sleep(BOOT_TIME)
         # enable anonymous browsing
@@ -1036,5 +1038,6 @@ class TestLdapLogin(unittest.TestCase, ui_class):
         self.inital_sync(self.kobo_adress)
 
         self.login("admin", "admin123")
+        time.sleep(1)
         self.edit_user('执一', {'delete': 1})
         self.fill_basic_config({'config_kobo_sync': 0})

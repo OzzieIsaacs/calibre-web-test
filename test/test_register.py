@@ -182,7 +182,7 @@ class TestRegister(unittest.TestCase, ui_class):
         self.logout()
         # admin resents password
         self.login('admin', 'admin123')
-        self.assertTrue(self.edit_user(u'upasswd', { 'resend_password':1}))
+        self.assertTrue(self.edit_user(u'upasswd', { 'resend_password': 1}))
         self.logout()
         self.assertTrue(wait_Email_received(self.email_server.handler.check_email_received))
         user, passw = self.email_server.handler.extract_register_info()

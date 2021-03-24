@@ -448,7 +448,7 @@ class TestUserTemplate(unittest.TestCase, ui_class):
     def test_detail_random_user_template(self):
         self.fill_view_config({'Show_detail_random':0})
         self.goto_page('create_user')
-        self.create_user('drand', {'password': '1234','email': 'ab@b.com'})
+        self.create_user('drand', {'password': '1234','email': 'ab@b.com', "download_role": 1})
         self.assertTrue(self.check_element_on_page((By.ID, "flash_success")))
         self.fill_view_config({'Show_detail_random': 1})
         self.logout()
@@ -502,7 +502,10 @@ class TestUserTemplate(unittest.TestCase, ui_class):
         self.goto_page("nav_hot")
         self.assertFalse(self.check_element_on_page((By.ID, "books_rand")))
         # check random books not shown in hot section
+        status, __ = self.download_book(5, "drand", "1234")
+        self.assertEqual(status, 200)
         self.goto_page("nav_download")
+        self.assertTrue(self.check_element_on_page((By.ID, "books")))
         self.assertFalse(self.check_element_on_page((By.ID, "books_rand")))
         # check random books not shown in best rated section
         self.goto_page("nav_rated")

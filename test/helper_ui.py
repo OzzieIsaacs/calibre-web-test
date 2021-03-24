@@ -6,6 +6,7 @@ from selenium.webdriver.support.ui import WebDriverWait, Select
 from selenium.webdriver.support import expected_conditions as EC
 from selenium.common.exceptions import TimeoutException
 from config_test import PY_BIN, BOOT_TIME
+import requests
 import time
 import lxml.etree
 from PIL import Image
@@ -34,7 +35,7 @@ page['nav_cat'] = {'check': (By.TAG_NAME, "h1"), 'click': [(By.ID, "nav_cat")]}
 page['nav_author'] = {'check': (By.TAG_NAME, "h1"), 'click': [(By.ID, "nav_author")]}
 page['nav_lang'] = {'check': (By.TAG_NAME, "h1"), 'click': [(By.ID, "nav_lang")]}
 page['nav_hot'] = {'check': None, 'click': [(By.ID, "nav_hot")]}
-page['nav_download'] = {'check': (By.TAG_NAME, "h2"), 'click': [(By.ID, "nav_download")]}
+page['nav_download'] = {'check': (By.TAG_NAME, "h1"), 'click': [(By.ID, "nav_download")]}
 page['nav_list'] = {'check': (By.ID, "merge_books"), 'click': [(By.ID, "nav_list")]}
 page['nav_about'] = {'check': (By.ID, "stats"), 'click': [(By.ID, "nav_about")]}
 page['nav_rated'] = {'check': None, 'click': [(By.ID, "nav_rated")]}
@@ -1384,6 +1385,16 @@ class ui_class():
             pass
         return ret
 
+    def download_book(self, id, user, password):
+        self.get_book_details(id)
+        element = self.check_element_on_page((By.XPATH, "//*[starts-with(@id,'btnGroupDrop')]"))
+        download_link = element.get_attribute("href")
+        r = requests.session()
+        payload = {'username': user, 'password': password, 'submit':"", 'next':"/", "remember_me":"on"}
+        r.post('http://127.0.0.1:8083/login', data=payload)
+        resp = r.get(download_link)
+        r.close()
+        return resp.status_code, resp.content
 
     @classmethod
     def check_tasks(cls):

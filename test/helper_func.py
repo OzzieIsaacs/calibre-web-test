@@ -264,11 +264,13 @@ def add_dependency(name, testclass_name):
 
     for indx, element in enumerate(element_version):
         with process_open([VENV_PYTHON, "-m", "pip", "install", element], (0, 4)) as r:
-            if os.name == 'nt':
-                while r.poll() == None:
-                    r.stdout.readline()
-            else:
-                r.wait()
+            while r.poll() == None:
+                print(r.stdout.readline().strip("\n"))
+            #if os.name == 'nt':
+            #    while r.poll() == None:
+            #        r.stdout.readline()
+            #else:
+            #    r.wait()
         if element.lower().startswith('git'):
             element_version[indx] = element[element.rfind('#egg=')+5:]
 
