@@ -1397,7 +1397,7 @@ class ui_class():
         return resp.status_code, resp.content
 
     @classmethod
-    def check_tasks(cls):
+    def check_tasks(cls, ref=None):
         if cls.goto_page('tasks'):
             time.sleep(1)
             parser = lxml.etree.HTMLParser()
@@ -1418,7 +1418,11 @@ class ui_class():
 
                 except IndexError:
                     pass
-            # val = cls.driver.find_elements_by_xpath("//table[@id='table']/tbody/tr/td")
+            if ref:
+                # orig = [i['start'] for i in ref]
+                # new = [i['start'] for i in val]
+                res = len([i for i in val if i in ref])
+                return (len(val) - res), val
             return val
         else:
             return False

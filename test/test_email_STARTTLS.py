@@ -60,7 +60,7 @@ class TestSTARTTLS(unittest.TestCase, ui_class):
     # start sending e-mail
     # check email received
     def test_STARTTLS(self):
-        task_len = len(self.check_tasks())
+        tasks = self.check_tasks()
         self.setup_server(False, {'mail_use_ssl': 'STARTTLS'})
         details = self.get_book_details(7)
         details['kindlebtn'].click()
@@ -71,8 +71,8 @@ class TestSTARTTLS(unittest.TestCase, ui_class):
         i = 0
         while i < 10:
             time.sleep(2)
-            ret = self.check_tasks()
-            if len(ret) - task_len == 1:
+            task_len, ret = self.check_tasks(tasks)
+            if task_len == 1:
                 if ret[-1]['result'] == 'Finished' or ret[-1]['result'] == 'Failed':
                     break
             i += 1
@@ -81,7 +81,7 @@ class TestSTARTTLS(unittest.TestCase, ui_class):
 
     # check behavior for failed server setup (SSL)
     def test_STARTTLS_SSL_setup_error(self):
-        task_len = len(self.check_tasks())
+        tasks = self.check_tasks()
         self.setup_server(False, {'mail_use_ssl':'SSL/TLS'})
         details = self.get_book_details(7)
         details['kindlebtn'].click()
@@ -92,8 +92,8 @@ class TestSTARTTLS(unittest.TestCase, ui_class):
         i = 0
         while i < 10:
             time.sleep(2)
-            ret = self.check_tasks()
-            if len(ret) - task_len == 1:
+            task_len, ret = self.check_tasks(tasks)
+            if task_len == 1:
                 if ret[-1]['result'] == 'Finished' or ret[-1]['result'] == 'Failed':
                     break
             i += 1

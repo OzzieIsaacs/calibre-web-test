@@ -120,7 +120,6 @@ class TestEbookConvertGDriveKepubify(unittest.TestCase, ui_class):
     # set excecutable not existing and start convert
     # set excecutable non excecutable and start convert
     def test_convert_wrong_excecutable(self):
-        task_len = len(self.check_tasks())
         self.fill_basic_config({'config_kepubifypath':'/opt/kepubify/ebook-polish'})
         self.goto_page('nav_about')
         element = self.check_element_on_page((By.XPATH, "//tr/th[text()='kepubify']/following::td[1]"))
