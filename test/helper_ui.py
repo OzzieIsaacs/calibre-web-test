@@ -643,13 +643,37 @@ class ui_class():
     def edit_user(cls, name, element):
         cls.goto_page('admin_setup')
         user = cls.driver.find_elements_by_xpath("//table[@id='table_user']/tbody/tr/td/a")
-        for ele in user:
-            if name == ele.text:
-                ele.click()
-                if not cls.check_element_on_page((By.ID, "email")):
-                    print('Could not edit user: %s' % name)
-                    return False
-                return cls.change_user(element)
+        # table
+        if not user:
+            user_table = cls.check_element_on_page((By.ID, "admin_user_table"))
+            if not user_table:
+                return False
+            else:
+                user_table.click()
+                # wait for page loaded
+                cls.check_element_on_page((By.ID, "user_delete_selection"))
+                time.sleep(1)
+                search = cls.check_element_on_page((By.CLASS_NAME, "search-input"))
+                if search:
+                    search.send_keys(name)
+                    cls.check_element_on_page((By.NAME, "search")).click()
+                    time.sleep(1)
+                users = cls.driver.find_elements_by_xpath("//table[@id='user-table']/tbody/tr")
+                for usr in users:
+                    if len(usr.find_elements_by_xpath("//td/a[@data-name='name'][text()='" + name + "']")):
+                        usr.find_element_by_xpath("//td/button/a").click()
+                        if not cls.check_element_on_page((By.ID, "email")):
+                            print('Could not edit user: %s' % name)
+                            return False
+                        return cls.change_user(element)
+        else:
+            for ele in user:
+                if name == ele.text:
+                    ele.click()
+                    if not cls.check_element_on_page((By.ID, "email")):
+                        print('Could not edit user: %s' % name)
+                        return False
+                    return cls.change_user(element)
         print('User: %s not found' % name)
         return False
 
