@@ -1442,9 +1442,7 @@ class ui_class():
 
                 except IndexError:
                     pass
-            if ref:
-                # orig = [i['start'] for i in ref]
-                # new = [i['start'] for i in val]
+            if isinstance(ref, list):
                 res = len([i for i in val if i in ref])
                 return (len(val) - res), val
             return val
