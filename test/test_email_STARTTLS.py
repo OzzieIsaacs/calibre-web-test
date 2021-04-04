@@ -105,8 +105,8 @@ class TestSTARTTLS(unittest.TestCase, ui_class):
         self.setup_server(False, {'mail_use_ssl': 'STARTTLS'})
         self.assertTrue(self.edit_user(u'paswd_resend', { 'resend_password': 1}))
         self.edit_user('paswd_resend', element={})
-        password_link = self.check_element_on_page((By.ID, "resend_password")).find_elements_by_tag_name("a")[0].get_attribute('href')
-        user_id = password_link[password_link.rfind("/")+1:]
+        password_link = self.check_element_on_page((By.ID, "resend_password")).get_attribute('href')
+        # user_id = password_link[password_link.rfind("/")+1:]
         self.logout()
         self.assertTrue(wait_Email_received(self.email_server.handler.check_email_received))
         user, passw = self.email_server.handler.extract_register_info()

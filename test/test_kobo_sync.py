@@ -119,32 +119,25 @@ class TestKoboSync(unittest.TestCase, ui_class):
             new_data = r.json()
             TestKoboSync.data = data
             TestKoboSync.syncToken = {'x-kobo-synctoken': r.headers['x-kobo-synctoken']}
-            #for element in r.json():
-            # if 'NewEntitlement' in element:
-            # print(element['NewEntitlement']['BookMetadata']['Title'])
             if not 'x-kobo-sync' in r.headers:
                 break
             data = new_data
-        # print('finished')
-        # data = r.json()
-        #TestKoboSync.data = data
-        #TestKoboSync.syncToken = {'x-kobo-synctoken': r.headers['x-kobo-synctoken']}
         self.assertEqual(len(data), 4, "4 Books should have valid kobo formats (epub, epub3, kebub)")
-        self.assertEqual(data[3]['NewEntitlement']['BookMetadata']['DownloadUrls'][1]['Format'], 'EPUB')
-        self.assertEqual(data[3]['NewEntitlement']['BookMetadata']['DownloadUrls'][1]['Size'], 6720)
+        self.assertEqual(data[3]['NewEntitlement']['BookMetadata']['DownloadUrls'][1]['Format'], 'EPUB', "Error {}".format(data))
+        self.assertEqual(data[3]['NewEntitlement']['BookMetadata']['DownloadUrls'][1]['Size'], 6720, "Error {}".format(data))
         self.assertEqual(data[3]['NewEntitlement']['BookMetadata']['DownloadUrls'][1]['Url'],
-                         self.kobo_adress + "/download/5/epub")
+                         self.kobo_adress + "/download/5/epub", "Error {}".format(data))
         self.assertEqual(data[3]['NewEntitlement']['BookMetadata']['Contributors'],
-                         ['John Döe执', 'Mon Go'])
+                         ['John Döe执', 'Mon Go'], "Error {}".format(data))
         self.assertEqual(data[3]['NewEntitlement']['BookMetadata']['CoverImageId'],
-                         bood_uuid)
-        self.assertEqual('<p>b物</p>', data[3]['NewEntitlement']['BookMetadata']['Description'])
+                         bood_uuid, "Error {}".format(data))
+        self.assertEqual('<p>b物</p>', data[3]['NewEntitlement']['BookMetadata']['Description'], "Error {}".format(data))
         self.assertEqual(data[3]['NewEntitlement']['BookMetadata']['Language'],
-                         'en')
+                         'en', "Error {}".format(data))
         self.assertEqual(data[3]['NewEntitlement']['BookMetadata']['Series']['Name'],
-                         'O0ü 执')
+                         'O0ü 执', "Error {}".format(data))
         self.assertEqual(data[3]['NewEntitlement']['BookMetadata']['Series']['NumberFloat'],
-                         1.5)
+                         1.5, "Error {}".format(data))
         # ToDo: What shall it look like?
         #self.assertEqual(data[0]['NewEntitlement']['BookMetadata']['Series']['Number'], 1)
         # ToDo What to expect
