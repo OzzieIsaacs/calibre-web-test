@@ -662,7 +662,7 @@ class ui_class():
                 users = cls.driver.find_elements_by_xpath("//table[@id='user-table']/tbody/tr")
                 for usr in users:
                     if len(usr.find_elements_by_xpath("//td/a[@data-name='name'][text()='" + name + "']")):
-                        usr.find_element_by_xpath("//td/button/a").click()
+                        usr.find_element_by_xpath("//td/a").click()
                         if not cls.check_element_on_page((By.ID, "email")):
                             print('Could not edit user: %s' % name)
                             return False

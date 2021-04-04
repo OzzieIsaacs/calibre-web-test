@@ -47,8 +47,9 @@ class TestUserList(TestCase, ui_class):
     @classmethod
     def setUpClass(cls):
         try:
-            debug_startup(cls, cls.py_version, {'config_calibre_dir': TEST_DB})
+            startup(cls, cls.py_version, {'config_calibre_dir': TEST_DB})
             time.sleep(3)
+            cls.mass_create_users(1)
         except Exception:
             cls.driver.quit()
             cls.p.kill()
@@ -56,8 +57,7 @@ class TestUserList(TestCase, ui_class):
     @classmethod
     def tearDownClass(cls):
         try:
-            #cls.stop_calibre_web()
-            pass
+            cls.stop_calibre_web()
         except:
             cls.driver.get("http://127.0.0.1:8083")
             time.sleep()
@@ -67,25 +67,25 @@ class TestUserList(TestCase, ui_class):
                 pass
         # close the browser window and stop calibre-web
         cls.driver.quit()
-        # cls.p.terminate()
-        # save_logfiles(cls, cls.__name__)
+        cls.p.terminate()
+        save_logfiles(cls, cls.__name__)
 
-    def mass_create_users(self, count):
-        self.create_user('no_one', {'password': '1234', 'email': 'muki1al@b.com', 'kindle_mail': 'muki1al@b.com'})
-        self.create_user('no_two', {'password': '1234', 'email': 'muki2al@b.com', "download_role": 1, "locale":"Deutsch"})
-        self.create_user('no_three', {'password': '1234', 'email': 'muki3al@b.com', 'kindle_mail': 'm11uklial@bds.com'})
-        self.create_user('no_four', {'password': '1234', 'email': 'muki4al@b.com', "download_role": 1, 'show_16': 1, "upload_role":1})
-        self.create_user('no_5', {'password': '1234', 'email': 'muki5al@b.com', 'kindle_mail': 'muki5al@bad.com'})
-        self.create_user('no_6', {'password': '1234', 'email': 'muki6al@b.com', "edit_role": 1, "locale":"Italiano", 'show_16': 1})
-        self.create_user('no_1', {'password': '1234', 'email': 'muki7al@b.com', "locale": "Polski", "passwd_role":1})
-        self.create_user('1_no', {'password': '1234', 'email': 'muki8al@b.com', 'kindle_mail': 'muki8al@bcd.com', "admin_role":1})
-        self.create_user('2_no', {'password': '1234', 'email': 'muki9al@b.com', "edit_role": 1, 'default_language': "English"})
-        self.create_user('3_no', {'password': '1234', 'email': 'muki10al@b.com', 'kindle_mail': 'muki1al@b.com', 'default_language': "Norwegian Bokmål"})
+    @classmethod
+    def mass_create_users(cls, count):
+        cls.create_user('no_one', {'password': '1234', 'email': 'muki1al@b.com', 'kindle_mail': 'muki1al@b.com'})
+        cls.create_user('no_two', {'password': '1234', 'email': 'muki2al@b.com', "download_role": 1, "locale":"Deutsch"})
+        cls.create_user('no_three', {'password': '1234', 'email': 'muki3al@b.com', 'kindle_mail': 'm11uklial@bds.com'})
+        cls.create_user('no_four', {'password': '1234', 'email': 'muki4al@b.com', "download_role": 1, 'show_16': 1, "upload_role":1})
+        cls.create_user('no_5', {'password': '1234', 'email': 'muki5al@b.com', 'kindle_mail': 'muki5al@bad.com'})
+        cls.create_user('no_6', {'password': '1234', 'email': 'muki6al@b.com', "edit_role": 1, "locale":"Italiano", 'show_16': 1})
+        cls.create_user('no_1', {'password': '1234', 'email': 'muki7al@b.com', "locale": "Polski", "passwd_role":1})
+        cls.create_user('1_no', {'password': '1234', 'email': 'muki8al@b.com', 'kindle_mail': 'muki8al@bcd.com', "admin_role":1})
+        cls.create_user('2_no', {'password': '1234', 'email': 'muki9al@b.com', "edit_role": 1, 'default_language': "English"})
+        cls.create_user('3_no', {'password': '1234', 'email': 'muki10al@b.com', 'kindle_mail': 'muki1al@b.com', 'default_language': "Norwegian Bokmål"})
         for i in range(0, count):
-            self.create_user('user_' + str(count), {'password': '1234', 'email': str(count) + 'al@b.com'})
+            cls.create_user('user_' + str(count), {'password': '1234', 'email': str(count) + 'al@b.com'})
 
     def test_user_list_edit_button(self):
-        # self.mass_create_users(1)
         ul = self.get_user_table(2)
         self.assertEqual("3_no", ul['table'][0]['Username']['text'])
         ul['table'][0]['Edit']['element'].click()
@@ -168,7 +168,49 @@ class TestUserList(TestCase, ui_class):
 
 
     def test_user_list_edit_email(self):
-        pass
+        ul = self.get_user_table(1)
+        self.assertTrue("muki1al@b.com", ul['table'][1]['E-mail Address']['text'])
+        self.edit_table_element(ul['table'][1]['E-mail Address']['element'], "nuki1al@b.com")
+        ul = self.get_user_table(-1)
+        self.assertEqual("nuki1al@b.com", ul['table'][1]['E-mail Address']['text'])
+        self.edit_table_element(ul['table'][1]['E-mail Address']['element'], "no_email")
+        self.assertTrue("Invalid e-mail" in self.check_element_on_page((By.XPATH,
+                                                          "//div[contains(@class,'editable-error-block')]")).text)
+        self.check_element_on_page((By.XPATH, "//button[contains(@class,'editable-cancel')]")).click()
 
-    def test_user_list_edit_email(self):
-        pass
+        self.edit_table_element(ul['table'][1]['E-mail Address']['element'], "muki2al@b.com")
+        self.assertTrue("existing account" in self.check_element_on_page((By.XPATH,
+                                                          "//div[contains(@class,'editable-error-block')]")).text)
+        self.check_element_on_page((By.XPATH, "//button[contains(@class,'editable-cancel')]")).click()
+        self.edit_table_element(ul['table'][1]['E-mail Address']['element'], "")
+        self.assertTrue("This Field is Required" in self.check_element_on_page((By.XPATH,
+                                                          "//div[contains(@class,'editable-error-block')]")).text)
+        self.check_element_on_page((By.XPATH, "//button[contains(@class,'editable-cancel')]")).click()
+        self.edit_table_element(ul['table'][1]['E-mail Address']['element'], " kin@de.de ")
+        ul = self.get_user_table(-1)
+        self.assertEqual("kin@de.de", ul['table'][1]['E-mail Address']['text'])
+        self.edit_table_element(ul['table'][1]['E-mail Address']['element'], "muki1al@b.com")
+        ul = self.get_user_table(-1)
+        self.assertTrue("muki1al@b.com", ul['table'][1]['E-mail Address']['text'])
+
+    '''def test_user_list_edit_kindle(self):
+        ul = self.get_user_table(1)
+        self.assertTrue("muki1al@b.com", ul['table'][1]['Kindle E-mail']['text'])
+        self.edit_table_element(ul['table'][1]['Kindle E-mail']['element'], "nuki1al@b.com")
+        ul = self.get_user_table(-1)
+        self.assertEqual("nuki1al@b.com", ul['table'][1]['E-mail Address ']['text'])
+        self.edit_table_element(ul['table'][1]['Kindle E-mail']['element'], "no_email")
+        self.assertTrue("already taken" in self.check_element_on_page((By.XPATH,
+                                                          "//div[contains(@class,'editable-error-block')]")).text)
+        self.check_element_on_page((By.XPATH, "//button[contains(@class,'editable-cancel')]")).click()
+
+        self.edit_table_element(ul['table'][1]['Kindle E-mail']['element'], "muki2al@b.com")
+        self.assertTrue("This Field is Required" in self.check_element_on_page((By.XPATH,
+                                                          "//div[contains(@class,'editable-error-block')]")).text)
+        self.check_element_on_page((By.XPATH, "//button[contains(@class,'editable-cancel')]")).click()
+        self.edit_table_element(ul['table'][1]['Kindle E-mail']['element'], "")
+        ul = self.get_user_table(-1)
+        self.assertEqual("+", ul['table'][1]['Kindle E-mail']['text'])
+        self.edit_table_element(ul['table'][1]['Kindle E-mail']['element'], "muki1al@b.com")
+        ul = self.get_user_table(-1)
+        self.assertTrue("muki1al@b.com", ul['table'][1]['Kindle E-mail']['text'])'''
