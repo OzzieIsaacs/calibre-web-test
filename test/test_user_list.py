@@ -47,9 +47,9 @@ class TestUserList(TestCase, ui_class):
     @classmethod
     def setUpClass(cls):
         try:
-            startup(cls, cls.py_version, {'config_calibre_dir': TEST_DB})
+            debug_startup(cls, cls.py_version, {'config_calibre_dir': TEST_DB})
             time.sleep(3)
-            cls.mass_create_users(1)
+            # cls.mass_create_users(1)
         except Exception:
             cls.driver.quit()
             cls.p.kill()
@@ -57,7 +57,8 @@ class TestUserList(TestCase, ui_class):
     @classmethod
     def tearDownClass(cls):
         try:
-            cls.stop_calibre_web()
+            pass
+            #cls.stop_calibre_web()
         except:
             cls.driver.get("http://127.0.0.1:8083")
             time.sleep()
@@ -67,8 +68,8 @@ class TestUserList(TestCase, ui_class):
                 pass
         # close the browser window and stop calibre-web
         cls.driver.quit()
-        cls.p.terminate()
-        save_logfiles(cls, cls.__name__)
+        # cls.p.terminate()
+        # save_logfiles(cls, cls.__name__)
 
     @classmethod
     def mass_create_users(cls, count):
@@ -193,7 +194,111 @@ class TestUserList(TestCase, ui_class):
         ul = self.get_user_table(-1)
         self.assertTrue("muki1al@b.com", ul['table'][1]['E-mail Address']['text'])
 
-    '''def test_user_list_edit_kindle(self):
+    def test_user_list_edit_kindle(self):
+        ul = self.get_user_table(1)
+        self.assertTrue("muki1al@b.com", ul['table'][1]['Kindle E-mail']['text'])
+        self.edit_table_element(ul['table'][1]['Kindle E-mail']['element'], "nuki1al@b.com")
+        ul = self.get_user_table(-1)
+        self.assertEqual("nuki1al@b.com", ul['table'][1]['Kindle E-mail']['text'])
+        self.edit_table_element(ul['table'][1]['Kindle E-mail']['element'], "no_email")
+        self.assertTrue("Invalid e-mail" in self.check_element_on_page((By.XPATH,
+                                                          "//div[contains(@class,'editable-error-block')]")).text)
+        self.check_element_on_page((By.XPATH, "//button[contains(@class,'editable-cancel')]")).click()
+        self.edit_table_element(ul['table'][1]['Kindle E-mail']['element'], "")
+        ul = self.get_user_table(-1)
+        self.assertEqual("+", ul['table'][1]['Kindle E-mail']['text'])
+        self.edit_table_element(ul['table'][1]['Kindle E-mail']['element'], "muki1al@b.com")
+        ul = self.get_user_table(-1)
+        self.assertTrue("muki1al@b.com", ul['table'][1]['Kindle E-mail']['text'])
+
+    def test_user_list_edit_locale(self):
+        ul = self.get_user_table(1)
+        self.assertTrue("English", ul['table'][1]['Locale']['text'])
+        self.edit_table_select(ul['table'][1]['Locale']['element'], "Hungarian")
+        ul = self.get_user_table(-1)
+        self.assertEqual("Hungarian", ul['table'][1]['Locale']['text'])
+        self.edit_table_select(ul['table'][1]['Locale']['element'], "Dutch", True)
+        self.assertEqual("Hungarian", ul['table'][1]['Locale']['element'].text)
+        # ToDo Mass Edit
+        self.assertEqual("Locale", ul['header'][5]['text'])
+        self.assertFalse(ul['header'][5]['element'].is_enabled())
+        self.edit_table_select(ul['table'][1]['Locale']['element'], "English")
+        ul = self.get_user_table(-1)
+        self.assertTrue("English", ul['table'][1]['Locale']['text'])
+
+    def test_user_list_edit_language(self):
+        ul = self.get_user_table(1)
+        self.assertTrue("Show All", ul['table'][1]['Visible Book Languages']['text'])
+        self.edit_table_select(ul['table'][1]['Visible Book Languages']['element'], "English")
+        ul = self.get_user_table(-1)
+        self.assertEqual("English", ul['table'][1]['Visible Book Languages']['text'])
+        self.edit_table_select(ul['table'][1]['Visible Book Languages']['element'], "Norwegian Bokmål", True)
+        self.assertEqual("English", ul['table'][1]['Locale']['element'].text)
+        # ToDo Mass Edit
+        self.assertEqual("Visible Book Languages", ul['header'][6]['text'])
+        self.assertFalse(ul['header'][6]['element'].is_enabled())
+        self.edit_table_select(ul['table'][1]['Visible Book Languages']['element'], "Show All")
+        ul = self.get_user_table(-1)
+        self.assertTrue("Show All", ul['table'][1]['Locale']['text'])
+
+    @skip("Not Implemented")
+    def test_user_list_denied_tags(self):
+        pass
+
+    def test_user_list_admin_role(self):
+        ul = self.get_user_table(1)
+        self.assertEqual("", ul['table'][1]['role_Admin']['text'])
+        self.assertFalse(ul['table'][1]['role_Admin']['element'].is_selected())
+        self.assertTrue(ul['table'][0]['role_Admin']['element'].is_selected())
+        self.assertTrue(ul['table'][8]['role_Admin']['element'].is_selected())
+        ul['table'][8]['role_Admin']['element'].click()
+        ul = self.get_user_table(-1)
+        self.assertFalse(ul['table'][8]['role_Admin']['element'].is_selected())
+
+        ul['table'][0]['role_Admin']['element'].click()
+        ul = self.get_user_table(-1)
+        self.assertTrue(ul['table'][0]['role_Admin']['element'].is_selected())
+        # ToDo: check Error Message on Remove last admin account
+        # ToDo: remove admin rights from current user
+        ul['table'][8]['role_Admin']['element'].click()
+
+    def test_user_list_download_role(self):
+        ul = self.get_user_table(1)
+        self.assertEqual("", ul['table'][1]['role_Download']['text'])
+        self.assertFalse(ul['table'][1]['role_Download']['element'].is_selected())
+        self.assertTrue(ul['table'][0]['role_Download']['element'].is_selected())
+        self.assertTrue(ul['table'][4]['role_Download']['element'].is_selected())
+        ul['table'][4]['role_Download']['element'].click()
+        ul = self.get_user_table(-1)
+        self.assertFalse(ul['table'][4]['role_Download']['element'].is_selected())
+        ul['table'][0]['role_Download']['element'].click()
+        ul = self.get_user_table(-1)
+        self.assertFalse(ul['table'][0]['role_Download']['element'].is_selected())
+        # ToDo: Mass change elements
+        # Restore default
+        ul['table'][4]['role_Download']['element'].click()
+        ul = self.get_user_table(-1)
+        ul['table'][0]['role_Download']['element'].click()
+
+    def test_user_list_edit_visiblility(self):
+        ul = self.get_user_table(1)
+        self.assertEqual("", ul['table'][1]['Show category selection']['text'])
+        self.assertTrue(ul['table'][1]['Show category selection']['element'].is_selected())
+        self.assertTrue(ul['table'][0]['Show category selection']['element'].is_selected())
+        self.assertTrue(ul['table'][4]['Show category selection']['element'].is_selected())
+        ul['table'][4]['Show category selection']['element'].click()
+        ul = self.get_user_table(-1)
+        self.assertFalse(ul['table'][4]['Show category selection']['element'].is_selected())
+        ul['table'][0]['Show category selection']['element'].click()
+        ul = self.get_user_table(-1)
+        self.assertFalse(ul['table'][0]['Show category selection']['element'].is_selected())
+        # ToDo: Mass change elements
+        # Restore default
+        ul['table'][4]['Show category selection']['element'].click()
+        ul = self.get_user_table(-1)
+        ul['table'][0]['Show category selection']['element'].click()
+
+    '''def test_user_list_search(self):
         ul = self.get_user_table(1)
         self.assertTrue("muki1al@b.com", ul['table'][1]['Kindle E-mail']['text'])
         self.edit_table_element(ul['table'][1]['Kindle E-mail']['element'], "nuki1al@b.com")

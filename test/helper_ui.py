@@ -1681,6 +1681,16 @@ class ui_class():
     def delete_blist_book(self, book):
         pass
 
+    def edit_table_select(self, table_select, new_value, cancel=False):
+        table_select.click()
+        select = Select(table_select.find_element_by_xpath("..//select"))
+        select.select_by_visible_text(new_value)
+
+        if not cancel:
+            table_select.find_element_by_xpath("..//button[contains(@class,'btn-primary')]").click()
+        else:
+            table_select.find_element_by_xpath("..//button[contains(@class,'btn-default')]").click()
+
     def edit_table_element(self, table_element, new_value, cancel=False):
         # get text of element
         table_element.click()
