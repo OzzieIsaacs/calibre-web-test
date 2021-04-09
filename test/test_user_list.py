@@ -47,9 +47,9 @@ class TestUserList(TestCase, ui_class):
     @classmethod
     def setUpClass(cls):
         try:
-            debug_startup(cls, cls.py_version, {'config_calibre_dir': TEST_DB})
+            startup(cls, cls.py_version, {'config_calibre_dir': TEST_DB})
             time.sleep(3)
-            # cls.mass_create_users(1)
+            cls.mass_create_users(1)
         except Exception:
             cls.driver.quit()
             cls.p.kill()
@@ -57,8 +57,7 @@ class TestUserList(TestCase, ui_class):
     @classmethod
     def tearDownClass(cls):
         try:
-            pass
-            #cls.stop_calibre_web()
+            cls.stop_calibre_web()
         except:
             cls.driver.get("http://127.0.0.1:8083")
             time.sleep()
@@ -68,8 +67,8 @@ class TestUserList(TestCase, ui_class):
                 pass
         # close the browser window and stop calibre-web
         cls.driver.quit()
-        # cls.p.terminate()
-        # save_logfiles(cls, cls.__name__)
+        cls.p.terminate()
+        save_logfiles(cls, cls.__name__)
 
     @classmethod
     def mass_create_users(cls, count):

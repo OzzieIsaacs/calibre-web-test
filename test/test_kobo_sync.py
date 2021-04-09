@@ -135,8 +135,9 @@ class TestKoboSync(unittest.TestCase, ui_class):
             self.assertEqual(data[3]['NewEntitlement']['BookMetadata']['Language'], 'en')
             self.assertEqual(data[3]['NewEntitlement']['BookMetadata']['Series']['Name'], 'O0ü 执')
             self.assertEqual(data[3]['NewEntitlement']['BookMetadata']['Series']['NumberFloat'], 1.5)
-        except Exception:
+        except Exception as e:
             print(data)
+            self.assertFalse(e, data)
         # ToDo: What shall it look like?
         #self.assertEqual(data[0]['NewEntitlement']['BookMetadata']['Series']['Number'], 1)
         # ToDo What to expect
@@ -583,7 +584,12 @@ class TestKoboSync(unittest.TestCase, ui_class):
         self.assertEqual(r.status_code, 200)
         TestKoboSync.syncToken = {'x-kobo-synctoken': r.headers['x-kobo-synctoken']}
         self.assertGreaterEqual(2, len(data[0]['NewEntitlement']['BookMetadata']['DownloadUrls']), data)
-        download = downloadSession.get(data[0]['NewEntitlement']['BookMetadata']['DownloadUrls'][1]['Url'], headers=TestKoboSync.header)
-        self.assertEqual(200, download.status_code)
-        self.assertEqual('application/epub+zip', download.headers['Content-Type'])
-        downloadSession.close()
+        try:
+            download = downloadSession.get(data[0]['NewEntitlement']['BookMetadata']['DownloadUrls'][1]['Url'], headers=TestKoboSync.header)
+            self.assertEqual(200, download.status_code)
+            self.assertEqual('application/epub+zip', download.headers['Content-Type'])
+            downloadSession.close()
+        except Exception as e:
+            print(e)
+            self.assertFalse(e, data)
+
