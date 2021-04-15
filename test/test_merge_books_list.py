@@ -62,7 +62,7 @@ class TestMergeBooksList(TestCase, ui_class):
         self.assertTrue(os.path.isdir(book_path1))
         self.assertEqual(0, len([name for name in os.listdir(book_path1) if os.path.isfile(name)]))
         self.get_book_details(4)
-        self.assertTrue(self.check_element_on_page((By.ID, "flash_alert")))
+        self.assertTrue(self.check_element_on_page((By.ID, "flash_danger")))
 
         # change permission of folder -> delete denied because of access rights
         book_path = os.path.join(TEST_DB, 'John Doe', 'Buuko (7)')
@@ -73,14 +73,14 @@ class TestMergeBooksList(TestCase, ui_class):
         bl['search'].send_keys(Keys.RETURN)
         time.sleep(1)
         bl = self.get_books_list(-1)
-        # delete book, -> denied because of additional folder
+
         bl['table'][0]['Delete']['element'].click()
         time.sleep(1)
         confirm = self.check_element_on_page((By.ID, "delete_confirm"))
         self.assertTrue(confirm)
         confirm.click()
         time.sleep(2)
-        self.assertTrue(self.check_element_on_page((By.ID, "flash_alert")))
+        self.assertTrue(self.check_element_on_page((By.ID, "flash_danger")))
         os.chmod(book_path, 0o775)
         self.goto_page("nav_new")
         books_after = self.get_books_displayed()

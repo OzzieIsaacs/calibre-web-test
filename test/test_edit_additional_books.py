@@ -54,9 +54,9 @@ class TestEditAdditionalBooks(TestCase, ui_class):
         time.sleep(3)
         self.assertTrue(self.check_element_on_page((By.ID, "flash_success")))
         self.fill_basic_config({'config_rarfile_location': '/bin/ur'})
-        self.assertTrue(self.check_element_on_page((By.ID, "flash_alert")))
+        self.assertTrue(self.check_element_on_page((By.ID, "flash_danger")))
         self.fill_basic_config({'config_rarfile_location': base_path})
-        self.assertTrue(self.check_element_on_page((By.ID, "flash_alert")))
+        self.assertTrue(self.check_element_on_page((By.ID, "flash_danger")))
         self.fill_basic_config({'config_rarfile_location': unrar_path()})
         self.assertTrue(self.check_element_on_page((By.ID, "flash_success")))
         time.sleep(3)
@@ -116,7 +116,7 @@ class TestEditAdditionalBooks(TestCase, ui_class):
         upload_file = os.path.join(base_path, 'files', 'book.pdf')
         upload = self.check_element_on_page((By.ID, 'btn-upload'))
         upload.send_keys(upload_file)
-        self.assertTrue(self.check_element_on_page((By.ID, "flash_alert")))
+        self.assertTrue(self.check_element_on_page((By.ID, "flash_danger")))
 
         self.goto_page('nav_new')
         upload_file = os.path.join(base_path, 'files', 'book.epub')
@@ -191,7 +191,7 @@ class TestEditAdditionalBooks(TestCase, ui_class):
         self.assertTrue(os.path.isdir(book_path1))
         self.assertEqual(0, len([name for name in os.listdir(book_path1) if os.path.isfile(name)]))
         self.get_book_details(1)
-        self.assertTrue(self.check_element_on_page((By.ID, "flash_alert")))
+        self.assertTrue(self.check_element_on_page((By.ID, "flash_danger")))
 
         details = self.get_book_details(7)
         self.assertTrue(os.path.isdir(os.path.join(TEST_DB, 'John Doe')))
@@ -204,7 +204,7 @@ class TestEditAdditionalBooks(TestCase, ui_class):
         # change permission of folder -> delete denied because of access rights
         os.chmod(book_path, 0o400)
         self.delete_book(7)
-        self.assertTrue(self.check_element_on_page((By.ID, "flash_alert")))
+        self.assertTrue(self.check_element_on_page((By.ID, "flash_danger")))
 
         # change permission back
         os.chmod(book_path, 0o775)
@@ -212,7 +212,7 @@ class TestEditAdditionalBooks(TestCase, ui_class):
         self.delete_book(7)
         self.assertTrue(self.check_element_on_page((By.ID, "flash_success")))
         self.get_book_details(7)
-        self.assertTrue(self.check_element_on_page((By.ID, "flash_alert")))
+        self.assertTrue(self.check_element_on_page((By.ID, "flash_danger")))
         self.assertTrue(os.path.isdir(os.path.join(TEST_DB, 'John Doe')))
         # delete book -> author folder deleted
         self.delete_book(5)
@@ -243,17 +243,17 @@ class TestEditAdditionalBooks(TestCase, ui_class):
         self.get_book_details(9)
         self.check_element_on_page((By.ID, "edit_book")).click()
         self.edit_book(content={u'tags': 'Geno'})
-        self.assertTrue(self.check_element_on_page((By.ID, "flash_alert")))
+        self.assertTrue(self.check_element_on_page((By.ID, "flash_danger")))
         details = self.get_book_details(9)
         self.assertEqual('Gênot', details['tag'][0])
         self.check_element_on_page((By.ID, "edit_book")).click()
         self.edit_book(content={u'book_title': 'Buuk'})
-        self.assertTrue(self.check_element_on_page((By.ID, "flash_alert")))
+        self.assertTrue(self.check_element_on_page((By.ID, "flash_danger")))
         details = self.get_book_details(9)
         self.assertEqual('Buuko', details['title'])
         self.check_element_on_page((By.ID, "edit_book")).click()
         self.edit_book(content={u'bookAuthor': 'Jon Döe'})
-        self.assertTrue(self.check_element_on_page((By.ID, "flash_alert")))
+        self.assertTrue(self.check_element_on_page((By.ID, "flash_danger")))
         details = self.get_book_details(9)
         self.assertEqual('John Döe', details['author'][0])
 
@@ -269,7 +269,7 @@ class TestEditAdditionalBooks(TestCase, ui_class):
         upload = self.check_element_on_page((By.ID, 'btn-upload'))
         upload.send_keys(upload_file)
         time.sleep(2)
-        self.assertTrue(self.check_element_on_page((By.ID, "flash_alert")))
+        self.assertTrue(self.check_element_on_page((By.ID, "flash_danger")))
         books = self.get_books_displayed()
         self.assertEqual(len(number_books[1]), len(books[1]))
         # restart and check it fails

@@ -442,9 +442,9 @@ class TestCalibreWebVisibilitys(unittest.TestCase, ui_class):
             self.assertEqual(row_count, 1)
             # goto add user page
             self.create_user(None, {'email': 'alfa@web.com'})
-            self.assertTrue(self.check_element_on_page((By.ID, "flash_alert")))
+            self.assertTrue(self.check_element_on_page((By.ID, "flash_danger")))
             self.create_user('User', {'email': 'alfa@web.com'})
-            self.assertTrue(self.check_element_on_page((By.ID, "flash_alert")))
+            self.assertTrue(self.check_element_on_page((By.ID, "flash_danger")))
             self.create_user('User', {'password': u"Guêst", 'email': 'alfa@web.com'})
             self.assertTrue(self.check_element_on_page((By.ID, "flash_success")))
             # check if on admin page

@@ -100,8 +100,8 @@ class TestUserList(TestCase, ui_class):
         ul = self.get_user_table(1)
         self.assertTrue(ul['column'])
         ul['column'].click()
-        self.assertEqual(32, len(ul['column_elements']))
-        self.assertEqual(33, len(ul['table'][0]))
+        self.assertEqual(33, len(ul['column_elements']))
+        self.assertEqual(34, len(ul['table'][0]))
         for indx, element in enumerate(ul['column_elements']):
             if element.is_selected():
                 if not ul['column_texts'][indx].text in ul['table'][0]:
@@ -120,8 +120,8 @@ class TestUserList(TestCase, ui_class):
         ul = self.get_user_table(2)
         self.assertTrue(ul['column'])
         ul['column'].click()
-        self.assertEqual(32, len(ul['column_elements']))
-        self.assertEqual(22, len(ul['table'][0]))
+        self.assertEqual(33, len(ul['column_elements']))
+        self.assertEqual(23, len(ul['table'][0]))
         self.assertFalse(ul['column_elements'][0].is_selected())
         self.assertFalse(ul['column_elements'][1].is_selected())
         self.assertFalse(ul['column_elements'][2].is_selected())
@@ -145,7 +145,7 @@ class TestUserList(TestCase, ui_class):
         ul['column_elements'][9].click()
         ul['column_elements'][10].click()
         ul = self.get_user_table(1)
-        self.assertEqual(33, len(ul['table'][0]))
+        self.assertEqual(34, len(ul['table'][0]))
 
     def test_user_list_edit_name(self):
         ul = self.get_user_table(1)
@@ -257,7 +257,7 @@ class TestUserList(TestCase, ui_class):
         ul['table'][0]['role_Admin']['element'].click()
         ul = self.get_user_table(-1)
         self.assertTrue(ul['table'][0]['role_Admin']['element'].is_selected())
-        # ToDo: check Error Message on Remove last admin account
+        self.assertTrue(self.check_element_on_page((By.ID, 'flash_danger')))
         # ToDo: remove admin rights from current user
         ul['table'][8]['role_Admin']['element'].click()
 

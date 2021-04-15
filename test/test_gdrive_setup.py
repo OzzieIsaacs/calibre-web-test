@@ -92,7 +92,7 @@ class TestSetupGdrive(unittest.TestCase, ui_class):
     def test_config_gdrive(self):
         # invalid db and tick gdrive
         self.fill_initial_config(dict(config_calibre_dir=TEST_DB[:-1], config_use_google_drive=1))
-        self.assertTrue(self.check_element_on_page((By.ID, 'flash_alert')))
+        self.assertTrue(self.check_element_on_page((By.ID, 'flash_danger')))
         # Tick gdrive and valid db
         self.fill_initial_config(dict(config_calibre_dir=TEST_DB, config_use_google_drive=1))
         # error no json file

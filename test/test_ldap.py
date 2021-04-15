@@ -114,17 +114,17 @@ class TestLdapLogin(unittest.TestCase, ui_class):
         time.sleep(BOOT_TIME)
         # leave hostname empty and password empty
         self.fill_basic_config({'config_ldap_provider_url':''})
-        message= self.check_element_on_page((By.ID, "flash_alert"))
+        message= self.check_element_on_page((By.ID, "flash_danger"))
         self.assertTrue(message)
         self.assertTrue('LDAP Provider' in message.text)
         # leave administrator empty
         self.fill_basic_config({'config_ldap_provider_url': '127.0.0.1', 'config_ldap_serv_username': ''})
-        message= self.check_element_on_page((By.ID, "flash_alert"))
+        message= self.check_element_on_page((By.ID, "flash_danger"))
         self.assertTrue(message)
         self.assertTrue('Password' in message.text)
         # leave administrator empty and change to Unauthenticated
         self.fill_basic_config({'config_ldap_authentication': 'Unauthenticated'})
-        message= self.check_element_on_page((By.ID, "flash_alert"))
+        message= self.check_element_on_page((By.ID, "flash_danger"))
         self.assertTrue(message)
         self.assertTrue('Service Account' in message.text)
         # leave administrator empty and change to Unauthenticated
@@ -135,38 +135,38 @@ class TestLdapLogin(unittest.TestCase, ui_class):
                                 'config_ldap_serv_username': 'cn=root,dc=calibreweb,dc=com'})
         # it can't be assured that password is empty if other tests run before
         time.sleep(BOOT_TIME)
-        #message= self.check_element_on_page((By.ID, "flash_alert"))
+        #message= self.check_element_on_page((By.ID, "flash_danger"))
         #self.assertTrue(message)
         #self.assertTrue('Service Account' in message.text)
         # leave DN empty
         self.fill_basic_config({'config_ldap_serv_password': 'secret', 'config_ldap_dn': ''})
-        message= self.check_element_on_page((By.ID, "flash_alert"))
+        message= self.check_element_on_page((By.ID, "flash_danger"))
         self.assertTrue(message)
         self.assertTrue('DN' in message.text)
         # leave user object empty
         self.fill_basic_config({'config_ldap_dn': 'ou=people,dc=calibreweb,dc=com', 'config_ldap_user_object': ''})
-        message= self.check_element_on_page((By.ID, "flash_alert"))
+        message= self.check_element_on_page((By.ID, "flash_danger"))
         self.assertTrue(message)
         self.assertTrue('User Object' in message.text)
         # leave user object without %s
         self.fill_basic_config({'config_ldap_user_object': '(&(objectClass=person)(uid=seven))'})
-        message= self.check_element_on_page((By.ID, "flash_alert"))
+        message= self.check_element_on_page((By.ID, "flash_danger"))
         self.assertTrue(message)
         self.assertTrue('%s' in message.text)
         # leave user object with unequal praenthesis
         self.fill_basic_config({'config_ldap_user_object': '(&(objectClass=person)(uid=%s)'})
-        message= self.check_element_on_page((By.ID, "flash_alert"))
+        message= self.check_element_on_page((By.ID, "flash_danger"))
         self.assertTrue(message)
         self.assertTrue('Parenthesis' in message.text)
         # leave groupOject filter without %s
         self.fill_basic_config({'config_ldap_user_object': '(&(objectClass=person)(uid=%s))',
                                 'config_ldap_group_object_filter': '(&(objectClass=groupofnames)(group=cps))'})
-        message= self.check_element_on_page((By.ID, "flash_alert"))
+        message= self.check_element_on_page((By.ID, "flash_danger"))
         self.assertTrue(message)
         self.assertTrue('%s' in message.text)
         # leave groupObject filter unequal praenthesis
         self.fill_basic_config({'config_ldap_group_object_filter': '(&(objectClass=groupofnames)(group=%s)'})
-        message= self.check_element_on_page((By.ID, "flash_alert"))
+        message= self.check_element_on_page((By.ID, "flash_danger"))
         self.assertTrue(message)
         self.assertTrue('Parenthesis' in message.text)
         self.fill_basic_config({'config_ldap_group_object_filter': '(&(objectClass=groupofnames)(group=%s))'})
@@ -176,15 +176,15 @@ class TestLdapLogin(unittest.TestCase, ui_class):
         self.assertTrue(self.check_element_on_page((By.ID, "flash_success")))
         time.sleep(BOOT_TIME)
         self.fill_basic_config({'config_ldap_cacert_path': 'nofile'})
-        message= self.check_element_on_page((By.ID, "flash_alert"))
+        message= self.check_element_on_page((By.ID, "flash_danger"))
         self.assertTrue(message)
         self.assertTrue('Location is not Valid' in message.text)
         self.fill_basic_config({'config_ldap_cacert_path': '', 'config_ldap_cert_path': 'nofile'})
-        message= self.check_element_on_page((By.ID, "flash_alert"))
+        message= self.check_element_on_page((By.ID, "flash_danger"))
         self.assertTrue(message)
         self.assertTrue('Location is not Valid' in message.text)
         self.fill_basic_config({'config_ldap_cert_path': '', 'config_ldap_key_path': 'nofile'})
-        message= self.check_element_on_page((By.ID, "flash_alert"))
+        message= self.check_element_on_page((By.ID, "flash_danger"))
         self.assertTrue(message)
         self.assertTrue('Location is not Valid' in message.text)
         self.fill_basic_config({'config_ldap_cacert_path': '',
@@ -224,14 +224,14 @@ class TestLdapLogin(unittest.TestCase, ui_class):
         self.logout()
         # try login -> LDAP not reachable
         self.login('user0','terces')
-        message= self.check_element_on_page((By.ID, "flash_alert"))
+        message= self.check_element_on_page((By.ID, "flash_danger"))
         self.assertTrue(message)
         self.assertTrue('LDAP Server' in message.text)
         # start ldap
         self.server.relisten(config=1, port=3268, encrypt=None)
         # try login, wrong password
         self.login('user0', 'terce')
-        message= self.check_element_on_page((By.ID, "flash_alert"))
+        message= self.check_element_on_page((By.ID, "flash_danger"))
         self.assertTrue(message)
         # login
         self.login('user0', 'terces')
@@ -240,7 +240,7 @@ class TestLdapLogin(unittest.TestCase, ui_class):
         self.logout()
         # try login fallback password -> fail
         self.login('user0', '1234')
-        self.assertTrue(self.check_element_on_page((By.ID, "flash_alert")))
+        self.assertTrue(self.check_element_on_page((By.ID, "flash_danger")))
 
         #login as admin
         self.login('admin','admin123')
@@ -252,7 +252,7 @@ class TestLdapLogin(unittest.TestCase, ui_class):
         self.logout()
         # try login LDAP password -> fail
         self.login('user0', 'terces')
-        self.assertTrue(self.check_element_on_page((By.ID, "flash_alert")))
+        self.assertTrue(self.check_element_on_page((By.ID, "flash_danger")))
 
         # stop ldap
         self.server.stopListen()
@@ -288,10 +288,10 @@ class TestLdapLogin(unittest.TestCase, ui_class):
         time.sleep(2)
         self.fill_basic_config({'ldap_import_user_filter': 'Custom Filter',
                                 'config_ldap_member_user_object':'member'})
-        self.assertTrue(self.check_element_on_page((By.ID, "flash_alert")))
+        self.assertTrue(self.check_element_on_page((By.ID, "flash_danger")))
         self.fill_basic_config({'ldap_import_user_filter': 'Custom Filter',
                                 'config_ldap_member_user_object': 'member=((%s)'})
-        self.assertTrue(self.check_element_on_page((By.ID, "flash_alert")))
+        self.assertTrue(self.check_element_on_page((By.ID, "flash_danger")))
         self.fill_basic_config({'ldap_import_user_filter': 'Custom Filter',
                                 'config_ldap_member_user_object': 'cn=%s'})
         self.assertTrue(self.check_element_on_page((By.ID, "flash_success")))
@@ -559,7 +559,7 @@ class TestLdapLogin(unittest.TestCase, ui_class):
         self.logout()
         # try login -> not reachable
         self.login('user0', 'terces')
-        self.assertTrue(self.check_element_on_page((By.ID, "flash_alert")))
+        self.assertTrue(self.check_element_on_page((By.ID, "flash_danger")))
         # login admin
         self.login('admin', 'admin123')
         self.assertTrue(self.check_element_on_page((By.ID, "flash_warning")))
@@ -621,7 +621,7 @@ class TestLdapLogin(unittest.TestCase, ui_class):
         self.logout()
         # try login -> not reachable
         self.login('user0', 'terces')
-        self.assertTrue(self.check_element_on_page((By.ID, "flash_alert")))
+        self.assertTrue(self.check_element_on_page((By.ID, "flash_danger")))
         # login admin
         self.login('admin', 'admin123')
         self.assertTrue(self.check_element_on_page((By.ID, "flash_warning")))
@@ -670,7 +670,7 @@ class TestLdapLogin(unittest.TestCase, ui_class):
         self.logout()
         # try login -> not reachable
         self.login('user0', 'terces')
-        self.assertTrue(self.check_element_on_page((By.ID, "flash_alert")))
+        self.assertTrue(self.check_element_on_page((By.ID, "flash_danger")))
         # login admin
         self.login('admin', 'admin123')
         self.assertTrue(self.check_element_on_page((By.ID, "flash_warning")))
@@ -682,7 +682,7 @@ class TestLdapLogin(unittest.TestCase, ui_class):
         self.logout()
         # try login -> not reachable
         self.login('user0', 'terces')
-        self.assertTrue(self.check_element_on_page((By.ID, "flash_alert")))
+        self.assertTrue(self.check_element_on_page((By.ID, "flash_danger")))
         # try login without openLDAP config
         self.login('admin', 'admin123')
         self.assertTrue(self.check_element_on_page((By.ID, "flash_warning")))
@@ -690,7 +690,7 @@ class TestLdapLogin(unittest.TestCase, ui_class):
         time.sleep(BOOT_TIME)
         self.logout()
         self.login('user0', 'terces')
-        self.assertTrue(self.check_element_on_page((By.ID, "flash_alert")))
+        self.assertTrue(self.check_element_on_page((By.ID, "flash_danger")))
 
         # check login with wrong user object string
         self.login('admin', 'admin123')
@@ -699,7 +699,7 @@ class TestLdapLogin(unittest.TestCase, ui_class):
         time.sleep(BOOT_TIME)
         self.logout()
         self.login('user0', 'terces')
-        self.assertTrue(self.check_element_on_page((By.ID, "flash_alert")))
+        self.assertTrue(self.check_element_on_page((By.ID, "flash_danger")))
 
         # check login with wrong dn string
         self.login('admin', 'admin123')
@@ -709,7 +709,7 @@ class TestLdapLogin(unittest.TestCase, ui_class):
         time.sleep(BOOT_TIME)
         self.logout()
         self.login('user0', 'terces')
-        self.assertTrue(self.check_element_on_page((By.ID, "flash_alert")))
+        self.assertTrue(self.check_element_on_page((By.ID, "flash_danger")))
 
         # check login with wrong admins password
         self.login('admin', 'admin123')
@@ -719,7 +719,7 @@ class TestLdapLogin(unittest.TestCase, ui_class):
         time.sleep(BOOT_TIME)
         self.logout()
         self.login('user0', 'terces')
-        self.assertTrue(self.check_element_on_page((By.ID, "flash_alert")))
+        self.assertTrue(self.check_element_on_page((By.ID, "flash_danger")))
 
         # check login with wrong admins name
         # ToDo:
@@ -730,7 +730,7 @@ class TestLdapLogin(unittest.TestCase, ui_class):
         time.sleep(BOOT_TIME)
         self.logout()
         self.login('user0', 'terces')
-        self.assertTrue(self.check_element_on_page((By.ID, "flash_alert")))
+        self.assertTrue(self.check_element_on_page((By.ID, "flash_danger")))
 
         self.login('admin', 'admin123')
         self.assertTrue(self.check_element_on_page((By.ID, "flash_warning")))
@@ -769,7 +769,7 @@ class TestLdapLogin(unittest.TestCase, ui_class):
         self.server.relisten(config=1, port=3268, encrypt=None, auth=1)
         # login as LDAP user
         self.login('user0', 'terces')
-        message=self.check_element_on_page((By.ID, "flash_alert"))
+        message=self.check_element_on_page((By.ID, "flash_danger"))
         self.assertTrue(message)
         self.assertTrue('admin login' in message.text)
         # login as admin
@@ -792,7 +792,7 @@ class TestLdapLogin(unittest.TestCase, ui_class):
 
         # login as LDAP user
         self.login('user0', 'terces')
-        message = self.check_element_on_page((By.ID, "flash_alert"))
+        message = self.check_element_on_page((By.ID, "flash_danger"))
         self.assertTrue(message)
         self.assertTrue('admin login' in message.text)
         # login as admin

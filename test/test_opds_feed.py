@@ -477,8 +477,33 @@ class TestOPDSFeed(unittest.TestCase, ui_class):
         r = requests.get('http://127.0.0.1:8083/opds', auth=('一执'.encode('utf-8'), '1234'))
         self.assertEqual(200, r.status_code)
         self.login("admin", "admin123")
-        self.edit_user('admin', {'delete': 1})
+        self.edit_user('一执', {'delete': 1})
         self.logout()
+
+    def test_opds_colon_password(self):
+        self.login("admin", "admin123")
+        self.create_user('usi', {'email': 'a8@b.com', 'password': '12:34'})
+        self.assertTrue(self.check_element_on_page((By.ID, "flash_success")))
+        self.create_user('uv:i', {'email': 'a9@b.com', 'password': '1234'})
+        self.assertTrue(self.check_element_on_page((By.ID, "flash_success")))
+        self.logout()
+        r = requests.get('http://127.0.0.1:8083/opds', auth=('usi', '12:34'))
+        self.assertEqual(200, r.status_code)
+        r = requests.get('http://127.0.0.1:8083/opds', auth=('uv:i', '1234'))
+        # Users with colon are invalid: rfc7617
+        # Furthermore, a user-id containing a colon character is invalid, as
+        # the first colon in a user-pass string separates user-id and password
+        # from one another; text after the first colon is part of the password.
+        # User-ids containing colons cannot be encoded in user-pass strings.
+        self.assertEqual(401, r.status_code)
+        self.login("admin", "admin123")
+        self.assertTrue(self.check_element_on_page((By.ID, "flash_success")))
+        self.edit_user('usi', {'delete': 1})
+        self.assertTrue(self.check_element_on_page((By.ID, "flash_success")))
+        self.edit_user('uv:i', {'delete': 1})
+        self.assertTrue(self.check_element_on_page((By.ID, "flash_success")))
+        self.logout()
+
 
     def test_opds_cover(self):
         r = requests.get('http://127.0.0.1:8083/opds', auth=('admin', 'admin123'))

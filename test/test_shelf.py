@@ -58,7 +58,7 @@ class TestShelf(unittest.TestCase, ui_class):
         self.assertFalse(len(self.list_shelfs()))
         # other user is not able to add books
         self.driver.get("http://127.0.0.1:8083/shelf/add/1/1")
-        self.assertTrue(self.check_element_on_page((By.ID, "flash_alert")))
+        self.assertTrue(self.check_element_on_page((By.ID, "flash_danger")))
         self.logout()
         self.login('admin','admin123')
         books = self.get_books_displayed()
@@ -76,7 +76,7 @@ class TestShelf(unittest.TestCase, ui_class):
         self.assertFalse(len(self.list_shelfs()))
         # other user is not able to add books
         self.driver.get("http://127.0.0.1:8083/shelf/add/1/1")
-        self.assertTrue(self.check_element_on_page((By.ID, "flash_alert")))
+        self.assertTrue(self.check_element_on_page((By.ID, "flash_danger")))
         self.create_shelf('Pü 执', False)
         self.assertTrue(len(self.list_shelfs()))
         self.logout()
@@ -114,7 +114,7 @@ class TestShelf(unittest.TestCase, ui_class):
         # No random books displayed, 2 books in shelf
         self.assertTrue(len(shelf_books) == 2)
         self.create_shelf('Gü 执', True)
-        self.assertTrue(self.check_element_on_page((By.ID, "flash_alert")))
+        self.assertTrue(self.check_element_on_page((By.ID, "flash_danger")))
         self.create_shelf('Gü 执', False)
         self.assertTrue(self.check_element_on_page((By.ID, "flash_success")))
         shelfs=self.list_shelfs()
@@ -176,7 +176,7 @@ class TestShelf(unittest.TestCase, ui_class):
         submit = self.check_element_on_page((By.ID, "submit"))
         submit.click()
         # can't rename shelf to same name of other shelf
-        self.assertTrue(self.check_element_on_page((By.ID, "flash_alert")))
+        self.assertTrue(self.check_element_on_page((By.ID, "flash_danger")))
         self.logout()
         # logout and try to create another shelf with same name, even if user can't see shelfs name
         self.login('shelf','123')

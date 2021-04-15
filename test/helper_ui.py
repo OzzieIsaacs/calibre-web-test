@@ -1623,6 +1623,8 @@ class ui_class():
             time.sleep(2)
             if not self.goto_list_page(page):
                 return False
+        else:
+            time.sleep(1)
         header = self.driver.find_elements_by_xpath("//thead/tr/th/div[starts-with(@class, 'th-inner')]")
         rows = self.driver.find_elements_by_xpath("//tbody/tr")
         table = list()
@@ -1709,6 +1711,8 @@ class ui_class():
             time.sleep(2)
             if not self.goto_list_page(page):
                 return False
+        else:
+            time.sleep(1)
         # header = self.driver.find_elements_by_xpath("//thead/tr/th/div[starts-with(@class, 'th-inner')]")
         header_edit = list()
         header = self.driver.find_elements_by_xpath("//table[@id='user-table']/thead/tr/th")
