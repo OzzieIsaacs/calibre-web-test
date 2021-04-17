@@ -89,7 +89,7 @@ for file in sorted(glob.glob1("./translations", "*.po")):
     languageFile=open("./translations/" + file)
     LanguageTranslation=pofile.read_po(languageFile)
     languageFile.close()
-    lang_name = LC.parse(langcode).get_language_name('en')
+    lang_name = LC.parse(langcode).english_name
     translation_list.append("| {} | {} of strings {} translated |".format(lang_name, count, allMsg))
     print("{} language: {} of strings {} translated".format(lang_name, count, allMsg))
     iso_translations = dict()

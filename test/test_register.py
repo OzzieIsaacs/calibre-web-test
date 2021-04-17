@@ -63,7 +63,7 @@ class TestRegister(unittest.TestCase, ui_class):
             self.assertTrue(self.check_element_on_page((By.ID, "flash_success")))
         self.setup_server(False, {'mail_server':'mail.example.org'})
         self.logout()
-        self.assertEqual(u'flash_alert',self.register(u'noserver','alo@de.org'))
+        self.assertEqual(u'flash_danger',self.register(u'noserver','alo@de.org'))
         self.goto_page('unlogged_login')
         self.login('admin', 'admin123')
         self.setup_server(False, {'mail_server': '127.0.0.1'})
@@ -88,7 +88,7 @@ class TestRegister(unittest.TestCase, ui_class):
         a_domains = self.list_domains(allow=True)
         self.assertEqual(a_domains[0]['domain'], '*.com')
         self.logout()
-        self.assertEqual(self.register('nocom','alfa@com.de'), 'flash_alert')
+        self.assertEqual(self.register('nocom','alfa@com.de'), 'flash_danger')
         self.assertEqual(self.register('nocom', 'alfa@com.com'),'flash_success')
         self.login('admin','admin123')
         self.goto_page('mail_server')
@@ -110,8 +110,8 @@ class TestRegister(unittest.TestCase, ui_class):
         d_domains = self.list_domains(allow=False)
         self.assertEqual(d_domains[0]['domain'], '*dod@g?ogle.c*')
         self.logout()
-        self.assertEqual(self.register('nocom1','a.dod@google.com'),'flash_alert')
-        self.assertEqual(self.register('nocom2', 'doda@google.cum'), 'flash_alert')
+        self.assertEqual(self.register('nocom1','a.dod@google.com'),'flash_danger')
+        self.assertEqual(self.register('nocom2', 'doda@google.cum'), 'flash_danger')
         self.assertEqual(self.register('nocom3', 'dod@koogle.com'), 'flash_success')
         #cleanup
         self.login('admin','admin123')
@@ -146,15 +146,15 @@ class TestRegister(unittest.TestCase, ui_class):
         self.assertEqual(u'flash_success',self.register(u'udouble','huj@de.com'))
         self.assertTrue(wait_Email_received(self.email_server.handler.check_email_received))
         self.email_server.handler.reset_email_received()
-        self.assertEqual(u'flash_alert',self.register(u'udouble','huj@de.cem'))
+        self.assertEqual(u'flash_danger',self.register(u'udouble','huj@de.cem'))
         self.email_server.handler.reset_email_received()
-        self.assertEqual(u'flash_alert',self.register(u'udoubl','huj@de.com'))
+        self.assertEqual(u'flash_danger',self.register(u'udoubl','huj@de.com'))
         self.email_server.handler.reset_email_received()
-        self.assertEqual(u'flash_alert',self.register(u'UdoUble','huo@de.com'))
+        self.assertEqual(u'flash_danger',self.register(u'UdoUble','huo@de.com'))
         self.email_server.handler.reset_email_received()
-        self.assertEqual(u'flash_alert',self.register(u'UdoUble','huJ@dE.com'))
+        self.assertEqual(u'flash_danger',self.register(u'UdoUble','huJ@dE.com'))
         self.email_server.handler.reset_email_received()
-        self.assertEqual(u'flash_alert',self.register(u'UdoUble','huJ@de'))
+        self.assertEqual(u'flash_danger',self.register(u'UdoUble','huJ@de'))
 
     # user registers, user changes password, user forgets password, admin resents password for user
     def test_user_change_password(self):
@@ -182,7 +182,7 @@ class TestRegister(unittest.TestCase, ui_class):
         self.logout()
         # admin resents password
         self.login('admin', 'admin123')
-        self.assertTrue(self.edit_user(u'upasswd', { 'resend_password':1}))
+        self.assertTrue(self.edit_user(u'upasswd', { 'resend_password': 1}))
         self.logout()
         self.assertTrue(wait_Email_received(self.email_server.handler.check_email_received))
         user, passw = self.email_server.handler.extract_register_info()
@@ -227,31 +227,31 @@ class TestRegister(unittest.TestCase, ui_class):
 
     def test_illegal_email(self):
         r = requests.session()
-        payload = {'nickname': 'user0 negativ', 'email': '1234'}
+        payload = {'name': 'user0 negativ', 'email': '1234'}
         resp = r.post('http://127.0.0.1:8083/register', data=payload)
-        self.assertTrue("flash_alert" in resp.text)
+        self.assertTrue("flash_danger" in resp.text)
         payload = {'email': '1234@gr.de'}
         resp = r.post('http://127.0.0.1:8083/register', data=payload)
-        self.assertTrue("flash_alert" in resp.text)
-        payload = {'nickname': 'user0 negativ'}
+        self.assertTrue("flash_danger" in resp.text)
+        payload = {'name': 'user0 negativ'}
         resp = r.post('http://127.0.0.1:8083/register', data=payload)
-        self.assertTrue("flash_alert" in resp.text)
-        payload = {'nickname': '/etc/./passwd', 'email': '/etc/./passwd'}
+        self.assertTrue("flash_danger" in resp.text)
+        payload = {'name': '/etc/./passwd', 'email': '/etc/./passwd'}
         resp = r.post('http://127.0.0.1:8083/register', data=payload)
-        self.assertTrue("flash_alert" in resp.text)
-        payload = {"nickname": "abc123@mycom.com'\"[]()", 'email': "abc123@mycom.com'\"[]()"}
+        self.assertTrue("flash_danger" in resp.text)
+        payload = {"name": "abc123@mycom.com'\"[]()", 'email': "abc123@mycom.com'\"[]()"}
         resp = r.post('http://127.0.0.1:8083/register', data=payload)
-        self.assertTrue("flash_alert" in resp.text)
-        payload = {"nickname": "abc123@mycom.com anD 1028=1028", 'email': "abc123@mycom.com anD 1028=1028"}
+        self.assertTrue("flash_danger" in resp.text)
+        payload = {"name": "abc123@mycom.com anD 1028=1028", 'email': "abc123@mycom.com anD 1028=1028"}
         resp = r.post('http://127.0.0.1:8083/register', data=payload)
-        self.assertTrue("flash_alert" in resp.text)
-        payload = {"nickname": "abc123@myc@om.com", 'email': "abc123@myc@om.com"}
+        self.assertTrue("flash_danger" in resp.text)
+        payload = {"name": "abc123@myc@om.com", 'email': "abc123@myc@om.com"}
         resp = r.post('http://127.0.0.1:8083/register', data=payload)
-        self.assertTrue("flash_alert" in resp.text)
-        payload = {"nickname": "1234456", 'email': "1@2.3"}
+        self.assertTrue("flash_danger" in resp.text)
+        payload = {"name": "1234456", 'email': "1@2.3"}
         resp = r.post('http://127.0.0.1:8083/register', data=payload)
         self.assertTrue("flash_success" in resp.text)
-        payload = {"nickname": "9dsfaf", 'email': "ü执1@ü执1.3"}
+        payload = {"name": "9dsfaf", 'email': "ü执1@ü执1.3"}
         resp = r.post('http://127.0.0.1:8083/register', data=payload)
         self.assertTrue("flash_success" in resp.text)
 

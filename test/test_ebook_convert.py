@@ -87,7 +87,7 @@ class TestEbookConvertCalibre(unittest.TestCase, ui_class):
     # set excecutable not existing and start convert
     # set excecutable non excecutable and start convert
     def test_convert_wrong_excecutable(self):
-        task_len = len(self.check_tasks())
+        tasks = self.check_tasks()
         self.fill_basic_config({'config_converterpath':'/opt/calibre/ebook-polish'})
         self.goto_page('nav_about')
         element = self.check_element_on_page((By.XPATH, "//tr/th[text()='ebook converter']/following::td[1]"))
@@ -133,12 +133,12 @@ class TestEbookConvertCalibre(unittest.TestCase, ui_class):
         i = 0
         while i < 10:
             time.sleep(2)
-            ret = self.check_tasks()
-            if len(ret) - task_len == 2:
+            task_len, ret = self.check_tasks(tasks)
+            if task_len == 2:
                 if ret[-1]['result'] == 'Finished' or ret[-1]['result'] == 'Failed':
                     break
             i += 1
-        self.assertEqual(len(ret), (task_len+2) % 20)
+        self.assertEqual(2, task_len)
         if len(ret) > 1:
             self.assertEqual(ret[-2]['result'], 'Failed')
         self.assertEqual(ret[-1]['result'], 'Failed')
@@ -149,7 +149,7 @@ class TestEbookConvertCalibre(unittest.TestCase, ui_class):
     # set parameters for convert ( --margin-righ) and start conversion -> conversion failed
     # remove parameters for conversion
     def test_convert_parameter(self):
-        task_len = len(self.check_tasks())
+        tasks = self.check_tasks()
         self.fill_basic_config({'config_calibre': '--margin-right 11.9'})
         vals = self.get_convert_book(8)
         select = Select(vals['btn_from'])
@@ -160,8 +160,8 @@ class TestEbookConvertCalibre(unittest.TestCase, ui_class):
         time.sleep(1)
         self.assertTrue(self.check_element_on_page((By.ID, "flash_success")))
         time.sleep(4)
-        ret = self.check_tasks()
-        self.assertEqual(len(ret) - 1, task_len)
+        task_len, ret = self.check_tasks(tasks)
+        self.assertEqual(1, task_len)
         self.assertEqual(ret[-1]['result'], 'Finished')
 
         self.fill_basic_config({'config_calibre': '--margin-rght 11.9'})
@@ -174,8 +174,8 @@ class TestEbookConvertCalibre(unittest.TestCase, ui_class):
         time.sleep(1)
         self.assertTrue(self.check_element_on_page((By.ID, "flash_success")))
         time.sleep(4)
-        ret = self.check_tasks()
-        self.assertEqual(len(ret), (task_len + 2) % 20)
+        task_len, ret = self.check_tasks(tasks)
+        self.assertEqual(2, task_len)
         self.assertEqual(ret[-1]['result'], 'Failed')
         self.fill_basic_config({'config_calibre': ''})
 
@@ -184,7 +184,7 @@ class TestEbookConvertCalibre(unittest.TestCase, ui_class):
     # check email received
     def test_convert_email(self):
         self.setup_server(True, {'mail_password': '10234', 'mail_use_ssl':'None'})
-        task_len = len(self.check_tasks())
+        tasks = self.check_tasks()
         details = self.get_book_details(9)
         self.assertEqual(len(details['kindle']), 1)
         details['kindlebtn'].click()
@@ -194,8 +194,8 @@ class TestEbookConvertCalibre(unittest.TestCase, ui_class):
         i = 0
         while i < 10:
             time.sleep(2)
-            ret = self.check_tasks()
-            if len(ret) - task_len == 2:
+            task_len, ret = self.check_tasks(tasks)
+            if task_len == 2:
                 if ret[-1]['result'] == 'Finished' or ret[-1]['result'] == 'Failed':
                     break
             i += 1
@@ -231,7 +231,7 @@ class TestEbookConvertCalibre(unittest.TestCase, ui_class):
         with open(orig_file, 'wb') as fout:
             fout.write(os.urandom(124))
         self.setup_server(True, {'mail_password': '10234'})
-        task_len = len(self.check_tasks())
+        tasks = self.check_tasks()
         details = self.get_book_details(8)
         self.assertEqual(len(details['kindle']), 1)
         details['kindlebtn'].click()
@@ -241,8 +241,8 @@ class TestEbookConvertCalibre(unittest.TestCase, ui_class):
         i = 0
         while i < 10:
             time.sleep(2)
-            ret = self.check_tasks()
-            if len(ret) - task_len == 1:
+            task_len, ret = self.check_tasks(tasks)
+            if task_len == 1:
                 if ret[-1]['result'] == 'Finished' or ret[-1]['result'] == 'Failed':
                     break
             i += 1
@@ -331,26 +331,26 @@ class TestEbookConvertCalibre(unittest.TestCase, ui_class):
 
         self.create_user('solo', {'password': '123', 'email': 'a@b.com', 'edit_role':1})
         time.sleep(2)
-        ret = self.check_tasks()
-        lenret = len(ret)
-        if lenret > 6:
-            self.assertEqual(ret[-6]['result'], 'Finished')
-        if lenret > 5:
-            self.assertEqual(ret[-5]['result'], 'Finished')
-        if lenret > 4:
-            self.assertEqual(ret[-4]['result'], 'Finished')
-        if lenret > 3:
-            self.assertEqual(ret[-3]['result'], 'Finished')
-        if lenret > 2:
-            self.assertEqual(ret[-2]['result'], 'Finished')
-        if lenret > 1:
-            self.assertEqual(ret[-1]['result'], 'Finished')
-        memory = len(ret)
+        ret_orig = self.check_tasks()
+        # lenret = len(ret)
+        #if lenret > 6:
+        self.assertEqual(ret_orig[-6]['result'], 'Finished')
+        # f lenret > 5:
+        self.assertEqual(ret_orig[-5]['result'], 'Finished')
+        #if lenret > 4:
+        self.assertEqual(ret_orig[-4]['result'], 'Finished')
+        #if lenret > 3:
+        self.assertEqual(ret_orig[-3]['result'], 'Finished')
+        #if lenret > 2:
+        self.assertEqual(ret_orig[-2]['result'], 'Finished')
+        #if lenret > 1:
+        self.assertEqual(ret_orig[-1]['result'], 'Finished')
+        # memory = len(ret)
 
         self.logout()
         self.login('solo', '123')
-        ret = self.check_tasks()
-        self.assertEqual(0, len(ret))
+        ret_user = self.check_tasks()
+        self.assertEqual(0, len(ret_user))
 
         vals = self.get_convert_book(7)
         select = Select(vals['btn_from'])
@@ -365,8 +365,8 @@ class TestEbookConvertCalibre(unittest.TestCase, ui_class):
 
         self.logout()
         self.login('admin', 'admin123')
-        ret = self.check_tasks()
-        self.assertEqual(memory + 1, len(ret))
+        task_len, ret = self.check_tasks(ret_orig)
+        self.assertEqual(1, task_len)
         # create shelf
         self.create_shelf('bookFORMAT', False)
         # add book 7,1 to shelf
@@ -397,7 +397,7 @@ class TestEbookConvertCalibre(unittest.TestCase, ui_class):
     # check filename
     def test_email_only(self):
         self.setup_server(True, {'mail_use_ssl': 'None', 'mail_password': '10234'})
-        task_len = len(self.check_tasks())
+        tasks = self.check_tasks()
         vals = self.get_convert_book(8)
         select = Select(vals['btn_from'])
         select.select_by_visible_text('EPUB')
@@ -408,8 +408,8 @@ class TestEbookConvertCalibre(unittest.TestCase, ui_class):
         i = 0
         while i < 10:
             time.sleep(2)
-            ret = self.check_tasks()
-            if len(ret) - task_len == 1:
+            task_len, ret = self.check_tasks(tasks)
+            if task_len == 1:
                 if ret[-1]['result'] == 'Finished' or ret[-1]['result'] == 'Failed':
                     break
             i += 1
@@ -423,8 +423,8 @@ class TestEbookConvertCalibre(unittest.TestCase, ui_class):
         i = 0
         while i < 10:
             time.sleep(2)
-            ret = self.check_tasks()
-            if len(ret) - task_len == 2:
+            task_len, ret = self.check_tasks(tasks)
+            if task_len == 2:
                 if ret[-1]['result'] == 'Finished' or ret[-1]['result'] == 'Failed':
                     break
             i += 1
@@ -437,7 +437,7 @@ class TestEbookConvertCalibre(unittest.TestCase, ui_class):
     # conversion okay, email failed
     def test_email_failed(self):
         self.setup_server(False, {'mail_password': '10234'})
-        task_len = len(self.check_tasks())
+        tasks = self.check_tasks()
         details = self.get_book_details(5)
         self.email_server.handler.set_return_value(552)
         # = '552 Requested mail action aborted: exceeded storage allocation'
@@ -449,8 +449,8 @@ class TestEbookConvertCalibre(unittest.TestCase, ui_class):
         i = 0
         while i < 10:
             time.sleep(2)
-            ret = self.check_tasks()
-            if len(ret) - task_len == 1:
+            task_len, ret = self.check_tasks(tasks)
+            if task_len == 1:
                 if ret[-1]['result'] == 'Finished' or ret[-1]['result'] == 'Failed':
                     break
             i += 1
@@ -461,7 +461,7 @@ class TestEbookConvertCalibre(unittest.TestCase, ui_class):
 
     # check behavior for failed server setup (STARTTLS)
     def test_starttls_smtp_setup_error(self):
-        task_len = len(self.check_tasks())
+        tasks = self.check_tasks()
         self.setup_server(False, {'mail_use_ssl':'STARTTLS', 'mail_password':'10234'})
         details = self.get_book_details(7)
         details['kindlebtn'].click()
@@ -472,8 +472,8 @@ class TestEbookConvertCalibre(unittest.TestCase, ui_class):
         i = 0
         while i < 10:
             time.sleep(2)
-            ret = self.check_tasks()
-            if len(ret) - task_len == 1:
+            task_len, ret = self.check_tasks(tasks)
+            if task_len == 1:
                 if ret[-1]['result'] == 'Finished' or ret[-1]['result'] == 'Failed':
                     break
             i += 1
@@ -481,7 +481,7 @@ class TestEbookConvertCalibre(unittest.TestCase, ui_class):
 
     # check behavior for failed server setup (SSL)
     def test_ssl_smtp_setup_error(self):
-        task_len = len(self.check_tasks())
+        tasks = self.check_tasks()
         self.setup_server(False, {'mail_use_ssl':'SSL/TLS', 'mail_password':'10234'})
         details = self.get_book_details(7)
         details['kindlebtn'].click()
@@ -492,8 +492,8 @@ class TestEbookConvertCalibre(unittest.TestCase, ui_class):
         i = 0
         while i < 10:
             time.sleep(2)
-            ret = self.check_tasks()
-            if len(ret) - task_len == 1:
+            task_len, ret = self.check_tasks(tasks)
+            if task_len == 1:
                 if ret[-1]['result'] == 'Finished' or ret[-1]['result'] == 'Failed':
                     break
             i += 1

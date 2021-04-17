@@ -6,6 +6,7 @@ from selenium.webdriver.support.ui import WebDriverWait, Select
 from selenium.webdriver.support import expected_conditions as EC
 from selenium.common.exceptions import TimeoutException
 from config_test import PY_BIN, BOOT_TIME
+import requests
 import time
 import lxml.etree
 from PIL import Image
@@ -34,7 +35,7 @@ page['nav_cat'] = {'check': (By.TAG_NAME, "h1"), 'click': [(By.ID, "nav_cat")]}
 page['nav_author'] = {'check': (By.TAG_NAME, "h1"), 'click': [(By.ID, "nav_author")]}
 page['nav_lang'] = {'check': (By.TAG_NAME, "h1"), 'click': [(By.ID, "nav_lang")]}
 page['nav_hot'] = {'check': None, 'click': [(By.ID, "nav_hot")]}
-page['nav_download'] = {'check': (By.TAG_NAME, "h2"), 'click': [(By.ID, "nav_download")]}
+page['nav_download'] = {'check': (By.TAG_NAME, "h1"), 'click': [(By.ID, "nav_download")]}
 page['nav_list'] = {'check': (By.ID, "merge_books"), 'click': [(By.ID, "nav_list")]}
 page['nav_about'] = {'check': (By.ID, "stats"), 'click': [(By.ID, "nav_about")]}
 page['nav_rated'] = {'check': None, 'click': [(By.ID, "nav_rated")]}
@@ -45,10 +46,11 @@ page['basic_config'] = {'check': (By.ID, "config_calibre_dir"),
                         'click': [(By.ID, "top_admin"), (By.ID, "basic_config")]}
 page['view_config'] = {'check': None, 'click': [(By.ID, "top_admin"), (By.ID, "view_config")]}
 page['mail_server'] = {'check': (By.ID, "mail_server"), 'click': [(By.ID, "top_admin"), (By.ID, "admin_edit_email")]}
+page['user_list'] = {'check': (By.ID, "user_delete_selection"), 'click': [(By.ID, "top_admin"), (By.ID, "admin_user_table")]}
 page['admin_setup'] = {'check': (By.ID, "admin_edit_email"), 'click': [(By.ID, "top_admin")]}
 page['user_setup'] = {'check': (By.ID, "kindle_mail"), 'click': [(By.ID, "top_user")]}
 page['create_shelf'] = {'check': (By.ID, "title"), 'click': [(By.ID, "nav_createshelf")]}
-page['create_user'] = {'check': (By.ID, "nickname"), 'click': [(By.ID, "top_admin"), (By.ID, "admin_new_user")]}
+page['create_user'] = {'check': (By.ID, "name"), 'click': [(By.ID, "top_admin"), (By.ID, "admin_new_user")]}
 page['register'] = {'check': (By.ID, "email"), 'click': [(By.ID, "register")]}
 page['tasks'] = {'check': (By.TAG_NAME, "h2"), 'click': [(By.ID, "top_tasks")]}
 page['login'] = {'check': (By.NAME, "username"), 'click': [(By.ID, "logout")]}
@@ -97,7 +99,7 @@ class ui_class():
     def register(cls, user, email):
         cls.goto_page('register')
         if user != '':
-            username = cls.driver.find_element_by_name("nickname")
+            username = cls.driver.find_element_by_name("name")
             username.send_keys(user)
         emailfield = cls.driver.find_element_by_name("email")
         submit = cls.driver.find_element_by_id("submit")
@@ -447,9 +449,9 @@ class ui_class():
             return False
         deleteButton.click()
         if accept:
-            submit = self.check_element_on_page((By.ID, "btnConfirmYes"))
+            submit = self.check_element_on_page((By.ID, "btnConfirmYes-GeneralDeleteModal"))
         else:
-            submit = self.check_element_on_page((By.ID, "btnConfirmNo"))
+            submit = self.check_element_on_page((By.ID, "btnConfirmNo-GeneralDeleteModal"))
         submit.click()
         time.sleep(2)
 
@@ -642,13 +644,37 @@ class ui_class():
     def edit_user(cls, name, element):
         cls.goto_page('admin_setup')
         user = cls.driver.find_elements_by_xpath("//table[@id='table_user']/tbody/tr/td/a")
-        for ele in user:
-            if name == ele.text:
-                ele.click()
-                if not cls.check_element_on_page((By.ID, "email")):
-                    print('Could not edit user: %s' % name)
-                    return False
-                return cls.change_user(element)
+        # table
+        if not user:
+            user_table = cls.check_element_on_page((By.ID, "admin_user_table"))
+            if not user_table:
+                return False
+            else:
+                user_table.click()
+                # wait for page loaded
+                cls.check_element_on_page((By.ID, "user_delete_selection"))
+                time.sleep(1)
+                search = cls.check_element_on_page((By.CLASS_NAME, "search-input"))
+                if search:
+                    search.send_keys(name)
+                    cls.check_element_on_page((By.NAME, "search")).click()
+                    time.sleep(1)
+                users = cls.driver.find_elements_by_xpath("//table[@id='user-table']/tbody/tr")
+                for usr in users:
+                    if len(usr.find_elements_by_xpath("//td/a[@data-name='name'][text()='" + name + "']")):
+                        usr.find_element_by_xpath("//td/a").click()
+                        if not cls.check_element_on_page((By.ID, "email")):
+                            print('Could not edit user: %s' % name)
+                            return False
+                        return cls.change_user(element)
+        else:
+            for ele in user:
+                if name == ele.text:
+                    ele.click()
+                    if not cls.check_element_on_page((By.ID, "email")):
+                        print('Could not edit user: %s' % name)
+                        return False
+                    return cls.change_user(element)
         print('User: %s not found' % name)
         return False
 
@@ -663,11 +689,11 @@ class ui_class():
                     return False
                 else:
                     user_settings=dict()
-                    element = self.check_element_on_page((By.ID, "nickname"))
+                    element = self.check_element_on_page((By.ID, "name"))
                     if element:
-                        user_settings['nickname'] = element.get_attribute('value')
+                        user_settings['name'] = element.get_attribute('value')
                     else:
-                        user_settings['nickname'] = None
+                        user_settings['name'] = None
                     user_settings['email'] = self.check_element_on_page((By.ID, "email")).get_attribute('value')
                     user_settings['kindle_mail'] = self.check_element_on_page((By.ID, "kindle_mail")).get_attribute('value')
                     element = self.check_element_on_page((By.ID, "locale"))
@@ -849,7 +875,7 @@ class ui_class():
         if name:
             self.list_shelfs(name)['ele'].click()
         self.check_element_on_page((By.ID, "delete_shelf")).click()
-        self.check_element_on_page((By.ID, "btnConfirmYes")).click()
+        self.check_element_on_page((By.ID, "btnConfirmYes-GeneralDeleteModal")).click()
         time.sleep(1)
         return
 
@@ -857,7 +883,7 @@ class ui_class():
     @classmethod
     def create_user(cls, name, config):
         if name:
-            config['nickname'] = name
+            config['name'] = name
         cls.goto_page('create_user')
         return cls.change_user(config)
 
@@ -876,7 +902,7 @@ class ui_class():
             'show_32','show_512', 'show_16', 'show_128', 'show_2', 'show_4',
             'show_8', 'show_64', 'show_256', 'Show_detail_random' '''
         selects = ['locale', 'default_language']
-        text_inputs = ['kindle_mail','email', 'password', 'nickname']
+        text_inputs = ['kindle_mail','email', 'password', 'name']
         process_selects = dict()
         process_checkboxes = dict()
         process_text = dict()
@@ -885,7 +911,7 @@ class ui_class():
                 time.sleep(2)
                 cls.driver.find_element_by_id('btndeluser').click()
                 time.sleep(2)
-                cls.driver.find_element_by_id('btnConfirmYes').click()
+                cls.driver.find_element_by_id('btnConfirmYes-GeneralDeleteModal').click()
                 time.sleep(2)
                 return
 
@@ -1384,9 +1410,19 @@ class ui_class():
             pass
         return ret
 
+    def download_book(self, id, user, password):
+        self.get_book_details(id)
+        element = self.check_element_on_page((By.XPATH, "//*[starts-with(@id,'btnGroupDrop')]"))
+        download_link = element.get_attribute("href")
+        r = requests.session()
+        payload = {'username': user, 'password': password, 'submit':"", 'next':"/", "remember_me":"on"}
+        r.post('http://127.0.0.1:8083/login', data=payload)
+        resp = r.get(download_link)
+        r.close()
+        return resp.status_code, resp.content
 
     @classmethod
-    def check_tasks(cls):
+    def check_tasks(cls, ref=None):
         if cls.goto_page('tasks'):
             time.sleep(1)
             parser = lxml.etree.HTMLParser()
@@ -1407,7 +1443,9 @@ class ui_class():
 
                 except IndexError:
                     pass
-            # val = cls.driver.find_elements_by_xpath("//table[@id='table']/tbody/tr/td")
+            if isinstance(ref, list):
+                res = len([i for i in val if i in ref])
+                return (len(val) - res), val
             return val
         else:
             return False
@@ -1566,9 +1604,9 @@ class ui_class():
         time.sleep(2)
         return True
 
-    def goto_blist_page(self, page):
-        if not self.check_element_on_page((By.CLASS_NAME, "pagination")):
-            return False
+    def goto_list_page(self, page):
+        if page == 1:
+            return True
         pages = self.driver.find_elements_by_class_name("page-item")
         for p in pages:
             if p.text == str(page):
@@ -1578,17 +1616,57 @@ class ui_class():
                 return True
         return False
 
-    def get_blist(self, page=1):
+    def get_books_list(self, page=1):
         # get current page
         if not page == -1:
             self.goto_page('nav_list')
             time.sleep(2)
-            if not self.goto_blist_page(page):
+            if not self.goto_list_page(page):
                 return False
+        else:
+            time.sleep(1)
         header = self.driver.find_elements_by_xpath("//thead/tr/th/div[starts-with(@class, 'th-inner')]")
         rows = self.driver.find_elements_by_xpath("//tbody/tr")
-        for row in rows:
-            elements = row.find_elements_by_xpath("./td")
+        table = list()
+        ret = dict()
+        for element in rows:
+            ele = dict()
+            row_elements = element.find_elements_by_xpath("./td")
+            for cnt, el in enumerate(row_elements):
+                click_element = el.find_elements_by_xpath("./a | ./label/input | ./div")
+                if click_element and len(click_element):
+                    click_element = click_element[0]
+                else:
+                    click_element = el
+                if header[cnt].text == "":
+                    index = "selector"
+                else:
+                    index = header[cnt].text
+                if click_element.text == "" and click_element.tag_name == "a":
+                    element_text = "+" if "glyphicon-plus" in click_element.find_elements_by_xpath("./span")[0].get_attribute('class') else ""
+                else:
+                    element_text = el.text
+                ele[index] = {'element': click_element, 'sort': header[cnt], 'text': element_text}
+            table.append(ele)
+
+        ret['pagination'] = dict()
+        if self.check_element_on_page((By.CLASS_NAME, "pagination")):
+            pages = self.driver.find_elements_by_class_name("page-item")
+            for page in pages:
+                active = 'active' in page.get_attribute('class')
+                disabled = "disabled" in page.get_attribute('class')
+                ret['pagination'][page.text] = {'link': page.find_element_by_xpath('./a'), 'active': active, 'disabled': disabled}
+        ret['table'] = table
+        ret['column'] = self.check_element_on_page((By.XPATH, "//*[@aria-label='Columns']"))
+        ret['column_elements'] = self.driver.find_elements_by_xpath("//*[@role='menuitem']/label/input")
+        ret['column_texts'] = self.driver.find_elements_by_xpath("//*[@role='menuitem']/label/span")
+        ret['search'] = self.check_element_on_page((By.CLASS_NAME, "search-input"))
+        ret['remove-btn'] = self.check_element_on_page((By.ID, "delete_selection"))
+        ret['merge-btn'] = self.check_element_on_page((By.ID, "merge_books"))
+        ret['title_sort'] = self.check_element_on_page((By.ID, "autoupdate_titlesort"))
+        ret['author_sort'] = self.check_element_on_page((By.ID, "autoupdate_authorsort"))
+        return ret
+
 
     def select_blist_books(self, books):
         pass
@@ -1605,8 +1683,96 @@ class ui_class():
     def delete_blist_book(self, book):
         pass
 
-    def edit_blist_book(self, book_dict):
-        pass
+    def edit_table_select(self, table_select, new_value, cancel=False):
+        table_select.click()
+        select = Select(table_select.find_element_by_xpath("..//select"))
+        select.select_by_visible_text(new_value)
+
+        if not cancel:
+            table_select.find_element_by_xpath("..//button[contains(@class,'btn-primary')]").click()
+        else:
+            table_select.find_element_by_xpath("..//button[contains(@class,'btn-default')]").click()
+
+    def edit_table_element(self, table_element, new_value, cancel=False):
+        # get text of element
+        table_element.click()
+        element = table_element.find_element_by_xpath("..//input") # .get_attribute('value')
+        element.clear()
+        element.send_keys(new_value)
+        if not cancel:
+            table_element.find_element_by_xpath("..//button[contains(@class,'btn-primary')]").click()
+        else:
+            table_element.find_element_by_xpath("..//button[contains(@class,'btn-default')]").click()
+
+    def get_user_table(self, page=1):
+        # get current page
+        if not page == -1:
+            self.goto_page('user_list')
+            time.sleep(2)
+            if not self.goto_list_page(page):
+                return False
+        else:
+            time.sleep(1)
+        # header = self.driver.find_elements_by_xpath("//thead/tr/th/div[starts-with(@class, 'th-inner')]")
+        header_edit = list()
+        header = self.driver.find_elements_by_xpath("//table[@id='user-table']/thead/tr/th")
+        for cnt, head in enumerate(header):
+            header_edit.insert(cnt, dict())
+            header_edit[cnt]['sort'] = head.find_element_by_xpath("./div[starts-with(@class, 'th-inner')]")
+            if head.get_attribute("data-field") == "locale":
+                header_edit[cnt]['text'] = head.text.split("\n\n")[1]
+                header_edit[cnt]['element'] = head.find_element_by_xpath(".//div/select")
+            elif head.get_attribute("data-field") == "default_language":
+                header_edit[cnt]['text'] = head.text.split("\n\n")[1]
+                header_edit[cnt]['element'] = head.find_element_by_xpath(".//div/select")
+            elif head.get_attribute("data-field") in ["role", "sidebar_view"]:
+                if head.get_attribute("data-field") == "role":
+                    header_edit[cnt]['text'] = head.get_attribute("data-field") + "_" + head.find_element_by_xpath("./div").text.split("\n")[2]
+                else:
+                    header_edit[cnt]['text'] = head.find_element_by_xpath("./div").text.split("\n")[2]
+                header_edit[cnt]['element'] = head.find_elements_by_xpath(".//div[contains(@class,'form-check')]")
+            else:
+                if header_edit[cnt]['sort'].text == "":
+                    header_edit[cnt]['text'] = "selector"
+                else:
+                    header_edit[cnt]['text'] = header_edit[cnt]['sort'].text.split('\n')[-1]
+
+        rows = self.driver.find_elements_by_xpath("//tbody/tr")
+
+        table = list()
+        ret = dict()
+        for element in rows:
+            ele = dict()
+            row_elements = element.find_elements_by_xpath("./td")
+            for cnt, el in enumerate(row_elements):
+                click_element = el.find_elements_by_xpath("./a | ./label/input | ./div | ./button | ./input")
+                if click_element and len(click_element):
+                    click_element = click_element[0]
+                else:
+                    click_element = el
+                index = header_edit[cnt]['text']
+                if click_element.text == "" and click_element.tag_name == "a":
+                    element_text = "+" if "glyphicon-plus" in click_element.find_elements_by_xpath("./span")[0].get_attribute('class') else ""
+                else:
+                    element_text = el.text
+                ele[index] = {'element': click_element, 'sort': header_edit[cnt]['sort'], 'text': element_text}
+            table.append(ele)
+
+        ret['pagination'] = dict()
+        if self.check_element_on_page((By.CLASS_NAME, "pagination")):
+            pages = self.driver.find_elements_by_class_name("page-item")
+            for page in pages:
+                active = 'active' in page.get_attribute('class')
+                disabled = "disabled" in page.get_attribute('class')
+                ret['pagination'][page.text] = {'link': page.find_element_by_xpath('./a'), 'active': active, 'disabled': disabled}
+        ret['table'] = table
+        ret['header'] = header_edit
+        ret['column'] = self.check_element_on_page((By.XPATH, "//*[@aria-label='Columns']"))
+        ret['column_elements'] = self.driver.find_elements_by_xpath("//*[@role='menuitem']/label/input")
+        ret['column_texts'] = self.driver.find_elements_by_xpath("//*[@role='menuitem']/label/span")
+        ret['search'] = self.check_element_on_page((By.CLASS_NAME, "search-input"))
+        ret['remove-btn'] = self.check_element_on_page((By.ID, "user_delete_selection"))
+        return ret
 
 
     @classmethod

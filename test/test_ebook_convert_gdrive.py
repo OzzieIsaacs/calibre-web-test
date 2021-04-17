@@ -135,7 +135,7 @@ class TestEbookConvertCalibreGDrive(unittest.TestCase, ui_class):
     # remove parameters for conversion
     def test_convert_parameter(self):
         time.sleep(WAIT_GDRIVE)
-        task_len = len(self.check_tasks())
+        tasks = self.check_tasks()
         self.fill_basic_config({'config_calibre': '--margin-right 11.9'})
         vals = self.get_convert_book(8)
         select = Select(vals['btn_from'])
@@ -147,12 +147,12 @@ class TestEbookConvertCalibreGDrive(unittest.TestCase, ui_class):
         i = 0
         while i < 20:
             time.sleep(2)
-            ret = self.check_tasks()
-            if len(ret) - task_len == 1:
+            task_len, ret = self.check_tasks(tasks)
+            if task_len == 1:
                 if ret[-1]['result'] == 'Finished' or ret[-1]['result'] == 'Failed':
                     break
             i += 1
-        self.assertEqual(len(ret) - 1, task_len)
+        self.assertEqual(task_len, 1)
         self.assertEqual(ret[-1]['result'], 'Finished')
 
         self.fill_basic_config({'config_calibre': '--margin-rght 11.9'})
@@ -164,8 +164,8 @@ class TestEbookConvertCalibreGDrive(unittest.TestCase, ui_class):
         self.driver.find_element_by_id("btn-book-convert").click()
         self.assertTrue(self.check_element_on_page((By.ID, "flash_success")))
         time.sleep(8)
-        ret = self.check_tasks()
-        self.assertEqual(len(ret), (task_len + 2) % 20)
+        task_len, ret = self.check_tasks(tasks)
+        self.assertEqual(task_len, 2)
         self.assertEqual(ret[-1]['result'], 'Failed')
         self.fill_basic_config({'config_calibre': ''})
 
@@ -174,15 +174,15 @@ class TestEbookConvertCalibreGDrive(unittest.TestCase, ui_class):
     # check email received
     def test_convert_email(self):
         self.setup_server(True, {'mail_password': '10234', 'mail_use_ssl':'None'})
-        task_len = len(self.check_tasks())
+        tasks = self.check_tasks()
         details = self.get_book_details(9)
         self.assertEqual(len(details['kindle']), 1)
         details['kindlebtn'].click()
         i = 0
         while i < 40:
             time.sleep(2)
-            ret = self.check_tasks()
-            if len(ret) - task_len == 2:
+            task_len, ret = self.check_tasks(tasks)
+            if task_len == 2:
                 if ret[-1]['result'] == 'Finished' or ret[-1]['result'] == 'Failed':
                     break
             i += 1
@@ -214,15 +214,15 @@ class TestEbookConvertCalibreGDrive(unittest.TestCase, ui_class):
         # with open(orig_file, 'wb') as fout:
         #    fout.write(os.urandom(124))
         self.setup_server(True, {'mail_password': '10234'})
-        task_len = len(self.check_tasks())
+        tasks = self.check_tasks()
         details = self.get_book_details(8)
         self.assertEqual(len(details['kindle']), 1)
         details['kindlebtn'].click()
         i = 0
         while i < 20:
             time.sleep(2)
-            ret = self.check_tasks()
-            if len(ret) - task_len == 1:
+            task_len, ret = self.check_tasks(tasks)
+            if task_len == 1:
                 if ret[-1]['result'] == 'Finished' or ret[-1]['result'] == 'Failed':
                     break
             i += 1
@@ -251,7 +251,7 @@ class TestEbookConvertCalibreGDrive(unittest.TestCase, ui_class):
     # login as admin
     # check conversion result conversion of other user visible
     def test_convert_only(self):
-        task_len = len(self.check_tasks())
+        tasks = self.check_tasks()
         vals = self.get_convert_book(7)
         select = Select(vals['btn_from'])
         select.select_by_visible_text('MOBI')
@@ -309,31 +309,31 @@ class TestEbookConvertCalibreGDrive(unittest.TestCase, ui_class):
         i = 0
         while i < 50:
             time.sleep(2)
-            ret = self.check_tasks()
-            if len(ret) - task_len >= 1:
+            task_len, ret = self.check_tasks(tasks)
+            if task_len == 6:
                 if ret[-1]['result'] == 'Finished' or ret[-1]['result'] == 'Failed':
                     break
             i += 1
-        lenret = len(ret)
-        if lenret > 6:
-            self.assertEqual(ret[-6]['result'], 'Finished')
-        if lenret > 5:
-            self.assertEqual(ret[-5]['result'], 'Finished')
-        if lenret > 4:
-            self.assertEqual(ret[-4]['result'], 'Finished')
-        if lenret > 3:
-            self.assertEqual(ret[-3]['result'], 'Finished')
-        if lenret > 2:
-            self.assertEqual(ret[-2]['result'], 'Finished')
-        if lenret > 1:
-            self.assertEqual(ret[-1]['result'], 'Finished')
+        # lenret = len(ret)
+        #if lenret > 6:
+        self.assertEqual(ret[-6]['result'], 'Finished')
+        #if lenret > 5:
+        self.assertEqual(ret[-5]['result'], 'Finished')
+        # f lenret > 4:
+        self.assertEqual(ret[-4]['result'], 'Finished')
+        # if lenret > 3:
+        self.assertEqual(ret[-3]['result'], 'Finished')
+        # if lenret > 2:
+        self.assertEqual(ret[-2]['result'], 'Finished')
+        # if lenret > 1:
+        self.assertEqual(ret[-1]['result'], 'Finished')
         memory = len(ret)
 
         self.logout()
         self.login('solo', '123')
-        ret = self.check_tasks()
-        task_len = len(ret)
-        self.assertEqual(0, task_len)
+        ret_user = self.check_tasks()
+        # No tasks logged
+        self.assertEqual(0, len(ret_user))
 
         vals = self.get_convert_book(7)
         select = Select(vals['btn_from'])
@@ -345,8 +345,8 @@ class TestEbookConvertCalibreGDrive(unittest.TestCase, ui_class):
         i = 0
         while i < 10:
             time.sleep(2)
-            ret = self.check_tasks()
-            if len(ret) - task_len == 1:
+            task_len, ret = self.check_tasks(ret)
+            if task_len == 1:
                 if ret[-1]['result'] == 'Finished' or ret[-1]['result'] == 'Failed':
                     break
             i += 1
@@ -355,8 +355,7 @@ class TestEbookConvertCalibreGDrive(unittest.TestCase, ui_class):
         self.logout()
         self.login('admin', 'admin123')
         time.sleep(WAIT_GDRIVE)
-        ret = self.check_tasks()
-        self.assertEqual(memory + 1, len(ret))
+        self.assertEqual(1, task_len)
 
 
     # start conversion of epub -> mobi
@@ -366,7 +365,7 @@ class TestEbookConvertCalibreGDrive(unittest.TestCase, ui_class):
     # check filename
     def test_email_only(self):
         self.setup_server(True, {'mail_use_ssl': 'None', 'mail_password': '10234'})
-        task_len = len(self.check_tasks())
+        tasks = self.check_tasks()
         vals = self.get_convert_book(8)
         select = Select(vals['btn_from'])
         select.select_by_visible_text('EPUB')
@@ -377,8 +376,8 @@ class TestEbookConvertCalibreGDrive(unittest.TestCase, ui_class):
         i = 0
         while i < 20:
             time.sleep(2)
-            ret = self.check_tasks()
-            if len(ret) - task_len == 1:
+            task_len, ret = self.check_tasks(tasks)
+            if task_len == 1:
                 if ret[-1]['result'] == 'Finished' or ret[-1]['result'] == 'Failed':
                     break
             i += 1
@@ -392,8 +391,8 @@ class TestEbookConvertCalibreGDrive(unittest.TestCase, ui_class):
         i = 0
         while i < 20:
             time.sleep(2)
-            ret = self.check_tasks()
-            if len(ret) - task_len == 2:
+            task_len, ret = self.check_tasks(tasks)
+            if task_len == 2:
                 if ret[-1]['result'] == 'Finished' or ret[-1]['result'] == 'Failed':
                     break
             i += 1
@@ -406,7 +405,7 @@ class TestEbookConvertCalibreGDrive(unittest.TestCase, ui_class):
     # conversion okay, email failed
     def test_email_failed(self):
         self.setup_server(False, {'mail_password': '10234'})
-        task_len = len(self.check_tasks())
+        tasks = self.check_tasks()
         details = self.get_book_details(5)
         self.email_server.handler.set_return_value(552)
         # = '552 Requested mail action aborted: exceeded storage allocation'
@@ -418,8 +417,8 @@ class TestEbookConvertCalibreGDrive(unittest.TestCase, ui_class):
         i = 0
         while i < 30:
             time.sleep(2)
-            ret = self.check_tasks()
-            if len(ret) - task_len == 2:
+            task_len, ret = self.check_tasks(tasks)
+            if task_len == 2:
                 if ret[-1]['result'] == 'Finished' or ret[-1]['result'] == 'Failed':
                     break
             i += 1

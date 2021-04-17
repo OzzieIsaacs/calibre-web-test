@@ -23,7 +23,7 @@ def user_change(user):
     for i in range(0, 200):
         time.sleep(random.random() * 0.05)
         parameter = int(random.uniform(2, 260))
-        userload = {'nickname': user,
+        userload = {'name': user,
                     'email': "",
                     'password': "",
                     'locale': "en",
@@ -80,7 +80,7 @@ class TestUserLoad(TestCase, ui_class):
         payload = {'username': 'admin', 'password': 'admin123', 'submit': "", 'next': "/"}
         r.post('http://127.0.0.1:8083/login', data=payload)
         for i in range(0, user_count):
-            userload = {'nickname': 'user' + str(i),
+            userload = {'name': 'user' + str(i),
                         'email': str(i) + 'alfa@email.com',
                         'password': "1234",
                         'locale': "en",

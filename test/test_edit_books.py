@@ -108,7 +108,7 @@ class TestEditBooks(TestCase, ui_class):
         self.get_book_details(4)
         self.check_element_on_page((By.ID, "edit_book")).click()
         self.edit_book(content={'book_title': u'Not found'})
-        self.check_element_on_page((By.ID, 'flash_alert'))
+        self.check_element_on_page((By.ID, 'flash_danger'))
         title = self.check_element_on_page((By.ID, "book_title"))
         # calibre strips spaces in the end
         self.assertEqual('The camicdemo', title.get_attribute('value'))
@@ -223,7 +223,7 @@ class TestEditBooks(TestCase, ui_class):
         self.get_book_details(8)
         self.check_element_on_page((By.ID, "edit_book")).click()
         self.edit_book(content={'bookAuthor': u'Not found'})
-        self.check_element_on_page((By.ID, 'flash_alert'))
+        self.check_element_on_page((By.ID, 'flash_danger'))
         author = self.check_element_on_page((By.ID, "bookAuthor"))
         self.assertEqual('Pipo, Pipe', author.get_attribute('value'))
         os.renames(not_file_path, file_path)
@@ -375,7 +375,7 @@ class TestEditBooks(TestCase, ui_class):
         self.get_book_details(3)
         self.check_element_on_page((By.ID, "edit_book")).click()
         self.edit_book(content={'languages':'German & English'}, detail_v=True)
-        self.check_element_on_page((By.ID, 'flash_alert'))
+        self.check_element_on_page((By.ID, 'flash_danger'))
         self.edit_book(content={'languages': 'German, English'})
         self.get_book_details(3)
         values = self.get_book_details()
@@ -776,7 +776,7 @@ class TestEditBooks(TestCase, ui_class):
         time.sleep(2)
         details = self.get_book_details()
         self.assertEqual('book55 - Lul执 de Marco', details['title'])
-        self.assertEqual('Oli  Köli', details['author'][0])
+        self.assertEqual('Oli Köli', details['author'][0])
         r = requests.session()
         payload = {'username': 'admin', 'password': 'admin123', 'submit':"", 'next':"/", "remember_me":"on"}
         r.post('http://127.0.0.1:8083/login', data=payload)
@@ -917,9 +917,8 @@ class TestEditBooks(TestCase, ui_class):
 
     # download of books
     def test_download_book(self):
-        self.goto_page('nav_download')
-        number_books = self.get_books_displayed()
-        self.assertEqual(0, len(number_books[1]))
+        list_element = self.goto_page('nav_download')
+        self.assertEqual(len(list_element), 0)
         self.get_book_details(5)
         element = self.check_element_on_page((By.XPATH, "//*[starts-with(@id,'btnGroupDrop')]"))
         download_link = element.get_attribute("href")
@@ -938,7 +937,9 @@ class TestEditBooks(TestCase, ui_class):
         self.assertNotIn('download', book)
         self.edit_user('admin', {'download_role': 1})
         r.close()
-        self.goto_page('nav_download')
+        list_element = self.goto_page('nav_download')
+        self.assertEqual(len(list_element),1)
+        list_element[0].click()
         number_books = self.get_books_displayed()
         self.assertEqual(1, len(number_books[1]))
 

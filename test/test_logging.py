@@ -93,13 +93,13 @@ class TestLogging(unittest.TestCase, ui_class):
         # check if path is accepted
         try:
             self.fill_basic_config({'config_logfile': CALIBRE_WEB_PATH})
-            WebDriverWait(self.driver, 5).until(EC.presence_of_element_located((By.ID, "flash_alert")))
+            WebDriverWait(self.driver, 5).until(EC.presence_of_element_located((By.ID, "flash_danger")))
             # check if path with trailing slash is accepted
             self.fill_basic_config({'config_logfile': CALIBRE_WEB_PATH+os.sep})
-            WebDriverWait(self.driver, 5).until(EC.presence_of_element_located((By.ID, "flash_alert")))
+            WebDriverWait(self.driver, 5).until(EC.presence_of_element_located((By.ID, "flash_danger")))
             # check if non existing path is accepted
             self.fill_basic_config({'config_logfile': os.path.join(CALIBRE_WEB_PATH, 'hü lo', 'lö g.log')})
-            WebDriverWait(self.driver, 5).until(EC.presence_of_element_located((By.ID, "flash_alert")))
+            WebDriverWait(self.driver, 5).until(EC.presence_of_element_located((By.ID, "flash_danger")))
             # check if path without extension is accepted
             os.makedirs(os.path.join(CALIBRE_WEB_PATH, 'hü lo'))
             self.fill_basic_config({'config_logfile': os.path.join(CALIBRE_WEB_PATH, 'hü lo', 'lö g')})
