@@ -641,7 +641,7 @@ class ui_class():
             return False
 
     @classmethod
-    def edit_user(cls, name, element):
+    def edit_user(cls, name, element, abort=False):
         cls.goto_page('admin_setup')
         user = cls.driver.find_elements_by_xpath("//table[@id='table_user']/tbody/tr/td/a")
         # table
@@ -666,7 +666,7 @@ class ui_class():
                         if not cls.check_element_on_page((By.ID, "email")):
                             print('Could not edit user: %s' % name)
                             return False
-                        return cls.change_user(element)
+                        return cls.change_user(element, abort)
         else:
             for ele in user:
                 if name == ele.text:
@@ -674,7 +674,7 @@ class ui_class():
                     if not cls.check_element_on_page((By.ID, "email")):
                         print('Could not edit user: %s' % name)
                         return False
-                    return cls.change_user(element)
+                    return cls.change_user(element, abort)
         print('User: %s not found' % name)
         return False
 
@@ -897,7 +897,7 @@ class ui_class():
         return users
 
     @classmethod
-    def change_user(cls, config):
+    def change_user(cls, config, abort=False):
         ''' All Checkboses are:
             'show_32','show_512', 'show_16', 'show_128', 'show_2', 'show_4',
             'show_8', 'show_64', 'show_256', 'Show_detail_random' '''
@@ -911,8 +911,14 @@ class ui_class():
                 time.sleep(2)
                 cls.driver.find_element_by_id('btndeluser').click()
                 time.sleep(2)
-                cls.driver.find_element_by_id('btnConfirmYes-GeneralDeleteModal').click()
+                if not abort:
+                    cls.driver.find_element_by_id('btnConfirmYes-GeneralDeleteModal').click()
+                else:
+                    cls.driver.find_element_by_id('btnConfirmNo-GeneralDeleteModal').click()
                 time.sleep(2)
+                if abort:
+                    cls.check_element_on_page((By.ID, "back")).click()
+                    time.sleep(1)
                 return
 
         # check if checkboxes are in list and seperate lists
@@ -1720,17 +1726,17 @@ class ui_class():
             header_edit.insert(cnt, dict())
             header_edit[cnt]['sort'] = head.find_element_by_xpath("./div[starts-with(@class, 'th-inner')]")
             if head.get_attribute("data-field") == "locale":
-                header_edit[cnt]['text'] = head.text.split("\n\n")[1]
+                header_edit[cnt]['text'] = head.text.split("\n")[-1]
                 header_edit[cnt]['element'] = head.find_element_by_xpath(".//div/select")
             elif head.get_attribute("data-field") == "default_language":
-                header_edit[cnt]['text'] = head.text.split("\n\n")[1]
+                header_edit[cnt]['text'] = head.text.split("\n")[-1]
                 header_edit[cnt]['element'] = head.find_element_by_xpath(".//div/select")
             elif head.get_attribute("data-field") in ["role", "sidebar_view"]:
                 if head.get_attribute("data-field") == "role":
                     header_edit[cnt]['text'] = head.get_attribute("data-field") + "_" + head.find_element_by_xpath("./div").text.split("\n")[2]
                 else:
                     header_edit[cnt]['text'] = head.find_element_by_xpath("./div").text.split("\n")[2]
-                header_edit[cnt]['element'] = head.find_elements_by_xpath(".//div[contains(@class,'form-check')]")
+                header_edit[cnt]['element'] = head.find_elements_by_xpath(".//div[contains(@class,'form-check')]/div")
             else:
                 if header_edit[cnt]['sort'].text == "":
                     header_edit[cnt]['text'] = "selector"
@@ -1752,7 +1758,10 @@ class ui_class():
                     click_element = el
                 index = header_edit[cnt]['text']
                 if click_element.text == "" and click_element.tag_name == "a":
-                    element_text = "+" if "glyphicon-plus" in click_element.find_elements_by_xpath("./span")[0].get_attribute('class') else ""
+                    try:
+                        element_text = "+" if "glyphicon-plus" in click_element.find_elements_by_xpath("./span")[0].get_attribute('class') else ""
+                    except:
+                        element_text = ""
                 else:
                     element_text = el.text
                 ele[index] = {'element': click_element, 'sort': header_edit[cnt]['sort'], 'text': element_text}

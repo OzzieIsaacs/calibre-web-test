@@ -47,9 +47,9 @@ class TestUserList(TestCase, ui_class):
     @classmethod
     def setUpClass(cls):
         try:
-            startup(cls, cls.py_version, {'config_calibre_dir': TEST_DB})
+            debug_startup(cls, cls.py_version, {'config_calibre_dir': TEST_DB})
             time.sleep(3)
-            cls.mass_create_users(1)
+            # cls.mass_create_users(1)
         except Exception:
             cls.driver.quit()
             cls.p.kill()
@@ -57,18 +57,28 @@ class TestUserList(TestCase, ui_class):
     @classmethod
     def tearDownClass(cls):
         try:
-            cls.stop_calibre_web()
+            pass # cls.stop_calibre_web()
         except:
-            cls.driver.get("http://127.0.0.1:8083")
-            time.sleep()
+            #cls.driver.get("http://127.0.0.1:8083")
+            #time.sleep()
             try:
                 cls.stop_calibre_web()
             except:
                 pass
         # close the browser window and stop calibre-web
         cls.driver.quit()
-        cls.p.terminate()
-        save_logfiles(cls, cls.__name__)
+        #cls.p.terminate()
+        #save_logfiles(cls, cls.__name__)
+
+    def check_search(self, bl, term, count, column, value):
+        bl['search'].clear()
+        bl['search'].send_keys(term)
+        bl['search'].send_keys(Keys.RETURN)
+        time.sleep(1)
+        bl = self.get_user_table(-1)
+        self.assertEqual(count, len(bl['table']))
+        self.assertEqual(value, bl['table'][0][column]['text'])
+        return bl
 
     @classmethod
     def mass_create_users(cls, count):
@@ -297,24 +307,71 @@ class TestUserList(TestCase, ui_class):
         ul = self.get_user_table(-1)
         ul['table'][0]['Show category selection']['element'].click()
 
-    '''def test_user_list_search(self):
+    def test_user_list_search(self):
         ul = self.get_user_table(1)
-        self.assertTrue("muki1al@b.com", ul['table'][1]['Kindle E-mail']['text'])
-        self.edit_table_element(ul['table'][1]['Kindle E-mail']['element'], "nuki1al@b.com")
-        ul = self.get_user_table(-1)
-        self.assertEqual("nuki1al@b.com", ul['table'][1]['E-mail Address ']['text'])
-        self.edit_table_element(ul['table'][1]['Kindle E-mail']['element'], "no_email")
-        self.assertTrue("already taken" in self.check_element_on_page((By.XPATH,
-                                                          "//div[contains(@class,'editable-error-block')]")).text)
-        self.check_element_on_page((By.XPATH, "//button[contains(@class,'editable-cancel')]")).click()
+        self.assertEqual(10, len(ul['table']))
+        self.assertEqual(4, len(ul['pagination']))
+        ul = self.check_search(ul, "u1", 1, "Username", "u1")
+        ul = self.check_search(ul, "B.cOm", 10, "E-mail Address", "a5@b.com")
+        self.check_search(ul, "a1@", 1, "Kindle E-mail", "a1@b.com")
 
-        self.edit_table_element(ul['table'][1]['Kindle E-mail']['element'], "muki2al@b.com")
-        self.assertTrue("This Field is Required" in self.check_element_on_page((By.XPATH,
-                                                          "//div[contains(@class,'editable-error-block')]")).text)
-        self.check_element_on_page((By.XPATH, "//button[contains(@class,'editable-cancel')]")).click()
-        self.edit_table_element(ul['table'][1]['Kindle E-mail']['element'], "")
+    def test_user_list_sort(self):
+        ul = self.get_user_table(1)
+        self.assertEqual("Username", ul['header'][2]['text'])
+        ul['header'][2]['sort'].click()
         ul = self.get_user_table(-1)
-        self.assertEqual("+", ul['table'][1]['Kindle E-mail']['text'])
-        self.edit_table_element(ul['table'][1]['Kindle E-mail']['element'], "muki1al@b.com")
+        self.assertEqual("1_no", ul['table'][0]['Username']['text'])
+        ul['header'][2]['sort'].click()
         ul = self.get_user_table(-1)
-        self.assertTrue("muki1al@b.com", ul['table'][1]['Kindle E-mail']['text'])'''
+        self.assertEqual("ü执1", ul['table'][0]['Username']['text'])
+        self.assertEqual("E-mail Address", ul['header'][3]['text'])
+        ul['header'][3]['sort'].click()
+        ul = self.get_user_table(-1)
+        self.assertEqual("1al@b.com", ul['table'][0]['E-mail Address']['text'])
+        ul['header'][3]['sort'].click()
+        ul = self.get_user_table(-1)
+        self.assertEqual("muki9al@b.com", ul['table'][0]['E-mail Address']['text'])
+        self.assertEqual("Kindle E-mail", ul['header'][4]['text'])
+        ul['header'][4]['sort'].click()
+        ul = self.get_user_table(-1)
+        self.assertEqual("+", ul['table'][0]['Kindle E-mail']['text'])
+        self.assertEqual("a1@b.com", ul['table'][8]['Kindle E-mail']['text'])
+        ul['header'][4]['sort'].click()
+        ul = self.get_user_table(-1)
+        self.assertEqual("muki8al@bcd.com", ul['table'][0]['Kindle E-mail']['text'])
+        self.assertEqual("Locale", ul['header'][5]['text'])
+        ul['header'][5]['sort'].click()
+        ul = self.get_user_table(-1)
+        self.assertEqual("German", ul['table'][0]['Locale']['text'])
+        ul['header'][5]['sort'].click()
+        ul = self.get_user_table(-1)
+        self.assertEqual("Polish", ul['table'][0]['Locale']['text'])
+        self.assertEqual("Visible Book Languages", ul['header'][6]['text'])
+        ul['header'][6]['sort'].click()
+        ul = self.get_user_table(-1)
+        self.assertEqual("Show All", ul['table'][0]['Visible Book Languages']['text'])
+        ul['header'][6]['sort'].click()
+        ul = self.get_user_table(-1)
+        self.assertEqual("Norwegian Bokmål", ul['table'][0]['Visible Book Languages']['text'])
+
+    def test_user_list_guest_edit(self):
+        self.fill_basic_config({'config_anonbrowse': 1})
+        ul = self.get_user_table(2)
+        self.assertEqual(3, len(ul['table']))
+        ul = self.get_user_table(1)
+        self.assertEqual("Guest", ul['table'][1]['Username']['text'])
+        self.assertFalse(ul['table'][1]['Delete User']['element'].is_displayed())
+        self.assertTrue("disabled" in ul['table'][1]['Username']['element'].get_attribute('class'))
+        self.assertEqual("", ul['table'][1]['Locale']['text'])
+        self.assertFalse(ul['table'][1]['Delete User']['element'].is_displayed())
+        ul['table'][1]['role_Admin']['element'].click()
+        self.assertTrue(self.check_element_on_page((By.ID, 'flash_danger')))
+        ul = self.get_user_table(-1)
+        self.assertEqual("", ul['table'][1]['Locale']['text'])
+        self.assertFalse(ul['table'][1]['Delete User']['element'].is_displayed())
+        ul['table'][1]['role_Change Password']['element'].click()
+        self.assertTrue(self.check_element_on_page((By.ID, 'flash_danger')))
+        ul = self.get_user_table(-1)
+        ul['table'][1]['role_Edit Public Shelfs']['element'].click()
+        self.assertTrue(self.check_element_on_page((By.ID, 'flash_danger')))
+        self.fill_basic_config({'config_anonbrowse': 0})

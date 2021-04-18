@@ -137,6 +137,9 @@ class TestRegister(unittest.TestCase, ui_class):
         user, passw = self.email_server.handler.extract_register_info()
         self.assertTrue(self.login(user, passw))
         self.logout()
+        self.assertEqual(u'flash_danger',self.register(u'guest','hufdj@de.de'))
+        self.assertEqual(u'flash_danger', self.register(u' guest ', 'hufdj@de.de'))
+
 
     # double username, emailadress, capital letters, lowercase characters
     def test_registering_user_fail(self):

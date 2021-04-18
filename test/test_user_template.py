@@ -62,6 +62,17 @@ class TestUserTemplate(unittest.TestCase, ui_class):
         self.logout()
         self.login('admin', 'admin123')
         # delete user
+        ul = self.get_user_table(1)
+        for ele in ul['table']:
+            if ele['Username']['text'] == "random":
+                ele['Edit']['element'].click()
+                back = self.check_element_on_page((By.ID, "back"))
+                self.assertTrue(back)
+                back.click()
+                self.assertTrue(self.check_element_on_page((By.ID, "user_delete_selection")))
+                break
+        self.edit_user('random', {'delete': 1}, abort=True)
+        self.assertTrue(self.check_element_on_page((By.ID, "admin_user_table")))
         self.edit_user('random', {'delete': 1})
 
     def test_recent_user_template(self):
