@@ -125,7 +125,7 @@
                     <a class="popup_link text-center" onfocus='blur()' onclick="showTestDetail('div_{{row['tid']}}')">{{row['status']}}</a>
                 </div>
                 <!--css div popup start-->
-                <div id="div_{{row['tid']}}" class="popup_window test_output" style="display:none;">
+                <div id="div_{{row['tid']}}" class="popup_window test_output" style={% if row['tid'].startswith('ft') or row['tid'].startswith('et') %}"display:block;"{% else %}"display:none;"{% endif %}>
                     <div class='close_button pull-right'>
                         <button type="button" class="close" aria-label="Close" onfocus='this.blur();'
                                 onclick='document.getElementById('div_{{row["tid"]}}').style.display='none'"><span
@@ -196,6 +196,7 @@
 
 <script>
     drawCircle({{ header_info.status.success }}, {{ header_info.status.failure }}, {{ header_info.status.error }}, {{ header_info.status.skip }});
+    showCase(5);
 </script>
 
 </div>
