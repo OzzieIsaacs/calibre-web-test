@@ -425,7 +425,7 @@ class TestCalibreWebVisibilitys(unittest.TestCase, ui_class):
         self.assertTrue(submit)
         submit.click()
         self.assertTrue(self.check_element_on_page((By.ID, "flash_success")))
-        back = self.check_element_on_page((By.ID, "back"))
+        back = self.check_element_on_page((By.ID, "email_back"))
         self.assertTrue(back)
         back.click()
         self.assertTrue(self.check_element_on_page((By.ID, "admin_edit_email")))

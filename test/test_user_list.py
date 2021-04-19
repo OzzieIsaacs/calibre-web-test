@@ -11,7 +11,7 @@ import threading
 from selenium.webdriver.common.by import By
 from selenium.webdriver.common.keys import Keys
 from helper_ui import ui_class
-from config_test import TEST_DB, base_path
+from config_test import TEST_DB, BOOT_TIME, base_path
 from helper_func import startup, debug_startup
 from helper_func import save_logfiles
 
@@ -19,7 +19,6 @@ def user_change(user):
     r = requests.session()
     payload = {'username': user, 'password': "1234", 'submit': "", 'next': "/"}
     r.post('http://127.0.0.1:8083/login', data=payload)
-    # random.seed(123)
     for i in range(0, 200):
         time.sleep(random.random() * 0.05)
         parameter = int(random.uniform(2, 260))
@@ -47,9 +46,9 @@ class TestUserList(TestCase, ui_class):
     @classmethod
     def setUpClass(cls):
         try:
-            debug_startup(cls, cls.py_version, {'config_calibre_dir': TEST_DB})
+            startup(cls, cls.py_version, {'config_calibre_dir': TEST_DB})
             time.sleep(3)
-            # cls.mass_create_users(1)
+            cls.mass_create_users(1)
         except Exception:
             cls.driver.quit()
             cls.p.kill()
@@ -57,18 +56,18 @@ class TestUserList(TestCase, ui_class):
     @classmethod
     def tearDownClass(cls):
         try:
-            pass # cls.stop_calibre_web()
+            cls.stop_calibre_web()
         except:
-            #cls.driver.get("http://127.0.0.1:8083")
-            #time.sleep()
+            cls.driver.get("http://127.0.0.1:8083")
+            time.sleep(2)
             try:
                 cls.stop_calibre_web()
             except:
                 pass
         # close the browser window and stop calibre-web
         cls.driver.quit()
-        #cls.p.terminate()
-        #save_logfiles(cls, cls.__name__)
+        cls.p.terminate()
+        save_logfiles(cls, cls.__name__)
 
     def check_search(self, bl, term, count, column, value):
         bl['search'].clear()
@@ -311,9 +310,9 @@ class TestUserList(TestCase, ui_class):
         ul = self.get_user_table(1)
         self.assertEqual(10, len(ul['table']))
         self.assertEqual(4, len(ul['pagination']))
-        ul = self.check_search(ul, "u1", 1, "Username", "u1")
-        ul = self.check_search(ul, "B.cOm", 10, "E-mail Address", "a5@b.com")
-        self.check_search(ul, "a1@", 1, "Kindle E-mail", "a1@b.com")
+        ul = self.check_search(ul, "user_1", 1, "Username", "user_1")
+        ul = self.check_search(ul, "B.cOm", 10, "E-mail Address", "muki1al@b.com")
+        self.check_search(ul, "m11", 1, "Kindle E-mail", "m11uklial@bds.com")
 
     def test_user_list_sort(self):
         ul = self.get_user_table(1)
@@ -323,11 +322,11 @@ class TestUserList(TestCase, ui_class):
         self.assertEqual("1_no", ul['table'][0]['Username']['text'])
         ul['header'][2]['sort'].click()
         ul = self.get_user_table(-1)
-        self.assertEqual("ü执1", ul['table'][0]['Username']['text'])
+        self.assertEqual("user_1", ul['table'][0]['Username']['text'])
         self.assertEqual("E-mail Address", ul['header'][3]['text'])
         ul['header'][3]['sort'].click()
         ul = self.get_user_table(-1)
-        self.assertEqual("1al@b.com", ul['table'][0]['E-mail Address']['text'])
+        self.assertEqual("+", ul['table'][0]['E-mail Address']['text'])
         ul['header'][3]['sort'].click()
         ul = self.get_user_table(-1)
         self.assertEqual("muki9al@b.com", ul['table'][0]['E-mail Address']['text'])
@@ -335,7 +334,7 @@ class TestUserList(TestCase, ui_class):
         ul['header'][4]['sort'].click()
         ul = self.get_user_table(-1)
         self.assertEqual("+", ul['table'][0]['Kindle E-mail']['text'])
-        self.assertEqual("a1@b.com", ul['table'][8]['Kindle E-mail']['text'])
+        self.assertEqual("muki1al@b.com", ul['table'][8]['Kindle E-mail']['text'])
         ul['header'][4]['sort'].click()
         ul = self.get_user_table(-1)
         self.assertEqual("muki8al@bcd.com", ul['table'][0]['Kindle E-mail']['text'])
@@ -356,6 +355,7 @@ class TestUserList(TestCase, ui_class):
 
     def test_user_list_guest_edit(self):
         self.fill_basic_config({'config_anonbrowse': 1})
+        time.sleep(BOOT_TIME)
         ul = self.get_user_table(2)
         self.assertEqual(3, len(ul['table']))
         ul = self.get_user_table(1)
@@ -375,3 +375,4 @@ class TestUserList(TestCase, ui_class):
         ul['table'][1]['role_Edit Public Shelfs']['element'].click()
         self.assertTrue(self.check_element_on_page((By.ID, 'flash_danger')))
         self.fill_basic_config({'config_anonbrowse': 0})
+        time.sleep(BOOT_TIME)
