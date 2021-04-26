@@ -3,15 +3,15 @@
 
 
 from unittest import TestCase, skip
-import os
 import time
 import requests
 import random
-import threading
+
 from selenium.webdriver.common.by import By
 from selenium.webdriver.common.keys import Keys
+from selenium.webdriver.support.ui import Select
 from helper_ui import ui_class
-from config_test import TEST_DB, BOOT_TIME, base_path
+from config_test import TEST_DB, BOOT_TIME
 from helper_func import startup, debug_startup
 from helper_func import save_logfiles
 
@@ -78,6 +78,25 @@ class TestUserList(TestCase, ui_class):
         self.assertEqual(count, len(bl['table']))
         self.assertEqual(value, bl['table'][0][column]['text'])
         return bl
+
+    def mass_change_setting(self, ul_element, cancel=False):
+        ul_element.click()
+        time.sleep(1)
+        if not cancel:
+            self.check_element_on_page((By.ID,"btnConfirmYes-GeneralChangeModal")).click()
+        else:
+            self.check_element_on_page((By.ID, "btnConfirmNo-GeneralChangeModal")).click()
+        time.sleep(1)
+
+    def mass_change_select(self, ul_element, new_value, cancel=False):
+        select = Select(ul_element)
+        select.select_by_visible_text(new_value)
+        time.sleep(1)
+        if not cancel:
+            self.check_element_on_page((By.ID,"btnConfirmYes-GeneralChangeModal")).click()
+        else:
+            self.check_element_on_page((By.ID, "btnConfirmNo-GeneralChangeModal")).click()
+        time.sleep(1)
 
     @classmethod
     def mass_create_users(cls, count):
@@ -227,7 +246,29 @@ class TestUserList(TestCase, ui_class):
         self.assertEqual("Hungarian", ul['table'][1]['Locale']['text'])
         self.edit_table_select(ul['table'][1]['Locale']['element'], "Dutch", True)
         self.assertEqual("Hungarian", ul['table'][1]['Locale']['element'].text)
-        # ToDo Mass Edit
+        # Mass Edit
+        ul['table'][2]['selector']['element'].click()
+        ul['table'][3]['selector']['element'].click()
+        self.assertEqual("Locale", ul['header'][5]['text'])
+        self.mass_change_select(ul['header'][5]['element'], "Italiano", True)
+        self.assertEqual("Select...", Select(ul['header'][5]['element']).first_selected_option.text)
+        self.assertTrue(ul['table'][2]['selector']['element'].is_selected())
+        self.assertTrue(ul['table'][3]['selector']['element'].is_selected())
+        self.mass_change_select(ul['header'][5]['element'], "Italiano")
+        ul = self.get_user_table(-1)
+        self.assertEqual("Select...", Select(ul['header'][5]['element']).first_selected_option.text)
+        self.assertTrue(ul['table'][2]['selector']['element'].is_selected())
+        self.assertTrue(ul['table'][3]['selector']['element'].is_selected())
+        self.assertEqual("Italian", ul['table'][2]['Locale']['text'])
+        self.assertEqual("Italian", ul['table'][3]['Locale']['text'])
+        ul['table'][2]['selector']['element'].click()
+        ul['table'][3]['selector']['element'].click()
+
+        self.edit_table_select(ul['table'][2]['Locale']['element'], "German")
+        ul = self.get_user_table(-1)
+        self.edit_table_select(ul['table'][3]['Locale']['element'], "English")
+
+        ul = self.get_user_table(-1)
         self.assertEqual("Locale", ul['header'][5]['text'])
         self.assertFalse(ul['header'][5]['element'].is_enabled())
         self.edit_table_select(ul['table'][1]['Locale']['element'], "English")
@@ -242,12 +283,33 @@ class TestUserList(TestCase, ui_class):
         self.assertEqual("English", ul['table'][1]['Visible Book Languages']['text'])
         self.edit_table_select(ul['table'][1]['Visible Book Languages']['element'], "Norwegian Bokmål", True)
         self.assertEqual("English", ul['table'][1]['Locale']['element'].text)
-        # ToDo Mass Edit
+        # Mass Edit
+        ul['table'][8]['selector']['element'].click()
+        ul['table'][9]['selector']['element'].click()
+        self.mass_change_select(ul['header'][6]['element'], "Norwegian Bokmål", True)
+        self.assertEqual("Select...", Select(ul['header'][6]['element']).first_selected_option.text)
+        self.assertTrue(ul['table'][8]['selector']['element'].is_selected())
+        self.assertTrue(ul['table'][9]['selector']['element'].is_selected())
+        self.mass_change_select(ul['header'][6]['element'], "Norwegian Bokmål")
+        ul = self.get_user_table(-1)
+        self.assertEqual("Select...", Select(ul['header'][6]['element']).first_selected_option.text)
+        self.assertTrue(ul['table'][8]['selector']['element'].is_selected())
+        self.assertTrue(ul['table'][9]['selector']['element'].is_selected())
+        self.assertEqual("Norwegian Bokmål", ul['table'][8]['Visible Book Languages']['text'])
+        self.assertEqual("Norwegian Bokmål", ul['table'][9]['Visible Book Languages']['text'])
+        ul['remove-btn'].click()
+        self.assertFalse(ul['table'][8]['selector']['element'].is_selected())
+        self.assertFalse(ul['table'][9]['selector']['element'].is_selected())
+        ul = self.get_user_table(-1)
+        self.edit_table_select(ul['table'][8]['Visible Book Languages']['element'], "Show All")
+        ul = self.get_user_table(-1)
+        self.edit_table_select(ul['table'][9]['Visible Book Languages']['element'], "English")
+        ul = self.get_user_table(-1)
         self.assertEqual("Visible Book Languages", ul['header'][6]['text'])
         self.assertFalse(ul['header'][6]['element'].is_enabled())
         self.edit_table_select(ul['table'][1]['Visible Book Languages']['element'], "Show All")
         ul = self.get_user_table(-1)
-        self.assertTrue("Show All", ul['table'][1]['Locale']['text'])
+        self.assertTrue("Show All", ul['table'][1]['Visible Book Languages']['text'])
 
     @skip("Not Implemented")
     def test_user_list_denied_tags(self):
@@ -267,8 +329,19 @@ class TestUserList(TestCase, ui_class):
         ul = self.get_user_table(-1)
         self.assertTrue(ul['table'][0]['role_Admin']['element'].is_selected())
         self.assertTrue(self.check_element_on_page((By.ID, 'flash_danger')))
-        # ToDo: remove admin rights from current user
         ul['table'][8]['role_Admin']['element'].click()
+
+    def test_user_list_remove_admin(self):
+        ul = self.get_user_table(1)
+        ul['table'][0]['role_Admin']['element'].click()
+        ul = self.get_user_table(-1)
+        self.assertEqual(1, len(ul['table']))
+        self.logout()
+        self.login("1_no", "1234")
+        ul = self.get_user_table(1)
+        ul['table'][0]['role_Admin']['element'].click()
+        self.logout()
+        self.login("admin", "admin123")
 
     def test_user_list_download_role(self):
         ul = self.get_user_table(1)
@@ -282,8 +355,30 @@ class TestUserList(TestCase, ui_class):
         ul['table'][0]['role_Download']['element'].click()
         ul = self.get_user_table(-1)
         self.assertFalse(ul['table'][0]['role_Download']['element'].is_selected())
-        # ToDo: Mass change elements
+        # Mass change elements
+        ul['table'][2]['selector']['element'].click()
+        ul['table'][3]['selector']['element'].click()
+        self.assertEqual("role_Download", ul['header'][14]['text'])
+        self.mass_change_setting(ul['header'][14]['element'][0])
+        ul = self.get_user_table(-1)
+        self.assertFalse(ul['header'][14]['element'][0].is_selected())
+        self.assertFalse(ul['header'][14]['element'][1].is_selected())
+        self.assertTrue(ul['table'][2]['selector']['element'].is_selected())
+        self.assertTrue(ul['table'][3]['selector']['element'].is_selected())
+        self.assertFalse(ul['table'][2]['role_Download']['element'].is_selected())
+        self.assertFalse(ul['table'][3]['role_Download']['element'].is_selected())
+        self.mass_change_setting(ul['header'][14]['element'][1])
+        ul = self.get_user_table(-1)
+        self.assertFalse(ul['header'][14]['element'][1].is_selected())
+        self.assertFalse(ul['header'][14]['element'][0].is_selected())
+        self.assertTrue(ul['table'][2]['selector']['element'].is_selected())
+        self.assertTrue(ul['table'][3]['selector']['element'].is_selected())
+        self.assertTrue(ul['table'][2]['role_Download']['element'].is_selected())
+        self.assertTrue(ul['table'][3]['role_Download']['element'].is_selected())
         # Restore default
+        ul = self.get_user_table(-1)
+        ul['table'][3]['role_Download']['element'].click()
+        ul = self.get_user_table(-1)
         ul['table'][4]['role_Download']['element'].click()
         ul = self.get_user_table(-1)
         ul['table'][0]['role_Download']['element'].click()
@@ -300,7 +395,32 @@ class TestUserList(TestCase, ui_class):
         ul['table'][0]['Show category selection']['element'].click()
         ul = self.get_user_table(-1)
         self.assertFalse(ul['table'][0]['Show category selection']['element'].is_selected())
-        # ToDo: Mass change elements
+        # Mass change elements
+        ul['table'][2]['selector']['element'].click()
+        ul['table'][3]['selector']['element'].click()
+        self.assertEqual("Show category selection", ul['header'][23]['text'])
+        self.mass_change_setting(ul['header'][23]['element'][0], True)
+        self.assertFalse(ul['header'][23]['element'][0].is_selected())
+        self.assertFalse(ul['header'][23]['element'][1].is_selected())
+        self.assertTrue(ul['table'][2]['selector']['element'].is_selected())
+        self.assertTrue(ul['table'][3]['selector']['element'].is_selected())
+        self.mass_change_setting(ul['header'][23]['element'][0])
+        ul = self.get_user_table(-1)
+        self.assertFalse(ul['header'][23]['element'][0].is_selected())
+        self.assertFalse(ul['header'][23]['element'][1].is_selected())
+        self.assertTrue(ul['table'][2]['selector']['element'].is_selected())
+        self.assertTrue(ul['table'][3]['selector']['element'].is_selected())
+        self.assertFalse(ul['table'][2]['Show category selection']['element'].is_selected())
+        self.assertFalse(ul['table'][3]['Show category selection']['element'].is_selected())
+        self.mass_change_setting(ul['header'][23]['element'][1])
+        ul = self.get_user_table(-1)
+        self.assertFalse(ul['header'][23]['element'][1].is_selected())
+        self.assertFalse(ul['header'][23]['element'][0].is_selected())
+        self.assertTrue(ul['table'][2]['selector']['element'].is_selected())
+        self.assertTrue(ul['table'][3]['selector']['element'].is_selected())
+        self.assertTrue(ul['table'][2]['Show category selection']['element'].is_selected())
+        self.assertTrue(ul['table'][3]['Show category selection']['element'].is_selected())
+
         # Restore default
         ul['table'][4]['Show category selection']['element'].click()
         ul = self.get_user_table(-1)
@@ -376,3 +496,24 @@ class TestUserList(TestCase, ui_class):
         self.assertTrue(self.check_element_on_page((By.ID, 'flash_danger')))
         self.fill_basic_config({'config_anonbrowse': 0})
         time.sleep(BOOT_TIME)
+
+    def test_user_list_check_sort(self):
+        ul = self.get_user_table(1)
+        self.assertFalse(ul['table'][2]['selector']['element'].is_selected())
+        self.assertFalse(ul['header'][5]['element'].is_enabled())
+        ul['table'][2]['selector']['element'].click()
+        ul['header'][5]['sort'].click()
+        ul = self.get_user_table(-1)
+        self.assertTrue(ul['table'][0]['selector']['element'].is_selected())
+        self.assertTrue(ul['header'][5]['element'].is_enabled())
+        ul['table'][0]['role_Edit']['element'].click()
+        ul = self.get_user_table(-1)
+        self.assertTrue(ul['table'][0]['selector']['element'].is_selected())
+        self.assertTrue(ul['header'][5]['element'].is_enabled())
+        ul['table'][0]['role_Edit']['element'].click()
+        ul = self.check_search(ul, "user", 1, "Username", "user_1")
+        self.assertTrue(ul['header'][5]['element'].is_enabled())
+        self.assertFalse(ul['table'][0]['selector']['element'].is_selected())
+        ul = self.check_search(ul, "two", 1, "Username", "no_two")
+        self.assertTrue(ul['header'][5]['element'].is_enabled())
+        self.assertTrue(ul['table'][0]['selector']['element'].is_selected())

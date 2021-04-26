@@ -1736,7 +1736,7 @@ class ui_class():
                     header_edit[cnt]['text'] = head.get_attribute("data-field") + "_" + head.find_element_by_xpath("./div").text.split("\n")[2]
                 else:
                     header_edit[cnt]['text'] = head.find_element_by_xpath("./div").text.split("\n")[2]
-                header_edit[cnt]['element'] = head.find_elements_by_xpath(".//div[contains(@class,'form-check')]/div")
+                header_edit[cnt]['element'] = head.find_elements_by_xpath(".//div[contains(@class,'form-check')]//input")
             else:
                 if header_edit[cnt]['sort'].text == "":
                     header_edit[cnt]['text'] = "selector"

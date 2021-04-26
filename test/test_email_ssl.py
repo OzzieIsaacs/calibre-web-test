@@ -13,8 +13,8 @@ import helper_email_convert
 from helper_ui import ui_class
 from config_test import CALIBRE_WEB_PATH, TEST_DB, BOOT_TIME, base_path
 # from parameterized import parameterized_class
-from helper_func import startup, save_logfiles
-
+from helper_func import startup, save_logfiles, wait_Email_received
+# from helper_certificate import generate_ssl_testing_files
 
 @unittest.skipIf(helper_email_convert.is_calibre_not_present(),"Skipping convert, calibre not found")
 class TestSSL(unittest.TestCase, ui_class):
@@ -25,25 +25,16 @@ class TestSSL(unittest.TestCase, ui_class):
 
     @classmethod
     def setUpClass(cls):
-
-        try:
-            os.remove(os.path.join(CALIBRE_WEB_PATH, 'calibre-web.log'))
-            os.remove(os.path.join(CALIBRE_WEB_PATH, 'calibre-web.log.1'))
-            os.remove(os.path.join(CALIBRE_WEB_PATH, 'calibre-web.log.2'))
-        except:
-            pass
-
         # start email server
+        # generate_ssl_testing_files()
         cls.email_server = AIOSMTPServer(
             hostname='127.0.0.1',port=1027,
             only_ssl=True,
             certfile='files/server.crt',
             keyfile='files/server.key',
-            timeout = 10
+            timeout=10
         )
-
         cls.email_server.start()
-
         startup(cls, cls.py_version, {'config_calibre_dir':TEST_DB,
                                       'config_converterpath':helper_email_convert.calibre_path(),
                                       'config_ebookconverter':'converter2',
@@ -177,3 +168,31 @@ class TestSSL(unittest.TestCase, ui_class):
 
         self.fill_basic_config({'config_uploading': 0})
         os.unlink(random_file)
+
+    # start sending e-mail
+    # check email received
+    def test_SSL_non_admin_user(self):
+        self.create_user('ssl_email', {'password': '123', 'email': 'answer@beta.com', 'kindle_mail': 'answer@beta.com', 'download_role': 1})
+        self.setup_server(False, {'mail_use_ssl': 'SSL/TLS'})
+        self.logout()
+        self.login("ssl_email", "123")
+        tasks = self.check_tasks()
+        details = self.get_book_details(7)
+        details['kindlebtn'].click()
+        conv = self.check_element_on_page((By.LINK_TEXT, details['kindle'][0].text))
+        self.assertTrue(conv)
+        conv.click()
+        self.assertTrue(self.check_element_on_page((By.ID, "flash_success")))
+        i = 0
+        while i < 10:
+            time.sleep(2)
+            task_len, ret = self.check_tasks(tasks)
+            if task_len == 1:
+                if ret[-1]['result'] == 'Finished' or ret[-1]['result'] == 'Failed':
+                    break
+            i += 1
+        self.assertEqual(ret[-1]['result'], 'Finished')
+        self.assertTrue(wait_Email_received(self.email_server.handler.check_email_received))
+        self.logout()
+        self.login("admin", "admin123")
+        self.edit_user('ssl_email', {'delete': 1})

@@ -9,7 +9,7 @@ from selenium.common.exceptions import WebDriverException
 import time
 import shutil
 from helper_ui import ui_class
-from helper_func import get_Host_IP
+from helper_func import get_Host_IP, kill_dead_cps
 from subproc_wrapper import process_open
 from config_test import CALIBRE_WEB_PATH, TEST_DB, BOOT_TIME, base_path
 import re
@@ -21,7 +21,7 @@ class TestCli(unittest.TestCase, ui_class):
 
     @classmethod
     def setUpClass(cls):
-        # startup function is not called, therfore direct print
+        # startup function is not called, therefore direct print
         print("\n%s - %s: " % (cls.py_version, cls.__name__))
         cls.driver = webdriver.Firefox()
         cls.driver.implicitly_wait(10)
@@ -39,13 +39,32 @@ class TestCli(unittest.TestCase, ui_class):
     @classmethod
     def tearDownClass(cls):
         # close the browser window
+        kill_dead_cps()
         cls.driver.quit()
         try:
-            os.remove(os.path.join(CALIBRE_WEB_PATH, 'app.db'))
             shutil.rmtree(os.path.join(CALIBRE_WEB_PATH, u'hü lo'), ignore_errors=True)
+            os.remove(os.path.join(CALIBRE_WEB_PATH, 'app.db'))
         except Exception:
             pass
         save_logfiles(cls, cls.__name__)
+
+    def tearDown(self):
+        try:
+            new_db = os.path.join(CALIBRE_WEB_PATH, 'hü go.app')
+            os.remove(new_db)
+        except Exception as e:
+            print(e)
+
+    def check_password_change(self, parameter, expectation):
+        p = process_open([self.py_version, 'cps.py', "-s", parameter], [1])
+        time.sleep(2)
+        if p.poll() is None:
+            p.kill()
+        nextline = p.communicate()[0]
+        self.assertIsNotNone(re.findall(expectation, nextline))
+        p.terminate()
+        p.stdout.close()
+        p.stderr.close()
 
     def test_cli_different_folder(self):
         os.chdir(CALIBRE_WEB_PATH)
@@ -79,8 +98,7 @@ class TestCli(unittest.TestCase, ui_class):
         self.p.terminate()
 
     def test_cli_different_settings_database(self):
-        new_db = os.path.join(CALIBRE_WEB_PATH, 'hü go.app')  # .decode('UTF-8')
-        new_db = new_db
+        new_db = os.path.join(CALIBRE_WEB_PATH, 'hü go.app')
         self.p = process_open([self.py_version, os.path.join(CALIBRE_WEB_PATH, u'cps.py'),
                                '-p', new_db], [1, 3])
 
@@ -130,6 +148,9 @@ class TestCli(unittest.TestCase, ui_class):
         if p.poll() is None:
             p.kill()
         self.assertIsNotNone(re.findall('Certfilepath is invalid. Exiting', nextline))
+        p.terminate()
+        p.stdout.close()
+        p.stderr.close()
 
         p = process_open([self.py_version, os.path.join(CALIBRE_WEB_PATH, u'cps.py'),
                           '-k', path_like_file], [1, 3])
@@ -138,6 +159,9 @@ class TestCli(unittest.TestCase, ui_class):
         if p.poll() is None:
             p.kill()
         self.assertIsNotNone(re.findall('Keyfilepath is invalid. Exiting', nextline))
+        p.terminate()
+        p.stdout.close()
+        p.stderr.close()
 
         p = process_open([self.py_version, os.path.join(CALIBRE_WEB_PATH, u'cps.py'),
                           '-c', only_path], [1, 3])
@@ -154,6 +178,9 @@ class TestCli(unittest.TestCase, ui_class):
         if p.poll() is None:
             p.kill()
         self.assertIsNotNone(re.findall('Keyfilepath is invalid. Exiting', nextline))
+        p.terminate()
+        p.stdout.close()
+        p.stderr.close()
 
         p = process_open([self.py_version, os.path.join(CALIBRE_WEB_PATH, u'cps.py'),
                          '-c', real_crt_file], (1, 3))
@@ -162,6 +189,9 @@ class TestCli(unittest.TestCase, ui_class):
             p.kill()
         nextline = p.communicate()[0]
         self.assertIsNotNone(re.findall('Certfilepath is invalid. Exiting', nextline))
+        p.terminate()
+        p.stdout.close()
+        p.stderr.close()
 
         p = process_open([self.py_version, os.path.join(CALIBRE_WEB_PATH, u'cps.py'),
                          '-k', real_key_file], (1, 3))
@@ -170,6 +200,9 @@ class TestCli(unittest.TestCase, ui_class):
             p.kill()
         nextline = p.communicate()[0]
         self.assertIsNotNone(re.findall('Keyfilepath is invalid. Exiting', nextline))
+        p.terminate()
+        p.stdout.close()
+        p.stderr.close()
 
         os.makedirs(os.path.join(CALIBRE_WEB_PATH, 'hü lo'))
         with open(real_key_file, 'wb') as fout:
@@ -184,6 +217,9 @@ class TestCli(unittest.TestCase, ui_class):
             p.kill()
         nextline = p.communicate()[0]
         self.assertIsNotNone(re.findall('Certfile and Keyfile have to be used together. Exiting', nextline))
+        p.terminate()
+        p.stdout.close()
+        p.stderr.close()
 
         p = process_open([self.py_version, os.path.join(CALIBRE_WEB_PATH, u'cps.py'),
                          '-k', real_key_file], (1, 3))
@@ -192,6 +228,9 @@ class TestCli(unittest.TestCase, ui_class):
             p.kill()
         nextline = p.communicate()[0]
         self.assertIsNotNone(re.findall('Certfile and Keyfile have to be used together. Exiting', nextline))
+        p.terminate()
+        p.stdout.close()
+        p.stderr.close()
 
         p = process_open([self.py_version, os.path.join(CALIBRE_WEB_PATH, u'cps.py'),
                          '-c', real_crt_file, '-k', real_key_file], (1, 3, 5))
@@ -200,6 +239,9 @@ class TestCli(unittest.TestCase, ui_class):
             self.assertIsNone('Fail', 'Unexpected error')
             p.kill()
         p.terminate()
+        p.stdout.close()
+        p.stderr.close()
+
         time.sleep(10)
         p.poll()
 
@@ -210,6 +252,9 @@ class TestCli(unittest.TestCase, ui_class):
         except WebDriverException as e:
             self.assertIsNotNone(re.findall('Reached error page: about:neterror?nssFailure', e.msg))
         p.kill()
+        p.stdout.close()
+        p.stderr.close()
+
         shutil.rmtree(os.path.join(CALIBRE_WEB_PATH, 'hü lo'), ignore_errors=True)
         shutil.copytree('./files', os.path.join(CALIBRE_WEB_PATH, 'hü lo'))
         real_crt_file = os.path.join(CALIBRE_WEB_PATH, 'hü lo', 'server.crt')
@@ -232,13 +277,10 @@ class TestCli(unittest.TestCase, ui_class):
         shutil.rmtree(os.path.join(CALIBRE_WEB_PATH, 'hü lo'), ignore_errors=True)
         self.assertTrue(self.check_element_on_page((By.ID, "config_calibre_dir")))
         p.terminate()
+        p.stdout.close()
+        p.stderr.close()
         time.sleep(3)
         p.poll()
-
-    @unittest.skip("Not Implemented")
-    def test_cli_gdrive_location(self):
-        # ToDo: implement
-        self.assertIsNone('not Implemented', 'Check if moving gdrive db on commandline works')
 
     def test_bind_to_single_interface(self):
         address = get_Host_IP()
@@ -363,3 +405,34 @@ class TestCli(unittest.TestCase, ui_class):
         self.assertEqual(result, 2)
         os.chmod("app.db", 0o644)
         os.chdir(base_path)
+
+    def test_change_password(self):
+        os.chdir(CALIBRE_WEB_PATH)
+        self.check_password_change("admin:admin12", "Password for user 'admin' changed")
+        self.check_password_change("admin:adm:in12", "Password for user 'admin' changed")
+        self.check_password_change("admin.kolo", "No valid username:password.*")
+        self.check_password_change("admin:", "Empty password")
+        p1 = process_open([self.py_version, u'cps.py'], [1])
+        time.sleep(BOOT_TIME)
+        try:
+            # navigate to the application home page
+            self.driver.get("http://127.0.0.1:8083")
+
+            # Wait for config screen to show up
+            self.fill_initial_config({'config_calibre_dir': TEST_DB})
+            # wait for cw to reboot
+            time.sleep(BOOT_TIME)
+            # Wait for config screen with login button to show up
+            login_button = self.check_element_on_page((By.NAME, "login"))
+            self.assertTrue(login_button)
+            login_button.click()
+
+        except Exception as e:
+            self.assertFalse(e)
+        self.check_password_change("admin:@hukl", "Password for user 'admin' changed")
+        self.assertFalse(self.login("admin", "admin123"))
+        self.assertTrue(self.login("admin", "@hukl"))
+        self.check_password_change("admin:admin123", "Password for user 'admin' changed")
+        p1.terminate()
+        time.sleep(3)
+        os.remove("app.db")
