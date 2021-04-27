@@ -1673,22 +1673,6 @@ class ui_class():
         ret['author_sort'] = self.check_element_on_page((By.ID, "autoupdate_authorsort"))
         return ret
 
-
-    def select_blist_books(self, books):
-        pass
-
-    def merge_blist_books(self, abort=False):
-        pass
-
-    def deselect_blist_books(self):
-        pass
-
-    def change_blist_visibliity(self, parameter_dict):
-        pass
-
-    def delete_blist_book(self, book):
-        pass
-
     def edit_table_select(self, table_select, new_value, cancel=False):
         table_select.click()
         select = Select(table_select.find_element_by_xpath("..//select"))
@@ -1737,6 +1721,10 @@ class ui_class():
                 else:
                     header_edit[cnt]['text'] = head.find_element_by_xpath("./div").text.split("\n")[2]
                 header_edit[cnt]['element'] = head.find_elements_by_xpath(".//div[contains(@class,'form-check')]//input")
+            elif head.get_attribute("data-field") in ["denied_tags", "allowed_tags"]:
+                header_edit[cnt]['element'] = head.find_element_by_xpath(
+                    ".//div[contains(@class,'multi_select')]")
+                header_edit[cnt]['text'] = head.find_elements_by_xpath("./div")[1].text
             else:
                 if header_edit[cnt]['sort'].text == "":
                     header_edit[cnt]['text'] = "selector"

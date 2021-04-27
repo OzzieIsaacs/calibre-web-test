@@ -98,6 +98,30 @@ class TestUserList(TestCase, ui_class):
             self.check_element_on_page((By.ID, "btnConfirmNo-GeneralChangeModal")).click()
         time.sleep(1)
 
+    def mass_change_multi(self, element, tag_list, remove, cancel=False):
+        button = element.find_element(By.XPATH, ".//select/following-sibling::button")
+        button.click()
+        ele = element.find_elements(By.XPATH,
+                                        ".//select/following-sibling::div//a[@role='option']")
+        for tag in tag_list:
+            for e in ele:
+                if e.text == tag:
+                    e.click()
+                    break
+        button.click()
+        action_button = element.find_elements(By.XPATH, ".//div[contains(@class,'multi_head')]")
+        if remove == "Remove":
+            action_button[0].click()
+        else:
+            action_button[1].click()
+        time.sleep(1)
+        if not cancel:
+            self.check_element_on_page((By.ID,"btnConfirmYes-GeneralChangeModal")).click()
+        else:
+            self.check_element_on_page((By.ID, "btnConfirmNo-GeneralChangeModal")).click()
+        time.sleep(1)
+
+
     @classmethod
     def mass_create_users(cls, count):
         cls.create_user('no_one', {'password': '1234', 'email': 'muki1al@b.com', 'kindle_mail': 'muki1al@b.com'})
@@ -177,7 +201,7 @@ class TestUserList(TestCase, ui_class):
 
     def test_user_list_edit_name(self):
         ul = self.get_user_table(1)
-        self.assertTrue("no_one", ul['table'][1]['Username']['text'])
+        self.assertEqual("no_one", ul['table'][1]['Username']['text'])
         self.edit_table_element(ul['table'][1]['Username']['element'], "nu_one")
         ul = self.get_user_table(-1)
         self.assertEqual("nu_one", ul['table'][1]['Username']['text'])
@@ -192,12 +216,12 @@ class TestUserList(TestCase, ui_class):
         self.check_element_on_page((By.XPATH, "//button[contains(@class,'editable-cancel')]")).click()
         self.edit_table_element(ul['table'][1]['Username']['element'], "no_one")
         ul = self.get_user_table(-1)
-        self.assertTrue("no_one", ul['table'][1]['Username']['text'])
+        self.assertEqual("no_one", ul['table'][1]['Username']['text'])
 
 
     def test_user_list_edit_email(self):
         ul = self.get_user_table(1)
-        self.assertTrue("muki1al@b.com", ul['table'][1]['E-mail Address']['text'])
+        self.assertEqual("muki1al@b.com", ul['table'][1]['E-mail Address']['text'])
         self.edit_table_element(ul['table'][1]['E-mail Address']['element'], "nuki1al@b.com")
         ul = self.get_user_table(-1)
         self.assertEqual("nuki1al@b.com", ul['table'][1]['E-mail Address']['text'])
@@ -219,11 +243,11 @@ class TestUserList(TestCase, ui_class):
         self.assertEqual("kin@de.de", ul['table'][1]['E-mail Address']['text'])
         self.edit_table_element(ul['table'][1]['E-mail Address']['element'], "muki1al@b.com")
         ul = self.get_user_table(-1)
-        self.assertTrue("muki1al@b.com", ul['table'][1]['E-mail Address']['text'])
+        self.assertEqual("muki1al@b.com", ul['table'][1]['E-mail Address']['text'])
 
     def test_user_list_edit_kindle(self):
         ul = self.get_user_table(1)
-        self.assertTrue("muki1al@b.com", ul['table'][1]['Kindle E-mail']['text'])
+        self.assertEqual("muki1al@b.com", ul['table'][1]['Kindle E-mail']['text'])
         self.edit_table_element(ul['table'][1]['Kindle E-mail']['element'], "nuki1al@b.com")
         ul = self.get_user_table(-1)
         self.assertEqual("nuki1al@b.com", ul['table'][1]['Kindle E-mail']['text'])
@@ -236,11 +260,11 @@ class TestUserList(TestCase, ui_class):
         self.assertEqual("+", ul['table'][1]['Kindle E-mail']['text'])
         self.edit_table_element(ul['table'][1]['Kindle E-mail']['element'], "muki1al@b.com")
         ul = self.get_user_table(-1)
-        self.assertTrue("muki1al@b.com", ul['table'][1]['Kindle E-mail']['text'])
+        self.assertEqual("muki1al@b.com", ul['table'][1]['Kindle E-mail']['text'])
 
     def test_user_list_edit_locale(self):
         ul = self.get_user_table(1)
-        self.assertTrue("English", ul['table'][1]['Locale']['text'])
+        self.assertEqual("English", ul['table'][1]['Locale']['text'])
         self.edit_table_select(ul['table'][1]['Locale']['element'], "Hungarian")
         ul = self.get_user_table(-1)
         self.assertEqual("Hungarian", ul['table'][1]['Locale']['text'])
@@ -254,7 +278,15 @@ class TestUserList(TestCase, ui_class):
         self.assertEqual("Select...", Select(ul['header'][5]['element']).first_selected_option.text)
         self.assertTrue(ul['table'][2]['selector']['element'].is_selected())
         self.assertTrue(ul['table'][3]['selector']['element'].is_selected())
+        self.mass_change_select(ul['header'][5]['element'], "Nederlands")
+        ul = self.get_user_table(-1)
+        ul['column'].click()
+        ul['column_elements'][7].click()
+        ul = self.get_user_table(-1)
         self.mass_change_select(ul['header'][5]['element'], "Italiano")
+        ul = self.get_user_table(-1)
+        ul['column'].click()
+        ul['column_elements'][7].click()
         ul = self.get_user_table(-1)
         self.assertEqual("Select...", Select(ul['header'][5]['element']).first_selected_option.text)
         self.assertTrue(ul['table'][2]['selector']['element'].is_selected())
@@ -273,11 +305,11 @@ class TestUserList(TestCase, ui_class):
         self.assertFalse(ul['header'][5]['element'].is_enabled())
         self.edit_table_select(ul['table'][1]['Locale']['element'], "English")
         ul = self.get_user_table(-1)
-        self.assertTrue("English", ul['table'][1]['Locale']['text'])
+        self.assertEqual("English", ul['table'][1]['Locale']['text'])
 
     def test_user_list_edit_language(self):
         ul = self.get_user_table(1)
-        self.assertTrue("Show All", ul['table'][1]['Visible Book Languages']['text'])
+        self.assertEqual("Show All", ul['table'][1]['Visible Book Languages']['text'])
         self.edit_table_select(ul['table'][1]['Visible Book Languages']['element'], "English")
         ul = self.get_user_table(-1)
         self.assertEqual("English", ul['table'][1]['Visible Book Languages']['text'])
@@ -309,11 +341,75 @@ class TestUserList(TestCase, ui_class):
         self.assertFalse(ul['header'][6]['element'].is_enabled())
         self.edit_table_select(ul['table'][1]['Visible Book Languages']['element'], "Show All")
         ul = self.get_user_table(-1)
-        self.assertTrue("Show All", ul['table'][1]['Visible Book Languages']['text'])
+        self.assertEqual("Show All", ul['table'][1]['Visible Book Languages']['text'])
 
-    @skip("Not Implemented")
     def test_user_list_denied_tags(self):
-        pass
+        self.get_book_details(5)
+        self.check_element_on_page((By.ID, "edit_book")).click()
+        self.edit_book(content={'tags': u'teschd'})
+        self.get_book_details(10)
+        self.check_element_on_page((By.ID, "edit_book")).click()
+        self.edit_book(content={'tags': u'hujiui'})
+        ul = self.get_user_table(1)
+        # Check name header of denied column and button
+        self.assertEqual("Denied Tags", ul['header'][7]['text'])
+        self.edit_table_element(ul['table'][1]['Denied Tags']['element'], "Guru")
+        ul = self.get_user_table(-1)
+        self.assertEqual("Guru", ul['table'][1]['Denied Tags']['text'])
+        ul['header'][7]['sort'].click()
+        ul = self.get_user_table(-1)
+        self.assertEqual("+", ul['table'][1]['Denied Tags']['text'])
+        ul['header'][7]['sort'].click()
+        ul = self.get_user_table(-1)
+        ul['table'][3]['selector']['element'].click()
+        ul['table'][2]['selector']['element'].click()
+        self.mass_change_multi(ul['header'][7]['element'], ["Gênot"], "Remove")
+        ul = self.get_user_table(-1)
+        self.assertEqual("Guru", ul['table'][0]['Denied Tags']['text'])
+        self.assertEqual("+", ul['table'][2]['Denied Tags']['text'])
+        self.assertEqual("+", ul['table'][3]['Denied Tags']['text'])
+        self.assertTrue(ul['table'][2]['selector']['element'].is_selected())
+        self.assertTrue(ul['table'][3]['selector']['element'].is_selected())
+        self.mass_change_multi(ul['header'][7]['element'], ["Gênot"], "Add", True)
+        # check multiselect has one selection
+        selection = Select(ul['header'][7]['element'].find_element(By.XPATH, ".//select"))
+        self.assertEqual(1, len(selection.all_selected_options))
+        self.assertTrue(ul['table'][2]['selector']['element'].is_selected())
+        self.assertTrue(ul['table'][3]['selector']['element'].is_selected())
+        # Genot should already be tick
+        self.mass_change_multi(ul['header'][7]['element'], [], "Add")
+        ul = self.get_user_table(-1)
+        # check multiselect has no selection
+        selection = Select(ul['header'][7]['element'].find_element(By.XPATH, ".//select"))
+        self.assertEqual(0, len(selection.all_selected_options))
+        self.assertEqual("Gênot", ul['table'][0]['Denied Tags']['text'])
+        self.assertEqual("Gênot", ul['table'][1]['Denied Tags']['text'])
+        self.assertEqual("Guru", ul['table'][2]['Denied Tags']['text'])
+        self.mass_change_multi(ul['header'][7]['element'], ["teschd"], "Add")
+        ul = self.get_user_table(-1)
+        self.assertEqual("Gênot,teschd", ul['table'][0]['Denied Tags']['text'])
+        self.assertEqual("Gênot,teschd", ul['table'][1]['Denied Tags']['text'])
+        ul['table'][1]['selector']['element'].click()
+        self.mass_change_multi(ul['header'][7]['element'], ["teschd"], "Remove")
+        ul = self.get_user_table(-1)
+        self.assertEqual("Gênot", ul['table'][1]['Denied Tags']['text'])
+        self.assertEqual("Gênot,teschd", ul['table'][0]['Denied Tags']['text'])
+        ul['table'][0]['selector']['element'].click()
+        self.mass_change_multi(ul['header'][7]['element'], ["teschd", "Gênot"], "Remove")
+        ul = self.get_user_table(-1)
+        self.assertEqual("Guru", ul['table'][0]['Denied Tags']['text'])
+        self.assertEqual("+", ul['table'][3]['Denied Tags']['text'])
+        self.assertEqual("+", ul['table'][2]['Denied Tags']['text'])
+        self.edit_table_element(ul['table'][0]['Denied Tags']['element'], "")
+
+        # Check button for custom column not avail
+        self.get_book_details(5)
+        self.check_element_on_page((By.ID, "edit_book")).click()
+        self.edit_book(content={'tags': u''})
+        self.get_book_details(10)
+        self.check_element_on_page((By.ID, "edit_book")).click()
+        self.edit_book(content={'tags': u''})
+
 
     def test_user_list_admin_role(self):
         ul = self.get_user_table(1)
