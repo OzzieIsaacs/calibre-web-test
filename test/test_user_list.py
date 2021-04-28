@@ -613,3 +613,52 @@ class TestUserList(TestCase, ui_class):
         ul = self.check_search(ul, "two", 1, "Username", "no_two")
         self.assertTrue(ul['header'][5]['element'].is_enabled())
         self.assertTrue(ul['table'][0]['selector']['element'].is_selected())
+
+
+    def test_user_list_requests(self):
+        r = requests.session()
+        payload = {'username': 'admin', 'password': 'admin123', 'submit':"", 'next':"/", "remember_me":"on"}
+        result = r.post('http://127.0.0.1:8083/login', data=payload)
+        self.assertEqual(200, result.status_code)
+        result = r.post('http://127.0.0.1:8083/ajax/editlistusers/hugo', data={})
+        self.assertEqual(400, result.status_code)
+        payload = {'name': 'name', 'value': 'Guest', 'pk': "2"}
+        result = r.post('http://127.0.0.1:8083/ajax/editlistusers/name', data=payload)
+        self.assertEqual(400, result.status_code)
+        payload = {'name': 'Nurm', 'value': 'Guest', 'pk': "2"}
+        result = r.post('http://127.0.0.1:8083/ajax/editlistusers/name', data=payload)
+        self.assertEqual(400, result.status_code)
+        payload = {'name': 'Name', 'value': 'Guest', 'pk': "2"}
+        result = r.post('http://127.0.0.1:8083/ajax/editlistusers/name', data=payload)
+        self.assertEqual(400, result.status_code)
+        payload = {'name': 'name', 'value': 'admin', 'pk': "7"}
+        result = r.post('http://127.0.0.1:8083/ajax/editlistusers/name', data=payload)
+        self.assertEqual(400, result.status_code)
+        payload = {'value': 'admin', 'pk': "1"}
+        result = r.post('http://127.0.0.1:8083/ajax/editlistusers/name', data=payload)
+        self.assertEqual(400, result.status_code)
+        payload = {'name': 'name', 'pk': "3"}
+        result = r.post('http://127.0.0.1:8083/ajax/editlistusers/name', data=payload)
+        self.assertEqual(400, result.status_code)
+        payload = {'name': 'name', 'value': 'admin'}
+        result = r.post('http://127.0.0.1:8083/ajax/editlistusers/name', data=payload)
+        self.assertEqual(400, result.status_code)
+        payload = {'name': 'locale', 'value': 'kk', 'pk': "1"}
+        result = r.post('http://127.0.0.1:8083/ajax/editlistusers/locale', data=payload)
+        self.assertEqual(400, result.status_code)
+        payload = {'name': 'default_language', 'value': 'kk', 'pk': "1"}
+        result = r.post('http://127.0.0.1:8083/ajax/editlistusers/default_language', data=payload)
+        self.assertEqual(400, result.status_code)
+
+        self.fill_basic_config({'config_anonbrowse': 1})
+        time.sleep(BOOT_TIME)
+        payload = {'name': 'name', 'value': 'Gast', 'pk': "2"}
+        result = r.post('http://127.0.0.1:8083/ajax/editlistusers/name', data=payload)
+        self.assertEqual(400, result.status_code)
+        payload = {'name': 'locale', 'value': 'it', 'pk': "2"}
+        result = r.post('http://127.0.0.1:8083/ajax/editlistusers/locale', data=payload)
+        self.assertEqual(400, result.status_code)
+        r.close()
+        self.fill_basic_config({'config_anonbrowse': 0})
+        time.sleep(BOOT_TIME)
+
