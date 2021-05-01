@@ -5,7 +5,7 @@
 from unittest import TestCase
 import os
 import time
-
+from unittest import skip
 from selenium.webdriver.common.by import By
 
 from helper_ui import ui_class
@@ -57,8 +57,6 @@ class TestFilePicker(TestCase, ui_class):
         time.sleep(1)
         self.assertEqual(self.check_element_on_page((By.ID, "config_calibre_dir")).text,"")
 
-
-
         # file_abort
         # self.driver.find_elements_by_class_name("tr-clickable")
         # check files with other ending than metadaa.db are not shown, only folders
@@ -70,8 +68,10 @@ class TestFilePicker(TestCase, ui_class):
         # put "." in field -> open filepicker, check back to original path, -> okay,value replaced
         # put invalid path to field, open fillepicker -> check back to original path, abort -> invalid path still present
 
+    @skip("Not implemented")
     def test_filepicker_new_file(self):
         pass
 
+    @skip("Not implemented")
     def test_filepicker_all_file(self):  # ?
         pass
