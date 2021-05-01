@@ -11,7 +11,7 @@ from helper_db import delete_cust_class
 from helper_ui import ui_class
 from config_test import TEST_DB
 from helper_func import startup, debug_startup
-
+from helper_ui import RESTRICT_COL_USER
 
 class TestErrorReadColumn(unittest.TestCase, ui_class):
     p = None
@@ -57,3 +57,24 @@ class TestErrorReadColumn(unittest.TestCase, ui_class):
         self.get_book_details(5)
         self.check_element_on_page((By.XPATH, "//*[@id='have_read_cb']")).click()
         self.assertTrue(self.check_element_on_page((By.ID, "flash_danger")))
+        self.fill_view_config({'config_read_column': ""})
+
+    def test_invalid_custom_column(self):
+        self.fill_view_config({'config_restricted_column': "Custom Text 人物 *'()&"})
+        self.edit_book(10, custom_content={"Custom Text 人物 *'()&": 'test'})
+        restricts = self.list_restrictions(RESTRICT_COL_USER, username="admin")
+        self.assertEqual(len(restricts), 0)
+        self.add_restrictions('test', allow=False)
+        close = self.check_element_on_page((By.ID, "restrict_close"))
+        self.assertTrue(close)
+        close.click()
+        time.sleep(2)
+        delete_cust_class(os.path.join(TEST_DB, "metadata.db"), 10)
+        self.restart_calibre_web()
+        self.goto_page("nav_read")
+        self.assertTrue(self.check_element_on_page((By.ID, "flash_danger")))
+        self.goto_page("nav_new")
+        self.assertTrue(self.check_element_on_page((By.ID, "flash_danger")))
+        self.goto_page("nav_lang")
+        self.assertTrue(self.check_element_on_page((By.ID, "flash_danger")))
+        self.fill_view_config({'config_restricted_column': "None"})
