@@ -818,6 +818,20 @@ class TestCalibreWebVisibilitys(unittest.TestCase, ui_class):
         self.check_element_on_page((By.ID, "edit_book")).click()
         self.edit_book(custom_content={u'Custom Bool 1 Ä': u''})
 
+    def test_request_link_column_to_read_status(self):
+        r = requests.session()
+        payload = {'username': 'admin', 'password': 'admin123', 'submit':"", 'next':"/", "remember_me":"on"}
+        result = r.post('http://127.0.0.1:8083/login', data=payload)
+        self.assertEqual(200, result.status_code)
+        payload = {"config_read_column": "-1"}
+        result = r.post('http://127.0.0.1:8083/admin/viewconfig', data=payload)
+        self.assertTrue("flash_danger" in result.text)
+        payload = {"config_read_column": "2"}
+        result = r.post('http://127.0.0.1:8083/admin/viewconfig', data=payload)
+        self.assertTrue("flash_danger" in result.text)
+        r.close()
+
+
     def test_hide_custom_column(self):
         self.get_book_details(5)
         self.check_element_on_page((By.ID, "edit_book")).click()

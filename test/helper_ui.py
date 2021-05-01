@@ -1800,7 +1800,6 @@ class ui_class():
         if self.goto_page('adv_search'):
             if get:
                 inc_tags = self.driver.find_elements_by_xpath("//select[@id='include_tag']/option")
-                # before: self.driver.find_elements_by_xpath("//label[starts-with(@id, 'tag_')]")
                 exc_tags = self.driver.find_elements_by_xpath("//select[@id='exclude_tag']/option")
                 inc_series = self.driver.find_elements_by_xpath("//select[@id='include_serie']/option")
                 exc_series = self.driver.find_elements_by_xpath("//select[@id='exclude_serie']/option")
@@ -1832,7 +1831,7 @@ class ui_class():
             else:
                 text_inputs = ['book_title', 'bookAuthor', 'publisher', 'comment', 'custom_column_8',
                                'custom_column_10', 'custom_column_1', 'custom_column_6', 'custom_column_4']
-                selects = ['custom_column_9', 'custom_column_3']
+                selects = ['custom_column_9', 'custom_column_3', "read_status"]
                 multi_selects = ['include_tag', 'exclude_tag', 'include_serie',
                                 'exclude_serie', 'include_language', 'exclude_language', 'include_extension',
                                 'exclude_extension', 'include_shelf', 'exclude_shelf']
