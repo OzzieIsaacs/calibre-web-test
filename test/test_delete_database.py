@@ -8,7 +8,7 @@ from config_test import TEST_DB
 # from parameterized import parameterized_class
 from helper_func import startup, debug_startup
 from helper_func import save_logfiles
-
+from selenium.webdriver.common.by import By
 
 class TestDeleteDatabase(TestCase, ui_class):
     p = None
@@ -39,7 +39,15 @@ class TestDeleteDatabase(TestCase, ui_class):
         self.delete_book(5)
         self.delete_book(7)
         self.delete_book(8)
-        self.delete_book(9)
+        bl = self.get_books_list(1)
+        bl['table'][4]['Delete']['element'].click()
+        time.sleep(1)
+        self.check_element_on_page((By.ID, "delete_confirm")).click()
+        time.sleep(1)
+        self.assertTrue(self.check_element_on_page((By.ID, "flash_success")))
+        self.assertTrue(self.check_element_on_page((By.ID, "merge_books")))
+        bl = self.get_books_list(-1)
+        self.assertEqual(4, len(bl['table']))
         self.delete_book(10)
         self.delete_book(11)
         self.delete_book(12)
@@ -59,3 +67,6 @@ class TestDeleteDatabase(TestCase, ui_class):
         self.assertEqual(0, len(list_element))
         list_element = self.goto_page("nav_cat")
         self.assertEqual(0, len(list_element))
+        bl = self.get_books_list(1)
+        self.assertEqual(1, len(bl['table']))
+        self.assertEqual("", bl['table'][0]['selector']['text'])

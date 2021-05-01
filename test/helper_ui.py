@@ -630,8 +630,6 @@ class ui_class():
             clicker = 'submit'
         cls.driver.find_element_by_name(clicker).click()
 
-
-
     @classmethod
     def check_element_on_page(cls, element, timeout=BOOT_TIME):
         try:
@@ -641,7 +639,13 @@ class ui_class():
             return False
 
     @classmethod
-    def edit_user(cls, name, element):
+    def edit_user(cls, name, element, abort=False):
+        if cls.navigate_to_user(name):
+            return cls.change_user(element, abort)
+        return False
+
+    @classmethod
+    def navigate_to_user(cls, name):
         cls.goto_page('admin_setup')
         user = cls.driver.find_elements_by_xpath("//table[@id='table_user']/tbody/tr/td/a")
         # table
@@ -666,7 +670,7 @@ class ui_class():
                         if not cls.check_element_on_page((By.ID, "email")):
                             print('Could not edit user: %s' % name)
                             return False
-                        return cls.change_user(element)
+                        return True
         else:
             for ele in user:
                 if name == ele.text:
@@ -674,95 +678,84 @@ class ui_class():
                     if not cls.check_element_on_page((By.ID, "email")):
                         print('Could not edit user: %s' % name)
                         return False
-                    return cls.change_user(element)
+                    return True
         print('User: %s not found' % name)
         return False
 
     def get_user_settings(self, name):
-        self.goto_page('admin_setup')
-        user = self.driver.find_elements_by_xpath("//table[@id='table_user']/tbody/tr/td/a")
-        for ele in user:
-            if name == ele.text:
-                ele.click()
-                if not self.check_element_on_page((By.ID, "email")):
-                    print('Could not find user: %s' % name)
-                    return False
-                else:
-                    user_settings=dict()
-                    element = self.check_element_on_page((By.ID, "name"))
-                    if element:
-                        user_settings['name'] = element.get_attribute('value')
-                    else:
-                        user_settings['name'] = None
-                    user_settings['email'] = self.check_element_on_page((By.ID, "email")).get_attribute('value')
-                    user_settings['kindle_mail'] = self.check_element_on_page((By.ID, "kindle_mail")).get_attribute('value')
-                    element = self.check_element_on_page((By.ID, "locale"))
-                    if element:
-                        user_settings['locale'] = element.get_attribute('value')
-                    else:
-                        user_settings['locale'] = None
-                    # user_settings['locale'] = Select(self.check_element_on_page((By.ID, "locale"))).first_selected_option.text
-                    user_settings['default_language'] = Select(self.check_element_on_page((By.ID, "default_language"))).first_selected_option.text
-                    user_settings['show_2'] = int(self.check_element_on_page((By.ID, "show_2")).is_selected())
-                    user_settings['show_4'] = int(self.check_element_on_page((By.ID, "show_4")).is_selected())
-                    user_settings['show_8'] = int(self.check_element_on_page((By.ID, "show_8")).is_selected())
-                    user_settings['show_16'] = int(self.check_element_on_page((By.ID, "show_16")).is_selected())
-                    user_settings['show_32'] = int(self.check_element_on_page((By.ID, "show_32")).is_selected())
-                    user_settings['show_64'] = int(self.check_element_on_page((By.ID, "show_64")).is_selected())
-                    user_settings['show_128'] = int(self.check_element_on_page((By.ID, "show_128")).is_selected())
-                    element = self.check_element_on_page((By.ID, "show_256"))
-                    if element:
-                        user_settings['show_256'] = element.is_selected()
-                    else:
-                        user_settings['show_256'] = None
-                    '''element = self.check_element_on_page((By.ID, "show_512"))
-                    if element:
-                        user_settings['show_512'] = element.is_selected()
-                    else:'''
-                    user_settings['show_512'] = None
-                    user_settings['show_1024'] = None  # was sorted
-                    user_settings['show_2048'] = None  # was mature content
-                    user_settings['show_4096'] = int(self.check_element_on_page((By.ID, "show_4096")).is_selected())
-                    user_settings['show_8192'] = int(self.check_element_on_page((By.ID, "show_8192")).is_selected())
-                    user_settings['show_16384'] = int(self.check_element_on_page((By.ID, "show_16384")).is_selected())
-                    element = self.check_element_on_page((By.ID, "show_32768"))
-                    if element:
-                        user_settings['show_32768'] = element.is_selected()
-                    else:
-                        user_settings['show_32768'] = None
-                    element = self.check_element_on_page((By.ID, "show_65536"))
-                    if element:
-                        user_settings['show_65536'] = element.is_selected()
-                    else:
-                        user_settings['show_65536'] = None
-                    element = self.check_element_on_page((By.ID, "show_131072"))
-                    if element:
-                        user_settings['show_131072'] = element.is_selected()
-                    else:
-                        user_settings['show_131072'] = None
-                    user_settings['Show_detail_random'] = int(self.check_element_on_page((By.ID, "Show_detail_random")).is_selected())
-                    element = self.check_element_on_page((By.ID, "admin_role"))
-                    if element:
-                        user_settings['admin_role'] = element.is_selected()
-                    else:
-                        user_settings['admin_role'] = None
+        if self.navigate_to_user(name):
+            user_settings=dict()
+            element = self.check_element_on_page((By.ID, "name"))
+            if element:
+                user_settings['name'] = element.get_attribute('value')
+            else:
+                user_settings['name'] = None
+            user_settings['email'] = self.check_element_on_page((By.ID, "email")).get_attribute('value')
+            user_settings['kindle_mail'] = self.check_element_on_page((By.ID, "kindle_mail")).get_attribute('value')
+            element = self.check_element_on_page((By.ID, "locale"))
+            if element:
+                user_settings['locale'] = element.get_attribute('value')
+            else:
+                user_settings['locale'] = None
+            # user_settings['locale'] = Select(self.check_element_on_page((By.ID, "locale"))).first_selected_option.text
+            user_settings['default_language'] = Select(self.check_element_on_page((By.ID, "default_language"))).first_selected_option.text
+            user_settings['show_2'] = int(self.check_element_on_page((By.ID, "show_2")).is_selected())
+            user_settings['show_4'] = int(self.check_element_on_page((By.ID, "show_4")).is_selected())
+            user_settings['show_8'] = int(self.check_element_on_page((By.ID, "show_8")).is_selected())
+            user_settings['show_16'] = int(self.check_element_on_page((By.ID, "show_16")).is_selected())
+            user_settings['show_32'] = int(self.check_element_on_page((By.ID, "show_32")).is_selected())
+            user_settings['show_64'] = int(self.check_element_on_page((By.ID, "show_64")).is_selected())
+            user_settings['show_128'] = int(self.check_element_on_page((By.ID, "show_128")).is_selected())
+            element = self.check_element_on_page((By.ID, "show_256"))
+            if element:
+                user_settings['show_256'] = element.is_selected()
+            else:
+                user_settings['show_256'] = None
+            user_settings['show_512'] = None
+            user_settings['show_1024'] = None  # was sorted
+            user_settings['show_2048'] = None  # was mature content
+            user_settings['show_4096'] = int(self.check_element_on_page((By.ID, "show_4096")).is_selected())
+            user_settings['show_8192'] = int(self.check_element_on_page((By.ID, "show_8192")).is_selected())
+            user_settings['show_16384'] = int(self.check_element_on_page((By.ID, "show_16384")).is_selected())
+            element = self.check_element_on_page((By.ID, "show_32768"))
+            if element:
+                user_settings['show_32768'] = element.is_selected()
+            else:
+                user_settings['show_32768'] = None
+            element = self.check_element_on_page((By.ID, "show_65536"))
+            if element:
+                user_settings['show_65536'] = element.is_selected()
+            else:
+                user_settings['show_65536'] = None
+            element = self.check_element_on_page((By.ID, "show_131072"))
+            if element:
+                user_settings['show_131072'] = element.is_selected()
+            else:
+                user_settings['show_131072'] = None
+            user_settings['Show_detail_random'] = int(self.check_element_on_page((By.ID, "Show_detail_random")).is_selected())
+            element = self.check_element_on_page((By.ID, "admin_role"))
+            if element:
+                user_settings['admin_role'] = element.is_selected()
+            else:
+                user_settings['admin_role'] = None
 
-                    user_settings['download_role'] = int(self.check_element_on_page((By.ID, "download_role")).is_selected())
-                    user_settings['upload_role'] = int(self.check_element_on_page((By.ID, "upload_role")).is_selected())
-                    user_settings['edit_role'] = int(self.check_element_on_page((By.ID, "edit_role")).is_selected())
-                    user_settings['delete_role'] = int(self.check_element_on_page((By.ID, "delete_role")).is_selected())
-                    element = self.check_element_on_page((By.ID, "passwd_role"))
-                    if element:
-                        user_settings['passwd_role'] = element.is_selected()
-                    else:
-                        user_settings['passwd_role'] = None
-                    element = self.check_element_on_page((By.ID, "edit_shelf_role"))
-                    if element:
-                        user_settings['edit_shelf_role'] = element.is_selected()
-                    else:
-                        user_settings['edit_shelf_role'] = None
-                    user_settings['viewer_role'] = int(self.check_element_on_page((By.ID, "viewer_role")).is_selected())
-                    return user_settings
+            user_settings['download_role'] = int(self.check_element_on_page((By.ID, "download_role")).is_selected())
+            user_settings['upload_role'] = int(self.check_element_on_page((By.ID, "upload_role")).is_selected())
+            user_settings['edit_role'] = int(self.check_element_on_page((By.ID, "edit_role")).is_selected())
+            user_settings['delete_role'] = int(self.check_element_on_page((By.ID, "delete_role")).is_selected())
+            element = self.check_element_on_page((By.ID, "passwd_role"))
+            if element:
+                user_settings['passwd_role'] = element.is_selected()
+            else:
+                user_settings['passwd_role'] = None
+            element = self.check_element_on_page((By.ID, "edit_shelf_role"))
+            if element:
+                user_settings['edit_shelf_role'] = element.is_selected()
+            else:
+                user_settings['edit_shelf_role'] = None
+            user_settings['viewer_role'] = int(self.check_element_on_page((By.ID, "viewer_role")).is_selected())
+            return user_settings
+        return False
 
     @classmethod
     def change_visibility_me(cls, nav_element):
@@ -810,7 +803,6 @@ class ui_class():
 
         # finally submit settings
         cls.driver.find_element_by_id("user_submit").click()
-
 
     def create_shelf(self, name, public=False):
         self.goto_page('create_shelf')
@@ -897,12 +889,12 @@ class ui_class():
         return users
 
     @classmethod
-    def change_user(cls, config):
+    def change_user(cls, config, abort=False):
         ''' All Checkboses are:
             'show_32','show_512', 'show_16', 'show_128', 'show_2', 'show_4',
             'show_8', 'show_64', 'show_256', 'Show_detail_random' '''
         selects = ['locale', 'default_language']
-        text_inputs = ['kindle_mail','email', 'password', 'name']
+        text_inputs = ['kindle_mail', 'email', 'password', 'name']
         process_selects = dict()
         process_checkboxes = dict()
         process_text = dict()
@@ -911,8 +903,14 @@ class ui_class():
                 time.sleep(2)
                 cls.driver.find_element_by_id('btndeluser').click()
                 time.sleep(2)
-                cls.driver.find_element_by_id('btnConfirmYes-GeneralDeleteModal').click()
+                if not abort:
+                    cls.driver.find_element_by_id('btnConfirmYes-GeneralDeleteModal').click()
+                else:
+                    cls.driver.find_element_by_id('btnConfirmNo-GeneralDeleteModal').click()
                 time.sleep(2)
+                if abort:
+                    cls.check_element_on_page((By.ID, "back")).click()
+                    time.sleep(1)
                 return
 
         # check if checkboxes are in list and seperate lists
@@ -1667,22 +1665,6 @@ class ui_class():
         ret['author_sort'] = self.check_element_on_page((By.ID, "autoupdate_authorsort"))
         return ret
 
-
-    def select_blist_books(self, books):
-        pass
-
-    def merge_blist_books(self, abort=False):
-        pass
-
-    def deselect_blist_books(self):
-        pass
-
-    def change_blist_visibliity(self, parameter_dict):
-        pass
-
-    def delete_blist_book(self, book):
-        pass
-
     def edit_table_select(self, table_select, new_value, cancel=False):
         table_select.click()
         select = Select(table_select.find_element_by_xpath("..//select"))
@@ -1720,17 +1702,21 @@ class ui_class():
             header_edit.insert(cnt, dict())
             header_edit[cnt]['sort'] = head.find_element_by_xpath("./div[starts-with(@class, 'th-inner')]")
             if head.get_attribute("data-field") == "locale":
-                header_edit[cnt]['text'] = head.text.split("\n\n")[1]
+                header_edit[cnt]['text'] = head.text.split("\n")[-1]
                 header_edit[cnt]['element'] = head.find_element_by_xpath(".//div/select")
             elif head.get_attribute("data-field") == "default_language":
-                header_edit[cnt]['text'] = head.text.split("\n\n")[1]
+                header_edit[cnt]['text'] = head.text.split("\n")[-1]
                 header_edit[cnt]['element'] = head.find_element_by_xpath(".//div/select")
             elif head.get_attribute("data-field") in ["role", "sidebar_view"]:
                 if head.get_attribute("data-field") == "role":
                     header_edit[cnt]['text'] = head.get_attribute("data-field") + "_" + head.find_element_by_xpath("./div").text.split("\n")[2]
                 else:
                     header_edit[cnt]['text'] = head.find_element_by_xpath("./div").text.split("\n")[2]
-                header_edit[cnt]['element'] = head.find_elements_by_xpath(".//div[contains(@class,'form-check')]")
+                header_edit[cnt]['element'] = head.find_elements_by_xpath(".//div[contains(@class,'form-check')]//input")
+            elif head.get_attribute("data-field") in ["denied_tags", "allowed_tags"]:
+                header_edit[cnt]['element'] = head.find_element_by_xpath(
+                    ".//div[contains(@class,'multi_select')]")
+                header_edit[cnt]['text'] = head.find_elements_by_xpath("./div")[1].text
             else:
                 if header_edit[cnt]['sort'].text == "":
                     header_edit[cnt]['text'] = "selector"
@@ -1752,7 +1738,10 @@ class ui_class():
                     click_element = el
                 index = header_edit[cnt]['text']
                 if click_element.text == "" and click_element.tag_name == "a":
-                    element_text = "+" if "glyphicon-plus" in click_element.find_elements_by_xpath("./span")[0].get_attribute('class') else ""
+                    try:
+                        element_text = "+" if "glyphicon-plus" in click_element.find_elements_by_xpath("./span")[0].get_attribute('class') else ""
+                    except:
+                        element_text = ""
                 else:
                     element_text = el.text
                 ele[index] = {'element': click_element, 'sort': header_edit[cnt]['sort'], 'text': element_text}
@@ -1811,7 +1800,6 @@ class ui_class():
         if self.goto_page('adv_search'):
             if get:
                 inc_tags = self.driver.find_elements_by_xpath("//select[@id='include_tag']/option")
-                # before: self.driver.find_elements_by_xpath("//label[starts-with(@id, 'tag_')]")
                 exc_tags = self.driver.find_elements_by_xpath("//select[@id='exclude_tag']/option")
                 inc_series = self.driver.find_elements_by_xpath("//select[@id='include_serie']/option")
                 exc_series = self.driver.find_elements_by_xpath("//select[@id='exclude_serie']/option")
@@ -1843,7 +1831,7 @@ class ui_class():
             else:
                 text_inputs = ['book_title', 'bookAuthor', 'publisher', 'comment', 'custom_column_8',
                                'custom_column_10', 'custom_column_1', 'custom_column_6', 'custom_column_4']
-                selects = ['custom_column_9', 'custom_column_3']
+                selects = ['custom_column_9', 'custom_column_3', "read_status"]
                 multi_selects = ['include_tag', 'exclude_tag', 'include_serie',
                                 'exclude_serie', 'include_language', 'exclude_language', 'include_extension',
                                 'exclude_extension', 'include_shelf', 'exclude_shelf']

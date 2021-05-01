@@ -28,3 +28,4 @@ fs.googledrivefs>=1.7.0
 # E-Mailing results and uploading results to server
 keyring>=21.0.0
 paramiko>=2.7.0
+pdfkit>=0.6.0

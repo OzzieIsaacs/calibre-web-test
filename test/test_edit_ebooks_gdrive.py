@@ -364,11 +364,12 @@ class TestEditBooksOnGdrive(unittest.TestCase, ui_class):
         self.assertFalse(gdrive_path)
 
         self.edit_book(content={'bookAuthor': 'Pipo| Pipe'}, detail_v=True)
-        self.wait_page_has_loaded() #time.sleep(WAIT_GDRIVE)
+        time.sleep(2)
+        self.wait_page_has_loaded()
         self.check_element_on_page((By.ID, 'flash_success'))
         author = self.check_element_on_page((By.ID, "bookAuthor"))
         self.assertEqual(u'Pipo, Pipe', author.get_attribute('value'))
-        list_element = self.goto_page('nav_author')
+        self.goto_page('nav_author')
 
         file_path = os.path.join('test', 'Pipo, Pipe', 'book8 (8)').replace('\\','/')
         not_file_path = os.path.join('test', 'Pipo, Pipe', 'nofolder').replace('\\','/')

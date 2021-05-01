@@ -97,7 +97,8 @@ if __name__ == '__main__':
     print("\nAll tests finished, please check testresults")
     kill_dead_cps()
     # E-Mail tests finished
-    finishing_notifier()
+    result_file = os.path.join(outfile, "Calibre-Web TestSummary_" + TEST_OS + ".html")
+    finishing_notifier(result_file)
 
     poweroff(power)
     sys.exit(0)

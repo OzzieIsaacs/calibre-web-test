@@ -9,8 +9,8 @@ import requests
 import json
 
 from helper_ui import ui_class
-from config_test import TEST_DB, VENV_PYTHON, CALIBRE_WEB_PATH, base_path
-from helper_func import startup, debug_startup, get_Host_IP, add_dependency, remove_dependency, kill_old_cps
+from config_test import TEST_DB, base_path
+from helper_func import startup, debug_startup, get_Host_IP, add_dependency, remove_dependency
 from selenium.webdriver.common.by import By
 from helper_func import save_logfiles
 
@@ -31,6 +31,7 @@ class TestKoboSync(unittest.TestCase, ui_class):
         try:
             host = 'http://' + get_Host_IP() + ':8083'
             startup(cls, cls.py_version, {'config_calibre_dir':TEST_DB, 'config_kobo_sync':1,
+                                          'config_kepubifypath': "",
                                           'config_kobo_proxy':0}, host=host)
             cls.goto_page('user_setup')
             cls.check_element_on_page((By.ID, "config_create_kobo_token")).click()
@@ -342,9 +343,9 @@ class TestKoboSync(unittest.TestCase, ui_class):
         self.check_element_on_page((By.XPATH, "//ul[@id='add-to-shelves']/li/a[contains(.,'privateShelf')]")).click()
         # ToDo works by change, because old entry is first one, click is independent of text
         self.check_element_on_page((By.XPATH, "//*[@id='remove-from-shelves']//a")).click()
-        time.sleep(2)
+        time.sleep(3)
         data = self.sync_kobo()
-        self.assertEqual(1, len(data))
+        self.assertEqual(1, len(data), data)
         self.assertEqual('privateShelf', data[0]['ChangedTag']['Tag']['Name'])
         self.assertEqual(1, len(data[0]['ChangedTag']['Tag']['Items']))
         tagId = data[0]['ChangedTag']['Tag']['Id']

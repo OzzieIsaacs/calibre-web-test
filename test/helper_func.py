@@ -3,6 +3,7 @@
 import os
 import shutil
 import re
+import mimetypes
 from config_test import CALIBRE_WEB_PATH, TEST_DB, BOOT_TIME, VENV_PYTHON, base_path, TEST_OS
 from selenium.webdriver.support.ui import WebDriverWait
 from subproc_wrapper import process_open
@@ -21,7 +22,15 @@ import importlib
 import datetime
 import smtplib
 from email.mime.text import MIMEText
+from email.mime.multipart import MIMEMultipart
+from email.mime.base import MIMEBase
+from email import encoders
 
+try:
+    import pdfkit
+    convert_config = True
+except ImportError:
+    convert_config = False
 try:
     from config_email import E_MAIL_ADDRESS, E_MAIL_SERVER_ADDRESS, STARTSSL, EMAIL_SERVER_PORT
     from config_email import E_MAIL_LOGIN, E_MAIL_PASSWORD
@@ -353,20 +362,38 @@ def save_logfiles(inst, module_name):
             shutil.move(src,dest)
     inst.assertTrue(result == "", "Exception in File {}".format(result))
 
-def finishing_notifier():
+def get_attachment(filename):
+    file_ = open(filename, 'rb')
+    data = file_.read()
+    file_.close()
+    content_type, encoding = mimetypes.guess_type(filename)
+    if content_type is None or encoding is not None:
+        content_type = 'application/octet-stream'
+    main_type, sub_type = content_type.split('/', 1)
+    attachment = MIMEBase(main_type, sub_type)
+    attachment.set_payload(data)
+    encoders.encode_base64(attachment)
+    attachment.add_header('Content-Disposition', 'attachment', filename=filename)
+    return attachment
+
+def finishing_notifier(result_file):
     try:
         if server_config:
             result_upload(TEST_OS)
     except Exception as e:
         print(e)
+    if convert_config:
+        pdfkit.from_url(result_file, 'out.pdf')
     try:
         if email_config:
-
-            msg = MIMEText('Calibre-Web Tests finished')
+            msg = MIMEMultipart()
+            message = MIMEText('Calibre-Web Tests finished')
             msg['Subject'] = 'Calibre-Web Tests on ' + TEST_OS + ' finished'
             msg['From'] = E_MAIL_ADDRESS
             msg['To'] = E_MAIL_ADDRESS
-
+            msg.attach(message)
+            if convert_config:
+                msg.attach(get_attachment('out.pdf'))
             s = smtplib.SMTP(E_MAIL_SERVER_ADDRESS, EMAIL_SERVER_PORT)
             if STARTSSL:
                 s.starttls()
@@ -376,6 +403,8 @@ def finishing_notifier():
             s.quit()
     except Exception as e:
         print(e)
+    if convert_config:
+        os.remove('out.pdf')
 
 def createSSHClient(server, port, user, password):
     client = paramiko.SSHClient()

@@ -63,7 +63,7 @@ class TestRegister(unittest.TestCase, ui_class):
             self.assertTrue(self.check_element_on_page((By.ID, "flash_success")))
         self.setup_server(False, {'mail_server':'mail.example.org'})
         self.logout()
-        self.assertEqual(u'flash_danger',self.register(u'noserver','alo@de.org'))
+        self.assertEqual(u'flash_danger', self.register(u'noserver', 'alo@de.org'))
         self.goto_page('unlogged_login')
         self.login('admin', 'admin123')
         self.setup_server(False, {'mail_server': '127.0.0.1'})
@@ -88,7 +88,7 @@ class TestRegister(unittest.TestCase, ui_class):
         a_domains = self.list_domains(allow=True)
         self.assertEqual(a_domains[0]['domain'], '*.com')
         self.logout()
-        self.assertEqual(self.register('nocom','alfa@com.de'), 'flash_danger')
+        self.assertEqual(self.register('nocom', 'alfa@com.de'), 'flash_danger')
         self.assertEqual(self.register('nocom', 'alfa@com.com'),'flash_success')
         self.login('admin','admin123')
         self.goto_page('mail_server')
@@ -110,7 +110,7 @@ class TestRegister(unittest.TestCase, ui_class):
         d_domains = self.list_domains(allow=False)
         self.assertEqual(d_domains[0]['domain'], '*dod@g?ogle.c*')
         self.logout()
-        self.assertEqual(self.register('nocom1','a.dod@google.com'),'flash_danger')
+        self.assertEqual(self.register('nocom1', 'a.dod@google.com'),'flash_danger')
         self.assertEqual(self.register('nocom2', 'doda@google.cum'), 'flash_danger')
         self.assertEqual(self.register('nocom3', 'dod@koogle.com'), 'flash_success')
         #cleanup
@@ -124,37 +124,39 @@ class TestRegister(unittest.TestCase, ui_class):
 
     # register user, extract password, login, check rights
     def test_registering_user(self):
-        if self.check_user_logged_in('admin',True):
+        if self.check_user_logged_in('admin', True):
             self.logout()
-        self.assertEqual(u'flash_success',self.register(u'u1','huj@de.de'))
+        self.assertEqual(u'flash_success',self.register(u'u1', 'huj@de.de'))
         self.assertTrue(wait_Email_received(self.email_server.handler.check_email_received))
         user, passw = self.email_server.handler.extract_register_info()
         self.email_server.handler.reset_email_received()
         self.assertTrue(self.login(user, passw))
         self.logout()
-        self.assertEqual(u'flash_success',self.register(u'ü执1',u'huij@de.de'))
+        self.assertEqual(u'flash_success',self.register(u'ü执1', u'huij@de.de'))
         self.assertTrue(wait_Email_received(self.email_server.handler.check_email_received))
         user, passw = self.email_server.handler.extract_register_info()
         self.assertTrue(self.login(user, passw))
         self.logout()
+        self.assertEqual(u'flash_danger',self.register(u'guest','hufdj@de.de'))
+        self.assertEqual(u'flash_danger', self.register(u' guest ', 'hufdj@de.de'))
 
     # double username, emailadress, capital letters, lowercase characters
     def test_registering_user_fail(self):
         if self.check_user_logged_in('admin',True):
             self.logout()
         self.email_server.handler.reset_email_received()
-        self.assertEqual(u'flash_success',self.register(u'udouble','huj@de.com'))
+        self.assertEqual(u'flash_success',self.register(u'udouble', 'huj@de.com'))
         self.assertTrue(wait_Email_received(self.email_server.handler.check_email_received))
         self.email_server.handler.reset_email_received()
-        self.assertEqual(u'flash_danger',self.register(u'udouble','huj@de.cem'))
+        self.assertEqual(u'flash_danger',self.register(u'udouble', 'huj@de.cem'))
         self.email_server.handler.reset_email_received()
-        self.assertEqual(u'flash_danger',self.register(u'udoubl','huj@de.com'))
+        self.assertEqual(u'flash_danger',self.register(u'udoubl', 'huj@de.com'))
         self.email_server.handler.reset_email_received()
-        self.assertEqual(u'flash_danger',self.register(u'UdoUble','huo@de.com'))
+        self.assertEqual(u'flash_danger',self.register(u'UdoUble', 'huo@de.com'))
         self.email_server.handler.reset_email_received()
-        self.assertEqual(u'flash_danger',self.register(u'UdoUble','huJ@dE.com'))
+        self.assertEqual(u'flash_danger',self.register(u'UdoUble', 'huJ@dE.com'))
         self.email_server.handler.reset_email_received()
-        self.assertEqual(u'flash_danger',self.register(u'UdoUble','huJ@de'))
+        self.assertEqual(u'flash_danger',self.register(u'UdoUble', 'huJ@de'))
 
     # user registers, user changes password, user forgets password, admin resents password for user
     def test_user_change_password(self):
@@ -165,7 +167,7 @@ class TestRegister(unittest.TestCase, ui_class):
         self.assertTrue(self.check_element_on_page((By.ID, "flash_success")))
         self.fill_view_config({'passwd_role': 1})
         self.logout()
-        self.assertEqual(u'flash_success',self.register(u'upasswd','passwd@de.com'))
+        self.assertEqual(u'flash_success',self.register(u'upasswd', 'passwd@de.com'))
         self.assertTrue(wait_Email_received(self.email_server.handler.check_email_received))
         user, passw = self.email_server.handler.extract_register_info()
         self.email_server.handler.reset_email_received()
@@ -213,7 +215,7 @@ class TestRegister(unittest.TestCase, ui_class):
             self.assertTrue(self.check_element_on_page((By.ID, "flash_success")))
         self.fill_basic_config({'config_register_email': 1})
         self.logout()
-        self.assertEqual(u'flash_success', self.register(u'','hujh@de.de'))
+        self.assertEqual(u'flash_success', self.register(u'', 'hujh@de.de'))
         self.assertTrue(wait_Email_received(self.email_server.handler.check_email_received))
         user, passw = self.email_server.handler.extract_register_info()
         self.assertEqual('hujh@de.de', user)
