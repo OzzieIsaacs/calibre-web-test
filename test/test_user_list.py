@@ -834,3 +834,4 @@ class TestUserList(TestCase, ui_class):
         self.edit_user("no_one", {'kindle_mail': "ü执1@ü执1.3"})
         self.assertTrue(self.check_element_on_page((By.ID, "flash_success")))
         self.edit_user("no_one", {'email': 'muki1al@b.com', 'kindle_mail': 'muki1al@b.com'})
+        self.assertTrue(self.check_element_on_page((By.ID, "flash_success")))
