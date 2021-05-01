@@ -6,6 +6,7 @@ from unittest import TestCase, skip
 import time
 import requests
 import random
+import json
 
 from selenium.webdriver.common.by import By
 from selenium.webdriver.common.keys import Keys
@@ -646,7 +647,130 @@ class TestUserList(TestCase, ui_class):
         payload = {'name': 'locale', 'value': 'kk', 'pk': "1"}
         result = r.post('http://127.0.0.1:8083/ajax/editlistusers/locale', data=payload)
         self.assertEqual(400, result.status_code)
+        payload = {'name': 'locale', 'value': 'kk', 'pk': "0"}
+        result = r.post('http://127.0.0.1:8083/ajax/editlistusers/locale', data=payload)
+        self.assertEqual(400, result.status_code)
         payload = {'name': 'default_language', 'value': 'kk', 'pk': "1"}
+        result = r.post('http://127.0.0.1:8083/ajax/editlistusers/default_language', data=payload)
+        self.assertEqual(400, result.status_code)
+        # edit roles
+        payload = {'name': 'default_language', 'value': 'kk', 'pk': "1"}
+        result = r.post('http://127.0.0.1:8083/ajax/editlistusers/edit_role', data=payload)
+        self.assertEqual(400, result.status_code)
+        payload = {'value': 'true', 'field_index': '-1', 'pk': "1"}
+        result = r.post('http://127.0.0.1:8083/ajax/editlistusers/edit_role', data=payload)
+        self.assertEqual(400, result.status_code)
+        payload = {'value': 'true', 'field_index': '3', 'pk': "1"}
+        result = r.post('http://127.0.0.1:8083/ajax/editlistusers/edit_role', data=payload)
+        self.assertEqual(400, result.status_code)
+        payload = {'value': 'true', 'field_index': '1', 'pk': "1"}  # check 1 is also accepted as valid role
+        result = r.post('http://127.0.0.1:8083/ajax/editlistusers/edit_role', data=payload)
+        self.assertEqual(200, result.status_code)        
+        payload = {'value': 'kiki', 'pk': "1"}
+        result = r.post('http://127.0.0.1:8083/ajax/editlistusers/edit_role', data=payload)
+        self.assertEqual(400, result.status_code)
+        payload = {'value': 'kiki', 'field_index': '16', 'pk': "1"}
+        result = r.post('http://127.0.0.1:8083/ajax/editlistusers/edit_role', data=payload)
+        self.assertEqual(400, result.status_code)
+        # sidebar roles
+        payload = {'value': 'true', 'field_index': '-1', 'pk': "1"}
+        result = r.post('http://127.0.0.1:8083/ajax/editlistusers/sidebar_test', data=payload)
+        self.assertEqual(400, result.status_code)
+        payload = {'value': 'true', 'field_index': '3', 'pk': "1"}
+        result = r.post('http://127.0.0.1:8083/ajax/editlistusers/sidebar_test', data=payload)
+        self.assertEqual(400, result.status_code)
+        payload = {'value': 'true', 'field_index': '1', 'pk': "1"}  # check 1 is also accepted as valid role
+        result = r.post('http://127.0.0.1:8083/ajax/editlistusers/sidebar_test', data=payload)
+        self.assertEqual(200, result.status_code)
+        payload = {'value': 'kiki', 'pk': "1"}
+        result = r.post('http://127.0.0.1:8083/ajax/editlistusers/sidebar_test', data=payload)
+        self.assertEqual(400, result.status_code)
+        payload = {'value': 'kiki', 'field_index': '16', 'pk': "1"}
+        result = r.post('http://127.0.0.1:8083/ajax/editlistusers/sidebar_test', data=payload)
+        self.assertEqual(400, result.status_code)
+        # edit of deny/allow column
+        payload = {'name': 'densdied_tags', 'value': 'sdsakk'}
+        result = r.post('http://127.0.0.1:8083/ajax/editlistusers/denied_tags', data=payload)
+        self.assertEqual(400, result.status_code)
+        payload = {'name': 'densdied_tags', 'pk': "1"}
+        result = r.post('http://127.0.0.1:8083/ajax/editlistusers/denied_tags', data=payload)
+        self.assertEqual(400, result.status_code)
+
+        # delete invalid user
+        payload = {'userid': '22'}
+        result = r.post('http://127.0.0.1:8083/ajax/deleteuser', data=payload)
+        self.assertEqual("danger", json.loads(result.text)['type'])
+        payload = {'name': 'kiki'}
+        result = r.post('http://127.0.0.1:8083/ajax/deleteuser', data=payload)
+        self.assertEqual("danger", json.loads(result.text)['type'])
+        payload = {'userid[]': ['22']}
+        result = r.post('http://127.0.0.1:8083/ajax/deleteuser', data=payload)
+        self.assertEqual("danger", json.loads(result.text)['type'])
+
+        # mass edit of name
+        payload = {'pk[]': ['5', '4'], 'value': 'kk'}
+        result = r.post('http://127.0.0.1:8083/ajax/editlistusers/name', data=payload)
+        self.assertEqual(400, result.status_code)
+        payload = {'pk[]': ['5', '4']}
+        result = r.post('http://127.0.0.1:8083/ajax/editlistusers/name', data=payload)
+        self.assertEqual(400, result.status_code)
+
+        # mass edit of allow, deny column
+        payload = {'action': 'kiko', 'pk[]': ["1"], 'value[]': ["1"]}
+        result = r.post('http://127.0.0.1:8083/ajax/editlistusers/denied_tags', data=payload)
+        self.assertEqual(400, result.status_code)
+        payload = {'action': 'kiko', 'value[]': ["1"]}
+        result = r.post('http://127.0.0.1:8083/ajax/editlistusers/denied_tags', data=payload)
+        self.assertEqual(400, result.status_code)
+        payload = {'action': 'add', 'pk[]': ["1"], 'value[]': ["77"]}
+        result = r.post('http://127.0.0.1:8083/ajax/editlistusers/denied_tags', data=payload)
+        self.assertEqual(400, result.status_code)
+        payload = {'action': 'add', 'pk[]': ["1"]}
+        result = r.post('http://127.0.0.1:8083/ajax/editlistusers/denied_tags', data=payload)
+        self.assertEqual(400, result.status_code)
+
+        # mass edit role
+        payload = {'pk[]': ['5', '4'], 'field_index':'256', 'value': 'guhu'}
+        result = r.post('http://127.0.0.1:8083/ajax/editlistusers/role', data=payload)
+        self.assertEqual(400, result.status_code)
+        payload = {'pk[]': ['5', '4'], 'field_index':'255', 'value': 'true'}
+        result = r.post('http://127.0.0.1:8083/ajax/editlistusers/role', data=payload)
+        self.assertEqual(400, result.status_code)
+        payload = {'pk[]': ['5', '4'], 'field_index':'256'}
+        result = r.post('http://127.0.0.1:8083/ajax/editlistusers/role', data=payload)
+        self.assertEqual(400, result.status_code)
+        payload = {'pk[]': ['5', '4'], 'value': 'true'}
+        result = r.post('http://127.0.0.1:8083/ajax/editlistusers/role', data=payload)
+        self.assertEqual(400, result.status_code)
+        payload = {'field_index':'255', 'value': 'true'}
+        result = r.post('http://127.0.0.1:8083/ajax/editlistusers/role', data=payload)
+        self.assertEqual(400, result.status_code)
+
+        # mass edit view
+        payload = {'pk[]': ['5', '4'], 'field_index':'256', 'value': 'guhu'}
+        result = r.post('http://127.0.0.1:8083/ajax/editlistusers/sidebar_view', data=payload)
+        self.assertEqual(400, result.status_code)
+        payload = {'pk[]': ['5', '4'], 'field_index':'255', 'value': 'true'}
+        result = r.post('http://127.0.0.1:8083/ajax/editlistusers/sidebar_view', data=payload)
+        self.assertEqual(400, result.status_code)
+        payload = {'pk[]': ['5', '4'], 'field_index':'256'}
+        result = r.post('http://127.0.0.1:8083/ajax/editlistusers/sidebar_view', data=payload)
+        self.assertEqual(400, result.status_code)
+        payload = {'pk[]': ['5', '4'], 'value': 'true'}
+        result = r.post('http://127.0.0.1:8083/ajax/editlistusers/sidebar_view', data=payload)
+        self.assertEqual(400, result.status_code)
+        payload = {'field_index':'255', 'value': 'true'}
+        result = r.post('http://127.0.0.1:8083/ajax/editlistusers/sidebar_view', data=payload)
+        self.assertEqual(400, result.status_code)
+
+        #mass edit locale/default language
+        payload = {'pk[]': ['5', '4'], 'value': 'kk'}
+        result = r.post('http://127.0.0.1:8083/ajax/editlistusers/locale', data=payload)
+        self.assertEqual(400, result.status_code)
+        payload = {'pk[]': ['5', '4']}
+        result = r.post('http://127.0.0.1:8083/ajax/editlistusers/locale', data=payload)
+        self.assertEqual(400, result.status_code)
+        payload = {'pk[]': ['5', '4'], 'value': 'kk'}
         result = r.post('http://127.0.0.1:8083/ajax/editlistusers/default_language', data=payload)
         self.assertEqual(400, result.status_code)
 
@@ -657,6 +781,18 @@ class TestUserList(TestCase, ui_class):
         self.assertEqual(400, result.status_code)
         payload = {'name': 'locale', 'value': 'it', 'pk': "2"}
         result = r.post('http://127.0.0.1:8083/ajax/editlistusers/locale', data=payload)
+        self.assertEqual(400, result.status_code)
+        payload = {'value': 'true', 'field_index': '1', 'pk': "2"}
+        result = r.post('http://127.0.0.1:8083/ajax/editlistusers/admin_role', data=payload)
+        self.assertEqual(400, result.status_code)
+        payload = {'value': 'true', 'field_index': '64', 'pk': "2"}
+        result = r.post('http://127.0.0.1:8083/ajax/editlistusers/edit_role', data=payload)
+        self.assertEqual(400, result.status_code)
+        payload = {'value': 'true', 'field_index': '16', 'pk': "2"}
+        result = r.post('http://127.0.0.1:8083/ajax/editlistusers/passwd_role', data=payload)
+        self.assertEqual(400, result.status_code)
+        payload = {'value': 'true', 'field_index': '256', 'pk': "2"}
+        result = r.post('http://127.0.0.1:8083/ajax/editlistusers/sidebar_test', data=payload)
         self.assertEqual(400, result.status_code)
         r.close()
         self.fill_basic_config({'config_anonbrowse': 0})
