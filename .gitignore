@@ -33,3 +33,4 @@ selenium
 *.key
 *.crt
 *.cert.pem
+/build/config.py
