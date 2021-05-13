@@ -2,13 +2,9 @@ import sys
 import ast
 
 from sqlalchemy import create_engine
-from sqlalchemy.pool import StaticPool
-from sqlalchemy import Table, Column
+from sqlalchemy import Column
 from sqlalchemy import String, Integer, Boolean
-from sqlalchemy.orm import relationship, sessionmaker, scoped_session
-from sqlalchemy.orm.collections import InstrumentedList
-from sqlalchemy.ext.declarative import DeclarativeMeta
-from sqlalchemy.exc import OperationalError
+from sqlalchemy.orm import sessionmaker, scoped_session
 try:
     # Compatibility with sqlalchemy 2.0
     from sqlalchemy.orm import declarative_base
