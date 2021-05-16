@@ -594,7 +594,7 @@ class TestKoboSync(unittest.TestCase, ui_class):
             print(e)
             self.assertFalse(e, data)
 
-    def test_kobo_sync_selected_chelfs(self):
+    def test_kobo_sync_selected_shelfs(self):
         self.inital_sync()
         # erzeuge privaten Shelf ohne sync
         # sync

@@ -1,5 +1,6 @@
 # -*- coding: utf-8 -*-
 
+import selenium.webdriver as webdriver
 from selenium.webdriver.common.by import By
 from selenium.webdriver.common.keys import Keys
 from selenium.webdriver.support.ui import WebDriverWait, Select
@@ -1308,9 +1309,9 @@ class ui_class():
             ret['publisher'] = [pub.text for pub in publishers]
 
             # Pubdate
-            pubdate = tree.xpath("//p[starts-with(text(),'Publishing date:')]")
+            pubdate = tree.xpath("//p[starts-with(text(),'Published:')]")
             if len(pubdate):
-                ret['pubdate']= pubdate[0].text
+                ret['pubdate']= pubdate[0].text.lstrip('Published: ').strip()
 
             comment = tree.find("//*[@class='comments']")
             ret['comment'] = ''
@@ -1327,13 +1328,6 @@ class ui_class():
                         for ele in comm:
                             if isinstance(ele.text, str):
                                 ret['comment'] += ele.text.strip()
-                #try:
-                #    for ele in comment.getchildren():
-                #        ret['comment'] += ele.tail.strip()
-                #except:
-                #    for ele in comment.getchildren()[1].getchildren():
-                #        if ele.text:
-                #            ret['comment'] += ele.text
 
             add_shelf = tree.findall("//*[@id='add-to-shelves']//a")
             ret['add_shelf'] = [sh.text.strip().lstrip() for sh in add_shelf]
@@ -1389,13 +1383,16 @@ class ui_class():
 
             cust_columns = tree.xpath("//div[@class='real_custom_columns']")
             if len(cust_columns) :      # we have custom columns
-                ret['cust_columns']=list()
+                ret['cust_columns'] = list()
                 for col in cust_columns: # .getchildren()[0].getchildren()[1:]:
                     element = dict()
                     if len(col.text.strip()):
                         if len(col.getchildren()):
                             element['Text'] = col.text.lstrip().split(':')[0]
-                            element['value'] = col.getchildren()[0].attrib['class'][20:]
+                            try:
+                                element['value'] = col.getchildren()[0].attrib['class'][20:]
+                            except KeyError:
+                                element['value'] = col.getchildren()[0].text
                             ret['cust_columns'].append(element)
                         elif ':' in col.text:
                             element['Text'] = col.text.lstrip().split(':')[0]
@@ -1449,6 +1446,47 @@ class ui_class():
             return False
 
     @classmethod
+    def select_date_with_editor(cls, element, delete_element, target_date):
+        if target_date == "":
+            cls.check_element_on_page((By.ID, delete_element)).click()
+        else:
+            dates = target_date.split('/')
+            month_names = ['January', 'February', 'March', 'April', 'May', 'June', 'July', 'August', 'September',
+                           'October', 'November', 'December']
+            cls.check_element_on_page((By.ID, element)).click()
+            month_year = cls.check_element_on_page((By.CLASS_NAME, 'datepicker-switch')).text.split(' ')
+            if month_year[1] != dates[2] or month_year[0] != month_names[int(dates[1]) - 1]:
+                cls.check_element_on_page((By.CLASS_NAME, 'datepicker-switch')).click()
+                if month_year[1] != dates[2]:
+                    cls.driver.find_element_by_xpath(
+                        "//div[@class='datepicker-months']//th[@class='datepicker-switch']").click()
+                    year_range = cls.driver.find_element_by_xpath(
+                        "//div[@class='datepicker-years']//th[@class='datepicker-switch']").text.split('-')
+                    if dates[2] < year_range[0] or dates[2] > year_range[1]:
+                        if dates[2] < year_range[0]:
+                            while dates[2] < year_range[0]:
+                                cls.driver.find_element_by_xpath(
+                                    "//div[@class='datepicker-years']//th[@class='prev']").click()
+                                year_range = cls.driver.find_element_by_xpath(
+                                    "//div[@class='datepicker-years']//th[@class='datepicker-switch']").text.split('-')
+                        else:
+                            while dates[2] > year_range[1]:
+                                cls.driver.find_element_by_xpath(
+                                    "//div[@class='datepicker-years']//th[@class='next']").click()
+                                year_range = cls.driver.find_element_by_xpath(
+                                    "//div[@class='datepicker-years']//th[@class='datepicker-switch']").text.split('-')
+                    years = cls.driver.find_elements_by_xpath("//span[starts-with(@class,'year')]")
+                    for y in years:
+                        if y.text == dates[2]:
+                            y.click()
+                            break
+                months = cls.driver.find_elements_by_class_name("month")
+                months[int(dates[1]) - 1].click()
+            days = cls.driver.find_elements_by_xpath("//td[starts-with(@class,'day')]")
+            days[int(dates[0]) - 1].click()
+            webdriver.ActionChains(cls.driver).send_keys(Keys.ESCAPE).perform()
+
+    @classmethod
     def edit_book(cls, id=-1, content=dict(), custom_content=dict(), detail_v=False, root_url='http://127.0.0.1:8083'):
         if id>0:
             cls.driver.get(root_url + "/admin/book/"+str(id))
@@ -1469,7 +1507,10 @@ class ui_class():
                     element['label'] = col.text
                     element['index'] = col.attrib['for']
                     if element['label'] in custom_content:
-                        if col.getnext().tag == 'select':
+                        if element['label'] == 'Custom Date Column 人物':
+                            cls.select_date_with_editor('custom_column_2', 'custom_column_2_delete',
+                                                        custom_content['Custom Date Column 人物'])
+                        elif col.getnext().tag == 'select':
                             select = Select(cls.driver.find_element_by_id(element['index']))
                             select.select_by_visible_text(custom_content[element['label']])
                         elif col.getnext().tag == 'input':
@@ -1477,6 +1518,12 @@ class ui_class():
                             edit.send_keys(Keys.CONTROL, "a")
                             edit.send_keys(Keys.DELETE)
                             edit.send_keys(custom_content[element['label']])
+                        elif col.getnext().tag == 'textarea':
+                            cls.driver.switch_to.frame(element['index'] + "_ifr")
+                            ele = cls.check_element_on_page((By.ID, 'tinymce'))
+                            ele.clear()
+                            ele.send_keys(custom_content[element['label']])
+                            cls.driver.switch_to.default_content()
 
         if 'local_cover' in content:
             local_cover = cls.check_element_on_page((By.ID, 'btn-upload-cover'))
@@ -1498,6 +1545,8 @@ class ui_class():
 
 
         for element, key in enumerate(content):
+            if key == 'pubdate':
+                continue
             ele = cls.check_element_on_page((By.ID, key))
             ele.send_keys(Keys.CONTROL, "a")
             ele.send_keys(Keys.DELETE)
@@ -1505,11 +1554,8 @@ class ui_class():
                 print("clear didn't work")
             ele.send_keys(content[key])
 
-        # not working
         if 'pubdate' in content:
-            ele = cls.check_element_on_page((By.ID, 'pubdate'))
-            cls.driver.execute_script("$('#fake_pubdate').val('2019-10-11');")
-
+            cls.select_date_with_editor('pubdate', 'pubdate_delete', content['pubdate'])
 
         # don't stay on page after edit
         if detail_v:
@@ -1830,7 +1876,9 @@ class ui_class():
                         }
             else:
                 text_inputs = ['book_title', 'bookAuthor', 'publisher', 'comment', 'custom_column_8',
-                               'custom_column_10', 'custom_column_1', 'custom_column_6', 'custom_column_4']
+                               'custom_column_10', 'custom_column_1', 'custom_column_6', 'custom_column_4',
+                               'custom_column_5']
+                date_inputs = ["publishstart", "publishend", 'custom_column_2_start', "custom_column_2_end"]
                 selects = ['custom_column_9', 'custom_column_3', "read_status"]
                 multi_selects = ['include_tag', 'exclude_tag', 'include_serie',
                                 'exclude_serie', 'include_language', 'exclude_language', 'include_extension',
@@ -1839,6 +1887,7 @@ class ui_class():
                 process_checkboxes = dict()
                 process_select = dict()
                 process_mulitselect = dict()
+                process_date = dict()
 
                 # check if checkboxes are in list and separate lists
                 for element, key in enumerate(term_dict):
@@ -1846,10 +1895,16 @@ class ui_class():
                         process_text[key] = term_dict[key]
                     elif key in selects:
                         process_select[key] = term_dict[key]
+                    elif key in date_inputs:
+                        process_date[key] = term_dict[key]
                     elif key in multi_selects:
                         process_mulitselect[key] = term_dict[key]
                     else:
                         process_checkboxes[key] = term_dict[key]
+
+                for element, key in enumerate(process_date):
+                    self.select_date_with_editor(key, key + '_delete',
+                                                process_date[key])
 
                 for element, key in enumerate(process_text):
                     ele = self.driver.find_element_by_id(key)
