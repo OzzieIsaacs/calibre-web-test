@@ -154,7 +154,7 @@ class TestUserList(TestCase, ui_class):
         self.assertTrue(ul['column'])
         ul['column'].click()
         self.assertEqual(33, len(ul['column_elements']))
-        self.assertEqual(34, len(ul['table'][0]))
+        self.assertEqual(35, len(ul['table'][0]))
         for indx, element in enumerate(ul['column_elements']):
             if element.is_selected():
                 if not ul['column_texts'][indx].text in ul['table'][0]:
@@ -174,7 +174,7 @@ class TestUserList(TestCase, ui_class):
         self.assertTrue(ul['column'])
         ul['column'].click()
         self.assertEqual(33, len(ul['column_elements']))
-        self.assertEqual(24, len(ul['table'][0]))
+        self.assertEqual(25, len(ul['table'][0]))
         self.assertFalse(ul['column_elements'][0].is_selected())
         self.assertFalse(ul['column_elements'][1].is_selected())
         self.assertFalse(ul['column_elements'][2].is_selected())
@@ -199,7 +199,7 @@ class TestUserList(TestCase, ui_class):
         ul['column_elements'][9].click()
         ul['column_elements'][10].click()
         ul = self.get_user_table(1)
-        self.assertEqual(34, len(ul['table'][0]))
+        self.assertEqual(35, len(ul['table'][0]))
 
     def test_user_list_edit_name(self):
         ul = self.get_user_table(1)
