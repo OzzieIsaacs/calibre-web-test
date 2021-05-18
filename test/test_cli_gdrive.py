@@ -30,7 +30,7 @@ class TestCliGdrivedb(unittest.TestCase, ui_class):
     def setUpClass(cls):
         add_dependency(cls.dependency, cls.__name__)
 
-        prepare_gdrive()
+        # prepare_gdrive()
         try:
             try:
                 os.remove(os.path.join(CALIBRE_WEB_PATH, 'app.db'))
@@ -79,11 +79,13 @@ class TestCliGdrivedb(unittest.TestCase, ui_class):
             cls.driver.get("http://127.0.0.1:8083")
             cls.stop_calibre_web()
             # close the browser window and stop calibre-web
-            cls.driver.quit()
             cls.p.terminate()
         except Exception as e:
             print(e)
-
+        try:
+            cls.driver.quit()
+        except Exception as e:
+            pass
         remove_dependency(cls.dependency)
 
         src1 = os.path.join(CALIBRE_WEB_PATH, "client_secrets.json")
@@ -107,8 +109,8 @@ class TestCliGdrivedb(unittest.TestCase, ui_class):
         try:
             os.remove(os.path.join(CALIBRE_WEB_PATH, 'app.db'))
             shutil.rmtree(os.path.join(CALIBRE_WEB_PATH, 'hü lo'), ignore_errors=True)
-        except Exception:
-            pass
+        except Exception as e:
+            print(e)
 
     def wait_page_has_loaded(self):
         time.sleep(1)
@@ -124,7 +126,7 @@ class TestCliGdrivedb(unittest.TestCase, ui_class):
         quotes = [1]
         if gdrive_path:
             parameter.extend(['-g', gdrive_path])
-            quotes.extend([2])
+            quotes.extend([3])
         self.p = process_open(parameter, quotes)
         # create a new Firefox session
         time.sleep(BOOT_TIME)

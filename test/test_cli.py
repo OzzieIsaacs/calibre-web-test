@@ -430,8 +430,9 @@ class TestCli(unittest.TestCase, ui_class):
         except Exception as e:
             self.assertFalse(e)
         self.check_password_change("admin:@hukl", "Password for user 'admin' changed")
-        self.assertFalse(self.login("admin", "admin123"))
-        self.assertTrue(self.login("admin", "@hukl"))
+        if os.name != "nt":
+            self.assertFalse(self.login("admin", "admin123"))
+            self.assertTrue(self.login("admin", "@hukl"))
         self.check_password_change("admin:admin123", "Password for user 'admin' changed")
         p1.terminate()
         time.sleep(3)
