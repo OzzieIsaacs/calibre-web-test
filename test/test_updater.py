@@ -49,7 +49,10 @@ class TestUpdater(unittest.TestCase, ui_class):
         cls.driver.quit()
         cls.proxy.stop_proxy()
         cls.p.terminate()
-        save_logfiles(cls, cls.__name__)
+        try:
+            save_logfiles(cls, cls.__name__)
+        except:
+            pass
         # Move original image back in place
         cls.return_cw()
 

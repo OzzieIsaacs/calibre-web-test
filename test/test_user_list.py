@@ -68,7 +68,10 @@ class TestUserList(TestCase, ui_class):
         # close the browser window and stop calibre-web
         cls.driver.quit()
         cls.p.terminate()
-        save_logfiles(cls, cls.__name__)
+        try:
+            save_logfiles(cls, cls.__name__)
+        except:
+            pass
 
     def check_search(self, bl, term, count, column, value):
         bl['search'].clear()
