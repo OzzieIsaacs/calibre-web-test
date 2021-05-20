@@ -339,11 +339,11 @@ class TestLogin(unittest.TestCase, ui_class):
         r = requests.session()
         resp = r.get("http://127.0.0.1:8083/")
         self.assertEqual(resp.status_code, 200)
-        self.assertTrue("Calibre-Web | login" in resp.text)
+        self.assertTrue("Calibre-Web | Login" in resp.text)
         r.headers['X-LOGIN'] = ""
         resp = r.get("http://127.0.0.1:8083/")
         self.assertEqual(resp.status_code, 200)
-        self.assertTrue("Calibre-Web | login" in resp.text)
+        self.assertTrue("Calibre-Web | Login" in resp.text)
         r.close()
         # set 'config_reverse_proxy_login_header_name': "X-LOGIN"'''
         self.fill_basic_config({'config_reverse_proxy_login_header_name': "X-LOGIN" })
@@ -353,18 +353,18 @@ class TestLogin(unittest.TestCase, ui_class):
         r.headers['X-LOGIN'] = ""
         resp = r.get("http://127.0.0.1:8083/")
         self.assertEqual(resp.status_code, 200)
-        self.assertTrue("Calibre-Web | login" in resp.text)
+        self.assertTrue("Calibre-Web | Login" in resp.text)
         # login with X-LOGIN wrong user -> no login
         r.headers['X-LOGIN'] = "admini"
         resp = r.get("http://127.0.0.1:8083/")
         self.assertEqual(resp.status_code, 200)
-        self.assertTrue("Calibre-Web | login" in resp.text)
+        self.assertTrue("Calibre-Web | Login" in resp.text)
 
         # login with X-LoGiN -> login
         r.headers['X-LoGiN'] = "admin"
         resp = r.get("http://127.0.0.1:8083/")
         self.assertEqual(resp.status_code, 200)
-        self.assertFalse("Calibre-Web | login" in resp.text)
+        self.assertFalse("Calibre-Web | Login" in resp.text)
         r.close()
 
         # login with X-LOGIN -> login
@@ -372,7 +372,7 @@ class TestLogin(unittest.TestCase, ui_class):
         r.headers['X-LOGIN'] = "admin"
         resp = r.get("http://127.0.0.1:8083/logout")
         self.assertEqual(resp.status_code, 200)
-        self.assertFalse("Calibre-Web | login" in resp.text)
+        self.assertFalse("Calibre-Web | Login" in resp.text)
         r.close()
         # ToDo: Additional test with reverse proxy
         self.assertTrue(self.login('admin', 'admin123'))
