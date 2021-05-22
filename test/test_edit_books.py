@@ -419,12 +419,14 @@ class TestEditBooks(TestCase, ui_class):
         self.edit_book(content={'description':u'bogomirä 人物'})
         values = self.get_book_details()
         self.assertEqual(u'bogomirä 人物', values['comment'])
+        self.assertEqual(len(self.adv_search({u'comment': u'mirä 人'})), 1)
+        self.get_book_details(12)
         self.check_element_on_page((By.ID, "edit_book")).click()
         self.edit_book(content={'description':''})
         values = self.get_book_details()
         self.assertEqual('', values['comment'])
 
-    # change comments, add comments, delete comments
+    # change state, delete state
     def test_edit_custom_bool(self):
         self.assertEqual(len(self.adv_search({u'custom_column_3': u'Yes'})), 0)
         self.get_book_details(5)
@@ -481,7 +483,7 @@ class TestEditBooks(TestCase, ui_class):
         vals = self.get_book_details(5)
         self.assertEqual(0, len(vals['cust_columns']))
 
-    # change comments, add comments, delete comments
+    # change text, add text, delete text
     def test_edit_custom_text(self):
         self.assertEqual(len(self.adv_search({u'custom_column_10': u'人 Ä'})), 0)
         self.get_book_details(5)
@@ -499,6 +501,23 @@ class TestEditBooks(TestCase, ui_class):
         self.assertEqual(0, len(vals['cust_columns']))
 
     # change comments, add comments, delete comments
+    def test_edit_custom_comment(self):
+        self.assertEqual(len(self.adv_search({u'custom_column_5': u'人1 Ä'})), 0)
+        self.get_book_details(5)
+        self.check_element_on_page((By.ID, "edit_book")).click()
+        self.edit_book(custom_content={u'Custom Comment 人物': u'Lulu 人1 Ä'})
+        vals = self.get_book_details(5)
+        self.assertEqual(u'Lulu 人1 Ä', vals['cust_columns'][0]['value'])
+        self.assertEqual(len(self.adv_search({u'custom_column_5': u'Koko'})), 0)
+        self.assertEqual(len(self.adv_search({u'custom_column_5': u'lu'})), 1)
+        self.assertEqual(len(self.adv_search({u'custom_column_5': u'人1 Ä'})), 1)
+        self.get_book_details(5)
+        self.check_element_on_page((By.ID, "edit_book")).click()
+        self.edit_book(custom_content={u'Custom Comment 人物': ''})
+        vals = self.get_book_details(5)
+        self.assertEqual(0, len(vals['cust_columns']))
+
+    # change categories, add categories, delete categories
     def test_edit_custom_categories(self):
         self.assertEqual(len(self.adv_search({u'custom_column_6': u'人 Ü'})), 0)
         self.get_book_details(5)
@@ -547,10 +566,41 @@ class TestEditBooks(TestCase, ui_class):
         vals = self.get_book_details(5)
         self.assertEqual(0, len(vals['cust_columns']))
 
+    # change dates, add dates, delete dates
+    def test_edit_custom_date(self):
+        self.assertEqual(len(self.adv_search({u'custom_column_2_start': u'16/7/2015'})), 0)
+        self.get_book_details(5)
+        self.check_element_on_page((By.ID, "edit_book")).click()
+        self.edit_book(custom_content={u'Custom Date Column 人物': '15/07/2015'})
+        vals = self.get_book_details(5)
+        self.assertEqual('Jul 15, 2015', vals['cust_columns'][0]['value'])
+        self.assertEqual(len(self.adv_search({u'custom_column_2_start': u'15/7/2015'})), 1)
+        self.assertEqual(len(self.adv_search({u'custom_column_2_start': u'16/7/2015'})), 0)
+        self.assertEqual(len(self.adv_search({u'custom_column_2_end': u'16/7/2015'})), 1)
+        self.assertEqual(len(self.adv_search({u'custom_column_2_end': u'15/7/2015'})), 1)
+        self.assertEqual(len(self.adv_search({u'custom_column_2_end': u'14/7/2015'})), 0)
+        self.assertEqual(len(self.adv_search({u'custom_column_2_end': u'15/7/2015',
+                                              u'custom_column_2_start': u'15/7/2015'})), 1)
+        self.assertEqual(len(self.adv_search({u'custom_column_2_end': u'16/7/2015',
+                                              u'custom_column_2_start': u'14/7/2015'})), 1)
+        self.assertEqual(len(self.adv_search({u'custom_column_2_end': u'14/7/2015',
+                                              u'custom_column_2_start': u'16/7/2015'})), 0)
+        self.get_book_details(5)
+        self.check_element_on_page((By.ID, "edit_book")).click()
+        self.edit_book(custom_content={u'Custom Date Column 人物': ''})
+        vals = self.get_book_details(5)
+        self.assertEqual(0, len(vals['cust_columns']))
 
-    @skip("Not Implemented")
     def test_edit_publishing_date(self):
-        self.assertIsNone('Not Implemented')
+        self.get_book_details(10)
+        self.check_element_on_page((By.ID, "edit_book")).click()
+        self.edit_book(content={'pubdate': '15/07/2015'})
+        vals = self.get_book_details(10)
+        self.assertEqual('Jul 15, 2015', vals['pubdate'])
+        self.check_element_on_page((By.ID, "edit_book")).click()
+        self.edit_book(content={'pubdate': ''})
+        vals = self.get_book_details(10)
+        self.assertFalse('pubdate' in vals)
 
     def test_typeahead_functions(self):
         req = requests.session()

@@ -106,7 +106,7 @@ print('Start building executable')
 files = glob.glob(os.path.join('dist','*.tar.gz'))
 if len(files) > 1:
     print('More than one package file found, aborting')
-    os.exit(1)
+    sys.exit(1)
 
 print('Deleting old "exe_temp" and "executable" directory')
 shutil.rmtree('exe_temp', ignore_errors=True)
@@ -121,7 +121,7 @@ os.chdir('exe_temp')
 setup_file = glob.glob('**/setup.py', recursive=True)
 if len(setup_file) > 1:
     print('More than one setup file found exiting')
-    os.exit(1)
+    sys.exit(1)
 os.chdir(os.path.dirname(setup_file[0]))
 print('Changing directory to package root folder "src/calibreweb"')
 os.chdir("src")
@@ -179,11 +179,14 @@ else:
     sep = ":"
 
 pyinst_path = os.path.join(os.path.dirname(sys.executable), pyinst)
-google_api_path = glob.glob(os.path.join(FILEPATH,"venv","lib/**/site-packages/google_api_python*"))
+if os.name == "nt":
+    google_api_path = glob.glob(os.path.join(FILEPATH, "venv","lib/site-packages/google_api_python*"))
+else:
+    google_api_path = glob.glob(os.path.join(FILEPATH, "venv","lib/**/site-packages/google_api_python*"))
 
 if len(google_api_path) != 1:
     print('More than one google_api_python directory found exiting')
-    os.exit(1)
+    sys.exit(1)
 p = subprocess.Popen(pyinst_path + " __init__.py "
                                    "-i cps/static/favicon.ico "
                                    "-n calibreweb "
