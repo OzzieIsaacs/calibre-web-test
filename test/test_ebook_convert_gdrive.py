@@ -69,18 +69,19 @@ class TestEbookConvertCalibreGDrive(unittest.TestCase, ui_class):
 
             cls.email_server.start()
 
-            startup(cls, cls.py_version, {'config_calibre_dir':TEST_DB,
-                                          'config_use_google_drive': 1,
+            startup(cls, cls.py_version, {'config_calibre_dir': TEST_DB,
                                           'config_log_level': 'DEBUG',
                                           'config_kepubifypath': '',
-                                          'config_converterpath':helper_email_convert.calibre_path()},
+                                          'config_converterpath': helper_email_convert.calibre_path()},
                     only_metadata=True)
-            cls.fill_basic_config({'config_google_drive_folder': 'test'})
-
+            cls.fill_db_config({'config_use_google_drive': 1})
+            time.sleep(2)
+            cls.fill_db_config({'config_google_drive_folder': 'test'})
+            time.sleep(2)
             cls.edit_user('admin', {'email': 'a5@b.com', 'kindle_mail': 'a1@b.com'})
-            cls.setup_server(True, {'mail_server':'127.0.0.1', 'mail_port':'1025',
-                                    'mail_use_ssl':'None', 'mail_login':'name@host.com', 'mail_password':'1234',
-                                    'mail_from':'name@host.com'})
+            cls.setup_server(True, {'mail_server': '127.0.0.1', 'mail_port': '1025',
+                                    'mail_use_ssl': 'None', 'mail_login': 'name@host.com', 'mail_password': '1234',
+                                    'mail_from': 'name@host.com'})
             time.sleep(2)
         except Exception as e:
             try:
@@ -89,7 +90,6 @@ class TestEbookConvertCalibreGDrive(unittest.TestCase, ui_class):
                 cls.p.kill()
             except Exception:
                 pass
-
 
     @classmethod
     def tearDownClass(cls):
@@ -128,7 +128,6 @@ class TestEbookConvertCalibreGDrive(unittest.TestCase, ui_class):
             self.logout()
             self.login('admin', 'admin123')
         self.fill_basic_config({'config_calibre': ''})
-
 
     # set parameters for convert ( --margin-right 11.9) and start conversion -> conversion okay
     # set parameters for convert ( --margin-righ) and start conversion -> conversion failed
@@ -173,7 +172,7 @@ class TestEbookConvertCalibreGDrive(unittest.TestCase, ui_class):
     # wait for finished
     # check email received
     def test_convert_email(self):
-        self.setup_server(True, {'mail_password': '10234', 'mail_use_ssl':'None'})
+        self.setup_server(True, {'mail_password': '10234', 'mail_use_ssl': 'None'})
         tasks = self.check_tasks()
         details = self.get_book_details(9)
         self.assertEqual(len(details['kindle']), 1)

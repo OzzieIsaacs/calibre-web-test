@@ -60,8 +60,10 @@ class TestEditBooksOnGdrive(unittest.TestCase, ui_class):
 
             startup(cls,
                     cls.py_version,
-                    {'config_calibre_dir': TEST_DB,'config_use_google_drive':1 },
+                    {'config_calibre_dir': TEST_DB },
                     only_metadata=True)
+            cls.fill_db_config({'config_use_google_drive': 1})
+            time.sleep(2)
             cls.fill_basic_config({'config_google_drive_folder':'test'})
             time.sleep(2)
         except Exception as e:

@@ -43,7 +43,9 @@ page['nav_rated'] = {'check': None, 'click': [(By.ID, "nav_rated")]}
 page['nav_read'] = {'check': (By.CLASS_NAME, "read"), 'click': [(By.ID, "nav_read")]}
 page['nav_unread'] = {'check': (By.CLASS_NAME, "unread"), 'click': [(By.ID, "nav_unread")]}
 page['nav_archived'] = {'check': (By.CLASS_NAME, "archived"), 'click': [(By.ID, "nav_archived")]}
-page['basic_config'] = {'check': (By.ID, "config_calibre_dir"),
+page['db_config'] = {'check': (By.ID, "config_calibre_dir"),
+                        'click': [(By.ID, "top_admin"), (By.ID, "db_config")]}
+page['basic_config'] = {'check': (By.ID, "config_port"),
                         'click': [(By.ID, "top_admin"), (By.ID, "basic_config")]}
 page['view_config'] = {'check': None, 'click': [(By.ID, "top_admin"), (By.ID, "view_config")]}
 page['mail_server'] = {'check': (By.ID, "mail_server"), 'click': [(By.ID, "top_admin"), (By.ID, "admin_edit_email")]}
@@ -197,8 +199,50 @@ class ui_class():
         return cls.check_element_on_page((By.ID, "flash_success"))
 
     @classmethod
-    def fill_initial_config(cls,elements=None):
+    def fill_db_config(cls,elements=None):
+        if not cls.check_user_logged_in('admin'):
+            cls.login('admin', 'admin123')
+        if not cls.check_element_on_page((By.ID, "config_calibre_dir")):
+            cls.goto_page('db_config')
         WebDriverWait(cls.driver, 5).until(EC.presence_of_element_located((By.ID, "config_calibre_dir")))
+        process_checkboxes = dict()
+        process_elements = dict()
+        process_options =dict()
+        # special handling for checkboxes
+        checkboxes = ['config_use_google_drive']
+        options = ['config_google_drive_folder']
+
+        # check if checkboxes are in list and seperate lists
+        for element,key in enumerate(elements):
+            if key in checkboxes:
+                process_checkboxes[key] = elements[key]
+            elif key in options:
+                process_options[key] = elements[key]
+            else:
+                process_elements[key] = elements[key]
+        # process all checkboxes Todo: If status was wrong before is not included in response
+        for checkbox in process_checkboxes:
+            ele = cls.driver.find_element_by_id(checkbox)
+            if (elements[checkbox] == 1 and not ele.is_selected() ) or elements[checkbox] == 0 and ele.is_selected():
+                ele.click()
+
+        # process all selects
+        for option, key in enumerate(process_options):
+            select = Select(cls.driver.find_element_by_id(key))
+            select.select_by_visible_text(process_options[key])
+
+        # process all text fields
+        for element, key in enumerate(process_elements):
+            ele = cls.driver.find_element_by_id(key)
+            ele.clear()
+            ele.send_keys(process_elements[key])
+
+        # finally submit settings
+        cls.driver.find_element_by_name("submit").click()
+
+    @classmethod
+    def _fill_basic_config(cls,elements=None):
+        # WebDriverWait(cls.driver, 5).until(EC.presence_of_element_located((By.ID, "config_port")))
         accordions=cls.driver.find_elements_by_class_name("accordion-toggle")
         opener = list()
         process_checkboxes = dict()
@@ -215,10 +259,10 @@ class ui_class():
         selects = ['config_ebookconverter']
         # depending on elements open accordions or not
         if any(key in elements for key in ['config_port', 'config_certfile','config_keyfile', 'config_updatechannel']):
-            opener.append(1)
+            opener.append(0)
         if any(key in elements for key in ['config_log_level','config_logfile', 'config_access_logfile',
                                            'config_access_log']):
-            opener.append(2)
+            opener.append(1)
         if any(key in elements for key in ['config_uploading', 'config_anonbrowse', 'config_public_reg',
                                            'config_register_email', 'config_upload_formats',
                                            'config_remote_login', 'config_use_goodreads', 'config_goodreads_api_key',
@@ -236,10 +280,10 @@ class ui_class():
                                            'config_allow_reverse_proxy_header_login',
                                            'config_reverse_proxy_login_header_name'
                                            ]):
-            opener.append(3)
+            opener.append(2)
         if any(key in elements for key in ['config_ebookconverter', 'config_calibre', 'config_kepubifypath',
                                            'config_converterpath','config_rarfile_location']):
-            opener.append(4)
+            opener.append(3)
 
         # open all necessary accordions
         for o in opener:
@@ -282,10 +326,11 @@ class ui_class():
         # finally submit settings
         cls.driver.find_element_by_name("submit").click()
 
+
     @classmethod
     def fill_basic_config(cls,elements=None):
         cls.goto_page('basic_config')
-        cls.fill_initial_config(elements)
+        cls._fill_basic_config(elements)
 
     @classmethod
     def fill_view_config(cls,elements=None):

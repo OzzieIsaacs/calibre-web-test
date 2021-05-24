@@ -205,19 +205,6 @@ if p.returncode != 0:
     print('Error: pyinstaller returned an error, aborting')
     sys.exit(1)
 
-#print('Renaming EXE file')
-#shutil.move('./dist/__init__', './dist/calibreweb')
-#if os.name == "nt":
-#   shutil.move('./dist/calibreweb/__init__.exe', './dist/calibreweb/calibreweb.exe')
-#else:
-#   shutil.move('./dist/calibreweb/__init__', './dist/calibreweb/calibreweb')
-
-#print('Adding templates, static and translations resources to folder')
-#os.mkdir('./dist/calibreweb/cps')
-#shutil.copytree('./cps/templates','./dist/calibreweb/cps/templates')
-#shutil.copytree('./cps/translations','./dist/calibreweb/cps/translations')
-#shutil.copytree('./cps/static','./dist/calibreweb/cps/static')
-
 print('Moving folder to root folder')
 shutil.move('./dist/calibreweb/',os.path.join(FILEPATH))
 os.chdir(FILEPATH)

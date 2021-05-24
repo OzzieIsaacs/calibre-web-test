@@ -276,7 +276,7 @@ class TestEditAdditionalBooks(TestCase, ui_class):
         self.restart_calibre_web()
         self.goto_page('nav_new')
         os.chmod(TEST_DB, rights)
-        self.fill_initial_config(dict(config_calibre_dir=TEST_DB))
+        self.fill_db_config(dict(config_calibre_dir=TEST_DB))
         # wait for cw to reboot
         time.sleep(BOOT_TIME)
         # Wait for config screen with login button to show up

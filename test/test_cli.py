@@ -77,7 +77,7 @@ class TestCli(unittest.TestCase, ui_class):
             self.driver.get("http://127.0.0.1:8083")
 
             # Wait for config screen to show up
-            self.fill_initial_config({'config_calibre_dir': TEST_DB})
+            self.fill_db_config({'config_calibre_dir': TEST_DB})
 
             # wait for cw to reboot
             time.sleep(BOOT_TIME)
@@ -112,18 +112,18 @@ class TestCli(unittest.TestCase, ui_class):
         self.driver.get("http://127.0.0.1:8083")
 
         # Wait for config screen to show up
-        self.check_element_on_page((By.ID, "config_calibre_dir"))
-        self.assertFalse(self.check_element_on_page((By.ID, "calibre_modal_path")))
-        self.fill_initial_config({'config_calibre_dir': TEST_DB})
+        self.check_element_on_page((By.ID, "username"))
+        self.fill_db_config({'config_calibre_dir': TEST_DB})
+        self.assertTrue(self.check_element_on_page((By.ID, "calibre_modal_path")))
 
         # wait for cw to reboot
-        time.sleep(BOOT_TIME)
+        time.sleep(2)
 
         # Wait for config screen with login button to show up
-        login_button = self.check_element_on_page((By.NAME, "login"))
-        self.assertTrue(login_button)
-        login_button.click()
-        self.login('admin', 'admin123')
+        #login_button = self.check_element_on_page((By.NAME, "login"))
+        #self.assertTrue(login_button)
+        #login_button.click()
+        #self.login('admin', 'admin123')
         self.stop_calibre_web(self.p)
         self.p.terminate()
         time.sleep(3)
@@ -275,7 +275,7 @@ class TestCli(unittest.TestCase, ui_class):
             self.assertIsNone("Error", "HTTPS Connection could not established with key/cert file")
 
         shutil.rmtree(os.path.join(CALIBRE_WEB_PATH, 'hü lo'), ignore_errors=True)
-        self.assertTrue(self.check_element_on_page((By.ID, "config_calibre_dir")))
+        self.assertTrue(self.check_element_on_page((By.ID, "username")))
         p.terminate()
         p.stdout.close()
         p.stderr.close()
@@ -308,7 +308,7 @@ class TestCli(unittest.TestCase, ui_class):
             self.driver.get("http://" + address + ":8083")
         except WebDriverException:
             self.assertIsNone('Limit listening address not working')
-        self.assertTrue(self.check_element_on_page((By.ID, "config_calibre_dir")))
+        self.assertTrue(self.check_element_on_page((By.ID, "username")))
         p.terminate()
         time.sleep(3)
         p.poll()
@@ -330,7 +330,7 @@ class TestCli(unittest.TestCase, ui_class):
         except WebDriverException as e:
             error = e.msg
         self.assertFalse(re.findall('Reached error page:\sabout:neterror\?e=connectionFailure', error))
-        self.assertTrue(self.check_element_on_page((By.ID, "config_calibre_dir")))
+        self.assertTrue(self.check_element_on_page((By.ID, "username")))
         p.terminate()
         time.sleep(3)
         p.poll()
@@ -385,10 +385,10 @@ class TestCli(unittest.TestCase, ui_class):
             self.driver.get("http://127.0.0.1:8083")
 
             # Wait for config screen to show up
-            self.fill_initial_config({'config_calibre_dir': TEST_DB})
+            self.fill_db_config({'config_calibre_dir': TEST_DB})
 
             # wait for cw to reboot
-            time.sleep(BOOT_TIME)
+            time.sleep(2)
         except Exception:
             self.assertFalse(True, "Inital config failed with on test nonwriteable database")
         p1.terminate()
@@ -419,13 +419,15 @@ class TestCli(unittest.TestCase, ui_class):
             self.driver.get("http://127.0.0.1:8083")
 
             # Wait for config screen to show up
-            self.fill_initial_config({'config_calibre_dir': TEST_DB})
+            self.login("admin", "adm:in12")
+            self.fill_db_config({'config_calibre_dir': TEST_DB})
             # wait for cw to reboot
-            time.sleep(BOOT_TIME)
+            time.sleep(2)
+            self.logout()
             # Wait for config screen with login button to show up
-            login_button = self.check_element_on_page((By.NAME, "login"))
-            self.assertTrue(login_button)
-            login_button.click()
+            #login_button = self.check_element_on_page((By.NAME, "login"))
+            #self.assertTrue(login_button)
+            #login_button.click()
 
         except Exception as e:
             self.assertFalse(e)

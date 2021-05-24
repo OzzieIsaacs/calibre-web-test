@@ -181,17 +181,17 @@ def startup(inst, pyVersion, config, login=True, host="http://127.0.0.1:8083",
     WebDriverWait(inst.driver, 5).until(EC.title_contains("Calibre-Web"))
     if not only_startup:
         # Wait for config screen to show up
-        inst.fill_initial_config(dict(config_calibre_dir=config['config_calibre_dir']))
+        inst.fill_db_config(dict(config_calibre_dir=config['config_calibre_dir']))
         del config['config_calibre_dir']
 
         # wait for cw to reboot
-        time.sleep(BOOT_TIME)
+        time.sleep(2)
 
         # Wait for config screen with login button to show up
-        WebDriverWait(inst.driver, 5).until(EC.presence_of_element_located((By.NAME, "login")))
-        login_button = inst.driver.find_element_by_name("login")
-        login_button.click()
-        inst.login("admin", "admin123")
+        #WebDriverWait(inst.driver, 5).until(EC.presence_of_element_located((By.NAME, "login")))
+        #login_button = inst.driver.find_element_by_name("login")
+        #login_button.click()
+        #inst.login("admin", "admin123")
         if config:
             inst.fill_basic_config(config)
         time.sleep(BOOT_TIME)
