@@ -64,7 +64,7 @@ class TestEditBooksOnGdrive(unittest.TestCase, ui_class):
                     only_metadata=True)
             cls.fill_db_config({'config_use_google_drive': 1})
             time.sleep(2)
-            cls.fill_basic_config({'config_google_drive_folder':'test'})
+            cls.fill_db_config({'config_google_drive_folder':'test'})
             time.sleep(2)
         except Exception as e:
             try:
