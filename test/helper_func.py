@@ -160,7 +160,7 @@ def startup(inst, pyVersion, config, login=True, host="http://127.0.0.1:8083",
     else:
         try:
             os.makedirs(TEST_DB)
-            shutil.copy('./Calibre_db/metadata.db', os.path.join(TEST_DB, 'metadata.db'))
+            shutil.copy(os.path.join(base_path, 'Calibre_db', 'metadata.db'), os.path.join(TEST_DB, 'metadata.db'))
         except FileExistsError:
             print('Metadata.db already present, might not be a clean version')
     inst.p = process_open([pyVersion, os.path.join(CALIBRE_WEB_PATH, u'cps.py'), parameter], [1], sout=None, env=env, cwd=work_path)

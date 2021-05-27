@@ -39,6 +39,7 @@ class TestCli(unittest.TestCase, ui_class):
     @classmethod
     def tearDownClass(cls):
         # close the browser window
+        os.chdir(base_path)
         kill_dead_cps()
         cls.driver.quit()
         try:
@@ -109,6 +110,10 @@ class TestCli(unittest.TestCase, ui_class):
         except Exception:
             pass
         self.driver.refresh()
+        try:
+            self.driver.switch_to.alert.accept()
+        except Exception:
+            pass
         self.driver.get("http://127.0.0.1:8083")
 
         # Wait for config screen to show up

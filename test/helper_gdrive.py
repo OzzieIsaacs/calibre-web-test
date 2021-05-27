@@ -36,7 +36,7 @@ def prepare_gdrive():
 
     # copy database from local to gdrive
     test = fs.makedir('test')
-    copy_fs(OSFS('./Calibre_db'), test)
+    copy_fs(OSFS(os.path.join(base_path, 'Calibre_db')), test)
     fs.close()
 
 
