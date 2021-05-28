@@ -605,6 +605,7 @@ class TestEditBooksOnGdrive(unittest.TestCase, ui_class):
         values = self.get_book_details()
         self.assertEqual(4, values['rating'])
         self.goto_page('nav_rated')
+        self.wait_page_has_loaded()
         books = self.get_books_displayed()
         self.assertEqual(1, len(books[1]))
         self.get_book_details(3)
@@ -613,6 +614,7 @@ class TestEditBooksOnGdrive(unittest.TestCase, ui_class):
         values = self.get_book_details()
         self.assertEqual(5, values['rating'])
         self.goto_page('nav_rated')
+        self.wait_page_has_loaded()
         books = self.get_books_displayed()
         self.assertEqual(2, len(books[1]))
         self.get_book_details(3)
@@ -626,10 +628,13 @@ class TestEditBooksOnGdrive(unittest.TestCase, ui_class):
         self.get_book_details(12)
         self.check_element_on_page((By.ID, "edit_book")).click()
         self.edit_book(content={'description':u'bogomirä 人物'})
+        self.wait_page_has_loaded()
         values = self.get_book_details()
         self.assertEqual(u'bogomirä 人物', values['comment'])
         self.check_element_on_page((By.ID, "edit_book")).click()
+        self.wait_page_has_loaded()
         self.edit_book(content={'description':''})
+        self.wait_page_has_loaded()
         values = self.get_book_details()
         self.assertEqual('', values['comment'])
 
@@ -875,7 +880,7 @@ class TestEditBooksOnGdrive(unittest.TestCase, ui_class):
     # download of books
     def test_watch_metadata(self):
         # enable watch metadata
-        self.goto_page("basic_config")
+        self.goto_page("db_config")
         button = self.check_element_on_page((By.ID, "enable_gdrive_watch"))
         self.assertTrue(button)
         button.click()
@@ -908,7 +913,7 @@ class TestEditBooksOnGdrive(unittest.TestCase, ui_class):
         # check book series content changed back
         book = self.get_book_details(5)
         self.assertNotIn('series', book)
-        self.goto_page("basic_config")
+        self.goto_page("db_config")
         self.wait_page_has_loaded() #
         time.sleep(5)
         self.assertTrue(self.check_element_on_page((By.ID, "config_google_drive_watch_changes_response")))
