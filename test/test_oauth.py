@@ -42,15 +42,18 @@ class TestOAuthLogin(unittest.TestCase, ui_class):
     def test_visible_oauth(self):
         # set to default
         self.fill_basic_config({'config_login_type':'Use OAuth'})
-        self.assertTrue(self.check_element_on_page((By.ID, "flash_success")))
         time.sleep(BOOT_TIME)
+        self.assertTrue(self.check_element_on_page((By.ID, "flash_success")))
         # enable github oauth
         self.fill_basic_config({'config_1_oauth_client_id': '1234','config_1_oauth_client_secret':'5678' })
-        self.assertTrue(self.check_element_on_page((By.ID, "flash_success")))
         time.sleep(BOOT_TIME)
+        self.assertTrue(self.check_element_on_page((By.ID, "flash_success")))
         # check link button visible
         self.goto_page('user_setup')
         self.assertTrue(self.check_element_on_page((By.ID, "config_1_oauth")))
+        self.navigate_to_user("admin")
+        self.assertTrue(self.check_element_on_page((By.ID, "name")))
+        self.assertFalse(self.check_element_on_page((By.ID, "config_1_oauth")))
         # logout
         self.logout()
         # check github button visible, google invisible
@@ -60,8 +63,8 @@ class TestOAuthLogin(unittest.TestCase, ui_class):
         self.login('admin','admin123')
         # enable additionally google oauth
         self.fill_basic_config({'config_2_oauth_client_id': '1234', 'config_2_oauth_client_secret': '5678'})
-        self.assertTrue(self.check_element_on_page((By.ID, "flash_success")))
         time.sleep(BOOT_TIME)
+        self.assertTrue(self.check_element_on_page((By.ID, "flash_success")))
         # Check link button visible
         self.goto_page('user_setup')
         self.assertTrue(self.check_element_on_page((By.ID, "config_2_oauth")))
@@ -73,15 +76,15 @@ class TestOAuthLogin(unittest.TestCase, ui_class):
         # login
         self.login('admin', 'admin123')
         self.fill_basic_config({'config_1_oauth_client_id': '','config_1_oauth_client_secret':'' })
-        self.assertTrue(self.check_element_on_page((By.ID, "flash_success")))
         time.sleep(BOOT_TIME)
+        self.assertTrue(self.check_element_on_page((By.ID, "flash_success")))
         # Check google link button invisible
         self.goto_page('user_setup')
         self.assertTrue(self.check_element_on_page((By.ID, "config_2_oauth")))
         # deactivate both oauths again
         self.fill_basic_config({'config_2_oauth_client_id': '','config_2_oauth_client_secret':'' })
-        self.assertTrue(self.check_element_on_page((By.ID, "flash_success")))
         time.sleep(BOOT_TIME)
+        self.assertTrue(self.check_element_on_page((By.ID, "flash_success")))
         # open settings
         self.driver.find_elements_by_class_name("accordion-toggle")[3].click()
         # check all 4 fields are empty

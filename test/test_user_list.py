@@ -593,7 +593,7 @@ class TestUserList(TestCase, ui_class):
         ul['table'][1]['role_Change Password']['element'].click()
         self.assertTrue(self.check_element_on_page((By.ID, 'flash_danger')))
         ul = self.get_user_table(-1)
-        ul['table'][1]['role_Edit Public Shelfs']['element'].click()
+        ul['table'][1]['role_Edit Public Shelves']['element'].click()
         self.assertTrue(self.check_element_on_page((By.ID, 'flash_danger')))
         self.fill_basic_config({'config_anonbrowse': 0})
         time.sleep(BOOT_TIME)

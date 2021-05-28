@@ -30,7 +30,7 @@ class TestCliGdrivedb(unittest.TestCase, ui_class):
     def setUpClass(cls):
         add_dependency(cls.dependency, cls.__name__)
 
-        # prepare_gdrive()
+        prepare_gdrive()
         try:
             try:
                 os.remove(os.path.join(CALIBRE_WEB_PATH, 'app.db'))
@@ -134,26 +134,18 @@ class TestCliGdrivedb(unittest.TestCase, ui_class):
         self.driver.get("http://127.0.0.1:8083")
 
         # Wait for config screen to show up
-        self.fill_initial_config({'config_calibre_dir': TEST_DB})
+        self.fill_db_config({'config_calibre_dir': TEST_DB})
 
-        # wait for cw to reboot
-        time.sleep(BOOT_TIME)
+        # wait for cw to be ready
+        time.sleep(2)
 
-        # Wait for config screen with login button to show up
-        login_button = self.check_element_on_page((By.NAME, "login"))
-        self.assertTrue(login_button)
-        login_button.click()
-
-        # login
-        self.login("admin", "admin123")
-        time.sleep(3)
         self.assertTrue(self.check_element_on_page((By.NAME, "query")))
 
     def test_gdrive_db_nonwrite(self):
         self.start_cw(os.path.join(CALIBRE_WEB_PATH, u'cps.py'))
-        self.fill_basic_config({'config_use_google_drive': 1})
+        self.fill_db_config({'config_use_google_drive': 1})
         time.sleep(BOOT_TIME)
-        self.fill_basic_config({'config_google_drive_folder': 'test'})
+        self.fill_db_config({'config_google_drive_folder': 'test'})
         time.sleep(BOOT_TIME)
         self.driver.get("http://127.0.0.1:8083")
         self.stop_calibre_web()
@@ -183,9 +175,9 @@ class TestCliGdrivedb(unittest.TestCase, ui_class):
         gdrivedir = os.path.join(CALIBRE_WEB_PATH, 'hü lo')
         os.makedirs(gdrivedir)
         self.start_cw(os.path.join(CALIBRE_WEB_PATH, u'cps.py'), os.path.join(gdrivedir, u'gü dr.app'))
-        self.fill_basic_config({'config_use_google_drive': 1})
+        self.fill_db_config({'config_use_google_drive': 1})
         time.sleep(BOOT_TIME)
-        self.fill_basic_config({'config_google_drive_folder': 'test'})
+        self.fill_db_config({'config_google_drive_folder': 'test'})
         time.sleep(BOOT_TIME)
         self.driver.get("http://127.0.0.1:8083")
         self.stop_calibre_web()

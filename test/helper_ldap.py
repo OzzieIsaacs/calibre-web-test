@@ -16,7 +16,12 @@ from ldaptor.protocols import pureldap
 from twisted.internet import defer, ssl
 from twisted.internet import reactor
 from ldaptor.protocols.ldap import distinguishedname
+from twisted.logger import Logger, LogLevel
+from twisted.logger import globalLogPublisher
+from twisted.logger import textFileLogObserver
+from twisted.logger import FilteringLogObserver, LogLevelFilterPredicate
 import time
+import sys
 
 LDAP_AUTH_ANON = 0
 LDAP_AUTH_UNAUTH = 1
@@ -293,6 +298,7 @@ member: cn=John1 Doe1,ou=People,dc=calibreb,dc=com
 
 """
 
+
 def verifyCallback(__, x509, ___, ____, ok):
     if not ok:
         # print ('invalid cert from subject:', x509.get_subject())
@@ -468,6 +474,15 @@ class TestLDAPServer(threading.Thread):
     def __init__(self, port=8080, encrypt=None, config=0, auth=LDAP_AUTH_SIMPLE, validate=False):
         threading.Thread.__init__(self)
         self.is_running = False
+
+        logfile = open("ldaptor.log", 'a')
+
+        level = LogLevel.info
+        predicate = LogLevelFilterPredicate(defaultLogLevel=level)
+        observer = FilteringLogObserver(textFileLogObserver(logfile), [predicate])
+        # remove std logger to stderr in case of Failure
+        globalLogPublisher.removeObserver(globalLogPublisher._observers[0])
+        globalLogPublisher.addObserver(observer)
 
         registerAdapter(
             lambda x: x.root,

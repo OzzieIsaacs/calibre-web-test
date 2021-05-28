@@ -91,73 +91,46 @@ class TestSetupGdrive(unittest.TestCase, ui_class):
 
     def test_config_gdrive(self):
         # invalid db and tick gdrive
-        self.fill_initial_config(dict(config_calibre_dir=TEST_DB[:-1], config_use_google_drive=1))
+        self.fill_db_config(dict(config_calibre_dir=TEST_DB[:-1], config_use_google_drive=1))
         self.assertTrue(self.check_element_on_page((By.ID, 'flash_danger')))
         # Tick gdrive and valid db
-        self.fill_initial_config(dict(config_calibre_dir=TEST_DB, config_use_google_drive=1))
+        self.fill_db_config(dict(config_calibre_dir=TEST_DB, config_use_google_drive=1))
         # error no json file
-        self.assertFalse(self.check_element_on_page((By.ID, "gdrive_error")).is_displayed())
-        self.assertTrue(self.check_element_on_page((By.ID, 'flash_success')))
-        login = self.check_element_on_page((By.NAME, "login"))
+        self.assertTrue(self.check_element_on_page((By.ID, 'flash_danger')))
         use_gdrive = self.check_element_on_page((By.ID, "config_use_google_drive"))
         self.assertTrue(use_gdrive)
         self.assertFalse(use_gdrive.is_selected())
-        use_gdrive.click()
-        self.assertTrue(self.check_element_on_page((By.ID, "gdrive_error")).is_displayed())
 
         dst = os.path.join(CALIBRE_WEB_PATH, "client_secrets.json")
         src = os.path.join(base_path, "files", "client_secrets.json")
         shutil.copy(src, dst)
         os.chmod(dst, 0o040)
+        self.fill_db_config(dict(config_use_google_drive=1))
 
-        self.assertTrue(login)
-        login.click()
-        # message continue after login
-        time.sleep(BOOT_TIME)
-        self.login('admin', 'admin123')
-        self.goto_page('basic_config')
-        if os.name != 'nt':
-            gdriveError = self.check_element_on_page((By.ID, "gdrive_error"))
-            self.assertTrue(gdriveError)
-            self.assertFalse(gdriveError.is_displayed())
         use_gdrive = self.check_element_on_page((By.ID, "config_use_google_drive"))
+        self.assertTrue(self.check_element_on_page((By.ID, 'flash_danger')))
         self.assertTrue(use_gdrive)
-        use_gdrive.click()
-        if os.name != 'nt':
-            # error json file not readable
-            self.assertTrue(self.check_element_on_page((By.ID, "gdrive_error")).is_displayed())
+        self.assertFalse(use_gdrive.is_selected())
+
         os.chmod(dst, 0o700)
         with open(dst, 'r') as settings:
             content = json.load(settings)
-
-        # callback = content['web']['redirect_uris'][0].strip('/gdrive/callback')
         content.pop('web', None)
-
         with open(dst, 'w') as data_file:
             json.dump(content, data_file)
         time.sleep(1)
-        self.goto_page('basic_config')
-        use_gdrive = self.check_element_on_page((By.ID, "config_use_google_drive"))
-        use_gdrive.click()
-        # error json file not configured for web
-        self.assertTrue(self.check_element_on_page((By.ID, "gdrive_error")).is_displayed())
+
+        self.fill_db_config(dict(config_use_google_drive=1))
+        self.assertTrue(self.check_element_on_page((By.ID, 'flash_danger')))
 
         shutil.copy(src, dst)
         time.sleep(1)
-        self.goto_page('basic_config')
-        use_gdrive = self.check_element_on_page((By.ID, "config_use_google_drive"))
-        use_gdrive.click()
+        self.fill_db_config(dict(config_use_google_drive=1))
         # no error in json file
-        self.assertFalse(self.check_element_on_page((By.ID, "gdrive_error")))
-        save = self.check_element_on_page((By.NAME, "submit"))
-        self.assertTrue(save)
-        save.click()
-        self.assertTrue(self.check_element_on_page((By.ID, 'flash_success')))
+        self.assertFalse(self.check_element_on_page((By.ID, 'flash_danger')))
         time.sleep(1)
         auth_button = self.check_element_on_page((By.ID, "gdrive_auth"))
-        time.sleep(1)
         self.assertTrue(auth_button)
-        time.sleep(3)
         auth_button.click()
         g_login = self.check_element_on_page((By.ID, "identifierId"))
         self.assertTrue(g_login)

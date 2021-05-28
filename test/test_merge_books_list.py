@@ -23,6 +23,7 @@ class TestMergeBooksList(TestCase, ui_class):
         try:
             startup(cls, cls.py_version, {'config_calibre_dir': TEST_DB})
             time.sleep(3)
+            cls.goto_page("nav_new")
         except Exception:
             cls.driver.quit()
             cls.p.kill()

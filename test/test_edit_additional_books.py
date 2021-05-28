@@ -276,13 +276,9 @@ class TestEditAdditionalBooks(TestCase, ui_class):
         self.restart_calibre_web()
         self.goto_page('nav_new')
         os.chmod(TEST_DB, rights)
-        self.fill_initial_config(dict(config_calibre_dir=TEST_DB))
+        self.fill_db_config(dict(config_calibre_dir=TEST_DB))
         # wait for cw to reboot
-        time.sleep(BOOT_TIME)
-        # Wait for config screen with login button to show up
-        login_button = self.driver.find_element_by_name("login")
-        login_button.click()
-        self.login("admin", "admin123")
+        time.sleep(2)
         self.fill_basic_config({'config_uploading': 0, 'config_rarfile_location': ""})
         book_path = os.path.join(TEST_DB, 'John Doe', 'Buuko (9)')
         self.assertTrue(os.path.isdir(book_path))
