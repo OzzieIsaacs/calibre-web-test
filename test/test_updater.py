@@ -32,7 +32,7 @@ class TestUpdater(unittest.TestCase, ui_class):
             my_env["REQUESTS_CA_BUNDLE"] = pem_file
             startup(cls, cls.py_version, {'config_calibre_dir': TEST_DB}, env=my_env)
         else:
-            cls.assert_("Target Directory present")
+            cls.assertTrue(False, "Target Directory present")
 
     @classmethod
     def tearDownClass(cls):
@@ -111,9 +111,12 @@ class TestUpdater(unittest.TestCase, ui_class):
                 try:
                     shutil.rmtree(CALIBRE_WEB_PATH, ignore_errors=True)
                     shutil.copytree(CALIBRE_WEB_PATH + '_2', CALIBRE_WEB_PATH,  dirs_exist_ok=True)
+                except Exception as e:
+                    print(e)
+                try:
                     shutil.rmtree(CALIBRE_WEB_PATH + '_2', ignore_errors=True)
-                except:
-                    pass
+                except Exception as e:
+                    print(e)
         try:
             os.remove(os.path.join(os.getcwd(),'cps_copy.zip'))
         except Exception:
@@ -311,7 +314,7 @@ class TestUpdater(unittest.TestCase, ui_class):
         performUpdate = self.check_element_on_page((By.ID, "perform_update"))
         self.assertTrue(performUpdate)
         performUpdate.click()
-        time.sleep(3)
+        time.sleep(5)
         self.assertTrue('HTTP Error' in self.check_element_on_page((By.ID, "DialogContent")).text)
         self.check_element_on_page((By.ID, "DialogFinished")).click()
         time.sleep(3)
@@ -335,8 +338,9 @@ class TestUpdater(unittest.TestCase, ui_class):
         updater = self.check_element_on_page((By.ID, "check_for_update"))
         self.assertTrue(updater)
         updater.click()
+        time.sleep(5)
         val.set_type(['GeneralError'])
-        time.sleep(4)
+        time.sleep(5)
         performUpdate = self.check_element_on_page((By.ID, "perform_update"))
         self.assertTrue(performUpdate)
         performUpdate.click()
@@ -363,14 +367,25 @@ class TestUpdater(unittest.TestCase, ui_class):
         time.sleep(2)
         performUpdate = self.check_element_on_page((By.ID, "perform_update"))
         performUpdate.click()
-        time.sleep(20)
-        self.check_element_on_page((By.ID, "DialogFinished")).click()
+        loop = 3
+        while loop:
+            time.sleep(20)
+            button = self.check_element_on_page((By.ID, "DialogFinished"))
+            if not button.is_displayed():
+                loop -= 1
+            else:
+                break
+        if button:
+            button.click()
+        else:
+            self.driver.get("http://127.0.0.1:8083")
         time.sleep(3)
-        # cps files not writebale
-        # Additional folders, additional files
-        # check all relevant files are kept, venv folder
+        # ToDo: cps files not writebale
+        # ToDo: Additional folders, additional files
+        # ToDo: check all relevant files are kept, venv folder
 
     def test_reconnect_database(self):
+        self.driver.get("http://127.0.0.1:8083")
         self.reconnect_database()
         self.assertTrue(self.check_element_on_page((By.ID, "check_for_update")))
         resp = requests.get('http://127.0.0.1:8083/reconnect')
