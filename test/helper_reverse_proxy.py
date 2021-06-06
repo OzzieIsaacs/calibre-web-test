@@ -3,11 +3,11 @@ import requests
 import re
 import logging
 from multiprocessing import Process
-import time
+# import time
 
-SITE_NAME = 'http://192.168.188.57:8083'
-SERVER_PATH = "/cw"
-SCHEME = "http"
+SITE_NAME = None # 'http://192.168.188.57:8083'
+SERVER_PATH = None # "/cw"
+SCHEME = None # "http"
 
 app = Flask(__name__)
 log =logging.getLogger("werkzeug")
@@ -74,9 +74,18 @@ def proxy(p):
         response = Response(resp.content, resp.status_code, headers)
     return response
 
-if __name__ == '__main__':
-    server = Process(target=app.run, kwargs={'debug': False,'use_reloader': False,'port': 8080})
-    server.start()
-    time.sleep(10)
-    server.terminate()
-    server.join()
+class Reverse_Proxy():
+    def __init__(self, port=8080, path="/cw", scheme="http", sitename="http://10.10.10.10:8083"):
+        global SERVER_PATH, SCHEME, SITE_NAME
+        SERVER_PATH = path
+        SCHEME = scheme
+        SITE_NAME = sitename
+        self.port=port
+        self.server=None
+    def start(self):
+        self.server = Process(target=app.run, kwargs={'debug': False, 'use_reloader': False,'port': self.port})
+        self.server.start()
+
+    def stop(self):
+        self.server.terminate()
+        self.server.join()
