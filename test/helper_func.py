@@ -164,7 +164,8 @@ def startup(inst, pyVersion, config, login=True, host="http://127.0.0.1:8083",
         except FileExistsError:
             print('Metadata.db already present, might not be a clean version')
     command = [pyVersion, os.path.join(CALIBRE_WEB_PATH, u'cps.py')]
-    command.extend(parameter)
+    if parameter:
+        command.extend(parameter)
     inst.p = process_open(command, [1], sout=None, env=env, cwd=work_path)
     # create a new Firefox session
     inst.driver = webdriver.Firefox()

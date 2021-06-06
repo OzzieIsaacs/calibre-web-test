@@ -388,7 +388,6 @@ class TestUpdater(unittest.TestCase, ui_class):
         self.assertTrue(os.path.isdir(os.path.join(CALIBRE_WEB_PATH, "app.db")))
         # ToDo: Additional folders, additional files
 
-
     # check cps files not writebale
     @unittest.skipIf(os.name=="nt", "Test isn't running on Windows")
     def test_update_write_protect(self):
