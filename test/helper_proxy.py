@@ -203,11 +203,10 @@ def zipball(version) -> str:
             if type == 'GeneralError':
                 return "Lulu"
             else:
-                # version='{}.{}.{}'.format(*val.get_Version()[0])
                 result = send_from_directory(os.getcwd(), 'cps_copy.zip',
                                              as_attachment=True,
                                              mimetype='application/zip',
-                                             attachment_filename='calibre-web-0.6.6.zip')
+                                             download_name='calibre-web-0.6.6.zip')
                 result.headers['Accept-Ranges'] = 'bytes'
                 return result
         else:

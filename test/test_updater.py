@@ -32,7 +32,7 @@ class TestUpdater(unittest.TestCase, ui_class):
             my_env["REQUESTS_CA_BUNDLE"] = pem_file
             startup(cls, cls.py_version, {'config_calibre_dir': TEST_DB}, env=my_env)
         else:
-            cls.assert_("Target Directory present")
+            cls.assertTrue(False, "Target Directory present")
 
     @classmethod
     def tearDownClass(cls):
@@ -57,6 +57,8 @@ class TestUpdater(unittest.TestCase, ui_class):
         cls.return_cw()
 
     def tearDown(self):
+        os.chmod(os.path.join(CALIBRE_WEB_PATH, "cps"), 0o764)
+        os.chmod(os.path.join(CALIBRE_WEB_PATH, "cps", "web.py"), 0o766)
         if not self.check_user_logged_in('admin'):
             try:
                 self.logout()
@@ -111,9 +113,12 @@ class TestUpdater(unittest.TestCase, ui_class):
                 try:
                     shutil.rmtree(CALIBRE_WEB_PATH, ignore_errors=True)
                     shutil.copytree(CALIBRE_WEB_PATH + '_2', CALIBRE_WEB_PATH,  dirs_exist_ok=True)
+                except Exception as e:
+                    print(e)
+                try:
                     shutil.rmtree(CALIBRE_WEB_PATH + '_2', ignore_errors=True)
-                except:
-                    pass
+                except Exception as e:
+                    print(e)
         try:
             os.remove(os.path.join(os.getcwd(),'cps_copy.zip'))
         except Exception:
@@ -311,7 +316,7 @@ class TestUpdater(unittest.TestCase, ui_class):
         performUpdate = self.check_element_on_page((By.ID, "perform_update"))
         self.assertTrue(performUpdate)
         performUpdate.click()
-        time.sleep(3)
+        time.sleep(5)
         self.assertTrue('HTTP Error' in self.check_element_on_page((By.ID, "DialogContent")).text)
         self.check_element_on_page((By.ID, "DialogFinished")).click()
         time.sleep(3)
@@ -335,8 +340,9 @@ class TestUpdater(unittest.TestCase, ui_class):
         updater = self.check_element_on_page((By.ID, "check_for_update"))
         self.assertTrue(updater)
         updater.click()
+        time.sleep(5)
         val.set_type(['GeneralError'])
-        time.sleep(4)
+        time.sleep(5)
         performUpdate = self.check_element_on_page((By.ID, "perform_update"))
         self.assertTrue(performUpdate)
         performUpdate.click()
@@ -363,14 +369,69 @@ class TestUpdater(unittest.TestCase, ui_class):
         time.sleep(2)
         performUpdate = self.check_element_on_page((By.ID, "perform_update"))
         performUpdate.click()
-        time.sleep(20)
+        loop = 3
+        while loop:
+            time.sleep(20)
+            button = self.check_element_on_page((By.ID, "DialogFinished"))
+            if not button.is_displayed():
+                loop -= 1
+            else:
+                break
+        if button:
+            button.click()
+        else:
+            self.driver.get("http://127.0.0.1:8083")
+        time.sleep(3)
+        # Check all relevant files are kept, venv folder
+        self.assertTrue(os.path.isdir(os.path.join(CALIBRE_WEB_PATH, "venv")))
+        self.assertTrue(os.path.isdir(os.path.join(CALIBRE_WEB_PATH, "calibre-web.log")))
+        self.assertTrue(os.path.isdir(os.path.join(CALIBRE_WEB_PATH, "app.db")))
+        # ToDo: Additional folders, additional files
+
+
+    # check cps files not writebale
+    @unittest.skipIf(os.name=="nt", "Test isn't running on Windows")
+    def test_update_write_protect(self):
+        self.fill_basic_config({'config_updatechannel': 'Stable'})
+        time.sleep(BOOT_TIME)
+        self.goto_page('admin_setup')
+        update_table = self.check_element_on_page((By.ID, "current_version")).find_elements_by_tag_name('td')
+        version = [int(x) for x in (update_table[0].text.rstrip(' Beta')).split('.')]
+        version3 = [version[0], version[1], version[2] + 2]
+        version2 = [version[0], version[1], version[2] + 1]
+        version1 = [version[0], version[1], version[2]]
+        val.set_Version([version3, version2, version1])
+        os.chmod(os.path.join(CALIBRE_WEB_PATH, "cps"), 0o400)
+        val.set_type([None])
+        time.sleep(0.5)
+        updater = self.check_element_on_page((By.ID, "check_for_update"))
+        updater.click()
+        time.sleep(2)
+        self.assertTrue(self.check_element_on_page((By.ID, "message")))
+        performUpdate = self.check_element_on_page((By.ID, "perform_update"))
+        performUpdate.click()
+        time.sleep(30)
+        self.assertTrue('Update failed' in self.check_element_on_page((By.ID, "DialogContent")).text)
         self.check_element_on_page((By.ID, "DialogFinished")).click()
         time.sleep(3)
-        # cps files not writebale
-        # Additional folders, additional files
-        # check all relevant files are kept, venv folder
+        os.chmod(os.path.join(CALIBRE_WEB_PATH, "cps"), 0o764)
+        # Only change permission of single file
+        os.chmod(os.path.join(CALIBRE_WEB_PATH, "cps", "web.py"), 0o400)
+        updater = self.check_element_on_page((By.ID, "check_for_update"))
+        updater.click()
+        time.sleep(2)
+        self.assertTrue(self.check_element_on_page((By.ID, "message")))
+        performUpdate = self.check_element_on_page((By.ID, "perform_update"))
+        performUpdate.click()
+        time.sleep(30)
+        # Update fails due to missing write permission on web.py
+        self.assertTrue('Update failed' in self.check_element_on_page((By.ID, "DialogContent")).text)
+        self.check_element_on_page((By.ID, "DialogFinished")).click()
+        time.sleep(3)
+        os.chmod(os.path.join(CALIBRE_WEB_PATH, "cps", "web.py"), 0o766)
 
     def test_reconnect_database(self):
+        self.driver.get("http://127.0.0.1:8083")
         self.reconnect_database()
         self.assertTrue(self.check_element_on_page((By.ID, "check_for_update")))
         resp = requests.get('http://127.0.0.1:8083/reconnect')

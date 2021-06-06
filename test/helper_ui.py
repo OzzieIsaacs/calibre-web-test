@@ -47,7 +47,7 @@ page['db_config'] = {'check': (By.ID, "config_calibre_dir"),
                         'click': [(By.ID, "top_admin"), (By.ID, "db_config")]}
 page['basic_config'] = {'check': (By.ID, "config_port"),
                         'click': [(By.ID, "top_admin"), (By.ID, "basic_config")]}
-page['view_config'] = {'check': None, 'click': [(By.ID, "top_admin"), (By.ID, "view_config")]}
+page['view_config'] = {'check': (By.NAME, "submit"), 'click': [(By.ID, "top_admin"), (By.ID, "view_config")]}
 page['mail_server'] = {'check': (By.ID, "mail_server"), 'click': [(By.ID, "top_admin"), (By.ID, "admin_edit_email")]}
 page['user_list'] = {'check': (By.ID, "user_delete_selection"), 'click': [(By.ID, "top_admin"), (By.ID, "admin_user_table")]}
 page['admin_setup'] = {'check': (By.ID, "admin_edit_email"), 'click': [(By.ID, "top_admin")]}
@@ -176,7 +176,10 @@ class ui_class():
                 if page[page_target]['check'][0] == By.ID:
                     WebDriverWait(cls.driver, 5).until(EC.presence_of_element_located(page[page_target]['check']))
                     return True
-                if page[page_target]['check'][0] == None:
+                elif page[page_target]['check'][0] == By.NAME:
+                    WebDriverWait(cls.driver, 5).until(EC.presence_of_element_located(page[page_target]['check']))
+                    return True
+                elif page[page_target]['check'][0] == None:
                     return True
 
                 if list_type:
