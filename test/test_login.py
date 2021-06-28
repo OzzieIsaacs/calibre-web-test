@@ -345,7 +345,7 @@ class TestLogin(unittest.TestCase, ui_class):
         self.assertEqual(resp.status_code, 200)
         self.assertTrue("Calibre-Web | Login" in resp.text)
         r.close()
-        # set 'config_reverse_proxy_login_header_name': "X-LOGIN"'''
+        # set 'config_reverse_proxy_login_header_name': "X-LOGIN"
         self.fill_basic_config({'config_reverse_proxy_login_header_name': "X-LOGIN" })
         self.assertTrue(self.check_element_on_page((By.ID, "flash_success")))
         self.logout()
@@ -367,6 +367,14 @@ class TestLogin(unittest.TestCase, ui_class):
         self.assertFalse("Calibre-Web | Login" in resp.text)
         r.close()
 
+        # login with X-LoGiN -> login
+        r = requests.session()
+        r.headers['X-LoGiN'] = "admin"
+        resp = r.get("http://127.0.0.1:8083/login")
+        self.assertEqual(resp.status_code, 200)
+        self.assertFalse("Calibre-Web | Login" in resp.text)
+        r.close()
+
         # login with X-LOGIN -> login
         r = requests.session()
         r.headers['X-LOGIN'] = "admin"
@@ -374,13 +382,28 @@ class TestLogin(unittest.TestCase, ui_class):
         self.assertEqual(resp.status_code, 200)
         self.assertFalse("Calibre-Web | Login" in resp.text)
         r.close()
+        self.assertTrue(self.login('admin', 'admin123'))
+        self.fill_basic_config({'config_anonbrowse': 1})
+        self.assertTrue(self.check_element_on_page((By.ID, "flash_success")))
+        self.logout()
+        r = requests.session()
+        resp = r.get("http://127.0.0.1:8083/")
+        self.assertEqual(resp.status_code, 200)
+        self.assertTrue("Guest" in resp.text)
+        r.close()
+        r = requests.session()
+        r.headers['X-LoGiN'] = "admin"
+        resp = r.get("http://127.0.0.1:8083/")
+        self.assertEqual(resp.status_code, 200)
+        self.assertTrue('class="hidden-sm">Admin</span>' in resp.text)
+        r.close()
+
         # ToDo: Additional test with reverse proxy
         self.assertTrue(self.login('admin', 'admin123'))
-        self.fill_basic_config({'config_allow_reverse_proxy_header_login': 0})
+        self.fill_basic_config({'config_allow_reverse_proxy_header_login': 0, 'config_anonbrowse': 0})
         time.sleep(3)
+        self.assertTrue(self.check_element_on_page((By.ID, "flash_success")))
         self.logout()
-
-
 
     def test_login_rename_user(self):
         self.driver.get("http://127.0.0.1:8083/login")

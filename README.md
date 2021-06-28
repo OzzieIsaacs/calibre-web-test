@@ -91,3 +91,10 @@ On Windows you can start the installer packaging afterwards  using innosetup, by
 All comment out all content: `var(--...);` occurences after the `url(images/` definitions.
 
 - In our viewer some buttons disappear (download button) depending on the settings. This has also to be handled in pdf.js file by putting a "if button is present do, else not" query arount it. The exact positon differs form version to version.
+
+# Debug outputs and more
+The following enviromentvariables can be set to control debugging output
+
+SQLALCHEMY_WARN_20 = 1 -> Outputs compatibility warnings for sqlalchemy 2.0
+FLASK_DEBUG = 1 -> routes debug output to stream console
+PYTHONWARNINGS = DEFAULT -> outputs depreciation warnings on console

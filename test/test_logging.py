@@ -14,7 +14,9 @@ from config_test import CALIBRE_WEB_PATH, TEST_DB, BOOT_TIME
 import re
 from helper_func import startup
 from helper_func import save_logfiles
-
+import requests
+import zipfile
+import io
 
 class TestLogging(unittest.TestCase, ui_class):
     p = None
@@ -235,3 +237,30 @@ class TestLogging(unittest.TestCase, ui_class):
         self.assertNotEqual(text1, text2)
         # Just check if there is output in the field
 
+    def test_debuginfo_download(self):
+        r = requests.session()
+        payload = {'username': 'admin', 'password': 'admin123', 'submit': "", 'next': "/admin", "remember_me": "on"}
+        r.post('http://127.0.0.1:8083/login', data=payload)
+        resp = r.get('http://127.0.0.1:8083/admin/debug')
+        self.assertGreater(len(resp.content), 2600)
+        self.assertEqual(resp.headers['Content-Type'], 'application/zip')
+        zip = zipfile.ZipFile(io.BytesIO(resp.content))
+        self.assertIsNone(zip.testzip())
+        r.close()
+
+    def test_debuginfo_download(self):
+        self.fill_basic_config({'config_logfile': '',
+                                'config_access_log': 1})
+        time.sleep(BOOT_TIME)
+        self.assertTrue(self.check_element_on_page((By.ID, "flash_success")))
+        self.goto_page('logviewer')
+        self.assertTrue(self.check_element_on_page((By.ID, "log_file_0")))
+        self.assertTrue(self.check_element_on_page((By.ID, "log_file_1")))
+        r = requests.session()
+        payload = {'username': 'admin', 'password': 'admin123', 'submit': "", 'next': "/admin", "remember_me": "on"}
+        r.post('http://127.0.0.1:8083/login', data=payload)
+        resp = r.get('http://127.0.0.1:8083/admin/logdownload/0')
+        self.assertTrue(resp.headers['Content-Type'].startswith('text/html'))
+        resp = r.get('http://127.0.0.1:8083/admin/logdownload/1')
+        self.assertTrue(resp.headers['Content-Type'].startswith('text/html'))
+        r.close()

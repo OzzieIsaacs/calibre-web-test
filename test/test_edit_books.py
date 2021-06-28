@@ -7,6 +7,7 @@ import os
 import time
 import requests
 from diffimg import diff
+from shutil import copyfile
 
 from selenium.webdriver.common.by import By
 from selenium.webdriver.common.keys import Keys
@@ -892,6 +893,20 @@ class TestEditBooks(TestCase, ui_class):
         details = self.get_book_details()
         self.assertEqual('book9', details['title'])
         self.assertEqual('Noname 23', details['author'][0])
+        new_file = os.path.join(base_path, 'files', 'big.EPUB')
+        copyfile(upload_file, new_file)
+        upload = self.check_element_on_page((By.ID, 'btn-upload'))
+        upload.send_keys(new_file)
+        time.sleep(3)
+        self.assertFalse(self.check_element_on_page((By.ID, 'flash_danger')))
+        self.assertTrue(self.check_element_on_page((By.ID, 'flash_warning')))
+        self.check_element_on_page((By.ID, 'edit_cancel')).click()
+        time.sleep(2)
+        details = self.get_book_details()
+        self.assertEqual('book9', details['title'])
+        self.assertEqual('Noname 23', details['author'][0])
+        os.unlink(new_file)
+
         r = requests.session()
         payload = {'username': 'admin', 'password': 'admin123', 'submit':"", 'next':"/", "remember_me":"on"}
         r.post('http://127.0.0.1:8083/login', data=payload)
