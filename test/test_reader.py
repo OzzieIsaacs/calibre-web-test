@@ -118,6 +118,7 @@ class TestReader(unittest.TestCase, ui_class):
         self.driver.switch_to.window(self.current_handle)
         self.fill_basic_config({'config_anonbrowse': 1})
         time.sleep(3)
+        self.assertTrue(self.check_element_on_page((By.ID, "flash_success")))
         self.edit_user('Guest', {'viewer_role': 1})
         self.logout()
         self.get_book_details(13)

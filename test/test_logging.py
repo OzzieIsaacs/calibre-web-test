@@ -31,6 +31,7 @@ class TestLogging(unittest.TestCase, ui_class):
             pass
         startup(cls, cls.py_version, {'config_calibre_dir': TEST_DB, 'config_log_level': 'DEBUG'})
         time.sleep(3)
+        WebDriverWait(cls.driver, 5).until(EC.presence_of_element_located((By.ID, "flash_success")))
 
     @classmethod
     def tearDownClass(cls):

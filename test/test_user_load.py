@@ -14,6 +14,9 @@ from helper_ui import ui_class
 from config_test import TEST_DB, base_path
 from helper_func import startup, debug_startup, add_dependency, remove_dependency
 from helper_func import save_logfiles
+from selenium.webdriver.support.ui import WebDriverWait
+from selenium.webdriver.support import expected_conditions as EC
+
 
 def user_change(user):
     r = requests.session()
@@ -49,6 +52,7 @@ class TestUserLoad(TestCase, ui_class):
         try:
             startup(cls, cls.py_version, {'config_calibre_dir': TEST_DB, 'config_access_log': 1})
             time.sleep(3)
+            WebDriverWait(cls.driver, 5).until(EC.presence_of_element_located((By.ID, "flash_success")))
         except Exception:
             cls.driver.quit()
             cls.p.kill()

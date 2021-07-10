@@ -15,7 +15,10 @@ class TestAnonymous(unittest.TestCase, ui_class):
 
     @classmethod
     def setUpClass(cls):
-        startup(cls, cls.py_version, {'config_calibre_dir': TEST_DB, 'config_anonbrowse': 1})
+        try:
+            startup(cls, cls.py_version, {'config_calibre_dir': TEST_DB, 'config_anonbrowse': 1})
+        except Exception as e:
+            print(e)
 
     @classmethod
     def tearDownClass(cls):

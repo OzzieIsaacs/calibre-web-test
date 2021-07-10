@@ -36,6 +36,7 @@ class TestLdapLogin(unittest.TestCase, ui_class):
             # print('stop in setup')
             cls.server.stopListen()
         except Exception as e:
+            print(e)
             cls.driver.quit()
             cls.p.terminate()
 

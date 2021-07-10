@@ -152,7 +152,7 @@ class TestEditBooksOnGdrive(unittest.TestCase, ui_class):
         fout.close()
         self.edit_book(content={'book_title': u' O0ü 执'}, detail_v=True)
         self.wait_page_has_loaded()
-        self.check_element_on_page((By.ID, 'flash_success'))
+        self.assertTrue(self.check_element_on_page((By.ID, 'flash_success')))
         title = self.check_element_on_page((By.ID, "book_title"))
         # calibre strips spaces in beginning
         self.assertEqual(u'O0ü 执', title.get_attribute('value'))
@@ -162,7 +162,7 @@ class TestEditBooksOnGdrive(unittest.TestCase, ui_class):
         self.wait_page_has_loaded()
         self.edit_book(content={'book_title': u'O0ü name'}, detail_v=True)
         self.wait_page_has_loaded()
-        self.check_element_on_page((By.ID, 'flash_success'))
+        self.assertTrue(self.check_element_on_page((By.ID, 'flash_success')))
         title = self.check_element_on_page((By.ID, "book_title"))
         # calibre strips spaces in the end
         self.assertEqual(u'O0ü name', title.get_attribute('value'))
@@ -759,6 +759,8 @@ class TestEditBooksOnGdrive(unittest.TestCase, ui_class):
 
     def test_upload_cover_hdd(self):
         self.fill_basic_config({'config_uploading': 1})
+        time.sleep(3)
+        self.assertTrue(self.check_element_on_page((By.ID, 'flash_success')))
         self.get_book_details(5)
         self.save_cover_screenshot('original.png')
         self.check_element_on_page((By.ID, "edit_book")).click()
@@ -809,6 +811,7 @@ class TestEditBooksOnGdrive(unittest.TestCase, ui_class):
     def test_upload_book_lit(self):
         self.fill_basic_config({'config_uploading':1})
         time.sleep(3)
+        self.assertTrue(self.check_element_on_page((By.ID, 'flash_success')))
         self.goto_page('nav_new')
         upload_file = os.path.join(base_path, 'files', 'book.lit')
         upload = self.check_element_on_page((By.ID, 'btn-upload'))
@@ -830,6 +833,7 @@ class TestEditBooksOnGdrive(unittest.TestCase, ui_class):
     def test_upload_book_epub(self):
         self.fill_basic_config({'config_uploading':1})
         time.sleep(3)
+        self.assertTrue(self.check_element_on_page((By.ID, 'flash_success')))
         self.goto_page('nav_new')
         upload_file = os.path.join(base_path, 'files', 'book.epub')
         upload = self.check_element_on_page((By.ID, 'btn-upload'))
@@ -846,6 +850,7 @@ class TestEditBooksOnGdrive(unittest.TestCase, ui_class):
         resp = r.get('http://127.0.0.1:8083' + details['cover'])
         self.assertEqual('8936', resp.headers['Content-Length'])
         self.fill_basic_config({'config_uploading': 0})
+        self.assertTrue(self.check_element_on_page((By.ID, 'flash_success')))
         r.close()
         # ToDo: Check folder are right
 

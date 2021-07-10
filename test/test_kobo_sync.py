@@ -13,7 +13,8 @@ from config_test import TEST_DB, base_path
 from helper_func import startup, debug_startup, get_Host_IP, add_dependency, remove_dependency
 from selenium.webdriver.common.by import By
 from helper_func import save_logfiles
-
+from selenium.webdriver.support.ui import WebDriverWait
+from selenium.webdriver.support import expected_conditions as EC
 
 class TestKoboSync(unittest.TestCase, ui_class):
 
@@ -33,6 +34,8 @@ class TestKoboSync(unittest.TestCase, ui_class):
             startup(cls, cls.py_version, {'config_calibre_dir':TEST_DB, 'config_kobo_sync':1,
                                           'config_kepubifypath': "",
                                           'config_kobo_proxy':0}, host=host)
+            time.sleep(3)
+            WebDriverWait(cls.driver, 5).until(EC.presence_of_element_located((By.ID, "flash_success")))
             cls.goto_page('user_setup')
             cls.check_element_on_page((By.ID, "config_create_kobo_token")).click()
             link = cls.check_element_on_page((By.CLASS_NAME, "well"))
@@ -41,7 +44,8 @@ class TestKoboSync(unittest.TestCase, ui_class):
             cls.driver.get('http://127.0.0.1:8083')
             cls.login('admin', 'admin123')
             time.sleep(2)
-        except Exception:
+        except Exception as e:
+            print(e)
             cls.driver.quit()
             cls.p.terminate()
             cls.p.poll()
@@ -443,7 +447,7 @@ class TestKoboSync(unittest.TestCase, ui_class):
         self.inital_sync()
         # create private shelf
         newSession = requests.session()
-        r = newSession.get(self.kobo_adress+'/v1/initialization', headers=TestKoboSync.header)
+        newSession.get(self.kobo_adress+'/v1/initialization', headers=TestKoboSync.header)
 
         r = newSession.post(self.kobo_adress + '/v1/library/tags', json={'Name': 'BooksAdd', 'Items': []})
         self.assertEqual(201, r.status_code)
@@ -595,6 +599,41 @@ class TestKoboSync(unittest.TestCase, ui_class):
             self.assertFalse(e, data)
 
     def test_kobo_sync_selected_shelfs(self):
-        self.inital_sync()
-        # erzeuge privaten Shelf ohne sync
-        # sync
+        data = self.inital_sync()
+        self.assertEqual(4, len(data))
+        self.change_visibility_me({"kobo_only_shelves_sync": 1})
+        # erzeuge privaten Shelf ohne sync, füge bücher hinzu
+        self.create_shelf("Unsyncd_shelf", sync=0)
+        self.get_book_details(5)
+        self.check_element_on_page((By.ID, "add-to-shelf")).click()
+        self.check_element_on_page((By.XPATH, "//ul[@id='add-to-shelves']/li/a[contains(.,'Unsyncd_shelf')]")).click()
+
+        self.assertEqual(0, len(self.sync_kobo()))
+
+        self.create_shelf("syncd_shelf_u1", sync=1)
+        self.get_book_details(10)
+        self.check_element_on_page((By.ID, "add-to-shelf")).click()
+        self.check_element_on_page((By.XPATH, "//ul[@id='add-to-shelves']/li/a[contains(.,'syncd_shelf_u1')]")).click()
+        data3 = self.sync_kobo()  # 1 book synced, reading state changed as book was modified due to adding to shelf(?)
+        self.assertIn("NewTag", data3[2])
+        self.assertIn("NewEntitlement", data3[0])
+        self.create_user('kobosync', {'password': '123', 'email': 'da@b.com', "kobo_only_shelves_sync": 1})
+        user_settings = self.get_user_settings('kobosync')
+        self.assertTrue(user_settings["kobo_only_shelves_sync"])
+        # check kobo only
+        self.logout()
+        self.login("kobosync","123")
+        # 2.user erzeuge neuen shelf mit sync füge Bücher hinzu
+        self.create_shelf("syncd_shelf_u2", sync=1)
+        self.get_book_details(9)
+        self.check_element_on_page((By.ID, "add-to-shelf")).click()
+        self.check_element_on_page((By.XPATH, "//ul[@id='add-to-shelves']/li/a[contains(.,'syncd_shelf_u2')]")).click()
+        self.logout()
+        self.login("admin","admin123")
+        self.assertEqual(0, len(self.sync_kobo()))  # nothing synced
+
+        # Cleanup
+        self.change_visibility_me({"kobo_only_shelves_sync": 0})
+        self.delete_shelf('Unsyncd_shelf')
+        self.delete_shelf('syncd_shelf_u1')
+        self.edit_user('kobosync', {'delete': 1})
