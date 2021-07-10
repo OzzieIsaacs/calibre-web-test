@@ -205,9 +205,13 @@ class ui_class():
     def fill_db_config(cls,elements=None):
         if not cls.check_user_logged_in('admin'):
             cls.login('admin', 'admin123')
+            time.sleep(1)
         if not cls.check_element_on_page((By.ID, "config_calibre_dir")):
             cls.goto_page('db_config')
-        WebDriverWait(cls.driver, 5).until(EC.presence_of_element_located((By.ID, "config_calibre_dir")))
+        try:
+            WebDriverWait(cls.driver, 5).until(EC.presence_of_element_located((By.ID, "config_calibre_dir")))
+        except Exception:
+            print("no config_calibre_dir visible")
         process_checkboxes = dict()
         process_elements = dict()
         process_options =dict()
@@ -245,8 +249,7 @@ class ui_class():
 
     @classmethod
     def _fill_basic_config(cls,elements=None):
-        # WebDriverWait(cls.driver, 5).until(EC.presence_of_element_located((By.ID, "config_port")))
-        accordions=cls.driver.find_elements_by_class_name("accordion-toggle")
+        WebDriverWait(cls.driver, 5).until(EC.presence_of_element_located((By.ID, "config_port")))
         opener = list()
         process_checkboxes = dict()
         process_elements = dict()
@@ -285,11 +288,13 @@ class ui_class():
                                            ]):
             opener.append(2)
         if any(key in elements for key in ['config_ebookconverter', 'config_calibre', 'config_kepubifypath',
-                                           'config_converterpath','config_rarfile_location']):
+                                           'config_converterpath', 'config_rarfile_location']):
             opener.append(3)
 
         # open all necessary accordions
+        accordions = cls.driver.find_elements_by_class_name("accordion-toggle")
         for o in opener:
+            time.sleep(1)
             accordions[o].click()
         # check if checkboxes are in list and seperate lists
         for element,key in enumerate(elements):
@@ -331,8 +336,9 @@ class ui_class():
 
 
     @classmethod
-    def fill_basic_config(cls,elements=None):
-        cls.goto_page('basic_config')
+    def fill_basic_config(cls, elements=None):
+        if not cls.goto_page('basic_config'):
+            print("page not reached")
         cls._fill_basic_config(elements)
 
     @classmethod
@@ -792,6 +798,11 @@ class ui_class():
             user_settings['upload_role'] = int(self.check_element_on_page((By.ID, "upload_role")).is_selected())
             user_settings['edit_role'] = int(self.check_element_on_page((By.ID, "edit_role")).is_selected())
             user_settings['delete_role'] = int(self.check_element_on_page((By.ID, "delete_role")).is_selected())
+            element = self.check_element_on_page((By.ID, "kobo_only_shelves_sync"))
+            if element:
+                user_settings['kobo_only_shelves_sync'] = element.is_selected()
+            else:
+                user_settings['kobo_only_shelves_sync'] = None
             element = self.check_element_on_page((By.ID, "passwd_role"))
             if element:
                 user_settings['passwd_role'] = element.is_selected()
@@ -853,7 +864,7 @@ class ui_class():
         # finally submit settings
         cls.driver.find_element_by_id("user_submit").click()
 
-    def create_shelf(self, name, public=False):
+    def create_shelf(self, name, public=False, sync=None):
         self.goto_page('create_shelf')
         ele = self.check_element_on_page((By.ID,'title'))
         if ele:
@@ -865,13 +876,17 @@ class ui_class():
                     public_shelf.click()
                 else:
                     return False
+            if sync:
+                sync_shelf = self.check_element_on_page((By.NAME, 'kobo_sync'))
+                if sync_shelf:
+                    sync_shelf.click()
             submit = self.check_element_on_page((By.ID, 'submit'))
             if submit:
                 submit.click()
                 return True
         return False
 
-    def change_shelf(self, name, new_name=None, public=None):
+    def change_shelf(self, name, new_name=None, public=None, sync=None):
         shelf = self.list_shelfs(name)
         if shelf:
             shelf['ele'].click()
@@ -888,6 +903,12 @@ class ui_class():
                 self.assertTrue(access)
                 if (public == 1 and not access.is_selected()) or public == 0 and access.is_selected():
                     access.click()
+            if sync != None:
+                sync_box = self.check_element_on_page((By.NAME, "kobo_sync"))
+                self.assertTrue(sync_box)
+                if (sync == 1 and not sync_box.is_selected()) or sync == 0 and sync_box.is_selected():
+                    access.click()
+
             if new_name or public:
                 submit = self.check_element_on_page((By.ID, "submit"))
                 submit.click()

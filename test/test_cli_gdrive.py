@@ -177,6 +177,7 @@ class TestCliGdrivedb(unittest.TestCase, ui_class):
         self.start_cw(os.path.join(CALIBRE_WEB_PATH, u'cps.py'), os.path.join(gdrivedir, u'gü dr.app'))
         self.fill_db_config({'config_use_google_drive': 1})
         time.sleep(BOOT_TIME)
+        self.assertTrue(self.check_element_on_page((By.ID, "flash_success")))
         self.fill_db_config({'config_google_drive_folder': 'test'})
         time.sleep(BOOT_TIME)
         self.driver.get("http://127.0.0.1:8083")

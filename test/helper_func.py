@@ -188,16 +188,19 @@ def startup(inst, pyVersion, config, login=True, host="http://127.0.0.1:8083",
         del config['config_calibre_dir']
 
         # wait for cw to reboot
-        time.sleep(2)
+        time.sleep(5)
+        try:
+            WebDriverWait(inst.driver, 5).until(EC.presence_of_element_located((By.ID, "flash_success")))
+        except Exception:
+            pass
 
-        # Wait for config screen with login button to show up
-        #WebDriverWait(inst.driver, 5).until(EC.presence_of_element_located((By.NAME, "login")))
-        #login_button = inst.driver.find_element_by_name("login")
-        #login_button.click()
-        #inst.login("admin", "admin123")
         if config:
             inst.fill_basic_config(config)
         time.sleep(BOOT_TIME)
+        try:
+            WebDriverWait(inst.driver, 5).until(EC.presence_of_element_located((By.ID, "flash_success")))
+        except Exception:
+            pass
         # login
         if not login:
             inst.logout()

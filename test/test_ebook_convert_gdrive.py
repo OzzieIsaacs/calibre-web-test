@@ -16,7 +16,8 @@ from config_test import CALIBRE_WEB_PATH, TEST_DB, base_path, WAIT_GDRIVE
 from helper_func import startup
 from helper_func import save_logfiles, add_dependency, remove_dependency
 from helper_gdrive import prepare_gdrive, connect_gdrive
-
+from selenium.webdriver.support.ui import WebDriverWait
+from selenium.webdriver.support import expected_conditions as EC
 
 @unittest.skipIf(not os.path.exists(os.path.join(base_path, "files", "client_secrets.json")) or
                  not os.path.exists(os.path.join(base_path, "files", "gdrive_credentials")),
@@ -128,6 +129,7 @@ class TestEbookConvertCalibreGDrive(unittest.TestCase, ui_class):
             self.logout()
             self.login('admin', 'admin123')
         self.fill_basic_config({'config_calibre': ''})
+        WebDriverWait(self.driver, 5).until(EC.presence_of_element_located((By.ID, "flash_success")))
 
     # set parameters for convert ( --margin-right 11.9) and start conversion -> conversion okay
     # set parameters for convert ( --margin-righ) and start conversion -> conversion failed
@@ -136,6 +138,7 @@ class TestEbookConvertCalibreGDrive(unittest.TestCase, ui_class):
         time.sleep(WAIT_GDRIVE)
         tasks = self.check_tasks()
         self.fill_basic_config({'config_calibre': '--margin-right 11.9'})
+        self.assertTrue(self.check_element_on_page((By.ID, "flash_success")))
         vals = self.get_convert_book(8)
         select = Select(vals['btn_from'])
         select.select_by_visible_text('EPUB')
@@ -155,6 +158,7 @@ class TestEbookConvertCalibreGDrive(unittest.TestCase, ui_class):
         self.assertEqual(ret[-1]['result'], 'Finished')
 
         self.fill_basic_config({'config_calibre': '--margin-rght 11.9'})
+        self.assertTrue(self.check_element_on_page((By.ID, "flash_success")))
         vals = self.get_convert_book(8)
         select = Select(vals['btn_from'])
         select.select_by_visible_text('EPUB')
@@ -167,6 +171,7 @@ class TestEbookConvertCalibreGDrive(unittest.TestCase, ui_class):
         self.assertEqual(task_len, 2)
         self.assertEqual(ret[-1]['result'], 'Failed')
         self.fill_basic_config({'config_calibre': ''})
+        self.assertTrue(self.check_element_on_page((By.ID, "flash_success")))
 
     # press send to kindle for not converted book
     # wait for finished
@@ -190,6 +195,7 @@ class TestEbookConvertCalibreGDrive(unittest.TestCase, ui_class):
         self.assertEqual(ret[-2]['result'], 'Finished')
         self.assertEqual(ret[-1]['result'], 'Finished')
         self.setup_server(True, {'mail_password': '1234'})
+        self.assertTrue(self.check_element_on_page((By.ID, "flash_info")))
 
 
     # check conversion and email started and conversion fails

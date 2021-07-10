@@ -82,10 +82,12 @@ class TestEditAdditionalBooks(TestCase, ui_class):
         self.fill_basic_config({'config_uploading': 0})
         r.close()
         time.sleep(2)
+        self.assertTrue(self.check_element_on_page((By.ID, "flash_success")))
 
     def test_upload_metadata_cbt(self):
         self.fill_basic_config({'config_uploading': 1})
         time.sleep(3)
+        self.assertTrue(self.check_element_on_page((By.ID, "flash_success")))
         self.goto_page('nav_new')
         upload_file = os.path.join(base_path, 'files', 'book.cbt')
         upload = self.check_element_on_page((By.ID, 'btn-upload'))
@@ -106,12 +108,14 @@ class TestEditAdditionalBooks(TestCase, ui_class):
         self.assertEqual('8936', resp.headers['Content-Length'])
         r.close()
         time.sleep(2)
+        self.assertTrue(self.check_element_on_page((By.ID, "flash_success")))
 
     # limit upload formats to epub -> check pdf -> denied, upload epub allowed
     # limit upload formats to FB2 -> upload fb2 allowed
     def test_change_upload_formats(self):
         self.fill_basic_config({'config_uploading': 1, 'config_upload_formats': 'epub'})
         time.sleep(BOOT_TIME)
+        self.assertTrue(self.check_element_on_page((By.ID, "flash_success")))
         self.goto_page('nav_new')
         upload_file = os.path.join(base_path, 'files', 'book.pdf')
         upload = self.check_element_on_page((By.ID, 'btn-upload'))
@@ -128,6 +132,7 @@ class TestEditAdditionalBooks(TestCase, ui_class):
 
         self.fill_basic_config({'config_upload_formats': 'FB2'})
         time.sleep(3)
+        self.assertTrue(self.check_element_on_page((By.ID, "flash_success")))
         self.goto_page('nav_new')
         upload_file = os.path.join(base_path, 'files', 'book.fb2')
         upload = self.check_element_on_page((By.ID, 'btn-upload'))
@@ -138,6 +143,7 @@ class TestEditAdditionalBooks(TestCase, ui_class):
 
         self.fill_basic_config({'config_upload_formats': 'jpg'})
         time.sleep(3)
+        self.assertTrue(self.check_element_on_page((By.ID, "flash_success")))
         self.goto_page('nav_new')
         upload_file = os.path.join(base_path, 'files', 'cover.jpg')
         upload = self.check_element_on_page((By.ID, 'btn-upload'))
@@ -148,6 +154,7 @@ class TestEditAdditionalBooks(TestCase, ui_class):
 
         self.fill_basic_config({'config_upload_formats': ''})
         time.sleep(3)
+        self.assertTrue(self.check_element_on_page((By.ID, "flash_success")))
         self.goto_page('nav_new')
         upload_file = os.path.join(base_path, 'files', 'cover.bmp')
         upload = self.check_element_on_page((By.ID, 'btn-upload'))
@@ -166,6 +173,7 @@ class TestEditAdditionalBooks(TestCase, ui_class):
         self.assertEqual('epub', formats.get_attribute('value'))
         self.fill_basic_config({'config_upload_formats': 'txt,pdf,epub,kepub,mobi,azw,azw3,cbr,cbz,cbt,djvu,prc,doc,'
                                                          'docx,fb2,html,rtf,lit,odt,mp3,mp4,ogg,opus,wav,flac,m4a,m4b'})
+        self.assertTrue(self.check_element_on_page((By.ID, "flash_success")))
 
     def test_delete_book(self):
         self.get_book_details(7)
@@ -225,6 +233,7 @@ class TestEditAdditionalBooks(TestCase, ui_class):
     def test_writeonly_path(self):
         self.fill_basic_config({'config_rarfile_location': unrar_path()})
         time.sleep(BOOT_TIME)
+        self.assertTrue(self.check_element_on_page((By.ID, "flash_success")))
         self.goto_page('nav_new')
         number_books = self.get_books_displayed()
         self.fill_view_config({'config_read_column': "Custom Bool 1 Ä"})
@@ -280,6 +289,7 @@ class TestEditAdditionalBooks(TestCase, ui_class):
         # wait for cw to reboot
         time.sleep(2)
         self.fill_basic_config({'config_uploading': 0, 'config_rarfile_location': ""})
+        self.assertTrue(self.check_element_on_page((By.ID, "flash_success")))
         book_path = os.path.join(TEST_DB, 'John Doe', 'Buuko (9)')
         self.assertTrue(os.path.isdir(book_path))
 
@@ -493,6 +503,7 @@ class TestEditAdditionalBooks(TestCase, ui_class):
     def test_upload_edit_role(self):
         self.fill_basic_config({'config_uploading': 1})
         time.sleep(3)
+        self.assertTrue(self.check_element_on_page((By.ID, "flash_success")))
         self.create_user('user0', {'password': '1234', 'email': 'a@b.com', 'upload_role': 0, 'edit_role': 1})
         self.assertTrue(self.check_element_on_page((By.ID, "flash_success")))
         self.logout()
@@ -559,11 +570,13 @@ class TestEditAdditionalBooks(TestCase, ui_class):
         self.edit_user('user0', {'delete': 1})
         self.fill_basic_config({'config_uploading': 0})
         time.sleep(3)
+        self.assertTrue(self.check_element_on_page((By.ID, "flash_success")))
 
 
     def test_delete_role(self):
         self.fill_basic_config({'config_uploading': 1})
         time.sleep(3)
+        self.assertTrue(self.check_element_on_page((By.ID, "flash_success")))
         self.get_book_details(12)
         self.check_element_on_page((By.ID, "edit_book")).click()
 
@@ -574,6 +587,7 @@ class TestEditAdditionalBooks(TestCase, ui_class):
         submit.click()
         self.fill_basic_config({'config_uploading': 0})
         time.sleep(3)
+        self.assertTrue(self.check_element_on_page((By.ID, "flash_success")))
 
         self.create_user('user2', {'password': '1234', 'email': 'a2@b.com', 'edit_role': 0, 'delete_role': 0})
         self.assertTrue(self.check_element_on_page((By.ID, "flash_success")))

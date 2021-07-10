@@ -8,6 +8,8 @@ from helper_func import startup, debug_startup, add_dependency, remove_dependenc
 from selenium.webdriver.common.by import By
 from helper_func import save_logfiles
 import os
+from selenium.webdriver.support.ui import WebDriverWait
+from selenium.webdriver.support import expected_conditions as EC
 
 try:
     from config_goodreads import GOODREADS_API_KEY, GOODREADS_API_SECRET
@@ -37,7 +39,9 @@ class TestGoodreads(unittest.TestCase, ui_class):
         try:
             startup(cls, cls.py_version, {'config_calibre_dir':TEST_DB,
                                           'config_use_goodreads':1})
-        except Exception:
+            WebDriverWait(cls.driver, 5).until(EC.presence_of_element_located((By.ID, "flash_success")))
+        except Exception as e:
+            print(e)
             cls.driver.quit()
             cls.p.terminate()
             cls.p.poll()
@@ -57,6 +61,7 @@ class TestGoodreads(unittest.TestCase, ui_class):
         self.fill_basic_config({'config_goodreads_api_key': 'rgg',
                                 'config_goodreads_api_secret': 'rgfg'
                                 })
+        self.assertTrue(self.check_element_on_page((By.ID, 'flash_success')))
         self.get_book_details(5)
         self.check_element_on_page((By.ID, "edit_book")).click()
         self.edit_book(content={'bookAuthor': u'Ken Follett'})
@@ -78,6 +83,7 @@ class TestGoodreads(unittest.TestCase, ui_class):
         self.fill_basic_config({'config_goodreads_api_key': GOODREADS_API_KEY,
                                 'config_goodreads_api_secret': GOODREADS_API_SECRET
                                 })
+        self.assertTrue(self.check_element_on_page((By.ID, 'flash_success')))
         self.get_book_details(7)
         self.check_element_on_page((By.ID, "edit_book")).click()
         self.edit_book(content={'bookAuthor': u'Andreas Eschbach'})

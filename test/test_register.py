@@ -11,7 +11,8 @@ from helper_ui import ui_class
 import time
 from helper_func import save_logfiles
 import requests
-
+from selenium.webdriver.support.ui import WebDriverWait
+from selenium.webdriver.support import expected_conditions as EC
 
 class TestRegister(unittest.TestCase, ui_class):
     p = None
@@ -30,6 +31,7 @@ class TestRegister(unittest.TestCase, ui_class):
         try:
             startup(cls, cls.py_version, {'config_calibre_dir':TEST_DB,
                                           'config_public_reg': 1})
+            WebDriverWait(cls.driver, 5).until(EC.presence_of_element_located((By.ID, "flash_success")))
             cls.edit_user('admin', {'email': 'a5@b.com','kindle_mail': 'a1@b.com'})
             cls.setup_server(False, {'mail_server':'127.0.0.1', 'mail_port':'1025',
                                 'mail_use_ssl':'None','mail_login':'name@host.com','mail_password':'10234',

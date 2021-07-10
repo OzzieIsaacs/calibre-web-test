@@ -58,6 +58,7 @@ class TestErrorReadColumn(unittest.TestCase, ui_class):
         self.check_element_on_page((By.XPATH, "//*[@id='have_read_cb']")).click()
         self.assertTrue(self.check_element_on_page((By.ID, "flash_danger")))
         self.fill_view_config({'config_read_column': ""})
+        self.assertTrue(self.check_element_on_page((By.ID, 'flash_success')))
 
     def test_invalid_custom_column(self):
         self.fill_view_config({'config_restricted_column': "Custom Text 人物 *'()&"})

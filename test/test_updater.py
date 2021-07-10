@@ -384,8 +384,8 @@ class TestUpdater(unittest.TestCase, ui_class):
         time.sleep(3)
         # Check all relevant files are kept, venv folder
         self.assertTrue(os.path.isdir(os.path.join(CALIBRE_WEB_PATH, "venv")))
-        self.assertTrue(os.path.isdir(os.path.join(CALIBRE_WEB_PATH, "calibre-web.log")))
-        self.assertTrue(os.path.isdir(os.path.join(CALIBRE_WEB_PATH, "app.db")))
+        self.assertTrue(os.path.isfile(os.path.join(CALIBRE_WEB_PATH, "calibre-web.log")))
+        self.assertTrue(os.path.isfile(os.path.join(CALIBRE_WEB_PATH, "app.db")))
         # ToDo: Additional folders, additional files
 
     # check cps files not writebale

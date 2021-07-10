@@ -13,7 +13,8 @@ from helper_ui import ui_class
 from config_test import CALIBRE_WEB_PATH, TEST_DB
 from helper_func import startup
 from helper_func import save_logfiles
-
+from selenium.webdriver.support.ui import WebDriverWait
+from selenium.webdriver.support import expected_conditions as EC
 
 @unittest.skipIf(helper_email_convert.is_kepubify_not_present(), "Skipping convert, kepubify not found")
 class TestEbookConvertKepubify(unittest.TestCase, ui_class):
@@ -30,7 +31,9 @@ class TestEbookConvertKepubify(unittest.TestCase, ui_class):
 
             cls.edit_user('admin', {'email': 'a5@b.com', 'kindle_mail': 'a1@b.com'})
             time.sleep(2)
-        except Exception:
+            WebDriverWait(cls.driver, 5).until(EC.presence_of_element_located((By.ID, "flash_success")))
+        except Exception as e:
+            print("Dead on Init")
             cls.driver.quit()
             cls.p.kill()
 
@@ -55,6 +58,7 @@ class TestEbookConvertKepubify(unittest.TestCase, ui_class):
     # deactivate converter and check convert are not visible anymore
     def test_convert_deactivate(self):
         self.fill_basic_config({'config_kepubifypath': ""})
+        self.assertTrue(self.check_element_on_page((By.ID, "flash_success")))
         self.goto_page('nav_about')
         element = self.check_element_on_page((By.XPATH, "//tr/th[text()='kepubify']/following::td[1]"))
         self.assertEqual(element.text, 'not installed')
@@ -70,6 +74,7 @@ class TestEbookConvertKepubify(unittest.TestCase, ui_class):
     # set excecutable non excecutable and start convert
     def test_convert_wrong_excecutable(self):
         self.fill_basic_config({'config_kepubifypath':'/opt/kepubify/ebook-polish'})
+        self.assertTrue(self.check_element_on_page((By.ID, "flash_success")))
         self.goto_page('nav_about')
         element = self.check_element_on_page((By.XPATH, "//tr/th[text()='kepubify']/following::td[1]"))
         self.assertEqual(element.text, 'not installed')
@@ -82,6 +87,7 @@ class TestEbookConvertKepubify(unittest.TestCase, ui_class):
 
         nonexec = os.path.join(CALIBRE_WEB_PATH, 'app.db')
         self.fill_basic_config({'config_kepubifypath': nonexec})
+        self.assertTrue(self.check_element_on_page((By.ID, "flash_success")))
         self.goto_page('nav_about')
         element = self.check_element_on_page((By.XPATH, "//tr/th[text()='kepubify']/following::td[1]"))
         self.assertEqual(element.text, 'Execution permissions missing')
@@ -150,9 +156,8 @@ class TestEbookConvertKepubify(unittest.TestCase, ui_class):
         select = Select(vals['btn_to'])
         select.select_by_visible_text('KEPUB')
         self.driver.find_element_by_id("btn-book-convert").click()
-        time.sleep(1)
+        time.sleep(6)
         self.assertTrue(self.check_element_on_page((By.ID, "flash_success")))
-        time.sleep(5)
         ret = self.check_tasks()
         # self.assertEqual(len(ret), len(ret2), "Reconvert of book started")
         self.assertEqual(ret[-1]['result'], 'Finished')

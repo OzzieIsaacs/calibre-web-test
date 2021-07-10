@@ -1,10 +1,13 @@
-import sys
 import ast
+import re
+from datetime import datetime
 
 from sqlalchemy import create_engine
 from sqlalchemy import Column
 from sqlalchemy import String, Integer, Boolean
 from sqlalchemy.orm import sessionmaker, scoped_session
+from sqlalchemy import TIMESTAMP
+
 try:
     # Compatibility with sqlalchemy 2.0
     from sqlalchemy.orm import declarative_base
@@ -28,9 +31,37 @@ class Custom_Columns(Base):
 
     def get_display_dict(self):
         display_dict = ast.literal_eval(self.display)
-        if sys.version_info < (3, 0):
-            display_dict['enum_values'] = [x.decode('unicode_escape') for x in display_dict['enum_values']]
         return display_dict
+
+class Books(Base):
+    __tablename__ = 'books'
+
+    DEFAULT_PUBDATE = datetime(101, 1, 1, 0, 0, 0, 0)  # ("0101-01-01 00:00:00+00:00")
+
+    id = Column(Integer, primary_key=True, autoincrement=True)
+    title = Column(String(collation='NOCASE'), nullable=False, default='Unknown')
+    sort = Column(String(collation='NOCASE'))
+    author_sort = Column(String(collation='NOCASE'))
+    timestamp = Column(TIMESTAMP, default=datetime.utcnow)
+    pubdate = Column(TIMESTAMP, default=DEFAULT_PUBDATE)
+    series_index = Column(String, nullable=False, default="1.0")
+    last_modified = Column(TIMESTAMP, default=datetime.utcnow)
+    path = Column(String, default="", nullable=False)
+    has_cover = Column(Integer, default=0)
+    uuid = Column(String)
+    isbn = Column(String(collation='NOCASE'), default="")
+    flags = Column(Integer, nullable=False, default=1)
+
+
+def update_title_sort(session):
+    # user defined sort function for calibre databases (Series, etc.)
+    def _title_sort(title):
+        # calibre sort stuff
+        return title.strip()
+
+    conn = session.connection().connection.connection
+    conn.create_function("title_sort", 1, _title_sort)
+
 
 def delete_cust_class(location, id):
     engine = create_engine('sqlite:///{0}'.format(location), echo=False)
@@ -40,6 +71,20 @@ def delete_cust_class(location, id):
 
     Base.metadata.create_all(engine)
     session.query(Custom_Columns).filter(Custom_Columns.id == id).delete()
+    session.commit()
+    session.close()
+    engine.dispose()
+
+def change_book_path(location, id):
+    engine = create_engine('sqlite:///{0}'.format(location), echo=False)
+    Session = scoped_session(sessionmaker())
+    Session.configure(bind=engine)
+    session = Session()
+
+    Base.metadata.create_all(engine)
+    update_title_sort(session)
+    book = session.query(Books).filter(Books.id == id).first()
+    book.path = "G/" + book.path
     session.commit()
     session.close()
     engine.dispose()
