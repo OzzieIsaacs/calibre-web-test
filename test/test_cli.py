@@ -395,7 +395,7 @@ class TestCli(unittest.TestCase, ui_class):
             # wait for cw to reboot
             time.sleep(2)
         except Exception:
-            self.assertFalse(True, "Inital config failed with on test nonwriteable database")
+            self.assertFalse(True, "Inital config failed with nonwriteable database")
         p1.terminate()
         time.sleep(BOOT_TIME)
         p1.poll()
@@ -429,10 +429,6 @@ class TestCli(unittest.TestCase, ui_class):
             # wait for cw to reboot
             time.sleep(2)
             self.logout()
-            # Wait for config screen with login button to show up
-            #login_button = self.check_element_on_page((By.NAME, "login"))
-            #self.assertTrue(login_button)
-            #login_button.click()
 
         except Exception as e:
             self.assertFalse(e)

@@ -249,7 +249,7 @@ class TestLogging(unittest.TestCase, ui_class):
         self.assertIsNone(zip.testzip())
         r.close()
 
-    def test_debuginfo_download(self):
+    def test_logbook_download(self):
         self.fill_basic_config({'config_logfile': '',
                                 'config_access_log': 1})
         time.sleep(BOOT_TIME)
@@ -261,7 +261,7 @@ class TestLogging(unittest.TestCase, ui_class):
         payload = {'username': 'admin', 'password': 'admin123', 'submit': "", 'next': "/admin", "remember_me": "on"}
         r.post('http://127.0.0.1:8083/login', data=payload)
         resp = r.get('http://127.0.0.1:8083/admin/logdownload/0')
-        self.assertTrue(resp.headers['Content-Type'].startswith('text/html'))
+        self.assertTrue(resp.headers['Content-Type'].startswith('application/octet-stream'))
         resp = r.get('http://127.0.0.1:8083/admin/logdownload/1')
-        self.assertTrue(resp.headers['Content-Type'].startswith('text/html'))
+        self.assertTrue(resp.headers['Content-Type'].startswith('application/octet-stream'))
         r.close()

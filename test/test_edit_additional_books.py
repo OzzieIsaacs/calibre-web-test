@@ -70,7 +70,7 @@ class TestEditAdditionalBooks(TestCase, ui_class):
         details = self.get_book_details()
         self.assertEqual('Test 执book', details['title'])
         self.assertEqual('Author Name', details['author'][0])
-        self.assertEqual('3.0', details['series_index'])
+        self.assertEqual('3', details['series_index'])
         self.assertEqual('No Series', details['series'])
         r = requests.session()
         payload = {'username': 'admin', 'password': 'admin123', 'submit': "", 'next': "/", "remember_me": "on"}
@@ -98,7 +98,7 @@ class TestEditAdditionalBooks(TestCase, ui_class):
         details = self.get_book_details()
         self.assertEqual('Test 执 to', details['title'])
         self.assertEqual('Author Nameless', details['author'][0])
-        self.assertEqual('2.0', details['series_index'])
+        self.assertEqual('2', details['series_index'])
         self.assertEqual('No S', details['series'])
         r = requests.session()
         payload = {'username': 'admin', 'password': 'admin123', 'submit': "", 'next': "/", "remember_me": "on"}
