@@ -69,6 +69,10 @@ class TestEditBooksList(TestCase, ui_class):
 
     def test_bookslist_edit_title(self):
         bl = self.get_books_list(1)
+        self.edit_table_element(bl['table'][3]['Title']['element'], "Die Buc\"t'itel")
+        bl = self.get_books_list(-1)
+        self.assertEqual("Die Buc\"t'itel", bl['table'][3]['Title']['text'])
+        self.assertEqual("Buc\"t'itel, Die", bl['table'][3]['Title Sort']['text'])
         self.edit_table_element(bl['table'][3]['Title']['element'], "Die Buctitel")
         bl = self.get_books_list(-1)
         self.assertEqual("Die Buctitel", bl['table'][3]['Title']['text'])

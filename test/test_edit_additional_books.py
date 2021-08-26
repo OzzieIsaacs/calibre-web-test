@@ -657,6 +657,14 @@ class TestEditAdditionalBooks(TestCase, ui_class):
         self.fill_view_config({'config_title_regex':
                                    '^(A|The|An|Der|Die|Das|Den|Ein|Eine|Einen|Dem|Des|Einem|Eines)\s+'})
 
+    def test_xss_comment_edit(self):
+        r = requests.session()
+        payload = {'username': 'admin', 'password': 'admin123', 'submit': "", 'next': "/", "remember_me": "on"}
+        r.post('http://127.0.0.1:8083/login', data=payload)
+        book_payload = {'description': '<p>calibre Quick Start Guide</p><img src=x onerror=alert("Huhu")>', 'author_name': 'Frodo Beutlin & Norbert Halagal & Liu Yang & Hector Gonçalves', 'book_title': 'Der Buchtitel', 'tags':'', 'series':'', 'series_index':'1', 'languages':'English', 'publisher':'', 'pubdate':'', 'rating': '', 'custom_column_1':'', 'custom_column_2':'', 'custom_column_3':'', 'custom_column_4':'', 'custom_column_5':'', 'custom_column_6':'','custom_column_7':'', 'custom_column_8':'', 'custom_column_9':'', 'custom_column_10':''}
+        result = r.post('http://127.0.0.1:8083/admin/book/1', data=book_payload)
+        self.assertEqual(200, result.status_code)
+        r.close()
 
 
 

@@ -207,6 +207,9 @@ class TestUserList(TestCase, ui_class):
     def test_user_list_edit_name(self):
         ul = self.get_user_table(1)
         self.assertEqual("no_one", ul['table'][1]['Username']['text'])
+        self.edit_table_element(ul['table'][1]['Username']['element'], "nu\"ko'one")
+        ul = self.get_user_table(-1)
+        self.assertEqual("nu\"ko'one", ul['table'][1]['Username']['text'])
         self.edit_table_element(ul['table'][1]['Username']['element'], "nu_one")
         ul = self.get_user_table(-1)
         self.assertEqual("nu_one", ul['table'][1]['Username']['text'])

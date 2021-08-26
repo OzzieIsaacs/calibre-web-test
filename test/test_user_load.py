@@ -2,14 +2,12 @@
 # -*- coding: utf-8 -*-
 
 
-from unittest import TestCase, skip
-import os
+from unittest import TestCase
 import time
 import requests
 import random
 import threading
 from selenium.webdriver.common.by import By
-from selenium.webdriver.common.keys import Keys
 from helper_ui import ui_class
 from config_test import TEST_DB, base_path
 from helper_func import startup, debug_startup, add_dependency, remove_dependency

@@ -584,6 +584,22 @@ class TestUserTemplate(unittest.TestCase, ui_class):
         close.click()
         time.sleep(2)
 
+        self.list_restrictions(RESTRICT_TAG_TEMPLATE)
+        self.add_restrictions("Th\"e'to", allow=True)
+        close = self.check_element_on_page((By.ID, "restrict_close"))
+        self.assertTrue(close)
+        close.click()
+        time.sleep(2)
+        restricts = self.list_restrictions(RESTRICT_TAG_TEMPLATE)
+        self.assertEqual(len(restricts), 2)
+        self.assertEqual(restricts[1]['restriction'], "Th\"e'to")
+        self.delete_restrictions('a1')
+        close = self.check_element_on_page((By.ID, "restrict_close"))
+        self.assertTrue(close)
+        close.click()
+        time.sleep(2)
+
+
         self.goto_page('create_user')
         self.create_user('allowtag', {'password': '1234', 'email': 'abb@b.com'})
         self.assertTrue(self.check_element_on_page((By.ID, "flash_success")))
