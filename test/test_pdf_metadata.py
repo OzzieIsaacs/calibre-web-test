@@ -20,11 +20,11 @@ from selenium.webdriver.support import expected_conditions as EC
 class TestUploadPDF(TestCase, ui_class):
     p = None
     driver = None
-    dependencys = ['lxml']
+    #dependencys = ['lxml']
 
     @classmethod
     def setUpClass(cls):
-        add_dependency(cls.dependencys, cls.__name__)
+        #add_dependency(cls.dependencys, cls.__name__)
 
         try:
             startup(cls, cls.py_version, {'config_calibre_dir': TEST_DB, 'config_uploading': 1})
@@ -40,7 +40,7 @@ class TestUploadPDF(TestCase, ui_class):
             os.remove(os.path.join(base_path, 'files', 'book1.pdf'))
         except FileNotFoundError:
             pass
-        remove_dependency(cls.dependencys)
+        #remove_dependency(cls.dependencys)
         cls.driver.get("http://127.0.0.1:8083")
         cls.stop_calibre_web()
         # close the browser window and stop calibre-web

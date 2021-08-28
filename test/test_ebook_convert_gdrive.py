@@ -26,7 +26,7 @@ from selenium.webdriver.support import expected_conditions as EC
 class TestEbookConvertCalibreGDrive(unittest.TestCase, ui_class):
     p=None
     driver = None
-    dependency = ["oauth2client", "PyDrive2", "PyYAML", "google-api-python-client", "httplib2", "lxml"]
+    dependency = ["oauth2client", "PyDrive2", "PyYAML", "google-api-python-client", "httplib2"]
     email_server = None
 
     @classmethod

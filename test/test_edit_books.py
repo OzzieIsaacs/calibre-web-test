@@ -11,6 +11,7 @@ from shutil import copyfile
 
 from selenium.webdriver.common.by import By
 from selenium.webdriver.common.keys import Keys
+from selenium.common.exceptions import UnexpectedAlertPresentException
 from helper_ui import ui_class
 from config_test import TEST_DB, base_path, BOOT_TIME
 from helper_func import startup, debug_startup, add_dependency, remove_dependency
@@ -20,12 +21,12 @@ from helper_func import save_logfiles
 class TestEditBooks(TestCase, ui_class):
     p = None
     driver = None
-    dependencys = ['lxml']
+    #dependencys = ['lxml']
     # py_version = u'/usr/bin/python3'
 
     @classmethod
     def setUpClass(cls):
-        add_dependency(cls.dependencys, cls.__name__)
+        #add_dependency(cls.dependencys, cls.__name__)
 
         try:
             startup(cls, cls.py_version, {'config_calibre_dir': TEST_DB})
@@ -36,7 +37,7 @@ class TestEditBooks(TestCase, ui_class):
 
     @classmethod
     def tearDownClass(cls):
-        remove_dependency(cls.dependencys)
+        #remove_dependency(cls.dependencys)
         cls.driver.get("http://127.0.0.1:8083")
         cls.stop_calibre_web()
         # close the browser window and stop calibre-web
@@ -279,6 +280,25 @@ class TestEditBooks(TestCase, ui_class):
         self.assertEqual(u'book6', ele.text)
         self.check_element_on_page((By.ID, "edit_book")).click()
         self.edit_book(content={'series': u''})
+
+        self.get_book_details(4)
+        self.check_element_on_page((By.ID, "edit_book")).click()
+        self.edit_book(content={'series':u'<p>calibre Quick Start Guide</p><img src=x onerror=alert("hiHo")>'})
+        try:
+            self.get_book_details(4)
+        except UnexpectedAlertPresentException:
+            self.assertFalse(True,"XSS in series")
+        self.goto_page('nav_serie')
+        list_element = self.get_series_books_displayed()
+        self.assertTrue(list_element[0]['title'].startswith('<p>calibre Quick Start Guide</p><img src=x onerror'))
+        list_element[0]['ele'].click()
+        try:
+            self.get_books_displayed()
+        except UnexpectedAlertPresentException:
+            self.assertFalse(True,"XSS in series")
+        self.edit_book(4, content={'series':u''})
+        values = self.get_book_details(4)
+        self.assertFalse('series' in values)
 
 
     def test_edit_category(self):

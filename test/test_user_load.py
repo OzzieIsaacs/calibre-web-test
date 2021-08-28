@@ -9,8 +9,8 @@ import random
 import threading
 from selenium.webdriver.common.by import By
 from helper_ui import ui_class
-from config_test import TEST_DB, base_path
-from helper_func import startup, debug_startup, add_dependency, remove_dependency
+from config_test import TEST_DB
+from helper_func import startup, debug_startup
 from helper_func import save_logfiles
 from selenium.webdriver.support.ui import WebDriverWait
 from selenium.webdriver.support import expected_conditions as EC

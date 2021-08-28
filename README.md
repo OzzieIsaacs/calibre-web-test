@@ -94,13 +94,13 @@ All comment out all content: `var(--...);` occurences after the `url(images/` de
 
 ## Bootstrap-Table
 
-### 1) Handling quotes
-Reported in https://github.com/janeczku/calibre-web/issues/2097 the original sources of bootstrap-table (editable) having a bug displaying double quotes (the issue originally was about single quotes)
-The problem is double quotes aren't escaped properly by bootstrap-table-editable, so the visible string is truncated at the double quote. To prevent this the double quote has to be replaced with "&quot;".
-This has to be done in bootstrap-table-editable.min.js (located in /cps/static/js/libs/bootstrap-table). Bold text has to be added. 
+### 1) Handling special html chars
+Reported in https://github.com/janeczku/calibre-web/issues/2097 the original sources of bootstrap-table (editable) having a bug displaying html special characters (',",\,<,>)
+The problem is the escaped charcters are displayed after editiing. To prevent this the order of some commands has to be replaced
+This has to be done in bootstrap-table-editable.min.js (located in /cps/static/js/libs/bootstrap-table). Bold text is the final order. 
 
-**if(typeof f==='string'){f=f.replace('\"',"&quot;");}**
-return d.hasOwnProperty("noEditFormatter")&&(s=d.noEditFormatter(e,a,c)),!1===s?'<a href="javascript:void(0)"\n            data-name="'.concat(r.field,'"\n            data-pk="').concat(a[t.options.idField],'"\n            data-value="').concat(f,'"\n            ').concat(i.join(""),"></a>"):s}}})))}}
+**l[r.field]=a,a=wn.escapeHTML(a)**,u.data("value",a),e.trigger("editable-save"
+
 
 ### 2) Success callback (don't show invalid edits)
 Reported by me here https://github.com/wenzhixin/bootstrap-table/issues/5715.
