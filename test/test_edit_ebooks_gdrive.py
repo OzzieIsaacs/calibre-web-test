@@ -236,8 +236,8 @@ class TestEditBooksOnGdrive(unittest.TestCase, ui_class):
         title = self.check_element_on_page((By.ID, "book_title"))
         self.assertEqual(u'Pipo|;.:', title.get_attribute('value'))
         self.edit_book(content={'book_title': u'Very long extra super turbo cool title without any issue of displaying including ö utf-8 characters'})
+        time.sleep(4)
         self.wait_page_has_loaded()
-        time.sleep(2)
         ele = self.check_element_on_page((By.ID, "title"))
         self.assertEqual(ele.text, u'Very long extra super turbo cool title without any issue of displaying including ö utf-8 characters')
         self.wait_page_has_loaded()
@@ -366,7 +366,7 @@ class TestEditBooksOnGdrive(unittest.TestCase, ui_class):
         self.assertFalse(gdrive_path)
 
         self.edit_book(content={'bookAuthor': 'Pipo| Pipe'}, detail_v=True)
-        time.sleep(2)
+        time.sleep(4)
         self.wait_page_has_loaded()
         self.check_element_on_page((By.ID, 'flash_success'))
         author = self.check_element_on_page((By.ID, "bookAuthor"))

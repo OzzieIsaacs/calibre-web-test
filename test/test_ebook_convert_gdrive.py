@@ -190,7 +190,7 @@ class TestEbookConvertCalibreGDrive(unittest.TestCase, ui_class):
                 if ret[-1]['result'] == 'Finished' or ret[-1]['result'] == 'Failed':
                     break
             i += 1
-        self.assertTrue("Email" in ret[-1]['task'])
+        self.assertTrue("E-mail" in ret[-1]['task'])
         self.assertTrue("Convert" in ret[-2]['task'])
         self.assertEqual(ret[-2]['result'], 'Finished')
         self.assertEqual(ret[-1]['result'], 'Finished')

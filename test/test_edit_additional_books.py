@@ -670,7 +670,8 @@ class TestEditAdditionalBooks(TestCase, ui_class):
             self.get_book_details(1)
         except UnexpectedAlertPresentException:
             self.assertFalse(True,"XSS in comments")
-        self.edit_book(1, content={'description': ''})
+        self.check_element_on_page((By.ID, "edit_book")).click()
+        self.edit_book(content={'description': ''})
         values = self.get_book_details()
         self.assertEqual('', values['comment'])
 
@@ -686,6 +687,7 @@ class TestEditAdditionalBooks(TestCase, ui_class):
             self.get_book_details(1)
         except UnexpectedAlertPresentException:
             self.assertFalse(True,"XSS in custom comments")
+        time.sleep(1)
         self.check_element_on_page((By.ID, "edit_book")).click()
         self.edit_book(custom_content={'Custom Comment 人物': ''})
         values = self.get_book_details()
