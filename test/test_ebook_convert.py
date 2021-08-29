@@ -11,6 +11,7 @@ from selenium.webdriver.common.by import By
 from selenium.webdriver.support.ui import Select
 from helper_ui import ui_class
 from config_test import CALIBRE_WEB_PATH, TEST_DB
+from selenium.common.exceptions import UnexpectedAlertPresentException
 # from parameterized import parameterized_class
 from helper_func import startup
 from helper_func import save_logfiles
@@ -498,3 +499,65 @@ class TestEbookConvertCalibre(unittest.TestCase, ui_class):
                     break
             i += 1
         self.assertEqual(ret[-1]['result'], 'Failed')
+
+    def test_convert_xss(self):
+        tasks = self.check_tasks()
+        self.edit_book(11, content={'book_title': u'<p>calibre Quick Start Guide</p><img src=x onerror=alert("hoho")>'})
+        vals = self.get_convert_book(11)
+
+        select = Select(vals['btn_from'])
+        select.select_by_visible_text('PDF')
+        select = Select(vals['btn_to'])
+        select.select_by_visible_text('LRF')
+        self.driver.find_element_by_id("btn-book-convert").click()
+        time.sleep(1)
+        self.assertTrue(self.check_element_on_page((By.ID, "flash_success")))
+        time.sleep(2)
+        i = 0
+        try:
+            while i < 10:
+                time.sleep(2)
+                task_len, ret = self.check_tasks(tasks)
+                if task_len == 1:
+                    if ret[-1]['result'] == 'Finished' or ret[-1]['result'] == 'Failed':
+                        break
+                i += 1
+        except UnexpectedAlertPresentException:
+            self.assertFalse(True, "XSS in ebook title after conversion in tasks view")
+        self.assertEqual(ret[-1]['result'], 'Finished')
+        self.assertEqual(ret[-1]['task'], 'Convert: PDF -> LRF: <p>calibre Quick Start Guide</p><img src=x onerror=alert("hoho")>')
+        self.edit_book(11, content={'book_title': u'book9'})
+
+    def test_user_convert_xss(self):
+        tasks = self.check_tasks()
+        self.create_user('<p>calibre Quick Start Guide</p><img src=x onerror=alert("jo")>', {'password': '123',
+                                                                                             'email': 'das@b.com',
+                                                                                             'edit_role':1})
+        self.logout()
+        self.login('<p>calibre Quick Start Guide</p><img src=x onerror=alert("jo")>', '123')
+        vals = self.get_convert_book(11)
+
+        select = Select(vals['btn_from'])
+        select.select_by_visible_text('PDF')
+        select = Select(vals['btn_to'])
+        select.select_by_visible_text('LIT')
+        self.driver.find_element_by_id("btn-book-convert").click()
+        time.sleep(1)
+        self.assertTrue(self.check_element_on_page((By.ID, "flash_success")))
+        self.logout()
+        self.login('admin', 'admin123')
+        time.sleep(2)
+        i = 0
+        try:
+            while i < 10:
+                time.sleep(2)
+                task_len, ret = self.check_tasks(tasks)
+                if task_len == 1:
+                    if ret[-1]['result'] == 'Finished' or ret[-1]['result'] == 'Failed':
+                        break
+                i += 1
+        except UnexpectedAlertPresentException:
+            self.assertFalse(True, "XSS in tasks view after malicious user converted book")
+        test_convert_email        self.assertEqual(ret[-1]['result'], 'Finished')
+        self.assertEqual(ret[-1]['user'], '<p>calibre Quick Start Guide</p><img src=x onerror=alert("jo")>')
+        self.edit_user('<p>calibre Quick Start Guide</p><img src=x onerror=alert("jo")>', {'delete': 1})

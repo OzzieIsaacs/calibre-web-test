@@ -117,6 +117,16 @@ gn: Chinese
 sn: Character
 userPassword: eekretsay
 
+dn: uid=Dot.to,ou=people, dc=calibreweb,dc=com
+objectClass: person
+objectClass: organizationalPerson
+objectClass: inetOrgPerson
+uid: Dot.to
+mail: dot@to.to
+gn: Spanish
+sn: Character
+userPassword: password
+
 #Generic groups
 dn: ou=groups,dc=calibreweb,dc=com
 objectclass:organizationalunit
@@ -128,6 +138,7 @@ objectclass: groupofnames
 cn: cps
 member: uid=Mümmy 7,ou=People,dc=calibreweb,dc=com
 member: uid=执一,ou=People,dc=calibreweb,dc=com
+member: uid=Dot.to,ou=People,dc=calibreweb,dc=com
 
 """.encode('utf-8')
 

@@ -26,7 +26,7 @@ from selenium.webdriver.support import expected_conditions as EC
 class TestEbookConvertCalibreGDrive(unittest.TestCase, ui_class):
     p=None
     driver = None
-    dependency = ["oauth2client", "PyDrive2", "PyYAML", "google-api-python-client", "httplib2", "lxml"]
+    dependency = ["oauth2client", "PyDrive2", "PyYAML", "google-api-python-client", "httplib2"]
     email_server = None
 
     @classmethod
@@ -190,7 +190,7 @@ class TestEbookConvertCalibreGDrive(unittest.TestCase, ui_class):
                 if ret[-1]['result'] == 'Finished' or ret[-1]['result'] == 'Failed':
                     break
             i += 1
-        self.assertTrue("Email" in ret[-1]['task'])
+        self.assertTrue("E-mail" in ret[-1]['task'])
         self.assertTrue("Convert" in ret[-2]['task'])
         self.assertEqual(ret[-2]['result'], 'Finished')
         self.assertEqual(ret[-1]['result'], 'Finished')

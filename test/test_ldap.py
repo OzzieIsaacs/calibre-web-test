@@ -405,8 +405,8 @@ class TestLdapLogin(unittest.TestCase, ui_class):
         time.sleep(2)
 
         userlist = self.get_user_list()
-        self.assertEqual(len(userlist), 3)
-        users = ['执一','Mümmy 7']
+        self.assertEqual(len(userlist), 4)
+        users = ['执一','Mümmy 7', "Dot.to"]
         self.assertTrue(all(elem in userlist for elem in users))
 
         # check access right of user match template access rights
@@ -454,6 +454,7 @@ class TestLdapLogin(unittest.TestCase, ui_class):
 
         self.edit_user('Mümmy 7', {'delete': 1})
         self.edit_user('执一', {'delete': 1})
+        self.edit_user('Dot.to', {'delete': 1})
         # stop/start ldap with poxixusergroup, no email, 2 email adresses
         # print('new setup config 3')
         self.server.relisten(config=3, port=3268, encrypt=None)

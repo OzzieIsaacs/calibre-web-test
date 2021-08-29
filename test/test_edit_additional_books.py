@@ -8,6 +8,7 @@ import time
 import requests
 
 from selenium.webdriver.common.by import By
+from selenium.common.exceptions import UnexpectedAlertPresentException
 from helper_ui import ui_class
 from config_test import TEST_DB, base_path, BOOT_TIME
 # from .parameterized import parameterized_class
@@ -19,7 +20,7 @@ from helper_func import save_logfiles
 class TestEditAdditionalBooks(TestCase, ui_class):
     p = None
     driver = None
-    dependencys = ['lxml', 'comicapi', 'rarfile']
+    dependencys = ['comicapi', 'rarfile']
 
     @classmethod
     def setUpClass(cls):
@@ -70,7 +71,7 @@ class TestEditAdditionalBooks(TestCase, ui_class):
         details = self.get_book_details()
         self.assertEqual('Test 执book', details['title'])
         self.assertEqual('Author Name', details['author'][0])
-        self.assertEqual('3.0', details['series_index'])
+        self.assertEqual('3', details['series_index'])
         self.assertEqual('No Series', details['series'])
         r = requests.session()
         payload = {'username': 'admin', 'password': 'admin123', 'submit': "", 'next': "/", "remember_me": "on"}
@@ -98,7 +99,7 @@ class TestEditAdditionalBooks(TestCase, ui_class):
         details = self.get_book_details()
         self.assertEqual('Test 执 to', details['title'])
         self.assertEqual('Author Nameless', details['author'][0])
-        self.assertEqual('2.0', details['series_index'])
+        self.assertEqual('2', details['series_index'])
         self.assertEqual('No S', details['series'])
         r = requests.session()
         payload = {'username': 'admin', 'password': 'admin123', 'submit': "", 'next': "/", "remember_me": "on"}
@@ -657,6 +658,39 @@ class TestEditAdditionalBooks(TestCase, ui_class):
         self.fill_view_config({'config_title_regex':
                                    '^(A|The|An|Der|Die|Das|Den|Ein|Eine|Einen|Dem|Des|Einem|Eines)\s+'})
 
+    def test_xss_comment_edit(self):
+        r = requests.session()
+        payload = {'username': 'admin', 'password': 'admin123', 'submit': "", 'next': "/", "remember_me": "on"}
+        r.post('http://127.0.0.1:8083/login', data=payload)
+        book_payload = {'description': '<p>calibre Quick Start Guide</p><img src=x onerror=alert("Huhu")>', 'author_name': 'Frodo Beutlin & Norbert Halagal & Liu Yang & Hector Gonçalves', 'book_title': 'Der Buchtitel', 'tags':'', 'series':'', 'series_index':'1', 'languages':'English', 'publisher':'', 'pubdate':'', 'rating': '', 'custom_column_1':'', 'custom_column_2':'', 'custom_column_3':'', 'custom_column_4':'', 'custom_column_5':'', 'custom_column_6':'','custom_column_7':'', 'custom_column_8':'', 'custom_column_9':'', 'custom_column_10':''}
+        result = r.post('http://127.0.0.1:8083/admin/book/1', data=book_payload)
+        self.assertEqual(200, result.status_code)
+        r.close()
+        try:
+            self.get_book_details(1)
+        except UnexpectedAlertPresentException:
+            self.assertFalse(True,"XSS in comments")
+        self.check_element_on_page((By.ID, "edit_book")).click()
+        self.edit_book(content={'description': ''})
+        values = self.get_book_details()
+        self.assertEqual('', values['comment'])
 
+    def test_xss_custom_comment_edit(self):
+        r = requests.session()
+        payload = {'username': 'admin', 'password': 'admin123', 'submit': "", 'next': "/", "remember_me": "on"}
+        r.post('http://127.0.0.1:8083/login', data=payload)
+        book_payload = {'description': '', 'author_name': 'Frodo Beutlin & Norbert Halagal & Liu Yang & Hector Gonçalves', 'book_title': '<p>calibre Quick Start Guide</p><img src=x onerror=alert("hoho")>', 'tags':'<p>calibre Quick Start Guide</p><img src=x onerror=alert("ddd")>', 'series':'<p>calibre Quick Start Guide</p><img src=x onerror=alert("hh")>', 'series_index':'1', 'languages':'English', 'publisher':'', 'pubdate':'', 'rating': '', 'custom_column_1':'', 'custom_column_2':'', 'custom_column_3':'', 'custom_column_4':'', 'custom_column_5':'<p>calibre Quick Start Guide</p><img src=x onerror=alert("Huhu")>', 'custom_column_6':'','custom_column_7':'', 'custom_column_8':'', 'custom_column_9':'', 'custom_column_10':''}
+        result = r.post('http://127.0.0.1:8083/admin/book/1', data=book_payload)
+        self.assertEqual(200, result.status_code)
+        r.close()
+        try:
+            self.get_book_details(1)
+        except UnexpectedAlertPresentException:
+            self.assertFalse(True,"XSS in custom comments")
+        time.sleep(1)
+        self.check_element_on_page((By.ID, "edit_book")).click()
+        self.edit_book(custom_content={'Custom Comment 人物': ''})
+        values = self.get_book_details()
+        self.assertEqual(0, len(values['cust_columns']))
 
 

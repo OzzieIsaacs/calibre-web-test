@@ -38,6 +38,7 @@ class TestCalibreHelper(unittest.TestCase):
 
     def test_check_chinese_Characters(self):
         self.assertEqual(helper.get_valid_filename(u'执一'), u'Zhi Yi')
+        self.assertEqual(helper.get_valid_filename(u'执一',unicode_filename=True), u'执一')
 
     def test_whitespaces(self):
         self.assertEqual(helper.get_valid_filename(u' Alfaman '), u'Alfaman')

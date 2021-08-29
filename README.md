@@ -70,8 +70,8 @@ Execute the build script make_release.py in the build folder, there will be a di
 Furthermore there will be a new folder executable containing the executable files for the current platform. On Windows you need to have the precompilied binaries for python Levenshtein and python-ldap on your harddrive and point to them in the config file
 On Windows you can start the installer packaging afterwards  using innosetup, by using the installer_script_windows.iss script file
 
-
-# Making new versions of pdf Reader work
+# Update JS libs
+## Making new versions of pdf Reader work
 
 - Reported in https://github.com/janeczku/calibre-web/issues/2004 the original sources of pdf reader don't work well in Safari (iOS and Mac), all buttons disapearing. Safari seems not to handle double declaration of the images in "cps/static/css/libs/viewer.css" , like
  ``` 
@@ -91,6 +91,22 @@ On Windows you can start the installer packaging afterwards  using innosetup, by
 All comment out all content: `var(--...);` occurences after the `url(images/` definitions.
 
 - In our viewer some buttons disappear (download button) depending on the settings. This has also to be handled in pdf.js file by putting a "if button is present do, else not" query arount it. The exact positon differs form version to version.
+
+## Bootstrap-Table
+
+### 1) Handling special html chars
+Reported in https://github.com/janeczku/calibre-web/issues/2097 the original sources of bootstrap-table (editable) having a bug displaying html special characters (',",\,<,>)
+The problem is the escaped charcters are displayed after editiing. To prevent this the order of some commands has to be replaced
+This has to be done in bootstrap-table-editable.min.js (located in /cps/static/js/libs/bootstrap-table). Bold text is the final order. 
+
+**l[r.field]=a,a=wn.escapeHTML(a)**,u.data("value",a),e.trigger("editable-save"
+
+
+### 2) Success callback (don't show invalid edits)
+Reported by me here https://github.com/wenzhixin/bootstrap-table/issues/5715.
+The fix has to be applied in bootstrap-table-editable.min.js (located in /cps/static/js/libs/bootstrap-table). Bold text has to be changed. 
+
+i.off("save").on("save",(function(t,o){var i=t.currentTarget,a=o.**newValue**,u=n.default(i)
 
 # Debug outputs and more
 The following enviromentvariables can be set to control debugging output

@@ -1493,18 +1493,25 @@ class ui_class():
             html = cls.driver.page_source
 
             tree = lxml.etree.parse(StringIO(html), parser)
-            vals = tree.xpath("//table[@id='table']/tbody/tr")
+            vals = tree.xpath("//table[@id='tasktable']/tbody/tr")
             val = list()
             for va in vals:
                 try:
                     go = va.getchildren()
                     if len(go) == 6:
-                        val.append({'user':go[0].text,'task':go[1].text,'result':go[2].text,
-                                    'progress':go[3].text,'duration':go[4].text,'start':go[5].text})
+                        val.append({'user':' '.join(go[0].itertext()),
+                                    'task': ''.join(go[1].itertext()),
+                                    'result': ''.join(go[2].itertext()),
+                                    'progress': ''.join(go[3].itertext()),
+                                    'duration': ''.join(go[4].itertext()),
+                                    'start':''.join(go[5].itertext())})
                     else:
-                        val.append({'user':None,'task':go[0].text,'result':go[1].text,
-                                    'progress':go[2].text,'duration':go[3].text,'start':go[4].text})
-
+                        val.append({'user': None,
+                                    'task': ''.join(go[0].itertext()),
+                                    'result': ''.join(go[1].itertext()),
+                                    'progress': ''.join(go[2].itertext()),
+                                    'duration': ''.join(go[3].itertext()),
+                                    'start': ''.join(go[4].itertext())})
                 except IndexError:
                     pass
             if isinstance(ref, list):

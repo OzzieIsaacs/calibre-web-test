@@ -267,8 +267,8 @@ class TestKoboSync(unittest.TestCase, ui_class):
         # append synctoken to headers and start over again
         data = self.sync_kobo()
         self.assertEqual(1, len(data))
-        self.assertEqual('Unknown', data[0]['NewEntitlement']['BookMetadata']['Contributors'])
-        self.assertEqual('book', data[0]['NewEntitlement']['BookMetadata']['Title'])
+        self.assertEqual('Noname 23', data[0]['NewEntitlement']['BookMetadata']['Contributors'])
+        self.assertEqual('book9', data[0]['NewEntitlement']['BookMetadata']['Title'])
         # self.assertEqual(None , data[0]['NewEntitlement']['BookMetadata']['Publisher']['Name'])
         self.delete_book(15)
 

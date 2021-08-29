@@ -164,8 +164,8 @@ class TestShelf(unittest.TestCase, ui_class):
         # create 2nd shelf
         self.create_shelf('Lolo', False)
         # goto 2nd shelf and try to rename to name of shelf one
-        self.list_shelfs('Lolo')['ele'].click()
-        # shelfs[0].click()
+        shelf_lolo = self.list_shelfs('Lolo')
+        shelf_lolo['ele'].click()
         edit=self.check_element_on_page((By.ID, "edit_shelf"))
         self.assertTrue(edit)
         edit.click()
@@ -181,11 +181,19 @@ class TestShelf(unittest.TestCase, ui_class):
         # logout and try to create another shelf with same name, even if user can't see shelfs name
         self.login('shelf','123')
         self.create_shelf('Lolu', True)
-        # can't rename shelf to same name of other shelf, even if invisible
+        self.assertTrue(self.check_element_on_page((By.ID, "flash_success")))
+        self.create_shelf('Lolo', False)
         self.assertTrue(self.check_element_on_page((By.ID, "flash_success")))
         self.logout()
+        r = requests.session()
+        payload = {'username': 'shelf', 'password': '123', 'submit':"", 'next':"/", "remember_me":"on"}
+        r.post('http://127.0.0.1:8083/login', data=payload)
+        resp = r.post('http://127.0.0.1:8083/shelf/edit/'+ shelf_lolo['id'], data={"title": "tuto"})
+        self.assertTrue("flash_danger" in resp.text)
         self.login('admin','admin123')
-        self.list_shelfs('Lolo')['ele'].click()
+        shelf_lolo = self.list_shelfs('Lolo')
+        self.assertTrue(shelf_lolo)
+        shelf_lolo['ele'].click()
         edit=self.check_element_on_page((By.ID, "edit_shelf"))
         self.assertTrue(edit)
         edit.click()

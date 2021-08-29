@@ -340,7 +340,7 @@ class TestLogin(unittest.TestCase, ui_class):
         resp = r.get("http://127.0.0.1:8083/")
         self.assertEqual(resp.status_code, 200)
         self.assertTrue("Calibre-Web | Login" in resp.text)
-        r.headers['X-LOGIN'] = ""
+        r.headers['X-LOGIN'] = "X-Logo"
         resp = r.get("http://127.0.0.1:8083/")
         self.assertEqual(resp.status_code, 200)
         self.assertTrue("Calibre-Web | Login" in resp.text)
@@ -450,7 +450,7 @@ class TestLogin(unittest.TestCase, ui_class):
         r.close()
         r = requests.session()
         site = r.get('http://127.0.0.1:8083')
-        self.assertTrue(re.search("Calibre-Web | login", site.content.decode('utf-8')))
+        self.assertTrue(re.search("Calibre-Web | Login", site.content.decode('utf-8')))
         r.close()
 
     # try to access robots.txt file
@@ -520,3 +520,17 @@ class TestLogin(unittest.TestCase, ui_class):
         # Remote token not fond so redirect after login puts us to 403 page
         self.assertEqual(resp.status_code, 403)
         r.close()
+
+    def test_login_cookie_steal(self):
+        r = requests.session()
+        payload = {'username': 'admin', 'password': 'admin123', 'submit':"", 'next':"/", "remember_me":"on"}
+        resp = r.post('http://127.0.0.1:8083/login', data=payload)
+        self.assertEqual(resp.status_code, 200)
+        cookies = r.cookies.get_dict()
+        r.get('http://127.0.0.1:8083/logout')
+        r.close()
+        cookie_stealer = requests.session()
+        resp = cookie_stealer.get('http://127.0.0.1:8083', cookies=cookies)
+        self.assertEqual(resp.status_code, 200)
+        self.assertNotIn("logout", resp.text)
+        cookie_stealer.close()
