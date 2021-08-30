@@ -662,12 +662,12 @@ class TestEditAdditionalBooks(TestCase, ui_class):
         r = requests.session()
         payload = {'username': 'admin', 'password': 'admin123', 'submit': "", 'next': "/", "remember_me": "on"}
         r.post('http://127.0.0.1:8083/login', data=payload)
-        book_payload = {'description': '<p>calibre Quick Start Guide</p><img src=x onerror=alert("Huhu")>', 'author_name': 'Frodo Beutlin & Norbert Halagal & Liu Yang & Hector Gonçalves', 'book_title': 'Der Buchtitel', 'tags':'', 'series':'', 'series_index':'1', 'languages':'English', 'publisher':'', 'pubdate':'', 'rating': '', 'custom_column_1':'', 'custom_column_2':'', 'custom_column_3':'', 'custom_column_4':'', 'custom_column_5':'', 'custom_column_6':'','custom_column_7':'', 'custom_column_8':'', 'custom_column_9':'', 'custom_column_10':''}
-        result = r.post('http://127.0.0.1:8083/admin/book/1', data=book_payload)
+        book_payload = {'description': '<p>calibre Quick Start Guide</p><img src=x onerror=alert("Huhu")>', 'author_name': 'Asterix Lionherd', 'book_title': 'Comicdemo', 'tags':'', 'series':'Djüngel', 'series_index':'1', 'languages':'', 'publisher':'', 'pubdate':'', 'rating': '', 'custom_column_1':'', 'custom_column_2':'', 'custom_column_3':'', 'custom_column_4':'', 'custom_column_5':'', 'custom_column_6':'','custom_column_7':'', 'custom_column_8':'', 'custom_column_9':'', 'custom_column_10':''}
+        result = r.post('http://127.0.0.1:8083/admin/book/3', data=book_payload)
         self.assertEqual(200, result.status_code)
         r.close()
         try:
-            self.get_book_details(1)
+            self.get_book_details(3)
         except UnexpectedAlertPresentException:
             self.assertFalse(True,"XSS in comments")
         self.check_element_on_page((By.ID, "edit_book")).click()
@@ -679,17 +679,17 @@ class TestEditAdditionalBooks(TestCase, ui_class):
         r = requests.session()
         payload = {'username': 'admin', 'password': 'admin123', 'submit': "", 'next': "/", "remember_me": "on"}
         r.post('http://127.0.0.1:8083/login', data=payload)
-        book_payload = {'description': '', 'author_name': 'Frodo Beutlin & Norbert Halagal & Liu Yang & Hector Gonçalves', 'book_title': '<p>calibre Quick Start Guide</p><img src=x onerror=alert("hoho")>', 'tags':'<p>calibre Quick Start Guide</p><img src=x onerror=alert("ddd")>', 'series':'<p>calibre Quick Start Guide</p><img src=x onerror=alert("hh")>', 'series_index':'1', 'languages':'English', 'publisher':'', 'pubdate':'', 'rating': '', 'custom_column_1':'', 'custom_column_2':'', 'custom_column_3':'', 'custom_column_4':'', 'custom_column_5':'<p>calibre Quick Start Guide</p><img src=x onerror=alert("Huhu")>', 'custom_column_6':'','custom_column_7':'', 'custom_column_8':'', 'custom_column_9':'', 'custom_column_10':''}
-        result = r.post('http://127.0.0.1:8083/admin/book/1', data=book_payload)
+        book_payload = {'description': '', 'author_name': 'Asterix Lionherd', 'book_title': '<p>calibre Quick Start Guide</p><img src=x onerror=alert("hoho")>', 'tags':'<p>calibre Quick Start Guide</p><img src=x onerror=alert("ddd")>', 'series':'<p>calibre Quick Start Guide</p><img src=x onerror=alert("hh")>', 'series_index':'1', 'languages':'', 'publisher':'', 'pubdate':'', 'rating': '', 'custom_column_1':'', 'custom_column_2':'', 'custom_column_3':'', 'custom_column_4':'', 'custom_column_5':'<p>calibre Quick Start Guide</p><img src=x onerror=alert("Huhu")>', 'custom_column_6':'','custom_column_7':'', 'custom_column_8':'', 'custom_column_9':'', 'custom_column_10':''}
+        result = r.post('http://127.0.0.1:8083/admin/book/3', data=book_payload)
         self.assertEqual(200, result.status_code)
         r.close()
         try:
-            self.get_book_details(1)
+            self.get_book_details(3)
         except UnexpectedAlertPresentException:
             self.assertFalse(True,"XSS in custom comments")
         time.sleep(1)
         self.check_element_on_page((By.ID, "edit_book")).click()
-        self.edit_book(custom_content={'Custom Comment 人物': ''})
+        self.edit_book(content={"book_title":"Comicdemo","tags":"", "series":"Djüngel",  }, custom_content={'Custom Comment 人物': ''})
         values = self.get_book_details()
         self.assertEqual(0, len(values['cust_columns']))
 
