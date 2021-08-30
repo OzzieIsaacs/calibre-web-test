@@ -558,6 +558,6 @@ class TestEbookConvertCalibre(unittest.TestCase, ui_class):
                 i += 1
         except UnexpectedAlertPresentException:
             self.assertFalse(True, "XSS in tasks view after malicious user converted book")
-        test_convert_email        self.assertEqual(ret[-1]['result'], 'Finished')
+        self.assertEqual(ret[-1]['result'], 'Finished')
         self.assertEqual(ret[-1]['user'], '<p>calibre Quick Start Guide</p><img src=x onerror=alert("jo")>')
         self.edit_user('<p>calibre Quick Start Guide</p><img src=x onerror=alert("jo")>', {'delete': 1})
