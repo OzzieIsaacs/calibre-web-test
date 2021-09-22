@@ -6793,14 +6793,14 @@ msgstr ""
 msgid "Greek Sign Language"
 msgstr "Ελληνική νοηματική γλώσσα"
 
-msgid "Greek, Ancient (to 1453)"
-msgstr ""
+msgid "Greek; Ancient (to 1453)"
+msgstr "Ελληνικά; Αρχαία (to 1453)"
 
 msgid "Greek, Cappadocian"
 msgstr ""
 
-msgid "Greek, Modern (1453-)"
-msgstr "Ελληνικά"
+msgid "Greek; Modern (1453-)"
+msgstr "Ελληνικά; Μοντέρνα (1453-)"
 
 msgid "Greek, Mycenaean"
 msgstr ""
