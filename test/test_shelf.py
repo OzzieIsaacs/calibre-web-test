@@ -3,6 +3,7 @@
 
 import unittest
 from selenium.webdriver.common.by import By
+from selenium.common.exceptions import UnexpectedAlertPresentException
 import time
 from helper_ui import ui_class
 from config_test import TEST_DB, BOOT_TIME
@@ -436,3 +437,23 @@ class TestShelf(unittest.TestCase, ui_class):
         self.assertEqual(len(self.adv_search({u'exclude_shelf': u'Search', 'book_title': 'book'})), 5)
         self.assertEqual(len(self.adv_search({u'include_shelf': u'Search', 'include_serie': 'Djüngel'})), 1)
         self.assertEqual(len(self.adv_search({u'include_shelf': u'Search', 'include_tag': 'Gênot'})), 2)
+
+    def test_xss_shelf(self):
+        self.create_shelf('<p>calibre Quick Start Guide</p><img src=x onerror=alert("ji")>', False)
+        self.assertTrue(self.check_element_on_page((By.ID, "flash_success")))
+        self.goto_page('nav_new')
+        self.get_book_details(3)
+        self.check_element_on_page((By.ID, "add-to-shelf")).click()
+        try:
+            self.check_element_on_page((By.XPATH, "//ul[@id='add-to-shelves']/li/a[contains(.,'calibre Quick Start')]")).click()
+        except UnexpectedAlertPresentException:
+            self.assertFalse(True,"XSS in custom comments")
+        try:
+            self.assertTrue(self.check_element_on_page((By.XPATH, "//*[@id='remove-from-shelves']//a")))
+            self.check_element_on_page(
+                (By.XPATH, "//div[@id='remove-from-shelves']/a[contains(.,'calibre Quick Start')]")).click()
+        except UnexpectedAlertPresentException:
+            self.assertFalse(True, "XSS in custom comments")
+
+
+

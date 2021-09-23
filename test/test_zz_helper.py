@@ -28,36 +28,46 @@ class TestCalibreHelper(unittest.TestCase):
         print("\n%s - %s: " % ("", cls.__name__))
 
     def test_check_high23(self):
+        helper.config.config_unicode_filename = False
         self.assertEqual(helper.get_valid_filename(u'²³'), u'23')
 
     def test_check_doubleS(self):
+        helper.config.config_unicode_filename = False
         self.assertEqual(helper.get_valid_filename(u'§ß'), u'SSss')
 
     def test_check_umlauts(self):
+        helper.config.config_unicode_filename = False
         self.assertEqual(helper.get_valid_filename(u'ÄÜÖäöü'), u'AUOaou')
 
     def test_check_chinese_Characters(self):
+        helper.config.config_unicode_filename = False
         self.assertEqual(helper.get_valid_filename(u'执一'), u'Zhi Yi')
-        self.assertEqual(helper.get_valid_filename(u'执一',unicode_filename=True), u'执一')
+        helper.config.config_unicode_filename = True
+        self.assertEqual(helper.get_valid_filename(u'执一'), u'执一')
 
     def test_whitespaces(self):
+        helper.config.config_unicode_filename = False
         self.assertEqual(helper.get_valid_filename(u' Alfaman '), u'Alfaman')
 
     def test_check_finish_Dot(self):
+        helper.config.config_unicode_filename = False
         self.assertEqual(helper.get_valid_filename(u'Nameless.'), u'Nameless_')
 
     def test_check_Limit_Length(self):
+        helper.config.config_unicode_filename = False
         self.assertEqual(helper.get_valid_filename(u'1234567890123456789012345678901234567890123456789012345678'
                 u'901234567890123456789012345678901234567890123456789012345678901234567890'), u'123456789012345678901'
                 u'23456789012345678901234567890123456789012345678901234567890123456789012345678901234567890123456789'
                 u'012345678')
 
     def test_check_char_replacement(self):
+        helper.config.config_unicode_filename = False
         self.assertEqual(helper.get_valid_filename(u'A*B+C:D"E/F<G>H?'), u'A_B_C_D_E_F_G_H_')
         self.assertEqual(helper.get_valid_filename(u'Alfaman| Name'), u'Alfaman, Name')
         self.assertEqual(helper.get_valid_filename(u'**++** Numi **++**'), u'_ Numi _')
 
     def test_check_deg_eur_replacement(self):
+        helper.config.config_unicode_filename = False
         self.assertEqual(helper.get_valid_filename(u'°€'), u'degEUR')
 
     def test_author_sort(self):
