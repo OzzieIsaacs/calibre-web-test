@@ -3,3 +3,4 @@
 venv/
 outcome/
 /config_email.py
+/geckodriver.exe

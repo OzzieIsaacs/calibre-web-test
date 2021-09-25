@@ -2,7 +2,7 @@
 ; SEE THE DOCUMENTATION FOR DETAILS ON CREATING INNO SETUP SCRIPT FILES!
 
 #define MyAppName "Calibre-Web"
-#define MyAppVersion "0.6.12 Beta"
+#define MyAppVersion "0.6.13"
 #define MyAppPublisher "Calibre-Web Team"
 #define MyAppURL "https://github.com/janeczku/calibre-web"
 #define MyAppExeName "calibreweb.exe"
