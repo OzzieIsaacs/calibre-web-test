@@ -51,6 +51,11 @@ class TestDeleteDatabase(TestCase, ui_class):
         self.delete_book(10)
         self.delete_book(11)
         self.delete_book(12)
+        # Check if users table is working
+        self.goto_page('admin_setup')
+        self.check_element_on_page((By.ID, "admin_user_table")).click()
+        self.assertEqual(1, len(self.get_user_table(-1)['table']))
+
         self.delete_book(13)
         books = self.get_books_displayed()
         self.assertEqual(0, len(books[0]))

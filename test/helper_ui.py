@@ -6,6 +6,7 @@ from selenium.webdriver.common.keys import Keys
 from selenium.webdriver.support.ui import WebDriverWait, Select
 from selenium.webdriver.support import expected_conditions as EC
 from selenium.common.exceptions import TimeoutException
+from selenium.common.exceptions import NoSuchElementException
 from config_test import PY_BIN, BOOT_TIME
 import requests
 import time
@@ -1836,9 +1837,12 @@ class ui_class():
                     header_edit[cnt]['text'] = head.find_element_by_xpath("./div").text.split("\n")[2]
                 header_edit[cnt]['element'] = head.find_elements_by_xpath(".//div[contains(@class,'form-check')]//input")
             elif head.get_attribute("data-field") in ["denied_tags", "allowed_tags"]:
-                header_edit[cnt]['element'] = head.find_element_by_xpath(
-                    ".//div[contains(@class,'multi_select')]")
-                header_edit[cnt]['text'] = head.find_elements_by_xpath("./div")[1].text
+                try:
+                    header_edit[cnt]['element'] = head.find_element_by_xpath(
+                        ".//div[contains(@class,'multi_select')]")
+                    header_edit[cnt]['text'] = head.find_elements_by_xpath("./div")[1].text
+                except NoSuchElementException:
+                    header_edit[cnt]['text'] = ""
             else:
                 if header_edit[cnt]['sort'].text == "":
                     header_edit[cnt]['text'] = "selector"
