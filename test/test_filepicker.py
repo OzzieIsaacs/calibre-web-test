@@ -69,10 +69,5 @@ class TestFilePicker(TestCase, ui_class):
         # put "." in field -> open filepicker, check back to original path, -> okay,value replaced
         # put invalid path to field, open fillepicker -> check back to original path, abort -> invalid path still present
 
-    @skip("Not implemented")
-    def test_filepicker_new_file(self):
-        pass
 
-    @skip("Not implemented")
-    def test_filepicker_all_file(self):  # ?
-        pass
+

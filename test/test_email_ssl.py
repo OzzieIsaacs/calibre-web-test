@@ -197,3 +197,76 @@ class TestSSL(unittest.TestCase, ui_class):
         self.logout()
         self.login("admin", "admin123")
         self.edit_user('ssl_email', {'delete': 1})
+
+    # Navigate to http://localhost:8083/admin/config
+    # Unfold "Server Configuration" section
+    # Click the filepicker next to the text input under "SSL certfile location (leave it empty for non-SSL Servers)"
+    # Navigate to an arbitrary location
+    # Confirm selection
+    # Click the filepicker next to the text input under "SSL Keyfile location (leave it empty for non-SSL Servers)
+    # Navigate to an arbitrary location
+    # Confirm selection
+
+    # Expected result:
+    # The value of the first text input is set to the result of step 5
+    # The value of the second text input is set to the result of step 8
+    def test_filepicker_two_file(self):
+        self.goto_page('basic_config')
+        accordions = self.driver.find_elements_by_class_name("accordion-toggle")
+        accordions[0].click()
+        filepicker = self.check_element_on_page((By.ID, "certfile_path"))
+        self.assertTrue(filepicker)
+        # open filepicker
+        filepicker.click()
+        time.sleep(2)
+        found = False
+        selections = self.driver.find_elements_by_xpath("//tr[@class='tr-clickable']/td[2]")
+        for i in selections:
+            if i.text == "files":
+                i.click()
+                found = True
+                break
+        self.assertTrue(found, "files folder not found")
+        found = False
+        time.sleep(2)
+        file_selections = self.driver.find_elements_by_xpath("//tr[@class='tr-clickable']/td[2]")
+        time.sleep(2)
+        for i in file_selections:
+            if i.text == "client.crt":
+                i.click()
+                found = True
+                break
+        self.assertTrue(found, "client.crt not found")
+        crt_element = self.check_element_on_page((By.ID, "element_selected")).text
+        self.check_element_on_page((By.ID, "file_confirm")).click()
+        time.sleep(2)
+
+        filepicker2 = self.check_element_on_page((By.ID, "keyfile_path"))
+        self.assertTrue(filepicker2)
+        found = False
+        # open filepicker
+        filepicker2.click()
+        time.sleep(2)
+        selections = self.driver.find_elements_by_xpath("//tr[@class='tr-clickable']/td[2]")
+        for i in selections:
+            if i.text == "files":
+                i.click()
+                time.sleep(1)
+                found = True
+                break
+        self.assertTrue(found, "files folder not found")
+        found = False
+        time.sleep(2)
+        file_selections = self.driver.find_elements_by_xpath("//tr[@class='tr-clickable']/td[2]")
+        for i in file_selections:
+            if i.text == "client.key":
+                i.click()
+                found = True
+                break
+        self.assertTrue(found, "client.key not found")
+        key_element = self.check_element_on_page((By.ID, "element_selected")).text
+        self.check_element_on_page((By.ID, "file_confirm")).click()
+        time.sleep(2)
+
+        self.assertEqual(self.check_element_on_page((By.ID, "config_certfile")).get_attribute('value'), crt_element)
+        self.assertEqual(self.check_element_on_page((By.ID, "config_keyfile")).get_attribute('value'), key_element)
