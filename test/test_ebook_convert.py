@@ -22,7 +22,6 @@ class TestEbookConvertCalibre(unittest.TestCase, ui_class):
     p = None
     driver = None
     email_server = None
-    #py_version = u'/usr/bin/python'
 
     @classmethod
     def setUpClass(cls):
@@ -99,7 +98,6 @@ class TestEbookConvertCalibre(unittest.TestCase, ui_class):
         # ToDo: Buttons should be invisible and convert should not be possible
         self.assertTrue(vals['btn_from'])
         self.assertTrue(vals['btn_to'])
-
 
         # ToDo: change behavior convert should only be visible if ebookconverter has valid entry
         self.fill_basic_config({'config_converterpath':'/opt/calibre/kuku'})
@@ -236,9 +234,6 @@ class TestEbookConvertCalibre(unittest.TestCase, ui_class):
         details = self.get_book_details(8)
         self.assertEqual(len(details['kindle']), 1)
         details['kindlebtn'].click()
-        # conv = self.check_element_on_page((By.LINK_TEXT, details['kindle'][1].text))
-        # self.assertTrue(conv)
-        # conv.click()
         i = 0
         while i < 10:
             time.sleep(2)
@@ -443,9 +438,6 @@ class TestEbookConvertCalibre(unittest.TestCase, ui_class):
         self.email_server.handler.set_return_value(552)
         # = '552 Requested mail action aborted: exceeded storage allocation'
         details['kindlebtn'].click()
-        # conv = self.check_element_on_page((By.LINK_TEXT, details['kindle'][1].text))
-        # self.assertTrue(conv)
-        # conv.click()
         self.assertTrue(self.check_element_on_page((By.ID, "flash_success")))
         i = 0
         while i < 10:
@@ -561,3 +553,44 @@ class TestEbookConvertCalibre(unittest.TestCase, ui_class):
         self.assertEqual(ret[-1]['result'], 'Finished')
         self.assertEqual(ret[-1]['user'], '<p>calibre Quick Start Guide</p><img src=x onerror=alert("jo")>')
         self.edit_user('<p>calibre Quick Start Guide</p><img src=x onerror=alert("jo")>', {'delete': 1})
+
+    def test_convert_options(self):
+        tasks = self.check_tasks()
+        vals = self.get_convert_book(3)
+        from_book = set([x.text.strip() for x in vals['from_book']])
+        to_book = set([x.text.strip() for x in vals['to_book']])
+        self.assertEqual(from_book, set(['-- select an option --', "CBR"]))
+        self.assertEqual(to_book, set([ '-- select an option --', "PDF", "EPUB", "MOBI", "AZW3", "DOCX", "RTF", "FB2", "LIT", "LRF", "TXT", "HTMLZ", "ODT"]))
+        select = Select(vals['btn_from'])
+        select.select_by_visible_text('CBR')
+        select = Select(vals['btn_to'])
+        select.select_by_visible_text('EPUB')
+        self.driver.find_element_by_id("btn-book-convert").click()
+        time.sleep(1)
+        self.assertTrue(self.check_element_on_page((By.ID, "flash_success")))
+        i = 0
+        while i < 10:
+            time.sleep(2)
+            task_len, ret = self.check_tasks(tasks)
+            if task_len == 1:
+                if ret[-1]['result'] == 'Finished' or ret[-1]['result'] == 'Failed':
+                    break
+            i += 1
+        self.assertEqual(ret[-1]['result'], 'Finished')
+        vals = self.get_convert_book(3)
+        from_book = set([x.text.strip() for x in vals['from_book']])
+        to_book = set([x.text.strip() for x in vals['to_book']])
+        self.assertEqual(from_book, set(['-- select an option --', "CBR", "EPUB"]))
+        self.assertEqual(to_book, set([ '-- select an option --', "PDF", "MOBI", "AZW3", "DOCX", "RTF", "FB2", "LIT", "LRF", "TXT", "HTMLZ", "ODT"]))
+
+        vals = self.get_convert_book(1)
+        from_book = set([x.text for x in vals['from_book']])
+        to_book = set([x.text for x in vals['to_book']])
+        self.assertEqual(from_book, set(['-- select an option --', "TXT"]))
+        self.assertEqual(to_book, set(['-- select an option --', "PDF", "EPUB", "MOBI", "AZW3", "DOCX", "RTF", "FB2", "LIT", "LRF", "HTMLZ", "ODT"]))
+        vals = self.get_convert_book(12)
+        from_book = set([x.text for x in vals['from_book']])
+        to_book = set([x.text for x in vals['to_book']])
+        self.assertEqual(from_book, set(['-- select an option --', "PDF"]))
+        self.assertEqual(to_book, set(['-- select an option --', "TXT", "EPUB", "MOBI", "AZW3", "DOCX", "RTF", "FB2", "LIT", "LRF", "TXT", "HTMLZ", "ODT"]))
+
