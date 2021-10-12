@@ -4,6 +4,7 @@
 
 from unittest import TestCase, skip
 import os
+import re
 import time
 import requests
 from diffimg import diff
@@ -828,7 +829,9 @@ class TestEditBooks(TestCase, ui_class):
         self.assertEqual('book', details['title'])
         self.assertEqual('Unknown', details['author'][0])
         r = requests.session()
-        payload = {'username': 'admin', 'password': 'admin123', 'submit':"", 'next':"/", "remember_me":"on"}
+        login_page = r.get('http://127.0.0.1:8083/login')
+        token = re.search('<input type="hidden" name="csrf_token" value="(.*)">', login_page.text)
+        payload = {'username': 'admin', 'password': 'admin123', 'submit':"", 'next':"/", "remember_me":"on", "csrf_token": token.group(1)}
         r.post('http://127.0.0.1:8083/login', data=payload)
         resp = r.get('http://127.0.0.1:8083' + details['cover'])
         self.assertLess('23300', resp.headers['Content-Length'])
@@ -852,7 +855,9 @@ class TestEditBooks(TestCase, ui_class):
         self.assertEqual('book55 - Lul执 de Marco', details['title'])
         self.assertEqual('Oli Köli', details['author'][0])
         r = requests.session()
-        payload = {'username': 'admin', 'password': 'admin123', 'submit':"", 'next':"/", "remember_me":"on"}
+        login_page = r.get('http://127.0.0.1:8083/login')
+        token = re.search('<input type="hidden" name="csrf_token" value="(.*)">', login_page.text)
+        payload = {'username': 'admin', 'password': 'admin123', 'submit':"", 'next':"/", "remember_me":"on", "csrf_token": token.group(1)}
         r.post('http://127.0.0.1:8083/login', data=payload)
         resp = r.get('http://127.0.0.1:8083' + details['cover'])
         self.assertEqual('19501', resp.headers['Content-Length'])
@@ -875,7 +880,9 @@ class TestEditBooks(TestCase, ui_class):
         self.assertEqual('book', details['title'])
         self.assertEqual('Unknown', details['author'][0])
         r = requests.session()
-        payload = {'username': 'admin', 'password': 'admin123', 'submit':"", 'next':"/", "remember_me":"on"}
+        login_page = r.get('http://127.0.0.1:8083/login')
+        token = re.search('<input type="hidden" name="csrf_token" value="(.*)">', login_page.text)
+        payload = {'username': 'admin', 'password': 'admin123', 'submit':"", 'next':"/", "remember_me":"on", "csrf_token": token.group(1)}
         r.post('http://127.0.0.1:8083/login', data=payload)
         resp = r.get('http://127.0.0.1:8083' + details['cover'])
         self.assertEqual('19501', resp.headers['Content-Length'])
@@ -897,7 +904,9 @@ class TestEditBooks(TestCase, ui_class):
         self.assertEqual('book', details['title'])
         self.assertEqual('Unknown', details['author'][0])
         r = requests.session()
-        payload = {'username': 'admin', 'password': 'admin123', 'submit':"", 'next':"/", "remember_me":"on"}
+        login_page = r.get('http://127.0.0.1:8083/login')
+        token = re.search('<input type="hidden" name="csrf_token" value="(.*)">', login_page.text)
+        payload = {'username': 'admin', 'password': 'admin123', 'submit':"", 'next':"/", "remember_me":"on", "csrf_token": token.group(1)}
         r.post('http://127.0.0.1:8083/login', data=payload)
         resp = r.get('http://127.0.0.1:8083' + details['cover'])
         self.assertEqual('19501', resp.headers['Content-Length'])
@@ -934,7 +943,9 @@ class TestEditBooks(TestCase, ui_class):
         os.unlink(new_file)
 
         r = requests.session()
-        payload = {'username': 'admin', 'password': 'admin123', 'submit':"", 'next':"/", "remember_me":"on"}
+        login_page = r.get('http://127.0.0.1:8083/login')
+        token = re.search('<input type="hidden" name="csrf_token" value="(.*)">', login_page.text)
+        payload = {'username': 'admin', 'password': 'admin123', 'submit':"", 'next':"/", "remember_me":"on", "csrf_token": token.group(1)}
         r.post('http://127.0.0.1:8083/login', data=payload)
         resp = r.get('http://127.0.0.1:8083' + details['cover'])
         self.assertEqual('8936', resp.headers['Content-Length'])
@@ -957,7 +968,9 @@ class TestEditBooks(TestCase, ui_class):
         self.assertEqual('book', details['title'])
         self.assertEqual('Unknown', details['author'][0])
         r = requests.session()
-        payload = {'username': 'admin', 'password': 'admin123', 'submit':"", 'next':"/", "remember_me":"on"}
+        login_page = r.get('http://127.0.0.1:8083/login')
+        token = re.search('<input type="hidden" name="csrf_token" value="(.*)">', login_page.text)
+        payload = {'username': 'admin', 'password': 'admin123', 'submit':"", 'next':"/", "remember_me":"on", "csrf_token": token.group(1)}
         r.post('http://127.0.0.1:8083/login', data=payload)
         resp = r.get('http://127.0.0.1:8083' + details['cover'])
         self.assertEqual('8936', resp.headers['Content-Length'])
@@ -980,7 +993,9 @@ class TestEditBooks(TestCase, ui_class):
         self.assertEqual('book', details['title'])
         self.assertEqual('Unknown', details['author'][0])
         r = requests.session()
-        payload = {'username': 'admin', 'password': 'admin123', 'submit':"", 'next':"/", "remember_me":"on"}
+        login_page = r.get('http://127.0.0.1:8083/login')
+        token = re.search('<input type="hidden" name="csrf_token" value="(.*)">', login_page.text)
+        payload = {'username': 'admin', 'password': 'admin123', 'submit':"", 'next':"/", "remember_me":"on", "csrf_token": token.group(1)}
         r.post('http://127.0.0.1:8083/login', data=payload)
         resp = r.get('http://127.0.0.1:8083' + details['cover'])
         self.assertEqual('8936', resp.headers['Content-Length'])
@@ -1002,7 +1017,9 @@ class TestEditBooks(TestCase, ui_class):
         self.assertEqual('book', details['title'])
         self.assertEqual('Unknown', details['author'][0])
         r = requests.session()
-        payload = {'username': 'admin', 'password': 'admin123', 'submit':"", 'next':"/", "remember_me":"on"}
+        login_page = r.get('http://127.0.0.1:8083/login')
+        token = re.search('<input type="hidden" name="csrf_token" value="(.*)">', login_page.text)
+        payload = {'username': 'admin', 'password': 'admin123', 'submit':"", 'next':"/", "remember_me":"on", "csrf_token": token.group(1)}
         r.post('http://127.0.0.1:8083/login', data=payload)
         resp = r.get('http://127.0.0.1:8083' + details['cover'])
         self.assertEqual('19501', resp.headers['Content-Length'])
@@ -1019,7 +1036,9 @@ class TestEditBooks(TestCase, ui_class):
         self.assertTrue(download_link.endswith('/5.epub'),
                         'Download Link has invalid format for kobo browser, has to end with filename')
         r = requests.session()
-        payload = {'username': 'admin', 'password': 'admin123', 'submit':"", 'next':"/", "remember_me":"on"}
+        login_page = r.get('http://127.0.0.1:8083/login')
+        token = re.search('<input type="hidden" name="csrf_token" value="(.*)">', login_page.text)
+        payload = {'username': 'admin', 'password': 'admin123', 'submit':"", 'next':"/", "remember_me":"on", "csrf_token": token.group(1)}
         r.post('http://127.0.0.1:8083/login', data=payload)
         resp = r.get(download_link)
         self.assertEqual(resp.headers['Content-Type'], 'application/epub+zip')

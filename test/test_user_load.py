@@ -4,6 +4,7 @@
 
 from unittest import TestCase
 import time
+import re
 import requests
 import random
 import threading
@@ -18,21 +19,27 @@ from selenium.webdriver.support import expected_conditions as EC
 
 def user_change(user):
     r = requests.session()
-    payload = {'username': user, 'password': "1234", 'submit': "", 'next': "/"}
+    login_page = r.get('http://127.0.0.1:8083/login')
+    token = re.search('<input type="hidden" name="csrf_token" value="(.*)">', login_page.text)
+    payload = {'username': user, 'password': "1234", 'submit': "", 'next': "/", "csrf_token": token.group(1)}
     r.post('http://127.0.0.1:8083/login', data=payload)
     # random.seed(123)
     for i in range(0, 200):
         time.sleep(random.random() * 0.05)
         parameter = int(random.uniform(2, 260))
+        me_page = r.get('http://127.0.0.1:8083/me')
+        token = re.search('<input type="hidden" name="csrf_token" value="(.*)">', me_page.text)
         userload = {'name': user,
                     'email': "",
                     'password': "",
                     'locale': "en",
                     'default_language': "all",
+                    "csrf_token": token.group(1)
                     }
         for bit_shift in range(1, 16):
             if (parameter >> bit_shift) & 1:
                 userload['show_'+ str(1 << bit_shift)] = "on"
+
         resp = r.post('http://127.0.0.1:8083/me', data=userload)
         if resp.status_code != 200:
             print('Error: ' + user)
@@ -79,9 +86,13 @@ class TestUserLoad(TestCase, ui_class):
     def test_user_change_vis(self):
         user_count = 30
         r = requests.session()
-        payload = {'username': 'admin', 'password': 'admin123', 'submit': "", 'next': "/"}
+        login_page = r.get('http://127.0.0.1:8083/login')
+        token = re.search('<input type="hidden" name="csrf_token" value="(.*)">', login_page.text)
+        payload = {'username': 'admin', 'password': 'admin123', 'submit': "", 'next': "/", "csrf_token": token.group(1)}
         r.post('http://127.0.0.1:8083/login', data=payload)
         for i in range(0, user_count):
+            new_user_page = r.get('http://127.0.0.1:8083/admin/user/new')
+            token = re.search('<input type="hidden" name="csrf_token" value="(.*)">', new_user_page.text)
             userload = {'name': 'user' + str(i),
                         'email': str(i) + 'alfa@email.com',
                         'password': "1234",
@@ -98,7 +109,8 @@ class TestUserLoad(TestCase, ui_class):
                         'show_4096': "on",
                         'show_2': "on",
                         'show_8192': "on",
-                        'edit_role': "on"
+                        'edit_role': "on",
+                        "csrf_token": token.group(1)
                         }
             resp = r.post('http://127.0.0.1:8083/admin/user/new', data=userload)
             self.assertEqual(resp.status_code, 200)

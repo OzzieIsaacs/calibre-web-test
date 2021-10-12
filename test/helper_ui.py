@@ -10,6 +10,7 @@ from selenium.common.exceptions import NoSuchElementException
 from config_test import PY_BIN, BOOT_TIME
 import requests
 import time
+import re
 import lxml.etree
 from PIL import Image
 try:
@@ -1480,7 +1481,9 @@ class ui_class():
         element = self.check_element_on_page((By.XPATH, "//*[starts-with(@id,'btnGroupDrop')]"))
         download_link = element.get_attribute("href")
         r = requests.session()
-        payload = {'username': user, 'password': password, 'submit':"", 'next':"/", "remember_me":"on"}
+        login_page = r.get('http://127.0.0.1:8083/login')
+        token = re.search('<input type="hidden" name="csrf_token" value="(.*)">', login_page.text)
+        payload = {'username': user, 'password': password, 'submit':"", 'next':"/", "remember_me":"on", "csrf_token": token.group(1)}
         r.post('http://127.0.0.1:8083/login', data=payload)
         resp = r.get(download_link)
         r.close()

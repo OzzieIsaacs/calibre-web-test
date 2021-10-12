@@ -1,5 +1,4 @@
 import ast
-import re
 from datetime import datetime
 
 from sqlalchemy import create_engine
@@ -7,6 +6,9 @@ from sqlalchemy import Column
 from sqlalchemy import String, Integer, Boolean
 from sqlalchemy.orm import sessionmaker, scoped_session
 from sqlalchemy import TIMESTAMP
+import random
+import string
+from uuid import uuid4
 
 try:
     # Compatibility with sqlalchemy 2.0
@@ -62,6 +64,9 @@ def update_title_sort(session):
     conn = session.connection().connection.connection
     conn.create_function("title_sort", 1, _title_sort)
 
+def _randStr(chars = string.ascii_uppercase + string.digits, N=10):
+    return ''.join(random.choice(chars) for _ in range(N))
+
 
 def delete_cust_class(location, id):
     engine = create_engine('sqlite:///{0}'.format(location), echo=False)
@@ -88,3 +93,33 @@ def change_book_path(location, id):
     session.commit()
     session.close()
     engine.dispose()
+
+def add_books(location, number):
+    engine = create_engine('sqlite:///{0}'.format(location), echo=False)
+    Session = scoped_session(sessionmaker())
+    Session.configure(bind=engine)
+    session = Session()
+
+    Base.metadata.create_all(engine)
+    update_title_sort(session)
+    session.connection().connection.connection.create_function('uuid4', 0, lambda: str(uuid4()))
+    for i in range(number):
+        book = Books()
+        book.title = _randStr()
+        book.sort = ""
+        book.author_sort = _randStr()
+        book.timestamp = datetime.utcnow()
+        book.pubdate = datetime.utcnow()
+        book.series_index = "1.0"
+        book.last_modified = datetime.utcnow()
+        book.path = ""
+        book.has_cover = 0
+        book.uuid = str(uuid4())
+        #book.isbn = ""
+        #book.flags = 1
+        session.add(book)
+    session.commit()
+    session.close()
+    engine.dispose()
+
+

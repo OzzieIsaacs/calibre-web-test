@@ -7,6 +7,7 @@ from config_test import TEST_DB
 from helper_func import startup, wait_Email_received
 # from parameterized import parameterized_class
 import unittest
+import re
 from helper_ui import ui_class
 import time
 from helper_func import save_logfiles
@@ -231,31 +232,33 @@ class TestRegister(unittest.TestCase, ui_class):
 
     def test_illegal_email(self):
         r = requests.session()
-        payload = {'name': 'user0 negativ', 'email': '1234'}
+        login_page = r.get('http://127.0.0.1:8083/login')
+        token = re.search('<input type="hidden" name="csrf_token" value="(.*)">', login_page.text)
+        payload = {'name': 'user0 negativ', 'email': '1234', "csrf_token": token.group(1)}
         resp = r.post('http://127.0.0.1:8083/register', data=payload)
         self.assertTrue("flash_danger" in resp.text)
-        payload = {'email': '1234@gr.de'}
+        payload = {'email': '1234@gr.de', "csrf_token": token.group(1)}
         resp = r.post('http://127.0.0.1:8083/register', data=payload)
         self.assertTrue("flash_danger" in resp.text)
-        payload = {'name': 'user0 negativ'}
+        payload = {'name': 'user0 negativ', "csrf_token": token.group(1)}
         resp = r.post('http://127.0.0.1:8083/register', data=payload)
         self.assertTrue("flash_danger" in resp.text)
-        payload = {'name': '/etc/./passwd', 'email': '/etc/./passwd'}
+        payload = {'name': '/etc/./passwd', 'email': '/etc/./passwd', "csrf_token": token.group(1)}
         resp = r.post('http://127.0.0.1:8083/register', data=payload)
         self.assertTrue("flash_danger" in resp.text)
-        payload = {"name": "abc123@mycom.com'\"[]()", 'email': "abc123@mycom.com'\"[]()"}
+        payload = {"name": "abc123@mycom.com'\"[]()", 'email': "abc123@mycom.com'\"[]()", "csrf_token": token.group(1)}
         resp = r.post('http://127.0.0.1:8083/register', data=payload)
         self.assertTrue("flash_danger" in resp.text)
-        payload = {"name": "abc123@mycom.com anD 1028=1028", 'email': "abc123@mycom.com anD 1028=1028"}
+        payload = {"name": "abc123@mycom.com anD 1028=1028", 'email': "abc123@mycom.com anD 1028=1028", "csrf_token": token.group(1)}
         resp = r.post('http://127.0.0.1:8083/register', data=payload)
         self.assertTrue("flash_danger" in resp.text)
-        payload = {"name": "abc123@myc@om.com", 'email': "abc123@myc@om.com"}
+        payload = {"name": "abc123@myc@om.com", 'email': "abc123@myc@om.com", "csrf_token": token.group(1)}
         resp = r.post('http://127.0.0.1:8083/register', data=payload)
         self.assertTrue("flash_danger" in resp.text)
-        payload = {"name": "1234456", 'email': "1@2.3"}
+        payload = {"name": "1234456", 'email': "1@2.3", "csrf_token": token.group(1)}
         resp = r.post('http://127.0.0.1:8083/register', data=payload)
         self.assertTrue("flash_success" in resp.text)
-        payload = {"name": "9dsfaf", 'email': "ü执1@ü执1.3"}
+        payload = {"name": "9dsfaf", 'email': "ü执1@ü执1.3", "csrf_token": token.group(1)}
         resp = r.post('http://127.0.0.1:8083/register', data=payload)
         self.assertTrue("flash_success" in resp.text)
 

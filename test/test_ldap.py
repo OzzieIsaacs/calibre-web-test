@@ -950,7 +950,9 @@ class TestLdapLogin(unittest.TestCase, ui_class):
         self.assertEqual(r.headers['Content-Type'], 'application/pdf')
         # create cookies by logging in to admin account and try to download book again
         req_session = requests.session()
-        payload = {'username': 'admin', 'password': 'admin123', 'submit': "", 'next': "/", "remember_me": "on"}
+        login_page = req_session.get('http://127.0.0.1:8083/login')
+        token = re.search('<input type="hidden" name="csrf_token" value="(.*)">', login_page.text)
+        payload = {'username': 'admin', 'password': 'admin123', 'submit': "", 'next': "/", "remember_me": "on", "csrf_token": token.group(1)}
         req_session.post('http://127.0.0.1:8083/login', data=payload)
         r = req_session.get('http://127.0.0.1:8083' + entries['elements'][0]['download'])
         # logged in via cookies from admin account -> admin is not allowed to download
@@ -972,7 +974,9 @@ class TestLdapLogin(unittest.TestCase, ui_class):
         self.assertEqual(403, r.status_code)
         # create cookies by logging in to admin account and try to download book again
         req_session = requests.session()
-        payload = {'username': 'admin', 'password': 'admin123', 'submit': "", 'next': "/", "remember_me": "on"}
+        login_page = req_session.get('http://127.0.0.1:8083/login')
+        token = re.search('<input type="hidden" name="csrf_token" value="(.*)">', login_page.text)
+        payload = {'username': 'admin', 'password': 'admin123', 'submit': "", 'next': "/", "remember_me": "on", "csrf_token": token.group(1)}
         req_session.post('http://127.0.0.1:8083/login', data=payload)
         # user is logged in via cookies, admin is not allowed to download
         r = req_session.get('http://127.0.0.1:8083' + entries['elements'][0]['download'])

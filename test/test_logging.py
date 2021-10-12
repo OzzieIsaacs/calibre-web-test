@@ -240,7 +240,9 @@ class TestLogging(unittest.TestCase, ui_class):
 
     def test_debuginfo_download(self):
         r = requests.session()
-        payload = {'username': 'admin', 'password': 'admin123', 'submit': "", 'next': "/admin", "remember_me": "on"}
+        login_page = r.get('http://127.0.0.1:8083/login')
+        token = re.search('<input type="hidden" name="csrf_token" value="(.*)">', login_page.text)
+        payload = {'username': 'admin', 'password': 'admin123', 'submit':"", 'next':"/", "remember_me":"on", "csrf_token": token.group(1)}
         r.post('http://127.0.0.1:8083/login', data=payload)
         resp = r.get('http://127.0.0.1:8083/admin/debug')
         self.assertGreater(len(resp.content), 2600)
@@ -258,7 +260,9 @@ class TestLogging(unittest.TestCase, ui_class):
         self.assertTrue(self.check_element_on_page((By.ID, "log_file_0")))
         self.assertTrue(self.check_element_on_page((By.ID, "log_file_1")))
         r = requests.session()
-        payload = {'username': 'admin', 'password': 'admin123', 'submit': "", 'next': "/admin", "remember_me": "on"}
+        login_page = r.get('http://127.0.0.1:8083/login')
+        token = re.search('<input type="hidden" name="csrf_token" value="(.*)">', login_page.text)
+        payload = {'username': 'admin', 'password': 'admin123', 'submit':"", 'next':"/", "remember_me":"on", "csrf_token": token.group(1)}
         r.post('http://127.0.0.1:8083/login', data=payload)
         resp = r.get('http://127.0.0.1:8083/admin/logdownload/0')
         self.assertTrue(resp.headers['Content-Type'].startswith('application/octet-stream'))

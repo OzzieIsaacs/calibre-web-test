@@ -236,32 +236,32 @@ def cover(type) -> str:
                 result = send_from_directory(cover_path, 'cover.jpg',
                                              as_attachment=True,
                                              mimetype='image/jpeg',
-                                             attachment_filename='äo.jpg')
+                                             download_name='äo.jpg')
             elif type == 'test.png':
                 result = send_from_directory(cover_path, 'cover.png',
                                              as_attachment=True,
                                              mimetype='image/png',
-                                             attachment_filename='o.pgk')
+                                             download_name='o.pgk')
             elif type == 'test.webp':
                 result = send_from_directory(cover_path, 'cover.webp',
                                              as_attachment=True,
                                              mimetype='image/webp',
-                                             attachment_filename='äo.webp')
+                                             download_name='äo.webp')
             elif type == 'test.bmp':
                 result = send_from_directory(cover_path, 'cover.bmp',
                                              as_attachment=True,
                                              mimetype='image/bmp',
-                                             attachment_filename='äo.bmp')
+                                             download_name='äo.bmp')
             elif type == 'test.jol':
                 result = send_from_directory(cover_path, 'cover.bmp',
                                              as_attachment=True,
                                              mimetype='image/jpeg',
-                                             attachment_filename='äo.bmp')
+                                             download_name='äo.bmp')
             elif type == 'test.brk':
                 result = send_from_directory(cover_path, 'book.cbz',
                                              as_attachment=True,
                                              mimetype='image/png',
-                                             attachment_filename='äo.cbz')
+                                             download_name='äo.cbz')
 
             result.headers['Accept-Ranges'] = 'bytes'
             return result
