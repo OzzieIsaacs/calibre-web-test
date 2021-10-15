@@ -69,6 +69,35 @@ class TestFilePicker(TestCase, ui_class):
         # put "." in field -> open filepicker, check back to original path, -> okay,value replaced
         # put invalid path to field, open fillepicker -> check back to original path, abort -> invalid path still present
 
+    def test_two_filepickers(self):
+        CALIBRE_WEB_PATH_PARENT = CALIBRE_WEB_PATH[:CALIBRE_WEB_PATH.rfind(os.sep)]
+
+        self.fill_db_config(dict(config_calibre_dir=TEST_DB))
+        self.goto_page('basic_config')
+        accordions = self.driver.find_elements(by=By.CLASS_NAME, value='accordion-toggle')
+        accordions[0].click()
+
+        input1 = self.check_element_on_page((By.ID, 'config_certfile'))
+        filepicker1 = self.check_element_on_page((By.ID, 'certfile_path'))
+        filepicker1.click()
+        time.sleep(1)
+        self.check_element_on_page((By.ID, 'file_confirm')).click()
+
+        # the dialog needs some time to animate away
+        time.sleep(1)
+
+        input2 = self.check_element_on_page((By.ID, 'config_keyfile'))
+        filepicker2 = self.check_element_on_page((By.ID, 'keyfile_path'))
+        filepicker2.click()
+        time.sleep(1)
+        path_entries = self.driver.find_elements(by=By.XPATH, value='//tr[@class=\'tr-clickable\']/td[2]')
+        path_entries[0].click()
+        self.check_element_on_page((By.ID, 'file_confirm')).click()
+
+        time.sleep(3)
+        self.assertEqual(input1.get_attribute('value'), CALIBRE_WEB_PATH)
+        self.assertEqual(input2.get_attribute('value'), CALIBRE_WEB_PATH_PARENT)
+
     @skip("Not implemented")
     def test_filepicker_new_file(self):
         pass
