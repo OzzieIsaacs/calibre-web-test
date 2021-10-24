@@ -1,9 +1,11 @@
 import ast
+import os
 from datetime import datetime
 
 from sqlalchemy import create_engine
 from sqlalchemy import Column
 from sqlalchemy import String, Integer, Boolean
+from sqlalchemy import ForeignKey
 from sqlalchemy.orm import sessionmaker, scoped_session
 from sqlalchemy import TIMESTAMP
 import random
@@ -54,6 +56,28 @@ class Books(Base):
     isbn = Column(String(collation='NOCASE'), default="")
     flags = Column(Integer, nullable=False, default=1)
 
+class Data(Base):
+    __tablename__ = 'data'
+
+    id = Column(Integer, primary_key=True)
+    book = Column(Integer, ForeignKey('books.id'), nullable=False)
+    format = Column(String(collation='NOCASE'), nullable=False)
+    uncompressed_size = Column(Integer, nullable=False)
+    name = Column(String, nullable=False)
+
+    def __init__(self, book, book_format, uncompressed_size, name):
+        self.book = book
+        self.format = book_format
+        self.uncompressed_size = uncompressed_size
+        self.name = name
+
+    # ToDo: Check
+    def get(self):
+        return self.name
+
+    def __repr__(self):
+        return u"<Data('{0},{1}{2}{3}')>".format(self.book, self.format, self.uncompressed_size, self.name)
+
 
 def update_title_sort(session):
     # user defined sort function for calibre databases (Series, etc.)
@@ -101,9 +125,10 @@ def add_books(location, number):
     session = Session()
 
     Base.metadata.create_all(engine)
-    update_title_sort(session)
-    session.connection().connection.connection.create_function('uuid4', 0, lambda: str(uuid4()))
+    database_root = location[:-len("metadata.db")]
     for i in range(number):
+        update_title_sort(session)
+        session.connection().connection.connection.create_function('uuid4', 0, lambda: str(uuid4()))
         book = Books()
         book.title = _randStr()
         book.sort = ""
@@ -118,7 +143,19 @@ def add_books(location, number):
         #book.isbn = ""
         #book.flags = 1
         session.add(book)
-    session.commit()
+        session.flush()
+        os.makedirs(os.path.join(database_root, book.author_sort))
+        book_folder = os.path.join(database_root, book.author_sort, book.title + " ({})".format(book.id))
+        os.makedirs(book_folder)
+        book_name = os.path.join(book_folder, "file.epub")
+        with open(book_name, 'wb') as fout:
+            fout.write(os.urandom(30))
+        new_format = Data(name="file.epub",
+                         book_format="epub".upper(),
+                         book=book.id, uncompressed_size=30)
+        session.merge(new_format)
+        session.commit()
+    # session.commit()
     session.close()
     engine.dispose()
 

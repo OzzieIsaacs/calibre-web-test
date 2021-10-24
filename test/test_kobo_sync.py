@@ -637,6 +637,7 @@ class TestKoboSync(unittest.TestCase, ui_class):
         self.delete_shelf('Unsyncd_shelf')
         self.delete_shelf('syncd_shelf_u1')
         self.edit_user('kobosync', {'delete': 1})
+
         # unarchive books
         self.get_book_details(10)
         self.check_element_on_page((By.XPATH, "//*[@id='archived_cb']")).click()

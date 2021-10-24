@@ -377,7 +377,7 @@ class TestEbookConvertCalibre(unittest.TestCase, ui_class):
         shelf_down = self.check_element_on_page((By.ID, "shelf_down"))
         self.assertTrue(shelf_down)
         shelf_down.click()
-        # check download butons for book1 and 7
+        # check download buttons for book1 and 7
         formats7 = self.driver.find_elements_by_xpath("//*[starts-with(@id,'btnGroupDrop7')]")
         self.assertTrue(len(formats7), 9)
         formats1 = self.driver.find_elements_by_xpath("//*[starts-with(@id,'btnGroupDrop1')]")
