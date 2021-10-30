@@ -74,4 +74,4 @@ class TestDeleteDatabase(TestCase, ui_class):
         self.assertEqual(0, len(list_element))
         bl = self.get_books_list(1)
         self.assertEqual(1, len(bl['table']))
-        self.assertEqual("", bl['table'][0]['selector']['text'])
+        self.assertEqual("No matching records found", bl['table'][0]['selector']['text'])

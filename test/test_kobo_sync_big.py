@@ -150,7 +150,7 @@ class TestKoboSyncBig(unittest.TestCase, ui_class):
         while True:
             r = changeSession.get(self.kobo_adress+'/v1/library/sync', params=params,
                                   headers=TestKoboSyncBig.syncToken,
-                                  timeout=10)
+                                  timeout=10000)
             self.assertEqual(r.status_code, 200)
             data.append(r.json())
             TestKoboSyncBig.data = data
@@ -275,8 +275,8 @@ class TestKoboSyncBig(unittest.TestCase, ui_class):
             self.check_element_on_page((By.XPATH, "//ul[@id='add-to-shelves']/li/a[contains(.,'syncd_shelf_u1')]")).click()
 
         data3 = self.sync_kobo()  # 1 book synced, reading state changed as book was modified due to adding to shelf(?)
-        self.assertIn("NewTag", data3[2])
-        self.assertIn("NewEntitlement", data3[0])
+        self.assertIn("NewTag", data3[0][-1])
+        self.assertIn("NewEntitlement", data3[0][0])
         self.create_user('kobosync', {'password': '123', 'email': 'da@b.com', "kobo_only_shelves_sync": 1})
         user_settings = self.get_user_settings('kobosync')
         self.assertTrue(user_settings["kobo_only_shelves_sync"])
@@ -290,7 +290,7 @@ class TestKoboSyncBig(unittest.TestCase, ui_class):
         self.check_element_on_page((By.XPATH, "//ul[@id='add-to-shelves']/li/a[contains(.,'syncd_shelf_u2')]")).click()
         self.logout()
         self.login("admin","admin123")
-        self.assertEqual(0, len(self.sync_kobo()))  # nothing synced
+        self.assertEqual(0, len(self.sync_kobo()[0]))  # nothing synced
 
         # Cleanup
         self.change_visibility_me({"kobo_only_shelves_sync": 0})
@@ -307,4 +307,9 @@ class TestKoboSyncBig(unittest.TestCase, ui_class):
         self.check_element_on_page((By.XPATH, "//*[@id='archived_cb']")).click()
         self.get_book_details(5)
         self.check_element_on_page((By.XPATH, "//*[@id='archived_cb']")).click()
+        for i in range(15, 134):
+            self.get_book_details(i)
+            self.check_element_on_page((By.XPATH, "//*[@id='archived_cb']")).click()
+
+        self.sync_kobo()
 
