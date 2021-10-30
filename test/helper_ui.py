@@ -1467,7 +1467,8 @@ class ui_class():
                             ret['cust_columns'].append(element)
                         elif ':' in col.text:
                             element['Text'] = col.text.lstrip().split(':')[0]
-                            element['value'] = col.text.split(':')[1].strip()
+                            element['value'] = re.sub(r"\n\s+","", col.text.split(':')[1].strip())
+                            # element['value'] = col.text.split(':')[1].strip()
                             ret['cust_columns'].append(element)
                         else:
                             pass
@@ -1811,6 +1812,20 @@ class ui_class():
             table_element.find_element_by_xpath("..//button[contains(@class,'btn-primary')]").click()
         else:
             table_element.find_element_by_xpath("..//button[contains(@class,'btn-default')]").click()
+
+    def edit_table_html(self, table_element, new_value, cancel=False):
+        table_element.click()
+        self.driver.switch_to.frame(self.driver.find_element_by_class_name("wysihtml5-sandbox"))
+        ele = self.check_element_on_page((By.CLASS_NAME, 'wysihtml5-editor'))
+        ele.clear()
+        ele.send_keys(new_value)
+        self.driver.switch_to.default_content()
+        if not cancel:
+            self.driver.find_element_by_xpath("//button[contains(@class,'btn-primary')]").click()
+        else:
+            self.driver.find_element_by_xpath("//button[contains(@class,'btn-default')]").click()
+
+
 
     def get_user_table(self, page=1):
         # get current page
