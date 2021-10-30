@@ -284,8 +284,8 @@ class TestEditBooksList(TestCase, ui_class):
         bl = self.get_books_list(1)
         self.assertTrue(bl['column'])
         bl['column'].click()
-        self.assertEqual(9, len(bl['column_elements']))
-        self.assertEqual(11, len(bl['table'][0]))
+        self.assertEqual(17, len(bl['column_elements']))
+        self.assertEqual(19, len(bl['table'][0]))
         for indx, element in enumerate(bl['column_elements']):
             if element.is_selected():
                 self.assertTrue(bl['column_texts'][indx].text in bl['table'][0])
@@ -299,8 +299,8 @@ class TestEditBooksList(TestCase, ui_class):
         bl = self.get_books_list(2)
         self.assertTrue(bl['column'])
         bl['column'].click()
-        self.assertEqual(9, len(bl['column_elements']))
-        self.assertEqual(4, len(bl['table'][0]))
+        self.assertEqual(17, len(bl['column_elements']))
+        self.assertEqual(12, len(bl['table'][0]))
         self.assertFalse(bl['column_elements'][0].is_selected())
         self.assertFalse(bl['column_elements'][1].is_selected())
         self.assertFalse(bl['column_elements'][2].is_selected())
@@ -316,7 +316,7 @@ class TestEditBooksList(TestCase, ui_class):
         bl['column_elements'][5].click()
         bl['column_elements'][6].click()
         bl = self.get_books_list(1)
-        self.assertEqual(11, len(bl['table'][0]))
+        self.assertEqual(19, len(bl['table'][0]))
 
     def test_restricted_rights(self):
         bl = self.get_books_list(1)

@@ -6,9 +6,11 @@ from selenium.webdriver.common.keys import Keys
 from selenium.webdriver.support.ui import WebDriverWait, Select
 from selenium.webdriver.support import expected_conditions as EC
 from selenium.common.exceptions import TimeoutException
+from selenium.common.exceptions import NoSuchElementException
 from config_test import PY_BIN, BOOT_TIME
 import requests
 import time
+import re
 import lxml.etree
 from PIL import Image
 try:
@@ -1479,7 +1481,9 @@ class ui_class():
         element = self.check_element_on_page((By.XPATH, "//*[starts-with(@id,'btnGroupDrop')]"))
         download_link = element.get_attribute("href")
         r = requests.session()
-        payload = {'username': user, 'password': password, 'submit':"", 'next':"/", "remember_me":"on"}
+        login_page = r.get('http://127.0.0.1:8083/login')
+        token = re.search('<input type="hidden" name="csrf_token" value="(.*)">', login_page.text)
+        payload = {'username': user, 'password': password, 'submit':"", 'next':"/", "remember_me":"on", "csrf_token": token.group(1)}
         r.post('http://127.0.0.1:8083/login', data=payload)
         resp = r.get(download_link)
         r.close()
@@ -1836,9 +1840,12 @@ class ui_class():
                     header_edit[cnt]['text'] = head.find_element_by_xpath("./div").text.split("\n")[2]
                 header_edit[cnt]['element'] = head.find_elements_by_xpath(".//div[contains(@class,'form-check')]//input")
             elif head.get_attribute("data-field") in ["denied_tags", "allowed_tags"]:
-                header_edit[cnt]['element'] = head.find_element_by_xpath(
-                    ".//div[contains(@class,'multi_select')]")
-                header_edit[cnt]['text'] = head.find_elements_by_xpath("./div")[1].text
+                try:
+                    header_edit[cnt]['element'] = head.find_element_by_xpath(
+                        ".//div[contains(@class,'multi_select')]")
+                    header_edit[cnt]['text'] = head.find_elements_by_xpath("./div")[1].text
+                except NoSuchElementException:
+                    header_edit[cnt]['text'] = ""
             else:
                 if header_edit[cnt]['sort'].text == "":
                     header_edit[cnt]['text'] = "selector"

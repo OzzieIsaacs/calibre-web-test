@@ -1,12 +1,16 @@
 import ast
-import re
+import os
 from datetime import datetime
 
 from sqlalchemy import create_engine
 from sqlalchemy import Column
 from sqlalchemy import String, Integer, Boolean
+from sqlalchemy import ForeignKey
 from sqlalchemy.orm import sessionmaker, scoped_session
 from sqlalchemy import TIMESTAMP
+import random
+import string
+from uuid import uuid4
 
 try:
     # Compatibility with sqlalchemy 2.0
@@ -52,6 +56,28 @@ class Books(Base):
     isbn = Column(String(collation='NOCASE'), default="")
     flags = Column(Integer, nullable=False, default=1)
 
+class Data(Base):
+    __tablename__ = 'data'
+
+    id = Column(Integer, primary_key=True)
+    book = Column(Integer, ForeignKey('books.id'), nullable=False)
+    format = Column(String(collation='NOCASE'), nullable=False)
+    uncompressed_size = Column(Integer, nullable=False)
+    name = Column(String, nullable=False)
+
+    def __init__(self, book, book_format, uncompressed_size, name):
+        self.book = book
+        self.format = book_format
+        self.uncompressed_size = uncompressed_size
+        self.name = name
+
+    # ToDo: Check
+    def get(self):
+        return self.name
+
+    def __repr__(self):
+        return u"<Data('{0},{1}{2}{3}')>".format(self.book, self.format, self.uncompressed_size, self.name)
+
 
 def update_title_sort(session):
     # user defined sort function for calibre databases (Series, etc.)
@@ -61,6 +87,9 @@ def update_title_sort(session):
 
     conn = session.connection().connection.connection
     conn.create_function("title_sort", 1, _title_sort)
+
+def _randStr(chars = string.ascii_uppercase + string.digits, N=10):
+    return ''.join(random.choice(chars) for _ in range(N))
 
 
 def delete_cust_class(location, id):
@@ -88,3 +117,46 @@ def change_book_path(location, id):
     session.commit()
     session.close()
     engine.dispose()
+
+def add_books(location, number):
+    engine = create_engine('sqlite:///{0}'.format(location), echo=False)
+    Session = scoped_session(sessionmaker())
+    Session.configure(bind=engine)
+    session = Session()
+
+    Base.metadata.create_all(engine)
+    database_root = location[:-len("metadata.db")]
+    for i in range(number):
+        update_title_sort(session)
+        session.connection().connection.connection.create_function('uuid4', 0, lambda: str(uuid4()))
+        book = Books()
+        book.title = _randStr()
+        book.sort = ""
+        book.author_sort = _randStr()
+        book.timestamp = datetime.utcnow()
+        book.pubdate = datetime.utcnow()
+        book.series_index = "1.0"
+        book.last_modified = datetime.utcnow()
+        book.path = ""
+        book.has_cover = 0
+        book.uuid = str(uuid4())
+        #book.isbn = ""
+        #book.flags = 1
+        session.add(book)
+        session.flush()
+        os.makedirs(os.path.join(database_root, book.author_sort))
+        book_folder = os.path.join(database_root, book.author_sort, book.title + " ({})".format(book.id))
+        os.makedirs(book_folder)
+        book_name = os.path.join(book_folder, "file.epub")
+        with open(book_name, 'wb') as fout:
+            fout.write(os.urandom(30))
+        new_format = Data(name="file.epub",
+                         book_format="epub".upper(),
+                         book=book.id, uncompressed_size=30)
+        session.merge(new_format)
+        session.commit()
+    # session.commit()
+    session.close()
+    engine.dispose()
+
+

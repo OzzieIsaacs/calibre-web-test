@@ -5,6 +5,7 @@ from selenium.webdriver.common.by import By
 
 from helper_func import save_logfiles
 import time
+import re
 import requests
 from helper_ui import ui_class
 from helper_ui import RESTRICT_TAG_ME, RESTRICT_COL_USER
@@ -497,7 +498,9 @@ class TestCalibreWebVisibilitys(unittest.TestCase, ui_class):
 
     def test_search_functions(self):
         r = requests.session()
-        payload = {'username': 'admin', 'password': 'admin123', 'submit': "", 'next': "/", "remember_me": "on"}
+        login_page = r.get('http://127.0.0.1:8083/login')
+        token = re.search('<input type="hidden" name="csrf_token" value="(.*)">', login_page.text)
+        payload = {'username': 'admin', 'password': 'admin123', 'submit': "", 'next': "/", "remember_me": "on", "csrf_token": token.group(1)}
         r.post('http://127.0.0.1:8083/login', data=payload)
         resp = r.get('http://127.0.0.1:8083/search')
         self.assertEqual(200, resp.status_code)
@@ -820,13 +823,18 @@ class TestCalibreWebVisibilitys(unittest.TestCase, ui_class):
 
     def test_request_link_column_to_read_status(self):
         r = requests.session()
-        payload = {'username': 'admin', 'password': 'admin123', 'submit':"", 'next':"/", "remember_me":"on"}
+        login_page = r.get('http://127.0.0.1:8083/login')
+        token = re.search('<input type="hidden" name="csrf_token" value="(.*)">', login_page.text)
+        payload = {'username': 'admin', 'password': 'admin123', 'submit':"", 'next':"/", "remember_me":"on", "csrf_token": token.group(1)}
         result = r.post('http://127.0.0.1:8083/login', data=payload)
         self.assertEqual(200, result.status_code)
-        payload = {"config_read_column": "-1"}
+        config_page = r.get('http://127.0.0.1:8083/admin/viewconfig')
+        token = re.search('<input type="hidden" name="csrf_token" value="(.*)">', config_page.text)
+        payload = {"config_read_column": "-1", "csrf_token": token.group(1)}
         result = r.post('http://127.0.0.1:8083/admin/viewconfig', data=payload)
         self.assertTrue("flash_danger" in result.text)
-        payload = {"config_read_column": "2"}
+        token = re.search('<input type="hidden" name="csrf_token" value="(.*)">', result.text)
+        payload = {"config_read_column": "2", "csrf_token": token.group(1)}
         result = r.post('http://127.0.0.1:8083/admin/viewconfig', data=payload)
         self.assertTrue("flash_danger" in result.text)
         r.close()
@@ -943,7 +951,9 @@ class TestCalibreWebVisibilitys(unittest.TestCase, ui_class):
         self.assertTrue(self.check_element_on_page((By.ID, "book_title")))
         # check right cover of book is visible
         r = requests.session()
-        payload = {'username': 'admin', 'password': 'admin123', 'submit': "", 'next': "/", "remember_me": "on"}
+        login_page = r.get('http://127.0.0.1:8083/login')
+        token = re.search('<input type="hidden" name="csrf_token" value="(.*)">', login_page.text)
+        payload = {'username': 'admin', 'password': 'admin123', 'submit': "", 'next': "/", "remember_me": "on", "csrf_token": token.group(1)}
         r.post('http://127.0.0.1:8083/login', data=payload)
         resp = r.get('http://127.0.0.1:8083/cover/'+list_element[1][0]['id'])
         self.assertEqual('16790', resp.headers['Content-Length'])

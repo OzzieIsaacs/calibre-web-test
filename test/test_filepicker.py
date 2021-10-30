@@ -103,5 +103,5 @@ class TestFilePicker(TestCase, ui_class):
         pass
 
     @skip("Not implemented")
-    def test_filepicker_all_file(self):  # ?
-        pass
+
+

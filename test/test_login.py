@@ -429,7 +429,9 @@ class TestLogin(unittest.TestCase, ui_class):
     def test_login_remember_me(self):
         # simulate login, close browser, restart browser, session shall be renewed, user stays logged in
         r = requests.session()
-        payload = {'username': 'admin', 'password': 'admin123', 'submit': "", 'next': "/", "remember_me": "on"}
+        login_page = r.get('http://127.0.0.1:8083/login')
+        token = re.search('<input type="hidden" name="csrf_token" value="(.*)">', login_page.text)
+        payload = {'username': 'admin', 'password': 'admin123', 'submit':"", 'next':"/", "remember_me":"on", "csrf_token": token.group(1)}
         r.post('http://127.0.0.1:8083/login', data=payload)
         remember = r.cookies['remember_token']
         r.close()
@@ -444,7 +446,9 @@ class TestLogin(unittest.TestCase, ui_class):
         # simulate login without remember me, close browser, restart browser, no remember me token, user logged out and
         # redirected to login page
         r = requests.session()
-        payload = {'username': 'admin', 'password': 'admin123', 'submit': "", 'next': "/"}
+        login_page = r.get('http://127.0.0.1:8083/login')
+        token = re.search('<input type="hidden" name="csrf_token" value="(.*)">', login_page.text)
+        payload = {'username': 'admin', 'password': 'admin123', 'submit': "", 'next': "/", "csrf_token": token.group(1)}
         r.post('http://127.0.0.1:8083/login', data=payload)
         self.assertFalse(r.cookies.get('remember_token'))
         r.close()
@@ -484,11 +488,14 @@ class TestLogin(unittest.TestCase, ui_class):
         self.assertTrue(verify_element)
         verifiy_url = "/" + verify_element.text.lstrip('http://127.0.0.1:8083')
         r = requests.session()
+        login_page = r.get('http://127.0.0.1:8083/login')
+        token = re.search('<input type="hidden" name="csrf_token" value="(.*)">', login_page.text)
         payload = {'username': 'admin',
                    'password': 'admin123',
                    'submit': "",
                    'next': verifiy_url,
-                   "remember_me": "on"
+                   "remember_me": "on",
+                   "csrf_token": token.group(1)
                    }
         resp = r.post('http://127.0.0.1:8083/login', data=payload)
         self.assertEqual(resp.status_code, 200)
@@ -497,11 +504,14 @@ class TestLogin(unittest.TestCase, ui_class):
         self.assertTrue(self.check_element_on_page((By.ID, "flash_success")))
         # reuse token without problem
         r = requests.session()
+        login_page = r.get('http://127.0.0.1:8083/login')
+        token = re.search('<input type="hidden" name="csrf_token" value="(.*)">', login_page.text)
         payload = {'username': 'admin',
                    'password': 'admin123',
                    'submit': "",
                    'next': verifiy_url,
-                   "remember_me": "on"
+                   "remember_me": "on",
+                   "csrf_token": token.group(1)
                    }
         resp = r.post('http://127.0.0.1:8083/login', data=payload)
         self.assertEqual(resp.status_code, 200)
@@ -510,11 +520,14 @@ class TestLogin(unittest.TestCase, ui_class):
         time.sleep(BOOT_TIME)
         self.logout()
         r = requests.session()
+        login_page = r.get('http://127.0.0.1:8083/login')
+        token = re.search('<input type="hidden" name="csrf_token" value="(.*)">', login_page.text)
         payload = {'username': 'admin',
                    'password': 'admin123',
                    'submit': "",
                    'next': verifiy_url,
-                   "remember_me": "on"
+                   "remember_me": "on",
+                   "csrf_token": token.group(1)
                    }
         resp = r.post('http://127.0.0.1:8083/login', data=payload)
         # Remote token not fond so redirect after login puts us to 403 page
@@ -523,7 +536,9 @@ class TestLogin(unittest.TestCase, ui_class):
 
     def test_login_cookie_steal(self):
         r = requests.session()
-        payload = {'username': 'admin', 'password': 'admin123', 'submit':"", 'next':"/", "remember_me":"on"}
+        login_page = r.get('http://127.0.0.1:8083/login')
+        token = re.search('<input type="hidden" name="csrf_token" value="(.*)">', login_page.text)
+        payload = {'username': 'admin', 'password': 'admin123', 'submit':"", 'next':"/", "remember_me":"on", "csrf_token": token.group(1)}
         resp = r.post('http://127.0.0.1:8083/login', data=payload)
         self.assertEqual(resp.status_code, 200)
         cookies = r.cookies.get_dict()

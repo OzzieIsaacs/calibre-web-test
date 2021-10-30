@@ -6,6 +6,7 @@ import os
 import unittest
 import time
 import requests
+import re
 
 from selenium.webdriver.common.by import By
 from selenium.common.exceptions import UnexpectedAlertPresentException
@@ -74,7 +75,9 @@ class TestEditAdditionalBooks(TestCase, ui_class):
         self.assertEqual('3', details['series_index'])
         self.assertEqual('No Series', details['series'])
         r = requests.session()
-        payload = {'username': 'admin', 'password': 'admin123', 'submit': "", 'next': "/", "remember_me": "on"}
+        login_page = r.get('http://127.0.0.1:8083/login')
+        token = re.search('<input type="hidden" name="csrf_token" value="(.*)">', login_page.text)
+        payload = {'username': 'admin', 'password': 'admin123', 'submit': "", 'next': "/", "remember_me": "on", "csrf_token": token.group(1)}
         r.post('http://127.0.0.1:8083/login', data=payload)
         resp = r.get('http://127.0.0.1:8083' + details['cover'])
         self.assertEqual('8936', resp.headers['Content-Length'])
@@ -102,7 +105,9 @@ class TestEditAdditionalBooks(TestCase, ui_class):
         self.assertEqual('2', details['series_index'])
         self.assertEqual('No S', details['series'])
         r = requests.session()
-        payload = {'username': 'admin', 'password': 'admin123', 'submit': "", 'next': "/", "remember_me": "on"}
+        login_page = r.get('http://127.0.0.1:8083/login')
+        token = re.search('<input type="hidden" name="csrf_token" value="(.*)">', login_page.text)
+        payload = {'username': 'admin', 'password': 'admin123', 'submit': "", 'next': "/", "remember_me": "on", "csrf_token": token.group(1)}
         r.post('http://127.0.0.1:8083/login', data=payload)
         resp = r.get('http://127.0.0.1:8083' + details['cover'])
         self.fill_basic_config({'config_uploading': 0})
@@ -509,17 +514,20 @@ class TestEditAdditionalBooks(TestCase, ui_class):
         self.assertTrue(self.check_element_on_page((By.ID, "flash_success")))
         self.logout()
         r = requests.session()
-        payload = {'username': 'user0', 'password': '1234', 'submit': "", 'next': "/", "remember_me": "on"}
+        login_page = r.get('http://127.0.0.1:8083/login')
+        token = re.search('<input type="hidden" name="csrf_token" value="(.*)">', login_page.text)
+        payload = {'username': 'user0', 'password': '1234', 'submit': "", 'next': "/", "remember_me": "on", "csrf_token": token.group(1)}
         r.post('http://127.0.0.1:8083/login', data=payload)
-        # cover_file = os.path.join(base_path, 'files', 'cover.jpg')
         upload_file = open(os.path.join(base_path, 'files', 'book.cbt'), 'rb')
         files = {'btn-upload': upload_file}
-        result = r.post('http://127.0.0.1:8083/upload', files=files)
+        result = r.post('http://127.0.0.1:8083/upload', files=files, data={"csrf_token": token.group(1)})
         self.assertEqual(403, result.status_code)
         upload_file.close()
+        book_page = r.get('http://127.0.0.1:8083/admin/book/13')
+        token = re.search('<input type="hidden" name="csrf_token" value="(.*)">', book_page.text)
         values = {'book_title': 'Buuko', 'author_name': 'John Döe', 'description': '',
                   'tags': 'Gênot', 'series': 'Djüngel', 'series_index': '3.0', 'ratings': '4',
-                  'pubdate': '', 'languages': '', 'detail_view': 'on'}
+                  'pubdate': '', 'languages': '', 'detail_view': 'on', "csrf_token": token.group(1)}
         upload_file = open(os.path.join(base_path, 'files', 'book.cbt'), 'rb')
         files_format = {'btn-upload-format': upload_file}
         result = r.post('http://127.0.0.1:8083/admin/book/13', files=files_format, data=values)
@@ -527,10 +535,14 @@ class TestEditAdditionalBooks(TestCase, ui_class):
         upload_file.close()
         cover_file = open(os.path.join(base_path, 'files', 'cover.jpg'), 'rb')
         files_cover = {'btn-upload-cover': cover_file}
+        token = re.search('<input type="hidden" name="csrf_token" value="(.*)">', book_page.text)
+        values['csrf_token'] = token.group(1)
         result = r.post('http://127.0.0.1:8083/admin/book/13', files=files_cover, data=values)
         self.assertEqual(403, result.status_code)
         cover_file.close()
         values['cover_url'] = "/home/user/kurt.jpg"
+        token = re.search('<input type="hidden" name="csrf_token" value="(.*)">', book_page.text)
+        values['csrf_token'] = token.group(1)
         result = r.post('http://127.0.0.1:8083/admin/book/13', data=values)
         self.assertEqual(403, result.status_code)
         r.close()
@@ -561,7 +573,9 @@ class TestEditAdditionalBooks(TestCase, ui_class):
         self.assertFalse(self.check_element_on_page((By.ID, "edit_book")))
         self.logout()
         r = requests.session()
-        payload = {'username': 'user0', 'password': '1234', 'submit': "", 'next': "/", "remember_me": "on"}
+        login_page = r.get('http://127.0.0.1:8083/login')
+        token = re.search('<input type="hidden" name="csrf_token" value="(.*)">', login_page.text)
+        payload = {'username': 'user0', 'password': '1234', 'submit': "", 'next': "/", "remember_me": "on", "csrf_token": token.group(1)}
         r.post('http://127.0.0.1:8083/login', data=payload)
         result = r.get('http://127.0.0.1:8083/admin/book/13')
         self.assertEqual(403, result.status_code)
@@ -594,7 +608,9 @@ class TestEditAdditionalBooks(TestCase, ui_class):
         self.assertTrue(self.check_element_on_page((By.ID, "flash_success")))
         self.logout()
         r = requests.session()
-        payload = {'username': 'user2', 'password': '1234', 'submit': "", 'next': "/", "remember_me": "on"}
+        login_page = r.get('http://127.0.0.1:8083/login')
+        token = re.search('<input type="hidden" name="csrf_token" value="(.*)">', login_page.text)
+        payload = {'username': 'user2', 'password': '1234', 'submit': "", 'next': "/", "remember_me": "on", "csrf_token": token.group(1)}
         r.post('http://127.0.0.1:8083/login', data=payload)
         result = r.post('http://127.0.0.1:8083/delete/12/FB2')
         self.assertEqual(405, result.status_code)
@@ -660,9 +676,13 @@ class TestEditAdditionalBooks(TestCase, ui_class):
 
     def test_xss_comment_edit(self):
         r = requests.session()
-        payload = {'username': 'admin', 'password': 'admin123', 'submit': "", 'next': "/", "remember_me": "on"}
+        login_page = r.get('http://127.0.0.1:8083/login')
+        token = re.search('<input type="hidden" name="csrf_token" value="(.*)">', login_page.text)
+        payload = {'username': 'admin', 'password': 'admin123', 'submit': "", 'next': "/", "remember_me": "on", "csrf_token": token.group(1)}
         r.post('http://127.0.0.1:8083/login', data=payload)
-        book_payload = {'description': '<p>calibre Quick Start Guide</p><img src=x onerror=alert("Huhu")>', 'author_name': 'Asterix Lionherd', 'book_title': 'Comicdemo', 'tags':'', 'series':'Djüngel', 'series_index':'1', 'languages':'', 'publisher':'', 'pubdate':'', 'rating': '', 'custom_column_1':'', 'custom_column_2':'', 'custom_column_3':'', 'custom_column_4':'', 'custom_column_5':'', 'custom_column_6':'','custom_column_7':'', 'custom_column_8':'', 'custom_column_9':'', 'custom_column_10':''}
+        book_page = r.get('http://127.0.0.1:8083/admin/book/3')
+        token = re.search('<input type="hidden" name="csrf_token" value="(.*)">', book_page.text)
+        book_payload = {'description': '<p>calibre Quick Start Guide</p><img src=x onerror=alert("Huhu")>', 'author_name': 'Asterix Lionherd', 'book_title': 'Comicdemo', 'tags':'', 'series':'Djüngel', 'series_index':'1', 'languages':'', 'publisher':'', 'pubdate':'', 'rating': '', 'custom_column_1':'', 'custom_column_2':'', 'custom_column_3':'', 'custom_column_4':'', 'custom_column_5':'', 'custom_column_6':'','custom_column_7':'', 'custom_column_8':'', 'custom_column_9':'', 'custom_column_10':'', "csrf_token": token.group(1)}
         result = r.post('http://127.0.0.1:8083/admin/book/3', data=book_payload)
         self.assertEqual(200, result.status_code)
         r.close()
@@ -677,9 +697,13 @@ class TestEditAdditionalBooks(TestCase, ui_class):
 
     def test_xss_custom_comment_edit(self):
         r = requests.session()
-        payload = {'username': 'admin', 'password': 'admin123', 'submit': "", 'next': "/", "remember_me": "on"}
+        login_page = r.get('http://127.0.0.1:8083/login')
+        token = re.search('<input type="hidden" name="csrf_token" value="(.*)">', login_page.text)
+        payload = {'username': 'admin', 'password': 'admin123', 'submit': "", 'next': "/", "remember_me": "on", "csrf_token": token.group(1)}
         r.post('http://127.0.0.1:8083/login', data=payload)
-        book_payload = {'description': '', 'author_name': 'Asterix Lionherd', 'book_title': '<p>calibre Quick Start Guide</p><img src=x onerror=alert("hoho")>', 'tags':'<p>calibre Quick Start Guide</p><img src=x onerror=alert("ddd")>', 'series':'<p>calibre Quick Start Guide</p><img src=x onerror=alert("hh")>', 'series_index':'1', 'languages':'', 'publisher':'', 'pubdate':'', 'rating': '', 'custom_column_1':'', 'custom_column_2':'', 'custom_column_3':'', 'custom_column_4':'', 'custom_column_5':'<p>calibre Quick Start Guide</p><img src=x onerror=alert("Huhu")>', 'custom_column_6':'','custom_column_7':'', 'custom_column_8':'', 'custom_column_9':'', 'custom_column_10':''}
+        book_page = r.get('http://127.0.0.1:8083/admin/book/3')
+        token = re.search('<input type="hidden" name="csrf_token" value="(.*)">', book_page.text)
+        book_payload = {'description': '', 'author_name': 'Asterix Lionherd', 'book_title': '<p>calibre Quick Start Guide</p><img src=x onerror=alert("hoho")>', 'tags':'<p>calibre Quick Start Guide</p><img src=x onerror=alert("ddd")>', 'series':'<p>calibre Quick Start Guide</p><img src=x onerror=alert("hh")>', 'series_index':'1', 'languages':'', 'publisher':'', 'pubdate':'', 'rating': '', 'custom_column_1':'', 'custom_column_2':'', 'custom_column_3':'', 'custom_column_4':'', 'custom_column_5':'<p>calibre Quick Start Guide</p><img src=x onerror=alert("Huhu")>', 'custom_column_6':'','custom_column_7':'', 'custom_column_8':'', 'custom_column_9':'', 'custom_column_10':'', "csrf_token": token.group(1)}
         result = r.post('http://127.0.0.1:8083/admin/book/3', data=book_payload)
         self.assertEqual(200, result.status_code)
         r.close()
@@ -693,4 +717,26 @@ class TestEditAdditionalBooks(TestCase, ui_class):
         values = self.get_book_details()
         self.assertEqual(0, len(values['cust_columns']))
 
+    @unittest.skip
+    def test_xss_author_edit(self):
+        r = requests.session()
+        login_page = r.get('http://127.0.0.1:8083/login')
+        #token = re.search('<input type="hidden" name="csrf_token" value="(.*)">', login_page.text)
+        payload = {'username': 'admin', 'password': 'admin123', 'submit': "", 'next': "/", "remember_me": "on"} #, "csrf_token": token.group(1)}
+        r.post('http://127.0.0.1:8083/login', data=payload)
+        book_page = r.get('http://127.0.0.1:8083/admin/book/3')
+        # token = re.search('<input type="hidden" name="csrf_token" value="(.*)">', book_page.text)
+        book_payload = {'description': '', 'author_name': "-->'\"<script>alert(1)</script>", 'book_title': '<p>calibre Quick Start Guide</p><img src=x onerror=alert("hoho")>', 'tags':'<p>calibre Quick Start Guide</p><img src=x onerror=alert("ddd")>', 'series':'<p>calibre Quick Start Guide</p><img src=x onerror=alert("hh")>', 'series_index':'1', 'languages':'', 'publisher':'', 'pubdate':'', 'rating': '', 'custom_column_1':'', 'custom_column_2':'', 'custom_column_3':'', 'custom_column_4':'', 'custom_column_5':'<p>calibre Quick Start Guide</p><img src=x onerror=alert("Huhu")>', 'custom_column_6':'','custom_column_7':'', 'custom_column_8':'', 'custom_column_9':'', 'custom_column_10':''} #, "csrf_token": token.group(1)}
+        result = r.post('http://127.0.0.1:8083/admin/book/3', data=book_payload)
+        self.assertEqual(200, result.status_code)
+        r.close()
+        try:
+            self.get_book_details(3)
+        except UnexpectedAlertPresentException:
+            self.assertFalse(True,"XSS in custom comments")
+        time.sleep(1)
+        self.check_element_on_page((By.ID, "edit_book")).click()
+        self.edit_book(content={"book_title":"Comicdemo","tags":"", "series":"Djüngel",  }, custom_content={'Custom Comment 人物': ''})
+        values = self.get_book_details()
+        self.assertEqual(0, len(values['cust_columns']))
 

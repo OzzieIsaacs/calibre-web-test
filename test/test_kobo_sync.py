@@ -121,12 +121,12 @@ class TestKoboSync(unittest.TestCase, ui_class):
         while True:
             r = session.get(self.kobo_adress+'/v1/library/sync', params=params, headers=TestKoboSync.syncToken, timeout=10)
             self.assertEqual(r.status_code, 200)
-            new_data = r.json()
+            data = r.json()
             TestKoboSync.data = data
             TestKoboSync.syncToken = {'x-kobo-synctoken': r.headers['x-kobo-synctoken']}
+            # data = new_data
             if not 'x-kobo-sync' in r.headers:
                 break
-            data = new_data
         self.assertEqual(len(data), 4, "4 Books should have valid kobo formats (epub, epub3, kebub)")
         self.assertGreaterEqual(2, len(data[3]['NewEntitlement']['BookMetadata']['DownloadUrls']), data)
         try:
@@ -602,7 +602,7 @@ class TestKoboSync(unittest.TestCase, ui_class):
         data = self.inital_sync()
         self.assertEqual(4, len(data))
         self.change_visibility_me({"kobo_only_shelves_sync": 1})
-        # erzeuge privaten Shelf ohne sync, füge bücher hinzu
+        # create private Shelf without sync, add book to it
         self.create_shelf("Unsyncd_shelf", sync=0)
         self.get_book_details(5)
         self.check_element_on_page((By.ID, "add-to-shelf")).click()
@@ -637,3 +637,14 @@ class TestKoboSync(unittest.TestCase, ui_class):
         self.delete_shelf('Unsyncd_shelf')
         self.delete_shelf('syncd_shelf_u1')
         self.edit_user('kobosync', {'delete': 1})
+
+        # unarchive books
+        self.get_book_details(10)
+        self.check_element_on_page((By.XPATH, "//*[@id='archived_cb']")).click()
+        self.get_book_details(9)
+        self.check_element_on_page((By.XPATH, "//*[@id='archived_cb']")).click()
+        self.get_book_details(8)
+        self.check_element_on_page((By.XPATH, "//*[@id='archived_cb']")).click()
+        self.get_book_details(5)
+        self.check_element_on_page((By.XPATH, "//*[@id='archived_cb']")).click()
+

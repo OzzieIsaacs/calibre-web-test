@@ -5,6 +5,7 @@ import unittest
 from selenium.webdriver.common.by import By
 from selenium.common.exceptions import UnexpectedAlertPresentException
 import time
+import re
 from helper_ui import ui_class
 from config_test import TEST_DB, BOOT_TIME
 from helper_func import startup
@@ -20,8 +21,9 @@ class TestShelf(unittest.TestCase, ui_class):
     @classmethod
     def setUpClass(cls):
         try:
-            startup(cls, cls.py_version,{'config_calibre_dir':TEST_DB})
-            cls.create_user('shelf', {'edit_shelf_role':1, 'password':'123', 'email':'a@b.com'})
+            # Upload needed for generating csrf token for edit shelf
+            startup(cls, cls.py_version,{'config_calibre_dir':TEST_DB, 'config_uploading': 1})
+            cls.create_user('shelf', {'edit_shelf_role':1, "upload_role": 1, 'password':'123', 'email':'a@b.com'})
             cls.edit_user('admin',{'edit_shelf_role':1, 'email':'e@fe.de'})
         except Exception:
             cls.driver.quit()
@@ -187,9 +189,13 @@ class TestShelf(unittest.TestCase, ui_class):
         self.assertTrue(self.check_element_on_page((By.ID, "flash_success")))
         self.logout()
         r = requests.session()
-        payload = {'username': 'shelf', 'password': '123', 'submit':"", 'next':"/", "remember_me":"on"}
-        r.post('http://127.0.0.1:8083/login', data=payload)
-        resp = r.post('http://127.0.0.1:8083/shelf/edit/'+ shelf_lolo['id'], data={"title": "tuto"})
+        login_page = r.get('http://127.0.0.1:8083/login')
+        token = re.search('<input type="hidden" name="csrf_token" value="(.*)">', login_page.text)
+        payload = {'username': 'shelf', 'password': '123', 'submit':"", 'next':"/", "remember_me":"on", "csrf_token": token.group(1)}
+        book_page = r.post('http://127.0.0.1:8083/login', data=payload)
+
+        token = re.search('<input type="hidden" name="csrf_token" value="(.*)">', book_page.text)
+        resp = r.post('http://127.0.0.1:8083/shelf/edit/'+ shelf_lolo['id'], data={"title": "tuto", "csrf_token": token.group(1)})
         self.assertTrue("flash_danger" in resp.text)
         self.login('admin','admin123')
         shelf_lolo = self.list_shelfs('Lolo')
@@ -248,9 +254,13 @@ class TestShelf(unittest.TestCase, ui_class):
         self.check_element_on_page((By.ID, "order_shelf")).click()
         self.get_order_shelf_list()
         r = requests.session()
-        payload = {'username': 'admin', 'password': 'admin123', 'submit':"", 'next':"/", "remember_me":"on"}
-        r.post('http://127.0.0.1:8083/login',data=payload)
-        r.post('http://127.0.0.1:8083/shelf/order/1', data={"9": "1","11": "2","13": "3"})
+        login_page = r.get('http://127.0.0.1:8083/login')
+        token = re.search('<input type="hidden" name="csrf_token" value="(.*)">', login_page.text)
+        payload = {'username': 'admin', 'password': 'admin123', 'submit':"", 'next':"/", "remember_me":"on", "csrf_token": token.group(1)}
+        r.post('http://127.0.0.1:8083/login', data=payload)
+        books_page = r.get('http://127.0.0.1:8083/shelf/order/1')
+        token = re.search('<input type="hidden" name="csrf_token" value="(.*)">', books_page.text)
+        r.post('http://127.0.0.1:8083/shelf/order/1', data={"9": "1","11": "2","13": "3", "csrf_token": token.group(1)})
         self.driver.refresh() # reload page
         self.check_element_on_page((By.ID, "shelf_back")).click()
         shelf_books = self.get_shelf_books_displayed()
