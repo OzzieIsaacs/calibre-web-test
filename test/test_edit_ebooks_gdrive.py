@@ -408,7 +408,7 @@ class TestEditBooksOnGdrive(unittest.TestCase, ui_class):
         self.assertEqual(u'Alf|alfa, Kuko', values['series'])
         self.goto_page('nav_serie')
         self.wait_page_has_loaded()
-        list_element = self.get_series_books_displayed()
+        list_element = self.get_list_books_displayed()
         self.assertEqual(list_element[0]['title'], u'Alf|alfa, Kuko')
 
         self.get_book_details(9)
@@ -436,7 +436,7 @@ class TestEditBooksOnGdrive(unittest.TestCase, ui_class):
         self.assertEqual(u'loko', values['series'])
         self.goto_page('nav_serie')
         self.wait_page_has_loaded()
-        list_element = self.get_series_books_displayed()
+        list_element = self.get_list_books_displayed()
         self.assertEqual(list_element[1]['title'], u'loko')
 
         self.get_book_details(4)

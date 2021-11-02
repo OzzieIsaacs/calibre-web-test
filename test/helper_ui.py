@@ -13,6 +13,8 @@ import time
 import re
 import lxml.etree
 from PIL import Image
+from functools import cmp_to_key
+
 try:
     from StringIO import StringIO
 except ImportError:
@@ -62,6 +64,16 @@ page['login'] = {'check': (By.NAME, "username"), 'click': [(By.ID, "logout")]}
 page['unlogged_login'] = {'check': (By.NAME, "username"), 'click': [(By.CLASS_NAME, "glyphicon-log-in")]}
 page['logviewer'] = {'check': (By.ID, "log_group"), 'click': [(By.ID, "top_admin"), (By.ID, "logfile")]}
 page['adv_search'] = {'check': (By.ID, "adv_submit"), 'click': [(By.ID, "advanced_search")]}
+
+
+def cust_compare(item1, item2):
+    if (item1['x'] < item2['x'] and item1['y'] <= item2['y']) or (item1['y'] < item2['y'] and item1['x'] >= item2['x']):
+        return -1
+    else:
+        # elif item1['x'] > item2['x']:
+        #    return 1
+        # else:
+        return 0
 
 
 class ui_class():
@@ -1222,29 +1234,36 @@ class ui_class():
         return [books_rand, books, pagination]
 
     @classmethod
-    def get_series_books_displayed(cls):
+    def get_list_books_displayed(cls):
         # expects grid view
-        #grid = cls.check_element_on_page((By.ID, "list-button"))
-        #if grid:
-        #    grid.click()
-        #    cls.check_element_on_page((By.ID, "grid-button"))
-        parser = lxml.etree.HTMLParser()
-        html = cls.driver.page_source
-
-        tree = lxml.etree.parse(StringIO(html), parser)
+        grid = cls.check_element_on_page((By.ID, "list-button"))
+        if grid:
+            index = 5
+            link = 1
+        else:
+            index = 2
+            link = 3
+        b = cls.driver.find_elements_by_xpath("//*[@id='list']/div")
         books = list()
-        b = tree.xpath("//*[@id='list']/div")
         for book in b:
-            ele = book.getchildren()
-            # ele[0] -> cover
-            meta=ele[1].getchildren()
+            if not book.is_displayed():
+                continue
+            ele = book.find_elements_by_xpath(".//*")
             bk = dict()
-            bk['link'] = ele[1].getchildren()[0].attrib['href']
+            bk['x'] = book.location['x']
+            bk['y'] = book.location['y']
+            bk['link'] = ele[link].get_attribute('href')
+            bk['link'] = bk['link'][bk['link'].find('/series'):]
             bk['id'] = bk['link'].split('/')[-1]
-            bk['ele'] = cls.check_element_on_page((By.XPATH,"//a[@href='"+bk['link']+"']//img"))
-            bk['title']= meta[0].getchildren()[0].text
+            if grid:
+                bk['ele'] = cls.check_element_on_page((By.XPATH,"//a[@href='"+bk['link']+"']//img"))
+            else:
+                bk['ele'] = None
+            bk['title']= ele[index].text
             books.append(bk)
-
+        if grid:
+            # sorted(mylist, key=cmp_to_key(compare))
+            return sorted(books, key=cmp_to_key(cust_compare))
         return books
 
     def verify_order(self, page, index=-1, order=None):
@@ -1257,7 +1276,7 @@ class ui_class():
         time.sleep(2)
         if index >= 0:
             if not len(list_elements):
-                list_elements = self.get_series_books_displayed()
+                list_elements = self.get_list_books_displayed()
                 list_elements[index]['ele'].click()
             else:
                 if page == "nav_rate":

@@ -94,4 +94,5 @@ class TestMergeBooksList(TestCase, ui_class):
     # select book on page 1, select book on page 2 -> merge -> abort, everything like before
     # select book on page 1, select book on page 2 -> merge -> one book less, both formats available
     def test_merge_book(self):
+        # ToDo Test Merge books
         pass

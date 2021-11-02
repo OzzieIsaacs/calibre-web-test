@@ -67,7 +67,7 @@ class TestAnonymous(unittest.TestCase, ui_class):
         self.goto_page('nav_serie')
         # check if we are seeing list view
         # if len(list_element == 0):
-        list_element = self.get_series_books_displayed()
+        list_element = self.get_list_books_displayed()
         self.assertIsNotNone(list_element)
         list_element[0]['ele'].click()
         self.assertTrue(self.check_element_on_page((By.ID, "books_rand")))
@@ -144,7 +144,7 @@ class TestAnonymous(unittest.TestCase, ui_class):
         self.assertFalse(self.check_element_on_page((By.ID, "nav_rand")))
         # check random books shown in series section
         self.goto_page("nav_serie")
-        list_element = self.get_series_books_displayed()
+        list_element = self.get_list_books_displayed()
         self.assertIsNotNone(list_element)
         list_element[0]['ele'].click()
 
@@ -185,7 +185,7 @@ class TestAnonymous(unittest.TestCase, ui_class):
         self.assertTrue(self.check_element_on_page((By.ID, "nav_rand")))
         # check random books shown in series section
         self.goto_page("nav_serie")
-        list_element = self.get_series_books_displayed()
+        list_element = self.get_list_books_displayed()
         self.assertIsNotNone(list_element)
         list_element[0]['ele'].click()
 
