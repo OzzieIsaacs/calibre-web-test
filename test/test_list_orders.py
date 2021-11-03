@@ -143,3 +143,82 @@ class TestCalibreWebListOrders(unittest.TestCase, ui_class):
         self.assertEqual(list_element[0]['title'], "Liu Yang")
         self.assertEqual(list_element[10]['title'], "Leo Baskerville")
         self.assertEqual(len(list_element), 11)
+
+    '''def test_lang_sort(self):
+        self.goto_page('nav_lang')
+        list_element = self.get_list_books_displayed()
+        self.assertEqual(list_element[0]['title'], "English")
+        self.assertEqual(list_element[10]['title'], "Liu Yang")
+        self.check_element_on_page((By.ID, "asc")).click()
+        list_element = self.get_list_books_displayed()
+        self.assertEqual(list_element[0]['title'], "Leo Baskerville")
+        self.assertEqual(list_element[10]['title'], "Liu Yang")
+        self.check_element_on_page((By.ID, "desc")).click()
+        list_element = self.get_list_books_displayed()
+        self.assertEqual(list_element[0]['title'], "Liu Yang")
+        self.assertEqual(list_element[10]['title'], "Leo Baskerville")'''
+
+    def test_publisher_sort(self):
+        self.get_book_details(9)
+        self.check_element_on_page((By.ID, "edit_book")).click()
+        self.edit_book(content={'publisher': 'Alfafa'})
+        self.goto_page('nav_publisher')
+        list_element = self.get_list_books_displayed()
+        self.assertEqual(list_element[0]['title'], "Alfafa")
+        self.assertEqual(list_element[1]['title'], "Randomhäus")
+        self.check_element_on_page((By.ID, "asc")).click()
+        list_element = self.get_list_books_displayed()
+        self.assertEqual(list_element[0]['title'], "Alfafa")
+        self.assertEqual(list_element[1]['title'], "Randomhäus")
+        self.check_element_on_page((By.ID, "desc")).click()
+        list_element = self.get_list_books_displayed()
+        self.assertEqual(list_element[0]['title'], "Randomhäus")
+        self.assertEqual(list_element[1]['title'], "Alfafa")
+        self.check_element_on_page((By.ID, "asc")).click()
+        self.get_book_details(9)
+        self.check_element_on_page((By.ID, "edit_book")).click()
+        self.edit_book(content={'publisher': ''})
+
+    def test_format_sort(self):
+        self.goto_page('nav_format')
+        list_element = self.get_list_books_displayed()
+        self.assertEqual(list_element[0]['title'], "CBR")
+        self.assertEqual(list_element[4]['title'], "TXT")
+        self.assertEqual(len(list_element), 5)
+        self.check_element_on_page((By.ID, "asc")).click()
+        list_element = self.get_list_books_displayed()
+        self.assertEqual(list_element[0]['title'], "CBR")
+        self.assertEqual(list_element[4]['title'], "TXT")
+        self.check_element_on_page((By.ID, "desc")).click()
+        list_element = self.get_list_books_displayed()
+        self.assertEqual(list_element[0]['title'], "TXT")
+        self.assertEqual(list_element[4]['title'], "CBR")
+        self.check_element_on_page((By.ID, "asc")).click()
+
+    def test_tags_sort(self):
+        self.get_book_details(9)
+        self.check_element_on_page((By.ID, "edit_book")).click()
+        self.edit_book(content={'tags': 'Älfafa'})
+        self.goto_page('nav_cat')
+        list_element = self.get_list_books_displayed()
+        self.assertEqual(list_element[0]['title'], "Gênot")
+        self.assertEqual(list_element[1]['title'], "Älfafa")
+        self.assertEqual(len(list_element), 2)
+        self.check_element_on_page((By.ID, "asc")).click()
+        list_element = self.get_list_books_displayed()
+        self.assertEqual(list_element[0]['title'], "Gênot")
+        self.assertEqual(list_element[1]['title'], "Älfafa")
+        self.check_element_on_page((By.ID, "desc")).click()
+        list_element = self.get_list_books_displayed()
+        self.assertEqual(list_element[0]['title'], "Älfafa")
+        self.assertEqual(list_element[1]['title'], "Gênot")
+        self.check_element_on_page((By.ID, "asc")).click()
+        self.get_book_details(9)
+        self.check_element_on_page((By.ID, "edit_book")).click()
+        self.edit_book(content={'tags': ''})
+
+    def test_ratings_sort(self):
+        pass
+
+    def test_download_sort(self):
+        pass
