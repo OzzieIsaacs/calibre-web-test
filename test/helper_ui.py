@@ -1234,18 +1234,19 @@ class ui_class():
         return [books_rand, books, pagination]
 
     @classmethod
-    def get_list_books_displayed(cls):
+    def get_list_books_displayed(cls, rating=False):
         # expects grid view
         grid = cls.check_element_on_page((By.ID, "list-button"))
         if grid:
             index = 5
             link = 1
         else:
-            index = 2
             link = 3
+            index = 2
         b = cls.driver.find_elements_by_xpath("//*[@id='list']/div")
         books = list()
         for book in b:
+
             if not book.is_displayed():
                 continue
             ele = book.find_elements_by_xpath(".//*")
@@ -1259,10 +1260,12 @@ class ui_class():
                 bk['ele'] = cls.check_element_on_page((By.XPATH,"//a[@href='"+bk['link']+"']//img"))
             else:
                 bk['ele'] = None
-            bk['title']= ele[index].text
+            if not rating:
+                bk['title']= ele[index].text
+            else:
+                bk['title'] = str(len(book.find_elements_by_xpath(".//*[@class='glyphicon glyphicon-star good']")))
             books.append(bk)
         if grid:
-            # sorted(mylist, key=cmp_to_key(compare))
             return sorted(books, key=cmp_to_key(cust_compare))
         return books
 

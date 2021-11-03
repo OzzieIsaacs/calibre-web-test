@@ -218,7 +218,20 @@ class TestCalibreWebListOrders(unittest.TestCase, ui_class):
         self.edit_book(content={'tags': ''})
 
     def test_ratings_sort(self):
-        pass
+        self.goto_page('nav_rate')
+        list_element = self.get_list_books_displayed(True)
+        self.assertEqual(list_element[0]['title'], "2")
+        self.assertEqual(list_element[1]['title'], "5")
+        self.assertEqual(len(list_element), 2)
+        self.check_element_on_page((By.ID, "asc")).click()
+        list_element = self.get_list_books_displayed()
+        self.assertEqual(list_element[0]['title'], "2")
+        self.assertEqual(list_element[1]['title'], "5")
+        self.check_element_on_page((By.ID, "desc")).click()
+        list_element = self.get_list_books_displayed()
+        self.assertEqual(list_element[0]['title'], "5")
+        self.assertEqual(list_element[1]['title'], "2")
+        self.check_element_on_page((By.ID, "asc")).click()
 
     def test_download_sort(self):
         pass
