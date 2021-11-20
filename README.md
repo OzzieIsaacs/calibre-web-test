@@ -67,7 +67,8 @@ Edit the file config.py in the build folder and change the pathnames to the corr
 For builing the exe installer on Windows, use Inno Setup, which can be downloaded from here https://jrsoftware.org/isinfo.php
 
 Execute the build script make_release.py in the build folder, there will be a dist subfolder in calibre-web folder containing the sourcefile and the wheel file for publishing it on pypi
-Furthermore there will be a new folder executable containing the executable files for the current platform. On Windows you need to have the precompilied binaries for python Levenshtein and python-ldap on your harddrive and point to them in the config file
+Furthermore there will be a new folder executable containing the executable files for the current platform. Uploading to pypi is done with the command "twine upload dist/*" afterwards, run from the calibre-web folder. 
+On Windows you need to have the precompilied binaries for python Levenshtein and python-ldap on your harddrive and point to them in the config file
 On Windows you can start the installer packaging afterwards  using innosetup, by using the installer_script_windows.iss script file
 
 # Update JS libs
