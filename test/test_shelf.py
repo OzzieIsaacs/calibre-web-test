@@ -153,7 +153,7 @@ class TestShelf(unittest.TestCase, ui_class):
         shelf_page = r.get('http://127.0.0.1:8083/shelf/create')
         token = re.search('<input type="hidden" name="csrf_token" value="(.*)">', shelf_page.text)
         payload = {'title': 'test', "is_public": "on", "csrf_token": token.group(1)}
-        test = r.post('http://127.0.0.1:8083/shelf/create', data=payload)
+        r.post('http://127.0.0.1:8083/shelf/create', data=payload)
         r.close()
         self.goto_page('nav_new')
         shelfs = self.list_shelfs()
