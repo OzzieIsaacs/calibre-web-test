@@ -141,6 +141,26 @@ class TestShelf(unittest.TestCase, ui_class):
         # No random books displayed, 3 books in shelf
         self.assertTrue(len(shelf_books) == 3)
 
+
+    def test_create_public_shelf(self):
+        self.create_user('invalid', {'edit_shelf_role': 0, 'password': '1234', 'email': 'bac@b.com'})
+        self.assertTrue(self.check_element_on_page((By.ID, "flash_success")))
+        r = requests.session()
+        login_page = r.get('http://127.0.0.1:8083/login')
+        token = re.search('<input type="hidden" name="csrf_token" value="(.*)">', login_page.text)
+        payload = {'username': 'invalid', 'password': '1234', 'submit':"", 'next':"/", "remember_me":"on", "csrf_token": token.group(1)}
+        r.post('http://127.0.0.1:8083/login', data=payload)
+        shelf_page = r.get('http://127.0.0.1:8083/shelf/create')
+        token = re.search('<input type="hidden" name="csrf_token" value="(.*)">', shelf_page.text)
+        payload = {'title': 'test', "is_public": "on", "csrf_token": token.group(1)}
+        test = r.post('http://127.0.0.1:8083/shelf/create', data=payload)
+        r.close()
+        self.goto_page('nav_new')
+        shelfs = self.list_shelfs()
+        self.assertEqual(len(shelfs), 0)
+        self.edit_user('invalid', {'delete': 1})
+
+
     # rename shelfs, duplicate shelfs are prevented and books can be added and deleted to shelf
     # capital letters and lowercase letters
     def test_rename_shelf(self):
