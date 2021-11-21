@@ -339,7 +339,7 @@ class TestLdapLogin(unittest.TestCase, ui_class):
         time.sleep(BOOT_TIME)
         # change user create template
         self.fill_view_config({'show_16384': 0,'show_2': 0,'show_16': 0, 'show_8192': 0, 'show_256': 0,
-                               'download_role': 1, 'delete_role':1, 'passwd_role':1})
+                               'download_role': 1, 'edit_role':1, 'delete_role':1, 'passwd_role':1})
         # start import
         self.goto_page('admin_setup')
         imprt = self.check_element_on_page((By.ID, "import_ldap_users"))
@@ -417,9 +417,10 @@ class TestLdapLogin(unittest.TestCase, ui_class):
         self.assertEqual(rights['show_8192'], 0)
         self.assertEqual(rights['show_256'], 0)
         self.assertEqual(rights['download_role'], 1)
+        self.assertEqual(rights['edit_role'], 1)
         self.assertEqual(rights['delete_role'], 1)
         self.assertEqual(rights['passwd_role'], 1)
-        self.assertEqual(rights['upload_role'], 0)
+        self.assertEqual(rights['upload_role'], None)
         self.assertEqual(rights['edit_shelf_role'], 0)
         self.assertEqual(rights['show_4'], 1)
         self.assertEqual(rights['show_4096'], 1)
@@ -435,7 +436,7 @@ class TestLdapLogin(unittest.TestCase, ui_class):
         self.assertTrue(self.check_element_on_page((By.ID, "flash_warning")))
 
         # change one user visibility and do reimport of users
-        self.edit_user('执一', {'show_256':0,'show_16':1,'passwd_role':0,'upload_role':1})
+        self.edit_user('执一', {'show_256':0,'show_16':1,'passwd_role':0})
         self.goto_page('admin_setup')
         imprt = self.check_element_on_page((By.ID, "import_ldap_users"))
         self.assertTrue(imprt)
@@ -450,7 +451,7 @@ class TestLdapLogin(unittest.TestCase, ui_class):
         self.assertEqual(rights['show_16'], 1)
         self.assertEqual(rights['show_4096'], 1)
         self.assertEqual(rights['passwd_role'], 0)
-        self.assertEqual(rights['upload_role'], 1)
+        self.assertEqual(rights['upload_role'], None)
 
         self.edit_user('Mümmy 7', {'delete': 1})
         self.edit_user('执一', {'delete': 1})

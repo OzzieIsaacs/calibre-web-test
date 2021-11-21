@@ -330,7 +330,7 @@ class TestEditBooksList(TestCase, ui_class):
         self.assertFalse('Delete' in bl['table'][0])
         for el in bl['table'][0]:
             self.assertTrue('td', bl['table'][0][el]['element'].tag_name)
-        self.edit_user('admin', {'delete_role': 1, 'edit_role': 1})
+        self.edit_user('admin', {'edit_role': 1, 'delete_role': 1})
 
     def test_bookslist_edit_cust_int(self):
         bl = self.get_books_list(1)

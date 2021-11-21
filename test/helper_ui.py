@@ -809,9 +809,21 @@ class ui_class():
                 user_settings['admin_role'] = None
 
             user_settings['download_role'] = int(self.check_element_on_page((By.ID, "download_role")).is_selected())
-            user_settings['upload_role'] = int(self.check_element_on_page((By.ID, "upload_role")).is_selected())
-            user_settings['edit_role'] = int(self.check_element_on_page((By.ID, "edit_role")).is_selected())
-            user_settings['delete_role'] = int(self.check_element_on_page((By.ID, "delete_role")).is_selected())
+            element = self.check_element_on_page((By.ID, "upload_role"))
+            if element:
+                user_settings['upload_role'] = element.is_selected()
+            else:
+                user_settings['upload_role'] = None
+            element = self.check_element_on_page((By.ID, "edit_role"))
+            if element:
+                user_settings['edit_role'] = element.is_selected()
+            else:
+                user_settings['edit_role'] = None
+            element = self.check_element_on_page((By.ID, "delete_role"))
+            if element:
+                user_settings['delete_role'] = element.is_selected()
+            else:
+                user_settings['delete_role'] = None
             element = self.check_element_on_page((By.ID, "kobo_only_shelves_sync"))
             if element:
                 user_settings['kobo_only_shelves_sync'] = element.is_selected()
