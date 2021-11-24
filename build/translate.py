@@ -37,9 +37,9 @@ def msgpack_loads(dump):
 
 need_iso = msgpack_loads(open('iso639.calibre_msgpack', 'rb').read())
 
-#need_iso['name_map']['enu'] = 'enu'
-#need_iso['codes3t'].append('enu')
-#msg_writer(need_iso)
+need_iso['name_map']['bit'] = 'berinomo'
+need_iso['codes3t'].append('bit')
+msg_writer(need_iso)
 workdir = os.getcwd()
 os.chdir(FILEPATH)
 
