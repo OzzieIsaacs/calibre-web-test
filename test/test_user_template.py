@@ -8,7 +8,7 @@ from helper_ui import ui_class, RESTRICT_TAG_TEMPLATE, RESTRICT_COL_TEMPLATE
 from config_test import TEST_DB
 from helper_func import startup
 from helper_func import save_logfiles
-
+from selenium.webdriver.support.ui import Select
 
 class TestUserTemplate(unittest.TestCase, ui_class):
     p = None
@@ -554,7 +554,16 @@ class TestUserTemplate(unittest.TestCase, ui_class):
         self.assertEqual(username.text, 'Username')
 
     def test_limit_book_languages(self):
-        self.edit_user('admin',{'default_language': 'Norwegian Bokmål'})
+        # Check all options are available even if visible languages are restricted
+        self.edit_user('admin', {'default_language': 'Norwegian Bokmål'})
+        default_language = Select(self.check_element_on_page((By.ID, "default_language")))
+        lang_options = [ opt.text for opt in default_language.options]
+        self.assertCountEqual(lang_options, ['Show All', 'Norwegian Bokmål', "English"])
+        self.edit_user('admin', {'default_language': 'Show All'})
+        default_language = Select(self.check_element_on_page((By.ID, "default_language")))
+        lang_options = [ opt.text for opt in default_language.options]
+        self.assertCountEqual(lang_options, ['Show All', 'Norwegian Bokmål', "English"])
+        self.edit_user('admin', {'default_language': 'Norwegian Bokmål'})
         self.goto_page("nav_hot")
         books = self.get_books_displayed()
         self.assertEqual(len(books[1]), 0)
@@ -574,6 +583,8 @@ class TestUserTemplate(unittest.TestCase, ui_class):
         self.assertEqual(len(tags), 2)
         self.assertEqual(tags[1].text, 'Unread Books (3)')
         # find 2 h2
+        self.edit_user('admin', {'default_language': 'Show All'})
+
 
     def test_allow_tag_restriction(self):
         restricts = self.list_restrictions(RESTRICT_TAG_TEMPLATE)

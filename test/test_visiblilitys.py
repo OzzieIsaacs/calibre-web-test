@@ -758,6 +758,13 @@ class TestCalibreWebVisibilitys(unittest.TestCase, ui_class):
         self.assertEqual(len(self.search('Lulu de Marco')), 0)
         self.assertEqual(len(self.search('Loko')), 1)
         self.assertEqual(len(self.search('Genot')), 2)
+        books = self.get_shelf_books_displayed()
+        self.assertEqual(books[0]['id'], '11')
+        self.check_element_on_page((By.ID, "old")).click()
+        books = self.get_shelf_books_displayed()
+        self.assertEqual(books[0]['id'], '10')
+        self.check_element_on_page((By.ID, "new")).click()
+
         self.list_restrictions(RESTRICT_COL_USER, username="admin")
         self.delete_restrictions('a0')
         close = self.check_element_on_page((By.ID, "restrict_close"))

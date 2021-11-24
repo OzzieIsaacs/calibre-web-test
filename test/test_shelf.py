@@ -467,6 +467,12 @@ class TestShelf(unittest.TestCase, ui_class):
         self.assertEqual(len(self.adv_search({u'exclude_shelf': u'Search', 'book_title': 'book'})), 5)
         self.assertEqual(len(self.adv_search({u'include_shelf': u'Search', 'include_serie': 'Djüngel'})), 1)
         self.assertEqual(len(self.adv_search({u'include_shelf': u'Search', 'include_tag': 'Gênot'})), 2)
+        books = self.get_shelf_books_displayed()
+        self.assertEqual(books[0]['id'], '12')
+        self.check_element_on_page((By.ID, "old")).click()
+        books = self.get_shelf_books_displayed()
+        self.assertEqual(books[0]['id'], '11')
+        self.check_element_on_page((By.ID, "new")).click()
 
     def test_xss_shelf(self):
         self.create_shelf('<p>calibre Quick Start Guide</p><img src=x onerror=alert("ji")>', False)

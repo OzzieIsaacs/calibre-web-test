@@ -229,7 +229,7 @@ class TestEditBooksList(TestCase, ui_class):
         self.assertEqual("German, English, French", bl['table'][3]['Languages']['text'])
         elements = self.goto_page("nav_lang")
         self.assertEqual(4, len(elements))
-        self.assertEqual("French", elements[3].text)
+        self.assertEqual("French", elements[1].text)
         self.assertEqual("German", elements[2].text)
         bl = self.get_books_list(1)
         self.edit_table_element(bl['table'][2]['Languages']['element'], "German, ")

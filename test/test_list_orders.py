@@ -125,7 +125,7 @@ class TestCalibreWebListOrders(unittest.TestCase, ui_class):
         list_element = self.get_list_books_displayed()
         self.assertEqual(list_element[0]['title'], "Leo Baskerville")
         self.assertEqual(list_element[10]['title'], "Liu Yang")
-        self.check_element_on_page((By.XPATH, "//button[contains(text(), 'L')]")).click()
+        self.check_element_on_page((By.XPATH, "//div[contains(text(), 'L')]")).click()
         list_element = self.get_list_books_displayed()
         self.assertEqual(list_element[0]['title'], "Sigurd Lindgren")
         self.assertEqual(list_element[1]['title'], "Asterix Lionherd")
@@ -134,7 +134,7 @@ class TestCalibreWebListOrders(unittest.TestCase, ui_class):
         self.assertEqual(list_element[0]['title'], "Asterix Lionherd")
         self.assertEqual(list_element[1]['title'], "Sigurd Lindgren")
         self.assertEqual(len(list_element),2)
-        self.check_element_on_page((By.XPATH, "//button[contains(text(), 'D')]")).click()
+        self.check_element_on_page((By.XPATH, "//div[contains(text(), 'D')]")).click()
         list_element = self.get_list_books_displayed()
         self.assertEqual(list_element[0]['title'], "John Döe")
         self.assertEqual(len(list_element), 1)
@@ -143,20 +143,6 @@ class TestCalibreWebListOrders(unittest.TestCase, ui_class):
         self.assertEqual(list_element[0]['title'], "Liu Yang")
         self.assertEqual(list_element[10]['title'], "Leo Baskerville")
         self.assertEqual(len(list_element), 11)
-
-    '''def test_lang_sort(self):
-        self.goto_page('nav_lang')
-        list_element = self.get_list_books_displayed()
-        self.assertEqual(list_element[0]['title'], "English")
-        self.assertEqual(list_element[10]['title'], "Liu Yang")
-        self.check_element_on_page((By.ID, "asc")).click()
-        list_element = self.get_list_books_displayed()
-        self.assertEqual(list_element[0]['title'], "Leo Baskerville")
-        self.assertEqual(list_element[10]['title'], "Liu Yang")
-        self.check_element_on_page((By.ID, "desc")).click()
-        list_element = self.get_list_books_displayed()
-        self.assertEqual(list_element[0]['title'], "Liu Yang")
-        self.assertEqual(list_element[10]['title'], "Leo Baskerville")'''
 
     def test_publisher_sort(self):
         self.get_book_details(9)
@@ -194,6 +180,28 @@ class TestCalibreWebListOrders(unittest.TestCase, ui_class):
         self.assertEqual(list_element[0]['title'], "TXT")
         self.assertEqual(list_element[4]['title'], "CBR")
         self.check_element_on_page((By.ID, "asc")).click()
+
+    def test_lang_sort(self):
+        self.get_book_details(9)
+        self.check_element_on_page((By.ID, "edit_book")).click()
+        self.edit_book(content={'languages': 'German'})
+        self.goto_page('nav_lang')
+        list_element = self.get_list_books_displayed()
+        self.assertEqual(list_element[0]['title'], "English")
+        self.assertEqual(list_element[1]['title'], "German")
+        self.assertEqual(len(list_element), 3)
+        self.check_element_on_page((By.ID, "asc")).click()
+        list_element = self.get_list_books_displayed()
+        self.assertEqual(list_element[0]['title'], "English")
+        self.assertEqual(list_element[1]['title'], "German")
+        self.check_element_on_page((By.ID, "desc")).click()
+        list_element = self.get_list_books_displayed()
+        self.assertEqual(list_element[0]['title'], "Norwegian Bokmål")
+        self.assertEqual(list_element[1]['title'], "German")
+        self.check_element_on_page((By.ID, "asc")).click()
+        self.get_book_details(9)
+        self.check_element_on_page((By.ID, "edit_book")).click()
+        self.edit_book(content={'languages': ''})
 
     def test_tags_sort(self):
         self.get_book_details(9)

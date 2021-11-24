@@ -1252,9 +1252,31 @@ class ui_class():
         if grid:
             index = 5
             link = 1
+            sep = "/series"
         else:
             link = 3
             index = 2
+            sep = cls.driver.find_element_by_xpath("//body").get_attribute("class")
+            if sep == "langlist ":
+                sep = "/language"
+            elif sep == "catlist ":
+                sep = "/category"
+            elif sep == "serieslist ":
+                sep = "/series"
+            elif sep == "authorlist ":
+                sep = "/author"
+            elif sep == "catlist ":
+                sep = "category"
+            elif sep == "publisherlist ":
+                sep = "/publisher"
+            elif sep == "publisherlist ":
+                sep = "/publisher"
+            elif sep == "langlist ":
+                sep = "/language"
+            elif sep == "ratingslist ":
+                sep = "/ratings"
+            elif sep == "formatslist ":
+                sep = "/formats"
         b = cls.driver.find_elements_by_xpath("//*[@id='list']/div")
         books = list()
         for book in b:
@@ -1266,7 +1288,7 @@ class ui_class():
             bk['x'] = book.location['x']
             bk['y'] = book.location['y']
             bk['link'] = ele[link].get_attribute('href')
-            bk['link'] = bk['link'][bk['link'].find('/series'):]
+            bk['link'] = bk['link'][bk['link'].find(sep):]
             bk['id'] = bk['link'].split('/')[-1]
             if grid:
                 bk['ele'] = cls.check_element_on_page((By.XPATH,"//a[@href='"+bk['link']+"']//img"))

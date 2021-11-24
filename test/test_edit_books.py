@@ -22,13 +22,9 @@ from helper_func import save_logfiles
 class TestEditBooks(TestCase, ui_class):
     p = None
     driver = None
-    #dependencys = ['lxml']
-    # py_version = u'/usr/bin/python3'
 
     @classmethod
     def setUpClass(cls):
-        #add_dependency(cls.dependencys, cls.__name__)
-
         try:
             startup(cls, cls.py_version, {'config_calibre_dir': TEST_DB})
             time.sleep(3)
@@ -395,7 +391,7 @@ class TestEditBooks(TestCase, ui_class):
         values = self.get_book_details()
         self.assertEqual('German', values['languages'][0])
         list_element = self.goto_page('nav_lang')
-        self.assertEqual(list_element[2].text, u'German')
+        self.assertEqual(list_element[1].text, u'German')
         self.get_book_details(3)
         self.check_element_on_page((By.ID, "edit_book")).click()
         self.edit_book(content={'languages':'German & English'}, detail_v=True)
@@ -772,6 +768,7 @@ class TestEditBooks(TestCase, ui_class):
         self.fill_basic_config({'config_uploading': 1})
         time.sleep(BOOT_TIME)
         self.assertTrue(self.check_element_on_page((By.ID, "flash_success")))
+        self.edit_user('admin', {'upload_role': 1})
         self.get_book_details(5)
         self.save_cover_screenshot('original.png')
         self.check_element_on_page((By.ID, "edit_book")).click()
