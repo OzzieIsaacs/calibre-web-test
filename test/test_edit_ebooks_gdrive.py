@@ -586,6 +586,7 @@ class TestEditBooksOnGdrive(unittest.TestCase, ui_class):
         self.edit_book(content={'languages':'German & English'}, detail_v=True)
         time.sleep(WAIT_GDRIVE)
         self.check_element_on_page((By.ID, 'flash_danger'))
+        self.check_element_on_page((By.ID, "edit_book")).click()
         self.edit_book(content={'languages': 'German, English'})
         self.get_book_details(3)
         values = self.get_book_details()

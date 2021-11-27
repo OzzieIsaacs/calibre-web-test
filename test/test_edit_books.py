@@ -396,6 +396,7 @@ class TestEditBooks(TestCase, ui_class):
         self.check_element_on_page((By.ID, "edit_book")).click()
         self.edit_book(content={'languages':'German & English'}, detail_v=True)
         self.check_element_on_page((By.ID, 'flash_danger'))
+        self.check_element_on_page((By.ID, "edit_book")).click()
         self.edit_book(content={'languages': 'German, English'})
         self.get_book_details(3)
         values = self.get_book_details()
