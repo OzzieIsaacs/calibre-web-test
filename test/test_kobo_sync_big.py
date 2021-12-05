@@ -283,7 +283,7 @@ class TestKoboSyncBig(unittest.TestCase, ui_class):
         # check kobo only
         self.logout()
         self.login("kobosync","123")
-        # 2.user erzeuge neuen shelf mit sync füge Bücher hinzu
+        # 2.user creates new shelf and adds books
         self.create_shelf("syncd_shelf_u2", sync=1)
         self.get_book_details(9)
         self.check_element_on_page((By.ID, "add-to-shelf")).click()
@@ -313,3 +313,5 @@ class TestKoboSyncBig(unittest.TestCase, ui_class):
 
         self.sync_kobo()
 
+    def test_kobo_sync_multi_user(self):
+        pass
