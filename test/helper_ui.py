@@ -13,6 +13,8 @@ import time
 import re
 import lxml.etree
 from PIL import Image
+from functools import cmp_to_key
+
 try:
     from StringIO import StringIO
 except ImportError:
@@ -62,6 +64,16 @@ page['login'] = {'check': (By.NAME, "username"), 'click': [(By.ID, "logout")]}
 page['unlogged_login'] = {'check': (By.NAME, "username"), 'click': [(By.CLASS_NAME, "glyphicon-log-in")]}
 page['logviewer'] = {'check': (By.ID, "log_group"), 'click': [(By.ID, "top_admin"), (By.ID, "logfile")]}
 page['adv_search'] = {'check': (By.ID, "adv_submit"), 'click': [(By.ID, "advanced_search")]}
+
+
+def cust_compare(item1, item2):
+    if (item1['x'] < item2['x'] and item1['y'] <= item2['y']) or (item1['y'] < item2['y'] and item1['x'] >= item2['x']):
+        return -1
+    else:
+        # elif item1['x'] > item2['x']:
+        #    return 1
+        # else:
+        return 0
 
 
 class ui_class():
@@ -797,9 +809,21 @@ class ui_class():
                 user_settings['admin_role'] = None
 
             user_settings['download_role'] = int(self.check_element_on_page((By.ID, "download_role")).is_selected())
-            user_settings['upload_role'] = int(self.check_element_on_page((By.ID, "upload_role")).is_selected())
-            user_settings['edit_role'] = int(self.check_element_on_page((By.ID, "edit_role")).is_selected())
-            user_settings['delete_role'] = int(self.check_element_on_page((By.ID, "delete_role")).is_selected())
+            element = self.check_element_on_page((By.ID, "upload_role"))
+            if element:
+                user_settings['upload_role'] = element.is_selected()
+            else:
+                user_settings['upload_role'] = None
+            element = self.check_element_on_page((By.ID, "edit_role"))
+            if element:
+                user_settings['edit_role'] = element.is_selected()
+            else:
+                user_settings['edit_role'] = None
+            element = self.check_element_on_page((By.ID, "delete_role"))
+            if element:
+                user_settings['delete_role'] = element.is_selected()
+            else:
+                user_settings['delete_role'] = None
             element = self.check_element_on_page((By.ID, "kobo_only_shelves_sync"))
             if element:
                 user_settings['kobo_only_shelves_sync'] = element.is_selected()
@@ -1222,29 +1246,61 @@ class ui_class():
         return [books_rand, books, pagination]
 
     @classmethod
-    def get_series_books_displayed(cls):
+    def get_list_books_displayed(cls, rating=False):
         # expects grid view
-        #grid = cls.check_element_on_page((By.ID, "list-button"))
-        #if grid:
-        #    grid.click()
-        #    cls.check_element_on_page((By.ID, "grid-button"))
-        parser = lxml.etree.HTMLParser()
-        html = cls.driver.page_source
-
-        tree = lxml.etree.parse(StringIO(html), parser)
+        grid = cls.check_element_on_page((By.ID, "list-button"))
+        if grid:
+            index = 5
+            link = 1
+            sep = "/series"
+        else:
+            link = 3
+            index = 2
+            sep = cls.driver.find_element_by_xpath("//body").get_attribute("class")
+            if sep == "langlist ":
+                sep = "/language"
+            elif sep == "catlist ":
+                sep = "/category"
+            elif sep == "serieslist ":
+                sep = "/series"
+            elif sep == "authorlist ":
+                sep = "/author"
+            elif sep == "catlist ":
+                sep = "category"
+            elif sep == "publisherlist ":
+                sep = "/publisher"
+            elif sep == "publisherlist ":
+                sep = "/publisher"
+            elif sep == "langlist ":
+                sep = "/language"
+            elif sep == "ratingslist ":
+                sep = "/ratings"
+            elif sep == "formatslist ":
+                sep = "/formats"
+        b = cls.driver.find_elements_by_xpath("//*[@id='list']/div")
         books = list()
-        b = tree.xpath("//*[@id='list']/div")
         for book in b:
-            ele = book.getchildren()
-            # ele[0] -> cover
-            meta=ele[1].getchildren()
-            bk = dict()
-            bk['link'] = ele[1].getchildren()[0].attrib['href']
-            bk['id'] = bk['link'].split('/')[-1]
-            bk['ele'] = cls.check_element_on_page((By.XPATH,"//a[@href='"+bk['link']+"']//img"))
-            bk['title']= meta[0].getchildren()[0].text
-            books.append(bk)
 
+            if not book.is_displayed():
+                continue
+            ele = book.find_elements_by_xpath(".//*")
+            bk = dict()
+            bk['x'] = book.location['x']
+            bk['y'] = book.location['y']
+            bk['link'] = ele[link].get_attribute('href')
+            bk['link'] = bk['link'][bk['link'].find(sep):]
+            bk['id'] = bk['link'].split('/')[-1]
+            if grid:
+                bk['ele'] = cls.check_element_on_page((By.XPATH,"//a[@href='"+bk['link']+"']//img"))
+            else:
+                bk['ele'] = None
+            if not rating:
+                bk['title']= ele[index].text
+            else:
+                bk['title'] = str(len(book.find_elements_by_xpath(".//*[@class='glyphicon glyphicon-star good']")))
+            books.append(bk)
+        if grid:
+            return sorted(books, key=cmp_to_key(cust_compare))
         return books
 
     def verify_order(self, page, index=-1, order=None):
@@ -1257,7 +1313,7 @@ class ui_class():
         time.sleep(2)
         if index >= 0:
             if not len(list_elements):
-                list_elements = self.get_series_books_displayed()
+                list_elements = self.get_list_books_displayed()
                 list_elements[index]['ele'].click()
             else:
                 if page == "nav_rate":
@@ -1467,7 +1523,8 @@ class ui_class():
                             ret['cust_columns'].append(element)
                         elif ':' in col.text:
                             element['Text'] = col.text.lstrip().split(':')[0]
-                            element['value'] = col.text.split(':')[1].strip()
+                            element['value'] = re.sub(r"\n\s+","", col.text.split(':')[1].strip())
+                            # element['value'] = col.text.split(':')[1].strip()
                             ret['cust_columns'].append(element)
                         else:
                             pass
@@ -1811,6 +1868,20 @@ class ui_class():
             table_element.find_element_by_xpath("..//button[contains(@class,'btn-primary')]").click()
         else:
             table_element.find_element_by_xpath("..//button[contains(@class,'btn-default')]").click()
+
+    def edit_table_html(self, table_element, new_value, cancel=False):
+        table_element.click()
+        self.driver.switch_to.frame(self.driver.find_element_by_class_name("wysihtml5-sandbox"))
+        ele = self.check_element_on_page((By.CLASS_NAME, 'wysihtml5-editor'))
+        ele.clear()
+        ele.send_keys(new_value)
+        self.driver.switch_to.default_content()
+        if not cancel:
+            self.driver.find_element_by_xpath("//button[contains(@class,'btn-primary')]").click()
+        else:
+            self.driver.find_element_by_xpath("//button[contains(@class,'btn-default')]").click()
+
+
 
     def get_user_table(self, page=1):
         # get current page

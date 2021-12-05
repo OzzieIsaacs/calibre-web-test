@@ -150,11 +150,8 @@ except CalledProcessError:
 print("Adding dependencies for executable from requirements file")
 requirements_file = os.path.join(FILEPATH, 'requirements.txt')
 p = process_open([VENV_PYTHON, "-m", "pip", "install", "-r", requirements_file], (0, 5))
-#if os.name == 'nt':
 while p.poll() == None:
     print(p.stdout.readline().strip("\n"))
-#else:
-#    p.wait()
 
 # Adding precompiled dependencies for Windows
 if os.name == "nt":
@@ -165,11 +162,13 @@ if os.name == "nt":
 print("Adding dependencies for executable from optional_requirements file")
 optional_requirements_file = os.path.join(FILEPATH, 'optional-requirements.txt')
 p = process_open([VENV_PYTHON, "-m", "pip", "install", "-r", optional_requirements_file], (0, 5))
-#if os.name == 'nt':
 while p.poll() == None:
     print(p.stdout.readline().strip("\n"))
-#else:
-#    p.wait()
+
+print("Adding pyinstaller to virtual environment")
+p = process_open([VENV_PYTHON, "-m", "pip", "install", "pyinstaller"], (0,))
+while p.poll() == None:
+    print(p.stdout.readline().strip("\n"))
 
 
 print("Starting build of executable via PyInstaller")
@@ -178,7 +177,7 @@ if os.name == "nt":
 else:
     sep = ":"
 
-pyinst_path = os.path.join(os.path.dirname(sys.executable), pyinst)
+pyinst_path = os.path.join(os.path.dirname(VENV_PYTHON), pyinst)
 if os.name == "nt":
     google_api_path = glob.glob(os.path.join(FILEPATH, "venv","lib/site-packages/google_api_python*"))
 else:
@@ -187,13 +186,18 @@ else:
 if len(google_api_path) != 1:
     print('More than one google_api_python directory found exiting')
     sys.exit(1)
-p = subprocess.Popen(pyinst_path + " __init__.py "
+os.rename('__init__.py', 'root.py')
+p = subprocess.Popen(pyinst_path + " root.py "
                                    "-i cps/static/favicon.ico "
                                    "-n calibreweb "
                                    "--add-data cps/static" + sep + "cps/static "
+                                   "--add-data cps/metadata_provider" + sep + "cps/metadata_provider "                                                                   
                                    "--add-data cps/templates" + sep + "cps/templates "
                                    "--add-data cps/translations" + sep + "cps/translations "
-                                   "--add-data " + google_api_path[0] + sep + os.path.basename(google_api_path[0]),
+                                   "--add-data " + google_api_path[0] + sep + os.path.basename(google_api_path[0]) + " "
+                                   "--hidden-import sqlalchemy.sql.default_comparator ",
+                                   # "--hidden-import flask_wtf "
+                                   # "--debug all",
                      shell=True,
                      stdout=subprocess.PIPE,
                      stdin=subprocess.PIPE)

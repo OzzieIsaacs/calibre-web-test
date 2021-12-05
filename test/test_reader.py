@@ -226,6 +226,7 @@ class TestReader(unittest.TestCase, ui_class):
         self.fill_basic_config({'config_uploading': 1})
         time.sleep(3)
         self.assertTrue(self.check_element_on_page((By.ID, "flash_success")))
+        self.edit_user('admin', {'upload_role': 1})
         self.sound_test('music.flac', 'Unknown - music', '0:02')
         self.sound_test('music.mp3', 'Unknown - music', '0:03')
         self.sound_test('music.ogg', 'Unknown - music', '0:02')

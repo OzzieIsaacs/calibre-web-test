@@ -22,13 +22,9 @@ from helper_func import save_logfiles
 class TestEditBooks(TestCase, ui_class):
     p = None
     driver = None
-    #dependencys = ['lxml']
-    # py_version = u'/usr/bin/python3'
 
     @classmethod
     def setUpClass(cls):
-        #add_dependency(cls.dependencys, cls.__name__)
-
         try:
             startup(cls, cls.py_version, {'config_calibre_dir': TEST_DB})
             time.sleep(3)
@@ -200,6 +196,8 @@ class TestEditBooks(TestCase, ui_class):
         self.assertEqual(values['author'][0], 'Marco, Lulu de')
         list_element = self.goto_page('nav_author')
         # ToDo check names of List elements
+        self.assertEqual("Lulu de Marco", list_element[6].text)
+        self.assertEqual("Marco, Lulu de", list_element[7].text)
         self.get_book_details(8)
         self.check_element_on_page((By.ID, "edit_book")).click()
 
@@ -218,7 +216,7 @@ class TestEditBooks(TestCase, ui_class):
         self.edit_book(content={'bookAuthor': 'Pipo| Pipe'}, detail_v=True)
         author = self.check_element_on_page((By.ID, "bookAuthor"))
         self.assertEqual(u'Pipo, Pipe', author.get_attribute('value'))
-        list_element = self.goto_page('nav_author')
+        self.goto_page('nav_author')
 
         file_path = os.path.join(TEST_DB, 'Pipo, Pipe', 'book8 (8)')
         not_file_path = os.path.join(TEST_DB, 'Pipo, Pipe', 'nofolder')
@@ -244,7 +242,7 @@ class TestEditBooks(TestCase, ui_class):
         values = self.get_book_details()
         self.assertEqual(u'Alf|alfa, Kuko', values['series'])
         self.goto_page('nav_serie')
-        list_element = self.get_series_books_displayed()
+        list_element = self.get_list_books_displayed()
         self.assertEqual(list_element[0]['title'], u'Alf|alfa, Kuko')
 
         self.get_book_details(9)
@@ -264,7 +262,7 @@ class TestEditBooks(TestCase, ui_class):
         values = self.get_book_details()
         self.assertEqual(u'loko', values['series'])
         self.goto_page('nav_serie')
-        list_element = self.get_series_books_displayed()
+        list_element = self.get_list_books_displayed()
         self.assertEqual(list_element[1]['title'], u'loko')
 
         self.get_book_details(4)
@@ -290,7 +288,7 @@ class TestEditBooks(TestCase, ui_class):
         except UnexpectedAlertPresentException:
             self.assertFalse(True,"XSS in series")
         self.goto_page('nav_serie')
-        list_element = self.get_series_books_displayed()
+        list_element = self.get_list_books_displayed()
         self.assertTrue(list_element[0]['title'].startswith('<p>calibre Quick Start Guide</p><img src=x onerror'))
         list_element[0]['ele'].click()
         try:
@@ -393,11 +391,12 @@ class TestEditBooks(TestCase, ui_class):
         values = self.get_book_details()
         self.assertEqual('German', values['languages'][0])
         list_element = self.goto_page('nav_lang')
-        self.assertEqual(list_element[2].text, u'German')
+        self.assertEqual(list_element[1].text, u'German')
         self.get_book_details(3)
         self.check_element_on_page((By.ID, "edit_book")).click()
         self.edit_book(content={'languages':'German & English'}, detail_v=True)
         self.check_element_on_page((By.ID, 'flash_danger'))
+        self.check_element_on_page((By.ID, "edit_book")).click()
         self.edit_book(content={'languages': 'German, English'})
         self.get_book_details(3)
         values = self.get_book_details()
@@ -770,6 +769,7 @@ class TestEditBooks(TestCase, ui_class):
         self.fill_basic_config({'config_uploading': 1})
         time.sleep(BOOT_TIME)
         self.assertTrue(self.check_element_on_page((By.ID, "flash_success")))
+        self.edit_user('admin', {'upload_role': 1})
         self.get_book_details(5)
         self.save_cover_screenshot('original.png')
         self.check_element_on_page((By.ID, "edit_book")).click()
@@ -818,6 +818,7 @@ class TestEditBooks(TestCase, ui_class):
         self.fill_basic_config({'config_uploading':1})
         time.sleep(BOOT_TIME)
         self.assertTrue(self.check_element_on_page((By.ID, "flash_success")))
+        self.edit_user('admin', {'upload_role': 1})
         self.goto_page('nav_new')
         upload_file = os.path.join(base_path, 'files', 'book.pdf')
         upload = self.check_element_on_page((By.ID, 'btn-upload'))
@@ -843,6 +844,7 @@ class TestEditBooks(TestCase, ui_class):
         self.fill_basic_config({'config_uploading':1})
         time.sleep(BOOT_TIME)
         self.assertTrue(self.check_element_on_page((By.ID, "flash_success")))
+        self.edit_user('admin', {'upload_role': 1})
         self.goto_page('nav_new')
         upload_file = os.path.join(base_path, 'files', 'book.fb2')
         upload = self.check_element_on_page((By.ID, 'btn-upload'))
@@ -868,6 +870,7 @@ class TestEditBooks(TestCase, ui_class):
         self.fill_basic_config({'config_uploading':1})
         time.sleep(BOOT_TIME)
         self.assertTrue(self.check_element_on_page((By.ID, "flash_success")))
+        self.edit_user('admin', {'upload_role': 1})
         self.goto_page('nav_new')
         upload_file = os.path.join(base_path, 'files', 'book.lit')
         upload = self.check_element_on_page((By.ID, 'btn-upload'))
@@ -893,6 +896,7 @@ class TestEditBooks(TestCase, ui_class):
         self.fill_basic_config({'config_uploading':1})
         time.sleep(BOOT_TIME)
         self.assertTrue(self.check_element_on_page((By.ID, "flash_success")))
+        self.edit_user('admin', {'upload_role': 1})
         self.goto_page('nav_new')
         upload_file = os.path.join(base_path, 'files', 'book.mobi')
         upload = self.check_element_on_page((By.ID, 'btn-upload'))
@@ -918,6 +922,7 @@ class TestEditBooks(TestCase, ui_class):
         self.fill_basic_config({'config_uploading':1})
         time.sleep(BOOT_TIME)
         self.assertTrue(self.check_element_on_page((By.ID, "flash_success")))
+        self.edit_user('admin', {'upload_role': 1})
         self.goto_page('nav_new')
         upload_file = os.path.join(base_path, 'files', 'book.epub')
         upload = self.check_element_on_page((By.ID, 'btn-upload'))
@@ -956,6 +961,7 @@ class TestEditBooks(TestCase, ui_class):
         self.fill_basic_config({'config_uploading':1})
         time.sleep(BOOT_TIME)
         self.assertTrue(self.check_element_on_page((By.ID, "flash_success")))
+        self.edit_user('admin', {'upload_role': 1})
         self.goto_page('nav_new')
         upload_file = os.path.join(base_path, 'files', 'book.cbz')
         upload = self.check_element_on_page((By.ID, 'btn-upload'))
@@ -981,6 +987,7 @@ class TestEditBooks(TestCase, ui_class):
         self.fill_basic_config({'config_uploading':1})
         time.sleep(BOOT_TIME)
         self.assertTrue(self.check_element_on_page((By.ID, "flash_success")))
+        self.edit_user('admin', {'upload_role': 1})
         self.goto_page('nav_new')
         upload_file = os.path.join(base_path, 'files', 'book.cbt')
         upload = self.check_element_on_page((By.ID, 'btn-upload'))
@@ -1006,6 +1013,7 @@ class TestEditBooks(TestCase, ui_class):
         self.fill_basic_config({'config_uploading':1})
         time.sleep(BOOT_TIME)
         self.assertTrue(self.check_element_on_page((By.ID, "flash_success")))
+        self.edit_user('admin', {'upload_role': 1})
         self.goto_page('nav_new')
         upload_file = os.path.join(base_path, 'files', 'book.cbr')
         upload = self.check_element_on_page((By.ID, 'btn-upload'))

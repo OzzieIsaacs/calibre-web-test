@@ -17,6 +17,17 @@ decoders = (
     lambda x, fj: set(x),
 )
 
+def default(obj):
+    if isinstance(obj, set):
+        return tuple(obj)  # msgpack module can't deal with sets so we make a tuple out of it
+    else:
+        return str(obj)
+
+
+def msg_writer(data):
+    with open('iso639_new.calibre_msgpack', "wb") as outfile:
+        packed = msgpack.packb(data, use_bin_type=True, default=default) # ext_hook=msgpack_decoder)
+        outfile.write(packed)
 
 def msgpack_decoder(code, data):
     return decoders[code](msgpack_loads(data), False)
@@ -26,6 +37,9 @@ def msgpack_loads(dump):
 
 need_iso = msgpack_loads(open('iso639.calibre_msgpack', 'rb').read())
 
+need_iso['name_map']['bit'] = 'berinomo'
+need_iso['codes3t'].append('bit')
+msg_writer(need_iso)
 workdir = os.getcwd()
 os.chdir(FILEPATH)
 

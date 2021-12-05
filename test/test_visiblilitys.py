@@ -58,7 +58,7 @@ class TestCalibreWebVisibilitys(unittest.TestCase, ui_class):
 
         # check random books shown in series section
         self.goto_page('nav_serie')
-        list_element = self.get_series_books_displayed()
+        list_element = self.get_list_books_displayed()
         self.assertIsNotNone(list_element)
         list_element[0]['ele'].click()
 
@@ -127,7 +127,7 @@ class TestCalibreWebVisibilitys(unittest.TestCase, ui_class):
         self.assertFalse(self.check_element_on_page((By.ID, "nav_rand")))
         # check random books shown in series section
         self.goto_page("nav_serie")
-        list_element = self.get_series_books_displayed()
+        list_element = self.get_list_books_displayed()
         self.assertIsNotNone(list_element)
         list_element[0]['ele'].click()
         self.assertTrue(self.check_element_on_page((By.ID, "books")))
@@ -758,6 +758,13 @@ class TestCalibreWebVisibilitys(unittest.TestCase, ui_class):
         self.assertEqual(len(self.search('Lulu de Marco')), 0)
         self.assertEqual(len(self.search('Loko')), 1)
         self.assertEqual(len(self.search('Genot')), 2)
+        books = self.get_shelf_books_displayed()
+        self.assertEqual(books[0]['id'], '11')
+        self.check_element_on_page((By.ID, "old")).click()
+        books = self.get_shelf_books_displayed()test_upload_book_cbr
+        self.assertEqual(books[0]['id'], '10')
+        self.check_element_on_page((By.ID, "new")).click()
+
         self.list_restrictions(RESTRICT_COL_USER, username="admin")
         self.delete_restrictions('a0')
         close = self.check_element_on_page((By.ID, "restrict_close"))

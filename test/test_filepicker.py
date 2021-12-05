@@ -60,14 +60,14 @@ class TestFilePicker(TestCase, ui_class):
 
         # file_abort
         # self.driver.find_elements_by_class_name("tr-clickable")
-        # check files with other ending than metadaa.db are not shown, only folders
+        # check files with other ending than metadata.db are not shown, only folders
         # check folder with name metadata.db is shown
-        # nagigate back to older where we came from, select nothing, click abort -> field still empty
-        # open filkepicker select nothing, click okay -> path taken
-        # open filkepicker select metadata.db, click okay -> path taken incl. metadata.db
+        # navigate back to older where we came from, select nothing, click abort -> field still empty
+        # open filepicker select nothing, click okay -> path taken
+        # open filepicker select metadata.db, click okay -> path taken incl. metadata.db
         # empty field -> open filepicker, check back to original path, abort -> field empty
         # put "." in field -> open filepicker, check back to original path, -> okay,value replaced
-        # put invalid path to field, open fillepicker -> check back to original path, abort -> invalid path still present
+        # put invalid path to field, open filepicker -> check back to original path, abort -> invalid path still present
 
     def test_two_filepickers(self):
         CALIBRE_WEB_PATH_PARENT = CALIBRE_WEB_PATH[:CALIBRE_WEB_PATH.rfind(os.sep)]

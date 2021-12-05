@@ -9,11 +9,12 @@ import requests
 
 from selenium.webdriver.common.by import By
 from helper_ui import ui_class
-from config_test import TEST_DB
-from helper_func import startup, debug_startup, add_dependency, remove_dependency
+from config_test import TEST_DB, base_path
+from helper_func import startup, debug_startup
 from helper_proxy import Proxy, val
 from helper_func import save_logfiles
 from diffimg import diff
+
 
 class TestCoverEditBooks(TestCase, ui_class):
     p = None
@@ -101,3 +102,24 @@ class TestCoverEditBooks(TestCase, ui_class):
         os.unlink('last.png')
         os.unlink('jpg.png')
         os.unlink('page.png')
+
+    def test_invalid_jpg_hdd(self):
+        invalid_cover = os.path.join(base_path, 'files', 'invalid.jpg')
+        with open(invalid_cover, 'wb') as fout:
+            fout.write(os.urandom(124))
+        self.get_book_details(9)
+        self.check_element_on_page((By.ID, "edit_book")).click()
+        element = self.check_element_on_page((By.ID, "btn-upload-cover"))
+        element.send_keys(invalid_cover)
+        self.check_element_on_page((By.ID, "submit")).click()
+        self.assertTrue(self.check_element_on_page((By.ID, "flash_danger")))
+        # check empty file
+        open(invalid_cover, 'wb').close()
+        self.get_book_details(9)
+        self.check_element_on_page((By.ID, "edit_book")).click()
+        element = self.check_element_on_page((By.ID, "btn-upload-cover"))
+        element.send_keys(invalid_cover)
+        self.check_element_on_page((By.ID, "submit")).click()
+        self.assertTrue(self.check_element_on_page((By.ID, "flash_danger")))
+
+        os.unlink(invalid_cover)

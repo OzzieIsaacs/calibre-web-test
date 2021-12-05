@@ -50,7 +50,7 @@ class TestUserList(TestCase, ui_class):
     @classmethod
     def setUpClass(cls):
         try:
-            startup(cls, cls.py_version, {'config_calibre_dir': TEST_DB})
+            startup(cls, cls.py_version, {'config_calibre_dir': TEST_DB, "config_uploading": 1})
             time.sleep(3)
             cls.mass_create_users(1)
         except Exception:

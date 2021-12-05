@@ -135,6 +135,7 @@ class TestSSL(unittest.TestCase, ui_class):
         self.fill_basic_config({'config_uploading': 1})
         time.sleep(3)
         self.assertTrue(self.check_element_on_page((By.ID, 'flash_success')))
+        self.edit_user('admin', {'upload_role': 1})
         random_file = os.path.join(base_path, 'files', 'random.mobi')
         # create random .mobi file size >2 mb
         with open(random_file, 'wb') as fout:
