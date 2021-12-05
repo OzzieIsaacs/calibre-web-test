@@ -31,7 +31,7 @@ class TestKoboSync(unittest.TestCase, ui_class):
 
         try:
             host = 'http://' + get_Host_IP() + ':8083'
-            startup(cls, cls.py_version, {'config_calibre_dir':TEST_DB, 'config_kobo_sync':1,
+            startup(cls, cls.py_version, {'config_calibre_dir':TEST_DB, 'config_log_level': 'DEBUG', 'config_kobo_sync':1,
                                           'config_kepubifypath': "",
                                           'config_kobo_proxy':0}, host=host)
             time.sleep(3)
@@ -647,4 +647,18 @@ class TestKoboSync(unittest.TestCase, ui_class):
         self.check_element_on_page((By.XPATH, "//*[@id='archived_cb']")).click()
         self.get_book_details(5)
         self.check_element_on_page((By.XPATH, "//*[@id='archived_cb']")).click()
+
+    def test_kobo_upload_book(self):
+        self.inital_sync()
+        self.fill_basic_config({'config_uploading': 1})
+        time.sleep(3)
+        self.assertTrue(self.check_element_on_page((By.ID, 'flash_success')))
+        self.edit_user('admin', {'upload_role': 1})
+        self.goto_page('nav_new')
+        upload_file = os.path.join(base_path, 'files', 'book.epub')
+        upload = self.check_element_on_page((By.ID, 'btn-upload'))
+        upload.send_keys(upload_file)
+        time.sleep(3)
+        data = self.sync_kobo()
+        print(data) # todo check result
 

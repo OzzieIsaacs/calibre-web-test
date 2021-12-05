@@ -761,7 +761,7 @@ class TestCalibreWebVisibilitys(unittest.TestCase, ui_class):
         books = self.get_shelf_books_displayed()
         self.assertEqual(books[0]['id'], '11')
         self.check_element_on_page((By.ID, "old")).click()
-        books = self.get_shelf_books_displayed()test_upload_book_cbr
+        books = self.get_shelf_books_displayed()
         self.assertEqual(books[0]['id'], '10')
         self.check_element_on_page((By.ID, "new")).click()
 
