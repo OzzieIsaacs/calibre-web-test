@@ -100,11 +100,11 @@ class TestKoboSyncBig(unittest.TestCase, ui_class):
         # perform benefits request
         r = session.get(self.kobo_adress+'/v1/user/loyalty/benefits', headers=TestKoboSyncBig.header, timeout=10)
         self.assertEqual(r.status_code, 200)
-        self.assertEqual(r.json(), {})
+        self.assertEqual(r.json(), {'Benefits': {}})
         # perform analytics request
         r = session.get(self.kobo_adress+'/v1/analytics/gettests', headers=TestKoboSyncBig.header, timeout=10)
         self.assertEqual(r.status_code, 200)
-        self.assertEqual(r.json(), {})
+        self.assertEqual(r.json(), {'Result': 'Success', 'TestKey': '', 'Tests': {}})
 
         # perform sync request
         params = {'Filter': 'All', 'DownloadUrlFilter': 'Generic,Android', 'PrioritizeRecentReads':'true'}

@@ -6,7 +6,6 @@ import re
 import time
 import unittest
 import requests
-import json
 
 from helper_ui import ui_class
 from config_test import TEST_DB, base_path
@@ -108,11 +107,11 @@ class TestKoboSync(unittest.TestCase, ui_class):
         # perform benefits request
         r = session.get(self.kobo_adress+'/v1/user/loyalty/benefits', headers=TestKoboSync.header, timeout=10)
         self.assertEqual(r.status_code, 200)
-        self.assertEqual(r.json(), {})
+        self.assertEqual(r.json(), {'Benefits': {}})
         # perform analytics request
         r = session.get(self.kobo_adress+'/v1/analytics/gettests', headers=TestKoboSync.header, timeout=10)
         self.assertEqual(r.status_code, 200)
-        self.assertEqual(r.json(), {})
+        self.assertEqual(r.json(), {'Result': 'Success', 'TestKey': '', 'Tests': {}})
 
         # perform sync request
         bood_uuid = '8f1b72c1-e9a4-4212-b538-8e4f4837d201'
@@ -267,7 +266,7 @@ class TestKoboSync(unittest.TestCase, ui_class):
         # append synctoken to headers and start over again
         data = self.sync_kobo()
         self.assertEqual(1, len(data))
-        self.assertEqual('Noname 23', data[0]['NewEntitlement']['BookMetadata']['Contributors'])
+        self.assertEqual(['Noname 23'], data[0]['NewEntitlement']['BookMetadata']['Contributors'])
         self.assertEqual('book9', data[0]['NewEntitlement']['BookMetadata']['Title'])
         # self.assertEqual(None , data[0]['NewEntitlement']['BookMetadata']['Publisher']['Name'])
         self.delete_book(15)
