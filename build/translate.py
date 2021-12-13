@@ -37,9 +37,9 @@ def msgpack_loads(dump):
 
 need_iso = msgpack_loads(open('iso639.calibre_msgpack', 'rb').read())
 
-need_iso['name_map']['bit'] = 'berinomo'
-need_iso['codes3t'].append('bit')
-msg_writer(need_iso)
+#need_iso['name_map']['ge'] = 'hmj'
+#need_iso['codes3t'].append('hmj')
+#msg_writer(need_iso)
 workdir = os.getcwd()
 os.chdir(FILEPATH)
 
@@ -71,7 +71,7 @@ for file in sorted(glob.glob1("./translations", "*.po")):
     langcode=file[23:-3]
     langcode_list.append(langcode)
     # Remove old content from po file
-    message_path = os.path.join(FILEPATH,'cps','translations',langcode, 'LC_MESSAGES','messages.po')
+    message_path = os.path.join(FILEPATH,'cps', 'translations', langcode, 'LC_MESSAGES', 'messages.po')
     translateFile=open(message_path)
     mergedTranslation=pofile.read_po(translateFile,locale=langcode)
     translateFile.close()
