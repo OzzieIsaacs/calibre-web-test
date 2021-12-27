@@ -208,6 +208,7 @@ class TestShelf(unittest.TestCase, ui_class):
         self.create_shelf('Lolo', False)
         self.assertTrue(self.check_element_on_page((By.ID, "flash_success")))
         self.logout()
+        # Try to rename non public shelf form other user
         r = requests.session()
         login_page = r.get('http://127.0.0.1:8083/login')
         token = re.search('<input type="hidden" name="csrf_token" value="(.*)">', login_page.text)
@@ -217,6 +218,10 @@ class TestShelf(unittest.TestCase, ui_class):
         token = re.search('<input type="hidden" name="csrf_token" value="(.*)">', book_page.text)
         resp = r.post('http://127.0.0.1:8083/shelf/edit/'+ shelf_lolo['id'], data={"title": "tuto", "csrf_token": token.group(1)})
         self.assertTrue("flash_danger" in resp.text)
+        token = re.search('<input type="hidden" name="csrf_token" value="(.*)">', book_page.text)
+        resp = r.post('http://127.0.0.1:8083/shelf/edit/'+ shelf_lolo['id'], data={"is_public": "on", "csrf_token": token.group(1)})
+        self.assertTrue("flash_danger" in resp.text)
+
         self.login('admin','admin123')
         shelf_lolo = self.list_shelfs('Lolo')
         self.assertTrue(shelf_lolo)
