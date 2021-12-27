@@ -38,6 +38,7 @@ class TestMergeBooksList(TestCase, ui_class):
         save_logfiles(cls, cls.__name__)
 
     def test_delete_book(self):
+        self.goto_page('nav_new')
         books = self.get_books_displayed()
         details = self.get_book_details(4)
         # add folder to folder
@@ -87,12 +88,63 @@ class TestMergeBooksList(TestCase, ui_class):
         books_after = self.get_books_displayed()
         self.assertEqual(len(books[1]) - 1, len(books_after[1]))
 
-    # select one book on page one -> button greyed
-    # select two books on page one -> button accessible, click unselect books -> no book selected
-    # select book on page 1, select book on page 2, -> button accessible, go to different page and return -> books unselected
+    # select book on page 1, select book on page 2, -> button accessible, go to different page and return -> books selected
     # select book on page 1, select book on page 2 -> press unselect, both books unselected
     # select book on page 1, select book on page 2 -> merge -> abort, everything like before
     # select book on page 1, select book on page 2 -> merge -> one book less, both formats available
-    def test_merge_book(self):
-        # ToDo Test Merge books
-        pass
+    def test_book_merge(self):
+        bl = self.get_books_list(1)
+        # select one book on page one -> button greyed
+        bl['table'][0]['selector']['element'].click()
+        self.assertTrue("disabled" in self.check_element_on_page((By.ID, "merge_books")).get_attribute("class"))
+        # select two books on page one -> button accessible
+        bl['table'][2]['selector']['element'].click()
+        self.assertFalse("disabled" in self.check_element_on_page((By.ID, "merge_books")).get_attribute("class"))
+        # Click unselect books -> no book selected, merge button greyed out
+        bl['remove-btn'].click()
+        bl = self.get_books_list(-1)
+        self.assertFalse(bl['table'][0]['selector']['element'].is_selected())
+        self.assertFalse(bl['table'][2]['selector']['element'].is_selected())
+        self.assertTrue("disabled" in self.check_element_on_page((By.ID, "merge_books")).get_attribute("class"))
+        # select book on page 1, select book on page 2, check merge button clickable
+        bl['table'][0]['selector']['element'].click()
+        bl['pagination']['›']['link'].click()
+        bl = self.get_books_list(-1)
+        bl['table'][0]['selector']['element'].click()
+        self.assertFalse("disabled" in self.check_element_on_page((By.ID, "merge_books")).get_attribute("class"))
+        # change page, books stay selected
+        bl['pagination']['‹']['link'].click()
+        bl = self.get_books_list(-1)
+        self.assertTrue(bl['table'][0]['selector']['element'].is_selected())
+        # click unselect, both books (on both pages) are unselected
+        bl['remove-btn'].click()
+        bl = self.get_books_list(-1)
+        self.assertFalse(bl['table'][0]['selector']['element'].is_selected())
+        bl['pagination']['›']['link'].click()
+        bl = self.get_books_list(-1)
+        self.assertFalse(bl['table'][0]['selector']['element'].is_selected())
+        # select 2 books and click merge and abort, check both books still selected
+        bl['table'][0]['selector']['element'].click()
+        bl['pagination']['‹']['link'].click()
+        bl = self.get_books_list(-1)
+        bl['table'][0]['selector']['element'].click()
+        bl['merge-btn'].click()
+        time.sleep(1)
+        self.check_element_on_page((By.ID, "merge_abort")).click()
+        bl = self.get_books_list(-1)
+        self.assertTrue(bl['table'][0]['selector']['element'].is_selected())
+        bl['pagination']['›']['link'].click()
+        bl = self.get_books_list(-1)
+        self.assertTrue(bl['table'][0]['selector']['element'].is_selected())
+        bl['merge-btn'].click()
+        time.sleep(1)
+        self.check_element_on_page((By.ID, "merge_confirm")).click()
+        time.sleep(1)
+        bl = self.get_books_list(-1)
+        self.assertEqual(1, len(bl['pagination']))
+        self.assertEqual(10, len(bl['table']))
+        merged_book = self.get_book_details(1)
+        self.assertEqual("Der Buchtitel", merged_book['title'])
+        self.assertEqual(4, len(merged_book['author']))
+        self.assertEqual(2, len(merged_book['download']))
+
