@@ -250,4 +250,70 @@ class TestCalibreWebListOrders(unittest.TestCase, ui_class):
         self.check_element_on_page((By.ID, "asc")).click()
 
     def test_download_sort(self):
-        pass
+        self.goto_page('nav_download')
+        list_element = self.get_list_books_displayed()
+        self.assertEqual(len(list_element), 0)
+        # download 2 books and check if they are counted as downloads from admin
+        self.download_book(9,"admin", "admin123")
+        self.download_book(11, "admin", "admin123")
+        self.goto_page('nav_download')
+        list_element = self.get_list_books_displayed()
+        self.assertEqual(len(list_element), 1)
+        self.assertEqual(list_element[0]['count'], "2")
+        #  redownload one book and check if it's not counted twice
+        self.download_book(11, "admin", "admin123")
+        self.goto_page('nav_download')
+        list_element = self.get_list_books_displayed()
+        self.assertEqual(list_element[0]['count'], "2")
+        # create new ueser and download a book as this user
+        self.create_user('down', {'email': 'd@a.com', 'password': '1234', 'download_role': 1})
+        self.assertTrue(self.check_element_on_page((By.ID, "flash_success")))
+        self.download_book(11, "down", "1234")
+        # check content of downloaded book section (2 users listed, admin still has 2 books downloaded)
+        self.goto_page('nav_download')
+        list_element = self.get_list_books_displayed()
+        self.assertEqual(len(list_element), 2)
+        self.assertEqual(list_element[0]['count'], "2")
+        self.assertEqual(list_element[0]['title'], "admin")
+        self.assertEqual(list_element[1]['title'], "down")
+        # start asc (which is default), check nothing has changed
+        self.check_element_on_page((By.ID, "asc")).click()
+        list_element = self.get_list_books_displayed()
+        self.assertEqual(list_element[0]['title'], "admin")
+        self.assertEqual(list_element[1]['title'], "down")
+        # start descending, check user down is the first one in list
+        self.check_element_on_page((By.ID, "desc")).click()
+        list_element = self.get_list_books_displayed()
+        self.assertEqual(list_element[0]['title'], "down")
+        self.assertEqual(list_element[1]['title'], "admin")
+        self.assertEqual(list_element[1]['count'], "2")
+        # put back default order
+        self.check_element_on_page((By.ID, "asc")).click()
+        # login as user down and check he sees only his downloads
+        self.logout()
+        self.login("down","1234")
+        self.goto_page('nav_download')
+        elements = self.get_books_displayed()
+        self.assertEqual(1, len(elements[1]))
+        #delete user and finish test
+        self.logout()
+        self.login("admin","admin123")
+        self.edit_user('down', {'delete': 1})
+        # enable anonymous browser
+        self.fill_basic_config({'config_anonbrowse': 1})
+        self.assertTrue(self.check_element_on_page((By.ID, "flash_success")))
+        self.edit_user('Guest', {'download_role': 1})
+        # check guest user is not listed, and check user "down" disappeared
+        self.goto_page('nav_download')
+        list_element = self.get_list_books_displayed()
+        self.assertEqual(len(list_element), 1)
+        # download book as Guest
+        code, _ = self.download_book(11, "guest", "")
+        self.assertEqual(200, code)
+        # check guest user is not listed
+        self.goto_page('nav_download')
+        list_element = self.get_list_books_displayed()
+        self.assertEqual(len(list_element), 1)
+        # diable anonymous browser
+        self.fill_basic_config({'config_anonbrowse': 0})
+        self.assertTrue(self.check_element_on_page((By.ID, "flash_success")))
