@@ -1292,7 +1292,9 @@ class ui_class():
             bk['id'] = bk['link'].split('/')[-1]
             if grid:
                 bk['ele'] = cls.check_element_on_page((By.XPATH,"//a[@href='"+bk['link']+"']//img"))
+                bk['count'] = None
             else:
+                bk['count'] = ele[index-1].text
                 bk['ele'] = None
             if not rating:
                 bk['title']= ele[index].text
