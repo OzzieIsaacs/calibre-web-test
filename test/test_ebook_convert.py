@@ -594,3 +594,53 @@ class TestEbookConvertCalibre(unittest.TestCase, ui_class):
         self.assertEqual(from_book, set(['-- select an option --', "PDF"]))
         self.assertEqual(to_book, set(['-- select an option --', "TXT", "EPUB", "MOBI", "AZW3", "DOCX", "RTF", "FB2", "LIT", "LRF", "TXT", "HTMLZ", "ODT"]))
 
+    def test_calibre_log(self):
+        tasks = self.check_tasks()
+        self.fill_basic_config({'config_log_level': 'DEBUG'})
+        self.assertTrue(self.check_element_on_page((By.ID, "flash_success")))
+        vals = self.get_convert_book(11)
+        select = Select(vals['btn_from'])
+        select.select_by_visible_text('PDF')
+        select = Select(vals['btn_to'])
+        select.select_by_visible_text('ODT')
+        self.driver.find_element_by_id("btn-book-convert").click()
+        time.sleep(1)
+        self.assertTrue(self.check_element_on_page((By.ID, "flash_success")))
+        i = 0
+        while i < 10:
+            time.sleep(2)
+            task_len, ret = self.check_tasks(tasks)
+            if task_len == 1:
+                if ret[-1]['result'] == 'Finished' or ret[-1]['result'] == 'Failed':
+                    break
+            i += 1
+        self.assertEqual(ret[-1]['result'], 'Failed')
+        # check Debug entry from starting
+        with open(os.path.join(CALIBRE_WEB_PATH, 'calibre-web.log'), 'r') as logfile:
+            data = logfile.read()
+        self.assertTrue("ValueError: No plugin to handle output format: odt" in data)
+        self.assertTrue("ebook converter failed with error while converting book" in data)
+        vals = self.get_convert_book(11)
+        select = Select(vals['btn_from'])
+        select.select_by_visible_text('PDF')
+        select = Select(vals['btn_to'])
+        select.select_by_visible_text('AZW3')
+        self.driver.find_element_by_id("btn-book-convert").click()
+        time.sleep(1)
+        self.assertTrue(self.check_element_on_page((By.ID, "flash_success")))
+        i = 0
+        while i < 10:
+            time.sleep(2)
+            task_len, ret = self.check_tasks(ret)
+            if task_len == 1:
+                if ret[-1]['result'] == 'Finished' or ret[-1]['result'] == 'Failed':
+                    break
+            i += 1
+        self.assertEqual(ret[-1]['result'], 'Finished')
+        # check Debug entry from starting
+        with open(os.path.join(CALIBRE_WEB_PATH, 'calibre-web.log'), 'r') as logfile:
+            data = logfile.read()
+        self.assertTrue(" …" in data)
+        self.delete_book_format(11, "AZW3")
+        self.fill_basic_config({'config_log_level': 'INFO'})
+        self.assertTrue(self.check_element_on_page((By.ID, "flash_success")))

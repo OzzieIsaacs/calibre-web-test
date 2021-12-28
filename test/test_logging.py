@@ -146,7 +146,7 @@ class TestLogging(unittest.TestCase, ui_class):
             logpath = self.driver.find_element_by_id("config_logfile").get_attribute("value")
             self.assertEqual(logpath, "", "logfile config value is not empty after reseting to default")
         else:
-            # It's NOT possible to delete the path, therefore changed folder/file is taken
+            # It's NOT possible to delete the path, therefore changed: folder/file is taken
             self.assertTrue(os.path.isfile(os.path.join(CALIBRE_WEB_PATH, 'hü lo', 'lö g')))
             self.assertFalse(os.path.isfile(os.path.join(CALIBRE_WEB_PATH, 'calibre-web.log')))
             # ToDo: Stop Calibre-Web delete folder restart it and check if folder is the new one
