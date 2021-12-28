@@ -463,6 +463,7 @@ class TestCalibreWebVisibilitys(unittest.TestCase, ui_class):
 
 
     def test_search_string(self):
+        self.assertEqual(7, len(self.adv_search({'book_title': ' book '})))
         self.adv_search({'book_title': 'Hallo'}, get=False)
         field = self.check_element_on_page((By.ID, "query"))
         self.assertEqual('', field.get_attribute('value'))

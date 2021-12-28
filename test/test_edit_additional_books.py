@@ -649,6 +649,8 @@ class TestEditAdditionalBooks(TestCase, ui_class):
         # ToDo: Test book delete rights on book list
 
     def test_title_sort(self):
+        # check trim of whitespaces work
+        self.assertEqual(7, len(self.search(' book ')))
         self.edit_book(3, content={'book_title': u'The Audiobok'})
         self.edit_book(13, content={'book_title': u'A bok'})
         self.search('bok')
