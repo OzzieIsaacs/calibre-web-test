@@ -237,7 +237,7 @@ class TestEditAdditionalBooks(TestCase, ui_class):
 
     @unittest.skipIf(os.name == 'nt', 'writeonly database on windows is not checked')
     def test_writeonly_path(self):
-        self.fill_basic_config({'config_rarfile_location': unrar_path()})
+        self.fill_basic_config({'config_rarfile_location': unrar_path(), "config_unicode_filename": 1})
         time.sleep(BOOT_TIME)
         self.assertTrue(self.check_element_on_page((By.ID, "flash_success")))
         self.goto_page('nav_new')
@@ -294,7 +294,7 @@ class TestEditAdditionalBooks(TestCase, ui_class):
         self.fill_db_config(dict(config_calibre_dir=TEST_DB))
         # wait for cw to reboot
         time.sleep(2)
-        self.fill_basic_config({'config_uploading': 0, 'config_rarfile_location': ""})
+        self.fill_basic_config({'config_uploading': 0, 'config_rarfile_location': "", "config_unicode_filename": 0})
         self.assertTrue(self.check_element_on_page((By.ID, "flash_success")))
         book_path = os.path.join(TEST_DB, 'John Doe', 'Buuko (9)')
         self.assertTrue(os.path.isdir(book_path))
