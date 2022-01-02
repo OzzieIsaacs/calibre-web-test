@@ -60,8 +60,19 @@ class TestShelf(unittest.TestCase, ui_class):
         # other user can't see shelf
         self.assertFalse(len(self.list_shelfs()))
         # other user is not able to add books
-        self.driver.get("http://127.0.0.1:8083/shelf/add/1/1")
-        self.assertTrue(self.check_element_on_page((By.ID, "flash_danger")))
+        r = requests.session()
+        login_page = r.get('http://127.0.0.1:8083/login')
+        token = re.search('<input type="hidden" name="csrf_token" value="(.*)">', login_page.text)
+        payload = {'username': 'shelf', 'password': '123', 'submit':"", 'next':"/", "remember_me":"on", "csrf_token": token.group(1)}
+        r.post('http://127.0.0.1:8083/login', data=payload)
+        shelf_page = r.get('http://127.0.0.1:8083/shelf/create')
+        token = re.search('<input type="hidden" name="csrf_token" value="(.*)">', shelf_page.text)
+        payload = {"csrf_token": token.group(1)}
+        request = r.post("http://127.0.0.1:8083/shelf/add/1/1", data=payload)
+        self.assertTrue("flash_danger" in request.text)
+        # self.driver.get("http://127.0.0.1:8083/shelf/add/1/1")
+        # self.assertTrue(self.check_element_on_page((By.ID, "flash_danger")))
+        r.get('http://127.0.0.1:8083/logout')
         self.logout()
         self.login('admin','admin123')
         books = self.get_books_displayed()
@@ -78,8 +89,20 @@ class TestShelf(unittest.TestCase, ui_class):
         # other user can't see shelf
         self.assertFalse(len(self.list_shelfs()))
         # other user is not able to add books
-        self.driver.get("http://127.0.0.1:8083/shelf/add/1/1")
-        self.assertTrue(self.check_element_on_page((By.ID, "flash_danger")))
+        login_page = r.get('http://127.0.0.1:8083/login')
+        token = re.search('<input type="hidden" name="csrf_token" value="(.*)">', login_page.text)
+        payload = {'username': 'shelf', 'password': '123', 'submit':"", 'next':"/", "remember_me":"on", "csrf_token": token.group(1)}
+        r.post('http://127.0.0.1:8083/login', data=payload)
+        shelf_page = r.get('http://127.0.0.1:8083/shelf/create')
+        token = re.search('<input type="hidden" name="csrf_token" value="(.*)">', shelf_page.text)
+        payload = {"csrf_token": token.group(1)}
+        request = r.post("http://127.0.0.1:8083/shelf/add/1/1", data=payload)
+        self.assertTrue("flash_danger" in request.text)
+        r.get('http://127.0.0.1:8083/logout')
+        r.close()
+
+        #self.driver.get("http://127.0.0.1:8083/shelf/add/1/1")
+        #self.assertTrue(self.check_element_on_page((By.ID, "flash_danger")))
         self.create_shelf('Pü 执', False)
         self.assertTrue(len(self.list_shelfs()))
         self.logout()
@@ -99,8 +122,20 @@ class TestShelf(unittest.TestCase, ui_class):
         shelfs = self.list_shelfs(u'Gü 执 (Public)')
         self.assertTrue(shelfs)
         # other user is able to add books
-        self.driver.get("http://127.0.0.1:8083/shelf/add/" + shelfs['id'] + '/1')
-        self.assertTrue(self.check_element_on_page((By.ID, "flash_success")))
+        r = requests.session()
+        login_page = r.get('http://127.0.0.1:8083/login')
+        token = re.search('<input type="hidden" name="csrf_token" value="(.*)">', login_page.text)
+        payload = {'username': 'shelf', 'password': '123', 'submit':"", 'next':"/", "remember_me":"on", "csrf_token": token.group(1)}
+        r.post('http://127.0.0.1:8083/login', data=payload)
+        shelf_page = r.get('http://127.0.0.1:8083/shelf/create')
+        token = re.search('<input type="hidden" name="csrf_token" value="(.*)">', shelf_page.text)
+        payload = {"csrf_token": token.group(1)}
+        request = r.post("http://127.0.0.1:8083/shelf/add/" + shelfs['id'] + '/1', data=payload)
+        self.assertTrue("flash_success" in request.text)
+        r.get('http://127.0.0.1:8083/logout')
+        r.close()
+        # self.driver.get("http://127.0.0.1:8083/shelf/add/" + shelfs['id'] + '/1')
+        # self.assertTrue(self.check_element_on_page((By.ID, "flash_success")))
         time.sleep(2)
         # 2nd way to add book
         books = self.get_books_displayed()
