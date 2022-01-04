@@ -640,7 +640,7 @@ class TestEbookConvertCalibre(unittest.TestCase, ui_class):
         # check Debug entry from starting
         with open(os.path.join(CALIBRE_WEB_PATH, 'calibre-web.log'), 'r') as logfile:
             data = logfile.read()
-        self.assertTrue(" …" in data)
+        self.assertTrue("1% Converting input to HTML" in data)
         self.delete_book_format(11, "AZW3")
         self.fill_basic_config({'config_log_level': 'INFO'})
         self.assertTrue(self.check_element_on_page((By.ID, "flash_success")))

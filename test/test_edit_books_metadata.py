@@ -41,11 +41,11 @@ class TestEditMetadata(TestCase, ui_class):
         cls.p.terminate()
         save_logfiles(cls, cls.__name__)
 
-    def test_upload_book_lit(self):
+    def test_load_metadata(self):
         self.get_book_details(1)
         self.check_element_on_page((By.ID, "edit_book")).click()
         self.check_element_on_page((By.ID, "get_meta")).click()
-        self.assertEqual("", self.check_element_on_page((By.ID, "Der Buchtitel")))
+        #self.assertEqual("", self.check_element_on_page((By.ID, "Der Buchtitel")))
         self.assertTrue(self.check_element_on_page((By.ID, "show-ComicVine")))
         self.assertTrue(self.check_element_on_page((By.ID, "show-Google")))
         self.assertFalse(self.check_element_on_page((By.ID, "show-Google Scholar")))
