@@ -232,8 +232,19 @@ class TestEditAdditionalBooks(TestCase, ui_class):
         self.delete_book(5)
         self.assertTrue(self.check_element_on_page((By.ID, "flash_success")))
         self.assertFalse(os.path.isdir(os.path.join(TEST_DB, 'John Doe')))
-
         # ToDo: what happens if folder isn't valid and no book or author folder is present?
+        self.fill_basic_config({'config_uploading': 1})
+        time.sleep(3)
+        self.assertTrue(self.check_element_on_page((By.ID, "flash_success")))
+        self.goto_page("nav_new")
+        upload_file = os.path.join(base_path, 'files', 'book.epub')
+        upload = self.check_element_on_page((By.ID, 'btn-upload'))
+        upload.send_keys(upload_file)
+        time.sleep(2)
+        self.edit_book(content={'bookAuthor': u'John Döe', 'book_title': u'testbook', 'languages': 'english'})
+        self.fill_basic_config({'config_uploading': 0})
+        time.sleep(3)
+        self.assertTrue(self.check_element_on_page((By.ID, "flash_success")))
 
     @unittest.skipIf(os.name == 'nt', 'writeonly database on windows is not checked')
     def test_writeonly_path(self):
@@ -252,7 +263,6 @@ class TestEditAdditionalBooks(TestCase, ui_class):
         self.edit_book(content={'tags': 'Gênot',
                                 "bookAuthor": 'John Döe',
                                 'book_title': 'Buuko'})
-
         rights = os.stat(TEST_DB).st_mode & 0o777
         os.chmod(TEST_DB, 0o400)
         self.get_book_details(9)
@@ -298,6 +308,9 @@ class TestEditAdditionalBooks(TestCase, ui_class):
         self.assertTrue(self.check_element_on_page((By.ID, "flash_success")))
         book_path = os.path.join(TEST_DB, 'John Doe', 'Buuko (9)')
         self.assertTrue(os.path.isdir(book_path))
+        self.goto_page('nav_new')
+
+
 
     @unittest.skip('Not implemented')
     def test_writeonly_calibre_database(self):
@@ -654,8 +667,7 @@ class TestEditAdditionalBooks(TestCase, ui_class):
 
     def test_title_sort(self):
         # check trim of whitespaces work
-        # ToDo: Book 7 is delete if all tests are running, line 226
-        self.assertEqual(6, len(self.search(' book ')))
+        self.assertEqual(7, len(self.search(' book ')))
         self.edit_book(3, content={'book_title': u'The Audiobok'})
         self.edit_book(13, content={'book_title': u'A bok'})
         self.search('bok')

@@ -37,8 +37,8 @@ def msgpack_loads(dump):
 
 need_iso = msgpack_loads(open('iso639.calibre_msgpack', 'rb').read())
 
-#need_iso['name_map']['ge'] = 'hmj'
-#need_iso['codes3t'].append('hmj')
+#need_iso['name_map']['dutch sign language'] = 'dse'
+#need_iso['codes3t'].append('dse')
 #msg_writer(need_iso)
 workdir = os.getcwd()
 os.chdir(FILEPATH)
