@@ -210,8 +210,7 @@ class ui_class():
     @classmethod
     def change_current_user_password(cls, new_passwd):
         cls.driver.find_element_by_id("top_user").click()
-        WebDriverWait(cls.driver, 5).until(EC.presence_of_element_located((By.ID, "password")))
-        cls.driver.find_element_by_id("password").send_keys(new_passwd)
+        cls.check_element_on_page((By.ID, "password")).send_keys(new_passwd)
         cls.driver.find_element_by_id("user_submit").click()
         return cls.check_element_on_page((By.ID, "flash_success"))
 
