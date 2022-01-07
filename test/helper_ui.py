@@ -1759,7 +1759,6 @@ class ui_class():
             return False
         return value.get_attribute('value')
 
-
     def delete_identifier(self, key):
         delete_button = self.check_element_on_page((By.XPATH, "//tr[td/input[@name='identifier-type-" + key + "']]/td/a"))
         if not delete_button:
@@ -1883,8 +1882,6 @@ class ui_class():
             self.driver.find_element_by_xpath("//button[contains(@class,'btn-primary')]").click()
         else:
             self.driver.find_element_by_xpath("//button[contains(@class,'btn-default')]").click()
-
-
 
     def get_user_table(self, page=1):
         # get current page
@@ -2091,3 +2088,30 @@ class ui_class():
                 self.check_element_on_page((By.ID, "adv_submit")).click()
                 return self.get_shelf_books_displayed()
         return False
+
+    def find_metadata_results(self):
+        entries = self.driver.find_elements_by_class_name("media")
+        result = []
+        for entry in entries:
+            if entry.is_displayed():
+                res=dict()
+                res['cover_element'] = entry.find_element_by_class_name("img-responsive")
+                res['cover'] = res['cover_element'].get_attribute('src')
+                res['source'] = entry.find_element_by_class_name("meta_source").get_attribute('href')
+                try:
+                    res['author'] = entry.find_element_by_class_name("meta_author").text[7:]
+                except Exception:
+                    res['author'] = ""
+                try:
+                    res['publisher'] = entry.find_element_by_class_name("meta_publisher").text[10:]
+                except Exception:
+                    res['publisher'] = ""
+                '''try:
+                    description = entry.find_element_by_class_name( "meta_description").text[13:]
+                except Exception:
+                    res['description'] = ""'''
+                title = entry.find_element_by_class_name("meta_title")
+                res['title'] = title.text
+                res['title_link'] = title.get_attribute('href')
+                result.append(res)
+        return result
