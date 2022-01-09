@@ -38,7 +38,7 @@ class TestKoboSyncBig(unittest.TestCase, ui_class):
                                           'config_kepubifypath': "",
                                           # 'config_log_level': 'DEBUG',
                                           'config_kobo_proxy': 0}, host=host)
-            add_books(os.path.join(TEST_DB, "metadata.db"), 120)    #1520
+            add_books(os.path.join(TEST_DB, "metadata.db"), 1520)    #1520
             time.sleep(3)
             WebDriverWait(cls.driver, 5).until(EC.presence_of_element_located((By.ID, "flash_success")))
             cls.goto_page('user_setup')
@@ -285,6 +285,7 @@ class TestKoboSyncBig(unittest.TestCase, ui_class):
 
         data3 = self.sync_kobo()  # 1 book synced, reading state changed as book was modified due to adding to shelf(?)
         self.assertIn("NewTag", data3[0][-1])
+        # self.assertFalse('DeletedTag' in data[0][-2])
         self.assertIn("NewEntitlement", data3[0][0])
         self.create_user('kobosync', {'password': '123', 'email': 'da@b.com', "kobo_only_shelves_sync": 1})
         user_settings = self.get_user_settings('kobosync')
@@ -348,7 +349,7 @@ class TestKoboSyncBig(unittest.TestCase, ui_class):
         # check number of books synced (-> is done in inital_sync)
         self.inital_sync(user2_kobo)
         # change one book
-        '''self.get_book_details(104, host)
+        self.get_book_details(104, host)
         self.check_element_on_page((By.ID, "edit_book")).click()
         self.edit_book(content={'book_title': u'Nonomatics'})
         # sync both user -> both get the new book synced
@@ -367,7 +368,9 @@ class TestKoboSyncBig(unittest.TestCase, ui_class):
         upload = self.check_element_on_page((By.ID, 'btn-upload'))
         upload.send_keys(new_epub_file)
         time.sleep(3)
-
+        self.check_element_on_page((By.ID, 'edit_cancel')).click()
+        time.sleep(1)
+        book_details = self.get_book_details(-1, host)
         # sync both user -> both get the new book synced
         data1 = self.sync_kobo(user1_kobo)
         data2 = self.sync_kobo(user2_kobo)
@@ -379,7 +382,12 @@ class TestKoboSyncBig(unittest.TestCase, ui_class):
         self.fill_basic_config({'config_uploading': 0})
         time.sleep(3)
         self.assertTrue(self.check_element_on_page((By.ID, "flash_success")))
-
+        # delete book to make book count as before
+        self.delete_book(book_details['id'], host)
+        data1 = self.sync_kobo(user1_kobo)
+        data2 = self.sync_kobo(user2_kobo)
+        self.assertEqual(0, len(data1[0]))
+        self.assertEqual(0, len(data2[0]))
         # archive one book for user 1 in cw (is archived last_modified value?)
         self.logout()
         self.login("user1", "123")
@@ -420,9 +428,8 @@ class TestKoboSyncBig(unittest.TestCase, ui_class):
         self.assertEqual(1, len(data1[0]))
         self.assertEqual(0, len(data2[0]))
         self.assertIn('NewTag', data1[0][0])
-        self.assertEqual(2, len(data1[0][0]['NewTag']['Tag']['Items']))'''
+        self.assertEqual(2, len(data1[0][0]['NewTag']['Tag']['Items']))
         # switch user2 to sync selected shelfs and add books
-        self.logout()       # ToDO: Revert later
         self.login("user2", "321")
         self.create_shelf('syncShelf2', False)
         self.get_book_details(122, host)
@@ -432,7 +439,7 @@ class TestKoboSyncBig(unittest.TestCase, ui_class):
         self.check_element_on_page((By.ID, "add-to-shelf")).click()
         self.check_element_on_page((By.XPATH, "//ul[@id='add-to-shelves']/li/a[contains(.,'syncShelf2')]")).click()
         self.change_visibility_me({"kobo_only_shelves_sync": 1})
-        time.sleep(40)
+        time.sleep(40)   # ToDo: Revert to 40
         self.assertTrue(self.check_element_on_page((By.ID, "flash_success")))
         self.change_shelf('syncShelf2', sync=1)
         self.logout()
@@ -440,6 +447,11 @@ class TestKoboSyncBig(unittest.TestCase, ui_class):
         data1 = self.sync_kobo(user1_kobo)
         data2 = self.sync_kobo(user2_kobo)
         self.assertEqual(0, len(data1[0]))
+        self.assertEqual(3, len(data2[0]))
+        self.assertTrue('NewTag' in data2[0][-1])
+        self.assertFalse('DeletedTag' in data2[0][-2])
+        self.assertEqual(2, len(data2[0][2]['NewTag']['Tag']['Items']))
+
         # Todo Fix and check user2 sync result
         self.login("admin", "admin123")
         self.edit_user("user1", {"delete":1})
