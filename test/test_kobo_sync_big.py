@@ -38,7 +38,7 @@ class TestKoboSyncBig(unittest.TestCase, ui_class):
                                           'config_kepubifypath': "",
                                           # 'config_log_level': 'DEBUG',
                                           'config_kobo_proxy': 0}, host=host)
-            add_books(os.path.join(TEST_DB, "metadata.db"), 1520)
+            add_books(os.path.join(TEST_DB, "metadata.db"), 120)    #1520
             time.sleep(3)
             WebDriverWait(cls.driver, 5).until(EC.presence_of_element_located((By.ID, "flash_success")))
             cls.goto_page('user_setup')
@@ -141,7 +141,7 @@ class TestKoboSyncBig(unittest.TestCase, ui_class):
         self.assertEqual(r.json(), {})
         session.close()
         self.assertEqual(100, len(data[0]))
-        self.assertEqual(24, len(data[15]))  # 120 new and 4 original books
+        self.assertEqual(24, len(data[-1]))  # 120 new and 4 original books
         return data
 
     def sync_kobo(self, user_id=None):
@@ -155,7 +155,7 @@ class TestKoboSyncBig(unittest.TestCase, ui_class):
         while True:
             r = changeSession.get(koboaddress + '/v1/library/sync', params=params,
                                   headers=TestKoboSyncBig.syncToken.get(koboaddress),
-                                  timeout=10)
+                                  timeout=10000)
             self.assertEqual(r.status_code, 200)
             data.append(r.json())
             TestKoboSyncBig.data[koboaddress] = data
@@ -324,8 +324,8 @@ class TestKoboSyncBig(unittest.TestCase, ui_class):
 
     def test_kobo_sync_multi_user(self):
         # create 2 users
-        self.create_user('user1', {'password': '123', 'email': 'ada@b.com', "download_role": 1})
-        self.create_user('user2', {'password': '321', 'email': 'aba@b.com', "download_role": 1})
+        self.create_user('user1', {'password': '123', 'email': 'ada@b.com', "edit_role":1, "download_role": 1})
+        self.create_user('user2', {'password': '321', 'email': 'aba@b.com', "edit_role":1, "download_role": 1})
         host = 'http://' + get_Host_IP() + ':8083'
         self.driver.get(host)   # still logged in
         # create links for both users
@@ -343,56 +343,105 @@ class TestKoboSyncBig(unittest.TestCase, ui_class):
         self.check_element_on_page((By.ID, "kobo_close")).click()
         # sync user 1
         # check number of books synced (-> is done in inital_sync)
-        data1 = self.inital_sync(user1_kobo)
+        self.inital_sync(user1_kobo)
         # sync user 2
         # check number of books synced (-> is done in inital_sync)
-        data2 = self.inital_sync(user2_kobo)
+        self.inital_sync(user2_kobo)
         # change one book
-        '''self.get_book_details(104)
+        '''self.get_book_details(104, host)
         self.check_element_on_page((By.ID, "edit_book")).click()
         self.edit_book(content={'book_title': u'Nonomatics'})
         # sync both user -> both get the new book synced
         data1 = self.sync_kobo(user1_kobo)
         data2 = self.sync_kobo(user2_kobo)
+        self.assertEqual(1, len(data1[0]))
+        self.assertEqual(1, len(data2[0]))
+        self.assertIn('ChangedEntitlement', data1[0][0])
+        self.assertIn('ChangedEntitlement', data2[0][0])
         # upload one book
         self.fill_basic_config({'config_uploading': 1})
         time.sleep(3)
         self.assertTrue(self.check_element_on_page((By.ID, "flash_success")))
+        self.goto_page('nav_new')
+        new_epub_file = os.path.join(base_path, 'files', 'book.epub')
+        upload = self.check_element_on_page((By.ID, 'btn-upload'))
+        upload.send_keys(new_epub_file)
+        time.sleep(3)
 
         # sync both user -> both get the new book synced
         data1 = self.sync_kobo(user1_kobo)
         data2 = self.sync_kobo(user2_kobo)
+        self.assertEqual(1, len(data1[0]))
+        self.assertEqual(1, len(data2[0]))
+        self.assertIn('NewEntitlement', data1[0][0])
+        self.assertIn('NewEntitlement', data2[0][0])
+
         self.fill_basic_config({'config_uploading': 0})
         time.sleep(3)
         self.assertTrue(self.check_element_on_page((By.ID, "flash_success")))
 
         # archive one book for user 1 in cw (is archived last_modified value?)
         self.logout()
-        self.login("user1","123")
-        self.get_book_details(110)
+        self.login("user1", "123")
+        self.get_book_details(110, host)
         self.check_element_on_page((By.XPATH, "//*[@id='archived_cb']")).click()
         # sync books for both user -> only archived for user1
         data1 = self.sync_kobo(user1_kobo)
         data2 = self.sync_kobo(user2_kobo)
+        self.assertEqual(1, len(data1[0]))
+        self.assertEqual(0, len(data2[0]))
+        self.assertIn('ChangedEntitlement', data1[0][0])
         self.logout()
         # archive one book for user 2 on kobo
         self.login("user2", "321")
-        self.get_book_details(140)
+        self.get_book_details(140, host)
         self.check_element_on_page((By.XPATH, "//*[@id='archived_cb']")).click()
         self.logout()
         # sync books for both user -> only archived for user2
         data1 = self.sync_kobo(user1_kobo)
         data2 = self.sync_kobo(user2_kobo)
+        self.assertEqual(0, len(data1[0]))
+        self.assertEqual(1, len(data2[0]))
+        self.assertIn('ChangedEntitlement', data2[0][0])
         # create shelf for one user add books
         # sync books for both user -> only changed for user1
+        self.login("user1", "123")
+        self.create_shelf('syncShelf', False)
+        self.assertTrue(self.check_element_on_page((By.ID, "flash_success")))
+        self.get_book_details(122, host)
+        self.check_element_on_page((By.ID, "add-to-shelf")).click()
+        self.check_element_on_page((By.XPATH, "//ul[@id='add-to-shelves']/li/a[contains(.,'syncShelf')]")).click()
+        self.get_book_details(55, host)
+        self.check_element_on_page((By.ID, "add-to-shelf")).click()
+        self.check_element_on_page((By.XPATH, "//ul[@id='add-to-shelves']/li/a[contains(.,'syncShelf')]")).click()
+        self.logout()
         data1 = self.sync_kobo(user1_kobo)
         data2 = self.sync_kobo(user2_kobo)
+        self.assertEqual(1, len(data1[0]))
+        self.assertEqual(0, len(data2[0]))
+        self.assertIn('NewTag', data1[0][0])
+        self.assertEqual(2, len(data1[0][0]['NewTag']['Tag']['Items']))'''
         # switch user2 to sync selected shelfs and add books
-        
+        self.logout()       # ToDO: Revert later
+        self.login("user2", "321")
+        self.create_shelf('syncShelf2', False)
+        self.get_book_details(122, host)
+        self.check_element_on_page((By.ID, "add-to-shelf")).click()
+        self.check_element_on_page((By.XPATH, "//ul[@id='add-to-shelves']/li/a[contains(.,'syncShelf2')]")).click()
+        self.get_book_details(56, host)
+        self.check_element_on_page((By.ID, "add-to-shelf")).click()
+        self.check_element_on_page((By.XPATH, "//ul[@id='add-to-shelves']/li/a[contains(.,'syncShelf2')]")).click()
+        self.change_visibility_me({"kobo_only_shelves_sync": 1})
+        time.sleep(40)
+        self.assertTrue(self.check_element_on_page((By.ID, "flash_success")))
+        self.change_shelf('syncShelf2', sync=1)
+        self.logout()
         # sync books for both user -> only changed for user2
         data1 = self.sync_kobo(user1_kobo)
-        data2 = self.sync_kobo(user2_kobo)'''
-
+        data2 = self.sync_kobo(user2_kobo)
+        self.assertEqual(0, len(data1[0]))
+        # Todo Fix and check user2 sync result
+        self.login("admin", "admin123")
         self.edit_user("user1", {"delete":1})
         self.edit_user("user2", {"delete":1})
         self.driver.get('http://127.0.0.1:8083') # still logged in

@@ -932,14 +932,12 @@ class ui_class():
                 sync_box = self.check_element_on_page((By.NAME, "kobo_sync"))
                 self.assertTrue(sync_box)
                 if (sync == 1 and not sync_box.is_selected()) or sync == 0 and sync_box.is_selected():
-                    access.click()
+                    sync_box.click()
 
-            if new_name or public:
+            if new_name or public or sync:
                 submit = self.check_element_on_page((By.ID, "submit"))
                 submit.click()
                 self.assertTrue(self.check_element_on_page((By.ID, "flash_success")))
-
-
         else:
             return False
         ele = self.check_element_on_page((By.ID,'title'))
@@ -1395,7 +1393,7 @@ class ui_class():
         return books
 
     @classmethod
-    def get_book_details(cls,id=-1,root_url="http://127.0.0.1:8083"):
+    def get_book_details(cls,id=-1, root_url="http://127.0.0.1:8083"):
         ret = dict()
         if id > 0:
             cls.driver.get(root_url + "/book/" + str(id))

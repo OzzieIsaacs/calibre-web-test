@@ -265,7 +265,7 @@ class TestEditBooksList(TestCase, ui_class):
         self.check_element_on_page((By.XPATH,"//button[contains(@class,'editable-cancel')]")).click()
         bl = self.get_books_list(-1)
         self.assertEqual("2", bl['table'][5]['Series Index']['text'])
-        self.edit_table_element(bl['table'][5]['Series Index']['element'], "2,01")
+        self.edit_table_element(bl['table'][5]['Series Index']['element'], "2.01")
         bl = self.get_books_list(-1)
         self.assertEqual("2.01", bl['table'][5]['Series Index']['text'])
         self.edit_table_element(bl['table'][5]['Series Index']['element'], "1.99")
