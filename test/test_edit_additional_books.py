@@ -310,8 +310,6 @@ class TestEditAdditionalBooks(TestCase, ui_class):
         self.assertTrue(os.path.isdir(book_path))
         self.goto_page('nav_new')
 
-
-
     @unittest.skip('Not implemented')
     def test_writeonly_calibre_database(self):
         pass

@@ -267,17 +267,20 @@ class TestEditBooksList(TestCase, ui_class):
         self.assertEqual("2", bl['table'][5]['Series Index']['text'])
         # ToDo check why "," is not working anymore
         self.edit_table_element(bl['table'][5]['Series Index']['element'], "2,01")
+        self.assertTrue(self.check_element_on_page((By.XPATH,
+                                                          "//button[contains(@class,'editable-submit')]")))
+        self.check_element_on_page((By.XPATH,"//button[contains(@class,'editable-cancel')]")).click()
         bl = self.get_books_list(-1)
-        self.assertEqual("2.01", bl['table'][5]['Series Index']['text'])
+        self.assertEqual("2", bl['table'][5]['Series Index']['text'])
         self.edit_table_element(bl['table'][5]['Series Index']['element'], "1.99")
         bl = self.get_books_list(-1)
         self.assertEqual("1.99", bl['table'][5]['Series Index']['text'])
 
         # Restore default
         bl = self.get_books_list(-1)
-        self.edit_table_element(bl['table'][4]['Series Index']['element'], "1")
+        self.edit_table_element(bl['table'][5]['Series Index']['element'], "1")
         bl = self.get_books_list(-1)
-        self.assertEqual("1", bl['table'][4]['Series Index']['text'])
+        self.assertEqual("1", bl['table'][5]['Series Index']['text'])
 
     # change visibility of some columns
     # goto other page, return to books list, check if visibility is same
