@@ -128,7 +128,7 @@ class TestLoadMetadata(TestCase, ui_class):
         search.clear()
         search.send_keys("Der Buchtitel")
         self.check_element_on_page((By.ID, "do-search")).click()
-        time.sleep(2)
+        time.sleep(3)
         results = self.find_metadata_results()
         results[1]['cover_element'].click()
         time.sleep(2)
