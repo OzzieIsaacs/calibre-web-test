@@ -36,10 +36,34 @@ def change_config(targetfile, config, value):
 config = configparser.ConfigParser()
 config.read(os.path.join(FILEPATH,"setup.cfg"))
 
+print("Updating config.cfg from requirments.txt")
 with open(os.path.join(FILEPATH, "requirements.txt"), "r") as stream:
     requirements = stream.readlines()
 
-config['options']['install_requires'] = "".join(requirements)
+config['options']['install_requires'] = "\n" + "".join(requirements)
+
+with open(os.path.join(FILEPATH, "optional-requirements.txt"), "r") as stream:
+    opt_requirements = stream.readlines()
+
+print("Updating config.cfg from optional-requirments.txt")
+optional_reqs = dict()
+option = ""
+for line in opt_requirements:
+    if line.startswith("#"):
+        option = line[1:].split()[0].strip()
+        optional_reqs[option] = "\n"
+    else:
+        if line != "\n":
+            optional_reqs[option] += line
+
+for key, value in optional_reqs.items():
+    try:
+        if config["options.extras_require"][key.lower()]:
+            config["options.extras_require"][key.lower()] = value.rstrip("\n")
+        print("'{}' block updated".format(key))
+    except KeyError:
+        print("Optional Requirement block '{}' not found in config.cfg".format(key.lower()))
+
 with open(os.path.join(FILEPATH,"setup.cfg"), 'w') as configfile:
     config.write(configfile)
 
