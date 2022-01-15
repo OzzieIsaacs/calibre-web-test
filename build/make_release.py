@@ -13,6 +13,7 @@ import venv
 from subprocess import CalledProcessError
 from subproc_wrapper import process_open
 from helper_environment import environment, add_dependency
+import configparser
 
 
 def change_config(targetfile, config, value):
@@ -31,6 +32,16 @@ def change_config(targetfile, config, value):
     f.write(replaced)
     f.close()
 
+# Update requirements in config.cfg file
+config = configparser.ConfigParser()
+config.read(os.path.join(FILEPATH,"setup.cfg"))
+
+with open(os.path.join(FILEPATH, "requirements.txt"), "r") as stream:
+    requirements = stream.readlines()
+
+config['options']['install_requires'] = "".join(requirements)
+with open(os.path.join(FILEPATH,"setup.cfg"), 'w') as configfile:
+    config.write(configfile)
 
 workdir = os.getcwd()
 os.chdir(FILEPATH)
