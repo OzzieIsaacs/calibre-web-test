@@ -213,7 +213,7 @@ class TestSSL(unittest.TestCase, ui_class):
     # The value of the second text input is set to the result of step 8
     def test_filepicker_two_file(self):
         self.goto_page('basic_config')
-        accordions = self.driver.find_elements_by_class_name("accordion-toggle")
+        accordions = self.driver.find_elements(By.CLASS_NAME, "accordion-toggle")
         accordions[0].click()
         filepicker = self.check_element_on_page((By.ID, "certfile_path"))
         self.assertTrue(filepicker)
@@ -221,7 +221,7 @@ class TestSSL(unittest.TestCase, ui_class):
         filepicker.click()
         time.sleep(2)
         found = False
-        selections = self.driver.find_elements_by_xpath("//tr[@class='tr-clickable']/td[2]")
+        selections = self.driver.find_elements(By.XPATH, "//tr[@class='tr-clickable']/td[2]")
         for i in selections:
             if i.text == "files":
                 i.click()
@@ -230,7 +230,7 @@ class TestSSL(unittest.TestCase, ui_class):
         self.assertTrue(found, "files folder not found")
         found = False
         time.sleep(2)
-        file_selections = self.driver.find_elements_by_xpath("//tr[@class='tr-clickable']/td[2]")
+        file_selections = self.driver.find_elements(By.XPATH, "//tr[@class='tr-clickable']/td[2]")
         time.sleep(2)
         for i in file_selections:
             if i.text == "client.crt":
@@ -248,7 +248,7 @@ class TestSSL(unittest.TestCase, ui_class):
         # open filepicker
         filepicker2.click()
         time.sleep(2)
-        selections = self.driver.find_elements_by_xpath("//tr[@class='tr-clickable']/td[2]")
+        selections = self.driver.find_elements(By.XPATH, "//tr[@class='tr-clickable']/td[2]")
         for i in selections:
             if i.text == "files":
                 i.click()
@@ -258,7 +258,7 @@ class TestSSL(unittest.TestCase, ui_class):
         self.assertTrue(found, "files folder not found")
         found = False
         time.sleep(2)
-        file_selections = self.driver.find_elements_by_xpath("//tr[@class='tr-clickable']/td[2]")
+        file_selections = self.driver.find_elements(By.XPATH, "//tr[@class='tr-clickable']/td[2]")
         for i in file_selections:
             if i.text == "client.key":
                 i.click()

@@ -173,7 +173,7 @@ class TestEditAdditionalBooks(TestCase, ui_class):
         self.fill_basic_config({'config_upload_formats': 'epub, ePub'})
         self.assertTrue(self.check_element_on_page((By.ID, "flash_success")))
 
-        accordions = self.driver.find_elements_by_class_name("accordion-toggle")
+        accordions = self.driver.find_elements(By.CLASS_NAME, "accordion-toggle")
         accordions[3].click()
         formats = self.check_element_on_page((By.ID, 'config_upload_formats'))
         self.assertEqual('epub', formats.get_attribute('value'))
@@ -232,12 +232,23 @@ class TestEditAdditionalBooks(TestCase, ui_class):
         self.delete_book(5)
         self.assertTrue(self.check_element_on_page((By.ID, "flash_success")))
         self.assertFalse(os.path.isdir(os.path.join(TEST_DB, 'John Doe')))
-
         # ToDo: what happens if folder isn't valid and no book or author folder is present?
+        self.fill_basic_config({'config_uploading': 1})
+        time.sleep(3)
+        self.assertTrue(self.check_element_on_page((By.ID, "flash_success")))
+        self.goto_page("nav_new")
+        upload_file = os.path.join(base_path, 'files', 'book.epub')
+        upload = self.check_element_on_page((By.ID, 'btn-upload'))
+        upload.send_keys(upload_file)
+        time.sleep(2)
+        self.edit_book(content={'bookAuthor': u'John Döe', 'book_title': u'testbook', 'languages': 'english'})
+        self.fill_basic_config({'config_uploading': 0})
+        time.sleep(3)
+        self.assertTrue(self.check_element_on_page((By.ID, "flash_success")))
 
     @unittest.skipIf(os.name == 'nt', 'writeonly database on windows is not checked')
     def test_writeonly_path(self):
-        self.fill_basic_config({'config_rarfile_location': unrar_path()})
+        self.fill_basic_config({'config_rarfile_location': unrar_path(), "config_unicode_filename": 1})
         time.sleep(BOOT_TIME)
         self.assertTrue(self.check_element_on_page((By.ID, "flash_success")))
         self.goto_page('nav_new')
@@ -252,7 +263,6 @@ class TestEditAdditionalBooks(TestCase, ui_class):
         self.edit_book(content={'tags': 'Gênot',
                                 "bookAuthor": 'John Döe',
                                 'book_title': 'Buuko'})
-
         rights = os.stat(TEST_DB).st_mode & 0o777
         os.chmod(TEST_DB, 0o400)
         self.get_book_details(9)
@@ -294,10 +304,11 @@ class TestEditAdditionalBooks(TestCase, ui_class):
         self.fill_db_config(dict(config_calibre_dir=TEST_DB))
         # wait for cw to reboot
         time.sleep(2)
-        self.fill_basic_config({'config_uploading': 0, 'config_rarfile_location': ""})
+        self.fill_basic_config({'config_uploading': 0, 'config_rarfile_location': "", "config_unicode_filename": 0})
         self.assertTrue(self.check_element_on_page((By.ID, "flash_success")))
         book_path = os.path.join(TEST_DB, 'John Doe', 'Buuko (9)')
         self.assertTrue(os.path.isdir(book_path))
+        self.goto_page('nav_new')
 
     @unittest.skip('Not implemented')
     def test_writeonly_calibre_database(self):
@@ -471,6 +482,7 @@ class TestEditAdditionalBooks(TestCase, ui_class):
         self.add_identifier('AMaZON_DE', 'a1b2c3')
         self.add_identifier('kurl', '9876ä4')
         self.add_identifier('knöffi', 'http://susi.com/huhu')
+        self.add_identifier('javascript', 'javascript:alert(1)')
         self.check_element_on_page((By.ID, "submit")).click()
         result = self.get_book_details()
 
@@ -487,6 +499,7 @@ class TestEditAdditionalBooks(TestCase, ui_class):
         self.check_identifier(result, 'kurl', '', '9876ä4', True)
         self.check_identifier(result, 'knöffi', '', 'http://susi.com/huhu', True)
         self.check_identifier(result, 'Amazon.de', 'amazon.de', 'a1b2c3', True)
+        self.check_identifier(result, 'javascript', '', 'javascript%3Aalert%281%29', True)
 
         self.check_element_on_page((By.ID, "edit_book")).click()
         self.delete_identifier('aMazon')
@@ -502,6 +515,7 @@ class TestEditAdditionalBooks(TestCase, ui_class):
         self.delete_identifier('AMaZON_DE')
         self.delete_identifier('kurl')
         self.delete_identifier('knöffi')
+        self.delete_identifier('javascript')
         self.check_element_on_page((By.ID, "submit")).click()
         final_length = len(self.get_book_details(4)['identifier'])
         self.assertEqual(final_length, reference_length)
@@ -587,7 +601,6 @@ class TestEditAdditionalBooks(TestCase, ui_class):
         time.sleep(3)
         self.assertTrue(self.check_element_on_page((By.ID, "flash_success")))
 
-
     def test_delete_role(self):
         self.fill_basic_config({'config_uploading': 1})
         time.sleep(3)
@@ -612,12 +625,16 @@ class TestEditAdditionalBooks(TestCase, ui_class):
         token = re.search('<input type="hidden" name="csrf_token" value="(.*)">', login_page.text)
         payload = {'username': 'user2', 'password': '1234', 'submit': "", 'next': "/", "remember_me": "on", "csrf_token": token.group(1)}
         r.post('http://127.0.0.1:8083/login', data=payload)
-        result = r.post('http://127.0.0.1:8083/delete/12/FB2')
-        self.assertEqual(405, result.status_code)
-        result = r.post('http://127.0.0.1:8083/delete/12')
-        self.assertEqual(405, result.status_code)
-        result = r.post('http://127.0.0.1:8083/ajax/delete/12')
-        self.assertEqual(405, result.status_code)
+        result = r.get('http://127.0.0.1:8083/book/12')
+        token = re.search('<input type="hidden" name="csrf_token" value="(.*)">', result.text)
+        payload = {"csrf_token": token.group(1)}
+        result = r.post('http://127.0.0.1:8083/delete/12/FB2', data=payload)
+        self.assertEqual(403, result.status_code)
+        result = r.post('http://127.0.0.1:8083/delete/12', data=payload)
+        self.assertEqual(403, result.status_code)
+        result = r.post('http://127.0.0.1:8083/ajax/delete/12', data=payload)
+        self.assertEqual(200, result.status_code)
+        self.assertEqual("danger", result.json()['type'])
 
         self.login('admin', 'admin123')
         self.edit_user('user2', {'edit_role': 1, 'delete_role': 0})
@@ -626,12 +643,13 @@ class TestEditAdditionalBooks(TestCase, ui_class):
         self.get_book_details(12)
         self.check_element_on_page((By.ID, "edit_book")).click()
         self.assertFalse(self.check_element_on_page((By.ID, "delete")))
-        self.assertFalse(self.check_element_on_page((By.ID, "delete")))
         self.logout()
-        result = r.post('http://127.0.0.1:8083/delete/12/FB2')
-        self.assertEqual(405, result.status_code)
-        result = r.post('http://127.0.0.1:8083/delete/12')
-        self.assertEqual(405, result.status_code)
+        result = r.post('http://127.0.0.1:8083/delete/12/FB2', data=payload)
+        self.assertEqual(200, result.status_code)
+        self.assertTrue('flash_danger' in result.text)
+        result = r.post('http://127.0.0.1:8083/delete/12', data=payload)
+        self.assertEqual(200, result.status_code)
+        self.assertTrue('flash_danger' in result.text)
         self.login('admin', 'admin123')
         self.edit_user('user2', {'delete_role': 1})
         self.logout()
@@ -646,6 +664,8 @@ class TestEditAdditionalBooks(TestCase, ui_class):
         # ToDo: Test book delete rights on book list
 
     def test_title_sort(self):
+        # check trim of whitespaces work
+        self.assertEqual(7, len(self.search(' book ')))
         self.edit_book(3, content={'book_title': u'The Audiobok'})
         self.edit_book(13, content={'book_title': u'A bok'})
         self.search('bok')

@@ -28,21 +28,21 @@ class TestCalibreHelper(unittest.TestCase):
         print("\n%s - %s: " % ("", cls.__name__))
 
     def test_check_high23(self):
-        helper.config.config_unicode_filename = False
+        helper.config.config_unicode_filename = True
         self.assertEqual(helper.get_valid_filename(u'²³'), u'23')
 
     def test_check_doubleS(self):
-        helper.config.config_unicode_filename = False
+        helper.config.config_unicode_filename = True
         self.assertEqual(helper.get_valid_filename(u'§ß'), u'SSss')
 
     def test_check_umlauts(self):
-        helper.config.config_unicode_filename = False
+        helper.config.config_unicode_filename = True
         self.assertEqual(helper.get_valid_filename(u'ÄÜÖäöü'), u'AUOaou')
 
     def test_check_chinese_Characters(self):
-        helper.config.config_unicode_filename = False
-        self.assertEqual(helper.get_valid_filename(u'执一'), u'Zhi Yi')
         helper.config.config_unicode_filename = True
+        self.assertEqual(helper.get_valid_filename(u'执一'), u'Zhi Yi')
+        helper.config.config_unicode_filename = False
         self.assertEqual(helper.get_valid_filename(u'执一'), u'执一')
 
     def test_whitespaces(self):
@@ -67,7 +67,7 @@ class TestCalibreHelper(unittest.TestCase):
         self.assertEqual(helper.get_valid_filename(u'**++** Numi **++**'), u'_ Numi _')
 
     def test_check_deg_eur_replacement(self):
-        helper.config.config_unicode_filename = False
+        helper.config.config_unicode_filename = True
         self.assertEqual(helper.get_valid_filename(u'°€'), u'degEUR')
 
     def test_author_sort(self):

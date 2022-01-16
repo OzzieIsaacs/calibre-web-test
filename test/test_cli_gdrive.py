@@ -2,19 +2,17 @@
 # -*- coding: utf-8 -*-
 
 import unittest
-import io
 import os
 from selenium.webdriver.common.by import By
 from selenium import webdriver
 import time
-import requests
 import shutil
 from helper_ui import ui_class
 
 from config_test import CALIBRE_WEB_PATH, TEST_DB, base_path, BOOT_TIME, WAIT_GDRIVE
 from helper_func import add_dependency, remove_dependency, startup
 from helper_func import save_logfiles
-from helper_gdrive import prepare_gdrive, connect_gdrive, check_path_gdrive
+from helper_gdrive import prepare_gdrive
 from subproc_wrapper import process_open
 
 # test gdrive database

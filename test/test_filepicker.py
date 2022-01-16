@@ -49,17 +49,17 @@ class TestFilePicker(TestCase, ui_class):
         self.assertEqual(CALIBRE_WEB_PATH, element.text)
         folder_depth = CALIBRE_WEB_PATH.count(os.sep)
         for i in range(0, folder_depth):
-            path_entries = self.driver.find_elements_by_xpath("//tr[@class='tr-clickable']/td[2]")
+            path_entries = self.driver.find_elements(By.XPATH, "//tr[@class='tr-clickable']/td[2]")
             self.assertEqual(path_entries[0].text, "..")
             path_entries[0].click()
-        path_entries = self.driver.find_elements_by_xpath("//tr[@class='tr-clickable']/td[2]")
+        path_entries = self.driver.find_elements(By.XPATH, "//tr[@class='tr-clickable']/td[2]")
         self.assertNotEqual(path_entries[0].text, "..")
         self.check_element_on_page((By.ID, "file_abort")).click()
         time.sleep(1)
         self.assertEqual(self.check_element_on_page((By.ID, "config_calibre_dir")).text,"")
 
         # file_abort
-        # self.driver.find_elements_by_class_name("tr-clickable")
+        # self.driver.find_elements(By.CLASS_NAME, "tr-clickable")
         # check files with other ending than metadata.db are not shown, only folders
         # check folder with name metadata.db is shown
         # navigate back to older where we came from, select nothing, click abort -> field still empty

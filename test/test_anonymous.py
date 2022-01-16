@@ -100,7 +100,7 @@ class TestAnonymous(unittest.TestCase, ui_class):
         # check random books shown in rating section
         list_element = self.goto_page('nav_rate')
         self.assertIsNotNone(list_element)
-        list_element[0].find_element_by_xpath('..').click()
+        list_element[0].find_element(By.XPATH, '..').click()
         self.assertTrue(self.check_element_on_page((By.ID, "books_rand")))
 
         # check random books shown in format section
@@ -414,7 +414,7 @@ class TestAnonymous(unittest.TestCase, ui_class):
 
     def test_check_locale_guest(self):
         self.goto_page('admin_setup')
-        user = self.driver.find_elements_by_xpath("//table[@id='table_user']/tbody/tr/td/a")
+        user = self.driver.find_elements(By.XPATH, "//table[@id='table_user']/tbody/tr/td/a")
         for ele in user:
             if ele.text == 'Guest':
                 ele.click()

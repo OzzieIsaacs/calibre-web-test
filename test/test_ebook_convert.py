@@ -155,7 +155,7 @@ class TestEbookConvertCalibre(unittest.TestCase, ui_class):
         select.select_by_visible_text('EPUB')
         select = Select(vals['btn_to'])
         select.select_by_visible_text('LIT')
-        self.driver.find_element_by_id("btn-book-convert").click()
+        self.check_element_on_page((By.ID, "btn-book-convert")).click()
         time.sleep(1)
         self.assertTrue(self.check_element_on_page((By.ID, "flash_success")))
         time.sleep(4)
@@ -169,7 +169,7 @@ class TestEbookConvertCalibre(unittest.TestCase, ui_class):
         select.select_by_visible_text('EPUB')
         select = Select(vals['btn_to'])
         select.select_by_visible_text('LRF')
-        self.driver.find_element_by_id("btn-book-convert").click()
+        self.check_element_on_page((By.ID, "btn-book-convert")).click()
         time.sleep(1)
         self.assertTrue(self.check_element_on_page((By.ID, "flash_success")))
         time.sleep(4)
@@ -272,7 +272,7 @@ class TestEbookConvertCalibre(unittest.TestCase, ui_class):
         select.select_by_visible_text('MOBI')
         select = Select(vals['btn_to'])
         select.select_by_visible_text('AZW3')
-        self.driver.find_element_by_id("btn-book-convert").click()
+        self.check_element_on_page((By.ID, "btn-book-convert")).click()
         time.sleep(1)
         self.assertTrue(self.check_element_on_page((By.ID, "flash_success")))
         time.sleep(2)
@@ -282,7 +282,7 @@ class TestEbookConvertCalibre(unittest.TestCase, ui_class):
         select.select_by_visible_text('MOBI')
         select = Select(vals['btn_to'])
         select.select_by_visible_text('EPUB')
-        self.driver.find_element_by_id("btn-book-convert").click()
+        self.check_element_on_page((By.ID, "btn-book-convert")).click()
         time.sleep(1)
         self.assertTrue(self.check_element_on_page((By.ID, "flash_success")))
         time.sleep(2)
@@ -292,7 +292,7 @@ class TestEbookConvertCalibre(unittest.TestCase, ui_class):
         select.select_by_visible_text('MOBI')
         select = Select(vals['btn_to'])
         select.select_by_visible_text('TXT')
-        self.driver.find_element_by_id("btn-book-convert").click()
+        self.check_element_on_page((By.ID, "btn-book-convert")).click()
         time.sleep(1)
         self.assertTrue(self.check_element_on_page((By.ID, "flash_success")))
         time.sleep(2)
@@ -302,7 +302,7 @@ class TestEbookConvertCalibre(unittest.TestCase, ui_class):
         select.select_by_visible_text('MOBI')
         select = Select(vals['btn_to'])
         select.select_by_visible_text('FB2')
-        self.driver.find_element_by_id("btn-book-convert").click()
+        self.check_element_on_page((By.ID, "btn-book-convert")).click()
         time.sleep(1)
         self.assertTrue(self.check_element_on_page((By.ID, "flash_success")))
         time.sleep(2)
@@ -312,7 +312,7 @@ class TestEbookConvertCalibre(unittest.TestCase, ui_class):
         select.select_by_visible_text('MOBI')
         select = Select(vals['btn_to'])
         select.select_by_visible_text('LIT')
-        self.driver.find_element_by_id("btn-book-convert").click()
+        self.check_element_on_page((By.ID, "btn-book-convert")).click()
         time.sleep(1)
         self.assertTrue(self.check_element_on_page((By.ID, "flash_success")))
         time.sleep(2)
@@ -322,7 +322,7 @@ class TestEbookConvertCalibre(unittest.TestCase, ui_class):
         select.select_by_visible_text('MOBI')
         select = Select(vals['btn_to'])
         select.select_by_visible_text('HTMLZ')
-        self.driver.find_element_by_id("btn-book-convert").click()
+        self.check_element_on_page((By.ID, "btn-book-convert")).click()
         self.assertTrue(self.check_element_on_page((By.ID, "flash_success")))
 
         self.create_user('solo', {'password': '123', 'email': 'a@b.com', 'edit_role':1})
@@ -353,7 +353,7 @@ class TestEbookConvertCalibre(unittest.TestCase, ui_class):
         select.select_by_visible_text('PDF')
         select = Select(vals['btn_to'])
         select.select_by_visible_text('RTF')
-        self.driver.find_element_by_id("btn-book-convert").click()
+        self.check_element_on_page((By.ID, "btn-book-convert")).click()
         self.assertTrue(self.check_element_on_page((By.ID, "flash_success")))
         time.sleep(10)
         ret = self.check_tasks()
@@ -378,9 +378,9 @@ class TestEbookConvertCalibre(unittest.TestCase, ui_class):
         self.assertTrue(shelf_down)
         shelf_down.click()
         # check download buttons for book1 and 7
-        formats7 = self.driver.find_elements_by_xpath("//*[starts-with(@id,'btnGroupDrop7')]")
+        formats7 = self.driver.find_elements(By.XPATH, "//*[starts-with(@id,'btnGroupDrop7')]")
         self.assertTrue(len(formats7), 9)
-        formats1 = self.driver.find_elements_by_xpath("//*[starts-with(@id,'btnGroupDrop1')]")
+        formats1 = self.driver.find_elements(By.XPATH, "//*[starts-with(@id,'btnGroupDrop1')]")
         self.assertTrue(len(formats1), 1)
         self.driver.get("http://127.0.0.1:8083/")
         self.delete_shelf('bookFORMAT')
@@ -399,7 +399,7 @@ class TestEbookConvertCalibre(unittest.TestCase, ui_class):
         select.select_by_visible_text('EPUB')
         select = Select(vals['btn_to'])
         select.select_by_visible_text('MOBI')
-        self.driver.find_element_by_id("btn-book-convert").click()
+        self.check_element_on_page((By.ID, "btn-book-convert")).click()
         self.assertTrue(self.check_element_on_page((By.ID, "flash_success")))
         i = 0
         while i < 10:
@@ -501,7 +501,7 @@ class TestEbookConvertCalibre(unittest.TestCase, ui_class):
         select.select_by_visible_text('PDF')
         select = Select(vals['btn_to'])
         select.select_by_visible_text('LRF')
-        self.driver.find_element_by_id("btn-book-convert").click()
+        self.check_element_on_page((By.ID, "btn-book-convert")).click()
         time.sleep(1)
         self.assertTrue(self.check_element_on_page((By.ID, "flash_success")))
         time.sleep(2)
@@ -533,7 +533,7 @@ class TestEbookConvertCalibre(unittest.TestCase, ui_class):
         select.select_by_visible_text('PDF')
         select = Select(vals['btn_to'])
         select.select_by_visible_text('LIT')
-        self.driver.find_element_by_id("btn-book-convert").click()
+        self.check_element_on_page((By.ID, "btn-book-convert")).click()
         time.sleep(1)
         self.assertTrue(self.check_element_on_page((By.ID, "flash_success")))
         self.logout()
@@ -565,7 +565,7 @@ class TestEbookConvertCalibre(unittest.TestCase, ui_class):
         select.select_by_visible_text('CBR')
         select = Select(vals['btn_to'])
         select.select_by_visible_text('EPUB')
-        self.driver.find_element_by_id("btn-book-convert").click()
+        self.check_element_on_page((By.ID, "btn-book-convert")).click()
         time.sleep(1)
         self.assertTrue(self.check_element_on_page((By.ID, "flash_success")))
         i = 0
@@ -594,3 +594,53 @@ class TestEbookConvertCalibre(unittest.TestCase, ui_class):
         self.assertEqual(from_book, set(['-- select an option --', "PDF"]))
         self.assertEqual(to_book, set(['-- select an option --', "TXT", "EPUB", "MOBI", "AZW3", "DOCX", "RTF", "FB2", "LIT", "LRF", "TXT", "HTMLZ", "ODT"]))
 
+    def test_calibre_log(self):
+        tasks = self.check_tasks()
+        self.fill_basic_config({'config_log_level': 'DEBUG'})
+        self.assertTrue(self.check_element_on_page((By.ID, "flash_success")))
+        vals = self.get_convert_book(11)
+        select = Select(vals['btn_from'])
+        select.select_by_visible_text('PDF')
+        select = Select(vals['btn_to'])
+        select.select_by_visible_text('ODT')
+        self.check_element_on_page((By.ID, "btn-book-convert")).click()
+        time.sleep(1)
+        self.assertTrue(self.check_element_on_page((By.ID, "flash_success")))
+        i = 0
+        while i < 10:
+            time.sleep(2)
+            task_len, ret = self.check_tasks(tasks)
+            if task_len == 1:
+                if ret[-1]['result'] == 'Finished' or ret[-1]['result'] == 'Failed':
+                    break
+            i += 1
+        self.assertEqual(ret[-1]['result'], 'Failed')
+        # check Debug entry from starting
+        with open(os.path.join(CALIBRE_WEB_PATH, 'calibre-web.log'), 'r') as logfile:
+            data = logfile.read()
+        self.assertTrue("ValueError: No plugin to handle output format: odt" in data)
+        self.assertTrue("ebook converter failed with error while converting book" in data)
+        vals = self.get_convert_book(11)
+        select = Select(vals['btn_from'])
+        select.select_by_visible_text('PDF')
+        select = Select(vals['btn_to'])
+        select.select_by_visible_text('AZW3')
+        self.check_element_on_page((By.ID, "btn-book-convert")).click()
+        time.sleep(1)
+        self.assertTrue(self.check_element_on_page((By.ID, "flash_success")))
+        i = 0
+        while i < 10:
+            time.sleep(2)
+            task_len, ret = self.check_tasks(ret)
+            if task_len == 1:
+                if ret[-1]['result'] == 'Finished' or ret[-1]['result'] == 'Failed':
+                    break
+            i += 1
+        self.assertEqual(ret[-1]['result'], 'Finished')
+        # check Debug entry from starting
+        with open(os.path.join(CALIBRE_WEB_PATH, 'calibre-web.log'), 'r') as logfile:
+            data = logfile.read()
+        self.assertTrue("1% Converting input to HTML" in data)
+        self.delete_book_format(11, "AZW3")
+        self.fill_basic_config({'config_log_level': 'INFO'})
+        self.assertTrue(self.check_element_on_page((By.ID, "flash_success")))

@@ -6,7 +6,6 @@ import re
 import time
 import unittest
 import requests
-import json
 
 from helper_ui import ui_class
 from config_test import TEST_DB, base_path
@@ -614,7 +613,7 @@ class TestKoboSync(unittest.TestCase, ui_class):
         self.check_element_on_page((By.ID, "add-to-shelf")).click()
         self.check_element_on_page((By.XPATH, "//ul[@id='add-to-shelves']/li/a[contains(.,'syncd_shelf_u1')]")).click()
         data3 = self.sync_kobo()  # 1 book synced, reading state changed as book was modified due to adding to shelf(?)
-        self.assertIn("NewTag", data3[2])
+        self.assertIn("NewTag", data3[1])
         self.assertIn("NewEntitlement", data3[0])
         self.create_user('kobosync', {'password': '123', 'email': 'da@b.com', "kobo_only_shelves_sync": 1})
         user_settings = self.get_user_settings('kobosync')

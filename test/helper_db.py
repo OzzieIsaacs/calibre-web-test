@@ -20,6 +20,22 @@ except ImportError:
 
 Base = declarative_base()
 
+#books_authors_link = Table('books_authors_link', Base.metadata,
+#                           Column('book', Integer, ForeignKey('books.id'), primary_key=True),
+#                           Column('author', Integer, ForeignKey('authors.id'), primary_key=True)
+#                           )
+
+class Books_Authors_Link(Base):
+    __tablename__ = 'books_authors_link'
+    id = Column(Integer, primary_key=True, autoincrement=True)
+    book = Column(Integer, primary_key=True)
+    author = Column(Integer, primary_key=True)
+
+    def __init__(self, book, author):
+        self.book = book
+        self.author = author
+
+
 class Custom_Columns(Base):
     __tablename__ = 'custom_columns'
 
@@ -36,6 +52,18 @@ class Custom_Columns(Base):
     def get_display_dict(self):
         display_dict = ast.literal_eval(self.display)
         return display_dict
+
+class Authors(Base):
+    __tablename__ = 'authors'
+
+    id = Column(Integer, primary_key=True)
+    name = Column(String(collation='NOCASE'), unique=True, nullable=False)
+    sort = Column(String(collation='NOCASE'))
+    link = Column(String, nullable=False, default="")
+
+    def __init__(self, name, sort):
+        self.name = name
+        self.sort = sort
 
 class Books(Base):
     __tablename__ = 'books'
@@ -140,20 +168,24 @@ def add_books(location, number):
         book.path = ""
         book.has_cover = 0
         book.uuid = str(uuid4())
-        #book.isbn = ""
-        #book.flags = 1
         session.add(book)
         session.flush()
         os.makedirs(os.path.join(database_root, book.author_sort))
         book_folder = os.path.join(database_root, book.author_sort, book.title + " ({})".format(book.id))
         os.makedirs(book_folder)
+        book.path = os.path.join(book.author_sort, book.title + " ({})".format(book.id))
         book_name = os.path.join(book_folder, "file.epub")
         with open(book_name, 'wb') as fout:
             fout.write(os.urandom(30))
-        new_format = Data(name="file.epub",
+        new_format = Data(name="file",
                          book_format="epub".upper(),
                          book=book.id, uncompressed_size=30)
         session.merge(new_format)
+        author = Authors(book.author_sort, book.author_sort)
+        session.add(author)
+        session.flush()
+        bal = Books_Authors_Link(book.id, author.id)
+        session.add(bal)
         session.commit()
     # session.commit()
     session.close()

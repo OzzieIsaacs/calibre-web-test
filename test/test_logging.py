@@ -48,7 +48,7 @@ class TestLogging(unittest.TestCase, ui_class):
             pass
 
     def test_failed_login(self):
-        self.driver.find_element_by_id("logout").click()
+        self.driver.find_element(By.ID, "logout").click()
         self.assertFalse(self.login("admin", "123"))
         self.assertTrue(self.login("admin", "admin123"))
         with open(os.path.join(CALIBRE_WEB_PATH, 'calibre-web.log'), 'r') as logfile:
@@ -141,12 +141,12 @@ class TestLogging(unittest.TestCase, ui_class):
             self.assertTrue(os.path.isfile(os.path.join(CALIBRE_WEB_PATH, 'calibre-web.log')))
             # check if logpath is deleted
             self.goto_page("basic_config")
-            accordions = self.driver.find_elements_by_class_name("accordion-toggle")
+            accordions = self.driver.find_elements(By.CLASS_NAME, "accordion-toggle")
             accordions[2].click()
-            logpath = self.driver.find_element_by_id("config_logfile").get_attribute("value")
+            logpath = self.driver.find_element(By.ID, "config_logfile").get_attribute("value")
             self.assertEqual(logpath, "", "logfile config value is not empty after reseting to default")
         else:
-            # It's NOT possible to delete the path, therefore changed folder/file is taken
+            # It's NOT possible to delete the path, therefore changed: folder/file is taken
             self.assertTrue(os.path.isfile(os.path.join(CALIBRE_WEB_PATH, 'hü lo', 'lö g')))
             self.assertFalse(os.path.isfile(os.path.join(CALIBRE_WEB_PATH, 'calibre-web.log')))
             # ToDo: Stop Calibre-Web delete folder restart it and check if folder is the new one
@@ -176,9 +176,9 @@ class TestLogging(unittest.TestCase, ui_class):
             self.assertFalse(os.path.isfile(os.path.join(CALIBRE_WEB_PATH, 'hö lo', 'lü g')))
             self.assertTrue(os.path.isfile(os.path.join(CALIBRE_WEB_PATH, 'access.log')))
             # check if logpath is deleted
-            accordions = self.driver.find_elements_by_class_name("accordion-toggle")
+            accordions = self.driver.find_elements(By.CLASS_NAME, "accordion-toggle")
             accordions[2].click()
-            logpath = self.driver.find_element_by_id("config_access_logfile").get_attribute("value")
+            logpath = self.driver.find_element(By.ID, "config_access_logfile").get_attribute("value")
             self.assertEqual(logpath, "", "Access logfile config value is not empty after reseting to default")
         else:
             # It's NOT possible to delete the path, therefore changed folder/file is taken

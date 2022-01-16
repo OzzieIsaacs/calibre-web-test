@@ -98,19 +98,19 @@ class TestCalibreWebVisibilitys(unittest.TestCase, ui_class):
 
     # checks if message for empty email working, sets e-mail for admin
     def test_user_email_available(self):
-        self.driver.find_element_by_id("top_user").click()
+        self.driver.find_element(By.ID, "top_user").click()
         self.check_element_on_page((By.ID, "email"))
         # WebDriverWait(self.driver, 5).until(EC.presence_of_element_located((By.ID, "email")))
-        submit = self.driver.find_element_by_id("user_submit")
-        self.driver.find_element_by_id("email").clear()
-        self.driver.find_element_by_id("email").send_keys("alfa@web.de")
+        submit = self.driver.find_element(By.ID, "user_submit")
+        self.driver.find_element(By.ID, "email").clear()
+        self.driver.find_element(By.ID, "email").send_keys("alfa@web.de")
         submit.click()
         self.assertTrue(self.check_element_on_page((By.ID, "flash_success")))
-        self.assertIsNotNone(self.driver.find_element_by_name("show_32"))
-        self.assertIsNotNone(self.driver.find_element_by_name("show_16"))
-        self.assertIsNotNone(self.driver.find_element_by_name("show_2"))
-        self.assertIsNotNone(self.driver.find_element_by_name("show_4"))
-        self.assertIsNotNone(self.driver.find_element_by_name("show_8"))
+        self.assertIsNotNone(self.driver.find_element(By.NAME, "show_32"))
+        self.assertIsNotNone(self.driver.find_element(By.NAME, "show_16"))
+        self.assertIsNotNone(self.driver.find_element(By.NAME, "show_2"))
+        self.assertIsNotNone(self.driver.find_element(By.NAME, "show_4"))
+        self.assertIsNotNone(self.driver.find_element(By.NAME, "show_8"))
 
     # checks if admin can configure sidebar for random view
     def test_user_visibility_sidebar(self):
@@ -436,7 +436,7 @@ class TestCalibreWebVisibilitys(unittest.TestCase, ui_class):
         # goto admin page
         self.goto_page("create_user")
         # goto back to admin page
-        self.driver.find_element_by_id("back").click()
+        self.driver.find_element(By.ID, "back").click()
         new_user = self.check_element_on_page((By.ID, "admin_new_user"))
         if new_user:
             row_count = len(self.get_user_list())
@@ -463,6 +463,7 @@ class TestCalibreWebVisibilitys(unittest.TestCase, ui_class):
 
 
     def test_search_string(self):
+        self.assertEqual(7, len(self.adv_search({'book_title': ' book '})))
         self.adv_search({'book_title': 'Hallo'}, get=False)
         field = self.check_element_on_page((By.ID, "query"))
         self.assertEqual('', field.get_attribute('value'))
@@ -903,7 +904,7 @@ class TestCalibreWebVisibilitys(unittest.TestCase, ui_class):
         details = self.get_book_details(1)
         self.assertEqual(len(details['author']), 4)
         self.check_element_on_page((By.ID, "add-to-shelf")).click()
-        shelf_list = self.driver.find_elements_by_xpath("//ul[@id='add-to-shelves']/li")
+        shelf_list = self.driver.find_elements(By.XPATH, "//ul[@id='add-to-shelves']/li")
         self.assertEqual(1, len(shelf_list))
         self.check_element_on_page((By.XPATH, "//ul[@id='add-to-shelves']/li/a[contains(.,'Author')]")).click()
         self.goto_page('nav_new')

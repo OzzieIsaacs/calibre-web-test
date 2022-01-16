@@ -53,7 +53,7 @@ class TestLdapLogin(unittest.TestCase, ui_class):
         cls.p.terminate()
         cls.driver.quit()
         # close the browser window and stop calibre-web
-        remove_dependency(cls.dep_line)
+        # remove_dependency(cls.dep_line)
         save_logfiles(cls, cls.__name__)
 
     @classmethod
@@ -575,7 +575,7 @@ class TestLdapLogin(unittest.TestCase, ui_class):
         self.edit_user('user0', {'delete': 1})
         self.assertTrue(self.check_element_on_page((By.ID, "flash_success")))
 
-    # @unittest.skip('Unknown how to test certificate')
+    @unittest.skip('Unknown how to test certificate')
     def test_LDAP_SSL_CERTIFICATE(self):
         shutil.rmtree(os.path.join(CALIBRE_WEB_PATH, 'files'), ignore_errors=True)
         os.makedirs(os.path.join(CALIBRE_WEB_PATH, 'files'))
@@ -603,8 +603,8 @@ class TestLdapLogin(unittest.TestCase, ui_class):
                                 'config_ldap_cert_path': real_cert_file,
                                 'config_ldap_key_path': real_key_file
                                 })
-        self.assertTrue(self.check_element_on_page((By.ID, "flash_success")))
         time.sleep(BOOT_TIME)
+        self.assertTrue(self.check_element_on_page((By.ID, "flash_success")))
         # create new user
         # give user password different form ldap
         self.create_user('user0',{'email':'user0@exi.com','password':'1235'})

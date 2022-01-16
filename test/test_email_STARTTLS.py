@@ -3,6 +3,8 @@
 
 import unittest
 import time
+import re
+import requests
 
 from helper_email_convert import AIOSMTPServer
 import helper_email_convert
@@ -105,7 +107,7 @@ class TestSTARTTLS(unittest.TestCase, ui_class):
         self.setup_server(False, {'mail_use_ssl': 'STARTTLS'})
         self.assertTrue(self.edit_user(u'paswd_resend', { 'resend_password': 1}))
         self.edit_user('paswd_resend', element={})
-        password_link = self.check_element_on_page((By.ID, "resend_password")).get_attribute('href')
+        password_link = self.check_element_on_page((By.ID, "resend_password")).get_attribute('data-action')
         # user_id = password_link[password_link.rfind("/")+1:]
         self.logout()
         self.assertTrue(wait_Email_received(self.email_server.handler.check_email_received))
@@ -122,9 +124,22 @@ class TestSTARTTLS(unittest.TestCase, ui_class):
         self.assertFalse(self.check_element_on_page((By.ID, "resend_password")))
         self.driver.get('http://127.0.0.1:8083/admin/user/99')
         self.assertTrue(self.check_element_on_page((By.ID, "flash_danger")))
-        self.driver.get(password_link)
-        self.assertTrue(self.check_element_on_page((By.ID, "flash_danger")))
-        self.driver.get(password_link[:password_link.rfind("/")] + '/99')
-        self.assertTrue(self.check_element_on_page((By.ID, "flash_danger")))
+        r = requests.session()
+        login_page = r.get('http://127.0.0.1:8083/login')
+        token = re.search('<input type="hidden" name="csrf_token" value="(.*)">', login_page.text)
+        payload = {'username': "admin", 'password': "admin123", 'submit': "", 'next': "/", "csrf_token": token.group(1)}
+        r.post('http://127.0.0.1:8083/login', data=payload)
+        link = r.get('http://127.0.0.1:8083/admin/view')
+        token = re.search('<input type="hidden" name="csrf_token" value="(.*)">', link.text)
+        payload = {"csrf_token": token.group(1)}
+        request = r.post('http://127.0.0.1:8083' + password_link, data=payload)
+        # self.driver.get(password_link)
+        self.assertTrue("flash_danger" in request.text)
+        #self.assertTrue(self.check_element_on_page((By.ID, "flash_danger")))
+        request = r.post('http://127.0.0.1:8083' + password_link[:password_link.rfind("/")] + '/99', data=payload)
+        # self.driver.get()
+        self.assertTrue("flash_danger" in request.text)
+        r.close()
+        # self.assertTrue(self.check_element_on_page((By.ID, "flash_danger")))
         self.edit_user('paswd_resend', {'delete': 1})
         self.setup_server(False, {'mail_server': '127.0.0.1'})

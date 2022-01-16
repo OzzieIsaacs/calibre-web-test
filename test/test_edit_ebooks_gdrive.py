@@ -108,7 +108,7 @@ class TestEditBooksOnGdrive(unittest.TestCase, ui_class):
         save_logfiles(cls, cls.__name__)
 
     def save_cover_screenshot(self, filename):
-        element = self.driver.find_element_by_tag_name('img')
+        element = self.driver.find_element(By.TAG_NAME, 'img')
         location = element.location
         size = element.size
         self.driver.save_screenshot("page.png")
@@ -130,6 +130,8 @@ class TestEditBooksOnGdrive(unittest.TestCase, ui_class):
         time.sleep(1)
 
     def test_edit_title(self):
+        self.fill_basic_config({"config_unicode_filename": 1})
+        self.check_element_on_page((By.ID, 'flash_success'))
         fs = connect_gdrive("test")
         self.get_book_details(4)
         self.check_element_on_page((By.ID, "edit_book")).click()
@@ -237,7 +239,7 @@ class TestEditBooksOnGdrive(unittest.TestCase, ui_class):
         title = self.check_element_on_page((By.ID, "book_title"))
         self.assertEqual(u'Pipo|;.:', title.get_attribute('value'))
         self.edit_book(content={'book_title': u'Very long extra super turbo cool title without any issue of displaying including ö utf-8 characters'})
-        time.sleep(4)
+        time.sleep(5)
         self.wait_page_has_loaded()
         ele = self.check_element_on_page((By.ID, "title"))
         self.assertEqual(ele.text, u'Very long extra super turbo cool title without any issue of displaying including ö utf-8 characters')
@@ -245,6 +247,8 @@ class TestEditBooksOnGdrive(unittest.TestCase, ui_class):
         self.check_element_on_page((By.ID, "edit_book")).click()
         self.edit_book(content={'book_title': u'book6'})
         self.wait_page_has_loaded()
+        self.fill_basic_config({"config_unicode_filename": 0})
+        self.check_element_on_page((By.ID, 'flash_success'))
 
 
     # goto Book 2
@@ -284,6 +288,8 @@ class TestEditBooksOnGdrive(unittest.TestCase, ui_class):
     # error should occour
     # Test Capital letters and lowercase characters
     def test_edit_author(self):
+        self.fill_basic_config({"config_unicode_filename": 1})
+        self.check_element_on_page((By.ID, 'flash_success'))
         fs = connect_gdrive("test")
         self.get_book_details(8)
         self.check_element_on_page((By.ID, "edit_book")).click()
@@ -388,6 +394,8 @@ class TestEditBooksOnGdrive(unittest.TestCase, ui_class):
         fs.close()
         self.edit_book(content={'bookAuthor': 'Leo Baskerville'}, detail_v=True)
         time.sleep(WAIT_GDRIVE)
+        self.check_element_on_page((By.ID, 'flash_success'))
+        self.fill_basic_config({"config_unicode_filename": 0})
         self.check_element_on_page((By.ID, 'flash_success'))
 
 

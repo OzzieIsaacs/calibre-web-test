@@ -432,6 +432,6 @@ def poweroff(power):
             os.system('shutdown /s')
         else:
             os.system('shutdown -P')
-        time.sleep(12)
+        time.sleep(1)
 
 

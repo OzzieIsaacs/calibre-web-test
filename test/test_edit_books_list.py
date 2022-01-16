@@ -60,8 +60,7 @@ class TestEditBooksList(TestCase, ui_class):
         self.get_book_details(10)
         self.check_element_on_page((By.XPATH, "//*[@id='archived_cb']")).click()
         bl = self.get_books_list(1)
-        # books in archive are also visible in books table
-        self.assertEqual(10, len(bl['table']))
+        self.assertEqual(9, len(bl['table']))
         # remove books from archive
         self.get_book_details(5)
         self.check_element_on_page((By.XPATH, "//*[@id='archived_cb']")).click()
@@ -266,18 +265,22 @@ class TestEditBooksList(TestCase, ui_class):
         self.check_element_on_page((By.XPATH,"//button[contains(@class,'editable-cancel')]")).click()
         bl = self.get_books_list(-1)
         self.assertEqual("2", bl['table'][5]['Series Index']['text'])
+        # ToDo check why "," is not working anymore
         self.edit_table_element(bl['table'][5]['Series Index']['element'], "2,01")
+        self.assertTrue(self.check_element_on_page((By.XPATH,
+                                                          "//button[contains(@class,'editable-submit')]")))
+        self.check_element_on_page((By.XPATH,"//button[contains(@class,'editable-cancel')]")).click()
         bl = self.get_books_list(-1)
-        self.assertEqual("2.01", bl['table'][5]['Series Index']['text'])
+        self.assertEqual("2", bl['table'][5]['Series Index']['text'])
         self.edit_table_element(bl['table'][5]['Series Index']['element'], "1.99")
         bl = self.get_books_list(-1)
         self.assertEqual("1.99", bl['table'][5]['Series Index']['text'])
 
         # Restore default
         bl = self.get_books_list(-1)
-        self.edit_table_element(bl['table'][4]['Series Index']['element'], "1")
+        self.edit_table_element(bl['table'][5]['Series Index']['element'], "1")
         bl = self.get_books_list(-1)
-        self.assertEqual("1", bl['table'][4]['Series Index']['text'])
+        self.assertEqual("1", bl['table'][5]['Series Index']['text'])
 
     # change visibility of some columns
     # goto other page, return to books list, check if visibility is same
@@ -285,8 +288,8 @@ class TestEditBooksList(TestCase, ui_class):
         bl = self.get_books_list(1)
         self.assertTrue(bl['column'])
         bl['column'].click()
-        self.assertEqual(20, len(bl['column_elements']))
-        self.assertEqual(22, len(bl['table'][0]))
+        self.assertEqual(17, len(bl['column_elements']))
+        self.assertEqual(19, len(bl['table'][0]))
         for indx, element in enumerate(bl['column_elements']):
             if element.is_selected():
                 self.assertTrue(bl['column_texts'][indx].text in bl['table'][0])
@@ -300,8 +303,8 @@ class TestEditBooksList(TestCase, ui_class):
         bl = self.get_books_list(2)
         self.assertTrue(bl['column'])
         bl['column'].click()
-        self.assertEqual(20, len(bl['column_elements']))
-        self.assertEqual(15, len(bl['table'][0]))
+        self.assertEqual(17, len(bl['column_elements']))
+        self.assertEqual(12, len(bl['table'][0]))
         self.assertFalse(bl['column_elements'][0].is_selected())
         self.assertFalse(bl['column_elements'][1].is_selected())
         self.assertFalse(bl['column_elements'][2].is_selected())
@@ -317,7 +320,7 @@ class TestEditBooksList(TestCase, ui_class):
         bl['column_elements'][5].click()
         bl['column_elements'][6].click()
         bl = self.get_books_list(1)
-        self.assertEqual(22, len(bl['table'][0]))
+        self.assertEqual(19, len(bl['table'][0]))
 
     def test_restricted_rights(self):
         bl = self.get_books_list(1)

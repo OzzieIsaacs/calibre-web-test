@@ -579,7 +579,7 @@ class TestUserTemplate(unittest.TestCase, ui_class):
         self.assertIn(int(books[0][0]['id']), (8, 12, 13))
         self.assertIn(int(books[0][1]['id']), (8, 12, 13))
         self.assertIn(int(books[0][2]['id']), (8, 12, 13))
-        tags = self.driver.find_elements_by_tag_name('h2')
+        tags = self.driver.find_elements(By.TAG_NAME, 'h2')
         self.assertEqual(len(tags), 2)
         self.assertEqual(tags[1].text, 'Unread Books (3)')
         # find 2 h2
