@@ -268,7 +268,6 @@ class TestKoboSync(unittest.TestCase, ui_class):
         self.assertEqual(1, len(data))
         self.assertEqual(['Noname 23'], data[0]['NewEntitlement']['BookMetadata']['Contributors'])
         self.assertEqual('book9', data[0]['NewEntitlement']['BookMetadata']['Title'])
-        # self.assertEqual(None , data[0]['NewEntitlement']['BookMetadata']['Publisher']['Name'])
         self.delete_book(15)
 
 
