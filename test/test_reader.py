@@ -81,7 +81,7 @@ class TestReader(unittest.TestCase, ui_class):
             self.assertFalse('Not exactly one new tab was opened')
         self.driver.switch_to.window(new_handle[0])
         self.driver.switch_to.frame(self.check_element_on_page((By.XPATH,"//iframe[starts-with(@id, 'epubjs-view')]")))
-        content = self.driver.find_elements_by_class_name("calibre1")
+        content = self.driver.find_elements(By.CLASS_NAME, "calibre1")
         # content = self.check_element_on_page((By.XPATH, "//@id=viewer/")) # "//div[@id='viewer']/div" [starts-with(@id, 'serie_')]"
         self.assertTrue(content)
         self.assertTrue('Überall dieselbe alte Leier.' in content[1].text)
@@ -111,7 +111,7 @@ class TestReader(unittest.TestCase, ui_class):
             self.assertFalse('Not exactly one new tab was opened')
         self.driver.switch_to.window(new_handle[0])
         time.sleep(3)
-        content = self.driver.find_elements_by_xpath("//div[@class='textLayer']/span")
+        content = self.driver.find_elements(By.XPATH, "//div[@class='textLayer']/span")
         self.assertTrue(content)
         self.assertTrue('Lorem ipsum dolor sit amet, consectetuer adipiscing elit' in content[0].text)
         self.driver.close()

@@ -108,7 +108,7 @@ class TestEditBooksOnGdrive(unittest.TestCase, ui_class):
         save_logfiles(cls, cls.__name__)
 
     def save_cover_screenshot(self, filename):
-        element = self.driver.find_element_by_tag_name('img')
+        element = self.driver.find_element(By.TAG_NAME, 'img')
         location = element.location
         size = element.size
         self.driver.save_screenshot("page.png")

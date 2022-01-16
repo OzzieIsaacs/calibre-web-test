@@ -173,7 +173,7 @@ class TestEditAdditionalBooks(TestCase, ui_class):
         self.fill_basic_config({'config_upload_formats': 'epub, ePub'})
         self.assertTrue(self.check_element_on_page((By.ID, "flash_success")))
 
-        accordions = self.driver.find_elements_by_class_name("accordion-toggle")
+        accordions = self.driver.find_elements(By.CLASS_NAME, "accordion-toggle")
         accordions[3].click()
         formats = self.check_element_on_page((By.ID, 'config_upload_formats'))
         self.assertEqual('epub', formats.get_attribute('value'))

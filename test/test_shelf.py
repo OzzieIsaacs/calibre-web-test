@@ -383,7 +383,7 @@ class TestShelf(unittest.TestCase, ui_class):
         self.get_book_details(int(books[1][2]['id']))
         # Add book to shelf
         self.check_element_on_page((By.ID, "add-to-shelf")).click()
-        shelf_list = self.driver.find_elements_by_xpath("//ul[@id='add-to-shelves']/li")
+        shelf_list = self.driver.find_elements(By.XPATH, "//ul[@id='add-to-shelves']/li")
         self.assertEqual(1, len(shelf_list))
         self.check_element_on_page((By.XPATH, "//ul[@id='add-to-shelves']/li/a[contains(.,'noright')]")).click()
         self.assertFalse(self.check_element_on_page((By.XPATH, "//ul[@id='add-to-shelves']/li/a[contains(.,'noright')]")))
@@ -416,7 +416,7 @@ class TestShelf(unittest.TestCase, ui_class):
         self.assertTrue(self.check_element_on_page((By.ID, "flash_success")))
         self.search('Döe')
         self.check_element_on_page((By.ID, "add-to-shelf")).click()
-        shelf_list = self.driver.find_elements_by_xpath("//ul[@id='add-to-shelves']/li")
+        shelf_list = self.driver.find_elements(By.XPATH, "//ul[@id='add-to-shelves']/li")
         self.assertEqual(1, len(shelf_list))
         self.check_element_on_page((By.XPATH, "//ul[@id='add-to-shelves']/li/a[contains(.,'search')]")).click()
         self.assertTrue(self.check_element_on_page((By.ID, "flash_success")))
@@ -437,7 +437,7 @@ class TestShelf(unittest.TestCase, ui_class):
         books = self.get_books_displayed()
         self.get_book_details(int(books[1][2]['id']))
         self.check_element_on_page((By.ID, "add-to-shelf")).click()
-        shelf_list = self.driver.find_elements_by_xpath("//ul[@id='add-to-shelves']/li")
+        shelf_list = self.driver.find_elements(By.XPATH, "//ul[@id='add-to-shelves']/li")
         self.assertEqual(1, len(shelf_list))
         self.check_element_on_page((By.XPATH, "//ul[@id='add-to-shelves']/li/a[contains(.,'anon')]")).click()
         # Check if book is in shelf

@@ -28,7 +28,7 @@ class TestUpdater(unittest.TestCase, ui_class):
             pem_file = os.path.join(os.path.expanduser('~'), '.mitmproxy', 'mitmproxy-ca-cert.pem')
             my_env = os.environ.copy()
             my_env["http_proxy"] = 'http://localhost:8080'
-            my_env["https_proxy"] = 'https://localhost:8080'
+            my_env["https_proxy"] = 'http://localhost:8080'
             my_env["REQUESTS_CA_BUNDLE"] = pem_file
             startup(cls, cls.py_version, {'config_calibre_dir': TEST_DB}, env=my_env)
         else:
@@ -128,7 +128,7 @@ class TestUpdater(unittest.TestCase, ui_class):
         self.fill_basic_config({'config_updatechannel': 'Stable'})
         time.sleep(BOOT_TIME)
         self.goto_page('admin_setup')
-        update_table = self.check_element_on_page((By.ID, "current_version")).find_elements_by_tag_name('td')
+        update_table = self.check_element_on_page((By.ID, "current_version")).find_elements(By.TAG_NAME, 'td')
         # self.assertEqual(update_table[0].text,'')  # ToDo Check current version correct
         self.assertEqual(update_table[1].text, 'Current version')
         version = [int(x) for x in (update_table[0].text.rstrip(' Beta')).split('.')]
@@ -156,7 +156,7 @@ class TestUpdater(unittest.TestCase, ui_class):
         self.fill_basic_config({'config_updatechannel': 'Stable'})
         time.sleep(BOOT_TIME)
         self.goto_page('admin_setup')
-        update_table = self.check_element_on_page((By.ID, "current_version")).find_elements_by_tag_name('td')
+        update_table = self.check_element_on_page((By.ID, "current_version")).find_elements(By.TAG_NAME, 'td')
         # ToDo Check current version correct
         self.assertEqual(update_table[1].text, 'Current version')
         version = [int(x) for x in (update_table[0].text.rstrip(' Beta')).split('.')]
@@ -216,7 +216,7 @@ class TestUpdater(unittest.TestCase, ui_class):
         self.fill_basic_config({'config_updatechannel': 'Nightly'})
         time.sleep(BOOT_TIME)
         self.goto_page('admin_setup')
-        update_table = self.check_element_on_page((By.ID, "current_version")).find_elements_by_tag_name('td')
+        update_table = self.check_element_on_page((By.ID, "current_version")).find_elements(By.TAG_NAME, 'td')
         # self.assertEqual(update_table[0],'')  # ToDo Check current version correct
         self.assertEqual(update_table[1].text, 'Current version')
         val.set_type(['Timeout'])
@@ -244,7 +244,7 @@ class TestUpdater(unittest.TestCase, ui_class):
         self.fill_basic_config({'config_updatechannel': 'Nightly'})
         time.sleep(BOOT_TIME)
         self.goto_page('admin_setup')
-        update_table = self.check_element_on_page((By.ID, "current_version")).find_elements_by_tag_name('td')
+        update_table = self.check_element_on_page((By.ID, "current_version")).find_elements(By.TAG_NAME, 'td')
         # self.assertEqual(update_table[0],'')  # ToDo Check current version correct
         self.assertEqual(update_table[1].text, 'Current version')
         val.set_type([None, 'Timeout'])
@@ -277,7 +277,7 @@ class TestUpdater(unittest.TestCase, ui_class):
         self.fill_basic_config({'config_updatechannel': 'Stable'})
         time.sleep(BOOT_TIME)
         self.goto_page('admin_setup')
-        update_table = self.check_element_on_page((By.ID, "current_version")).find_elements_by_tag_name('td')
+        update_table = self.check_element_on_page((By.ID, "current_version")).find_elements(By.TAG_NAME, 'td')
         version = [int(x) for x in (update_table[0].text.rstrip(' Beta')).split('.')]
         version3 = [version[0], version[1], version[2] + 2]
         version2 = [version[0], version[1], version[2] + 1]
@@ -298,7 +298,7 @@ class TestUpdater(unittest.TestCase, ui_class):
         self.fill_basic_config({'config_updatechannel': 'Stable'})
         time.sleep(BOOT_TIME)
         self.goto_page('admin_setup')
-        update_table = self.check_element_on_page((By.ID, "current_version")).find_elements_by_tag_name('td')
+        update_table = self.check_element_on_page((By.ID, "current_version")).find_elements(By.TAG_NAME, 'td')
         version = [int(x) for x in (update_table[0].text.rstrip(' Beta')).split('.')]
         version3 = [version[0], version[1], version[2] + 2]
         version2 = [version[0], version[1], version[2] + 1]
@@ -355,7 +355,7 @@ class TestUpdater(unittest.TestCase, ui_class):
         self.fill_basic_config({'config_updatechannel': 'Stable'})
         time.sleep(BOOT_TIME)
         self.goto_page('admin_setup')
-        update_table = self.check_element_on_page((By.ID, "current_version")).find_elements_by_tag_name('td')
+        update_table = self.check_element_on_page((By.ID, "current_version")).find_elements(By.TAG_NAME, 'td')
         version = [int(x) for x in (update_table[0].text.rstrip(' Beta')).split('.')]
         version3 = [version[0], version[1], version[2] + 2]
         version2 = [version[0], version[1], version[2] + 1]
@@ -394,7 +394,7 @@ class TestUpdater(unittest.TestCase, ui_class):
         self.fill_basic_config({'config_updatechannel': 'Stable'})
         time.sleep(BOOT_TIME)
         self.goto_page('admin_setup')
-        update_table = self.check_element_on_page((By.ID, "current_version")).find_elements_by_tag_name('td')
+        update_table = self.check_element_on_page((By.ID, "current_version")).find_elements(By.TAG_NAME, 'td')
         version = [int(x) for x in (update_table[0].text.rstrip(' Beta')).split('.')]
         version3 = [version[0], version[1], version[2] + 2]
         version2 = [version[0], version[1], version[2] + 1]

@@ -5,7 +5,7 @@
 from unittest import TestCase
 import os
 import time
-import requests
+# import requests
 
 from selenium.webdriver.common.by import By
 from helper_ui import ui_class
@@ -29,8 +29,8 @@ class TestCoverEditBooks(TestCase, ui_class):
             pem_file = os.path.join(os.path.expanduser('~'), '.mitmproxy', 'mitmproxy-ca-cert.pem')
             my_env = os.environ.copy()
             my_env["http_proxy"] = 'http://localhost:8080'
-            my_env["https_proxy"] = 'https://localhost:8080'
-            my_env["REQUESTS_CA_BUNDLE"] = pem_file
+            my_env["https_proxy"] = 'http://localhost:8080'
+            my_env["CURL_CA_BUNDLE"] = pem_file
             # my_env["LANG"] = 'de_DE.UTF-8'
             startup(cls, cls.py_version, {'config_calibre_dir': TEST_DB, 'config_uploading': 1}, env=my_env)
             time.sleep(3)

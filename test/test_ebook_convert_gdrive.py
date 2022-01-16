@@ -144,7 +144,7 @@ class TestEbookConvertCalibreGDrive(unittest.TestCase, ui_class):
         select.select_by_visible_text('EPUB')
         select = Select(vals['btn_to'])
         select.select_by_visible_text('LIT')
-        self.driver.find_element_by_id("btn-book-convert").click()
+        self.check_element_on_page((By.ID, "btn-book-convert")).click()
         self.assertTrue(self.check_element_on_page((By.ID, "flash_success")))
         i = 0
         while i < 20:
@@ -164,7 +164,7 @@ class TestEbookConvertCalibreGDrive(unittest.TestCase, ui_class):
         select.select_by_visible_text('EPUB')
         select = Select(vals['btn_to'])
         select.select_by_visible_text('LRF')
-        self.driver.find_element_by_id("btn-book-convert").click()
+        self.check_element_on_page((By.ID,"btn-book-convert")).click()
         self.assertTrue(self.check_element_on_page((By.ID, "flash_success")))
         time.sleep(8)
         task_len, ret = self.check_tasks(tasks)
@@ -262,7 +262,7 @@ class TestEbookConvertCalibreGDrive(unittest.TestCase, ui_class):
         select.select_by_visible_text('MOBI')
         select = Select(vals['btn_to'])
         select.select_by_visible_text('AZW3')
-        self.driver.find_element_by_id("btn-book-convert").click()
+        self.check_element_on_page((By.ID, "btn-book-convert")).click()
         self.assertTrue(self.check_element_on_page((By.ID, "flash_success")))
         time.sleep(2)
 
@@ -271,7 +271,7 @@ class TestEbookConvertCalibreGDrive(unittest.TestCase, ui_class):
         select.select_by_visible_text('MOBI')
         select = Select(vals['btn_to'])
         select.select_by_visible_text('EPUB')
-        self.driver.find_element_by_id("btn-book-convert").click()
+        self.check_element_on_page((By.ID, "btn-book-convert")).click()
         self.assertTrue(self.check_element_on_page((By.ID, "flash_success")))
         time.sleep(2)
 
@@ -280,7 +280,7 @@ class TestEbookConvertCalibreGDrive(unittest.TestCase, ui_class):
         select.select_by_visible_text('MOBI')
         select = Select(vals['btn_to'])
         select.select_by_visible_text('TXT')
-        self.driver.find_element_by_id("btn-book-convert").click()
+        self.check_element_on_page((By.ID, "btn-book-convert")).click()
         self.assertTrue(self.check_element_on_page((By.ID, "flash_success")))
         time.sleep(2)
 
@@ -289,7 +289,7 @@ class TestEbookConvertCalibreGDrive(unittest.TestCase, ui_class):
         select.select_by_visible_text('MOBI')
         select = Select(vals['btn_to'])
         select.select_by_visible_text('FB2')
-        self.driver.find_element_by_id("btn-book-convert").click()
+        self.check_element_on_page((By.ID, "btn-book-convert")).click()
         self.assertTrue(self.check_element_on_page((By.ID, "flash_success")))
         time.sleep(2)
 
@@ -298,7 +298,7 @@ class TestEbookConvertCalibreGDrive(unittest.TestCase, ui_class):
         select.select_by_visible_text('MOBI')
         select = Select(vals['btn_to'])
         select.select_by_visible_text('LIT')
-        self.driver.find_element_by_id("btn-book-convert").click()
+        self.check_element_on_page((By.ID, "btn-book-convert")).click()
         self.assertTrue(self.check_element_on_page((By.ID, "flash_success")))
         time.sleep(2)
 
@@ -307,7 +307,7 @@ class TestEbookConvertCalibreGDrive(unittest.TestCase, ui_class):
         select.select_by_visible_text('MOBI')
         select = Select(vals['btn_to'])
         select.select_by_visible_text('HTMLZ')
-        self.driver.find_element_by_id("btn-book-convert").click()
+        self.check_element_on_page((By.ID, "btn-book-convert")).click()
         self.assertTrue(self.check_element_on_page((By.ID, "flash_success")))
 
         self.create_user('solo', {'password': '123', 'email': 'a@b.com', 'edit_role':1})
@@ -345,7 +345,7 @@ class TestEbookConvertCalibreGDrive(unittest.TestCase, ui_class):
         select.select_by_visible_text('PDF')
         select = Select(vals['btn_to'])
         select.select_by_visible_text('RTF')
-        self.driver.find_element_by_id("btn-book-convert").click()
+        self.check_element_on_page((By.ID, "btn-book-convert")).click()
         self.assertTrue(self.check_element_on_page((By.ID, "flash_success")))
         i = 0
         while i < 10:
@@ -376,7 +376,7 @@ class TestEbookConvertCalibreGDrive(unittest.TestCase, ui_class):
         select.select_by_visible_text('EPUB')
         select = Select(vals['btn_to'])
         select.select_by_visible_text('MOBI')
-        self.driver.find_element_by_id("btn-book-convert").click()
+        self.check_element_on_page((By.ID, "btn-book-convert")).click()
         self.assertTrue(self.check_element_on_page((By.ID, "flash_success")))
         i = 0
         while i < 20:
