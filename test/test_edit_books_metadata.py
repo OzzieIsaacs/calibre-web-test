@@ -131,7 +131,7 @@ class TestLoadMetadata(TestCase, ui_class):
         time.sleep(3)
         results = self.find_metadata_results()
         results[1]['cover_element'].click()
-        time.sleep(2)
+        time.sleep(3)
         cover = self.check_element_on_page((By.ID, "detailcover")).screenshot_as_png
         self.assertGreaterEqual(diff(BytesIO(cover), BytesIO(original_cover), delete_diff_file=True), 0.05)
         self.check_element_on_page((By.ID, "submit")).click()

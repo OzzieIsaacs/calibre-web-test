@@ -36,7 +36,7 @@ class TestErrorReadColumn(unittest.TestCase, ui_class):
         cls.p.terminate()
         save_logfiles(cls, cls.__name__)
 
-    def test_invalid_custom_column(self):
+    def test_invalid_custom_read_column(self):
         self.fill_view_config({'config_read_column': "Custom Bool 1 Ä"})
         self.get_book_details(10)
         self.check_element_on_page((By.XPATH, "//*[@id='have_read_cb']")).click()
