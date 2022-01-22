@@ -2,10 +2,9 @@
 # -*- coding: utf-8 -*-
 
 
-from unittest import TestCase, skip
+from unittest import TestCase
 import os
 import time
-import requests
 import zipfile
 from bs4 import BeautifulSoup
 import codecs

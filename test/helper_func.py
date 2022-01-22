@@ -25,6 +25,7 @@ from email.mime.text import MIMEText
 from email.mime.multipart import MIMEMultipart
 from email.mime.base import MIMEBase
 from email import encoders
+import zipfile
 
 try:
     import pdfkit
@@ -435,3 +436,8 @@ def poweroff(power):
         time.sleep(1)
 
 
+def createcbz(zipname, filenames, finalnames):
+    with zipfile.ZipFile(zipname, 'w') as zip:
+        for indx, item in enumerate(filenames):
+            with open(item, "rb") as f:
+                zip.writestr(finalnames[indx], f.read())
