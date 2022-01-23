@@ -16,6 +16,7 @@ from helper_ui import ui_class
 from config_test import TEST_DB, base_path, BOOT_TIME
 # from .parameterized import parameterized_class
 from helper_func import startup, add_dependency, remove_dependency, unrar_path, is_unrar_not_present, createcbz
+from helper_func import change_comic_meta
 from helper_func import save_logfiles
 
 
@@ -27,7 +28,6 @@ class TestEditAdditionalBooks(TestCase, ui_class):
 
     @classmethod
     def setUpClass(cls):
-        pass
         add_dependency(cls.dependencys, cls.__name__)
 
         try:
@@ -54,6 +54,38 @@ class TestEditAdditionalBooks(TestCase, ui_class):
             self.assertTrue(name in identifier[0])
         self.assertTrue(value in identifier[0])
 
+    def test_cbz_comicinfo(self):
+        self.fill_basic_config({'config_uploading': 1})
+        time.sleep(3)
+        self.assertTrue(self.check_element_on_page((By.ID, "flash_success")))
+
+        upload_file = os.path.join(base_path, 'files', 'book2.cbz')
+        other_file = os.path.join(base_path, 'files', 'book1.cbz')
+        zipdata = [os.path.join(base_path, 'files', 'cover.webp')]
+        names = ['cover1.weBp']
+        createcbz(upload_file, zipdata, names)
+        change_comic_meta(upload_file, other_file, element={"Writer": "Test Writer",
+                                                            "Summary": "Testdummy",
+                                                            "Series": "Hilo",
+                                                            "Title": "With Title"})
+        self.goto_page('nav_new')
+        upload = self.check_element_on_page((By.ID, 'btn-upload'))
+        upload.send_keys(upload_file)
+        time.sleep(2)
+        self.check_element_on_page((By.ID, 'edit_cancel')).click()
+        time.sleep(2)
+        details = self.get_book_details()
+        self.assertEqual('With Title', details['title'])
+        self.assertEqual('Test Writer', details['author'][0])
+        self.assertEqual('3', details['series_index'])
+        self.assertEqual('Hilo', details['series'])
+        self.assertEqual('Testdummy', details['comment'])
+
+        self.fill_basic_config({'config_uploading': 0})
+        time.sleep(2)
+        self.assertTrue(self.check_element_on_page((By.ID, "flash_success")))
+        self.delete_book(details['id'])
+
     def test_upload_cbz_coverformats(self):
         self.fill_basic_config({'config_uploading': 1})
         time.sleep(3)
@@ -78,9 +110,7 @@ class TestEditAdditionalBooks(TestCase, ui_class):
         time.sleep(2)
         cover = self.check_element_on_page((By.ID, "detailcover")).screenshot_as_png
         self.assertGreaterEqual(diff(BytesIO(cover), BytesIO(original_cover), delete_diff_file=True), 0.05)
-        self.check_element_on_page((By.ID, "delete")).click()
-        self.check_element_on_page((By.ID, "delete_confirm")).click()
-        time.sleep(2)
+        self.delete_book(-1)
 
         # upload png book
         zipdata = [os.path.join(base_path, 'files', 'cover.png')]
@@ -92,9 +122,7 @@ class TestEditAdditionalBooks(TestCase, ui_class):
         time.sleep(2)
         cover = self.check_element_on_page((By.ID, "detailcover")).screenshot_as_png
         self.assertGreaterEqual(diff(BytesIO(cover), BytesIO(original_cover), delete_diff_file=True), 0.05)
-        self.check_element_on_page((By.ID, "delete")).click()
-        self.check_element_on_page((By.ID, "delete_confirm")).click()
-        time.sleep(2)
+        self.delete_book(-1)
 
         # upload bmp book
         zipdata = [os.path.join(base_path, 'files', 'cover.bmp')]
@@ -106,8 +134,7 @@ class TestEditAdditionalBooks(TestCase, ui_class):
         time.sleep(2)
         cover = self.check_element_on_page((By.ID, "detailcover")).screenshot_as_png
         self.assertGreaterEqual(diff(BytesIO(cover), BytesIO(original_cover), delete_diff_file=True), 0.049)
-        self.check_element_on_page((By.ID, "delete")).click()
-        self.check_element_on_page((By.ID, "delete_confirm")).click()
+        self.delete_book(-1)
         time.sleep(2)
 
         self.fill_basic_config({'config_uploading': 0})

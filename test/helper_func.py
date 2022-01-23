@@ -474,15 +474,9 @@ def change_epub_meta(zipname_new=None, zipname_org='./files/book.epub', element=
     updateZip(zipname_new, zipname_org, 'content.opf', str(soup))
 
 def change_comic_meta(zipname_new=None, zipname_org='./files/book1.cbz', element={}):
-    with codecs.open('./ComicInfo.xml', "r", "utf-8") as f:
+    with codecs.open('./files/ComicInfo.xml', "r", "utf-8") as f:
         soup = BeautifulSoup(f.read(), "xml")
-    for el in soup.findAll("meta"):
-        el.prefix = ""
-        el.namespace=""
-    soup.find("metadata").prefix = ""
     for k, v in element.items():
-        if k == "author":
-            pass
         el = soup.find(k)
         el.string = v
-    updateZip(zipname_new, zipname_org, 'content.opf', str(soup))
+    updateZip(zipname_new, zipname_org, 'ComicInfo.xml', str(soup))
