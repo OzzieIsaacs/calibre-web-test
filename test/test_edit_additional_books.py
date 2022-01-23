@@ -85,6 +85,8 @@ class TestEditAdditionalBooks(TestCase, ui_class):
         time.sleep(2)
         self.assertTrue(self.check_element_on_page((By.ID, "flash_success")))
         self.delete_book(details['id'])
+        os.remove(upload_file)
+        os.remove(other_file)
 
     def test_upload_cbz_coverformats(self):
         self.fill_basic_config({'config_uploading': 1})
