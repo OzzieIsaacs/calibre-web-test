@@ -55,11 +55,18 @@ class TestEditAdditionalBooks(TestCase, ui_class):
         self.assertTrue(value in identifier[0])
 
     def test_upload_cbz_coverformats(self):
-        self.get_book_details(1)
-        original_cover = self.check_element_on_page((By.ID, "detailcover")).screenshot_as_png
         self.fill_basic_config({'config_uploading': 1})
         time.sleep(3)
         self.assertTrue(self.check_element_on_page((By.ID, "flash_success")))
+        # Upload book to be sure we have a reference (delete book test runs maybe before this test)
+        upload_file = os.path.join(base_path, 'files', 'book.fb2')
+        self.goto_page('nav_new')
+        upload = self.check_element_on_page((By.ID, 'btn-upload'))
+        upload.send_keys(upload_file)
+        time.sleep(2)
+        original_cover = self.check_element_on_page((By.ID, "detailcover")).screenshot_as_png
+        self.delete_book(-1)
+
         upload_file = os.path.join(base_path, 'files', 'book1.cbz')
         # upload webp book
         zipdata = [os.path.join(base_path, 'files', 'cover.webp')]

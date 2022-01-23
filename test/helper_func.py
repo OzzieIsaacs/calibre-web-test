@@ -26,6 +26,9 @@ from email.mime.multipart import MIMEMultipart
 from email.mime.base import MIMEBase
 from email import encoders
 import zipfile
+from bs4 import BeautifulSoup
+import codecs
+
 
 try:
     import pdfkit
@@ -441,3 +444,45 @@ def createcbz(zipname, filenames, finalnames):
         for indx, item in enumerate(filenames):
             with open(item, "rb") as f:
                 zip.writestr(finalnames[indx], f.read())
+
+def updateZip(zipname_new, zipname_org, filename, data):
+    # create a temp copy of the archive without filename
+    with zipfile.ZipFile(zipname_org, 'r') as zin:
+        with zipfile.ZipFile(zipname_new, 'w') as zout:
+            zout.comment = zin.comment  # preserve the comment
+            for item in zin.infolist():
+                if item.filename != filename:
+                    zout.writestr(item, zin.read(item.filename))
+
+    # now add filename with its new data
+    with zipfile.ZipFile(zipname_new, mode='a', compression=zipfile.ZIP_DEFLATED) as zf:
+        zf.writestr(filename, data)
+
+
+def change_epub_meta(zipname_new=None, zipname_org='./files/book.epub', element={}):
+    with codecs.open('./files/test.opf', "r", "utf-8") as f:
+        soup = BeautifulSoup(f.read(), "xml")
+    for el in soup.findAll("meta"):
+        el.prefix = ""
+        el.namespace=""
+    soup.find("metadata").prefix = ""
+    for k, v in element.items():
+        if k == "author":
+            pass
+        el = soup.find(k)
+        el.string = v
+    updateZip(zipname_new, zipname_org, 'content.opf', str(soup))
+
+def change_comic_meta(zipname_new=None, zipname_org='./files/book1.cbz', element={}):
+    with codecs.open('./ComicInfo.xml', "r", "utf-8") as f:
+        soup = BeautifulSoup(f.read(), "xml")
+    for el in soup.findAll("meta"):
+        el.prefix = ""
+        el.namespace=""
+    soup.find("metadata").prefix = ""
+    for k, v in element.items():
+        if k == "author":
+            pass
+        el = soup.find(k)
+        el.string = v
+    updateZip(zipname_new, zipname_org, 'content.opf', str(soup))

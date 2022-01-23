@@ -6,13 +6,11 @@ from unittest import TestCase
 import os
 import time
 import zipfile
-from bs4 import BeautifulSoup
-import codecs
 
 from selenium.webdriver.common.by import By
 from helper_ui import ui_class
 from config_test import TEST_DB, base_path, BOOT_TIME
-from helper_func import add_dependency, remove_dependency, save_logfiles, startup
+from helper_func import add_dependency, remove_dependency, save_logfiles, startup, change_epub_meta
 from selenium.webdriver.support.ui import WebDriverWait
 from selenium.webdriver.support import expected_conditions as EC
 
@@ -44,36 +42,9 @@ class TestUploadEPubs(TestCase, ui_class):
         cls.p.terminate()
         save_logfiles(cls, cls.__name__)
 
-    def updateZip(self, zipname_new, zipname_org, filename, data):
-        # create a temp copy of the archive without filename
-        with zipfile.ZipFile(zipname_org, 'r') as zin:
-            with zipfile.ZipFile(zipname_new, 'w') as zout:
-                zout.comment = zin.comment  # preserve the comment
-                for item in zin.infolist():
-                    if item.filename != filename:
-                        zout.writestr(item, zin.read(item.filename))
-
-        # now add filename with its new data
-        with zipfile.ZipFile(zipname_new, mode='a', compression=zipfile.ZIP_DEFLATED) as zf:
-            zf.writestr(filename, data)
-
-    def change_epub_meta(self, zipname_new=None, zipname_org='./files/book.epub', element={}):
-        with codecs.open('./files/test.opf', "r", "utf-8") as f:
-            soup = BeautifulSoup(f.read(), "xml")
-        for el in soup.findAll("meta"):
-            el.prefix = ""
-            el.namespace=""
-        soup.find("metadata").prefix = ""
-        for k, v in element.items():
-            if k == "author":
-                pass
-            el = soup.find(k)
-            el.string = v
-        self.updateZip(zipname_new, zipname_org, 'content.opf', str(soup))
-
     def test_upload_epub_duplicate(self):
         epub_file = os.path.join(base_path, 'files', 'title.epub')
-        self.change_epub_meta(epub_file, element={'title': "Der titel", 'creator': "Kurt Hugo"})
+        change_epub_meta(epub_file, element={'title': "Der titel", 'creator': "Kurt Hugo"})
         self.goto_page('nav_new')
         upload = self.check_element_on_page((By.ID, 'btn-upload'))
         upload.send_keys(epub_file)
@@ -107,17 +78,17 @@ class TestUploadEPubs(TestCase, ui_class):
     def test_upload_epub_lang(self):
         epub_file = os.path.join(base_path, 'files', 'lang.epub')
         self.change_visibility_me({'locale': "Italiano"})
-        self.change_epub_meta(epub_file, element={'title': "Langtest", 'creator': "Nobody Perfect", "language": "xx"})
+        change_epub_meta(epub_file, element={'title': "Langtest", 'creator': "Nobody Perfect", "language": "xx"})
         details = self.verify_upload(epub_file, check_warning=True)
         self.assertEqual('Langtest', details['title'])
         self.assertEqual('Nobody Perfect', details['author'][0])
         self.assertNotIn('languages', details)
         self.delete_book(details['id'])
-        self.change_epub_meta(epub_file, element={'title': "Langtest", 'creator': "Nobody Perfect", "language": "xyz"})
+        change_epub_meta(epub_file, element={'title': "Langtest", 'creator': "Nobody Perfect", "language": "xyz"})
         details = self.verify_upload(epub_file, check_warning=True)
         self.assertNotIn('languages', details)
         self.delete_book(details['id'])
-        self.change_epub_meta(epub_file, element={'title': "Langtest", 'creator': "Nobody Perfect", "language": "deu"})
+        change_epub_meta(epub_file, element={'title': "Langtest", 'creator': "Nobody Perfect", "language": "deu"})
         details = self.verify_upload(epub_file)
         self.assertEqual('Tedesco', details['languages'][0])
         list_element = self.goto_page("nav_lang")
@@ -126,7 +97,7 @@ class TestUploadEPubs(TestCase, ui_class):
         self.assertEqual("Lingua: Tedesco", self.driver.find_elements(By.TAG_NAME, "h2")[1].text)
         self.assertEqual(len(self.adv_search({u'include_language': u'Tedesco'})), 1)
         self.delete_book(details['id'])
-        self.change_epub_meta(epub_file, element={'title': "Langtest", 'creator': "Nobody Perfect", "language": "lat"})
+        change_epub_meta(epub_file, element={'title': "Langtest", 'creator': "Nobody Perfect", "language": "lat"})
         details = self.verify_upload(epub_file)
         self.assertEqual('Latino', details['languages'][0])
         list_element = self.goto_page("nav_lang")
@@ -135,12 +106,12 @@ class TestUploadEPubs(TestCase, ui_class):
         self.assertEqual("Lingua: Latino", self.driver.find_elements(By.TAG_NAME, "h2")[1].text)
         self.assertEqual(len(self.adv_search({u'include_language': u'Latino'})), 1)
         self.delete_book(details['id'])
-        self.change_epub_meta(epub_file, element={'title': "Langtest", 'creator': "Nobody Perfect", "language": "und"})
+        change_epub_meta(epub_file, element={'title': "Langtest", 'creator': "Nobody Perfect", "language": "und"})
         details = self.verify_upload(epub_file)
         self.assertEqual('Non determinato', details['languages'][0])
         self.delete_book(details['id'])
 
-        self.change_epub_meta(epub_file, element={'title': "Langtest", 'creator': "Nobody Perfect", "language": "de"})
+        change_epub_meta(epub_file, element={'title': "Langtest", 'creator': "Nobody Perfect", "language": "de"})
         details = self.verify_upload(epub_file)
         self.assertEqual('Tedesco', details['languages'][0])
         self.delete_book(details['id'])

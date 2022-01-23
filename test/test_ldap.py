@@ -575,7 +575,8 @@ class TestLdapLogin(unittest.TestCase, ui_class):
         self.edit_user('user0', {'delete': 1})
         self.assertTrue(self.check_element_on_page((By.ID, "flash_success")))
 
-    @unittest.skip('Unknown how to test certificate')
+    # if this test isn't running anymore delete all certificate files and regenerate them
+    # @unittest.skip('Unknown how to test certificate')
     def test_LDAP_SSL_CERTIFICATE(self):
         shutil.rmtree(os.path.join(CALIBRE_WEB_PATH, 'files'), ignore_errors=True)
         os.makedirs(os.path.join(CALIBRE_WEB_PATH, 'files'))
