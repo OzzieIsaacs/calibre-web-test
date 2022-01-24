@@ -425,6 +425,27 @@ class TestShelf(unittest.TestCase, ui_class):
         shelf_books = self.get_shelf_books_displayed()
         self.assertEqual(len(shelf_books), 2)
         self.delete_shelf()
+        self.fill_basic_config({'config_uploading': 0})
+        time.sleep(3)
+        self.assertTrue(self.check_element_on_page((By.ID, "flash_success")))
+        self.create_shelf('book_search', False)
+        self.assertTrue(self.check_element_on_page((By.ID, "flash_success")))
+        self.search('book')
+        self.check_element_on_page((By.ID, "add-to-shelf")).click()
+        shelf_list = self.driver.find_elements(By.XPATH, "//ul[@id='add-to-shelves']/li")
+        self.assertEqual(1, len(shelf_list))
+        self.check_element_on_page((By.XPATH, "//ul[@id='add-to-shelves']/li/a[contains(.,'book_search')]")).click()
+        self.assertTrue(self.check_element_on_page((By.ID, "flash_success")))
+        self.list_shelfs('book_search')['ele'].click()
+        shelf_books = self.get_shelf_books_displayed()
+        self.assertEqual(len(shelf_books), 7)
+        self.delete_shelf()
+
+        self.fill_basic_config({'config_uploading': 1})
+        time.sleep(3)
+        self.assertTrue(self.check_element_on_page((By.ID, "flash_success")))
+
+
 
     def test_shelf_anonymous(self):
         # Enable Anonymous browsing and create shelf
