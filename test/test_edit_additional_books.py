@@ -63,7 +63,7 @@ class TestEditAdditionalBooks(TestCase, ui_class):
         other_file = os.path.join(base_path, 'files', 'book1.cbz')
         zipdata = [os.path.join(base_path, 'files', 'cover.webp')]
         names = ['cover1.weBp']
-        createcbz(upload_file, zipdata, names)
+        createcbz(other_file, zipdata, names)
         change_comic_meta(upload_file, other_file, element={"Writer": "Test Writer",
                                                             "Summary": "Testdummy",
                                                             "Series": "Hilo",
