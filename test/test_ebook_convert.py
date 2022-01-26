@@ -187,9 +187,6 @@ class TestEbookConvertCalibre(unittest.TestCase, ui_class):
         details = self.get_book_details(9)
         self.assertEqual(len(details['kindle']), 1)
         details['kindlebtn'].click()
-        # conv = self.check_element_on_page((By.LINK_TEXT, details['kindle'][0].getchildren()[0].tail))
-        # self.assertTrue(conv)
-        # conv.click()
         i = 0
         while i < 10:
             time.sleep(2)
