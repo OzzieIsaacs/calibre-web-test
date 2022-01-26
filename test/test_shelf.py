@@ -532,4 +532,19 @@ class TestShelf(unittest.TestCase, ui_class):
             self.assertFalse(True, "XSS in custom comments")
 
 
+    def test_create_public_shelf_no_permission(self):
+        self.create_user("test1", {'password': '1234', 'email': 'a11@bc.com'})
+        r = requests.session()
+        login_page = r.get('http://127.0.0.1:8083/login')
+        token = re.search('<input type="hidden" name="csrf_token" value="(.*)">', login_page.text)
+        payload = {'username': 'test1', 'password': '1234', 'submit':"", 'next':"/", "remember_me":"on", "csrf_token": token.group(1)}
+        r.post('http://127.0.0.1:8083/login', data=payload)
+        shelf_page = r.get('http://127.0.0.1:8083/shelf/create')
+        token = re.search('<input type="hidden" name="csrf_token" value="(.*)">', shelf_page.text)
+        payload = {'title': 'no_permission', "is_public": "off", "csrf_token": token.group(1)}
+        test = r.post('http://127.0.0.1:8083/shelf/create', data=payload)
+        self.assertNotIn('no_permission (Public)'.lower(), test.text)
+        r.close()
+        self.edit_user("test1", {"delete":1})
+
 

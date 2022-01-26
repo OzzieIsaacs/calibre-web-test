@@ -631,16 +631,17 @@ class TestEbookConvertCalibre(unittest.TestCase, ui_class):
         i = 0
         while i < 10:
             time.sleep(2)
-            task_len, ret = self.check_tasks(ret)
+            task_len, ret1 = self.check_tasks(ret)
             if task_len == 1:
-                if ret[-1]['result'] == 'Finished' or ret[-1]['result'] == 'Failed':
+                if ret1[-1]['result'] == 'Finished' or ret1[-1]['result'] == 'Failed':
                     break
             i += 1
-        self.assertEqual(ret[-1]['result'], 'Finished')
+        self.assertEqual(ret1[-1]['result'], 'Finished')
         # check Debug entry from starting
         with open(os.path.join(CALIBRE_WEB_PATH, 'calibre-web.log'), 'r') as logfile:
             data = logfile.read()
         self.assertTrue("1% Converting input to HTML" in data)
         self.delete_book_format(11, "AZW3")
+        self.assertTrue(self.check_element_on_page((By.ID, "flash_success")))
         self.fill_basic_config({'config_log_level': 'INFO'})
         self.assertTrue(self.check_element_on_page((By.ID, "flash_success")))

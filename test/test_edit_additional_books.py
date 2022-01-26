@@ -7,13 +7,16 @@ import unittest
 import time
 import requests
 import re
+from diffimg import diff
+from io import BytesIO
 
 from selenium.webdriver.common.by import By
 from selenium.common.exceptions import UnexpectedAlertPresentException
 from helper_ui import ui_class
 from config_test import TEST_DB, base_path, BOOT_TIME
 # from .parameterized import parameterized_class
-from helper_func import startup, debug_startup, add_dependency, remove_dependency, unrar_path, is_unrar_not_present
+from helper_func import startup, add_dependency, remove_dependency, unrar_path, is_unrar_not_present, createcbz
+from helper_func import change_comic_meta
 from helper_func import save_logfiles
 
 
@@ -50,6 +53,96 @@ class TestEditAdditionalBooks(TestCase, ui_class):
         if not only_value:
             self.assertTrue(name in identifier[0])
         self.assertTrue(value in identifier[0])
+
+    def test_cbz_comicinfo(self):
+        self.fill_basic_config({'config_uploading': 1})
+        time.sleep(3)
+        self.assertTrue(self.check_element_on_page((By.ID, "flash_success")))
+
+        upload_file = os.path.join(base_path, 'files', 'book2.cbz')
+        other_file = os.path.join(base_path, 'files', 'book1.cbz')
+        zipdata = [os.path.join(base_path, 'files', 'cover.webp')]
+        names = ['cover1.weBp']
+        createcbz(other_file, zipdata, names)
+        change_comic_meta(upload_file, other_file, element={"Writer": "Test Writer",
+                                                            "Summary": "Testdummy",
+                                                            "Series": "Hilo",
+                                                            "Title": "With Title"})
+        self.goto_page('nav_new')
+        upload = self.check_element_on_page((By.ID, 'btn-upload'))
+        upload.send_keys(upload_file)
+        time.sleep(2)
+        self.check_element_on_page((By.ID, 'edit_cancel')).click()
+        time.sleep(2)
+        details = self.get_book_details()
+        self.assertEqual('With Title', details['title'])
+        self.assertEqual('Test Writer', details['author'][0])
+        self.assertEqual('3', details['series_index'])
+        self.assertEqual('Hilo', details['series'])
+        self.assertEqual('Testdummy', details['comment'])
+
+        self.fill_basic_config({'config_uploading': 0})
+        time.sleep(2)
+        self.assertTrue(self.check_element_on_page((By.ID, "flash_success")))
+        self.delete_book(details['id'])
+        os.remove(upload_file)
+        os.remove(other_file)
+
+    def test_upload_cbz_coverformats(self):
+        self.fill_basic_config({'config_uploading': 1})
+        time.sleep(3)
+        self.assertTrue(self.check_element_on_page((By.ID, "flash_success")))
+        # Upload book to be sure we have a reference (delete book test runs maybe before this test)
+        upload_file = os.path.join(base_path, 'files', 'book.fb2')
+        self.goto_page('nav_new')
+        upload = self.check_element_on_page((By.ID, 'btn-upload'))
+        upload.send_keys(upload_file)
+        time.sleep(2)
+        original_cover = self.check_element_on_page((By.ID, "detailcover")).screenshot_as_png
+        self.delete_book(-1)
+
+        upload_file = os.path.join(base_path, 'files', 'book1.cbz')
+        # upload webp book
+        zipdata = [os.path.join(base_path, 'files', 'cover.webp')]
+        names = ['cover1.weBp']
+        createcbz(upload_file, zipdata, names)
+        self.goto_page('nav_new')
+        upload = self.check_element_on_page((By.ID, 'btn-upload'))
+        upload.send_keys(upload_file)
+        time.sleep(2)
+        cover = self.check_element_on_page((By.ID, "detailcover")).screenshot_as_png
+        self.assertGreaterEqual(diff(BytesIO(cover), BytesIO(original_cover), delete_diff_file=True), 0.05)
+        self.delete_book(-1)
+
+        # upload png book
+        zipdata = [os.path.join(base_path, 'files', 'cover.png')]
+        names = ['cover10.png']
+        createcbz(upload_file, zipdata, names)
+        self.goto_page('nav_new')
+        upload = self.check_element_on_page((By.ID, 'btn-upload'))
+        upload.send_keys(upload_file)
+        time.sleep(2)
+        cover = self.check_element_on_page((By.ID, "detailcover")).screenshot_as_png
+        self.assertGreaterEqual(diff(BytesIO(cover), BytesIO(original_cover), delete_diff_file=True), 0.05)
+        self.delete_book(-1)
+
+        # upload bmp book
+        zipdata = [os.path.join(base_path, 'files', 'cover.bmp')]
+        names = ['cover-0.bmp']
+        createcbz(upload_file, zipdata, names)
+        self.goto_page('nav_new')
+        upload = self.check_element_on_page((By.ID, 'btn-upload'))
+        upload.send_keys(upload_file)
+        time.sleep(2)
+        cover = self.check_element_on_page((By.ID, "detailcover")).screenshot_as_png
+        self.assertGreaterEqual(diff(BytesIO(cover), BytesIO(original_cover), delete_diff_file=True), 0.049)
+        self.delete_book(-1)
+        time.sleep(2)
+
+        self.fill_basic_config({'config_uploading': 0})
+        time.sleep(2)
+        self.assertTrue(self.check_element_on_page((By.ID, "flash_success")))
+        os.remove(upload_file)
 
     def test_upload_metadata_cbr(self):
         self.fill_basic_config({'config_uploading': 1})
@@ -658,6 +751,7 @@ class TestEditAdditionalBooks(TestCase, ui_class):
         self.check_element_on_page((By.ID, "edit_book")).click()
         self.assertTrue(self.check_element_on_page((By.ID, "delete")))
         self.assertTrue(self.delete_book_format(12, 'FB2'))
+        self.assertTrue(self.check_element_on_page((By.ID, "flash_success")))
         self.logout()
         self.login('admin', 'admin123')
         self.edit_user('user2', {'delete': 1})
@@ -759,4 +853,73 @@ class TestEditAdditionalBooks(TestCase, ui_class):
         self.edit_book(content={"book_title":"Comicdemo","tags":"", "series":"Djüngel",  }, custom_content={'Custom Comment 人物': ''})
         values = self.get_book_details()
         self.assertEqual(0, len(values['cust_columns']))
+
+    def test_details_popup(self):
+        self.goto_page("nav_new")
+        books = self.get_books_displayed()
+        # make first book read
+        books[1][0]['ele'].click()
+        time.sleep(2)
+        self.check_element_on_page((By.XPATH, "//*[@id='have_read_cb']")).click()
+        self.check_element_on_page((By.ID, "details_close")).click()
+        time.sleep(2)
+        self.goto_page("nav_read")
+        books = self.get_books_displayed()
+        self.assertEqual(1, len(books[1]))
+        # unread first book
+        books[1][0]['ele'].click()
+        time.sleep(2)
+        self.check_element_on_page((By.XPATH, "//*[@id='have_read_cb']")).click()
+        self.check_element_on_page((By.ID, "details_close")).click()
+        time.sleep(2)
+        self.goto_page("nav_read")
+        books = self.get_books_displayed()
+        self.assertEqual(0, len(books[1]))
+
+        self.goto_page("nav_new")
+        books = self.get_books_displayed()
+        # make first book archived
+        books[1][0]['ele'].click()
+        time.sleep(2)
+        self.check_element_on_page((By.XPATH, "//*[@id='archived_cb']")).click()
+        self.check_element_on_page((By.ID, "details_close")).click()
+        time.sleep(2)
+        self.goto_page("nav_archived")
+        books = self.get_books_displayed()
+        self.assertEqual(1, len(books[1]))
+        # unarchive first book
+        books[1][0]['ele'].click()
+        time.sleep(2)
+        self.check_element_on_page((By.XPATH, "//*[@id='archived_cb']")).click()
+        self.check_element_on_page((By.ID, "details_close")).click()
+        time.sleep(2)
+        self.goto_page("nav_archived")
+        books = self.get_books_displayed()
+        self.assertEqual(0, len(books[1]))
+
+        # Create shelf, add book to shelf, check shelf, remove book from shelf, delete shelf
+        self.create_shelf("Detail_shelf")
+        self.goto_page("nav_new")
+        books = self.get_books_displayed()
+        # make first book archived
+        books[1][0]['ele'].click()
+        time.sleep(2)
+        self.check_element_on_page((By.ID, "add-to-shelf")).click()
+        self.check_element_on_page((By.XPATH, "//ul[@id='add-to-shelves']/li/a[contains(.,'Detail_shelf')]")).click()
+        self.assertTrue(self.check_element_on_page((By.XPATH, "//*[@id='remove-from-shelves']//a")))
+        self.check_element_on_page((By.ID, "details_close")).click()
+        time.sleep(2)
+        self.list_shelfs('Detail_shelf')['ele'].click()
+        books = self.get_shelf_books_displayed()
+        self.assertEqual(1, len(books))
+        books[0]['ele'].click()
+        time.sleep(2)
+        self.check_element_on_page(
+            (By.XPATH, "//div[@id='remove-from-shelves']/a[contains(.,'Detail_shelf')]")).click()
+        self.check_element_on_page((By.ID, "details_close")).click()
+        time.sleep(2)
+        self.list_shelfs('Detail_shelf')['ele'].click()
+        books = self.get_shelf_books_displayed()
+        self.assertEqual(0, len(books))
+        self.delete_shelf("Detail_shelf")
 

@@ -1767,8 +1767,9 @@ class ui_class():
         return True
 
     def delete_book(self, id, root_url="http://127.0.0.1:8083"):
-        self.get_book_details(id, root_url)
-        self.check_element_on_page((By.ID, "edit_book")).click()
+        if id != -1:
+            self.get_book_details(id, root_url)
+            self.check_element_on_page((By.ID, "edit_book")).click()
         self.check_element_on_page((By.ID, "delete")).click()
         self.check_element_on_page((By.ID, "delete_confirm")).click()
         time.sleep(2)

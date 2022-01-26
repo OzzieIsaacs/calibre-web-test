@@ -1,0 +1,27 @@
+<?xml version="1.0"?>
+<ComicInfo xmlns:xsd="http://www.w3.org/2001/XMLSchema" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance">
+  <Title>Test 执book</Title>
+  <Series>No Series</Series>
+  <Number>3</Number>
+  <Volume>1</Volume>
+  <Summary>Extra Long summary with Tags</Summary>
+  <Notes>With awesome notes äquiped</Notes>
+  <Year>2015</Year>
+  <Month>03</Month>
+  <Day>21</Day>
+  <Writer>Author Name</Writer>
+  <Penciller>Nick Pen</Penciller>
+  <Inker>Antonia Ink</Inker>
+  <Colorist>Chris Color</Colorist>
+  <Letterer>Leo Letter</Letterer>
+  <Publisher>Olkp</Publisher>
+  <Web>https://comicvine.gamespot.com/book/41233/</Web>
+  <PageCount>22</PageCount>
+  <Characters>Many Mano, Mukil Loplr</Characters>
+  <Teams>Turob sdsdk</Teams>
+  <Locations>everywhere, and anywhere, .C.</Locations>
+  <Pages>
+    <Page Image="0" ImageSize="122" Type="FrontCover" />
+    <Page Image="1" ImageSize="12232"/>
+  </Pages>
+</ComicInfo>

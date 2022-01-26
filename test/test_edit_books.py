@@ -9,13 +9,14 @@ import time
 import requests
 from diffimg import diff
 from shutil import copyfile
+from io import BytesIO
 
 from selenium.webdriver.common.by import By
 from selenium.webdriver.common.keys import Keys
 from selenium.common.exceptions import UnexpectedAlertPresentException
 from helper_ui import ui_class
 from config_test import TEST_DB, base_path, BOOT_TIME
-from helper_func import startup, debug_startup, add_dependency, remove_dependency
+from helper_func import startup, debug_startup, createcbz
 from helper_func import save_logfiles
 
 
@@ -1016,6 +1017,60 @@ class TestEditBooks(TestCase, ui_class):
         self.assertEqual('8936', resp.headers['Content-Length'])
         self.fill_basic_config({'config_uploading': 0})
         r.close()
+
+    def test_upload_cbz_coverformats(self):
+        self.get_book_details(1)
+        original_cover = self.check_element_on_page((By.ID, "detailcover")).screenshot_as_png
+        self.fill_basic_config({'config_uploading': 1})
+        time.sleep(3)
+        self.assertTrue(self.check_element_on_page((By.ID, "flash_success")))
+        upload_file = os.path.join(base_path, 'files', 'book1.cbz')
+        # upload webp book
+        zipdata = [os.path.join(base_path, 'files', 'cover.webp')]
+        names = ['cover1.weBp']
+        createcbz(upload_file, zipdata, names)
+        self.goto_page('nav_new')
+        upload = self.check_element_on_page((By.ID, 'btn-upload'))
+        upload.send_keys(upload_file)
+        time.sleep(2)
+        cover = self.check_element_on_page((By.ID, "detailcover")).screenshot_as_png
+        self.assertGreaterEqual(diff(BytesIO(cover), BytesIO(original_cover), delete_diff_file=True), 0.05)
+        self.check_element_on_page((By.ID, "delete")).click()
+        self.check_element_on_page((By.ID, "delete_confirm")).click()
+        time.sleep(2)
+
+        # upload png book
+        zipdata = [os.path.join(base_path, 'files', 'cover.png')]
+        names = ['cover10.png']
+        createcbz(upload_file, zipdata, names)
+        self.goto_page('nav_new')
+        upload = self.check_element_on_page((By.ID, 'btn-upload'))
+        upload.send_keys(upload_file)
+        time.sleep(2)
+        cover = self.check_element_on_page((By.ID, "detailcover")).screenshot_as_png
+        self.assertGreaterEqual(diff(BytesIO(cover), BytesIO(original_cover), delete_diff_file=True), 0.05)
+        self.check_element_on_page((By.ID, "delete")).click()
+        self.check_element_on_page((By.ID, "delete_confirm")).click()
+        time.sleep(2)
+
+        # upload bmp book
+        zipdata = [os.path.join(base_path, 'files', 'cover.bmp')]
+        names = ['cover-0.bmp']
+        createcbz(upload_file, zipdata, names)
+        self.goto_page('nav_new')
+        upload = self.check_element_on_page((By.ID, 'btn-upload'))
+        upload.send_keys(upload_file)
+        time.sleep(2)
+        cover = self.check_element_on_page((By.ID, "detailcover")).screenshot_as_png
+        self.assertGreaterEqual(diff(BytesIO(cover), BytesIO(original_cover), delete_diff_file=True), 0.049)
+        self.check_element_on_page((By.ID, "delete")).click()
+        self.check_element_on_page((By.ID, "delete_confirm")).click()
+        time.sleep(2)
+
+        self.fill_basic_config({'config_uploading': 0})
+        time.sleep(2)
+        self.assertTrue(self.check_element_on_page((By.ID, "flash_success")))
+        os.remove(upload_file)
 
     def test_upload_book_cbr(self):
         self.fill_basic_config({'config_uploading':1})

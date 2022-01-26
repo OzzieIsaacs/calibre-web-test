@@ -3,8 +3,6 @@
 from HTMLTestRunner import runner as HTMLTestRunner
 import os
 import re
-import time
-import requests
 from subproc_wrapper import process_open
 from config_test import CALIBRE_WEB_PATH, VENV_PATH, VENV_PYTHON, TEST_OS
 import unittest

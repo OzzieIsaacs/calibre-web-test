@@ -21,7 +21,6 @@ from twisted.logger import globalLogPublisher
 from twisted.logger import textFileLogObserver
 from twisted.logger import FilteringLogObserver, LogLevelFilterPredicate
 import time
-import sys
 
 LDAP_AUTH_ANON = 0
 LDAP_AUTH_UNAUTH = 1
@@ -314,8 +313,7 @@ def verifyCallback(__, x509, ___, ____, ok):
     if not ok:
         # print ('invalid cert from subject:', x509.get_subject())
         return False
-    # else:
-        # print ("Certs are fine")
+    # print ("Certs are fine")
     return True
 
 
