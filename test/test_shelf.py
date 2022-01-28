@@ -53,7 +53,7 @@ class TestShelf(unittest.TestCase, ui_class):
 
     def test_private_shelf(self):
         self.goto_page('create_shelf')
-        self.create_shelf('Pü 执',False)
+        self.create_shelf('Pü 执', False)
         self.assertTrue(self.check_element_on_page((By.ID, "flash_success")))
         self.logout()
         self.login('shelf','123')
@@ -567,5 +567,36 @@ class TestShelf(unittest.TestCase, ui_class):
         self.assertNotIn('no_permission (Public)'.lower(), test.text)
         r.close()
         self.edit_user("test1", {"delete":1})
+
+    def test_access_shelf(self):
+        self.create_user("tester", {'password': '1234', 'email': 'a12@bc.com'})
+        self.create_shelf("access", False)
+        shelf = self.list_shelfs("access")
+        r = requests.session()
+        login_page = r.get('http://127.0.0.1:8083/login')
+        token = re.search('<input type="hidden" name="csrf_token" value="(.*)">', login_page.text)
+        payload = {'username': 'tester', 'password': '1234', 'submit':"", 'next':"/", "remember_me":"on", "csrf_token": token.group(1)}
+        r.post('http://127.0.0.1:8083/login', data=payload)
+        shelf_page = r.get('http://127.0.0.1:8083/shelf/create')
+        token = re.search('<input type="hidden" name="csrf_token" value="(.*)">', shelf_page.text)
+        payload = {"csrf_token": token.group(1)}
+        result = r.post('http://127.0.0.1:8083/shelf/delete/'+ shelf['id'], data=payload)
+        self.assertIn('flash_danger'.lower(), result.text)
+        result = r.post('http://127.0.0.1:8083/shelf/delete/'+ str(int(shelf['id'])+1), data=payload)
+        self.assertIn('flash_danger'.lower(), result.text)
+        result = r.post('http://127.0.0.1:8083/shelf/add/' + shelf['id'] + '/10', data=payload)
+        self.assertIn('flash_danger'.lower(), result.text)
+        shelf_page = r.get('http://127.0.0.1:8083/shelf/create')
+        result = r.post('http://127.0.0.1:8083/shelf/massadd/' + shelf['id'], data=payload)
+        self.assertIn('flash_danger'.lower(), result.text)
+        result = r.post('http://127.0.0.1:8083/shelf/remove/' + shelf['id'] + '/10', data=payload)
+        self.assertIn('flash_danger'.lower(), result.text)
+        result = r.get('http://127.0.0.1:8083/simpleshelf/' + shelf['id'])
+        self.assertIn('flash_danger'.lower(), result.text)
+        result = r.get('http://127.0.0.1:8083/shelf/' + shelf['id'])
+        self.assertIn('flash_danger'.lower(), result.text)
+        r.close()
+        self.edit_user("tester", {"delete": 1})
+
 
 
