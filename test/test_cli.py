@@ -15,6 +15,7 @@ from config_test import CALIBRE_WEB_PATH, TEST_DB, BOOT_TIME, base_path
 import re
 import sys
 from helper_func import save_logfiles
+import requests
 
 
 class TestCli(unittest.TestCase, ui_class):
@@ -54,7 +55,8 @@ class TestCli(unittest.TestCase, ui_class):
             new_db = os.path.join(CALIBRE_WEB_PATH, 'hü go.app')
             os.remove(new_db)
         except Exception as e:
-            print(e)
+            pass
+            # print(e)
 
     def check_password_change(self, parameter, expectation):
         p = process_open([self.py_version, 'cps.py', "-s", parameter], [1])
@@ -96,6 +98,8 @@ class TestCli(unittest.TestCase, ui_class):
 
         except Exception:
             pass
+        self.p.stdout.close()
+        self.p.stderr.close()
         self.p.terminate()
 
     def test_cli_different_settings_database(self):
@@ -125,11 +129,9 @@ class TestCli(unittest.TestCase, ui_class):
         time.sleep(2)
 
         # Wait for config screen with login button to show up
-        #login_button = self.check_element_on_page((By.NAME, "login"))
-        #self.assertTrue(login_button)
-        #login_button.click()
-        #self.login('admin', 'admin123')
         self.stop_calibre_web(self.p)
+        self.p.stdout.close()
+        self.p.stderr.close()
         self.p.terminate()
         time.sleep(3)
         self.assertTrue(os.path.isfile(new_db), "New settingsfile location not accepted")
@@ -293,6 +295,9 @@ class TestCli(unittest.TestCase, ui_class):
         time.sleep(2)
         if p.poll() is None:
             p.kill()
+        p.stdout.close()
+        p.stderr.close()
+
         nextline = p.communicate()[0]
         self.assertIsNotNone(re.findall('Illegal IP address string', nextline))
         p = process_open([self.py_version, os.path.join(CALIBRE_WEB_PATH, u'cps.py'), '-i', address], [1])
@@ -314,6 +319,8 @@ class TestCli(unittest.TestCase, ui_class):
         except WebDriverException:
             self.assertIsNone('Limit listening address not working')
         self.assertTrue(self.check_element_on_page((By.ID, "username")))
+        p.stdout.close()
+        p.stderr.close()
         p.terminate()
         time.sleep(3)
         p.poll()
@@ -359,6 +366,10 @@ class TestCli(unittest.TestCase, ui_class):
         p1.terminate()
         time.sleep(3)
         p1.poll()
+        p1.stdout.close()
+        p1.stderr.close()
+        p2.stdout.close()
+        p2.stderr.close()
 
     # start calibre-web in process A.
     # Start calibre-web in process B.
@@ -370,6 +381,8 @@ class TestCli(unittest.TestCase, ui_class):
         p1 = process_open([self.py_version, u'cps.py'], [1])
         time.sleep(BOOT_TIME)
         p1.terminate()
+        p1.stdout.close()
+        p1.stderr.close()
         time.sleep(BOOT_TIME)
         p1.poll()
         os.chmod("app.db", 0o400)
@@ -380,6 +393,8 @@ class TestCli(unittest.TestCase, ui_class):
             p2.terminate()
             p2.poll()
             self.assertTrue('2nd process not terminated, port is already in use')
+        p2.stdout.close()
+        p2.stderr.close()
         self.assertEqual(result, 2)
         os.chmod("app.db", 0o644)
         # configure and check again
@@ -397,6 +412,8 @@ class TestCli(unittest.TestCase, ui_class):
         except Exception:
             self.assertFalse(True, "Inital config failed with nonwriteable database")
         p1.terminate()
+        p1.stdout.close()
+        p1.stderr.close()
         time.sleep(BOOT_TIME)
         p1.poll()
         os.chmod("app.db", 0o400)
@@ -407,6 +424,8 @@ class TestCli(unittest.TestCase, ui_class):
             p2.terminate()
             p2.poll()
             self.assertTrue('2nd process not terminated, port is already in use')
+        p2.stdout.close()
+        p2.stderr.close()
         self.assertEqual(result, 2)
         os.chmod("app.db", 0o644)
         os.chdir(base_path)
@@ -439,4 +458,80 @@ class TestCli(unittest.TestCase, ui_class):
         self.check_password_change("admin:admin123", "Password for user 'admin' changed")
         p1.terminate()
         time.sleep(3)
+        p1.stdout.close()
+        p1.stderr.close()
         os.remove("app.db")
+
+    def help_dry_run(self):
+        p1 = process_open([self.py_version, u'cps.py', "-d"], [1])
+        output =list()
+        while p1.poll() == None:
+            output.append(p1.stdout.readline())
+        self.assertEqual(0, p1.returncode)
+        p1.stdout.close()
+        p1.stderr.close()
+        p1.kill()
+        return "".join(output)
+
+    def test_dryrun_update(self):
+        os.chdir(CALIBRE_WEB_PATH)
+        # check empty file
+        output = self.help_dry_run()
+        self.assertTrue("Finished" in output)
+        # check missing file
+        os.remove(os.path.join(CALIBRE_WEB_PATH, "exclude.txt"))
+        output = self.help_dry_run()
+        self.assertTrue("file list for updater not found" in output)
+        # check no permission for file
+        with open(os.path.join(CALIBRE_WEB_PATH, "exclude.txt"), "w") as f:
+            f.write("")
+        os.chmod(os.path.join(CALIBRE_WEB_PATH, "exclude.txt"), 0o040)
+        output = self.help_dry_run()
+        self.assertTrue("file list for updater not found" in output)
+        os.chmod(os.path.join(CALIBRE_WEB_PATH, "exclude.txt"), 0o644)
+
+        # check empty file
+        with open(os.path.join(CALIBRE_WEB_PATH, "exclude.txt"), "w") as f:
+            f.write("")
+        output = self.help_dry_run()
+        self.assertTrue("Finished" in output)
+
+        # check file with spaces is found
+        with open(os.path.join(CALIBRE_WEB_PATH, "exclude.txt"), "w") as f:
+            f.write(" cps.py ")
+        output = self.help_dry_run()
+        self.assertFalse("cps.py" in output)
+
+        # check file with backslash is found
+        with open(os.path.join(CALIBRE_WEB_PATH, "exclude.txt"), "w") as f:
+            f.write(" \\cps.py ")
+        output = self.help_dry_run()
+        self.assertFalse("cps.py" in output)
+
+        # check file with double backslash is found
+        with open(os.path.join(CALIBRE_WEB_PATH, "exclude.txt"), "w") as f:
+            f.write(" \\\\cps.py ")
+        output = self.help_dry_run()
+        self.assertFalse("cps.py" in output)
+
+        # check file with double backslash is found
+        with open(os.path.join(CALIBRE_WEB_PATH, "exclude.txt"), "w") as f:
+            f.write("invalid_strange_pfile.pi")
+        output = self.help_dry_run()
+        self.assertTrue("invalid_strange_pfile.pi" in output)
+
+        # check file with " and mixed path separators is not found
+        with open(os.path.join(CALIBRE_WEB_PATH, "exclude.txt"), "w") as f:
+            f.write(' "cps\static/favicon.ico" ')
+        output = self.help_dry_run()
+        self.assertFalse("favicon.ico" in output)
+
+        # check file with 2 lines
+        with open(os.path.join(CALIBRE_WEB_PATH, "exclude.txt"), "w") as f:
+            f.write(' "\cps\static/favicon.ico"\ncps.py ')
+        output = self.help_dry_run()
+        self.assertFalse("favicon.ico" in output)
+        self.assertFalse("cps.py" in output)
+
+
+
