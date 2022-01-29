@@ -52,6 +52,9 @@ class TestLoadMetadataScholar(TestCase, ui_class):
         google_scholar = self.check_element_on_page((By.ID, "show-Google Scholar"))
         google = self.check_element_on_page((By.ID, "show-Google"))
         comic_vine = self.check_element_on_page((By.ID, "show-ComicVine"))
+        amazon = self.check_element_on_page((By.ID, "show-Amazon"))
+        self.assertTrue(amazon)
+        amazon.click()
         self.assertTrue(google_scholar)
         self.assertTrue(google)
         self.assertTrue(comic_vine)
@@ -59,6 +62,7 @@ class TestLoadMetadataScholar(TestCase, ui_class):
         self.assertTrue(google_scholar.is_selected())
         self.assertTrue(google.is_selected())
         self.assertTrue(comic_vine.is_selected())
+        # self.assertTrue(amazon.is_selected())
         # Check results
         results = self.find_metadata_results()
         self.assertEqual(30, len(results))

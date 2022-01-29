@@ -9,8 +9,8 @@ from io import BytesIO
 
 from selenium.webdriver.common.by import By
 from helper_ui import ui_class
-from config_test import TEST_DB, base_path, BOOT_TIME
-from helper_func import startup, debug_startup, add_dependency, remove_dependency
+from config_test import TEST_DB
+from helper_func import startup
 from helper_func import save_logfiles
 
 
@@ -44,22 +44,50 @@ class TestLoadMetadata(TestCase, ui_class):
         self.assertEqual("Der Buchtitel", self.check_element_on_page((By.ID, "keyword")).get_attribute("value"))
         comic_vine = self.check_element_on_page((By.ID, "show-ComicVine"))
         google = self.check_element_on_page((By.ID, "show-Google"))
+        amazon = self.check_element_on_page((By.ID, "show-Amazon"))
         self.assertTrue(comic_vine)
         self.assertTrue(google)
+        self.assertTrue(amazon)
         self.assertFalse(self.check_element_on_page((By.ID, "show-Google Scholar")))
+        self.assertFalse(self.check_element_on_page((By.ID, "show-lubimyczytac")))
         # check active searches
         self.assertTrue(comic_vine.is_selected())
         self.assertTrue(google.is_selected())
+        self.assertTrue(amazon.is_selected())
         # Check results -> no cover google
         results = self.find_metadata_results()
         # Link to Google, Comicvine
-        try:
-            self.assertEqual('https://comicvine.gamespot.com/', results[10]['source'])
-            self.assertEqual('https://books.google.com/', results[0]['source'])
-        except Exception:
-            self.assertEqual('https://comicvine.gamespot.com/', results[0]['source'])
-            self.assertEqual('https://books.google.com/', results[10]['source'])
+        if 'https://comicvine.gamespot.com/' == results[10]['source']:
+            cv = 10
+        elif 'https://comicvine.gamespot.com/' == results[0]['source']:
+            cv = 0
+        elif 'https://comicvine.gamespot.com/' == results[20]['source']:
+            cv = 20
+        else:
+            cv = -1
+        if 'https://books.google.com/' == results[10]['source']:
+            go = 10
+        elif 'https://books.google.com/' == results[0]['source']:
+            go = 0
+        elif 'https://books.google.com/' == results[20]['source']:
+            go = 20
+        else:
+            go = -1
 
+        if 'https://amazon.com/' == results[10]['source']:
+            am = 10
+        elif 'https://amazon.com/' == results[0]['source']:
+            am = 0
+        elif 'https://amazon.com/' == results[20]['source']:
+            am = 20
+        else:
+            am = -1
+
+        self.assertEqual('https://comicvine.gamespot.com/', results[cv]['source'])
+        self.assertEqual('https://books.google.com/', results[go]['source'])
+        self.assertEqual('https://amazon.com/', results[am]['source'])
+
+        amazon.click()
         # Remove one search element
         comic_vine.click()
         results = self.find_metadata_results()

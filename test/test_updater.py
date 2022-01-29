@@ -433,6 +433,8 @@ class TestUpdater(unittest.TestCase, ui_class):
         self.driver.get("http://127.0.0.1:8083")
         self.reconnect_database()
         self.assertTrue(self.check_element_on_page((By.ID, "check_for_update")))
+        # deactivated by default
         resp = requests.get('http://127.0.0.1:8083/reconnect')
-        self.assertEqual(200, resp.status_code)
-        self.assertDictEqual({}, resp.json())
+        self.assertEqual(404, resp.status_code)
+        # self.assertDictEqual({}, resp.json())
+
