@@ -533,5 +533,8 @@ class TestCli(unittest.TestCase, ui_class):
         self.assertFalse("favicon.ico" in output)
         self.assertFalse("cps.py" in output)
 
+        # Delete exclude file content
+        with open(os.path.join(CALIBRE_WEB_PATH, "exclude.txt"), "w") as f:
+            f.write("")
 
 
