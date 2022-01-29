@@ -9,15 +9,15 @@ from io import BytesIO
 
 from selenium.webdriver.common.by import By
 from helper_ui import ui_class
-from config_test import TEST_DB, base_path, BOOT_TIME
-from helper_func import startup, debug_startup, add_dependency, remove_dependency
+from config_test import TEST_DB
+from helper_func import startup, add_dependency, remove_dependency
 from helper_func import save_logfiles
 
 
 class TestLoadMetadataScholar(TestCase, ui_class):
     p = None
     driver = None
-    dependency = ["scholarly"]
+    dependency = ["scholarly", "beautifulsoup4"]
 
     @classmethod
     def setUpClass(cls):

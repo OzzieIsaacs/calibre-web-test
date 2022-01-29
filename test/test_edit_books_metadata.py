@@ -10,16 +10,18 @@ from io import BytesIO
 from selenium.webdriver.common.by import By
 from helper_ui import ui_class
 from config_test import TEST_DB
-from helper_func import startup
+from helper_func import startup, add_dependency, remove_dependency
 from helper_func import save_logfiles
 
 
 class TestLoadMetadata(TestCase, ui_class):
     p = None
     driver = None
+    dependency = ["beautifulsoup4"]
 
     @classmethod
     def setUpClass(cls):
+        add_dependency(cls.dependency, cls.__name__)
         try:
             startup(cls, cls.py_version, {'config_calibre_dir': TEST_DB})
             time.sleep(3)
@@ -35,6 +37,7 @@ class TestLoadMetadata(TestCase, ui_class):
         cls.driver.quit()
         cls.p.terminate()
         save_logfiles(cls, cls.__name__)
+        remove_dependency(cls.dependency)
 
     def test_load_metadata(self):
         self.get_book_details(1)
