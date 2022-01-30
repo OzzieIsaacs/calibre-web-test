@@ -325,22 +325,14 @@ class TestEbookConvertCalibre(unittest.TestCase, ui_class):
         self.create_user('solo', {'password': '123', 'email': 'a@b.com', 'edit_role':1})
         time.sleep(2)
         ret_orig = self.check_tasks()
-        # lenret = len(ret)
-        #if lenret > 6:
         self.assertEqual(ret_orig[-6]['result'], 'Finished')
-        # f lenret > 5:
         self.assertEqual(ret_orig[-5]['result'], 'Finished')
-        #if lenret > 4:
         self.assertEqual(ret_orig[-4]['result'], 'Finished')
-        #if lenret > 3:
         self.assertEqual(ret_orig[-3]['result'], 'Finished')
-        #if lenret > 2:
         self.assertEqual(ret_orig[-2]['result'], 'Finished')
-        #if lenret > 1:
         self.assertEqual(ret_orig[-1]['result'], 'Finished')
-        # memory = len(ret)
-
         self.logout()
+
         self.login('solo', '123')
         ret_user = self.check_tasks()
         self.assertEqual(0, len(ret_user))

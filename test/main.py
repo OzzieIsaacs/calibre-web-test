@@ -85,7 +85,7 @@ if __name__ == '__main__':
                                            template=template,
                                            stream=sys.stdout,
                                            resultclass=CalibreResult,
-                                           open_in_browser=True,
+                                           open_in_browser=not power,
                                            verbosity=2)
     # run the suite using HTMLTestRunner
     runner.run(all_tests)

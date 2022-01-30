@@ -62,7 +62,7 @@ class TestLoadMetadataScholar(TestCase, ui_class):
         self.assertTrue(google_scholar.is_selected())
         self.assertTrue(google.is_selected())
         self.assertTrue(comic_vine.is_selected())
-        # self.assertTrue(amazon.is_selected())
+        time.sleep(3)
         # Check results
         results = self.find_metadata_results()
         self.assertEqual(30, len(results))

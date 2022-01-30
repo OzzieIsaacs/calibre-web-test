@@ -1535,6 +1535,7 @@ class ui_class():
             pass
         return ret
 
+    # works only if there is one format per book
     def download_book(self, id, user, password):
         self.get_book_details(id)
         element = self.check_element_on_page((By.XPATH, "//*[starts-with(@id,'btnGroupDrop')]"))
