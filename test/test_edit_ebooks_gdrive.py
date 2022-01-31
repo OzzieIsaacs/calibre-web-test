@@ -915,28 +915,37 @@ class TestEditBooksOnGdrive(unittest.TestCase, ui_class):
         revoke = self.check_element_on_page((By.ID, "watch_revoke"))
         self.assertTrue(revoke)
         revoke.click()
-        self.wait_page_has_loaded() # time.sleep(5)
+        self.wait_page_has_loaded()
+        time.sleep(5)
         button = self.check_element_on_page((By.ID, "enable_gdrive_watch"))
         self.assertTrue(button)
         button.click()
-        self.wait_page_has_loaded() # time.sleep(5)
-        # change book series content
-        self.edit_book(5, content={'series':'test'})
         self.wait_page_has_loaded()
         time.sleep(5)
-        book = self.get_book_details(5)
+        # change book series content
+        self.edit_book(5, content={'series': 'test'})
+        self.wait_page_has_loaded()
+        time.sleep(10)
+        book = self.get_book_details(-1)
         self.assertEqual(book['series'], 'test')
         # upload new metadata.db from outside
         fs = connect_gdrive("test")
+        # upload unchanged database from hdd -> watch metadata should recocnize this and replace current
+        # used metadata.db
         metadata = open(os.path.join(base_path, 'Calibre_db', 'metadata.db'), 'rb')
-        fs.upload(os.path.join('test', 'metadata.db').replace('\\','/'), metadata)
+        fs.upload(os.path.join('test', 'metadata.db').replace('\\', '/'), metadata)
         metadata.close()
-        # wait a bit
-        time.sleep(5)
-        self.wait_page_has_loaded()
-        time.sleep(10)
-        # check book series content changed back
-        book = self.get_book_details(5)
+        loop = 0
+        while loop < 3:
+            loop += 1
+            # wait a bit
+            time.sleep(5)
+            self.wait_page_has_loaded()
+            time.sleep(10)
+            # check book series content changed back
+            book = self.get_book_details(5)
+            if 'series' not in book:
+                break
         self.assertNotIn('series', book)
         self.goto_page("db_config")
         self.wait_page_has_loaded()
