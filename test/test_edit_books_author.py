@@ -42,6 +42,7 @@ class TestEditAuthors(TestCase, ui_class):
                                                     'book8 - Leo Baskerville.epub')))
         # rename uppercase to lowercase only of author
         self.edit_book(8, content={'bookAuthor': "Leo baskerville"})
+        self.assertFalse(self.check_element_on_page((By.ID, "flash_danger")))
         details = self.get_book_details(-1)
         self.assertEqual(['Leo baskerville'], details['author'])
         self.assertTrue(os.path.isfile(os.path.join(TEST_DB, 'Leo baskerville/book8 (8)',
@@ -53,6 +54,7 @@ class TestEditAuthors(TestCase, ui_class):
         self.assertEqual(200, ret_code)
         # rename book title and author in the same step
         self.edit_book(8, content={'bookAuthor': "Leo Baskerville", 'book_title': 'book 9'})
+        self.assertFalse(self.check_element_on_page((By.ID, "flash_danger")))
         details = self.get_book_details(-1)
         self.assertEqual(['Leo Baskerville'], details['author'])
         self.assertEqual('book 9', details['title'])
@@ -65,6 +67,7 @@ class TestEditAuthors(TestCase, ui_class):
         self.assertEqual(200, ret_code)
         # rename only book title
         self.edit_book(8, content={'bookAuthor': "Leo Baskerville", 'book_title': 'book8'})
+        self.assertFalse(self.check_element_on_page((By.ID, "flash_danger")))
         details = self.get_book_details(-1)
         self.assertEqual(['Leo Baskerville'], details['author'])
         self.assertEqual('book8', details['title'])
@@ -84,6 +87,7 @@ class TestEditAuthors(TestCase, ui_class):
                                                     'book7 - Peter Parker.epub')))
         # rename uppercase to lowercase only of author
         self.edit_book(10, content={'bookAuthor': "Peter parker"})
+        self.assertFalse(self.check_element_on_page((By.ID, "flash_danger")))
         details = self.get_book_details(-1)
         self.assertEqual(['Peter parker'], details['author'])
         self.assertTrue(os.path.isfile(os.path.join(TEST_DB, 'Peter parker/book7 (10)',
@@ -101,6 +105,7 @@ class TestEditAuthors(TestCase, ui_class):
         self.assertEqual(200, ret_code)
         # rename book title and author in the same step
         self.edit_book(10, content={'bookAuthor': "Peter Parker", 'book_title': 'book 7'})
+        self.assertFalse(self.check_element_on_page((By.ID, "flash_danger")))
         details = self.get_book_details(-1)
         self.assertEqual(['Peter Parker'], details['author'])
         self.assertEqual('book 7', details['title'])
@@ -119,6 +124,7 @@ class TestEditAuthors(TestCase, ui_class):
         self.assertEqual(200, ret_code)
         # rename only book title
         self.edit_book(10, content={'bookAuthor': "Peter Parker", 'book_title': 'book7'})
+        self.assertFalse(self.check_element_on_page((By.ID, "flash_danger")))
         details = self.get_book_details(-1)
         self.assertEqual(['Peter Parker'], details['author'])
         self.assertEqual('book7', details['title'])
@@ -138,6 +144,7 @@ class TestEditAuthors(TestCase, ui_class):
                                                     'book11 - Norbert Halagal.pdf')))
         # rename uppercase to lowercase only of author
         self.edit_book(13, content={'bookAuthor': "Norbert halagal"})
+        self.assertFalse(self.check_element_on_page((By.ID, "flash_danger")))
         details = self.get_book_details(-1)
         self.assertEqual(['Norbert halagal'], details['author'])
         self.assertTrue(os.path.isfile(os.path.join(TEST_DB, 'Norbert halagal/book11 (13)',
@@ -154,6 +161,7 @@ class TestEditAuthors(TestCase, ui_class):
 
         # rename book title and author in the same step
         self.edit_book(13, content={'bookAuthor': "Norbert Halagal", 'book_title': 'book 11'})
+        self.assertFalse(self.check_element_on_page((By.ID, "flash_danger")))
         details = self.get_book_details(-1)
         self.assertEqual(['Norbert Halagal'], details['author'])
         self.assertEqual('book 11', details['title'])
@@ -168,6 +176,7 @@ class TestEditAuthors(TestCase, ui_class):
         self.assertEqual(200, ret_code)
         # rename only book title
         self.edit_book(13, content={'book_title': 'book11'})
+        self.assertFalse(self.check_element_on_page((By.ID, "flash_danger")))
         details = self.get_book_details(-1)
         self.assertEqual(['Norbert Halagal'], details['author'])
         self.assertEqual('book11', details['title'])
@@ -187,6 +196,7 @@ class TestEditAuthors(TestCase, ui_class):
                                                     'Der Buchtitel - Frodo Beutlin.txt')))
         # rename uppercase to lowercase only of author
         self.edit_book(1, content={'bookAuthor': "Frodo Beutlin & Norbert Halagal & Liu yang & Hector Gonçalves"})
+        self.assertFalse(self.check_element_on_page((By.ID, "flash_danger")))
         details = self.get_book_details(-1)
         self.assertEqual(['Frodo Beutlin', 'Norbert Halagal', 'Liu yang', 'Hector Gonçalves'], details['author'])
         self.assertTrue(os.path.isfile(os.path.join(TEST_DB, 'Frodo Beutlin/Der Buchtitel (1)',
@@ -199,6 +209,7 @@ class TestEditAuthors(TestCase, ui_class):
         # rename book title and author in the same step
         self.edit_book(1, content={'bookAuthor': "Frodo Beutlin & Norbert Halagal & Liu Yang & Hector Gonçalves",
                                    'book_title': 'Derbook 1'})
+        self.assertFalse(self.check_element_on_page((By.ID, "flash_danger")))
         details = self.get_book_details(-1)
         self.assertEqual(['Frodo Beutlin', 'Norbert Halagal', 'Liu Yang', 'Hector Gonçalves'], details['author'])
         self.assertEqual('Derbook 1', details['title'])
@@ -210,6 +221,7 @@ class TestEditAuthors(TestCase, ui_class):
         self.assertEqual(200, ret_code)
         # rename only book title
         self.edit_book(1, content={'book_title': 'Der Buchtitel'})
+        self.assertFalse(self.check_element_on_page((By.ID, "flash_danger")))
         details = self.get_book_details(-1)
         self.assertEqual(['Frodo Beutlin', 'Norbert Halagal', 'Liu Yang', 'Hector Gonçalves'], details['author'])
         self.assertEqual('Der Buchtitel', details['title'])
@@ -232,6 +244,7 @@ class TestEditAuthors(TestCase, ui_class):
                                                     'cover.jpg')))
         # Author folder is not found due to utf characters not represented in filename
         self.edit_book(1, content={'bookAuthor': "Frodo Beutlin & Norbert Halagal & Liu Yang & hector Gonçalves"})
+        self.assertFalse(self.check_element_on_page((By.ID, "flash_danger")))
         details = self.get_book_details(-1)
         self.assertEqual(['Frodo Beutlin', 'Norbert Halagal', 'Liu Yang', 'hector Gonçalves'], details['author'])
         self.assertFalse(os.path.isfile(os.path.join(TEST_DB, 'Frodo Beutlin/Der Buchtitel (1)',
@@ -249,6 +262,7 @@ class TestEditAuthors(TestCase, ui_class):
 
         # ToDo: currently empty folder Hector Goncalves remains
         self.edit_book(11, content={'bookAuthor': "hector Gonçalves & Unbekannt"})
+        self.assertFalse(self.check_element_on_page((By.ID, "flash_danger")))
         details = self.get_book_details(-1)
         self.assertEqual(['hector Gonçalves', 'Unbekannt'], details['author'])
 
@@ -256,6 +270,7 @@ class TestEditAuthors(TestCase, ui_class):
         self.edit_book(11, content={'bookAuthor': "Hector Gonçalves & unbekannt"})
         # rename uppercase to lowercase only of author
         self.edit_book(1, content={'bookAuthor': "Frodo Beutlin & Norbert Halagal & Liu Yang & Hector gonçalves"})
+        self.assertFalse(self.check_element_on_page((By.ID, "flash_danger")))
         details = self.get_book_details(-1)
         self.assertEqual(['Frodo Beutlin', 'Norbert Halagal', 'Liu Yang', 'Hector gonçalves'], details['author'])
         self.assertTrue(os.path.isfile(os.path.join(TEST_DB, 'Frodo Beutlin/Der Buchtitel (1)',
@@ -276,6 +291,7 @@ class TestEditAuthors(TestCase, ui_class):
         # rename book title and author in the same step
         self.edit_book(1, content={'bookAuthor': "Frodo Beutlin & Norbert Halagal & Liu Yang & Hector Gonçalves",
                                    'book_title': 'Derbook 1'})
+        self.assertFalse(self.check_element_on_page((By.ID, "flash_danger")))
         details = self.get_book_details(-1)
         self.assertEqual(['Frodo Beutlin', 'Norbert Halagal', 'Liu Yang', 'Hector Gonçalves'], details['author'])
         self.assertEqual('Derbook 1', details['title'])
@@ -294,6 +310,7 @@ class TestEditAuthors(TestCase, ui_class):
 
         # rename only book title
         self.edit_book(1, content={'book_title': 'Der Buchtitel'})
+        self.assertFalse(self.check_element_on_page((By.ID, "flash_danger")))
         details = self.get_book_details(-1)
         self.assertEqual(['Frodo Beutlin', 'Norbert Halagal', 'Liu Yang', 'Hector Gonçalves'], details['author'])
         self.assertEqual('Der Buchtitel', details['title'])
@@ -321,6 +338,7 @@ class TestEditAuthors(TestCase, ui_class):
                                                     'Der Buchtitel - Frodo Beutlin.txt')))
         # Add 2. author to book to have usecase
         self.edit_book(3, content={'bookAuthor': "Asterix Lionherd & Liu Yang"})
+        self.assertFalse(self.check_element_on_page((By.ID, "flash_danger")))
         details = self.get_book_details(-1)
         self.assertEqual(['Asterix Lionherd', 'Liu Yang'], details['author'])
         self.assertTrue(os.path.isfile(os.path.join(TEST_DB, 'Asterix Lionherd/comicdemo (3)',
@@ -330,6 +348,7 @@ class TestEditAuthors(TestCase, ui_class):
 
         #rename co-author
         self.edit_book(1, content={'bookAuthor': "Frodo Beutlin & Norbert Halagal & liu Yang & Hector Gonçalves"})
+        self.assertFalse(self.check_element_on_page((By.ID, "flash_danger")))
         details = self.get_book_details(-1)
         self.assertEqual(['Frodo Beutlin', 'Norbert Halagal', 'liu Yang', 'Hector Gonçalves'], details['author'])
         details = self.get_book_details(3)
@@ -351,6 +370,7 @@ class TestEditAuthors(TestCase, ui_class):
         # rename book title and author in the same step
         self.edit_book(1, content={'bookAuthor': "Frodo Beutlin & Norbert Halagal & Liu Yang & Hector Gonçalves",
                                    'book_title': 'Derbook 1'})
+        self.assertFalse(self.check_element_on_page((By.ID, "flash_danger")))
         details = self.get_book_details(-1)
         self.assertEqual(['Frodo Beutlin', 'Norbert Halagal', 'Liu Yang', 'Hector Gonçalves'], details['author'])
         self.assertEqual('Derbook 1', details['title'])
@@ -370,9 +390,9 @@ class TestEditAuthors(TestCase, ui_class):
         details = self.get_book_details(-1)
         self.assertEqual(['Asterix Lionherd'], details['author'])
 
-
         # rename only book title
         self.edit_book(1, content={'book_title': 'Der Buchtitel'})
+        self.assertFalse(self.check_element_on_page((By.ID, "flash_danger")))
         details = self.get_book_details(-1)
         self.assertEqual(['Frodo Beutlin', 'Norbert Halagal', 'Liu Yang', 'Hector Gonçalves'], details['author'])
         self.assertEqual('Der Buchtitel', details['title'])
@@ -400,6 +420,7 @@ class TestEditAuthors(TestCase, ui_class):
         time.sleep(3)
         self.check_element_on_page((By.ID, 'edit_cancel')).click()
         time.sleep(2)
+        self.assertFalse(self.check_element_on_page((By.ID, "flash_danger")))
         details = self.get_book_details()
         self.assertEqual('Useless', details['title'])
         self.assertEqual(['asterix Lionherd'], details['author'])
@@ -414,6 +435,7 @@ class TestEditAuthors(TestCase, ui_class):
 
         self.delete_book(details['id'])
         self.edit_book(3, content={'bookAuthor': "Asterix Lionherd"})
+        self.assertFalse(self.check_element_on_page((By.ID, "flash_danger")))
         details = self.get_book_details(-1)
         self.assertEqual(['Asterix Lionherd'], details['author'])
         self.assertTrue(os.path.isfile(os.path.join(TEST_DB, 'Asterix Lionherd/comicdemo (3)',
@@ -429,6 +451,7 @@ class TestEditAuthors(TestCase, ui_class):
         time.sleep(3)
         self.check_element_on_page((By.ID, 'edit_cancel')).click()
         time.sleep(2)
+        self.assertFalse(self.check_element_on_page((By.ID, "flash_danger")))
         details = self.get_book_details()
         self.assertEqual('Useless', details['title'])
         self.assertEqual(['liu yang'], details['author'])
