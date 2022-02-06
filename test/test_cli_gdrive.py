@@ -186,3 +186,74 @@ class TestCliGdrivedb(unittest.TestCase, ui_class):
         except Exception:
             pass
         self.assertTrue(os.path.join(gdrivedir, u'gü dr.app'))
+
+    def test_no_database(self):
+        # check unconfigured database
+        os.chdir(CALIBRE_WEB_PATH)
+        p1 = process_open([self.py_version, u'cps.py'], [1])
+        time.sleep(BOOT_TIME)
+        try:
+            # navigate to the application home page
+            self.driver.get("http://127.0.0.1:8083")
+            # Wait for config screen to show up
+            self.fill_db_config({'config_calibre_dir': TEST_DB})
+            # wait for cw to reboot
+            time.sleep(2)
+            self.assertTrue(self.check_element_on_page((By.ID, 'flash_success')))
+            self.fill_db_config({'config_use_google_drive': 1})
+            time.sleep(2)
+            self.fill_db_config({'config_google_drive_folder': 'test'})
+            time.sleep(2)
+            self.assertTrue(self.check_element_on_page((By.ID, 'flash_success')))
+        except Exception:
+            self.assertFalse(True, "Inital config failed with normal database")
+        # create shelf, add book to shelf
+        self.create_shelf("database")
+        self.assertTrue(self.check_element_on_page((By.ID, 'flash_success')))
+        self.get_book_details(1)
+        time.sleep(2)
+        self.check_element_on_page((By.ID, "add-to-shelf")).click()
+        self.check_element_on_page((By.XPATH, "//ul[@id='add-to-shelves']/li/a[contains(.,'database')]")).click()
+        self.list_shelfs("database")['ele'].click()
+        time.sleep(2)
+        book_shelf = self.get_shelf_books_displayed()
+        self.assertEqual(1, len(book_shelf))
+        # rename database file and restart
+        # ToDo: deleting local database results in delete of all shelfs, new database is accepted
+        '''os.rename(os.path.join(TEST_DB, "metadata.db"), os.path.join(TEST_DB, "_metadata.db"))
+        self.restart_calibre_web(p1)        
+        self.goto_page("user_setup")
+        database_dir = self.check_element_on_page((By.ID, "config_calibre_dir"))
+        self.assertTrue(database_dir)
+        self.assertEqual(TEST_DB, database_dir.get_attribute("value"))
+        self.check_element_on_page((By.ID, "config_back")).click()
+        time.sleep(2)
+        self.check_element_on_page((By.ID, "config_calibre_dir"))
+        self.check_element_on_page((By.ID, "db_submit")).click()
+        self.assertTrue(self.check_element_on_page((By.ID, 'flash_danger')))
+        database_dir = self.check_element_on_page((By.ID, "config_calibre_dir"))
+        self.assertTrue(database_dir)
+        self.assertEqual(TEST_DB, database_dir.get_attribute("value"))
+        os.rename(os.path.join(TEST_DB, "_metadata.db"), os.path.join(TEST_DB, "metadata.db"))
+        self.check_element_on_page((By.ID, "db_submit")).click()
+        self.assertTrue(self.check_element_on_page((By.ID, 'flash_success')))
+        # check shelf is still there
+        self.list_shelfs("database")['ele'].click()
+        book_shelf = self.get_shelf_books_displayed()
+        self.assertEqual(1, len(book_shelf))'''
+        # copy database to different location, move location, check shelf is still there
+        alt_location = os.path.abspath(os.path.join(TEST_DB, "..", "alternate"))
+        os.makedirs(alt_location, exist_ok=True)
+        shutil.copy(os.path.join(TEST_DB, "metadata.db"), os.path.join(alt_location, "metadata.db"))
+        self.fill_db_config({'config_calibre_dir': alt_location})
+        self.assertTrue(self.check_element_on_page((By.ID, 'flash_success')))
+        # check shelf is still there
+        self.list_shelfs("database")['ele'].click()
+        book_shelf = self.get_shelf_books_displayed()
+        self.assertEqual(1, len(book_shelf))
+        os.remove(os.path.join(alt_location, "metadata.db"))
+        os.rmdir(alt_location)
+        self.delete_shelf("database")
+        self.assertTrue(self.check_element_on_page((By.ID, 'flash_success')))
+        self.stop_calibre_web(p1)
+        os.unlink(os.path.join(CALIBRE_WEB_PATH, "gdrive.db"))

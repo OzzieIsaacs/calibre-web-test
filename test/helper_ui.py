@@ -440,7 +440,7 @@ class ui_class():
             cls.goto_page('admin_setup')
         except:
             cls.driver.get("http://127.0.0.1:8083")
-            if not cls.check_user_logged_in("admin",True):
+            if not cls.check_user_logged_in("admin", True):
                 cls.login('admin','admin123')
             cls.goto_page('admin_setup')
         cls.driver.find_element(By.ID, 'admin_stop').click()
@@ -455,6 +455,9 @@ class ui_class():
         if proc:
             time.sleep(3)
             proc.poll()
+            proc.stdout.close()
+            proc.stderr.close()
+
 
     def list_domains(self, allow=True):
         if not self.check_element_on_page((By.ID, "mail_server")):

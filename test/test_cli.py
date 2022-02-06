@@ -2,23 +2,22 @@
 # -*- coding: utf-8 -*-
 
 import unittest
-from selenium import webdriver
 import os
-from selenium.webdriver.common.by import By
-from selenium.common.exceptions import WebDriverException
 import time
 import shutil
+import re
+
 from helper_ui import ui_class
-from helper_func import get_Host_IP, kill_dead_cps
+from helper_func import get_Host_IP, kill_dead_cps, save_logfiles
 from subproc_wrapper import process_open
 from config_test import CALIBRE_WEB_PATH, TEST_DB, BOOT_TIME, base_path
-import re
-import sys
-from helper_func import save_logfiles
-import requests
+from selenium import webdriver
+from selenium.webdriver.common.by import By
+from selenium.common.exceptions import WebDriverException
 
 
 class TestCli(unittest.TestCase, ui_class):
+    driver = None
 
     @classmethod
     def setUpClass(cls):
@@ -54,7 +53,7 @@ class TestCli(unittest.TestCase, ui_class):
         try:
             new_db = os.path.join(CALIBRE_WEB_PATH, 'hü go.app')
             os.remove(new_db)
-        except Exception as e:
+        except Exception:
             pass
             # print(e)
 
@@ -144,10 +143,6 @@ class TestCli(unittest.TestCase, ui_class):
         only_path = CALIBRE_WEB_PATH + os.sep
         real_key_file = os.path.join(CALIBRE_WEB_PATH, 'hü lo', 'lö g.key')
         real_crt_file = os.path.join(CALIBRE_WEB_PATH, 'hü lo', 'lö g.crt')
-        if sys.version_info < (3, 0):
-            real_key_file = real_key_file.decode('UTF-8')
-            real_crt_file = real_crt_file.decode('UTF-8')
-
         p = process_open([self.py_version, os.path.join(CALIBRE_WEB_PATH, u'cps.py'),
                           '-c', path_like_file], [1, 3])
         time.sleep(2)
@@ -266,9 +261,6 @@ class TestCli(unittest.TestCase, ui_class):
         shutil.copytree('./files', os.path.join(CALIBRE_WEB_PATH, 'hü lo'))
         real_crt_file = os.path.join(CALIBRE_WEB_PATH, 'hü lo', 'server.crt')
         real_key_file = os.path.join(CALIBRE_WEB_PATH, 'hü lo', 'server.key')
-        if sys.version_info < (3, 0):
-            real_crt_file = real_crt_file.decode('UTF-8')
-            real_key_file = real_key_file.decode('UTF-8')
         p = process_open([self.py_version, os.path.join(CALIBRE_WEB_PATH, u'cps.py'),
                          '-c', real_crt_file, '-k', real_key_file], (1, 3, 5))
         if p.poll() is not None:
@@ -464,8 +456,8 @@ class TestCli(unittest.TestCase, ui_class):
 
     def help_dry_run(self):
         p1 = process_open([self.py_version, u'cps.py', "-d"], [1])
-        output =list()
-        while p1.poll() == None:
+        output = list()
+        while p1.poll() is None:
             output.append(p1.stdout.readline())
         self.assertEqual(0, p1.returncode)
         p1.stdout.close()
@@ -537,4 +529,64 @@ class TestCli(unittest.TestCase, ui_class):
         with open(os.path.join(CALIBRE_WEB_PATH, "exclude.txt"), "w") as f:
             f.write("")
 
-
+    def test_no_database(self):
+        # check unconfigured database
+        os.chdir(CALIBRE_WEB_PATH)
+        p1 = process_open([self.py_version, u'cps.py'], [1])
+        time.sleep(BOOT_TIME)
+        try:
+            # navigate to the application home page
+            self.driver.get("http://127.0.0.1:8083")
+            # Wait for config screen to show up
+            self.fill_db_config({'config_calibre_dir': TEST_DB})
+            # wait for cw to reboot
+            time.sleep(5)
+            self.assertTrue(self.check_element_on_page((By.ID, 'flash_success')))
+        except Exception:
+            self.assertFalse(True, "Inital config failed with normal database")
+        # create shelf, add book to shelf
+        self.create_shelf("database")
+        self.assertTrue(self.check_element_on_page((By.ID, 'flash_success')))
+        self.get_book_details(1)
+        self.check_element_on_page((By.ID, "add-to-shelf")).click()
+        self.check_element_on_page((By.XPATH, "//ul[@id='add-to-shelves']/li/a[contains(.,'database')]")).click()
+        self.list_shelfs("database")['ele'].click()
+        book_shelf = self.get_shelf_books_displayed()
+        self.assertEqual(1, len(book_shelf))
+        # rename database file and restart
+        os.rename(os.path.join(TEST_DB, "metadata.db"), os.path.join(TEST_DB, "_metadata.db"))
+        self.restart_calibre_web()
+        self.goto_page("user_setup")
+        database_dir = self.check_element_on_page((By.ID, "config_calibre_dir"))
+        self.assertTrue(database_dir)
+        self.assertEqual(TEST_DB, database_dir.get_attribute("value"))
+        self.check_element_on_page((By.ID, "config_back")).click()
+        time.sleep(2)
+        self.check_element_on_page((By.ID, "config_calibre_dir"))
+        self.check_element_on_page((By.ID, "db_submit")).click()
+        self.assertTrue(self.check_element_on_page((By.ID, 'flash_danger')))
+        database_dir = self.check_element_on_page((By.ID, "config_calibre_dir"))
+        self.assertTrue(database_dir)
+        self.assertEqual(TEST_DB, database_dir.get_attribute("value"))
+        os.rename(os.path.join(TEST_DB, "_metadata.db"), os.path.join(TEST_DB, "metadata.db"))
+        self.check_element_on_page((By.ID, "db_submit")).click()
+        self.assertTrue(self.check_element_on_page((By.ID, 'flash_success')))
+        # check shelf is still there
+        self.list_shelfs("database")['ele'].click()
+        book_shelf = self.get_shelf_books_displayed()
+        self.assertEqual(1, len(book_shelf))
+        # copy database to different location, move location, check shelf is still there
+        alt_location = os.path.abspath(os.path.join(TEST_DB, "..", "alternate"))
+        os.makedirs(alt_location, exist_ok=True)
+        shutil.copy(os.path.join(TEST_DB, "metadata.db"), os.path.join(alt_location, "metadata.db"))
+        self.fill_db_config({'config_calibre_dir': alt_location})
+        self.assertTrue(self.check_element_on_page((By.ID, 'flash_success')))
+        # check shelf is still there
+        self.list_shelfs("database")['ele'].click()
+        book_shelf = self.get_shelf_books_displayed()
+        self.assertEqual(1, len(book_shelf))
+        os.remove(os.path.join(alt_location, "metadata.db"))
+        os.rmdir(alt_location)
+        self.delete_shelf("database")
+        self.assertTrue(self.check_element_on_page((By.ID, 'flash_success')))
+        self.stop_calibre_web(p1)
