@@ -9,15 +9,15 @@ from io import BytesIO
 
 from selenium.webdriver.common.by import By
 from helper_ui import ui_class
-from config_test import TEST_DB, base_path, BOOT_TIME
-from helper_func import startup, debug_startup, add_dependency, remove_dependency
+from config_test import TEST_DB
+from helper_func import startup, add_dependency, remove_dependency
 from helper_func import save_logfiles
 
 
 class TestLoadMetadataScholar(TestCase, ui_class):
     p = None
     driver = None
-    dependency = ["scholarly"]
+    dependency = ["scholarly", "beautifulsoup4"]
 
     @classmethod
     def setUpClass(cls):
@@ -52,6 +52,10 @@ class TestLoadMetadataScholar(TestCase, ui_class):
         google_scholar = self.check_element_on_page((By.ID, "show-Google Scholar"))
         google = self.check_element_on_page((By.ID, "show-Google"))
         comic_vine = self.check_element_on_page((By.ID, "show-ComicVine"))
+        amazon = self.check_element_on_page((By.ID, "show-Amazon"))
+        time.sleep(3)
+        self.assertTrue(amazon)
+        amazon.click()
         self.assertTrue(google_scholar)
         self.assertTrue(google)
         self.assertTrue(comic_vine)

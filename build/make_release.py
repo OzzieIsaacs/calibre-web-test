@@ -14,6 +14,7 @@ from subprocess import CalledProcessError
 from subproc_wrapper import process_open
 from helper_environment import environment, add_dependency
 import configparser
+import argparse
 
 
 def change_config(targetfile, config, value):
@@ -32,223 +33,266 @@ def change_config(targetfile, config, value):
     f.write(replaced)
     f.close()
 
-# Update requirements in config.cfg file
-config = configparser.ConfigParser()
-config.read(os.path.join(FILEPATH,"setup.cfg"))
+def update_requirements():
+    # Update requirements in config.cfg file
+    config = configparser.ConfigParser()
+    config.read(os.path.join(FILEPATH, "setup.cfg"))
 
-print("Updating config.cfg from requirments.txt")
-with open(os.path.join(FILEPATH, "requirements.txt"), "r") as stream:
-    requirements = stream.readlines()
+    print("* Updating config.cfg from requirements.txt")
+    with open(os.path.join(FILEPATH, "requirements.txt"), "r") as stream:
+        requirements = stream.readlines()
 
-config['options']['install_requires'] = "\n" + "".join(requirements)
+    config['options']['install_requires'] = "\n" + "".join(requirements)
 
-with open(os.path.join(FILEPATH, "optional-requirements.txt"), "r") as stream:
-    opt_requirements = stream.readlines()
+    with open(os.path.join(FILEPATH, "optional-requirements.txt"), "r") as stream:
+        opt_requirements = stream.readlines()
 
-print("Updating config.cfg from optional-requirments.txt")
-optional_reqs = dict()
-option = ""
-for line in opt_requirements:
-    if line.startswith("#"):
-        option = line[1:].split()[0].strip()
-        optional_reqs[option] = "\n"
-    else:
-        if line != "\n":
-            optional_reqs[option] += line
+    print("* Updating config.cfg from optional-requirements.txt")
+    optional_reqs = dict()
+    option = ""
+    for line in opt_requirements:
+        if line.startswith("#"):
+            option = line[1:].split()[0].strip()
+            optional_reqs[option] = "\n"
+        else:
+            if line != "\n":
+                optional_reqs[option] += line
 
-for key, value in optional_reqs.items():
+    for key, value in optional_reqs.items():
+        try:
+            if config["options.extras_require"][key.lower()]:
+                config["options.extras_require"][key.lower()] = value.rstrip("\n")
+            print("'{}' block updated".format(key))
+        except KeyError:
+            print("* Optional Requirement block '{}' not found in config.cfg".format(key.lower()))
+
+    with open(os.path.join(FILEPATH, "setup.cfg"), 'w') as configfile:
+        config.write(configfile)
+
+def parse_arguments():
+    parser = argparse.ArgumentParser(description='Build files installer files of Calibre-web\n', prog='make_release.py')
+    parser.add_argument('-u', action='store_true', help='Update setup.cfg file')
+    return parser.parse_args()
+
+def prepare_folders():
+    # create source folder
     try:
-        if config["options.extras_require"][key.lower()]:
-            config["options.extras_require"][key.lower()] = value.rstrip("\n")
-        print("'{}' block updated".format(key))
-    except KeyError:
-        print("Optional Requirement block '{}' not found in config.cfg".format(key.lower()))
+        os.makedirs('src')
+        print('* Creating "src" directory')
+    except FileExistsError:
+        pass
+    try:
+        os.makedirs('src/calibreweb')
+        print('* Creating "calibreweb" directory')
+    except FileExistsError:
+        pass
 
-with open(os.path.join(FILEPATH,"setup.cfg"), 'w') as configfile:
-    config.write(configfile)
+    # delete build and dist dir
+    shutil.rmtree('build', ignore_errors=True)
+    shutil.rmtree('dist', ignore_errors=True)
 
-workdir = os.getcwd()
-os.chdir(FILEPATH)
-targetfile = os.path.join(FILEPATH, "src/calibreweb/cps/constants.py")
+    # move cps and cps.py file to source folder
+    try:
+        os.remove('cps.pyc')
+    except:
+        pass
+    try:
+        os.remove('./cps/*.pyc')
+    except:
+        pass
+    try:
+        os.remove('./cps/services/*.pyc')
+    except:
+        pass
+    shutil.move('cps.py', 'src/calibreweb/__init__.py')
+    shutil.move('cps', 'src/calibreweb')
+    print('* Moving files to "src" directory')
 
-# create sourcedir
-try:
-    os.makedirs('src')
-    print('Creating "src" directory')
-except FileExistsError:
-    pass
-try:
-    os.makedirs('src/calibreweb')
-    print('Creating "calibreweb" directory')
-except FileExistsError:
-    pass
+def generate_package():
+    prepare_folders()
+    # Change home-config setting
+    target_file = os.path.join(FILEPATH, "src/calibreweb/cps/constants.py")
+    change_config(target_file, "HOME_CONFIG", "True")
+    print('* Change "homeconfig" settings to true')
 
-# delete build and dist dir
-shutil.rmtree('build', ignore_errors=True)
-shutil.rmtree('dist', ignore_errors=True)
+    # Generate package
+    print('* Generating package')
+    error = False
+    p = subprocess.Popen(sys.executable + " setup.py sdist bdist_wheel",
+                         shell=True,
+                         stdout=subprocess.PIPE,
+                         stdin=subprocess.PIPE)
+    p.communicate()[0]
+    p.wait()
 
-# move cps and cps.py file to sourcefolder
-try:
-    os.remove('cps.pyc')
-except:
-    pass
-try:
-    os.remove('./cps/*.pyc')
-except:
-    pass
-try:
-    os.remove('./cps/services/*.pyc')
-except:
-    pass
+    # check successful
+    if p.returncode != 0:
+        print('## Error: package generation returned an error, aborting ##')
+        error = True
 
-shutil.move('cps.py','src/calibreweb/__init__.py')
+    # Change home-config setting back
+    print('* Change "homeconfig" settings back to false')
+    change_config(target_file,"HOME_CONFIG", "False")
 
-shutil.move('cps','src/calibreweb')
-print('Moving files to "src" directory')
+    # move files back in original place
+    print('* Moving files back to origin')
+    shutil.move('./src/calibreweb/__init__.py', './cps.py')
+    shutil.move('./src/calibreweb/cps', '.')
+    print('* Deleting "src" directory')
+    shutil.rmtree('src', ignore_errors=True)
+    print('* Deleting "build" directory')
+    shutil.rmtree('build', ignore_errors=True)
 
-change_config(targetfile,"HOME_CONFIG", "True")
-print('Change "homeconfig" settings to true')
+    return error
 
-# Generate package
-print('Generating package')
-error = False
-p = subprocess.Popen(sys.executable + " setup.py sdist bdist_wheel"
-                     ,shell=True,stdout=subprocess.PIPE, stdin=subprocess.PIPE)
-p.communicate()[0]
-p.wait()
 
-# check succesfull
-if p.returncode != 0:
-    print('Error: package generation returned an error, aborting')
-    error = True
-# move files back
-print('Change "homeconfig" settings back to false')
-change_config(targetfile,"HOME_CONFIG", "False")
+def create_python_environment():
+    # install requirements and optional requirements in venv of calibre-web
+    print("* Creating virtual environment for executable")
+    try:
+        venv.create(VENV_PATH, clear=True, with_pip=True)
+    except CalledProcessError:
+        print("## Error Creating virtual environment ##")
+        venv.create(VENV_PATH, system_site_packages=True, with_pip=False)
 
-print('Moving files back to origin')
-shutil.move('./src/calibreweb/__init__.py','./cps.py')
-shutil.move('./src/calibreweb/cps','.')
-print('Deleting "src" directory')
-shutil.rmtree('src', ignore_errors=True)
-print('Deleting "build" directory')
-shutil.rmtree('build', ignore_errors=True)
+    print("* Adding dependencies for executable from requirements file")
+    requirements_file = os.path.join(FILEPATH, 'requirements.txt')
+    p = process_open([VENV_PYTHON, "-m", "pip", "install", "-r", requirements_file], (0, 5))
+    while p.poll() is None:
+        print(p.stdout.readline().strip("\n"))
 
-if error:
+    # Adding precompiled dependencies for Windows
+    if os.name == "nt":
+        print("* Adding precompiled dependencies for executable for Windows")
+        environment.init_Environment(VENV_PYTHON)
+        add_dependency(["local|LDAP_WHL|python-ldap", "local|LEVENSHTEIN_WHL|python-Levenshtein"], "")
+
+    print("* Adding dependencies for executable from optional_requirements file")
+    optional_requirements_file = os.path.join(FILEPATH, 'optional-requirements.txt')
+    p = process_open([VENV_PYTHON, "-m", "pip", "install", "-r", optional_requirements_file], (0, 5))
+    while p.poll() is None:
+        print(p.stdout.readline().strip("\n"))
+
+    print("Adding pyinstaller to virtual environment")
+    p = process_open([VENV_PYTHON, "-m", "pip", "install", "pyinstaller"], (0,))
+    while p.poll() is None:
+        print(p.stdout.readline().strip("\n"))
+
+
+def create_executable():
+    error = False
+    print('* Make updater unavailable in executable')
+    target_file = os.path.join("cps/constants.py")
+    change_config(target_file, "UPDATER_AVAILABLE", "False")
+    if os.name == "nt":
+        print('* Store config for executable in program folder on Windows')
+        change_config(target_file, "HOME_CONFIG", "False")
+        py_inst = "pyinstaller.exe"
+    else:
+        py_inst = "pyinstaller"
+
+    print("* Starting build of executable via PyInstaller")
+
+    sep = ";" if os.name == "nt" else ":"
+
+    py_inst_path = os.path.join(os.path.dirname(VENV_PYTHON), py_inst)
+    if os.name == "nt":
+        google_api_path = glob.glob(os.path.join(FILEPATH, "venv", "lib/site-packages/google_api_python*"))
+    else:
+        google_api_path = glob.glob(os.path.join(FILEPATH, "venv", "lib/**/site-packages/google_api_python*"))
+
+    if len(google_api_path) != 1:
+        print('* More than one google_api_python directory found exiting')
+        sys.exit(1)
+    os.rename('__init__.py', 'root.py')
+    command = (py_inst_path + " root.py -i cps/static/favicon.ico "
+                              "-n calibreweb "
+                              "--add-data cps/static" + sep + "cps/static "
+                              "--add-data cps/metadata_provider" + sep + "cps/metadata_provider "
+                              "--add-data cps/templates" + sep + "cps/templates "
+                              "--add-data cps/translations" + sep + "cps/translations "
+                              "--add-data " + google_api_path[0] + sep + os.path.basename(google_api_path[0]) + " "
+                              "--hidden-import sqlalchemy.sql.default_comparator ")
+    p = subprocess.Popen(command,
+                         # "--debug all",
+                         shell=True,
+                         stdout=subprocess.PIPE,
+                         stdin=subprocess.PIPE)
+    p.communicate()[0]
+    p.wait()
+
+    # check successful
+    if p.returncode != 0:
+        print('## Error: pyinstaller returned an error, aborting ##')
+        error = True
+    return error
+
+
+def prepare_files_pyinstaller():
+    print('* Start building executable')
+    files = glob.glob(os.path.join('dist', '*.tar.gz'))
+    if len(files) > 1:
+        print('## More than one package file found, aborting ##')
+        sys.exit(1)
+
+    print('* Deleting old "exe_temp" and "executable" directory')
+    shutil.rmtree('exe_temp', ignore_errors=True)
+    shutil.rmtree('executable', ignore_errors=True)
+    print('* Creating "exe_temp" directory')
+    os.mkdir('exe_temp')
+    print('* Extracting package file to "exe_temp" directory')
+    tar = tarfile.open(files[0], "r:gz")
+    tar.extractall('exe_temp')
+    tar.close()
+    os.chdir('exe_temp')
+    setup_file = glob.glob('**/setup.py', recursive=True)
+    if len(setup_file) > 1:
+        print('## More than one setup file found, aborting ##')
+        sys.exit(1)
+    os.chdir(os.path.dirname(setup_file[0]))
+    print('* Changing directory to package root folder "src/calibreweb"')
+    os.chdir("src")
+    os.chdir("calibreweb")
+
+
+def revert_files_pyinstaller(workdir):
+    print('* Moving folder to root folder')
+    shutil.move('./dist/calibreweb/',os.path.join(FILEPATH))
+    os.chdir(FILEPATH)
+    os.rename("calibreweb", "executable")
+    shutil.rmtree('exe_temp', ignore_errors=True)
+    os.chdir(workdir)
+
+
+def main():
+    args = parse_arguments()
+    update_requirements()
+    if args.u:
+        sys.exit(0)
+
+    # Change workdir to calibre folder
+    workdir = os.getcwd()
+    os.chdir(FILEPATH)
+
+    # Generate pypi package
     # if package generation had an error stop
-    sys.exit(1)
+    if generate_package():
+        sys.exit(1)
 
-print('Start building executable')
-files = glob.glob(os.path.join('dist','*.tar.gz'))
-if len(files) > 1:
-    print('More than one package file found, aborting')
-    sys.exit(1)
+    # move files for pyinstaller
+    prepare_files_pyinstaller()
+    # Prepare environment for pyinstaller
+    create_python_environment()
+    # create pyinstaller executable
+    error = create_executable()
+    revert_files_pyinstaller(workdir)
 
-print('Deleting old "exe_temp" and "executable" directory')
-shutil.rmtree('exe_temp', ignore_errors=True)
-shutil.rmtree('executable', ignore_errors=True)
-print('Creating "exe_temp" directory')
-os.mkdir('exe_temp')
-print('Extracting package file to "exe_temp" directory')
-tar = tarfile.open(files[0], "r:gz")
-tar.extractall('exe_temp')
-tar.close()
-os.chdir('exe_temp')
-setup_file = glob.glob('**/setup.py', recursive=True)
-if len(setup_file) > 1:
-    print('More than one setup file found exiting')
-    sys.exit(1)
-os.chdir(os.path.dirname(setup_file[0]))
-print('Changing directory to package root folder "src/calibreweb"')
-os.chdir("src")
-os.chdir("calibreweb")
+    if error:
+        print('## Pyinstaller finished with error, aborting ##')
+        sys.exit(1)
 
-print('Make Updater unavailable in excecutable')
-
-targetfile = os.path.join("cps/constants.py")
-change_config(targetfile,"UPDATER_AVAILABLE", "False")
-if os.name == "nt":
-    print('Store config for excecutable in program folder on Windows')
-    change_config(targetfile,"HOME_CONFIG", "False")
-    pyinst = "pyinstaller.exe"
-else:
-    pyinst = "pyinstaller"
-
-# install requirements and optional requirements in venv of calibre-web
-print("Creating virtual environment for executable")
-try:
-    venv.create(VENV_PATH, clear=True, with_pip=True)
-except CalledProcessError:
-    print("Error Creating virtual environment")
-    venv.create(VENV_PATH, system_site_packages=True, with_pip=False)
+    print('* Build Successfully Finished')
 
 
-print("Adding dependencies for executable from requirements file")
-requirements_file = os.path.join(FILEPATH, 'requirements.txt')
-p = process_open([VENV_PYTHON, "-m", "pip", "install", "-r", requirements_file], (0, 5))
-while p.poll() == None:
-    print(p.stdout.readline().strip("\n"))
-
-# Adding precompiled dependencies for Windows
-if os.name == "nt":
-    print("Adding precompiled dependencies for executable for Windows")
-    environment.init_Environment(VENV_PYTHON)
-    add_dependency(["local|LDAP_WHL|python-ldap", "local|LEVENSHTEIN_WHL|python-Levenshtein"], "")
-
-print("Adding dependencies for executable from optional_requirements file")
-optional_requirements_file = os.path.join(FILEPATH, 'optional-requirements.txt')
-p = process_open([VENV_PYTHON, "-m", "pip", "install", "-r", optional_requirements_file], (0, 5))
-while p.poll() == None:
-    print(p.stdout.readline().strip("\n"))
-
-print("Adding pyinstaller to virtual environment")
-p = process_open([VENV_PYTHON, "-m", "pip", "install", "pyinstaller"], (0,))
-while p.poll() == None:
-    print(p.stdout.readline().strip("\n"))
-
-
-print("Starting build of executable via PyInstaller")
-if os.name == "nt":
-    sep = ";"
-else:
-    sep = ":"
-
-pyinst_path = os.path.join(os.path.dirname(VENV_PYTHON), pyinst)
-if os.name == "nt":
-    google_api_path = glob.glob(os.path.join(FILEPATH, "venv","lib/site-packages/google_api_python*"))
-else:
-    google_api_path = glob.glob(os.path.join(FILEPATH, "venv","lib/**/site-packages/google_api_python*"))
-
-if len(google_api_path) != 1:
-    print('More than one google_api_python directory found exiting')
-    sys.exit(1)
-os.rename('__init__.py', 'root.py')
-p = subprocess.Popen(pyinst_path + " root.py "
-                                   "-i cps/static/favicon.ico "
-                                   "-n calibreweb "
-                                   "--add-data cps/static" + sep + "cps/static "
-                                   "--add-data cps/metadata_provider" + sep + "cps/metadata_provider "                                                                   
-                                   "--add-data cps/templates" + sep + "cps/templates "
-                                   "--add-data cps/translations" + sep + "cps/translations "
-                                   "--add-data " + google_api_path[0] + sep + os.path.basename(google_api_path[0]) + " "
-                                   "--hidden-import sqlalchemy.sql.default_comparator ",
-                                   # "--hidden-import flask_wtf "
-                                   # "--debug all",
-                     shell=True,
-                     stdout=subprocess.PIPE,
-                     stdin=subprocess.PIPE)
-p.communicate()[0]
-p.wait()
-
-# check succesfull
-if p.returncode != 0:
-    print('Error: pyinstaller returned an error, aborting')
-    sys.exit(1)
-
-print('Moving folder to root folder')
-shutil.move('./dist/calibreweb/',os.path.join(FILEPATH))
-os.chdir(FILEPATH)
-os.rename("calibreweb", "executable")
-shutil.rmtree('exe_temp', ignore_errors=True)
-os.chdir(workdir)
-
-print('finished')
+if __name__ == '__main__':
+    main()

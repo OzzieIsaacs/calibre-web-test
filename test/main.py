@@ -61,9 +61,6 @@ if __name__ == '__main__':
     except CalledProcessError:
         print("Error Creating virtual environment")
         venv.create(VENV_PATH, system_site_packages =True, with_pip=False)
-    # else:
-    #    p = process_open([python, "-m", "venv", "--upgrade", VENV_PATH])
-    #    p.wait()
     print("Creating virtual environment for testing")
 
 
@@ -88,7 +85,7 @@ if __name__ == '__main__':
                                            template=template,
                                            stream=sys.stdout,
                                            resultclass=CalibreResult,
-                                           open_in_browser=True,
+                                           open_in_browser=not power,
                                            verbosity=2)
     # run the suite using HTMLTestRunner
     runner.run(all_tests)

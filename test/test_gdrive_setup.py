@@ -27,12 +27,12 @@ class TestSetupGdrive(unittest.TestCase, ui_class):
     def setUpClass(cls):
         add_dependency(cls.dependency, cls.__name__)
 
-        # remove client_secrets.file
+
         try:
+            # remove client_secrets.file
             dst = os.path.join(CALIBRE_WEB_PATH, "client_secrets.json")
             if os.path.exists(dst):
                 os.unlink(dst)
-
 
             # delete settings_yaml file
             set_yaml = os.path.join(CALIBRE_WEB_PATH, "settings.yaml")

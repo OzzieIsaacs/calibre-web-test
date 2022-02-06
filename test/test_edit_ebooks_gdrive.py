@@ -24,7 +24,7 @@ from helper_gdrive import prepare_gdrive, connect_gdrive, check_path_gdrive
                  not os.path.exists(os.path.join(base_path, "files", "gdrive_credentials")),
                  "client_secrets.json and/or gdrive_credentials file is missing")
 class TestEditBooksOnGdrive(unittest.TestCase, ui_class):
-    p=None
+    p = None
     driver = None
     dependency = ["oauth2client", "PyDrive2", "PyYAML", "google-api-python-client", "httplib2"]
 
@@ -61,11 +61,11 @@ class TestEditBooksOnGdrive(unittest.TestCase, ui_class):
 
             startup(cls,
                     cls.py_version,
-                    {'config_calibre_dir': TEST_DB },
+                    {'config_calibre_dir': TEST_DB},
                     only_metadata=True)
             cls.fill_db_config({'config_use_google_drive': 1})
             time.sleep(2)
-            cls.fill_db_config({'config_google_drive_folder':'test'})
+            cls.fill_db_config({'config_google_drive_folder': 'test'})
             time.sleep(2)
         except Exception as e:
             try:
@@ -74,7 +74,6 @@ class TestEditBooksOnGdrive(unittest.TestCase, ui_class):
                 cls.p.kill()
             except Exception:
                 pass
-
 
     @classmethod
     def tearDownClass(cls):
@@ -140,10 +139,10 @@ class TestEditBooksOnGdrive(unittest.TestCase, ui_class):
         self.wait_page_has_loaded()
         values = self.get_book_details()
         self.assertEqual(u'O0ü 执', values['title'])
-        new_book_path = os.path.join('test', values['author'][0], 'O0u Zhi (4)').replace('\\','/')
+        new_book_path = os.path.join('test', values['author'][0], 'O0u Zhi (4)').replace('\\', '/')
         gdrive_path = check_path_gdrive(fs, new_book_path)
         self.assertTrue(gdrive_path)
-        old_book_path = os.path.join('test', values['author'][0], 'Very long extra super turbo cool tit (4)').replace('\\','/')
+        old_book_path = os.path.join('test', values['author'][0], 'Very long extra super turbo cool tit (4)').replace('\\', '/')
         gdrive_path = check_path_gdrive(fs, old_book_path)
         self.assertFalse(gdrive_path)
         self.check_element_on_page((By.ID, "edit_book")).click()
@@ -151,7 +150,7 @@ class TestEditBooksOnGdrive(unittest.TestCase, ui_class):
         # file operation
         fout = io.BytesIO()
         fout.write(os.urandom(124))
-        fs.upload(os.path.join('test', values['author'][0], 'O0u Zhi (4)', 'test.dum').replace('\\','/'), fout)
+        fs.upload(os.path.join('test', values['author'][0], 'O0u Zhi (4)', 'test.dum').replace('\\', '/'), fout)
         fout.close()
         self.edit_book(content={'book_title': u' O0ü 执'}, detail_v=True)
         self.wait_page_has_loaded()
@@ -159,8 +158,7 @@ class TestEditBooksOnGdrive(unittest.TestCase, ui_class):
         title = self.check_element_on_page((By.ID, "book_title"))
         # calibre strips spaces in beginning
         self.assertEqual(u'O0ü 执', title.get_attribute('value'))
-        # self.assertTrue(os.path.isdir(os.path.join(TEST_DB, values['author'][0], 'O0u Zhi (4)')))
-        new_book_path = os.path.join('test', values['author'][0], 'O0u Zhi (4)').replace('\\','/')
+        new_book_path = os.path.join('test', values['author'][0], 'O0u Zhi (4)').replace('\\', '/')
         gdrive_path = check_path_gdrive(fs, new_book_path)
         self.wait_page_has_loaded()
         self.edit_book(content={'book_title': u'O0ü name'}, detail_v=True)
@@ -169,12 +167,11 @@ class TestEditBooksOnGdrive(unittest.TestCase, ui_class):
         title = self.check_element_on_page((By.ID, "book_title"))
         # calibre strips spaces in the end
         self.assertEqual(u'O0ü name', title.get_attribute('value'))
-        # self.assertTrue(os.path.isdir(os.path.join(TEST_DB, values['author'][0], 'O0u name (4)')))
-        new_book_path = os.path.join('test', values['author'][0], 'O0u name (4)').replace('\\','/')
+        new_book_path = os.path.join('test', values['author'][0], 'O0u name (4)').replace('\\', '/')
         gdrive_path = check_path_gdrive(fs, new_book_path)
         self.assertTrue(gdrive_path)
         # self.assertFalse(os.path.isdir(os.path.join(TEST_DB, values['author'][0], 'O0u Zhi (4)')))
-        old_book_path = os.path.join('test', values['author'][0], 'O0u Zhi (4)').replace('\\','/')
+        old_book_path = os.path.join('test', values['author'][0], 'O0u Zhi (4)').replace('\\', '/')
         gdrive_path = check_path_gdrive(fs, old_book_path)
         self.assertFalse(gdrive_path)
 
@@ -184,10 +181,10 @@ class TestEditBooksOnGdrive(unittest.TestCase, ui_class):
         # os.path.join(TEST_DB, values['author'][0], 'Unknown')
         self.assertEqual('Unknown', values['title'])
         # self.assertTrue(os.path.isdir(os.path.join(TEST_DB, values['author'][0], 'Unknown (4)')))
-        new_book_path = os.path.join('test', values['author'][0], 'Unknown (4)').replace('\\','/')
+        new_book_path = os.path.join('test', values['author'][0], 'Unknown (4)').replace('\\', '/')
         gdrive_path = check_path_gdrive(fs, new_book_path)
         self.assertTrue(gdrive_path)
-        old_book_path = os.path.join('test', values['author'][0], 'Unknown').replace('\\','/')
+        old_book_path = os.path.join('test', values['author'][0], 'Unknown').replace('\\', '/')
         gdrive_path = check_path_gdrive(fs, old_book_path)
         self.assertFalse(gdrive_path)
         self.check_element_on_page((By.ID, "edit_book")).click()
@@ -195,14 +192,13 @@ class TestEditBooksOnGdrive(unittest.TestCase, ui_class):
         self.edit_book(content={'book_title': 'The camicdemo'})
         self.wait_page_has_loaded()
         values = self.get_book_details()
-        # os.path.join(TEST_DB, values['author'][0], 'The camicdemo')
         self.assertEqual('The camicdemo', values['title'])
         self.goto_page('nav_new')
         self.wait_page_has_loaded()
         books = self.get_books_displayed()
         self.assertEqual('The camicdemo', books[1][8]['title'])
-        file_path = os.path.join('test', values['author'][0], 'The camicdemo (4)').replace('\\','/')
-        not_file_path = os.path.join('test', values['author'][0], 'camicdemo').replace('\\','/')
+        file_path = os.path.join('test', values['author'][0], 'The camicdemo (4)').replace('\\', '/')
+        not_file_path = os.path.join('test', values['author'][0], 'camicdemo').replace('\\', '/')
 
         # file operation
         fs.movedir(file_path, not_file_path, create=True)
@@ -210,26 +206,29 @@ class TestEditBooksOnGdrive(unittest.TestCase, ui_class):
         self.check_element_on_page((By.ID, "edit_book")).click()
         self.wait_page_has_loaded()
         self.edit_book(content={'book_title': u'Not found'})
+        time.sleep(4)
         self.wait_page_has_loaded()
         self.check_element_on_page((By.ID, 'flash_danger'))
-        title = self.check_element_on_page((By.ID, "book_title"))
+        values = self.get_book_details(-1)
+        # title = self.check_element_on_page((By.ID, "book_title"))
         # calibre strips spaces in the end
-        self.assertEqual('The camicdemo', title.get_attribute('value'))
+        self.assertEqual('The camicdemo', values['title'])
         # file operation
         fs.movedir(not_file_path, file_path, create=True)
         # missing cover file is not detected, and cover file is moved
-        cover_file = os.path.join('test', values['author'][0], 'The camicdemo (4)', 'cover.jpg').replace('\\','/')
-        not_cover_file = os.path.join('test', values['author'][0], 'The camicdemo (4)', 'no_cover.jpg').replace('\\','/')
+        cover_file = os.path.join('test', values['author'][0], 'The camicdemo (4)', 'cover.jpg').replace('\\', '/')
+        not_cover_file = os.path.join('test', values['author'][0], 'The camicdemo (4)', 'no_cover.jpg').replace('\\', '/')
 
         # file operation
         fs.move(cover_file, not_cover_file)
+        self.check_element_on_page((By.ID, "edit_book")).click()
         self.edit_book(content={'book_title': u'No Cover'}, detail_v=True)
         self.wait_page_has_loaded()
         self.check_element_on_page((By.ID, 'flash_success'))
         title = self.check_element_on_page((By.ID, "book_title"))
         self.assertEqual('No Cover', title.get_attribute('value'))
-        cover_file = os.path.join('test', values['author'][0], 'No Cover (4)', 'cover.jpg').replace('\\','/')
-        not_cover_file = os.path.join('test', values['author'][0], 'No Cover (4)', 'no_cover.jpg').replace('\\','/')
+        cover_file = os.path.join('test', values['author'][0], 'No Cover (4)', 'cover.jpg').replace('\\', '/')
+        not_cover_file = os.path.join('test', values['author'][0], 'No Cover (4)', 'no_cover.jpg').replace('\\', '/')
 
         fs.move(not_cover_file, cover_file)
         fs.close()
@@ -250,7 +249,6 @@ class TestEditBooksOnGdrive(unittest.TestCase, ui_class):
         self.fill_basic_config({"config_unicode_filename": 0})
         self.check_element_on_page((By.ID, 'flash_success'))
 
-
     # goto Book 2
     # Change Author with unicode chars
     # save book, go to show books page
@@ -259,7 +257,7 @@ class TestEditBooksOnGdrive(unittest.TestCase, ui_class):
     # save book, stay on page
     # check Author correct, check folder name correct, old folder deleted (last book of author)
     # edit Author of book 7, book 2 and 7 have same author now
-    # check authorfolder has 2 subfolders
+    # check author folder has 2 sub folders
     # change author of book 2
     # save book, stay on page
     # check Author correct, check folder name correct, old folder still existing (not last book of author)
@@ -279,13 +277,13 @@ class TestEditBooksOnGdrive(unittest.TestCase, ui_class):
     # check author correct (what is correct)???
     # add files to folder of author
     # change author of book,
-    # check folder moves completly with all files
+    # check folder moves completely with all files
     # remove folder permissions
     # change author of book
-    # error should occour
+    # error should occur
     # remove folder of author
     # change author of book
-    # error should occour
+    # error should occur
     # Test Capital letters and lowercase characters
     def test_edit_author(self):
         self.fill_basic_config({"config_unicode_filename": 1})
@@ -294,43 +292,43 @@ class TestEditBooksOnGdrive(unittest.TestCase, ui_class):
         self.get_book_details(8)
         self.check_element_on_page((By.ID, "edit_book")).click()
         self.wait_page_has_loaded()
-        self.edit_book(content={'bookAuthor':u'O0ü 执'})
-        self.wait_page_has_loaded() # time.sleep(WAIT_GDRIVE)
+        self.edit_book(content={'bookAuthor': u'O0ü 执'})
+        self.wait_page_has_loaded()
         values = self.get_book_details()
         self.assertEqual(u'O0ü 执', values['author'][0])
-        new_book_path = os.path.join('test', 'O0u Zhi', 'book8 (8)').replace('\\','/')
+        new_book_path = os.path.join('test', 'O0u Zhi', 'book8 (8)').replace('\\', '/')
         gdrive_path = check_path_gdrive(fs, new_book_path)
         self.assertTrue(gdrive_path)
-        old_book_path = os.path.join('test', 'Leo Baskerville', 'book8 (8)').replace('\\','/')
+        old_book_path = os.path.join('test', 'Leo Baskerville', 'book8 (8)').replace('\\', '/')
         gdrive_path = check_path_gdrive(fs, old_book_path)
         self.assertFalse(gdrive_path)
 
         self.check_element_on_page((By.ID, "edit_book")).click()
-        self.edit_book(content={'bookAuthor':u' O0ü name '}, detail_v=True)
-        self.wait_page_has_loaded() #time.sleep(WAIT_GDRIVE)
+        self.edit_book(content={'bookAuthor': ' O0ü name '}, detail_v=True)
+        self.wait_page_has_loaded()
         self.check_element_on_page((By.ID, 'flash_success'))
         author = self.check_element_on_page((By.ID, "bookAuthor"))
         # calibre strips spaces in the end
         self.assertEqual(u'O0ü name', author.get_attribute('value'))
         # self.assertTrue(os.path.isdir(os.path.join(TEST_DB, 'O0u name', 'book8 (8)')))
-        new_book_path = os.path.join('test', 'O0u name', 'book8 (8)').replace('\\','/')
+        new_book_path = os.path.join('test', 'O0u name', 'book8 (8)').replace('\\', '/')
         gdrive_path = check_path_gdrive(fs, new_book_path)
         self.assertTrue(gdrive_path)
 
-        self.edit_book(content={'bookAuthor':''})
-        self.wait_page_has_loaded() #time.sleep(WAIT_GDRIVE)
+        self.edit_book(content={'bookAuthor': ''})
+        self.wait_page_has_loaded()
         values = self.get_book_details()
         # os.path.join(TEST_DB, 'Unknown', 'book8 (8)')
         self.assertEqual('Unknown', values['author'][0])
         # self.assertTrue(os.path.isdir(os.path.join(TEST_DB, values['author'][0], 'book8 (8)')))
-        new_book_path = os.path.join('test', values['author'][0], 'book8 (8)').replace('\\','/')
+        new_book_path = os.path.join('test', values['author'][0], 'book8 (8)').replace('\\', '/')
         gdrive_path = check_path_gdrive(fs, new_book_path)
         self.assertTrue(gdrive_path)
 
         self.check_element_on_page((By.ID, "edit_book")).click()
         # Check authorsort
-        self.edit_book(content={'bookAuthor':'Marco, Lulu de'})
-        self.wait_page_has_loaded() #time.sleep(WAIT_GDRIVE)
+        self.edit_book(content={'bookAuthor': 'Marco, Lulu de'})
+        self.wait_page_has_loaded()
         values = self.get_book_details()
         # os.path.join(TEST_DB, values['author'][0], 'book8 (8)')
         self.assertEqual(values['author'][0], 'Marco, Lulu de')
@@ -340,35 +338,35 @@ class TestEditBooksOnGdrive(unittest.TestCase, ui_class):
         self.check_element_on_page((By.ID, "edit_book")).click()
 
         self.edit_book(content={'bookAuthor': 'Sigurd Lindgren'}, detail_v=True)
-        self.wait_page_has_loaded() #time.sleep(WAIT_GDRIVE)
+        self.wait_page_has_loaded()
         self.check_element_on_page((By.ID, 'flash_success'))
         author = self.check_element_on_page((By.ID, "bookAuthor")).get_attribute('value')
         self.assertEqual(u'Sigurd Lindgren', author)
-        new_book_path = os.path.join('test', author, 'book8 (8)').replace('\\','/')
+        new_book_path = os.path.join('test', author, 'book8 (8)').replace('\\', '/')
         gdrive_path = check_path_gdrive(fs, new_book_path)
         self.assertTrue(gdrive_path)
 
         # self.assertTrue(os.path.isdir(os.path.join(TEST_DB, author, 'book8 (8)')))
         self.edit_book(content={'bookAuthor': 'Sigurd Lindgren&Leo Baskerville'}, detail_v=True)
-        self.wait_page_has_loaded() #time.sleep(WAIT_GDRIVE)
+        self.wait_page_has_loaded()
         self.check_element_on_page((By.ID, 'flash_success'))
-        new_book_path = os.path.join('test',  'Sigurd Lindgren', 'book8 (8)').replace('\\','/')
+        new_book_path = os.path.join('test',  'Sigurd Lindgren', 'book8 (8)').replace('\\', '/')
         gdrive_path = check_path_gdrive(fs, new_book_path)
         self.assertTrue(gdrive_path)
-        old_book_path = os.path.join('test', 'Leo Baskerville', 'book8 (8)').replace('\\','/')
+        old_book_path = os.path.join('test', 'Leo Baskerville', 'book8 (8)').replace('\\', '/')
         gdrive_path = check_path_gdrive(fs, old_book_path)
         self.assertFalse(gdrive_path)
 
         author = self.check_element_on_page((By.ID, "bookAuthor"))
         self.assertEqual(u'Sigurd Lindgren & Leo Baskerville', author.get_attribute('value'))
         self.edit_book(content={'bookAuthor': ' Leo Baskerville & Sigurd Lindgren '}, detail_v=True)
-        self.wait_page_has_loaded() #time.sleep(WAIT_GDRIVE)
+        self.wait_page_has_loaded()
         self.check_element_on_page((By.ID, 'flash_success'))
 
-        new_book_path = os.path.join('test',  'Leo Baskerville', 'book8 (8)').replace('\\','/')
+        new_book_path = os.path.join('test',  'Leo Baskerville', 'book8 (8)').replace('\\', '/')
         gdrive_path = check_path_gdrive(fs, new_book_path)
         self.assertTrue(gdrive_path)
-        old_book_path = os.path.join('test', 'Sigurd Lindgren', 'book8 (8)').replace('\\','/')
+        old_book_path = os.path.join('test', 'Sigurd Lindgren', 'book8 (8)').replace('\\', '/')
         gdrive_path = check_path_gdrive(fs, old_book_path)
         self.assertFalse(gdrive_path)
 
@@ -380,56 +378,57 @@ class TestEditBooksOnGdrive(unittest.TestCase, ui_class):
         self.assertEqual(u'Pipo, Pipe', author.get_attribute('value'))
         self.goto_page('nav_author')
 
-        file_path = os.path.join('test', 'Pipo, Pipe', 'book8 (8)').replace('\\','/')
-        not_file_path = os.path.join('test', 'Pipo, Pipe', 'nofolder').replace('\\','/')
+        file_path = os.path.join('test', 'Pipo, Pipe', 'book8 (8)').replace('\\', '/')
+        not_file_path = os.path.join('test', 'Pipo, Pipe', 'nofolder').replace('\\', '/')
         fs.movedir(file_path, not_file_path, create=True)
         self.get_book_details(8)
         self.check_element_on_page((By.ID, "edit_book")).click()
         self.edit_book(content={'bookAuthor': u'Not found'})
-        self.wait_page_has_loaded() #time.sleep(WAIT_GDRIVE)
+        time.sleep(4)
+        self.wait_page_has_loaded()
         self.check_element_on_page((By.ID, 'flash_danger'))
-        author = self.check_element_on_page((By.ID, "bookAuthor"))
-        self.assertEqual('Pipo, Pipe', author.get_attribute('value'))
+        values = self.get_book_details(-1)
+        self.assertEqual(values['author'][0], 'Pipo, Pipe')
         fs.movedir(not_file_path, file_path, create=True)
         fs.close()
+        self.check_element_on_page((By.ID, "edit_book")).click()
         self.edit_book(content={'bookAuthor': 'Leo Baskerville'}, detail_v=True)
-        time.sleep(WAIT_GDRIVE)
+        self.wait_page_has_loaded()
         self.check_element_on_page((By.ID, 'flash_success'))
         self.fill_basic_config({"config_unicode_filename": 0})
         self.check_element_on_page((By.ID, 'flash_success'))
-
 
     # series with unicode spaces, ,|,
     def test_edit_series(self):
         self.get_book_details(9)
         self.check_element_on_page((By.ID, "edit_book")).click()
         self.wait_page_has_loaded()
-        self.edit_book(content={'series':u'O0ü 执'})
+        self.edit_book(content={'series': 'O0ü 执'})
         self.wait_page_has_loaded()
         values = self.get_book_details()
         self.assertEqual(u'O0ü 执', values['series'])
         self.check_element_on_page((By.ID, "edit_book")).click()
         self.wait_page_has_loaded()
-        self.edit_book(content={'series':u'Alf|alfa, Kuko'})
+        self.edit_book(content={'series': 'Alf|alfa, Kuko'})
         self.wait_page_has_loaded()
         values = self.get_book_details()
         self.assertEqual(u'Alf|alfa, Kuko', values['series'])
         self.goto_page('nav_serie')
         self.wait_page_has_loaded()
         list_element = self.get_list_books_displayed()
-        self.assertEqual(list_element[0]['title'], u'Alf|alfa, Kuko')
+        self.assertEqual(list_element[0]['title'], 'Alf|alfa, Kuko')
 
         self.get_book_details(9)
         self.check_element_on_page((By.ID, "edit_book")).click()
         self.wait_page_has_loaded()
-        self.edit_book(content={'series':''})
+        self.edit_book(content={'series': ''})
         self.wait_page_has_loaded()
         values = self.get_book_details()
         self.assertFalse('series' in values)
 
         self.check_element_on_page((By.ID, "edit_book")).click()
         self.wait_page_has_loaded()
-        self.edit_book(content={'series':'Loko'}, detail_v=True)
+        self.edit_book(content={'series': 'Loko'}, detail_v=True)
         self.wait_page_has_loaded()
         self.check_element_on_page((By.ID, 'flash_success'))
         series = self.check_element_on_page((By.ID, "series"))
@@ -438,19 +437,19 @@ class TestEditBooksOnGdrive(unittest.TestCase, ui_class):
         self.get_book_details(4)
         self.check_element_on_page((By.ID, "edit_book")).click()
         self.wait_page_has_loaded()
-        self.edit_book(content={'series':u'loko'})
+        self.edit_book(content={'series': 'loko'})
         self.wait_page_has_loaded()
         values = self.get_book_details()
         self.assertEqual(u'loko', values['series'])
         self.goto_page('nav_serie')
         self.wait_page_has_loaded()
         list_element = self.get_list_books_displayed()
-        self.assertEqual(list_element[1]['title'], u'loko')
+        self.assertEqual(list_element[1]['title'], 'loko')
 
         self.get_book_details(4)
         self.check_element_on_page((By.ID, "edit_book")).click()
         self.wait_page_has_loaded()
-        self.edit_book(content={'series':u'Loko', 'series_index':'1.0'})
+        self.edit_book(content={'series': 'Loko', 'series_index': '1.0'})
         self.wait_page_has_loaded()
         values = self.get_book_details()
         self.assertEqual(u'Loko', values['series'])
@@ -471,38 +470,38 @@ class TestEditBooksOnGdrive(unittest.TestCase, ui_class):
         self.get_book_details(12)
         self.check_element_on_page((By.ID, "edit_book")).click()
         self.wait_page_has_loaded()
-        self.edit_book(content={'tags':u'O0ü 执'})
+        self.edit_book(content={'tags': 'O0ü 执'})
         self.wait_page_has_loaded()
         values = self.get_book_details()
         self.assertEqual(len(values['tag']), 1)
         self.assertEqual(u'O0ü 执', values['tag'][0])
         self.check_element_on_page((By.ID, "edit_book")).click()
         self.wait_page_has_loaded()
-        self.edit_book(content={'tags':u'Alf|alfa'})
+        self.edit_book(content={'tags': 'Alf|alfa'})
         self.wait_page_has_loaded()
         values = self.get_book_details()
         self.assertEqual(u'Alf|alfa', values['tag'][0])
         list_element = self.goto_page('nav_cat')
         self.wait_page_has_loaded()
-        self.assertEqual(list_element[0].text, u'Alf|alfa')
+        self.assertEqual(list_element[0].text, 'Alf|alfa')
 
         self.get_book_details(12)
         self.check_element_on_page((By.ID, "edit_book")).click()
         self.wait_page_has_loaded()
-        self.edit_book(content={'tags':''})
+        self.edit_book(content={'tags': ''})
         self.wait_page_has_loaded()
         values = self.get_book_details()
         self.assertEqual(len(values['tag']), 0)
 
         self.check_element_on_page((By.ID, "edit_book")).click()
         self.wait_page_has_loaded()
-        self.edit_book(content={'tags':u' Gênot & Peter '}, detail_v=True)
+        self.edit_book(content={'tags': ' Gênot & Peter '}, detail_v=True)
         self.wait_page_has_loaded()
         self.check_element_on_page((By.ID, 'flash_success'))
         tags = self.check_element_on_page((By.ID, "tags"))
         self.assertEqual(u'Gênot & Peter', tags.get_attribute('value'))
 
-        self.edit_book(content={'tags':u' Gênot , Peter '})
+        self.edit_book(content={'tags': ' Gênot , Peter '})
         self.wait_page_has_loaded()
         values = self.get_book_details()
         self.assertEqual(u'Gênot', values['tag'][0])
@@ -510,88 +509,86 @@ class TestEditBooksOnGdrive(unittest.TestCase, ui_class):
 
         self.check_element_on_page((By.ID, "edit_book")).click()
         self.wait_page_has_loaded()
-        self.edit_book(content={'tags':u'gênot'})
+        self.edit_book(content={'tags': 'gênot'})
         self.wait_page_has_loaded()
         values = self.get_book_details()
         self.assertEqual(u'gênot', values['tag'][0])
         self.get_book_details(12)
         self.check_element_on_page((By.ID, "edit_book")).click()
         self.wait_page_has_loaded()
-        self.edit_book(content={'tags':'Gênot'})
+        self.edit_book(content={'tags': 'Gênot'})
         self.wait_page_has_loaded()
-
 
     def test_edit_publisher(self):
         self.get_book_details(7)
         self.check_element_on_page((By.ID, "edit_book")).click()
         self.wait_page_has_loaded()
-        self.edit_book(content={'publisher':u'O0ü 执'})
+        self.edit_book(content={'publisher': 'O0ü 执'})
         self.wait_page_has_loaded()
         values = self.get_book_details()
         self.assertEqual(len(values['publisher']), 1)
         self.assertEqual(u'O0ü 执', values['publisher'][0])
         self.check_element_on_page((By.ID, "edit_book")).click()
         self.wait_page_has_loaded()
-        self.edit_book(content={'publisher':u'Beta|,Bet'})
+        self.edit_book(content={'publisher': 'Beta|,Bet'})
         self.wait_page_has_loaded()
         values = self.get_book_details()
         self.assertEqual(u'Beta|,Bet', values['publisher'][0])
         list_element = self.goto_page('nav_publisher')
         self.wait_page_has_loaded()
-        self.assertEqual(list_element[0].text, u'Beta|,Bet', "Publisher Sorted according to name, B before R")
+        self.assertEqual(list_element[0].text,  'Beta|,Bet', "Publisher Sorted according to name, B before R")
 
         self.get_book_details(7)
         self.check_element_on_page((By.ID, "edit_book")).click()
         self.wait_page_has_loaded()
-        self.edit_book(content={'publisher':''})
+        self.edit_book(content={'publisher': ''})
         self.wait_page_has_loaded()
         values = self.get_book_details()
         self.assertEqual(len(values['publisher']), 0)
 
         self.check_element_on_page((By.ID, "edit_book")).click()
         self.wait_page_has_loaded()
-        self.edit_book(content={'publisher':u' Gênot & Peter '}, detail_v=True)
+        self.edit_book(content={'publisher': ' Gênot & Peter '}, detail_v=True)
         self.wait_page_has_loaded()
         self.check_element_on_page((By.ID, 'flash_success'))
         publisher = self.check_element_on_page((By.ID, "publisher"))
         self.assertEqual(u'Gênot & Peter', publisher.get_attribute('value'))
 
-        self.edit_book(content={'publisher':u' Gênot , Peter '})
+        self.edit_book(content={'publisher': ' Gênot , Peter '})
         self.wait_page_has_loaded()
         values = self.get_book_details()
         self.assertEqual(u'Gênot , Peter', values['publisher'][0])
 
         self.check_element_on_page((By.ID, "edit_book")).click()
         self.wait_page_has_loaded()
-        self.edit_book(content={'publisher':u'gênot'})
+        self.edit_book(content={'publisher': 'gênot'})
         self.wait_page_has_loaded()
         values = self.get_book_details()
         self.assertEqual(u'gênot', values['publisher'][0])
         self.check_element_on_page((By.ID, "edit_book")).click()
         self.wait_page_has_loaded()
-        self.edit_book(content={'publisher':u'Gênot'})
+        self.edit_book(content={'publisher': 'Gênot'})
         self.wait_page_has_loaded()
         values = self.get_book_details()
         self.assertEqual(u'Gênot', values['publisher'][0])
-
 
     # choose language not part ob lib
     def test_edit_language(self):
         self.get_book_details(3)
         self.check_element_on_page((By.ID, "edit_book")).click()
-        self.edit_book(content={'languages':u'english'})
+        self.edit_book(content={'languages': 'english'})
         values = self.get_book_details()
         self.assertEqual(len(values['languages']), 1)
         self.assertEqual('English', values['languages'][0])
         self.check_element_on_page((By.ID, "edit_book")).click()
-        self.edit_book(content={'languages':u'German'})
+        self.edit_book(content={'languages': 'German'})
         values = self.get_book_details()
         self.assertEqual('German', values['languages'][0])
         list_element = self.goto_page('nav_lang')
-        self.assertEqual(list_element[1].text, u'German')
+        self.assertEqual(list_element[1].text,  'German')
         self.get_book_details(3)
         self.check_element_on_page((By.ID, "edit_book")).click()
-        self.edit_book(content={'languages':'German & English'}, detail_v=True)
+        self.edit_book(content={'languages': 'German & English'}, detail_v=True)
         time.sleep(WAIT_GDRIVE)
         self.check_element_on_page((By.ID, 'flash_danger'))
         self.check_element_on_page((By.ID, "edit_book")).click()
@@ -602,7 +599,6 @@ class TestEditBooksOnGdrive(unittest.TestCase, ui_class):
         self.assertEqual('German', values['languages'][1])
         self.assertEqual('English', values['languages'][0])
 
-
     # change rating, delete rating
     # check if book with rating of 4 stars appears in list of hot books
     def test_edit_rating(self):
@@ -611,7 +607,7 @@ class TestEditBooksOnGdrive(unittest.TestCase, ui_class):
         self.assertEqual(1, len(books[1]))
         self.get_book_details(3)
         self.check_element_on_page((By.ID, "edit_book")).click()
-        self.edit_book(content={'rating':4})
+        self.edit_book(content={'rating': 4})
         values = self.get_book_details()
         self.assertEqual(4, values['rating'])
         self.goto_page('nav_rated')
@@ -620,7 +616,7 @@ class TestEditBooksOnGdrive(unittest.TestCase, ui_class):
         self.assertEqual(1, len(books[1]))
         self.get_book_details(3)
         self.check_element_on_page((By.ID, "edit_book")).click()
-        self.edit_book(content={'rating':5})
+        self.edit_book(content={'rating': 5})
         values = self.get_book_details()
         self.assertEqual(5, values['rating'])
         self.goto_page('nav_rated')
@@ -629,7 +625,7 @@ class TestEditBooksOnGdrive(unittest.TestCase, ui_class):
         self.assertEqual(2, len(books[1]))
         self.get_book_details(3)
         self.check_element_on_page((By.ID, "edit_book")).click()
-        self.edit_book(content={'rating':0})
+        self.edit_book(content={'rating': 0})
         values = self.get_book_details()
         self.assertEqual(0, values['rating'])
 
@@ -637,13 +633,13 @@ class TestEditBooksOnGdrive(unittest.TestCase, ui_class):
     def test_edit_comments(self):
         self.get_book_details(12)
         self.check_element_on_page((By.ID, "edit_book")).click()
-        self.edit_book(content={'description':u'bogomirä 人物'})
+        self.edit_book(content={'description': 'bogomirä 人物'})
         self.wait_page_has_loaded()
         values = self.get_book_details()
         self.assertEqual(u'bogomirä 人物', values['comment'])
         self.check_element_on_page((By.ID, "edit_book")).click()
         self.wait_page_has_loaded()
-        self.edit_book(content={'description':''})
+        self.edit_book(content={'description': ''})
         self.wait_page_has_loaded()
         values = self.get_book_details()
         self.assertEqual('', values['comment'])
@@ -653,7 +649,7 @@ class TestEditBooksOnGdrive(unittest.TestCase, ui_class):
         self.assertEqual(len(self.adv_search({u'custom_column_3': u'Yes'})), 0)
         self.get_book_details(5)
         self.check_element_on_page((By.ID, "edit_book")).click()
-        self.edit_book(custom_content={u'Custom Bool 1 Ä':u'Yes'})
+        self.edit_book(custom_content={u'Custom Bool 1 Ä': 'Yes'})
         vals = self.get_book_details(5)
         self.assertEqual(u'ok', vals['cust_columns'][0]['value'])
         self.assertEqual(len(self.adv_search({u'custom_column_3': u'No'})), 0)
@@ -664,12 +660,11 @@ class TestEditBooksOnGdrive(unittest.TestCase, ui_class):
         vals = self.get_book_details(5)
         self.assertEqual(0, len(vals['cust_columns']))
 
-
     def test_edit_custom_rating(self):
         self.assertEqual(len(self.adv_search({u'custom_column_1': u'3'})), 0)
         self.get_book_details(5)
         self.check_element_on_page((By.ID, "edit_book")).click()
-        self.edit_book(custom_content={u'Custom Rating 人物':'3'})
+        self.edit_book(custom_content={u'Custom Rating 人物': '3'})
         vals = self.get_book_details(5)
         self.assertEqual('3', vals['cust_columns'][0]['value'])
         self.check_element_on_page((By.ID, "edit_book")).click()
@@ -684,12 +679,11 @@ class TestEditBooksOnGdrive(unittest.TestCase, ui_class):
         vals = self.get_book_details(5)
         self.assertEqual(0, len(vals['cust_columns']))
 
-
     def test_edit_custom_single_select(self):
         self.assertEqual(len(self.adv_search({u'custom_column_9': u'人物'})), 0)
         self.get_book_details(5)
         self.check_element_on_page((By.ID, "edit_book")).click()
-        self.edit_book(custom_content={u'Custom 人物 Enum':u'人物'})
+        self.edit_book(custom_content={u'Custom 人物 Enum': '人物'})
         vals = self.get_book_details(5)
         self.assertEqual(u'人物', vals['cust_columns'][0]['value'])
         self.assertEqual(len(self.adv_search({u'custom_column_9': u'Alfa'})), 0)
@@ -733,7 +727,6 @@ class TestEditBooksOnGdrive(unittest.TestCase, ui_class):
         self.edit_book(custom_content={r'Custom categories\|, 人物': ''})
         vals = self.get_book_details(5)
         self.assertEqual(0, len(vals['cust_columns']))
-
 
     # change comments, add comments, delete comments
     def test_edit_custom_float(self):
@@ -820,7 +813,7 @@ class TestEditBooksOnGdrive(unittest.TestCase, ui_class):
         time.sleep(2)
 
     def test_upload_book_lit(self):
-        self.fill_basic_config({'config_uploading':1})
+        self.fill_basic_config({'config_uploading': 1})
         time.sleep(3)
         self.assertTrue(self.check_element_on_page((By.ID, 'flash_success')))
         self.edit_user('admin', {'upload_role': 1})
@@ -837,7 +830,8 @@ class TestEditBooksOnGdrive(unittest.TestCase, ui_class):
         r = requests.session()
         login_page = r.get('http://127.0.0.1:8083/login')
         token = re.search('<input type="hidden" name="csrf_token" value="(.*)">', login_page.text)
-        payload = {'username': 'admin', 'password': 'admin123', 'submit':"", 'next':"/", "remember_me":"on", "csrf_token": token.group(1)}
+        payload = {'username': 'admin', 'password': 'admin123', 'submit': "", 'next': "/", "remember_me": "on",
+                   "csrf_token": token.group(1)}
         r.post('http://127.0.0.1:8083/login', data=payload)
         resp = r.get('http://127.0.0.1:8083' + details['cover'])
         self.assertEqual('19501', resp.headers['Content-Length'])
@@ -845,7 +839,7 @@ class TestEditBooksOnGdrive(unittest.TestCase, ui_class):
         r.close()
 
     def test_upload_book_epub(self):
-        self.fill_basic_config({'config_uploading':1})
+        self.fill_basic_config({'config_uploading': 1})
         time.sleep(3)
         self.assertTrue(self.check_element_on_page((By.ID, 'flash_success')))
         self.edit_user('admin', {'upload_role': 1})
@@ -862,7 +856,8 @@ class TestEditBooksOnGdrive(unittest.TestCase, ui_class):
         r = requests.session()
         login_page = r.get('http://127.0.0.1:8083/login')
         token = re.search('<input type="hidden" name="csrf_token" value="(.*)">', login_page.text)
-        payload = {'username': 'admin', 'password': 'admin123', 'submit':"", 'next':"/", "remember_me":"on", "csrf_token": token.group(1)}
+        payload = {'username': 'admin', 'password': 'admin123', 'submit': "",
+                   'next': "/", "remember_me": "on", "csrf_token": token.group(1)}
         r.post('http://127.0.0.1:8083/login', data=payload)
         resp = r.get('http://127.0.0.1:8083' + details['cover'])
         self.assertEqual('8936', resp.headers['Content-Length'])
@@ -883,12 +878,13 @@ class TestEditBooksOnGdrive(unittest.TestCase, ui_class):
         r = requests.session()
         login_page = r.get('http://127.0.0.1:8083/login')
         token = re.search('<input type="hidden" name="csrf_token" value="(.*)">', login_page.text)
-        payload = {'username': 'admin', 'password': 'admin123', 'submit':"", 'next':"/", "remember_me":"on", "csrf_token": token.group(1)}
+        payload = {'username': 'admin', 'password': 'admin123', 'submit': "",
+                   'next': "/", "remember_me": "on", "csrf_token": token.group(1)}
         r.post('http://127.0.0.1:8083/login', data=payload)
         resp = r.get(download_link)
         self.assertEqual(resp.headers['Content-Type'], 'application/epub+zip')
         self.assertEqual(resp.status_code, 200)
-        self.edit_user('admin', {'download_role':0})
+        self.edit_user('admin', {'download_role': 0})
         resp = r.get(download_link)
         self.assertEqual(resp.status_code, 403)
         book = self.get_book_details(5)
@@ -896,7 +892,7 @@ class TestEditBooksOnGdrive(unittest.TestCase, ui_class):
         self.edit_user('admin', {'download_role': 1})
         r.close()
         list_element = self.goto_page('nav_download')
-        self.assertEqual(len(list_element),1)
+        self.assertEqual(len(list_element), 1)
         list_element[0].click()
         number_books = self.get_books_displayed()
         self.assertEqual(1, len(number_books[1]))
@@ -915,28 +911,37 @@ class TestEditBooksOnGdrive(unittest.TestCase, ui_class):
         revoke = self.check_element_on_page((By.ID, "watch_revoke"))
         self.assertTrue(revoke)
         revoke.click()
-        self.wait_page_has_loaded() # time.sleep(5)
+        self.wait_page_has_loaded()
+        time.sleep(5)
         button = self.check_element_on_page((By.ID, "enable_gdrive_watch"))
         self.assertTrue(button)
         button.click()
-        self.wait_page_has_loaded() # time.sleep(5)
-        # change book series content
-        self.edit_book(5, content={'series':'test'})
         self.wait_page_has_loaded()
         time.sleep(5)
-        book = self.get_book_details(5)
+        # change book series content
+        self.edit_book(5, content={'series': 'test'})
+        self.wait_page_has_loaded()
+        time.sleep(10)
+        book = self.get_book_details(-1)
         self.assertEqual(book['series'], 'test')
         # upload new metadata.db from outside
         fs = connect_gdrive("test")
+        # upload unchanged database from hdd -> watch metadata should recocnize this and replace current
+        # used metadata.db
         metadata = open(os.path.join(base_path, 'Calibre_db', 'metadata.db'), 'rb')
-        fs.upload(os.path.join('test', 'metadata.db').replace('\\','/'), metadata)
+        fs.upload(os.path.join('test', 'metadata.db').replace('\\', '/'), metadata)
         metadata.close()
-        # wait a bit
-        time.sleep(5)
-        self.wait_page_has_loaded()
-        time.sleep(10)
-        # check book series content changed back
-        book = self.get_book_details(5)
+        loop = 0
+        while loop < 3:
+            loop += 1
+            # wait a bit
+            time.sleep(5)
+            self.wait_page_has_loaded()
+            time.sleep(10)
+            # check book series content changed back
+            book = self.get_book_details(5)
+            if 'series' not in book:
+                break
         self.assertNotIn('series', book)
         self.goto_page("db_config")
         self.wait_page_has_loaded()
@@ -948,4 +953,3 @@ class TestEditBooksOnGdrive(unittest.TestCase, ui_class):
         revoke.click()
         self.wait_page_has_loaded()
         time.sleep(5)
-
