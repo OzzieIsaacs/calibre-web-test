@@ -540,7 +540,7 @@ class TestEditAuthorsGdrive(TestCase, ui_class):
         self.goto_page('nav_new')
         upload = self.check_element_on_page((By.ID, 'btn-upload'))
         upload.send_keys(epub_file)
-        time.sleep(3)
+        time.sleep(10)
         self.check_element_on_page((By.ID, 'edit_cancel')).click()
         time.sleep(WAIT_GDRIVE)
         details = self.get_book_details()
