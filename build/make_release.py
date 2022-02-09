@@ -205,6 +205,8 @@ def create_executable():
         print('* More than one google_api_python directory found exiting')
         sys.exit(1)
     os.rename('__init__.py', 'root.py')
+    shutil.move(os.path.join(FILEPATH, 'requirements.txt'), 'requirements.txt')
+    shutil.move(os.path.join(FILEPATH, 'optional-requirements.txt'), 'optional-requirements.txt')
     command = (py_inst_path + " root.py -i cps/static/favicon.ico "
                               "-n calibreweb "
                               "--add-data cps/static" + sep + "cps/static "
@@ -258,6 +260,8 @@ def prepare_files_pyinstaller():
 def revert_files_pyinstaller(workdir):
     print('* Moving folder to root folder')
     shutil.move('./dist/calibreweb/',os.path.join(FILEPATH))
+    shutil.move('requirements.txt', os.path.join(FILEPATH, 'requirements.txt'))
+    shutil.move('optional-requirements.txt', os.path.join(FILEPATH, 'optional-requirements.txt'))
     os.chdir(FILEPATH)
     os.rename("calibreweb", "executable")
     shutil.rmtree('exe_temp', ignore_errors=True)
