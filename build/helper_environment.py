@@ -8,6 +8,7 @@ import os
 import sys
 import pkg_resources
 import importlib
+import json
 
 class Environment:
     def __init__(self):
@@ -82,6 +83,13 @@ class Environment:
     def get_Environment(self):
         return self.result
 
+    def save_environment(self, filename):
+        output = dict()
+        for line in self.result:
+            output[line[0].lower()] = line[1]
+        with open(filename, "w") as f:
+            f.write(json.dumps(output))
+
 
 environment = Environment()
 
@@ -114,11 +122,9 @@ def add_dependency(name, testclass_name):
 
     for indx, element in enumerate(element_version):
         with process_open([VENV_PYTHON, "-m", "pip", "install", element], (0, 4)) as r:
-            # if os.name == 'nt':
             while r.poll() == None:
-                print(r.stdout.readline().strip("\n"))
-            # else:
-            #    r.wait()
+                out = r.stdout.readline()
+                out != "" and print(out.strip("\n"))
         if element.lower().startswith('git'):
             element_version[indx] = element[element.rfind('#egg=')+5:]
 
@@ -134,6 +140,7 @@ def remove_dependency(names):
         with process_open([VENV_PYTHON, "-m", "pip", "uninstall", "-y", name], (0, 5)) as q:
             if os.name == 'nt':
                 while q.poll() == None:
-                    q.stdout.readline()
+                    out = q.stdout.readline()
+                    out != "" and print(out.strip("\n"))
             else:
                 q.wait()
