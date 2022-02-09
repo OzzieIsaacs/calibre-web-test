@@ -1563,7 +1563,7 @@ class ui_class():
             for va in vals:
                 try:
                     go = va.getchildren()
-                    if len(go) == 6:
+                    if len(go) == 7:
                         val.append({'user':' '.join(go[0].itertext()),
                                     'task': ''.join(go[1].itertext()),
                                     'result': ''.join(go[2].itertext()),

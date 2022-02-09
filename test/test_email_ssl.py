@@ -159,12 +159,12 @@ class TestSSL(unittest.TestCase, ui_class):
         # set limit to 601 mb
         self.setup_server(False, {'mail_size': '601'})
         self.assertFalse(self.check_element_on_page((By.ID, "flash_success")))
-        # set limit to 1 mb
+        # set limit to 2 mb
         self.setup_server(False, {'mail_size': '2'})
         self.assertTrue(self.check_element_on_page((By.ID, "flash_success")))
 
         # try to send
-        details = self.get_book_details(int(book_details['cover'].split('/')[-1].split('?')[0]))
+        details = self.get_book_details(int(book_details['id']))
         # check what happens
         self.assertFalse(details['kindlebtn'])
 

@@ -219,7 +219,7 @@ class TestReader(unittest.TestCase, ui_class):
         self.assertEqual(duration, duration_item.text)
         self.driver.close()
         self.driver.switch_to.window(self.current_handle)
-        self.delete_book(int(details['cover'].split('/')[-1].split('?')[0]))
+        self.delete_book(int(details['id']))
 
 
     def test_sound_listener(self):
