@@ -20,12 +20,18 @@ from selenium.webdriver.support import expected_conditions as EC
 class TestUploadPDF(TestCase, ui_class):
     p = None
     driver = None
-    #dependencys = ['lxml']
 
     @classmethod
     def setUpClass(cls):
-        #add_dependency(cls.dependencys, cls.__name__)
+        '''with pikepdf.open(os.path.join(base_path, 'files', 'book1.pdf'), allow_overwriting_input=True) as pdf:
+            with pdf.open_metadata() as meta:
+                print(meta)
 
+        with pikepdf.open("/home/ozzie/Downloads/1.pdf", allow_overwriting_input=True) as pdf:
+            pdf.docinfo.Keywords = "123434\r\n32434"
+            #with pdf.open_metadata() as meta:
+            #    print(meta["pdf:Authors"])
+            pdf.save()'''
         try:
             startup(cls, cls.py_version, {'config_calibre_dir': TEST_DB, 'config_uploading': 1})
             time.sleep(3)
@@ -40,7 +46,6 @@ class TestUploadPDF(TestCase, ui_class):
             os.remove(os.path.join(base_path, 'files', 'book1.pdf'))
         except FileNotFoundError:
             pass
-        #remove_dependency(cls.dependencys)
         cls.driver.get("http://127.0.0.1:8083")
         cls.stop_calibre_web()
         # close the browser window and stop calibre-web
@@ -104,6 +109,7 @@ class TestUploadPDF(TestCase, ui_class):
         pdf.output(filename)
 
         with pikepdf.open(filename, allow_overwriting_input=True) as pdf:
+            # pdf.docinfo.Keywords = "123434\r\n32434"
             with pdf.open_metadata() as meta:
                 if 'title' in book_properties:
                     meta["dc:title"] = book_properties['title']
@@ -142,6 +148,18 @@ class TestUploadPDF(TestCase, ui_class):
                                 {'title': "Tü执el",
                                  'author': ["Ma执i Mücks"],
                                  'languages' : ["German"]
+                                 }
+                                )
+        # This example gives an bytes encodes tag
+        self.check_uploaded_pdf({'title': "tit",
+                                 'author': ["No Name"],
+                                 'comment': "Holla die 执Wü",
+                                 'tag': "123434\r\n32434",
+                                 "cover": os.path.join(base_path, 'files', 'cover.jpg')},
+                                {'title': "tit",
+                                 'author': ["No Name"],
+                                 'comment' : "Holla die 执Wü",
+                                 'tag': ["123434 32434"],
                                  }
                                 )
         self.check_uploaded_pdf({'title': "tit",
