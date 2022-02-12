@@ -17,7 +17,7 @@ from selenium.webdriver.support.ui import WebDriverWait
 from selenium.webdriver.support import expected_conditions as EC
 
 
-def user_change(user):
+def user_change(user, result, index):
     r = requests.session()
     login_page = r.get('http://127.0.0.1:8083/login')
     token = re.search('<input type="hidden" name="csrf_token" value="(.*)">', login_page.text)
@@ -29,8 +29,8 @@ def user_change(user):
         parameter = int(random.uniform(2, 260))
         me_page = r.get('http://127.0.0.1:8083/me')
         token = re.search('<input type="hidden" name="csrf_token" value="(.*)">', me_page.text)
-        userload = {'name': user,
-                    'email': "",
+        user_load = {'name': user,
+                    'email': 'alfa' + re.findall("user(\d+)", user)[0] + '@email.com',
                     'password': "",
                     'locale': "en",
                     'default_language': "all",
@@ -38,14 +38,17 @@ def user_change(user):
                     }
         for bit_shift in range(1, 16):
             if (parameter >> bit_shift) & 1:
-                userload['show_'+ str(1 << bit_shift)] = "on"
+                user_load['show_'+ str(1 << bit_shift)] = "on"
 
-        resp = r.post('http://127.0.0.1:8083/me', data=userload)
-        if resp.status_code != 200:
+        resp = r.post('http://127.0.0.1:8083/me', data=user_load)
+        if resp.status_code != 200 or "flash_danger" in resp.text:
             print('Error: ' + user)
-            break
+            result[index] = False
+            return
     r.close()
     print('Finished: ' + user)
+    result[index] = True
+    return
 
 
 class TestUserLoad(TestCase, ui_class):
@@ -93,8 +96,8 @@ class TestUserLoad(TestCase, ui_class):
         for i in range(0, user_count):
             new_user_page = r.get('http://127.0.0.1:8083/admin/user/new')
             token = re.search('<input type="hidden" name="csrf_token" value="(.*)">', new_user_page.text)
-            userload = {'name': 'user' + str(i),
-                        'email': str(i) + 'alfa@email.com',
+            user_load = {'name': 'user' + str(i),
+                        'email': 'alfa' + str(i) + '@email.com',
                         'password': "1234",
                         'locale': "en",
                         'default_language': "all",
@@ -112,9 +115,15 @@ class TestUserLoad(TestCase, ui_class):
                         'edit_role': "on",
                         "csrf_token": token.group(1)
                         }
-            resp = r.post('http://127.0.0.1:8083/admin/user/new', data=userload)
+            resp = r.post('http://127.0.0.1:8083/admin/user/new', data=user_load)
             self.assertEqual(resp.status_code, 200)
         r.close()
+        threads = [None] * user_count
+        results = [None] * user_count
         for i in range(0, user_count):
-            threading.Thread(target=user_change, args=('user'+str(i),)).start()
-        time.sleep(400)
+            threads[i] = threading.Thread(target=user_change, args=('user'+str(i), results, i))
+            threads[i].start()
+        # time.sleep(400)
+        for i in range(0, user_count):
+            threads[i].join()
+            self.assertTrue(results[i])

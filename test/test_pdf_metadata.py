@@ -101,6 +101,7 @@ class TestUploadPDF(TestCase, ui_class):
         pdf.output(filename)
 
         with pikepdf.open(filename, allow_overwriting_input=True) as pdf:
+            # pdf.docinfo.Keywords = "123434\r\n32434"
             with pdf.open_metadata() as meta:
                 if 'title' in book_properties:
                     meta["dc:title"] = book_properties['title']
@@ -139,6 +140,18 @@ class TestUploadPDF(TestCase, ui_class):
                                 {'title': "Tü执el",
                                  'author': ["Ma执i Mücks"],
                                  'languages': ["German"]
+                                 }
+                                )
+        # This example gives an bytes encodes tag
+        self.check_uploaded_pdf({'title': "tit",
+                                 'author': ["No Name"],
+                                 'comment': "Holla die 执Wü",
+                                 'tag': "123434\r\n32434",
+                                 "cover": os.path.join(base_path, 'files', 'cover.jpg')},
+                                {'title': "tit",
+                                 'author': ["No Name"],
+                                 'comment' : "Holla die 执Wü",
+                                 'tag': ["123434 32434"],
                                  }
                                 )
         self.check_uploaded_pdf({'title': "tit",

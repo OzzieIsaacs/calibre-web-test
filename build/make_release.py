@@ -17,21 +17,22 @@ import configparser
 import argparse
 
 
-def change_config(targetfile, config, value):
+def change_config(target_file, config, value):
     if config == "HOME_CONFIG":
-        home_file = os.path.join(os.path.dirname(targetfile), ".HOMEDIR")
+        home_file = os.path.join(os.path.dirname(target_file), ".HOMEDIR")
         if value == 'False':
             if os.path.isfile(home_file):
                 os.remove(home_file)
         else:
             open(home_file, 'w').close()
         return
-    with codecs.open(targetfile, 'r') as fp:
+    with codecs.open(target_file, 'r') as fp:
         file = fp.read()
     replaced = re.sub("(" + config + "\s+=\s+)(.*)", r"\1" + value, file)
-    f = codecs.open(targetfile, "w")
+    f = codecs.open(target_file, "w")
     f.write(replaced)
     f.close()
+
 
 def update_requirements():
     # Update requirements in config.cfg file
@@ -106,6 +107,8 @@ def prepare_folders():
         pass
     shutil.move('cps.py', 'src/calibreweb/__init__.py')
     shutil.move('cps', 'src/calibreweb')
+    shutil.move(os.path.join(FILEPATH, 'requirements.txt'), 'src/calibreweb/requirements.txt')
+    shutil.move(os.path.join(FILEPATH, 'optional-requirements.txt'), 'src/calibreweb/optional-requirements.txt')
     print('* Moving files to "src" directory')
 
 def generate_package():
@@ -138,6 +141,9 @@ def generate_package():
     print('* Moving files back to origin')
     shutil.move('./src/calibreweb/__init__.py', './cps.py')
     shutil.move('./src/calibreweb/cps', '.')
+    shutil.move('./src/calibreweb/requirements.txt', '.')
+    shutil.move('./src/calibreweb/optional-requirements.txt', '.')
+
     print('* Deleting "src" directory')
     shutil.rmtree('src', ignore_errors=True)
     print('* Deleting "build" directory')
@@ -155,28 +161,40 @@ def create_python_environment():
         print("## Error Creating virtual environment ##")
         venv.create(VENV_PATH, system_site_packages=True, with_pip=False)
 
+    #print("* Adding wheel to virtual environment")
+    #p = process_open([VENV_PYTHON, "-m", "pip", "install", "wheel"], (0,))
+    #while p.poll() is None:
+    #    out = p.stdout.readline()
+    #    out != "" and print(out.strip("\n"))
+
     print("* Adding dependencies for executable from requirements file")
     requirements_file = os.path.join(FILEPATH, 'requirements.txt')
     p = process_open([VENV_PYTHON, "-m", "pip", "install", "-r", requirements_file], (0, 5))
     while p.poll() is None:
-        print(p.stdout.readline().strip("\n"))
+        out = p.stdout.readline()
+        out != "" and print(out.strip("\n"))
 
     # Adding precompiled dependencies for Windows
     if os.name == "nt":
         print("* Adding precompiled dependencies for executable for Windows")
-        environment.init_Environment(VENV_PYTHON)
         add_dependency(["local|LDAP_WHL|python-ldap", "local|LEVENSHTEIN_WHL|python-Levenshtein"], "")
 
     print("* Adding dependencies for executable from optional_requirements file")
     optional_requirements_file = os.path.join(FILEPATH, 'optional-requirements.txt')
     p = process_open([VENV_PYTHON, "-m", "pip", "install", "-r", optional_requirements_file], (0, 5))
     while p.poll() is None:
-        print(p.stdout.readline().strip("\n"))
+        out = p.stdout.readline()
+        out != "" and print(out.strip("\n"))
+
+    print("* Saving installed requirement versions")
+    environment.init_Environment(VENV_PYTHON)
+    environment.save_environment(os.path.join(FILEPATH, '.pip_installed'))
 
     print("Adding pyinstaller to virtual environment")
     p = process_open([VENV_PYTHON, "-m", "pip", "install", "pyinstaller"], (0,))
     while p.poll() is None:
-        print(p.stdout.readline().strip("\n"))
+        out = p.stdout.readline()
+        out != "" and print(out.strip("\n"))
 
 
 def create_executable():
@@ -205,12 +223,18 @@ def create_executable():
         print('* More than one google_api_python directory found exiting')
         sys.exit(1)
     os.rename('__init__.py', 'root.py')
+    shutil.move(os.path.join(FILEPATH, 'requirements.txt'), 'requirements.txt')
+    shutil.move(os.path.join(FILEPATH, 'optional-requirements.txt'), 'optional-requirements.txt')
+    shutil.move(os.path.join(FILEPATH, '.pip_installed'), '.pip_installed')
     command = (py_inst_path + " root.py -i cps/static/favicon.ico "
                               "-n calibreweb "
                               "--add-data cps/static" + sep + "cps/static "
                               "--add-data cps/metadata_provider" + sep + "cps/metadata_provider "
                               "--add-data cps/templates" + sep + "cps/templates "
                               "--add-data cps/translations" + sep + "cps/translations "
+                              "--add-data requirements.txt" + sep + ". "
+                              "--add-data optional-requirements.txt" + sep + ". "
+                              "--add-data .pip_installed" + sep + ". "
                               "--add-data " + google_api_path[0] + sep + os.path.basename(google_api_path[0]) + " "
                               "--hidden-import sqlalchemy.sql.default_comparator ")
     p = subprocess.Popen(command,
@@ -258,6 +282,10 @@ def prepare_files_pyinstaller():
 def revert_files_pyinstaller(workdir):
     print('* Moving folder to root folder')
     shutil.move('./dist/calibreweb/',os.path.join(FILEPATH))
+    shutil.move('requirements.txt', os.path.join(FILEPATH, 'requirements.txt'))
+    shutil.move('optional-requirements.txt', os.path.join(FILEPATH, 'optional-requirements.txt'))
+    # created .pip installed file is deleted
+    # shutil.move(os.path.join(FILEPATH, '.pip_installed', '.pip_installed'))
     os.chdir(FILEPATH)
     os.rename("calibreweb", "executable")
     shutil.rmtree('exe_temp', ignore_errors=True)
