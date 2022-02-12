@@ -22,7 +22,7 @@ class TestReverseProxy(TestCase, ui_class):
             host = 'http://' + get_Host_IP() + ':8083'
             cls.proxy = Reverse_Proxy(sitename=host)
             cls.proxy.start()
-            startup(cls, cls.py_version, {'config_calibre_dir':TEST_DB}, host=host, parameter=["-i",get_Host_IP()])
+            startup(cls, cls.py_version, {'config_calibre_dir':TEST_DB}, host=host, parameter=["-i",get_Host_IP()], env={"APP_MODE": "test"})
 
             time.sleep(3)
             cls.driver.get('http://127.0.0.1:8080/cw')

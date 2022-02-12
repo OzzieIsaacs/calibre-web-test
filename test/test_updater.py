@@ -30,6 +30,7 @@ class TestUpdater(unittest.TestCase, ui_class):
             my_env["http_proxy"] = 'http://localhost:8080'
             my_env["https_proxy"] = 'http://localhost:8080'
             my_env["REQUESTS_CA_BUNDLE"] = pem_file
+            my_env["APP_MODE"] = "test"
             startup(cls, cls.py_version, {'config_calibre_dir': TEST_DB}, env=my_env)
         else:
             cls.assertTrue(False, "Target Directory present")

@@ -21,7 +21,7 @@ class TestOPDSFeed(unittest.TestCase, ui_class):
 
     @classmethod
     def setUpClass(cls):
-        startup(cls, cls.py_version, {'config_calibre_dir': TEST_DB}, login=False)
+        startup(cls, cls.py_version, {'config_calibre_dir': TEST_DB}, login=False, env={"APP_MODE": "test"})
 
     @classmethod
     def tearDownClass(cls):

@@ -32,7 +32,7 @@ class TestKoboSync(unittest.TestCase, ui_class):
             host = 'http://' + get_Host_IP() + ':8083'
             startup(cls, cls.py_version, {'config_calibre_dir':TEST_DB, 'config_log_level': 'DEBUG', 'config_kobo_sync':1,
                                           'config_kepubifypath': "",
-                                          'config_kobo_proxy':0}, host=host)
+                                          'config_kobo_proxy':0}, host=host, env={"APP_MODE": "test"})
             time.sleep(3)
             WebDriverWait(cls.driver, 5).until(EC.presence_of_element_located((By.ID, "flash_success")))
             cls.goto_page('user_setup')

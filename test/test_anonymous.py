@@ -16,7 +16,7 @@ class TestAnonymous(unittest.TestCase, ui_class):
     @classmethod
     def setUpClass(cls):
         try:
-            startup(cls, cls.py_version, {'config_calibre_dir': TEST_DB, 'config_anonbrowse': 1})
+            startup(cls, cls.py_version, {'config_calibre_dir': TEST_DB, 'config_anonbrowse': 1}, env={"APP_MODE": "test"})
         except Exception as e:
             print(e)
 

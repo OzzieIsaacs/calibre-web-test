@@ -62,7 +62,7 @@ class TestEditBooksOnGdrive(unittest.TestCase, ui_class):
             startup(cls,
                     cls.py_version,
                     {'config_calibre_dir': TEST_DB},
-                    only_metadata=True)
+                    only_metadata=True, env={"APP_MODE": "test"})
             cls.fill_db_config({'config_use_google_drive': 1})
             time.sleep(2)
             cls.fill_db_config({'config_google_drive_folder': 'test'})

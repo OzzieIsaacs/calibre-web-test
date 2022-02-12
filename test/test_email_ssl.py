@@ -38,7 +38,7 @@ class TestSSL(unittest.TestCase, ui_class):
         startup(cls, cls.py_version, {'config_calibre_dir':TEST_DB,
                                       'config_converterpath':helper_email_convert.calibre_path(),
                                       'config_ebookconverter':'converter2',
-                                      'config_log_level':cls.LOG_LEVEL})
+                                      'config_log_level':cls.LOG_LEVEL}, env={"APP_MODE": "test"})
 
         cls.edit_user('admin', {'email': 'a5@b.com','kindle_mail': 'a1@b.com'})
         cls.setup_server(False, {'mail_server':'127.0.0.1', 'mail_port':'1027',

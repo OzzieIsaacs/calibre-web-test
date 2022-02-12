@@ -25,7 +25,7 @@ class TestUploadEPubs(TestCase, ui_class):
         #add_dependency(cls.dependencys, cls.__name__)
 
         try:
-            startup(cls, cls.py_version, {'config_calibre_dir': TEST_DB, 'config_uploading': 1})
+            startup(cls, cls.py_version, {'config_calibre_dir': TEST_DB, 'config_uploading': 1}, env = {"APP_MODE": "test"})
             time.sleep(3)
             WebDriverWait(cls.driver, 5).until(EC.presence_of_element_located((By.ID, "flash_success")))
         except Exception:

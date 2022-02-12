@@ -31,6 +31,7 @@ class TestCoverEditBooks(TestCase, ui_class):
             my_env["http_proxy"] = 'http://localhost:8080'
             my_env["https_proxy"] = 'http://localhost:8080'
             my_env["REQUESTS_CA_BUNDLE"] = pem_file
+            my_env["APP_MODE"] = "test"
             # my_env["LANG"] = 'de_DE.UTF-8'
             startup(cls, cls.py_version, {'config_calibre_dir': TEST_DB, 'config_uploading': 1}, env=my_env)
             time.sleep(3)

@@ -20,7 +20,7 @@ class TestReader(unittest.TestCase, ui_class):
     def setUpClass(cls):
 
         try:
-            startup(cls, cls.py_version, {'config_calibre_dir':TEST_DB})
+            startup(cls, cls.py_version, {'config_calibre_dir':TEST_DB}, env={"APP_MODE": "test"})
             cls.current_handle = cls.driver.current_window_handle
 
         except Exception:

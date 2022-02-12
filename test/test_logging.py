@@ -29,7 +29,7 @@ class TestLogging(unittest.TestCase, ui_class):
             os.remove(os.path.join(CALIBRE_WEB_PATH, 'calibre-web.log.2'))
         except Exception:
             pass
-        startup(cls, cls.py_version, {'config_calibre_dir': TEST_DB, 'config_log_level': 'DEBUG'})
+        startup(cls, cls.py_version, {'config_calibre_dir': TEST_DB, 'config_log_level': 'DEBUG'}, env={"APP_MODE": "test"})
         time.sleep(3)
         WebDriverWait(cls.driver, 5).until(EC.presence_of_element_located((By.ID, "flash_success")))
 

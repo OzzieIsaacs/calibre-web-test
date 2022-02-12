@@ -74,7 +74,7 @@ class TestEbookConvertCalibreGDrive(unittest.TestCase, ui_class):
                                           'config_log_level': 'DEBUG',
                                           'config_kepubifypath': '',
                                           'config_converterpath': helper_email_convert.calibre_path()},
-                    only_metadata=True)
+                    only_metadata=True, env={"APP_MODE": "test"})
             cls.fill_db_config({'config_use_google_drive': 1})
             time.sleep(2)
             cls.fill_db_config({'config_google_drive_folder': 'test'})
