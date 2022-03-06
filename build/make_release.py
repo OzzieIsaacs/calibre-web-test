@@ -226,7 +226,7 @@ def create_executable():
     shutil.move(os.path.join(FILEPATH, 'requirements.txt'), 'requirements.txt')
     shutil.move(os.path.join(FILEPATH, 'optional-requirements.txt'), 'optional-requirements.txt')
     shutil.move(os.path.join(FILEPATH, '.pip_installed'), '.pip_installed')
-    command = (py_inst_path + " root.py -i cps/static/favicon.ico "
+    command = (py_inst_path + " --noconsole root.py -i cps/static/favicon.ico "
                               "-n calibreweb "
                               "--add-data cps/static" + sep + "cps/static "
                               "--add-data cps/metadata_provider" + sep + "cps/metadata_provider "
@@ -235,6 +235,7 @@ def create_executable():
                               "--add-data requirements.txt" + sep + ". "
                               "--add-data optional-requirements.txt" + sep + ". "
                               "--add-data .pip_installed" + sep + ". "
+                              "--add-data " + "C:\\Development\\calibre-web\\venv\\lib\\site-packages\\iso639" + sep + "iso639" + " "
                               "--add-data " + google_api_path[0] + sep + os.path.basename(google_api_path[0]) + " "
                               "--hidden-import sqlalchemy.sql.default_comparator ")
     p = subprocess.Popen(command,
