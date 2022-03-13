@@ -55,6 +55,7 @@ class TestLdapLogin(unittest.TestCase, ui_class):
         # close the browser window and stop calibre-web
         # remove_dependency(cls.dep_line)
         save_logfiles(cls, cls.__name__)
+        shutil.rmtree(os.path.join(CALIBRE_WEB_PATH, 'files'), ignore_errors=True)
 
     @classmethod
     def tearDown(cls):

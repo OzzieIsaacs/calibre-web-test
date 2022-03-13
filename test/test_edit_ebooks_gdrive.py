@@ -103,10 +103,13 @@ class TestEditBooksOnGdrive(unittest.TestCase, ui_class):
                 os.unlink(src1)
             except PermissionError:
                 print('client_secrets.json delete failed')
+        os.unlink('original.png')
+        os.unlink('jpeg.png')
+        os.unlink('page.png')
 
         save_logfiles(cls, cls.__name__)
 
-    def save_cover_screenshot(self, filename):
+    '''def save_cover_screenshot(self, filename):
         element = self.driver.find_element(By.TAG_NAME, 'img')
         location = element.location
         size = element.size
@@ -117,7 +120,7 @@ class TestEditBooksOnGdrive(unittest.TestCase, ui_class):
         height = location['y'] + size['height']
         im = Image.open('page.png')
         im = im.crop((int(x), int(y), int(width), int(height)))
-        im.save(filename)
+        im.save(filename)'''
 
     def wait_page_has_loaded(self):
         time.sleep(1)

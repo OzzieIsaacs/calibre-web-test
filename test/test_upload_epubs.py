@@ -5,25 +5,21 @@
 from unittest import TestCase
 import os
 import time
-import zipfile
 
 from selenium.webdriver.common.by import By
 from helper_ui import ui_class
 from config_test import TEST_DB, base_path, BOOT_TIME
-from helper_func import add_dependency, remove_dependency, save_logfiles, startup, change_epub_meta
+from helper_func import save_logfiles, startup, change_epub_meta, updateZip
 from selenium.webdriver.support.ui import WebDriverWait
 from selenium.webdriver.support import expected_conditions as EC
-
+from diffimg import diff
 
 class TestUploadEPubs(TestCase, ui_class):
     p = None
     driver = None
-    #dependencys = ['lxml']
 
     @classmethod
     def setUpClass(cls):
-        #add_dependency(cls.dependencys, cls.__name__)
-
         try:
             startup(cls, cls.py_version, {'config_calibre_dir': TEST_DB, 'config_uploading': 1})
             time.sleep(3)
@@ -44,7 +40,7 @@ class TestUploadEPubs(TestCase, ui_class):
 
     def test_upload_epub_duplicate(self):
         epub_file = os.path.join(base_path, 'files', 'title.epub')
-        change_epub_meta(epub_file, element={'title': "Der titel", 'creator': "Kurt Hugo"})
+        change_epub_meta(epub_file, meta={'title': "Der titel", 'creator': "Kurt Hugo"})
         self.goto_page('nav_new')
         upload = self.check_element_on_page((By.ID, 'btn-upload'))
         upload.send_keys(epub_file)
@@ -73,22 +69,23 @@ class TestUploadEPubs(TestCase, ui_class):
         if check_warning:
             self.assertTrue(self.check_element_on_page((By.ID, "flash_warning")))
         self.check_element_on_page((By.ID, 'edit_cancel')).click()
+        time.sleep(1)
         return self.get_book_details()
 
     def test_upload_epub_lang(self):
         epub_file = os.path.join(base_path, 'files', 'lang.epub')
         self.change_visibility_me({'locale': "Italiano"})
-        change_epub_meta(epub_file, element={'title': "Langtest", 'creator': "Nobody Perfect", "language": "xx"})
+        change_epub_meta(epub_file, meta={'title': "Langtest", 'creator': "Nobody Perfect", "language": "xx"})
         details = self.verify_upload(epub_file, check_warning=True)
         self.assertEqual('Langtest', details['title'])
         self.assertEqual('Nobody Perfect', details['author'][0])
         self.assertNotIn('languages', details)
         self.delete_book(details['id'])
-        change_epub_meta(epub_file, element={'title': "Langtest", 'creator': "Nobody Perfect", "language": "xyz"})
+        change_epub_meta(epub_file, meta={'title': "Langtest", 'creator': "Nobody Perfect", "language": "xyz"})
         details = self.verify_upload(epub_file, check_warning=True)
         self.assertNotIn('languages', details)
         self.delete_book(details['id'])
-        change_epub_meta(epub_file, element={'title': "Langtest", 'creator': "Nobody Perfect", "language": "deu"})
+        change_epub_meta(epub_file, meta={'title': "Langtest", 'creator': "Nobody Perfect", "language": "deu"})
         details = self.verify_upload(epub_file)
         self.assertEqual('Tedesco', details['languages'][0])
         list_element = self.goto_page("nav_lang")
@@ -97,7 +94,7 @@ class TestUploadEPubs(TestCase, ui_class):
         self.assertEqual("Lingua: Tedesco", self.driver.find_elements(By.TAG_NAME, "h2")[1].text)
         self.assertEqual(len(self.adv_search({u'include_language': u'Tedesco'})), 1)
         self.delete_book(details['id'])
-        change_epub_meta(epub_file, element={'title': "Langtest", 'creator': "Nobody Perfect", "language": "lat"})
+        change_epub_meta(epub_file, meta={'title': "Langtest", 'creator': "Nobody Perfect", "language": "lat"})
         details = self.verify_upload(epub_file)
         self.assertEqual('Latino', details['languages'][0])
         list_element = self.goto_page("nav_lang")
@@ -106,12 +103,12 @@ class TestUploadEPubs(TestCase, ui_class):
         self.assertEqual("Lingua: Latino", self.driver.find_elements(By.TAG_NAME, "h2")[1].text)
         self.assertEqual(len(self.adv_search({u'include_language': u'Latino'})), 1)
         self.delete_book(details['id'])
-        change_epub_meta(epub_file, element={'title': "Langtest", 'creator': "Nobody Perfect", "language": "und"})
+        change_epub_meta(epub_file, meta={'title': "Langtest", 'creator': "Nobody Perfect", "language": "und"})
         details = self.verify_upload(epub_file)
         self.assertEqual('Non determinato', details['languages'][0])
         self.delete_book(details['id'])
 
-        change_epub_meta(epub_file, element={'title': "Langtest", 'creator': "Nobody Perfect", "language": "de"})
+        change_epub_meta(epub_file, meta={'title': "Langtest", 'creator': "Nobody Perfect", "language": "de"})
         details = self.verify_upload(epub_file)
         self.assertEqual('Tedesco', details['languages'][0])
         self.delete_book(details['id'])
@@ -123,3 +120,93 @@ class TestUploadEPubs(TestCase, ui_class):
         self.change_visibility_me({'default_language': "Show All"})
         os.remove(epub_file)
 
+    def test_upload_epub_cover(self):
+        orig = self.verify_upload(os.path.join(base_path, 'files', 'book.epub'))
+        self.save_cover_screenshot('original.png')
+        self.delete_book(orig['id'])
+
+        # check cover-image is detected
+        epub_file = os.path.join(base_path, 'files', 'cover.epub')
+        change_epub_meta(epub_file, meta={'title': "Coverimage", 'creator': "Testo"},
+                         item={'change': {"find_id": "cover", 'id':'cover-image'}})
+        ci = self.verify_upload(epub_file)
+        self.save_cover_screenshot('cover_image.png')
+        self.delete_book(ci['id'])
+        self.assertAlmostEqual(diff('original.png', 'cover_image.png', delete_diff_file=True), 0.0, delta=0.0001)
+
+        # check if multiple cover-image ids are detected correct
+        change_epub_meta(epub_file, meta={'title': "Multi Coverimage", 'creator': "Testo"},
+                         meta_change={'create': {"name": "cover", 'content': "cover-image"}},
+                         item={'change': {"find_id": "cover", 'id': 'cover-image', 'href': 'cover.html'},
+                               'create': {"id": "cover-image", 'href': 'cover.jpeg', 'media-type': 'image/jpeg'}})
+        ci = self.verify_upload(epub_file)
+        self.save_cover_screenshot('cover_image.png')
+        self.delete_book(ci['id'])
+        self.assertAlmostEqual(diff('original.png', 'cover_image.png', delete_diff_file=True), 0.0, delta=0.0001)
+
+        # check if properties as cover selector is detected with reference from meta
+        change_epub_meta(epub_file, meta={'title': "Properties Cover", 'creator': "Testo"},
+                         meta_change={'create': {"name": "cover", 'content': "cover-imag"}},
+                         item={'delete': {"id": "cover"},
+                               'create': {"id": "id_Images_jpg", "properties": "cover-imag", 'href': 'cover.jpeg',
+                                          'media-type': 'image/jpeg'}})
+        ci = self.verify_upload(epub_file)
+        self.save_cover_screenshot('cover_image.png')
+        self.delete_book(ci['id'])
+        self.assertAlmostEqual(diff('original.png', 'cover_image.png', delete_diff_file=True), 0.0, delta=0.0001)
+
+        # check if content cover selector is detected with reference from meta
+        change_epub_meta(epub_file, meta={'title': "Cover", 'creator': "Testo"},
+                         meta_change={'create': {"name": "cover", 'content': "cover-imge"}},
+                         item={'delete': {"id": "cover"},
+                               'create': {"id": "cover-imge", 'href': 'cover.jpeg', 'media-type': 'image/jpeg'}})
+        ci = self.verify_upload(epub_file)
+        self.save_cover_screenshot('cover_image.png')
+        self.delete_book(ci['id'])
+        self.assertAlmostEqual(diff('original.png', 'cover_image.png', delete_diff_file=True), 0.0, delta=0.0001)
+
+        # check if guide reference can act as cover with reference from meta
+        change_epub_meta(epub_file, meta={'title': "Cover", 'creator': "Testo"},
+                         item={'delete': {"id": "cover"}},
+                         guide={'change': {"find_title": "Cover", "href": 'cover.jpeg'}})
+        ci = self.verify_upload(epub_file)
+        self.save_cover_screenshot('cover_image.png')
+        self.delete_book(ci['id'])
+        self.assertAlmostEqual(diff('original.png', 'cover_image.png', delete_diff_file=True), 0.0, delta=0.0001)
+
+        # check if multiple guide reference can act as cover with reference from meta
+        change_epub_meta(epub_file, meta={'title': "Cover", 'creator': "Testo"},
+                         item={'delete': {"id": "cover"}},
+                         guide={'create': {"title": "Cover", "href": 'cover.jpeg'}})
+        ci = self.verify_upload(epub_file)
+        self.save_cover_screenshot('cover_image.png')
+        self.delete_book(ci['id'])
+        self.assertAlmostEqual(diff('original.png', 'cover_image.png', delete_diff_file=True), 0.0, delta=0.0001)
+
+        os.remove(epub_file)
+        os.remove('cover_image.png')
+        os.remove('original.png')
+
+    def test_upload_epub_cover_formats(self):
+        orig = self.verify_upload(os.path.join(base_path, 'files', 'book.epub'))
+        self.save_cover_screenshot('original.png')
+        self.delete_book(orig['id'])
+
+        # check cover-image is detected
+        epub_file = os.path.join(base_path, 'files', 'cover.epub')
+        change_epub_meta(epub_file, meta={'title': "png Cover", 'creator': "Testo"},
+                         item={'change': {"find_id": "cover", 'id':'cover-image', 'href': 'cover.png'}})
+        with open(os.path.join(base_path, 'files', 'cover.png'), "rb") as f:
+            data = f.read()
+        epub_png = os.path.join(base_path, 'files', 'png.epub')
+        updateZip(epub_png, epub_file, 'cover.png', data)
+
+        ci = self.verify_upload(epub_png)
+        self.save_cover_screenshot('cover_image.png')
+        self.delete_book(ci['id'])
+        self.assertAlmostEqual(diff('original.png', 'cover_image.png', delete_diff_file=True), 0.0058, delta=0.0001)
+
+        os.remove(epub_file)
+        os.remove(epub_png)
+        os.remove('cover_image.png')
+        os.remove('original.png')

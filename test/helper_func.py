@@ -459,19 +459,64 @@ def updateZip(zipname_new, zipname_org, filename, data):
         zf.writestr(filename, data)
 
 
-def change_epub_meta(zipname_new=None, zipname_org='./files/book.epub', element={}):
+def change_epub_meta(zipname_new=None, zipname_org='./files/book.epub', meta={}, item={}, guide={}, meta_change={}):
     with codecs.open('./files/test.opf', "r", "utf-8") as f:
         soup = BeautifulSoup(f.read(), "xml")
     for el in soup.findAll("meta"):
         el.prefix = ""
-        el.namespace=""
+        el.namespace = ""
     soup.find("metadata").prefix = ""
-    for k, v in element.items():
+    for k, v in meta.items():
         if k == "author":
             pass
         el = soup.find(k)
         el.string = v
+
+    # handle meta_handle block
+    for task, to_do in meta_change.items():
+        if task == 'create':
+            new_element = soup.new_tag("meta")
+            for key, value in to_do.items():
+                new_element[key] = value
+                soup.find("metadata").append(new_element)
+        elif task == 'delete':
+            for key, value in to_do.items():
+                soup.find(key).extract()
+
+    # handle item block
+    for task, to_do in item.items():
+        if task == 'change':
+            element = soup.find("item", {'id': to_do['find_id']})
+            to_do.pop('find_id', None)
+            for key, value in to_do.items():
+                element[key] = value
+        elif task == 'create':
+            new_element = soup.new_tag("item")
+            for key, value in to_do.items():
+                new_element[key] = value
+            soup.find("manifest").append(new_element)
+        elif task == 'delete':
+            for key, value in to_do.items():
+                soup.find("item", {key: value}).extract()
+
+    # handle guide block
+    for task, to_do in guide.items():
+        if task == 'change':
+            element = soup.find("reference", {'title': to_do['find_title']})
+            to_do.pop('find_title', None)
+            for key, value in to_do.items():
+                element[key] = value
+        elif task == 'create':
+            new_element = soup.new_tag("reference")
+            for key, value in to_do.items():
+                new_element[key] = value
+            soup.find("guide").append(new_element)
+        elif task == 'delete':
+            for key, value in to_do.items():
+                soup.find("reference", {key: value}).extract()
+
     updateZip(zipname_new, zipname_org, 'content.opf', str(soup))
+
 
 def change_comic_meta(zipname_new=None, zipname_org='./files/book1.cbz', element={}):
     with codecs.open('./files/ComicInfo.xml', "r", "utf-8") as f:
