@@ -413,7 +413,7 @@ class TestEditAuthors(TestCase, ui_class):
         self.assertTrue(self.check_element_on_page((By.ID, "flash_success")))
         # Upload book with one author in database
         epub_file = os.path.join(base_path, 'files', 'title.epub')
-        change_epub_meta(epub_file, element={'title': "Useless", 'creator': "asterix Lionherd"})
+        change_epub_meta(epub_file, meta={'title': "Useless", 'creator': "asterix Lionherd"})
         self.goto_page('nav_new')
         upload = self.check_element_on_page((By.ID, 'btn-upload'))
         upload.send_keys(epub_file)
@@ -444,7 +444,7 @@ class TestEditAuthors(TestCase, ui_class):
                                                     'cover.jpg')))
 
         # Upload book with one co-author in database
-        change_epub_meta(epub_file, element={'title': "Useless", 'creator': 'liu yang'})
+        change_epub_meta(epub_file, meta={'title': "Useless", 'creator': 'liu yang'})
         self.goto_page('nav_new')
         upload = self.check_element_on_page((By.ID, 'btn-upload'))
         upload.send_keys(epub_file)

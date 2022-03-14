@@ -58,7 +58,7 @@ class TestCli(unittest.TestCase, ui_class):
             # print(e)
 
     def check_password_change(self, parameter, expectation):
-        p = process_open([self.py_version, 'cps.py', "-s", parameter], [1])
+        p = process_open([self.py_version, "-B", 'cps.py', "-s", parameter], [1])
         time.sleep(2)
         if p.poll() is None:
             p.kill()
@@ -70,7 +70,7 @@ class TestCli(unittest.TestCase, ui_class):
 
     def test_cli_different_folder(self):
         os.chdir(CALIBRE_WEB_PATH)
-        self.p = process_open([self.py_version, u'cps.py'], [1])
+        self.p = process_open([self.py_version,  "-B", u'cps.py'], [1])
         os.chdir(os.path.dirname(__file__))
         try:
             # create a new Firefox session
@@ -103,7 +103,7 @@ class TestCli(unittest.TestCase, ui_class):
 
     def test_cli_different_settings_database(self):
         new_db = os.path.join(CALIBRE_WEB_PATH, 'hü go.app')
-        self.p = process_open([self.py_version, os.path.join(CALIBRE_WEB_PATH, u'cps.py'),
+        self.p = process_open([self.py_version, "-B",  os.path.join(CALIBRE_WEB_PATH, u'cps.py'),
                                '-p', new_db], [1, 3])
 
         time.sleep(15)
@@ -143,7 +143,7 @@ class TestCli(unittest.TestCase, ui_class):
         only_path = CALIBRE_WEB_PATH + os.sep
         real_key_file = os.path.join(CALIBRE_WEB_PATH, 'hü lo', 'lö g.key')
         real_crt_file = os.path.join(CALIBRE_WEB_PATH, 'hü lo', 'lö g.crt')
-        p = process_open([self.py_version, os.path.join(CALIBRE_WEB_PATH, u'cps.py'),
+        p = process_open([self.py_version, "-B", os.path.join(CALIBRE_WEB_PATH, u'cps.py'),
                           '-c', path_like_file], [1, 3])
         time.sleep(2)
         nextline = p.communicate()[0]
@@ -154,7 +154,7 @@ class TestCli(unittest.TestCase, ui_class):
         p.stdout.close()
         p.stderr.close()
 
-        p = process_open([self.py_version, os.path.join(CALIBRE_WEB_PATH, u'cps.py'),
+        p = process_open([self.py_version, "-B", os.path.join(CALIBRE_WEB_PATH, u'cps.py'),
                           '-k', path_like_file], [1, 3])
         time.sleep(2)
         nextline = p.communicate()[0]
@@ -165,7 +165,7 @@ class TestCli(unittest.TestCase, ui_class):
         p.stdout.close()
         p.stderr.close()
 
-        p = process_open([self.py_version, os.path.join(CALIBRE_WEB_PATH, u'cps.py'),
+        p = process_open([self.py_version, "-B", os.path.join(CALIBRE_WEB_PATH, u'cps.py'),
                           '-c', only_path], [1, 3])
         time.sleep(2)
         nextline = p.communicate()[0]
@@ -173,7 +173,7 @@ class TestCli(unittest.TestCase, ui_class):
             p.kill()
         self.assertIsNotNone(re.findall('Certfilepath is invalid. Exiting', nextline))
 
-        p = process_open([self.py_version, os.path.join(CALIBRE_WEB_PATH, u'cps.py'),
+        p = process_open([self.py_version,  "-B", os.path.join(CALIBRE_WEB_PATH, u'cps.py'),
                           '-k', only_path], [1, 3])
         time.sleep(2)
         nextline = p.communicate()[0]
@@ -184,7 +184,7 @@ class TestCli(unittest.TestCase, ui_class):
         p.stdout.close()
         p.stderr.close()
 
-        p = process_open([self.py_version, os.path.join(CALIBRE_WEB_PATH, u'cps.py'),
+        p = process_open([self.py_version,  "-B", os.path.join(CALIBRE_WEB_PATH, u'cps.py'),
                          '-c', real_crt_file], (1, 3))
         time.sleep(2)
         if p.poll() is None:
@@ -195,7 +195,7 @@ class TestCli(unittest.TestCase, ui_class):
         p.stdout.close()
         p.stderr.close()
 
-        p = process_open([self.py_version, os.path.join(CALIBRE_WEB_PATH, u'cps.py'),
+        p = process_open([self.py_version, "-B", os.path.join(CALIBRE_WEB_PATH, u'cps.py'),
                          '-k', real_key_file], (1, 3))
         time.sleep(2)
         if p.poll() is None:
@@ -212,7 +212,7 @@ class TestCli(unittest.TestCase, ui_class):
         with open(real_crt_file, 'wb') as fout:
             fout.write(os.urandom(124))
 
-        p = process_open([self.py_version, os.path.join(CALIBRE_WEB_PATH, u'cps.py'),
+        p = process_open([self.py_version,  "-B", os.path.join(CALIBRE_WEB_PATH, u'cps.py'),
                          '-c', real_crt_file], (1, 3))
         time.sleep(2)
         if p.poll() is None:
@@ -223,7 +223,7 @@ class TestCli(unittest.TestCase, ui_class):
         p.stdout.close()
         p.stderr.close()
 
-        p = process_open([self.py_version, os.path.join(CALIBRE_WEB_PATH, u'cps.py'),
+        p = process_open([self.py_version,  "-B", os.path.join(CALIBRE_WEB_PATH, u'cps.py'),
                          '-k', real_key_file], (1, 3))
         time.sleep(2)
         if p.poll() is None:
@@ -234,7 +234,7 @@ class TestCli(unittest.TestCase, ui_class):
         p.stdout.close()
         p.stderr.close()
 
-        p = process_open([self.py_version, os.path.join(CALIBRE_WEB_PATH, u'cps.py'),
+        p = process_open([self.py_version,  "-B", os.path.join(CALIBRE_WEB_PATH, u'cps.py'),
                          '-c', real_crt_file, '-k', real_key_file], (1, 3, 5))
 
         if p.poll() is not None:
@@ -261,7 +261,7 @@ class TestCli(unittest.TestCase, ui_class):
         shutil.copytree('./files', os.path.join(CALIBRE_WEB_PATH, 'hü lo'))
         real_crt_file = os.path.join(CALIBRE_WEB_PATH, 'hü lo', 'server.crt')
         real_key_file = os.path.join(CALIBRE_WEB_PATH, 'hü lo', 'server.key')
-        p = process_open([self.py_version, os.path.join(CALIBRE_WEB_PATH, u'cps.py'),
+        p = process_open([self.py_version, "-B", os.path.join(CALIBRE_WEB_PATH, u'cps.py'),
                          '-c', real_crt_file, '-k', real_key_file], (1, 3, 5))
         if p.poll() is not None:
             self.assertIsNone('Fail', 'Unexpected error')
@@ -283,7 +283,7 @@ class TestCli(unittest.TestCase, ui_class):
 
     def test_bind_to_single_interface(self):
         address = get_Host_IP()
-        p = process_open([self.py_version, os.path.join(CALIBRE_WEB_PATH, u'cps.py'), '-i', 'http://'+address], [1])
+        p = process_open([self.py_version,  "-B", os.path.join(CALIBRE_WEB_PATH, u'cps.py'), '-i', 'http://'+address], [1])
         time.sleep(2)
         if p.poll() is None:
             p.kill()
@@ -292,7 +292,7 @@ class TestCli(unittest.TestCase, ui_class):
 
         nextline = p.communicate()[0]
         self.assertIsNotNone(re.findall('Illegal IP address string', nextline))
-        p = process_open([self.py_version, os.path.join(CALIBRE_WEB_PATH, u'cps.py'), '-i', address], [1])
+        p = process_open([self.py_version,  "-B", os.path.join(CALIBRE_WEB_PATH, u'cps.py'), '-i', address], [1])
 
         time.sleep(BOOT_TIME)
         # navigate to the application home page
@@ -320,7 +320,7 @@ class TestCli(unittest.TestCase, ui_class):
     def test_environ_port_setting(self):
         my_env = os.environ.copy()
         my_env["CALIBRE_PORT"] = '8082'
-        p = process_open([self.py_version, os.path.join(CALIBRE_WEB_PATH, u'cps.py')], [1], env=my_env)
+        p = process_open([self.py_version,  "-B", os.path.join(CALIBRE_WEB_PATH, u'cps.py')], [1], env=my_env)
 
         time.sleep(BOOT_TIME)
         # navigate to the application home page
@@ -345,9 +345,9 @@ class TestCli(unittest.TestCase, ui_class):
     # stop process A
     def test_already_started(self):
         os.chdir(CALIBRE_WEB_PATH)
-        p1 = process_open([self.py_version, u'cps.py'], [1])
+        p1 = process_open([self.py_version,  "-B", u'cps.py'], [1])
         time.sleep(BOOT_TIME)
-        p2 = process_open([self.py_version, u'cps.py'], [1])
+        p2 = process_open([self.py_version,  "-B", u'cps.py'], [1])
         time.sleep(BOOT_TIME)
         time.sleep(2)
         result = p2.poll()
@@ -370,7 +370,7 @@ class TestCli(unittest.TestCase, ui_class):
     def test_settingsdb_not_writeable(self):
         # check unconfigured database
         os.chdir(CALIBRE_WEB_PATH)
-        p1 = process_open([self.py_version, u'cps.py'], [1])
+        p1 = process_open([self.py_version,  "-B", u'cps.py'], [1])
         time.sleep(BOOT_TIME)
         p1.terminate()
         p1.stdout.close()
@@ -378,7 +378,7 @@ class TestCli(unittest.TestCase, ui_class):
         time.sleep(BOOT_TIME)
         p1.poll()
         os.chmod("app.db", 0o400)
-        p2 = process_open([self.py_version, u'cps.py'], [1])
+        p2 = process_open([self.py_version,  "-B", u'cps.py'], [1])
         time.sleep(BOOT_TIME)
         result = p2.poll()
         if result is None:
@@ -390,7 +390,7 @@ class TestCli(unittest.TestCase, ui_class):
         self.assertEqual(result, 2)
         os.chmod("app.db", 0o644)
         # configure and check again
-        p1 = process_open([self.py_version, u'cps.py'], [1])
+        p1 = process_open([self.py_version,  "-B", u'cps.py'], [1])
         time.sleep(BOOT_TIME)
         try:
             # navigate to the application home page
@@ -409,7 +409,7 @@ class TestCli(unittest.TestCase, ui_class):
         time.sleep(BOOT_TIME)
         p1.poll()
         os.chmod("app.db", 0o400)
-        p2 = process_open([self.py_version, u'cps.py'], [1])
+        p2 = process_open([self.py_version,  "-B", u'cps.py'], [1])
         time.sleep(BOOT_TIME)
         result = p2.poll()
         if result is None:
@@ -428,7 +428,7 @@ class TestCli(unittest.TestCase, ui_class):
         self.check_password_change("admin:adm:in12", "Password for user 'admin' changed")
         self.check_password_change("admin.kolo", "No valid username:password.*")
         self.check_password_change("admin:", "Empty password")
-        p1 = process_open([self.py_version, u'cps.py'], [1])
+        p1 = process_open([self.py_version,  "-B", u'cps.py'], [1])
         time.sleep(BOOT_TIME)
         try:
             # navigate to the application home page
@@ -455,7 +455,7 @@ class TestCli(unittest.TestCase, ui_class):
         os.remove("app.db")
 
     def help_dry_run(self):
-        p1 = process_open([self.py_version, u'cps.py', "-d"], [1])
+        p1 = process_open([self.py_version, "-B", u'cps.py', "-d"], [1])
         output = list()
         while p1.poll() is None:
             output.append(p1.stdout.readline())

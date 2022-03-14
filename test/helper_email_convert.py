@@ -1,6 +1,7 @@
 # -*- coding: utf-8 -*-
 
 import asyncio
+import base64
 
 import sys
 import os
@@ -107,9 +108,10 @@ class MyMessage:
     def extract_register_info(self):
         if self.message:
             # self.message = email.message_from_string(self.message).get_payload(0).
+            message = base64.b64decode(self.message)
             # get_payload(decode=True).decode('utf-8')
-            username = re.findall('User name:\s(.*)\r', self.message.decode('utf-8'))
-            password = re.findall('Password:\s(.*)\r', self.message.decode('utf-8'))
+            username = re.findall('User name:\s(.*)\r', message.decode('utf-8'))
+            password = re.findall('Password:\s(.*)\r', message.decode('utf-8'))
             if len(username) and len(password):
                 return [username[0], password[0]]
         return [False, False]

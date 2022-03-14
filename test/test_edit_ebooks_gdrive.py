@@ -64,9 +64,9 @@ class TestEditBooksOnGdrive(unittest.TestCase, ui_class):
                     {'config_calibre_dir': TEST_DB},
                     only_metadata=True)
             cls.fill_db_config({'config_use_google_drive': 1})
-            time.sleep(2)
+            time.sleep(4)
             cls.fill_db_config({'config_google_drive_folder': 'test'})
-            time.sleep(2)
+            time.sleep(5)
         except Exception as e:
             try:
                 print(e)
@@ -77,7 +77,6 @@ class TestEditBooksOnGdrive(unittest.TestCase, ui_class):
 
     @classmethod
     def tearDownClass(cls):
-        # remove_gdrive()
         try:
             cls.driver.get("http://127.0.0.1:8083")
             cls.stop_calibre_web()
@@ -86,6 +85,7 @@ class TestEditBooksOnGdrive(unittest.TestCase, ui_class):
             cls.p.terminate()
         except Exception as e:
             print(e)
+        save_logfiles(cls, cls.__name__)
 
         remove_dependency(cls.dependency)
 
@@ -103,21 +103,9 @@ class TestEditBooksOnGdrive(unittest.TestCase, ui_class):
                 os.unlink(src1)
             except PermissionError:
                 print('client_secrets.json delete failed')
-
-        save_logfiles(cls, cls.__name__)
-
-    def save_cover_screenshot(self, filename):
-        element = self.driver.find_element(By.TAG_NAME, 'img')
-        location = element.location
-        size = element.size
-        self.driver.save_screenshot("page.png")
-        x = location['x']
-        y = location['y']
-        width = location['x'] + size['width']
-        height = location['y'] + size['height']
-        im = Image.open('page.png')
-        im = im.crop((int(x), int(y), int(width), int(height)))
-        im.save(filename)
+        for f in ['original.png', 'jpeg.png', 'page.png']:
+            if os.path.exists(f):
+                os.unlink(f)
 
     def wait_page_has_loaded(self):
         time.sleep(1)
@@ -177,6 +165,7 @@ class TestEditBooksOnGdrive(unittest.TestCase, ui_class):
 
         self.edit_book(content={'book_title': ''})
         self.wait_page_has_loaded()
+        time.sleep(2)
         values = self.get_book_details()
         # os.path.join(TEST_DB, values['author'][0], 'Unknown')
         self.assertEqual('Unknown', values['title'])
@@ -206,10 +195,10 @@ class TestEditBooksOnGdrive(unittest.TestCase, ui_class):
         self.check_element_on_page((By.ID, "edit_book")).click()
         self.wait_page_has_loaded()
         self.edit_book(content={'book_title': u'Not found'})
-        time.sleep(4)
         self.wait_page_has_loaded()
+        time.sleep(4)
         self.check_element_on_page((By.ID, 'flash_danger'))
-        values = self.get_book_details(-1)
+        values = self.get_book_details(4)
         # title = self.check_element_on_page((By.ID, "book_title"))
         # calibre strips spaces in the end
         self.assertEqual('The camicdemo', values['title'])
@@ -384,10 +373,10 @@ class TestEditBooksOnGdrive(unittest.TestCase, ui_class):
         self.get_book_details(8)
         self.check_element_on_page((By.ID, "edit_book")).click()
         self.edit_book(content={'bookAuthor': u'Not found'})
-        time.sleep(4)
+        time.sleep(WAIT_GDRIVE)
         self.wait_page_has_loaded()
         self.check_element_on_page((By.ID, 'flash_danger'))
-        values = self.get_book_details(-1)
+        values = self.get_book_details(8)
         self.assertEqual(values['author'][0], 'Pipo, Pipe')
         fs.movedir(not_file_path, file_path, create=True)
         fs.close()
@@ -850,6 +839,7 @@ class TestEditBooksOnGdrive(unittest.TestCase, ui_class):
 
         time.sleep(WAIT_GDRIVE)
         self.check_element_on_page((By.ID, 'edit_cancel')).click()
+        time.sleep(WAIT_GDRIVE)
         details = self.get_book_details()
         self.assertEqual('book9', details['title'])
         self.assertEqual('Noname 23', details['author'][0])
@@ -864,7 +854,7 @@ class TestEditBooksOnGdrive(unittest.TestCase, ui_class):
         self.fill_basic_config({'config_uploading': 0})
         self.assertTrue(self.check_element_on_page((By.ID, 'flash_success')))
         r.close()
-        # ToDo: Check folder are right
+        # ToDo: Check folders are right
 
     # download of books
     def test_download_book(self):
