@@ -31,7 +31,6 @@ class TestKoboSyncBig(unittest.TestCase, ui_class):
     def setUpClass(cls):
         add_dependency(cls.json_line, cls.__name__)
 
-
         try:
             host = 'http://' + get_Host_IP() + ':8083'
             startup(cls, cls.py_version, {'config_calibre_dir': TEST_DB, 'config_kobo_sync': 1,

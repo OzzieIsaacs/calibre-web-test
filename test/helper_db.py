@@ -11,6 +11,7 @@ from sqlalchemy import TIMESTAMP
 import random
 import string
 from uuid import uuid4
+from PIL import Image, ImageDraw
 
 try:
     # Compatibility with sqlalchemy 2.0
@@ -146,7 +147,19 @@ def change_book_path(location, id):
     session.close()
     engine.dispose()
 
-def add_books(location, number):
+
+def _generate_random_cover(output_path):
+    image = Image.new("RGB", (800, 1280), (255, 255, 255))
+    draw = ImageDraw.Draw(image)
+    colors = ["red", "green", "blue", "yellow", "aquamarine", "darkgrey", "darkolivegreen", "rosybrown",
+              "purple", "orange", "magenta", "black"]
+    for i in range(0, 8):
+        ele = [draw.ellipse, draw.line, draw.rectangle]
+        random.choice(ele)((random.randint(0, 800), (random.randint(0, 1280))) + (random.randint(0, 800), (random.randint(0, 1280))), width=5, fill=random.choice(colors))
+    image.save(output_path)
+
+
+def add_books(location, number, cover=False):
     engine = create_engine('sqlite:///{0}'.format(location), echo=False)
     Session = scoped_session(sessionmaker())
     Session.configure(bind=engine)
@@ -166,20 +179,22 @@ def add_books(location, number):
         book.series_index = "1.0"
         book.last_modified = datetime.utcnow()
         book.path = ""
-        book.has_cover = 0
         book.uuid = str(uuid4())
+        book.has_cover = int(cover)
         session.add(book)
         session.flush()
         os.makedirs(os.path.join(database_root, book.author_sort))
-        book_folder = os.path.join(database_root, book.author_sort, book.title + " ({})".format(book.id))
-        os.makedirs(book_folder)
-        book.path = os.path.join(book.author_sort, book.title + " ({})".format(book.id))
-        book_name = os.path.join(book_folder, "file.epub")
-        with open(book_name, 'wb') as fout:
-            fout.write(os.urandom(30))
+        book_folder = os.path.join(book.author_sort, book.title + " ({})".format(book.id))
+        os.makedirs(os.path.join(database_root, book_folder))
+        book.path = book_folder
+        book_name = os.path.join(database_root, book_folder, "file.epub")
+        with open(book_name, 'wb') as f_out:
+            f_out.write(os.urandom(30))
+        if cover:
+            _generate_random_cover(os.path.join(database_root, book_folder, 'cover.jpg'))
         new_format = Data(name="file",
-                         book_format="epub".upper(),
-                         book=book.id, uncompressed_size=30)
+                          book_format="epub".upper(),
+                          book=book.id, uncompressed_size=30)
         session.merge(new_format)
         author = Authors(book.author_sort, book.author_sort)
         session.add(author)

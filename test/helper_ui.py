@@ -52,6 +52,8 @@ page['nav_unread'] = {'check': (By.CLASS_NAME, "unread"), 'click': [(By.ID, "nav
 page['nav_archived'] = {'check': (By.CLASS_NAME, "archived"), 'click': [(By.ID, "nav_archived")]}
 page['db_config'] = {'check': (By.ID, "config_calibre_dir"),
                         'click': [(By.ID, "top_admin"), (By.ID, "db_config")]}
+page['thumbnail_config'] = {'check': (By.ID, "schedule_start_time"),
+                        'click': [(By.ID, "top_admin"), (By.ID, "admin_edit_scheduled_tasks")]}
 page['basic_config'] = {'check': (By.ID, "config_port"),
                         'click': [(By.ID, "top_admin"), (By.ID, "basic_config")]}
 page['view_config'] = {'check': (By.NAME, "submit"), 'click': [(By.ID, "top_admin"), (By.ID, "view_config")]}
@@ -216,6 +218,33 @@ class ui_class():
         cls.check_element_on_page((By.ID, "password")).send_keys(new_passwd)
         cls.driver.find_element(By.ID, "user_submit").click()
         return cls.check_element_on_page((By.ID, "flash_success"))
+
+    @classmethod
+    def fill_thumbnail_config(cls,elements=None):
+        cls.goto_page('thumbnail_config')
+        process_options =dict()
+        process_checkboxes = dict()
+
+        checkboxes = ['schedule_generate_book_covers', 'schedule_generate_series_covers']
+        options = ['schedule_end_time', 'schedule_start_time']
+        # check if checkboxes are in list and seperate lists
+        for element,key in enumerate(elements):
+            if key in checkboxes:
+                process_checkboxes[key] = elements[key]
+            else:
+                process_options[key] = elements[key]
+        # process all checkboxes Todo: If status was wrong before is not included in response
+        for checkbox in process_checkboxes:
+            ele = cls.driver.find_element(By.ID, checkbox)
+            if (elements[checkbox] == 1 and not ele.is_selected() ) or elements[checkbox] == 0 and ele.is_selected():
+                ele.click()
+
+        # process all selects
+        for option, key in enumerate(process_options):
+            select = Select(cls.driver.find_element(By.ID, key))
+            select.select_by_visible_text(process_options[key])
+        # finally submit settings
+        cls.driver.find_element(By.NAME, "submit").click()
 
     @classmethod
     def fill_db_config(cls,elements=None):
