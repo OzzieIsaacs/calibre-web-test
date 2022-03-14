@@ -568,7 +568,7 @@ class TestOPDSFeed(unittest.TestCase, ui_class):
         term = (searches['search'][1].attrib['template']).format(searchTerms='Parker')
         r = requests.get('http://127.0.0.1:8083' + term)
         self.assertEqual(401, r.status_code)
-        r = requests.get('http://127.0.0.1:8083' + term.replace("query","kweri"), auth=('admin', 'admin123'))
+        r = requests.get('http://127.0.0.1:8083' + term.replace("query", "kweri"), auth=('admin', 'admin123'))
         self.assertEqual(200, r.status_code)
         r = requests.get('http://127.0.0.1:8083' + term, auth=('admin', 'admin123'))
         self.assertEqual(200, r.status_code)

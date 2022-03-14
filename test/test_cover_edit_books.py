@@ -10,7 +10,7 @@ import time
 from selenium.webdriver.common.by import By
 from helper_ui import ui_class
 from config_test import TEST_DB, base_path
-from helper_func import startup, debug_startup
+from helper_func import startup
 from helper_proxy import Proxy, val
 from helper_func import save_logfiles
 from diffimg import diff
@@ -19,6 +19,7 @@ from diffimg import diff
 class TestCoverEditBooks(TestCase, ui_class):
     p = None
     driver = None
+    proxy = None
 
     @classmethod
     def setUpClass(cls):
@@ -33,12 +34,12 @@ class TestCoverEditBooks(TestCase, ui_class):
             my_env["REQUESTS_CA_BUNDLE"] = pem_file
             my_env["APP_MODE"] = "test"
             # my_env["LANG"] = 'de_DE.UTF-8'
-            startup(cls, cls.py_version, {'config_calibre_dir': TEST_DB, 'config_uploading': 1}, env=my_env)
+            startup(cls, cls.py_version, {'config_calibre_dir': TEST_DB, 'config_uploading': 1}, env=my_env,
+                    parameter=["-l"])
             time.sleep(3)
         except Exception:
             cls.driver.quit()
             cls.p.kill()
-
 
     @classmethod
     def tearDownClass(cls):
@@ -48,6 +49,14 @@ class TestCoverEditBooks(TestCase, ui_class):
         cls.proxy.stop_proxy()
         cls.p.terminate()
         save_logfiles(cls, cls.__name__)
+
+    def check_invalid_cover(self, invalid_cover):
+        self.get_book_details(9)
+        self.check_element_on_page((By.ID, "edit_book")).click()
+        element = self.check_element_on_page((By.ID, "btn-upload-cover"))
+        element.send_keys(invalid_cover)
+        self.check_element_on_page((By.ID, "submit")).click()
+        self.assertTrue(self.check_element_on_page((By.ID, "flash_danger")))
 
     def test_upload_jpg(self):
         val.set_type(['HTTPError'])
@@ -95,7 +104,8 @@ class TestCoverEditBooks(TestCase, ui_class):
         self.edit_book(content={'cover_url': u'https://api.github.com/repos/janeczku/calibre-web/cover/test.brk'})
         self.assertTrue(self.check_element_on_page((By.ID, 'flash_danger')))
         self.check_element_on_page((By.ID, "edit_book")).click()
-        self.edit_book(content={'cover_url': u'https://api.github.com/repos/janeczku/calibre-web/cover/test.jpg?size=500'})
+        self.edit_book(
+            content={'cover_url': u'https://api.github.com/repos/janeczku/calibre-web/cover/test.jpg?size=500'})
         self.assertFalse(self.check_element_on_page((By.ID, 'flash_danger')))
         self.save_cover_screenshot('last.png')
         self.assertAlmostEqual(diff('last.png', 'jpg.png', delete_diff_file=True), 0.0, delta=0.0001,
@@ -106,21 +116,10 @@ class TestCoverEditBooks(TestCase, ui_class):
 
     def test_invalid_jpg_hdd(self):
         invalid_cover = os.path.join(base_path, 'files', 'invalid.jpg')
-        with open(invalid_cover, 'wb') as fout:
-            fout.write(os.urandom(124))
-        self.get_book_details(9)
-        self.check_element_on_page((By.ID, "edit_book")).click()
-        element = self.check_element_on_page((By.ID, "btn-upload-cover"))
-        element.send_keys(invalid_cover)
-        self.check_element_on_page((By.ID, "submit")).click()
-        self.assertTrue(self.check_element_on_page((By.ID, "flash_danger")))
+        with open(invalid_cover, 'wb') as file_out:
+            file_out.write(os.urandom(124))
+        self.check_invalid_cover(invalid_cover)
         # check empty file
         open(invalid_cover, 'wb').close()
-        self.get_book_details(9)
-        self.check_element_on_page((By.ID, "edit_book")).click()
-        element = self.check_element_on_page((By.ID, "btn-upload-cover"))
-        element.send_keys(invalid_cover)
-        self.check_element_on_page((By.ID, "submit")).click()
-        self.assertTrue(self.check_element_on_page((By.ID, "flash_danger")))
-
+        self.check_invalid_cover(invalid_cover)
         os.unlink(invalid_cover)

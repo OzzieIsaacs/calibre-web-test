@@ -339,7 +339,7 @@ class TestEditAdditionalBooks(TestCase, ui_class):
         time.sleep(3)
         self.assertTrue(self.check_element_on_page((By.ID, "flash_success")))
 
-    @unittest.skipIf(os.name == 'nt', 'writeonly database on windows is not checked')
+    '''@unittest.skipIf(os.name == 'nt', 'writeonly database on windows is not checked')
     def test_writeonly_path(self):
         self.fill_basic_config({'config_rarfile_location': unrar_path(), "config_unicode_filename": 1})
         time.sleep(BOOT_TIME)
@@ -405,7 +405,7 @@ class TestEditAdditionalBooks(TestCase, ui_class):
 
     @unittest.skip('Not implemented')
     def test_writeonly_calibre_database(self):
-        pass
+        pass'''
 
     def test_edit_book_identifier(self):
         reference_length = len(self.get_book_details(9)['identifier'])

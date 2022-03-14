@@ -45,6 +45,8 @@ Calibre-web-test
 
 - SSL Files for testing will be automatically generated. A Tutorial for generating ssl files can be found here [https://www.golinuxcloud.com/create-certificate-authority-root-ca-linux](https://www.golinuxcloud.com/create-certificate-authority-root-ca-linux) and here [https://www.golinuxcloud.com/openssl-create-client-server-certificate](https://www.golinuxcloud.com/openssl-create-client-server-certificate)
 
+- Mitmporoxy for windows is problematic, as several modules are no longer available for newer python versions, so download the mitmproxy source for version 6.02 and patch the setup file to accept cryptography 36.0 and zstandard>0.15. Afterwards install via pip from this source
+
 ## Start Testing
 
 Tests are running with python 3.6+ (better 3.7 as with 3.6 testing the e-mail startssl/ssl functionality will be skipped) by starting ./test/main.py (tests run for ca. 45min), tested on Linux Mint 19.3. \
