@@ -77,7 +77,6 @@ class TestEditBooksOnGdrive(unittest.TestCase, ui_class):
 
     @classmethod
     def tearDownClass(cls):
-        # remove_gdrive()
         try:
             cls.driver.get("http://127.0.0.1:8083")
             cls.stop_calibre_web()
@@ -86,6 +85,7 @@ class TestEditBooksOnGdrive(unittest.TestCase, ui_class):
             cls.p.terminate()
         except Exception as e:
             print(e)
+        save_logfiles(cls, cls.__name__)
 
         remove_dependency(cls.dependency)
 
@@ -103,24 +103,9 @@ class TestEditBooksOnGdrive(unittest.TestCase, ui_class):
                 os.unlink(src1)
             except PermissionError:
                 print('client_secrets.json delete failed')
-        os.unlink('original.png')
-        os.unlink('jpeg.png')
-        os.unlink('page.png')
-
-        save_logfiles(cls, cls.__name__)
-
-    '''def save_cover_screenshot(self, filename):
-        element = self.driver.find_element(By.TAG_NAME, 'img')
-        location = element.location
-        size = element.size
-        self.driver.save_screenshot("page.png")
-        x = location['x']
-        y = location['y']
-        width = location['x'] + size['width']
-        height = location['y'] + size['height']
-        im = Image.open('page.png')
-        im = im.crop((int(x), int(y), int(width), int(height)))
-        im.save(filename)'''
+        for f in ['original.png', 'jpeg.png', 'page.png']:
+            if os.path.exists(f):
+                os.unlink(f)
 
     def wait_page_has_loaded(self):
         time.sleep(1)
