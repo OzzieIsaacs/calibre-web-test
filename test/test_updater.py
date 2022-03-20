@@ -8,7 +8,8 @@ import requests
 
 from helper_ui import ui_class
 from config_test import TEST_DB, BOOT_TIME, CALIBRE_WEB_PATH
-from helper_func import startup, debug_startup
+from helper_func import startup, debug_startup, add_dependency, remove_dependency
+from helper_func import count_files
 from helper_proxy import Proxy, val
 from selenium.webdriver.common.by import By
 from zipfile import ZipFile, ZipInfo
@@ -19,9 +20,11 @@ class TestUpdater(unittest.TestCase, ui_class):
     p = None
     driver = None
     proxy = None
+    json_line = ["APScheduler"]
 
     @classmethod
     def setUpClass(cls):
+        add_dependency(cls.json_line, cls.__name__)
         if cls.copy_cw():
             cls.proxy = Proxy()
             cls.proxy.start()
@@ -30,7 +33,6 @@ class TestUpdater(unittest.TestCase, ui_class):
             my_env["http_proxy"] = 'http://localhost:8080'
             my_env["https_proxy"] = 'http://localhost:8080'
             my_env["REQUESTS_CA_BUNDLE"] = pem_file
-            my_env["APP_MODE"] = "test"
             startup(cls, cls.py_version, {'config_calibre_dir': TEST_DB}, env=my_env)
         else:
             cls.assertTrue(False, "Target Directory present")
@@ -50,6 +52,7 @@ class TestUpdater(unittest.TestCase, ui_class):
         cls.driver.quit()
         cls.proxy.stop_proxy()
         cls.p.terminate()
+        remove_dependency(cls.json_line)
         try:
             save_logfiles(cls, cls.__name__)
         except:
@@ -355,6 +358,13 @@ class TestUpdater(unittest.TestCase, ui_class):
     def test_perform_update(self):
         self.fill_basic_config({'config_updatechannel': 'Stable'})
         time.sleep(BOOT_TIME)
+        self.fill_thumbnail_config({'schedule_generate_book_covers': 1})
+        self.assertTrue(self.check_element_on_page((By.ID, "flash_success")))
+        self.restart_calibre_web()
+        time.sleep(3)
+        thumbail_cache_path = os.path.exists(os.path.join(CALIBRE_WEB_PATH, 'cps', 'cache', 'thumbnails'))
+        self.assertTrue(thumbail_cache_path)
+        self.assertEqual(count_files(thumbail_cache_path), 20)
         self.goto_page('admin_setup')
         update_table = self.check_element_on_page((By.ID, "current_version")).find_elements(By.TAG_NAME, 'td')
         version = [int(x) for x in (update_table[0].text.rstrip(' Beta')).split('.')]
@@ -387,6 +397,9 @@ class TestUpdater(unittest.TestCase, ui_class):
         self.assertTrue(os.path.isdir(os.path.join(CALIBRE_WEB_PATH, "venv")))
         self.assertTrue(os.path.isfile(os.path.join(CALIBRE_WEB_PATH, "calibre-web.log")))
         self.assertTrue(os.path.isfile(os.path.join(CALIBRE_WEB_PATH, "app.db")))
+        self.assertTrue(thumbail_cache_path)
+        self.assertEqual(count_files(thumbail_cache_path), 20)
+        self.fill_thumbnail_config({'schedule_generate_book_covers': 0})
         # ToDo: Additional folders, additional files
 
     # check cps files not writebale

@@ -21,10 +21,12 @@ except ImportError:
 
 Base = declarative_base()
 
-#books_authors_link = Table('books_authors_link', Base.metadata,
-#                           Column('book', Integer, ForeignKey('books.id'), primary_key=True),
-#                           Column('author', Integer, ForeignKey('authors.id'), primary_key=True)
-#                           )
+
+class LibraryId(Base):
+    __tablename__ = 'library_id'
+    id = Column(Integer, primary_key=True)
+    uuid = Column(String, nullable=False)
+
 
 class Books_Authors_Link(Base):
     __tablename__ = 'books_authors_link'
@@ -159,13 +161,17 @@ def _generate_random_cover(output_path):
     image.save(output_path)
 
 
-def add_books(location, number, cover=False):
+def add_books(location, number, cover=False, set_id=False):
     engine = create_engine('sqlite:///{0}'.format(location), echo=False)
     Session = scoped_session(sessionmaker())
     Session.configure(bind=engine)
     session = Session()
 
     Base.metadata.create_all(engine)
+    if set_id:
+        database_uuid = session.query(LibraryId).one_or_none()
+        database_uuid.uuid = str(uuid4())
+        session.commit()
     database_root = location[:-len("metadata.db")]
     for i in range(number):
         update_title_sort(session)
