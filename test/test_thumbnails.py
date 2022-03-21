@@ -5,8 +5,8 @@ import os
 import shutil
 import time
 import unittest
-import requests
-import json
+from diffimg import diff
+from io import BytesIO
 
 from helper_ui import ui_class
 from config_test import TEST_DB, base_path, CALIBRE_WEB_PATH
@@ -68,9 +68,9 @@ class TestThumbnails(unittest.TestCase, ui_class):
         self.restart_calibre_web()
 
         # check cover folder is filled
-        thumbail_cache_path = os.path.join(CALIBRE_WEB_PATH, 'cps', 'cache', 'thumbnails')
-        self.assertTrue(os.path.exists(thumbail_cache_path))
-        self.assertEqual(count_files(thumbail_cache_path), 110*2)
+        thumbnail_cache_path = os.path.join(CALIBRE_WEB_PATH, 'cps', 'cache', 'thumbnails')
+        self.assertTrue(os.path.exists(thumbnail_cache_path))
+        self.assertEqual(count_files(thumbnail_cache_path), 110*2)
         # change database
         new_path = TEST_DB + '_2'
         create_2nd_database(new_path)
@@ -79,11 +79,11 @@ class TestThumbnails(unittest.TestCase, ui_class):
         self.check_element_on_page((By.ID, "btnConfirmYes-GeneralChangeModal")).click()
         self.assertTrue(self.check_element_on_page((By.ID, "flash_success")))
         time.sleep(3)   # give system time to delete cache
-        self.assertEqual(count_files(thumbail_cache_path), 0)
+        self.assertEqual(count_files(thumbnail_cache_path), 0)
         self.restart_calibre_web()
         # check cover folder is filled with new covers
         time.sleep(3) # give system time to create cache
-        self.assertEqual(count_files(thumbail_cache_path), 20)
+        self.assertEqual(count_files(thumbnail_cache_path), 20)
         # deactivate cache
         self.fill_thumbnail_config({'schedule_generate_book_covers': 0})
         # change database
@@ -93,11 +93,24 @@ class TestThumbnails(unittest.TestCase, ui_class):
         self.assertTrue(self.check_element_on_page((By.ID, "flash_success")))
         time.sleep(1)
         # check cover folder is empty
-        self.assertEqual(count_files(thumbail_cache_path), 0)
+        self.assertEqual(count_files(thumbnail_cache_path), 0)
 
     @unittest.skip
     def test_cover_change_on_upload_new_cover(self):
-        pass
+        self.fill_thumbnail_config({'schedule_generate_book_covers': 1})
+        self.assertTrue(self.check_element_on_page((By.ID, "flash_success")))
+        self.restart_calibre_web()
+        self.fill_basic_config({'config_uploading': 1})
+        time.sleep(3)
+        self.assertTrue(self.check_element_on_page((By.ID, "flash_success")))
+        self.get_book_details(4)
+
+
+        self.fill_basic_config({'config_uploading': 0})
+        time.sleep(3)
+        self.assertTrue(self.check_element_on_page((By.ID, "flash_success")))
+        self.fill_thumbnail_config({'schedule_generate_book_covers': 0})
+        self.assertTrue(self.check_element_on_page((By.ID, "flash_success")))
 
     @unittest.skip
     def test_remove_cover_from_cache(self):
@@ -107,16 +120,58 @@ class TestThumbnails(unittest.TestCase, ui_class):
     def test_cache_with_kobo_sync(self):
         pass
 
-    @unittest.skip
     def test_cache_of_deleted_book(self):
-        pass
+        self.fill_basic_config({'config_uploading': 1})
+        time.sleep(3)
+        self.assertTrue(self.check_element_on_page((By.ID, "flash_success")))
+        self.fill_thumbnail_config({'schedule_generate_book_covers': 1})
+        self.assertTrue(self.check_element_on_page((By.ID, "flash_success")))
+        upload_file = os.path.join(base_path, 'files', 'book.epub')
+        self.goto_page('nav_new')
+        upload = self.check_element_on_page((By.ID, 'btn-upload'))
+        upload.send_keys(upload_file)
+        time.sleep(2)
+        thumbnail_cache_path = os.path.join(CALIBRE_WEB_PATH, 'cps', 'cache', 'thumbnails')
+        book_thumbnail_reference = count_files(thumbnail_cache_path)
+        # covers for new books are generated according to schedule
+        self.assertEqual(book_thumbnail_reference, 0)
+        self.check_element_on_page((By.ID, 'edit_cancel')).click()
+        details = self.get_book_details()
+        # ToDo: check cover is displayed properly
+        self.restart_calibre_web()
+        time.sleep(2)
+        self.delete_book(details['id'])
+        time.sleep(2)
 
-    @unittest.skip
+        self.assertEqual(book_thumbnail_reference-2, count_files(thumbnail_cache_path))
+        self.fill_thumbnail_config({'schedule_generate_book_covers': 0})
+        self.assertTrue(self.check_element_on_page((By.ID, "flash_success")))
+        shutil.rmtree(thumbnail_cache_path, ignore_errors=True)
+
     def test_cache_non_writable(self):
-        pass
+        # makedir cache
+        cache_dir = os.path.join(CALIBRE_WEB_PATH, 'cps', 'cache')
+        os.makedirs(cache_dir)
+        # change to readonly
+        os.chmod(cache_dir, 0o400)
+        self.fill_thumbnail_config({'schedule_generate_book_covers': 1})
+        self.assertTrue(self.check_element_on_page((By.ID, "flash_success")))
+        self.restart_calibre_web()
+        thumbnail_cache_path = os.path.join(CALIBRE_WEB_PATH, 'cps', 'cache', 'thumbnails')
+        book_thumbnail_reference = count_files(thumbnail_cache_path)
+        self.assertEqual(book_thumbnail_reference, 0)
+        # ToDo: check covers are still displayed properly
+        self.fill_thumbnail_config({'schedule_generate_book_covers': 0})
+        self.assertTrue(self.check_element_on_page((By.ID, "flash_success")))
+        os.chmod(cache_dir, 0o764)
+        shutil.rmtree(thumbnail_cache_path, ignore_errors=True)
 
     @unittest.skip
     def test_gdrive_cache(self):
+        pass
+
+    @unittest.skip
+    def test_cache_of_deleted_book_gdrive(self):
         pass
 
     @unittest.skip
