@@ -105,6 +105,7 @@ def prepare_folders():
         os.remove('./cps/services/*.pyc')
     except:
         pass
+    shutil.copy('cps.py', 'src/calibreweb/__main__.py')
     shutil.move('cps.py', 'src/calibreweb/__init__.py')
     shutil.move('cps', 'src/calibreweb')
     shutil.move(os.path.join(FILEPATH, 'requirements.txt'), 'src/calibreweb/requirements.txt')
@@ -140,6 +141,7 @@ def generate_package():
     # move files back in original place
     print('* Moving files back to origin')
     shutil.move('./src/calibreweb/__init__.py', './cps.py')
+    shutil.delete('./src/calibreweb/__main__.py')
     shutil.move('./src/calibreweb/cps', '.')
     shutil.move('./src/calibreweb/requirements.txt', '.')
     shutil.move('./src/calibreweb/optional-requirements.txt', '.')
