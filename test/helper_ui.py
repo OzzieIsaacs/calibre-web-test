@@ -1197,6 +1197,8 @@ class ui_class():
             book_r['title']= meta[0].getchildren()[0].text
             authors = meta[1].getchildren()
             book_r['author'] = [a.text for a in authors if a.text != '&' and a.attrib.get('class') != 'author-name author-hidden']
+            book_r['author_ele'] = [cls.check_element_on_page((By.XPATH, "//div[contains(@class, 'load-more')]//a[@href='" + a.attrib['href'] + "']")) for a in authors if a.attrib.get('href')]
+
             if len(meta) >= 3:
                 for met in meta[2:]:
                     element = met.getchildren()
@@ -1210,6 +1212,8 @@ class ui_class():
                         elif 'href' in element[0].attrib:
                             book_r['series'] = element[0].text.rstrip().lstrip()
                             book_r['series_index'] = element[0].tail.rstrip().lstrip().strip(')').lstrip('(')
+                            book_r['series_ele'] = cls.check_element_on_page((By.XPATH,
+                                                                              "//div[contains(@class, 'random-books')]//a[@href='" + element[0].attrib['href'] + "']"))
             books_rand.append(book_r)
         books = list()
         b = tree.xpath("//*[@class='discover load-more']/div/div")
@@ -1224,6 +1228,8 @@ class ui_class():
             bk['title']= meta[0].getchildren()[0].text
             authors = meta[1].getchildren()
             bk['author'] = [a.text for a in authors if a.text != '&' and a.attrib.get('class') != 'author-name author-hidden']
+            bk['author_ele'] = [cls.check_element_on_page((By.XPATH, "//div[contains(@class, 'load-more')]//a[@href='" + a.attrib['href'] + "']")) for a in authors if a.attrib.get('href')]
+
             if len(meta) >= 3:
                 for met in meta[2:]:
                     element = met.getchildren()
@@ -1235,6 +1241,11 @@ class ui_class():
                                     counter += 1
                             bk['rating'] = counter
                         elif 'href' in element[0].attrib:
+                            bk['series'] = element[0].text.rstrip().lstrip()
+                            bk['series_index'] = element[0].tail.rstrip().lstrip().strip(')').lstrip('(')
+                            bk['series_ele'] = cls.check_element_on_page((By.XPATH,
+                                                                              "//div[contains(@class, 'load-more')]//a[@href='" + element[0].attrib['href'] + "']"))
+                        else:
                             bk['series'] = element[0].text.rstrip().lstrip()
                             bk['series_index'] = element[0].tail.rstrip().lstrip().strip(')').lstrip('(')
             books.append(bk)
@@ -1295,7 +1306,7 @@ class ui_class():
                 bk['count'] = None
             else:
                 bk['count'] = ele[index-1].text
-                bk['ele'] = None
+                bk['ele'] = cls.check_element_on_page((By.XPATH,"//a[@href='"+bk['link']+"']"))
             if not rating:
                 bk['title']= ele[index].text
             else:
@@ -1353,6 +1364,8 @@ class ui_class():
             bk['title']= meta[0].getchildren()[0].text
             authors = meta[1].getchildren()
             bk['author'] = [a.text for a in authors if a.text != '&' and a.attrib.get('class') != 'author-name author-hidden']
+            bk['author_ele'] = [self.check_element_on_page(
+                (By.XPATH, "//a[@href='" + a.attrib['href'] + "']")) for a in authors  if a.attrib.get('href')]
             if len(meta) >= 3:
                 for met in meta[2:]:
                     element = met.getchildren()
@@ -1366,6 +1379,9 @@ class ui_class():
                         elif 'href' in element[0].attrib:
                             bk['series'] = element[0].text.rstrip().lstrip()
                             bk['series_index'] = element[0].tail.rstrip().lstrip().strip(')').lstrip('(')
+                            bk['series_ele'] = self.check_element_on_page((By.XPATH,
+                                                                              "//a[@href='" + element[0].attrib['href'] + "']"))
+
             books.append(bk)
         return books
 
