@@ -786,9 +786,11 @@ class TestCalibreWebVisibilitys(unittest.TestCase, ui_class):
         self.get_book_details(5)
         self.check_element_on_page((By.ID, "edit_book")).click()
         self.edit_book(custom_content={u'Custom Bool 1 Ä': u'No'})
+        self.assertTrue(self.check_element_on_page((By.ID, "flash_success")))
         self.get_book_details(7)
         self.check_element_on_page((By.ID, "edit_book")).click()
         self.edit_book(custom_content={u'Custom Bool 1 Ä': u'Yes'})
+        self.assertTrue(self.check_element_on_page((By.ID, "flash_success")))
         details = self.get_book_details(5)
         self.assertEqual(details['cust_columns'][0]['value'], 'remove')
         details = self.get_book_details(7)
@@ -804,6 +806,46 @@ class TestCalibreWebVisibilitys(unittest.TestCase, ui_class):
         self.goto_page("nav_read")
         list_element = self.get_books_displayed()
         self.assertEqual(len(list_element[1]), 1)
+        # check read mark visible in read view
+        self.assertTrue(list_element[1][0]['read'])
+        # check read mark visible in author view
+        list_element[1][0]['author_ele'][0].click()
+        author = self.get_books_displayed()
+        self.assertTrue(author[1][0]['read'])
+        self.assertFalse(author[1][1]['read'])
+        # check read mark visible in series view
+        author[1][0]['series_ele'].click()
+        series = self.get_books_displayed()
+        self.assertTrue(series[1][0]['read'])
+        self.assertFalse(series[1][1]['read'])
+        # check read mark visible in normal book view
+        self.goto_page("nav_new")
+        books = self.get_books_displayed()
+        self.assertTrue(books[1][6]['read'])
+        self.assertFalse(books[1][5]['read'])
+        # check read mark visible in discovery view
+        self.goto_page("nav_rand")
+        books = self.get_books_displayed()
+        found = 0
+        for book in books[1]:
+            if book['read'] == True:
+                found = 1
+                break
+        self.assertEqual(1, found)
+        # check read mark visible in search view
+        search = self.search("Djüngel")
+        self.assertTrue(search[0]['read'])
+        self.assertFalse(search[1]['read'])
+        # check read mark visible in shelf view
+        self.create_shelf("linked_read")
+        self.get_book_details(7)
+        time.sleep(2)
+        self.check_element_on_page((By.ID, "add-to-shelf")).click()
+        self.check_element_on_page((By.XPATH, "//ul[@id='add-to-shelves']/li/a[contains(.,'linked_read')]")).click()
+        self.list_shelfs("linked_read")['ele'].click()
+        shelf_books = self.get_shelf_books_displayed()
+        self.assertTrue(shelf_books[0]['read'])
+        self.delete_shelf("linked_read")
         self.goto_page("nav_unread")
         list_element = self.get_books_displayed()
         self.assertEqual(len(list_element[1]), 10)
@@ -833,7 +875,8 @@ class TestCalibreWebVisibilitys(unittest.TestCase, ui_class):
         r = requests.session()
         login_page = r.get('http://127.0.0.1:8083/login')
         token = re.search('<input type="hidden" name="csrf_token" value="(.*)">', login_page.text)
-        payload = {'username': 'admin', 'password': 'admin123', 'submit':"", 'next':"/", "remember_me":"on", "csrf_token": token.group(1)}
+        payload = {'username': 'admin', 'password': 'admin123', 'submit':"",
+                   'next':"/", "remember_me":"on", "csrf_token": token.group(1)}
         result = r.post('http://127.0.0.1:8083/login', data=payload)
         self.assertEqual(200, result.status_code)
         config_page = r.get('http://127.0.0.1:8083/admin/viewconfig')
@@ -846,6 +889,55 @@ class TestCalibreWebVisibilitys(unittest.TestCase, ui_class):
         result = r.post('http://127.0.0.1:8083/admin/viewconfig', data=payload)
         self.assertTrue("flash_danger" in result.text)
         r.close()
+
+    def test_read_status_visible(self):
+        self.get_book_details(7)
+        self.check_element_on_page((By.XPATH, "//*[@id='have_read_cb']")).click()
+        self.goto_page("nav_read")
+        list_element = self.get_books_displayed()
+        self.assertEqual(len(list_element[1]), 1)
+        # check read mark visible in read view
+        self.assertTrue(list_element[1][0]['read'])
+        # check read mark visible in author view
+        list_element[1][0]['author_ele'][0].click()
+        author = self.get_books_displayed()
+        self.assertTrue(author[1][0]['read'])
+        self.assertFalse(author[1][1]['read'])
+        # check read mark visible in series view
+        author[1][0]['series_ele'].click()
+        series = self.get_books_displayed()
+        self.assertTrue(series[1][0]['read'])
+        self.assertFalse(series[1][1]['read'])
+        # check read mark visible in normal book view
+        self.goto_page("nav_new")
+        books = self.get_books_displayed()
+        self.assertTrue(books[1][6]['read'])
+        self.assertFalse(books[1][5]['read'])
+        # check read mark visible in discovery view
+        self.goto_page("nav_rand")
+        books = self.get_books_displayed()
+        found = 0
+        for book in books[1]:
+            if book['read'] == True:
+                found = 1
+                break
+        self.assertEqual(1, found)
+        # check read mark visible in search view
+        search = self.search("Djüngel")
+        self.assertTrue(search[0]['read'])
+        self.assertFalse(search[1]['read'])
+        # check read mark visible in shelf view
+        self.create_shelf("linked_read")
+        self.get_book_details(7)
+        time.sleep(2)
+        self.check_element_on_page((By.ID, "add-to-shelf")).click()
+        self.check_element_on_page((By.XPATH, "//ul[@id='add-to-shelves']/li/a[contains(.,'linked_read')]")).click()
+        self.list_shelfs("linked_read")['ele'].click()
+        shelf_books = self.get_shelf_books_displayed()
+        self.assertTrue(shelf_books[0]['read'])
+        self.delete_shelf("linked_read")
+        self.get_book_details(7)
+        self.check_element_on_page((By.XPATH, "//*[@id='have_read_cb']")).click()
 
 
     def test_hide_custom_column(self):

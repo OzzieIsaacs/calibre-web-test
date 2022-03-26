@@ -385,7 +385,6 @@ class TestCalibreWebListOrders(unittest.TestCase, ui_class):
         self.assertEqual(books[1][1]['title'], "comicdemo")
         self.check_element_on_page((By.ID, "new")).click()
 
-
     def test_order_authors_all_links(self):
         self.goto_page('nav_author')
         list_element = self.get_list_books_displayed()

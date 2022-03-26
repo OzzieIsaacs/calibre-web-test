@@ -1192,6 +1192,7 @@ class ui_class():
             meta=ele[1].getchildren()
             book_r = dict()
             book_r['link'] = ele[0].getchildren()[0].attrib['href']
+            book_r['read'] = bool(ele[0].getchildren()[0].xpath(".//span[contains(@class, 'read')]"))
             book_r['ele'] = cls.check_element_on_page((By.XPATH,"//a[@href='"+book_r['link']+"']//img"))
             book_r['id'] = book_r['link'][6:]
             book_r['title']= meta[0].getchildren()[0].text
@@ -1223,6 +1224,7 @@ class ui_class():
             meta=ele[1].getchildren()
             bk = dict()
             bk['link'] = ele[0].getchildren()[0].attrib['href']
+            bk['read'] = bool(ele[0].getchildren()[0].xpath(".//span[contains(@class, 'read')]"))
             bk['id'] = bk['link'][6:]
             bk['ele'] = cls.check_element_on_page((By.XPATH,"//a[@href='"+bk['link']+"']//img"))
             bk['title']= meta[0].getchildren()[0].text
@@ -1359,6 +1361,7 @@ class ui_class():
             meta=ele[1].getchildren()
             bk = dict()
             bk['link'] = ele[0].getchildren()[0].attrib['href']
+            bk['read'] = bool(ele[0].getchildren()[0].xpath(".//span[contains(@class, 'read')]"))
             bk['id'] = bk['link'][6:]
             bk['ele'] = self.check_element_on_page((By.XPATH,"//a[@href='"+bk['link']+"']//img"))
             bk['title']= meta[0].getchildren()[0].text
