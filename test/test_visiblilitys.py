@@ -188,6 +188,7 @@ class TestCalibreWebVisibilitys(unittest.TestCase, ui_class):
                  'pub_old': (10,)
                  }
         self.verify_order("nav_rated", order=order)
+        self.check_element_on_page((By.ID, "new")).click()
 
     # Test if user can change visibility of sidebar view read and unread books
     def test_admin_change_visibility_read(self):
@@ -229,6 +230,7 @@ class TestCalibreWebVisibilitys(unittest.TestCase, ui_class):
                  'pub_old': (1, 3, 4, 8)
                  }
         self.verify_order("nav_unread", order=order)
+        self.check_element_on_page((By.ID, "new")).click()
 
     # checks if admin can change user language
     def test_admin_change_visibility_language(self):
@@ -249,6 +251,7 @@ class TestCalibreWebVisibilitys(unittest.TestCase, ui_class):
                  'pub_old': (1, 9, 10, 5)
                  }
         self.verify_order("nav_lang", 0, order=order)
+        self.check_element_on_page((By.ID, "new")).click()
 
     # checks if admin can change hot books
     def test_admin_change_visibility_hot(self):
@@ -302,6 +305,7 @@ class TestCalibreWebVisibilitys(unittest.TestCase, ui_class):
                  'series_desc': (7, 3)
                  }
         self.verify_order("nav_serie", 0, order=order)
+        self.check_element_on_page((By.ID, "new")).click()
 
     # checks if admin can change publisher
     def test_admin_change_visibility_publisher(self):
@@ -322,6 +326,7 @@ class TestCalibreWebVisibilitys(unittest.TestCase, ui_class):
                  'pub_old': (5,),
                  }
         self.verify_order("nav_publisher", 0, order=order)
+        self.check_element_on_page((By.ID, "new")).click()
 
     # checks if admin can change ratings
     def test_admin_change_visibility_rating(self):
@@ -342,6 +347,7 @@ class TestCalibreWebVisibilitys(unittest.TestCase, ui_class):
                  'pub_old': (7,),
                  }
         self.verify_order("nav_rate", 0, order=order)
+        self.check_element_on_page((By.ID, "new")).click()
 
     # checks if admin can change fileFormats
     def test_admin_change_visibility_file_formats(self):
@@ -362,6 +368,7 @@ class TestCalibreWebVisibilitys(unittest.TestCase, ui_class):
                  'pub_old': (8, 9, 10, 5)  # books 8,9,10 are all of same date (0101) -> 2nd order according to id in database
                  }
         self.verify_order("nav_format", 1, order=order)
+        self.check_element_on_page((By.ID, "new")).click()
 
     # checks if admin can change fileFormats
     def test_admin_change_visibility_archived(self):
@@ -397,6 +404,7 @@ class TestCalibreWebVisibilitys(unittest.TestCase, ui_class):
                  'pub_old': (5, 7)
                  }
         self.verify_order("nav_author", 2, order=order)
+        self.check_element_on_page((By.ID, "new")).click()
 
     # checks if admin can change categories
     def test_admin_change_visibility_category(self):
@@ -494,6 +502,7 @@ class TestCalibreWebVisibilitys(unittest.TestCase, ui_class):
                  'pub_old': (8, 9, 10, 11)
                  }
         self.verify_order("search", order=order)
+        self.check_element_on_page((By.ID, "new")).click()
 
 
 
@@ -781,6 +790,11 @@ class TestCalibreWebVisibilitys(unittest.TestCase, ui_class):
         self.assertEqual(len(books[1]), 11)
 
     def test_link_column_to_read_status(self):
+        self.goto_page("nav_author")
+        list_element = self.get_list_books_displayed()
+        self.assertIsNotNone(list_element)
+        list_element[0]['ele'].click()
+        self.check_element_on_page((By.ID, "new")).click()
         search = self.adv_search('', get=True)
         self.assertTrue(search['cust_columns']['Custom Bool 1 Ä'])
         self.get_book_details(5)

@@ -503,6 +503,7 @@ class TestEditBooks(TestCase, ui_class):
 
     def test_edit_custom_single_select(self):
         self.assertEqual(len(self.adv_search({u'custom_column_9': u'人物'})), 0)
+        self.assertEqual(len(self.search(u'人物')), 0)
         self.get_book_details(5)
         self.check_element_on_page((By.ID, "edit_book")).click()
         self.edit_book(custom_content={u'Custom 人物 Enum':u'人物'})
@@ -510,6 +511,7 @@ class TestEditBooks(TestCase, ui_class):
         self.assertEqual(u'人物', vals['cust_columns'][0]['value'])
         self.assertEqual(len(self.adv_search({u'custom_column_9': u'Alfa'})), 0)
         self.assertEqual(len(self.adv_search({u'custom_column_9': u'人物'})), 1)
+        self.assertEqual(len(self.search(u'人物')), 1)
         self.get_book_details(5)
         self.check_element_on_page((By.ID, "edit_book")).click()
         self.edit_book(custom_content={u'Custom 人物 Enum': ''})
@@ -519,6 +521,7 @@ class TestEditBooks(TestCase, ui_class):
     # change text, add text, delete text
     def test_edit_custom_text(self):
         self.assertEqual(len(self.adv_search({u'custom_column_10': u'人 Ä'})), 0)
+        self.assertEqual(len(self.search(u'人 Ä')), 0)
         self.get_book_details(5)
         self.check_element_on_page((By.ID, "edit_book")).click()
         self.edit_book(custom_content={u'Custom Text 人物 *\'()&': u'Lulu 人 Ä'})
@@ -527,6 +530,7 @@ class TestEditBooks(TestCase, ui_class):
         self.assertEqual(len(self.adv_search({u'custom_column_10': u'Koko'})), 0)
         self.assertEqual(len(self.adv_search({u'custom_column_10': u'lu'})), 1)
         self.assertEqual(len(self.adv_search({u'custom_column_10': u'人 Ä'})), 1)
+        self.assertEqual(len(self.search(u'人 Ä')), 1)
         self.get_book_details(5)
         self.check_element_on_page((By.ID, "edit_book")).click()
         self.edit_book(custom_content={u'Custom Text 人物 *\'()&': ''})
@@ -536,6 +540,7 @@ class TestEditBooks(TestCase, ui_class):
     # change comments, add comments, delete comments
     def test_edit_custom_comment(self):
         self.assertEqual(len(self.adv_search({u'custom_column_5': u'人1 Ä'})), 0)
+        self.assertEqual(len(self.search(u'人1 Ä')), 0)
         self.get_book_details(5)
         self.check_element_on_page((By.ID, "edit_book")).click()
         self.edit_book(custom_content={u'Custom Comment 人物': u'Lulu 人1 Ä'})
@@ -544,6 +549,7 @@ class TestEditBooks(TestCase, ui_class):
         self.assertEqual(len(self.adv_search({u'custom_column_5': u'Koko'})), 0)
         self.assertEqual(len(self.adv_search({u'custom_column_5': u'lu'})), 1)
         self.assertEqual(len(self.adv_search({u'custom_column_5': u'人1 Ä'})), 1)
+        self.assertEqual(len(self.search(u'人1 Ä')), 1)
         self.get_book_details(5)
         self.check_element_on_page((By.ID, "edit_book")).click()
         self.edit_book(custom_content={u'Custom Comment 人物': ''})
@@ -553,6 +559,7 @@ class TestEditBooks(TestCase, ui_class):
     # change categories, add categories, delete categories
     def test_edit_custom_categories(self):
         self.assertEqual(len(self.adv_search({u'custom_column_6': u'人 Ü'})), 0)
+        self.assertEqual(len(self.search(u'人 Ü')), 0)
         self.get_book_details(5)
         self.check_element_on_page((By.ID, "edit_book")).click()
         self.edit_book(custom_content={r'Custom categories\|, 人物': u'KuKu 人 Ü'})
@@ -561,6 +568,7 @@ class TestEditBooks(TestCase, ui_class):
         self.assertEqual(len(self.adv_search({u'custom_column_6': u'Koko'})), 0)
         self.assertEqual(len(self.adv_search({u'custom_column_6': u'Ku'})), 1)
         self.assertEqual(len(self.adv_search({u'custom_column_6': u'人 Ü'})), 1)
+        self.assertEqual(len(self.search(u'人 Ü')), 1)
         self.get_book_details(5)
         self.check_element_on_page((By.ID, "edit_book")).click()
         self.edit_book(custom_content={r'Custom categories\|, 人物': ''})
@@ -796,7 +804,7 @@ class TestEditBooks(TestCase, ui_class):
         self.check_element_on_page((By.ID, "edit_book")).click()
         bmpcover = os.path.join(base_path, 'files', 'cover.bmp')
         self.edit_book(content={'local_cover': bmpcover})
-        self.assertFalse(self.check_element_on_page((By.CLASS_NAME, "alert")))
+        self.assertTrue(self.check_element_on_page((By.ID, "flash_success")))
         time.sleep(5)
         self.get_book_details(5)
         self.save_cover_screenshot('bmp.png')

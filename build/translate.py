@@ -73,7 +73,7 @@ for file in sorted(glob.glob1("./translations", "*.po")):
     # Remove old content from po file
     message_path = os.path.join(FILEPATH,'cps', 'translations', langcode, 'LC_MESSAGES', 'messages.po')
     translateFile=open(message_path)
-    mergedTranslation=pofile.read_po(translateFile,locale=langcode)
+    mergedTranslation=pofile.read_po(translateFile, locale=langcode)
     translateFile.close()
 
     # transfer calibre language translation to

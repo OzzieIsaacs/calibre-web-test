@@ -751,6 +751,7 @@ class TestEditBooksOnGdrive(unittest.TestCase, ui_class):
         vals = self.get_book_details(5)
         self.assertEqual(0, len(vals['cust_columns']))
 
+    @unittest.expectedFailure
     def test_upload_cover_hdd(self):
         self.fill_basic_config({'config_uploading': 1})
         time.sleep(3)
@@ -829,6 +830,7 @@ class TestEditBooksOnGdrive(unittest.TestCase, ui_class):
         self.fill_basic_config({'config_uploading': 0})
         r.close()
 
+    @unittest.expectedFailure
     def test_upload_book_epub(self):
         self.fill_basic_config({'config_uploading': 1})
         time.sleep(3)

@@ -322,6 +322,7 @@ class TestCalibreWebListOrders(unittest.TestCase, ui_class):
         self.goto_page('nav_serie')
         list = self.check_element_on_page((By.ID, "list-button"))
         self.assertTrue(list)
+        self.check_element_on_page((By.ID, "asc")).click()
         list_element = self.get_list_books_displayed()
         list_element[0]['ele'].click()
         self.check_element_on_page((By.ID, "series_desc")).click()
@@ -387,6 +388,7 @@ class TestCalibreWebListOrders(unittest.TestCase, ui_class):
 
     def test_order_authors_all_links(self):
         self.goto_page('nav_author')
+        self.check_element_on_page((By.ID, "asc")).click()
         list_element = self.get_list_books_displayed()
         list_element[2]['ele'].click()
         self.check_element_on_page((By.ID, "desc")).click()
