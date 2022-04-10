@@ -15,6 +15,17 @@ from subproc_wrapper import process_open
 from helper_environment import environment, add_dependency
 import configparser
 import argparse
+import platform
+
+
+def find_version(file_paths):
+    with codecs.open(file_paths, 'r') as fp:
+        version_file = fp.read()
+    version_match = re.search(r"^STABLE_VERSION\s+=\s+{['\"]version['\"]:\s*['\"](.*)['\"]}",
+                              version_file, re.M)
+    if version_match:
+        return version_match.group(1)
+    raise RuntimeError("Unable to find version string.")
 
 
 def change_config(target_file, config, value):
@@ -73,6 +84,7 @@ def update_requirements():
 def parse_arguments():
     parser = argparse.ArgumentParser(description='Build files installer files of Calibre-web\n', prog='make_release.py')
     parser.add_argument('-u', action='store_true', help='Update setup.cfg file')
+    parser.add_argument('-p', action='store_true', help='Only generate pypi package file')
     return parser.parse_args()
 
 def prepare_folders():
@@ -95,15 +107,15 @@ def prepare_folders():
     # move cps and cps.py file to source folder
     try:
         os.remove('cps.pyc')
-    except:
+    except OSError:
         pass
     try:
         os.remove('./cps/*.pyc')
-    except:
+    except OSError:
         pass
     try:
         os.remove('./cps/services/*.pyc')
-    except:
+    except OSError:
         pass
     shutil.copy('cps.py', 'src/calibreweb/__main__.py')
     shutil.move('cps.py', 'src/calibreweb/__init__.py')
@@ -112,10 +124,11 @@ def prepare_folders():
     shutil.move(os.path.join(FILEPATH, 'optional-requirements.txt'), 'src/calibreweb/optional-requirements.txt')
     print('* Moving files to "src" directory')
 
+
 def generate_package():
     prepare_folders()
     # Change home-config setting
-    target_file = os.path.join(FILEPATH, "src/calibreweb/cps/constants.py")
+    target_file = os.path.join(FILEPATH, "src", "calibreweb", "cps", "constants.py")
     change_config(target_file, "HOME_CONFIG", "True")
     print('* Change "homeconfig" settings to true')
 
@@ -286,7 +299,7 @@ def prepare_files_pyinstaller():
 
 def revert_files_pyinstaller(workdir):
     print('* Moving folder to root folder')
-    shutil.move('./dist/calibreweb/',os.path.join(FILEPATH))
+    shutil.move('./dist/calibreweb/', os.path.join(FILEPATH))
     shutil.move('requirements.txt', os.path.join(FILEPATH, 'requirements.txt'))
     shutil.move('optional-requirements.txt', os.path.join(FILEPATH, 'optional-requirements.txt'))
     # created .pip installed file is deleted
@@ -295,6 +308,76 @@ def revert_files_pyinstaller(workdir):
     os.rename("calibreweb", "executable")
     shutil.rmtree('exe_temp', ignore_errors=True)
     os.chdir(workdir)
+
+
+def create_deb_package():
+    shutil.rmtree(os.path.join(FILEPATH, "debian"), ignore_errors=True)
+    arch = platform.uname().machine
+    if arch == "x86_64":
+        arch = "amd64"
+    elif arch == "aarch64":
+        arch = "arm64"
+    version_file = os.path.join(FILEPATH, "cps", "constants.py")
+    version_string = find_version(version_file).replace(" ", "-")
+    os.makedirs(os.path.join(FILEPATH, "debian"))
+    with open(os.path.join(FILEPATH, "debian", "control"), "w") as f:
+        f.write("Source: Calibre-Web\n")
+        f.write("\n")
+        f.write("Package: Calibre-Web\n")
+        f.write("Version: {}\n".format(version_string))
+        f.write("Architecture: {}\n".format(arch))
+        f.write("Maintainer: Ozzie Isaacs <Ozzie.Fernandez.Isaacs@googlemail.com>\n")
+        f.write("Description: Calibre-Web is a web app providing a clean interface for browsing, reading and downloading eBooks using a valid Calibre database.\n")
+    target_dir = "calibre-web_" + version_string + "_" + arch
+    os.makedirs(os.path.join(FILEPATH, target_dir))
+    os.makedirs(os.path.join(FILEPATH, target_dir, "DEBIAN"))
+    os.makedirs(os.path.join(FILEPATH, target_dir, "opt"))
+    shutil.copytree(os.path.join(FILEPATH, "executable"), os.path.join(FILEPATH, target_dir, "opt", "calibre-web"))
+    exefile = os.path.join(target_dir, "opt", "calibre-web", "calibreweb")
+    command = ("dpkg-shlibdeps -O " + "./" + exefile)
+    p = subprocess.Popen(command,
+                         cwd=FILEPATH,
+                         shell=True,
+                         stdout=subprocess.PIPE,
+                         stdin=subprocess.PIPE)
+    p.wait()
+    lines = p.stdout.readlines()
+    dep_line = "".join([line.decode('utf-8') for line in lines])
+    print("* Output dpkg-shlibdeps: {}".format(dep_line))
+    dep_line =  dep_line[15:].rstrip("\n")
+    # check successful
+    if p.returncode != 0:
+        print('## Error: dpkg-shlibdeps returned an error, aborting ##')
+        return True
+
+    with open(os.path.join(FILEPATH, target_dir, "DEBIAN", "control"), "w") as f:
+        f.write("Package: Calibre-Web\n")
+        f.write("Version: {}\n".format(version_string))
+        f.write("Architecture: {}\n".format(arch))
+        f.write("Depends: {}\n".format(dep_line))
+        f.write("Maintainer: Ozzie Isaacs <Ozzie.Fernandez.Isaacs@googlemail.com>\n")
+        f.write("Description: Calibre-Web is a web app providing a clean interface for browsing, reading and downloading eBooks using a valid Calibre database.\n")
+
+    command = ("dpkg-deb --build --root-owner-group " + target_dir)
+    p = subprocess.Popen(command,
+                         cwd=FILEPATH,
+                         shell=True,
+                         stdout=subprocess.PIPE,
+                         stdin=subprocess.PIPE)
+    p.wait()
+    lines = p.stdout.readlines()
+    print("* Output dpkg-deb: ")
+    for line in lines:
+        print(line.decode('utf-8'))
+    # check successful
+    if p.returncode != 0:
+        print('## Error: dpkg-deb returned an error, aborting ##')
+        return True
+    print('* Delete temporary files for .deb generation and move deb file to directory "debian"')
+    os.remove(os.path.join(FILEPATH, "debian", "control"))
+    shutil.move(os.path.join(FILEPATH, target_dir + ".deb"), os.path.join(FILEPATH, "debian"))
+    shutil.rmtree(os.path.join(FILEPATH, target_dir), ignore_errors=True)
+    return False
 
 
 def main():
@@ -311,7 +394,8 @@ def main():
     # if package generation had an error stop
     if generate_package():
         sys.exit(1)
-
+    if args.p:
+        sys.exit(0)
     # move files for pyinstaller
     prepare_files_pyinstaller()
     # Prepare environment for pyinstaller
@@ -324,6 +408,11 @@ def main():
         print('## Pyinstaller finished with error, aborting ##')
         sys.exit(1)
 
+    if sys.platform.lower() == "linux":
+        print('* Generating Debian DEB package')
+        if create_deb_package():
+            print('## Generate DEB-package finished with error, aborting ##')
+            sys.exit(1)
     print('* Build Successfully Finished')
 
 
