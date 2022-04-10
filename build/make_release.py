@@ -218,8 +218,10 @@ def create_executable():
     py_inst_path = os.path.join(os.path.dirname(VENV_PYTHON), py_inst)
     if os.name == "nt":
         google_api_path = glob.glob(os.path.join(FILEPATH, "venv", "lib/site-packages/google_api_python*"))
+        iso639_path = os.path.join(FILEPATH, "venv", "lib", "site-packages", "iso639")
     else:
         google_api_path = glob.glob(os.path.join(FILEPATH, "venv", "lib/**/site-packages/google_api_python*"))
+        iso639_path = glob.glob(os.path.join(FILEPATH, "venv", "lib", "python*", "site-packages", "iso639"))[0]
 
     if len(google_api_path) != 1:
         print('* More than one google_api_python directory found exiting')
@@ -237,7 +239,7 @@ def create_executable():
                               "--add-data requirements.txt" + sep + ". "
                               "--add-data optional-requirements.txt" + sep + ". "
                               "--add-data .pip_installed" + sep + ". "
-                              "--add-data " + os.path.join(FILEPATH, "venv", "lib", "site-packages", "iso639") + sep + "iso639" + " "
+                              "--add-data " + iso639_path + sep + "iso639" + " "
                               "--add-data " + google_api_path[0] + sep + os.path.basename(google_api_path[0]) + " "
                               "--hidden-import sqlalchemy.sql.default_comparator ")
     p = subprocess.Popen(command,
