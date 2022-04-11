@@ -51,7 +51,7 @@ p.wait()
 # update all translation files with the new content of the template file
 # adding --ignore-obsolete will delete all obsolete translations
 pot_path = os.path.join(FILEPATH,"messages.pot")
-translation_path = os.path.join(FILEPATH,'cps','translations')
+translation_path = os.path.join(FILEPATH,'cps', 'translations')
 if sys.version_info < (3, 0):
     translation_path = translation_path.encode(sys.getfilesystemencoding())
 p = subprocess.Popen("pybabel update --no-wrap -i "+ pot_path + " -d " + translation_path,
@@ -67,7 +67,7 @@ langcode_list = list()
 lang_keys = need_iso['name_map'].keys()
 eng_translations = dict()
 
-for file in sorted(glob.glob1("./translations", "*.po")):
+for file in sorted(glob.glob1("translations", "*.po")):
     langcode=file[23:-3]
     langcode_list.append(langcode)
     # Remove old content from po file
@@ -92,7 +92,7 @@ for file in sorted(glob.glob1("./translations", "*.po")):
             if transid != origid:
                 print("Format string error {}: '{}'".format(langcode,element.id))
     # write mo and po files
-    mo_path = os.path.join(FILEPATH , "cps","translations" , langcode , "LC_MESSAGES","messages.mo")
+    mo_path = os.path.join(FILEPATH, "cps", "translations", langcode, "LC_MESSAGES", "messages.mo")
     target_path = os.path.join(FILEPATH, "cps", "translations", langcode, "LC_MESSAGES", "messages.po")
     targetFile = open(target_path,'wb')
     pofile.write_po(targetFile, mergedTranslation, ignore_obsolete=True, width=0)

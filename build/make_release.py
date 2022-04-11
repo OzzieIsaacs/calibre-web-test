@@ -2,7 +2,6 @@
 # # -*- coding: utf-8 -*-
 import os
 import glob
-from config import FILEPATH, VENV_PATH, VENV_PYTHON
 import shutil
 import sys
 import subprocess
@@ -11,11 +10,13 @@ import re
 import tarfile
 import venv
 from subprocess import CalledProcessError
-from subproc_wrapper import process_open
-from helper_environment import environment, add_dependency
 import configparser
 import argparse
 import platform
+
+sys.path.append(os.path.dirname(os.path.abspath(__file__)))
+
+from config import FILEPATH, VENV_PATH, VENV_PYTHON
 
 
 def find_version(file_paths):
@@ -47,14 +48,14 @@ def change_config(target_file, config, value):
 
 def update_requirements():
     # Update requirements in config.cfg file
-    config = configparser.ConfigParser()
-    config.read(os.path.join(FILEPATH, "setup.cfg"))
+    cfg = configparser.ConfigParser()
+    cfg.read(os.path.join(FILEPATH, "setup.cfg"))
 
     print("* Updating config.cfg from requirements.txt")
     with open(os.path.join(FILEPATH, "requirements.txt"), "r") as stream:
         requirements = stream.readlines()
 
-    config['options']['install_requires'] = "\n" + "".join(requirements)
+    cfg['options']['install_requires'] = "\n" + "".join(requirements)
 
     with open(os.path.join(FILEPATH, "optional-requirements.txt"), "r") as stream:
         opt_requirements = stream.readlines()
@@ -72,20 +73,20 @@ def update_requirements():
 
     for key, value in optional_reqs.items():
         try:
-            if config["options.extras_require"][key.lower()]:
-                config["options.extras_require"][key.lower()] = value.rstrip("\n")
+            if cfg["options.extras_require"][key.lower()]:
+                cfg["options.extras_require"][key.lower()] = value.rstrip("\n")
             print("'{}' block updated".format(key))
         except KeyError:
             print("* Optional Requirement block '{}' not found in config.cfg".format(key.lower()))
 
     with open(os.path.join(FILEPATH, "setup.cfg"), 'w') as configfile:
-        config.write(configfile)
+        cfg.write(configfile)
 
-def parse_arguments():
+def parse_arguments(*args):
     parser = argparse.ArgumentParser(description='Build files installer files of Calibre-web\n', prog='make_release.py')
     parser.add_argument('-u', action='store_true', help='Update setup.cfg file')
     parser.add_argument('-p', action='store_true', help='Only generate pypi package file')
-    return parser.parse_args()
+    return parser.parse_args(*args)
 
 def prepare_folders():
     # create source folder
@@ -153,16 +154,16 @@ def generate_package():
 
     # move files back in original place
     print('* Moving files back to origin')
-    shutil.move('./src/calibreweb/__init__.py', './cps.py')
-    os.remove('./src/calibreweb/__main__.py')
-    shutil.move('./src/calibreweb/cps', '.')
-    shutil.move('./src/calibreweb/requirements.txt', '.')
-    shutil.move('./src/calibreweb/optional-requirements.txt', '.')
+    shutil.move(os.path.join(FILEPATH, 'src', 'calibreweb', '__init__.py'), os.path.join(FILEPATH,'cps.py'))
+    os.remove(os.path.join(FILEPATH, 'src/calibreweb/__main__.py'))
+    shutil.move(os.path.join(FILEPATH, 'src/calibreweb/cps'), FILEPATH)
+    shutil.move(os.path.join(FILEPATH,'src/calibreweb/requirements.txt'), FILEPATH)
+    shutil.move(os.path.join(FILEPATH,'src/calibreweb/optional-requirements.txt'), FILEPATH)
 
     print('* Deleting "src" directory')
-    shutil.rmtree('src', ignore_errors=True)
+    shutil.rmtree(os.path.join(FILEPATH, 'src'), ignore_errors=True)
     print('* Deleting "build" directory')
-    shutil.rmtree('build', ignore_errors=True)
+    shutil.rmtree(os.path.join(FILEPATH, 'build'), ignore_errors=True)
 
     return error
 
@@ -380,11 +381,12 @@ def create_deb_package():
     return False
 
 
-def main():
-    args = parse_arguments()
+def main(args):
+    # args = parse_arguments()
     update_requirements()
     if args.u:
-        sys.exit(0)
+        return 0
+        # sys.exit(0)
 
     # Change workdir to calibre folder
     workdir = os.getcwd()
@@ -393,9 +395,11 @@ def main():
     # Generate pypi package
     # if package generation had an error stop
     if generate_package():
-        sys.exit(1)
+        return 1
+        # sys.exit(1)
     if args.p:
-        sys.exit(0)
+        return 0
+        # sys.exit(0)
     # move files for pyinstaller
     prepare_files_pyinstaller()
     # Prepare environment for pyinstaller
@@ -406,15 +410,20 @@ def main():
 
     if error:
         print('## Pyinstaller finished with error, aborting ##')
-        sys.exit(1)
+        return 1
+        # sys.exit(1)
 
     if sys.platform.lower() == "linux":
         print('* Generating Debian DEB package')
         if create_deb_package():
             print('## Generate DEB-package finished with error, aborting ##')
-            sys.exit(1)
+            return 1
+            # sys.exit(1)
     print('* Build Successfully Finished')
+    return 0
 
 
 if __name__ == '__main__':
-    main()
+    args = parse_arguments()
+    ret = main(args)
+    sys.exit(ret)
