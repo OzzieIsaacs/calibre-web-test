@@ -10,6 +10,7 @@ from helper_func import startup, debug_startup
 import time
 from helper_func import save_logfiles
 import re
+from urllib.parse import quote_plus
 '''
 opds feed tests
 '''
@@ -589,7 +590,45 @@ class TestOPDSFeed(unittest.TestCase, ui_class):
         entries = self.get_opds_feed(r.text)
         self.assertTrue('search_link' in entries)
         self.assertEqual(len(entries['elements']), 2)
+
+        r = requests.get('http://127.0.0.1:8083/opds/search/peter parker', auth=('admin', 'admin123'))
+        entries = self.get_opds_feed(r.text)
+        self.assertEqual(len(entries['elements']), 2)
+        self.assertEqual(entries['elements'][0]['author'][0], 'Peter Parker')
+        self.assertEqual(entries['elements'][1]['author'][0], 'Peter Parker')
+        r = requests.get('http://127.0.0.1:8083/opds/search/der+buchtitel', auth=('admin', 'admin123'))
+        entries = self.get_opds_feed(r.text)
+        self.assertEqual(len(entries['elements']), 1)
+        self.assertEqual(entries['elements'][0]['title'], 'Der Buchtitel')
+        # with plusencode the plus is encoded to %2B and the search should search for a peter plus parker, therefore not returning anything
+        r = requests.get('http://127.0.0.1:8083/opds/search/' + quote_plus('peter+parker'), auth=('admin', 'admin123'))
+        entries = self.get_opds_feed(r.text)
+        self.assertEqual(len(entries['elements']), 0)
         self.login("admin", "admin123")
+        self.edit_book(11, content={'book_title':'+'})
+        time.sleep(1)
+        # with plusencode the plus is encoded to %2B and the search should search for a plus
+        r = requests.get('http://127.0.0.1:8083/opds/search/' + quote_plus('+'), auth=('admin', 'admin123'))
+        entries = self.get_opds_feed(r.text)
+        self.assertEqual(len(entries['elements']), 1)
+        self.assertEqual(entries['elements'][0]['title'], '+')
+        # unencoded search for "+" searches for space and finds nothing as it's stripped
+        r = requests.get('http://127.0.0.1:8083/opds/search/+', auth=('admin', 'admin123'))
+        entries = self.get_opds_feed(r.text)
+        self.assertEqual(len(entries['elements']), 0)
+
+        term = (searches['search'][1].attrib['template']).format(searchTerms=quote_plus('+'))
+        r = requests.get('http://127.0.0.1:8083' + term, auth=('admin', 'admin123'))
+        self.assertEqual(200, r.status_code)
+        entries = self.get_opds_feed(r.text)
+        self.assertEqual(len(entries['elements']), 1)
+        term = (searches['search'][0].attrib['template']).format(searchTerms='+')
+        r = requests.get('http://127.0.0.1:8083' + term, auth=('admin', 'admin123'))
+        self.assertEqual(200, r.status_code)
+        entries = self.get_opds_feed(r.text)
+        self.assertEqual(len(entries['elements']), 0)
+
+        self.edit_book(11, content={'book_title':'book9'})
         self.edit_user('admin', {'default_language': 'English'})
         time.sleep(2)
         term = (searches['search'][0].attrib['template']).format(searchTerms='book')

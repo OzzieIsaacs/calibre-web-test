@@ -60,7 +60,7 @@ if __name__ == '__main__':
         venv.create(VENV_PATH, clear=True, with_pip=True)
     except CalledProcessError:
         print("Error Creating virtual environment")
-        venv.create(VENV_PATH, system_site_packages =True, with_pip=False)
+        venv.create(VENV_PATH, system_site_packages=True, with_pip=False)
     print("Creating virtual environment for testing")
 
 
