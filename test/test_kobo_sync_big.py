@@ -25,7 +25,7 @@ class TestKoboSyncBig(unittest.TestCase, ui_class):
     syncToken = dict()
     header = dict()
     data = dict()
-    json_line = ["jsonschema"]
+    json_line = ["jsonschema", "APScheduler"]
 
     @classmethod
     def setUpClass(cls):
@@ -37,7 +37,7 @@ class TestKoboSyncBig(unittest.TestCase, ui_class):
                                           'config_kepubifypath': "",
                                           # 'config_log_level': 'DEBUG',
                                           'config_kobo_proxy': 0}, host=host, env={"APP_MODE": "test"})
-            add_books(os.path.join(TEST_DB, "metadata.db"), 1520)    #1520
+            add_books(os.path.join(TEST_DB, "metadata.db"), 1520, cover=True, set_id=True)    #1520
             time.sleep(3)
             WebDriverWait(cls.driver, 5).until(EC.presence_of_element_located((By.ID, "flash_success")))
             cls.goto_page('user_setup')
