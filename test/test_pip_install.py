@@ -99,3 +99,19 @@ class TestPipInstall(unittest.TestCase, ui_class):
         except Exception:
             pass
 
+    def test_foldername_database_location(self):
+        package_command = os.path.join(self.package_path, "bin", "cps")
+        p = process_open([package_command, "-p",self.package_path])
+        # create a new Firefox session
+        time.sleep(BOOT_TIME)
+        # navigate to the application home page
+        self.driver.get("http://127.0.0.1:8083")
+        self.login("admin", "admin123")
+        self.fill_db_config({'config_calibre_dir': TEST_DB})
+        self.assertTrue(self.check_element_on_page((By.ID, "flash_success")))
+        self.stop_calibre_web(p)
+        time.sleep(1)
+        try:
+            self.driver.switch_to.alert.accept()
+        except Exception:
+            pass
