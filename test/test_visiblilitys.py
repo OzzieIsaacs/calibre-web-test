@@ -325,7 +325,7 @@ class TestCalibreWebVisibilitys(unittest.TestCase, ui_class):
                  'pub_new': (5,),
                  'pub_old': (5,),
                  }
-        self.verify_order("nav_publisher", 0, order=order)
+        self.verify_order("nav_publisher", 1, order=order)
         self.check_element_on_page((By.ID, "new")).click()
 
     # checks if admin can change ratings
@@ -346,7 +346,7 @@ class TestCalibreWebVisibilitys(unittest.TestCase, ui_class):
                  'pub_new': (7,),
                  'pub_old': (7,),
                  }
-        self.verify_order("nav_rate", 0, order=order)
+        self.verify_order("nav_rate", 1, order=order)
         self.check_element_on_page((By.ID, "new")).click()
 
     # checks if admin can change fileFormats
