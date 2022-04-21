@@ -302,7 +302,7 @@ def prepare_files_pyinstaller():
 
 def revert_files_pyinstaller(workdir):
     print('* Moving folder to root folder')
-    shutil.move('./dist/calibreweb/', os.path.join(FILEPATH))
+    shutil.move(os.path.join(FILEPATH,'dist','calibreweb'), os.path.join(FILEPATH))
     shutil.move('requirements.txt', os.path.join(FILEPATH, 'requirements.txt'))
     shutil.move('optional-requirements.txt', os.path.join(FILEPATH, 'optional-requirements.txt'))
     # created .pip installed file is deleted
