@@ -10,6 +10,8 @@ import re
 import tarfile
 import venv
 from subprocess import CalledProcessError
+from subproc_wrapper import process_open
+from helper_environment import environment, add_dependency
 import configparser
 import argparse
 import platform
@@ -207,7 +209,7 @@ def create_python_environment():
     environment.save_environment(os.path.join(FILEPATH, '.pip_installed'))
 
     print("Adding pyinstaller to virtual environment")
-    p = process_open([VENV_PYTHON, "-m", "pip", "install", "pyinstaller"], (0,))
+    p = process_open([VENV_PYTHON, "-m", "pip", "install", "pyinstaller==4.10"], (0,))
     while p.poll() is None:
         out = p.stdout.readline()
         out != "" and print(out.strip("\n"))

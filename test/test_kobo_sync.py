@@ -165,8 +165,8 @@ class TestKoboSync(unittest.TestCase, ui_class):
         self.assertEqual(16790, len(r.content))
         # perform image request of unknown book
         r = session.get(self.kobo_adress+'/100129102/100/100/false/image.jpg', headers=TestKoboSync.header, timeout=10)
-        self.assertEqual(r.status_code, 200)
-        self.assertEqual(r.json(), {})
+        self.assertEqual(r.status_code, 404)
+        # self.assertEqual(r.json(), {})
 
         # perform whishlist request
         params = {'PageSize': '30', 'PageIndex': '0'}
