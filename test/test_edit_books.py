@@ -791,15 +791,14 @@ class TestEditBooks(TestCase, ui_class):
         self.assertTrue(self.check_element_on_page((By.ID, "flash_success")))
         self.edit_user('admin', {'upload_role': 1})
         self.get_book_details(5)
-        self.save_cover_screenshot('original.png')
+        original = self.check_element_on_page((By.ID, "detailcover")).screenshot_as_png
         self.check_element_on_page((By.ID, "edit_book")).click()
         jpegcover = os.path.join(base_path, 'files', 'cover.jpg')
         self.edit_book(content={'local_cover': jpegcover})
         time.sleep(5)
         self.get_book_details(5)
-        self.save_cover_screenshot('jpeg.png')
-        self.assertGreater(diff('original.png', 'jpeg.png', delete_diff_file=True), 0.02)
-        os.unlink('original.png')
+        jpeg = self.check_element_on_page((By.ID, "detailcover")).screenshot_as_png
+        self.assertGreater(diff(BytesIO(original), BytesIO(jpeg), delete_diff_file=True), 0.02)
 
         self.check_element_on_page((By.ID, "edit_book")).click()
         bmpcover = os.path.join(base_path, 'files', 'cover.bmp')
@@ -807,29 +806,24 @@ class TestEditBooks(TestCase, ui_class):
         self.assertTrue(self.check_element_on_page((By.ID, "flash_success")))
         time.sleep(5)
         self.get_book_details(5)
-        self.save_cover_screenshot('bmp.png')
-        self.assertGreater(diff('bmp.png', 'jpeg.png', delete_diff_file=True), 0.003)
-        os.unlink('jpeg.png')
+        bmp = self.check_element_on_page((By.ID, "detailcover")).screenshot_as_png
+        self.assertGreater(diff(BytesIO(bmp), BytesIO(jpeg), delete_diff_file=True), 0.003)
 
         self.check_element_on_page((By.ID, "edit_book")).click()
         pngcover = os.path.join(base_path, 'files', 'cover.png')
         self.edit_book(content={'local_cover': pngcover})
         time.sleep(5)
         self.get_book_details(5)
-        self.save_cover_screenshot('png.png')
-        self.assertGreater(diff('bmp.png', 'png.png', delete_diff_file=True), 0.005)
-        os.unlink('bmp.png')
+        png = self.check_element_on_page((By.ID, "detailcover")).screenshot_as_png
+        self.assertGreater(diff(BytesIO(bmp), BytesIO(png), delete_diff_file=True), 0.005)
 
         self.check_element_on_page((By.ID, "edit_book")).click()
         pngcover = os.path.join(base_path, 'files', 'cover.webp')
         self.edit_book(content={'local_cover': pngcover})
         time.sleep(5)
         self.get_book_details(5)
-        self.save_cover_screenshot('webp.png')
-        self.assertGreater(diff('webp.png', 'png.png', delete_diff_file=True), 0.005)
-        os.unlink('webp.png')
-        os.unlink('png.png')
-        os.unlink('page.png')
+        webp = self.check_element_on_page((By.ID, "detailcover")).screenshot_as_png
+        self.assertGreater(diff(BytesIO(webp), BytesIO(png), delete_diff_file=True), 0.005)
         self.fill_basic_config({'config_uploading': 0})
         time.sleep(5)
 

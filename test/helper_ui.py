@@ -1754,19 +1754,6 @@ class ui_class():
         submit.click()
         return
 
-    def save_cover_screenshot(self, filename):
-        element = self.driver.find_element(By.TAG_NAME, 'img')
-        location = element.location
-        size = element.size
-        self.driver.save_screenshot("page.png")
-        x = location['x']
-        y = location['y']
-        width = location['x'] + size['width']
-        height = location['y'] + size['height']
-        im = Image.open('page.png')
-        im = im.crop((int(x), int(y), int(width), int(height)))
-        im.save(filename)
-
     def add_identifier(self, key, value):
         add_button = self.check_element_on_page((By.ID, "add-identifier-line"))
         if not add_button:

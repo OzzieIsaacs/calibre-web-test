@@ -10,8 +10,8 @@ import time
 import requests
 import shutil
 from helper_ui import ui_class
-from PIL import Image
 from diffimg import diff
+from io import BytesIO
 
 from config_test import CALIBRE_WEB_PATH, TEST_DB, base_path, WAIT_GDRIVE
 from helper_func import add_dependency, remove_dependency, startup
@@ -103,9 +103,6 @@ class TestEditBooksOnGdrive(unittest.TestCase, ui_class):
                 os.unlink(src1)
             except PermissionError:
                 print('client_secrets.json delete failed')
-        for f in ['original.png', 'jpeg.png', 'page.png']:
-            if os.path.exists(f):
-                os.unlink(f)
 
     def wait_page_has_loaded(self):
         time.sleep(1)
@@ -758,25 +755,24 @@ class TestEditBooksOnGdrive(unittest.TestCase, ui_class):
         self.assertTrue(self.check_element_on_page((By.ID, 'flash_success')))
         self.edit_user('admin', {'upload_role': 1})
         self.get_book_details(5)
-        self.save_cover_screenshot('original.png')
+        original = self.check_element_on_page((By.ID, "detailcover")).screenshot_as_png
+
         self.check_element_on_page((By.ID, "edit_book")).click()
         jpegcover = os.path.join(base_path, 'files', 'cover.jpg')
         self.edit_book(content={'local_cover': jpegcover})
         time.sleep(5)
         self.get_book_details(5)
         time.sleep(5)
-        self.save_cover_screenshot('jpeg.png')
-        self.assertGreater(diff('original.png', 'jpeg.png', delete_diff_file=True), 0.02)
-        os.unlink('original.png')
+        jpeg = self.check_element_on_page((By.ID, "detailcover")).screenshot_as_png
+        self.assertGreater(diff(BytesIO(original), BytesIO(jpeg), delete_diff_file=True), 0.02)
 
         self.check_element_on_page((By.ID, "edit_book")).click()
         bmpcover = os.path.join(base_path, 'files', 'cover.bmp')
         self.edit_book(content={'local_cover': bmpcover})
         self.assertFalse(self.check_element_on_page((By.CLASS_NAME, "alert")))
         time.sleep(5)
-        self.save_cover_screenshot('bmp.png')
-        self.assertGreater(diff('bmp.png', 'jpeg.png', delete_diff_file=True), 0.006)
-        os.unlink('jpeg.png')
+        bmp = self.check_element_on_page((By.ID, "detailcover")).screenshot_as_png
+        self.assertGreater(diff(BytesIO(bmp), BytesIO(jpeg), delete_diff_file=True), 0.006)
         self.get_book_details(5)
         time.sleep(5)
         self.check_element_on_page((By.ID, "edit_book")).click()
@@ -785,9 +781,8 @@ class TestEditBooksOnGdrive(unittest.TestCase, ui_class):
         time.sleep(5)
         self.get_book_details(5)
         time.sleep(5)
-        self.save_cover_screenshot('png.png')
-        self.assertGreater(diff('bmp.png', 'png.png', delete_diff_file=True), 0.005)
-        os.unlink('bmp.png')
+        png = self.check_element_on_page((By.ID, "detailcover")).screenshot_as_png
+        self.assertGreater(diff(BytesIO(bmp), BytesIO(png), delete_diff_file=True), 0.005)
 
         self.check_element_on_page((By.ID, "edit_book")).click()
         pngcover = os.path.join(base_path, 'files', 'cover.webp')
@@ -795,11 +790,8 @@ class TestEditBooksOnGdrive(unittest.TestCase, ui_class):
         time.sleep(5)
         self.get_book_details(5)
         time.sleep(5)
-        self.save_cover_screenshot('webp.png')
-        self.assertGreater(diff('webp.png', 'png.png', delete_diff_file=True), 0.005)
-        os.unlink('webp.png')
-        os.unlink('png.png')
-        os.unlink('page.png')
+        webp = self.check_element_on_page((By.ID, "detailcover")).screenshot_as_png
+        self.assertGreater(diff(BytesIO(webp), BytesIO(png), delete_diff_file=True), 0.005)
 
         self.fill_basic_config({'config_uploading': 0})
         time.sleep(2)
