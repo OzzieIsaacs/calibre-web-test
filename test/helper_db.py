@@ -9,6 +9,7 @@ from sqlalchemy import ForeignKey
 from sqlalchemy.orm import sessionmaker, scoped_session
 from sqlalchemy import TIMESTAMP
 import random
+import shutil
 import string
 from uuid import uuid4
 from PIL import Image, ImageDraw
@@ -117,7 +118,10 @@ def update_title_sort(session):
         return title.strip()
 
     conn = session.connection().connection.connection
-    conn.create_function("title_sort", 1, _title_sort)
+    try:
+        conn.create_function("title_sort", 1, _title_sort)
+    except Exception:
+        pass
 
 def _randStr(chars = string.ascii_uppercase + string.digits, N=10):
     return ''.join(random.choice(chars) for _ in range(N))
@@ -157,7 +161,9 @@ def _generate_random_cover(output_path):
               "purple", "orange", "magenta", "black"]
     for i in range(0, 8):
         ele = [draw.ellipse, draw.line, draw.rectangle]
-        random.choice(ele)((random.randint(0, 800), (random.randint(0, 1280))) + (random.randint(0, 800), (random.randint(0, 1280))), width=5, fill=random.choice(colors))
+        random.choice(ele)((random.randint(0, 800), (random.randint(0, 1280))) +
+                           (random.randint(0, 800), (random.randint(0, 1280))),
+                           width=5, fill=random.choice(colors))
     image.save(output_path)
 
 
@@ -208,8 +214,38 @@ def add_books(location, number, cover=False, set_id=False):
         bal = Books_Authors_Link(book.id, author.id)
         session.add(bal)
         session.commit()
-    # session.commit()
     session.close()
     engine.dispose()
 
+def remove_book(location, book_id):
+    engine = create_engine('sqlite:///{0}'.format(location), echo=False)
+    Session = scoped_session(sessionmaker())
+    Session.configure(bind=engine)
+    session = Session()
+    del_book = session.query(Books).filter(Books.id == book_id).first()
+    # delete path
+    database_root = location[:-len("metadata.db")]
+    shutil.rmtree(os.path.join(database_root, del_book.path))
+    session.query(Data).filter(Data.book == book_id).delete()
+    session.query(Books).filter(Books.id == book_id).delete()
+    session.commit()
+    Base.metadata.create_all(engine)
+    session.close()
+    engine.dispose()
 
+def change_book_cover(location, book_id, cover_path):
+    engine = create_engine('sqlite:///{0}'.format(location), echo=False)
+    Session = scoped_session(sessionmaker())
+    Session.configure(bind=engine)
+    session = Session()
+    update_title_sort(session)
+    # file_location = session.query(Data).filter(Data.book == book_id).first()
+    book = session.query(Books).filter(Books.id == book_id).first()
+    database_root = location[:-len("metadata.db")]
+    shutil.copy(cover_path, os.path.join(database_root, book.path, "cover.jpg"))
+    book = session.query(Books).filter(Books.id == book_id).first()
+    book.last_modified = datetime.utcnow()
+    session.commit()
+    Base.metadata.create_all(engine)
+    session.close()
+    engine.dispose()

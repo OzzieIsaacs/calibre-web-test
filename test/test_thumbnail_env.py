@@ -20,7 +20,6 @@ class TestThumbnailsEnv(unittest.TestCase, ui_class):
 
     p = None
     driver = None
-    json_line = ["APScheduler"]
 
     @classmethod
     def setUpClass(cls):

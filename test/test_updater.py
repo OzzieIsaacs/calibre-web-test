@@ -20,11 +20,9 @@ class TestUpdater(unittest.TestCase, ui_class):
     p = None
     driver = None
     proxy = None
-    json_line = ["APScheduler"]
 
     @classmethod
     def setUpClass(cls):
-        add_dependency(cls.json_line, cls.__name__)
         if cls.copy_cw():
             cls.proxy = Proxy()
             cls.proxy.start()
@@ -52,7 +50,6 @@ class TestUpdater(unittest.TestCase, ui_class):
         cls.driver.quit()
         cls.proxy.stop_proxy()
         cls.p.terminate()
-        remove_dependency(cls.json_line)
         try:
             save_logfiles(cls, cls.__name__)
         except:
@@ -451,4 +448,3 @@ class TestUpdater(unittest.TestCase, ui_class):
         resp = requests.get('http://127.0.0.1:8083/reconnect')
         self.assertEqual(404, resp.status_code)
         # self.assertDictEqual({}, resp.json())
-

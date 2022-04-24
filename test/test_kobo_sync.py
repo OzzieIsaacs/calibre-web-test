@@ -160,7 +160,8 @@ class TestKoboSync(unittest.TestCase, ui_class):
         # ToDo Check Reading state
         # self.assertEqual(data[0]['NewEntitlement']['ReadingState'], '')
         # perform image request of first book
-        r = session.get(self.kobo_adress+'/' + bood_uuid + '/100/100/false/image.jpg', headers=TestKoboSync.header, timeout=10)
+        r = session.get(self.kobo_adress+'/' + bood_uuid + '/100/100/false/image.jpg', headers=TestKoboSync.header,
+                        timeout=10)
         self.assertEqual(r.status_code, 200)
         self.assertEqual(16790, len(r.content))
         # perform image request of unknown book

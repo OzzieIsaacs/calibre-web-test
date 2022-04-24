@@ -220,14 +220,14 @@ class ui_class():
         return cls.check_element_on_page((By.ID, "flash_success"))
 
     @classmethod
-    def fill_thumbnail_config(cls,elements=None):
+    def fill_thumbnail_config(cls, elements=None):
         cls.goto_page('thumbnail_config')
-        process_options =dict()
+        process_options = dict()
         process_checkboxes = dict()
 
         checkboxes = ['schedule_generate_book_covers', 'schedule_generate_series_covers']
         options = ['schedule_end_time', 'schedule_start_time']
-        # check if checkboxes are in list and seperate lists
+        # check if checkboxes are in list and separate lists
         for element,key in enumerate(elements):
             if key in checkboxes:
                 process_checkboxes[key] = elements[key]
@@ -448,20 +448,20 @@ class ui_class():
         # finally submit settings
         cls.driver.find_element(By.NAME, "submit").click()
 
-
-    def restart_calibre_web(self):
-        self.goto_page('admin_setup')
-        self.driver.find_element(By.ID, 'admin_restart').click()
-        element = self.check_element_on_page((By.ID, "restart"))
+    @classmethod
+    def restart_calibre_web(cls):
+        cls.goto_page('admin_setup')
+        cls.driver.find_element(By.ID, 'admin_restart').click()
+        element = cls.check_element_on_page((By.ID, "restart"))
         element.click()
-        time.sleep (10)
+        time.sleep(10)
 
     def reconnect_database(self):
         self.goto_page('admin_setup')
         self.driver.find_element(By.ID, 'restart_database').click()
         element = self.check_element_on_page((By.ID, "DialogFinished"))
         element.click()
-        time.sleep (3)
+        time.sleep(3)
 
     @classmethod
     def stop_calibre_web(cls, proc=None):
