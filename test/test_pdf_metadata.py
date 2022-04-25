@@ -129,7 +129,8 @@ class TestUploadPDF(TestCase, ui_class):
                                  "cover": os.path.join(base_path, 'files', 'cover.jpg')},
                                 {'title': "book1",
                                  'author': ["Unknown"],
-                                 'languages': None
+                                 'languages': None,
+                                 'comment': ""
                                  }
                                 )
         # Unicode author and Titel, with language
@@ -139,7 +140,8 @@ class TestUploadPDF(TestCase, ui_class):
                                  "cover": os.path.join(base_path, 'files', 'cover.jpg')},
                                 {'title': "Tü执el",
                                  'author': ["Ma执i Mücks"],
-                                 'languages': ["German"]
+                                 'languages' : ["German"],
+                                 'comment': ""
                                  }
                                 )
         # This example gives an bytes encodes tag

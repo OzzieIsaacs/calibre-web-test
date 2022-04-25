@@ -10,7 +10,7 @@ from config_test import TEST_DB
 # from parameterized import parameterized_class
 from helper_func import startup, debug_startup
 
-
+# other tests regardign order of elements is in test_visibilities
 class TestCalibreWebListOrders(unittest.TestCase, ui_class):
 
     p = None
@@ -56,14 +56,14 @@ class TestCalibreWebListOrders(unittest.TestCase, ui_class):
         self.assertEqual(list_element[1]['title'], "Djüngel")
         self.check_element_on_page((By.ID, "list-button")).click()
         list_element = self.get_list_books_displayed()
-        self.assertEqual(list_element[0]['title'], "Loko")
-        self.assertEqual(list_element[1]['title'], "Djüngel")
+        self.assertEqual(list_element[1]['title'], "Loko")
+        self.assertEqual(list_element[2]['title'], "Djüngel")
         grid = self.check_element_on_page((By.ID, "grid-button"))
         self.assertTrue(grid)
         self.check_element_on_page((By.ID, "desc")).click()
         list_element = self.get_list_books_displayed()
-        self.assertEqual(list_element[0]['title'], "Loko")
-        self.assertEqual(list_element[1]['title'], "Djüngel")
+        self.assertEqual(list_element[1]['title'], "Loko")
+        self.assertEqual(list_element[2]['title'], "Djüngel")
         self.check_element_on_page((By.ID, "asc")).click()
         list_element = self.get_list_books_displayed()
         self.assertEqual(list_element[0]['title'], "Djüngel")
@@ -151,15 +151,17 @@ class TestCalibreWebListOrders(unittest.TestCase, ui_class):
         self.goto_page('nav_publisher')
         list_element = self.get_list_books_displayed()
         self.assertEqual(list_element[0]['title'], "Alfafa")
-        self.assertEqual(list_element[1]['title'], "Randomhäus")
+        self.assertEqual(list_element[1]['title'], "None")
+        self.assertEqual(list_element[2]['title'], "Randomhäus")
         self.check_element_on_page((By.ID, "asc")).click()
         list_element = self.get_list_books_displayed()
         self.assertEqual(list_element[0]['title'], "Alfafa")
-        self.assertEqual(list_element[1]['title'], "Randomhäus")
+        self.assertEqual(list_element[2]['title'], "Randomhäus")
         self.check_element_on_page((By.ID, "desc")).click()
         list_element = self.get_list_books_displayed()
         self.assertEqual(list_element[0]['title'], "Randomhäus")
-        self.assertEqual(list_element[1]['title'], "Alfafa")
+        self.assertEqual(list_element[1]['title'], "None")
+        self.assertEqual(list_element[2]['title'], "Alfafa")
         self.check_element_on_page((By.ID, "asc")).click()
         self.get_book_details(9)
         self.check_element_on_page((By.ID, "edit_book")).click()
@@ -191,7 +193,7 @@ class TestCalibreWebListOrders(unittest.TestCase, ui_class):
         self.assertEqual(list_element[1]['title'], "German")
         self.assertEqual(list_element[0]['count'], "3")
         self.assertEqual(list_element[1]['count'], "1")
-        self.assertEqual(len(list_element), 3)
+        self.assertEqual(len(list_element), 4)
         self.check_element_on_page((By.ID, "asc")).click()
         list_element = self.get_list_books_displayed()
         self.assertEqual(list_element[0]['title'], "English")
@@ -199,13 +201,15 @@ class TestCalibreWebListOrders(unittest.TestCase, ui_class):
         self.check_element_on_page((By.ID, "desc")).click()
         list_element = self.get_list_books_displayed()
         self.assertEqual(list_element[0]['title'], "Norwegian Bokmål")
-        self.assertEqual(list_element[1]['title'], "German")
+        self.assertEqual(list_element[2]['title'], "German")
         self.goto_page('nav_lang')
         list_element = self.get_list_books_displayed()
         self.assertEqual(list_element[0]['title'], "Norwegian Bokmål")
-        self.assertEqual(list_element[1]['title'], "German")
+        self.assertEqual(list_element[1]['title'], "None")
+        self.assertEqual(list_element[2]['title'], "German")
         self.assertEqual(list_element[0]['count'], "3")
-        self.assertEqual(list_element[1]['count'], "1")
+        self.assertEqual(list_element[2]['count'], "1")
+        self.assertEqual(list_element[1]['count'], "4")
         self.check_element_on_page((By.ID, "asc")).click()
         self.get_book_details(9)
         self.check_element_on_page((By.ID, "edit_book")).click()
@@ -218,16 +222,19 @@ class TestCalibreWebListOrders(unittest.TestCase, ui_class):
         self.goto_page('nav_cat')
         list_element = self.get_list_books_displayed()
         self.assertEqual(list_element[0]['title'], "Gênot")
-        self.assertEqual(list_element[1]['title'], "Älfafa")
-        self.assertEqual(len(list_element), 2)
+        self.assertEqual(list_element[1]['title'], "None")
+        self.assertEqual(list_element[2]['title'], "Älfafa")
+        self.assertEqual(len(list_element), 3)
         self.check_element_on_page((By.ID, "asc")).click()
         list_element = self.get_list_books_displayed()
         self.assertEqual(list_element[0]['title'], "Gênot")
-        self.assertEqual(list_element[1]['title'], "Älfafa")
+        self.assertEqual(list_element[1]['title'], "None")
+        self.assertEqual(list_element[2]['title'], "Älfafa")
         self.check_element_on_page((By.ID, "desc")).click()
         list_element = self.get_list_books_displayed()
         self.assertEqual(list_element[0]['title'], "Älfafa")
-        self.assertEqual(list_element[1]['title'], "Gênot")
+        self.assertEqual(list_element[1]['title'], "None")
+        self.assertEqual(list_element[2]['title'], "Gênot")
         self.check_element_on_page((By.ID, "asc")).click()
         self.get_book_details(9)
         self.check_element_on_page((By.ID, "edit_book")).click()
@@ -236,13 +243,13 @@ class TestCalibreWebListOrders(unittest.TestCase, ui_class):
     def test_ratings_sort(self):
         self.goto_page('nav_rate')
         list_element = self.get_list_books_displayed(True)
-        self.assertEqual(list_element[0]['title'], "2")
-        self.assertEqual(list_element[1]['title'], "5")
-        self.assertEqual(len(list_element), 2)
+        self.assertEqual(list_element[1]['title'], "2")
+        self.assertEqual(list_element[2]['title'], "5")
+        self.assertEqual(len(list_element), 3)
         self.check_element_on_page((By.ID, "asc")).click()
         list_element = self.get_list_books_displayed(True)
-        self.assertEqual(list_element[0]['title'], "2")
-        self.assertEqual(list_element[1]['title'], "5")
+        self.assertEqual(list_element[1]['title'], "2")
+        self.assertEqual(list_element[2]['title'], "5")
         self.check_element_on_page((By.ID, "desc")).click()
         list_element = self.get_list_books_displayed(True)
         self.assertEqual(list_element[0]['title'], "5")
@@ -317,3 +324,131 @@ class TestCalibreWebListOrders(unittest.TestCase, ui_class):
         # diable anonymous browser
         self.fill_basic_config({'config_anonbrowse': 0})
         self.assertTrue(self.check_element_on_page((By.ID, "flash_success")))
+
+    def test_order_series_all_links(self):
+        self.goto_page('nav_serie')
+        list = self.check_element_on_page((By.ID, "list-button"))
+        self.assertTrue(list)
+        self.check_element_on_page((By.ID, "asc")).click()
+        list_element = self.get_list_books_displayed()
+        list_element[0]['ele'].click()
+        self.check_element_on_page((By.ID, "series_desc")).click()
+        books = self.get_books_displayed()
+        self.assertEqual(books[1][0]['title'], "Buuko")
+        self.assertEqual(books[1][1]['title'], "comicdemo")
+        self.assertEqual(books[1][0]['series'], "Djüngel")
+        self.assertFalse("series_ele" in books[1][0])
+        # discover
+        self.goto_page('nav_rand')
+        books = self.get_books_displayed()
+        for book in books[1]:
+            if book.get('series', "") == "Djüngel":
+                book['series_ele'].click()
+                break
+        books = self.get_books_displayed()
+        self.assertEqual(books[1][0]['title'], "Buuko")
+        self.assertEqual(books[1][1]['title'], "comicdemo")
+        # search
+        books = self.search("Djüngel")
+        books[0]['series_ele'].click()
+        books = self.get_books_displayed()
+        self.assertEqual(books[1][0]['title'], "Buuko")
+        self.assertEqual(books[1][1]['title'], "comicdemo")
+        # details_random
+        stop = 0
+        for i in range(0,8):
+            self.goto_page('nav_new')
+            books = self.get_books_displayed()
+            for book in books[0]:
+                if book.get('series', "") == "Djüngel":
+                    book['series_ele'].click()
+                    stop = 1
+                    break
+            if stop == 1:
+                break
+        self.assertEqual(stop, 1)
+        books = self.get_books_displayed()
+        self.assertEqual(books[1][0]['title'], "Buuko")
+        self.assertEqual(books[1][1]['title'], "comicdemo")
+        # shelf
+        self.create_shelf("Series")
+        self.get_book_details(3)
+        self.check_element_on_page((By.ID, "add-to-shelf")).click()
+        self.check_element_on_page((By.XPATH, "//ul[@id='add-to-shelves']/li/a[contains(.,'Series')]")).click()
+        self.list_shelfs('Series')['ele'].click()
+        shelf_books = self.get_shelf_books_displayed()
+        shelf_books[0]['series_ele'].click()
+        books = self.get_books_displayed()
+        self.assertEqual(books[1][0]['title'], "Buuko")
+        self.assertEqual(books[1][1]['title'], "comicdemo")
+        self.delete_shelf("Series")
+        # author
+        self.goto_page('nav_author')
+        list_element = self.get_list_books_displayed()
+        list_element[2]['ele'].click()
+        author_books = self.get_books_displayed()
+        author_books[1][0]['series_ele'].click()
+        books = self.get_books_displayed()
+        self.assertEqual(books[1][0]['title'], "Buuko")
+        self.assertEqual(books[1][1]['title'], "comicdemo")
+        self.check_element_on_page((By.ID, "new")).click()
+
+    def test_order_authors_all_links(self):
+        self.goto_page('nav_author')
+        self.check_element_on_page((By.ID, "asc")).click()
+        list_element = self.get_list_books_displayed()
+        list_element[2]['ele'].click()
+        self.check_element_on_page((By.ID, "desc")).click()
+        books = self.get_books_displayed()
+        self.assertEqual(books[1][0]['title'], "testbook")
+        self.assertEqual(books[1][1]['title'], "Buuko")
+        books[1][0]['author_ele'][0].click()
+        # check if entered from same page authorlink
+        books = self.get_books_displayed()
+        self.assertEqual(books[1][0]['title'], "testbook")
+        self.assertEqual(books[1][1]['title'], "Buuko")
+        # discover
+        self.goto_page('nav_rand')
+        books = self.get_books_displayed()
+        for book in books[1]:
+            if book.get('author', "") == ["John Döe"]:
+                book['author_ele'][0].click()
+                break
+        books = self.get_books_displayed()
+        self.assertEqual(books[1][0]['title'], "testbook")
+        self.assertEqual(books[1][1]['title'], "Buuko")
+        # search
+        books = self.search("Döe")
+        books[0]['author_ele'][0].click()
+        books = self.get_books_displayed()
+        self.assertEqual(books[1][0]['title'], "testbook")
+        self.assertEqual(books[1][1]['title'], "Buuko")
+        # details_random
+        stop = 0
+        for i in range(0, 8):
+            self.goto_page('nav_new')
+            books = self.get_books_displayed()
+            for book in books[0]:
+                if book.get('author', "") == ["John Döe"]:
+                    book['author_ele'][0].click()
+                    stop = 1
+                    break
+            if stop == 1:
+                break
+        self.assertEqual(stop, 1)
+        books = self.get_books_displayed()
+        self.assertEqual(books[1][0]['title'], "testbook")
+        self.assertEqual(books[1][1]['title'], "Buuko")
+        # shelf
+        self.create_shelf("Authors")
+        self.get_book_details(5)
+        self.check_element_on_page((By.ID, "add-to-shelf")).click()
+        self.check_element_on_page((By.XPATH, "//ul[@id='add-to-shelves']/li/a[contains(.,'Authors')]")).click()
+        self.list_shelfs('Authors')['ele'].click()
+        shelf_books = self.get_shelf_books_displayed()
+        shelf_books[0]['author_ele'][0].click()
+        books = self.get_books_displayed()
+        self.assertEqual(books[1][0]['title'], "testbook")
+        self.assertEqual(books[1][1]['title'], "Buuko")
+        self.check_element_on_page((By.ID, "new")).click()
+        self.delete_shelf("Authors")

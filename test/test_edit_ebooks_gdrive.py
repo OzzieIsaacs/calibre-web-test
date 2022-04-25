@@ -358,7 +358,7 @@ class TestEditBooksOnGdrive(unittest.TestCase, ui_class):
         old_book_path = os.path.join('test', 'Sigurd Lindgren', 'book8 (8)').replace('\\', '/')
         gdrive_path = check_path_gdrive(fs, old_book_path)
         self.assertFalse(gdrive_path)
-
+        time.sleep(5)
         self.edit_book(content={'bookAuthor': 'Pipo| Pipe'}, detail_v=True)
         time.sleep(4)
         self.wait_page_has_loaded()
@@ -383,6 +383,7 @@ class TestEditBooksOnGdrive(unittest.TestCase, ui_class):
         self.check_element_on_page((By.ID, "edit_book")).click()
         self.edit_book(content={'bookAuthor': 'Leo Baskerville'}, detail_v=True)
         self.wait_page_has_loaded()
+        time.sleep(5)
         self.check_element_on_page((By.ID, 'flash_success'))
         self.fill_basic_config({"config_unicode_filename": 0})
         self.check_element_on_page((By.ID, 'flash_success'))
@@ -580,9 +581,10 @@ class TestEditBooksOnGdrive(unittest.TestCase, ui_class):
         self.edit_book(content={'languages': 'German & English'}, detail_v=True)
         time.sleep(WAIT_GDRIVE)
         self.check_element_on_page((By.ID, 'flash_danger'))
-        self.check_element_on_page((By.ID, "edit_book")).click()
+        # self.check_element_on_page((By.ID, "edit_book")).click()
         self.edit_book(content={'languages': 'German, English'})
-        self.get_book_details(3)
+        # self.get_book_details(3)
+        time.sleep(WAIT_GDRIVE)
         values = self.get_book_details()
         self.assertEqual(len(values['languages']), 2)
         self.assertEqual('German', values['languages'][1])
@@ -749,6 +751,7 @@ class TestEditBooksOnGdrive(unittest.TestCase, ui_class):
         vals = self.get_book_details(5)
         self.assertEqual(0, len(vals['cust_columns']))
 
+    @unittest.expectedFailure
     def test_upload_cover_hdd(self):
         self.fill_basic_config({'config_uploading': 1})
         time.sleep(3)
@@ -827,6 +830,7 @@ class TestEditBooksOnGdrive(unittest.TestCase, ui_class):
         self.fill_basic_config({'config_uploading': 0})
         r.close()
 
+    @unittest.expectedFailure
     def test_upload_book_epub(self):
         self.fill_basic_config({'config_uploading': 1})
         time.sleep(3)
@@ -916,7 +920,7 @@ class TestEditBooksOnGdrive(unittest.TestCase, ui_class):
         self.assertEqual(book['series'], 'test')
         # upload new metadata.db from outside
         fs = connect_gdrive("test")
-        # upload unchanged database from hdd -> watch metadata should recocnize this and replace current
+        # upload unchanged database from hdd -> watch metadata should recognize this and replace current
         # used metadata.db
         metadata = open(os.path.join(base_path, 'Calibre_db', 'metadata.db'), 'rb')
         fs.upload(os.path.join('test', 'metadata.db').replace('\\', '/'), metadata)

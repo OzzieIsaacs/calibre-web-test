@@ -232,7 +232,12 @@ class TestLoadMetadata(TestCase, ui_class):
         self.check_element_on_page((By.ID, "do-search")).click()
         time.sleep(3)
         results = self.find_metadata_results()
-        self.assertEqual("奇想西遊記1", results[2]['title'])
+        found = 0
+        for r in results:
+            if r['title'] == "奇想西遊記1":
+                found = 1
+                break
+        self.assertEqual(1, found)
         self.check_element_on_page((By.ID, "meta_close")).click()
 
 
