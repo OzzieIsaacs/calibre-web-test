@@ -23,7 +23,7 @@ class TestLoadMetadataScholar(TestCase, ui_class):
     def setUpClass(cls):
         add_dependency(cls.dependency, cls.__name__)
         try:
-            startup(cls, cls.py_version, {'config_calibre_dir': TEST_DB})
+            startup(cls, cls.py_version, {'config_calibre_dir': TEST_DB}, env={"APP_MODE": "test"})
             time.sleep(3)
         except Exception:
             cls.driver.quit()

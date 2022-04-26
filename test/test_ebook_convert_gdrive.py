@@ -13,7 +13,7 @@ from selenium.webdriver.common.by import By
 from selenium.webdriver.support.ui import Select
 from helper_ui import ui_class
 from config_test import CALIBRE_WEB_PATH, TEST_DB, base_path, WAIT_GDRIVE
-from helper_func import startup
+from helper_func import startup, count_files
 from helper_func import save_logfiles, add_dependency, remove_dependency
 from helper_gdrive import prepare_gdrive, connect_gdrive
 from selenium.webdriver.support.ui import WebDriverWait
@@ -74,7 +74,7 @@ class TestEbookConvertCalibreGDrive(unittest.TestCase, ui_class):
                                           'config_log_level': 'DEBUG',
                                           'config_kepubifypath': '',
                                           'config_converterpath': helper_email_convert.calibre_path()},
-                    only_metadata=True)
+                    only_metadata=True, env={"APP_MODE": "test"})
             cls.fill_db_config({'config_use_google_drive': 1})
             time.sleep(2)
             cls.fill_db_config({'config_google_drive_folder': 'test'})
@@ -84,6 +84,9 @@ class TestEbookConvertCalibreGDrive(unittest.TestCase, ui_class):
                                     'mail_use_ssl': 'None', 'mail_login': 'name@host.com', 'mail_password': '1234',
                                     'mail_from': 'name@host.com'})
             time.sleep(2)
+            cls.fill_thumbnail_config({'schedule_generate_book_covers': 1})
+            cls.restart_calibre_web()
+            time.sleep(30)
         except Exception as e:
             try:
                 print(e)
@@ -95,6 +98,8 @@ class TestEbookConvertCalibreGDrive(unittest.TestCase, ui_class):
     @classmethod
     def tearDownClass(cls):
         cls.email_server.stop()
+        thumbnail_cache_path = os.path.join(CALIBRE_WEB_PATH, 'cps', 'cache', 'thumbnails')
+        shutil.rmtree(thumbnail_cache_path, ignore_errors=True)
         try:
             cls.driver.get("http://127.0.0.1:8083")
             cls.stop_calibre_web()
@@ -397,7 +402,7 @@ class TestEbookConvertCalibreGDrive(unittest.TestCase, ui_class):
         while i < 20:
             time.sleep(2)
             task_len, ret = self.check_tasks(tasks)
-            if task_len == 2:
+            if task_len == 3:
                 if ret[-1]['result'] == 'Finished' or ret[-1]['result'] == 'Failed':
                     break
             i += 1
@@ -430,3 +435,9 @@ class TestEbookConvertCalibreGDrive(unittest.TestCase, ui_class):
         self.assertEqual(ret[-1]['result'], 'Failed')
         self.email_server.handler.set_return_value(0)
         self.setup_server(False, {'mail_password':'1234'})
+
+    def test_thumbnail_cache(self):
+        thumbnail_cache_path = os.path.join(CALIBRE_WEB_PATH, 'cps', 'cache', 'thumbnails')
+        self.assertTrue(os.path.exists(thumbnail_cache_path))
+        self.assertEqual(10*2, count_files(thumbnail_cache_path))
+

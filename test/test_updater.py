@@ -8,7 +8,8 @@ import requests
 
 from helper_ui import ui_class
 from config_test import TEST_DB, BOOT_TIME, CALIBRE_WEB_PATH
-from helper_func import startup, debug_startup
+from helper_func import startup, debug_startup, add_dependency, remove_dependency
+from helper_func import count_files
 from helper_proxy import Proxy, val
 from selenium.webdriver.common.by import By
 from zipfile import ZipFile, ZipInfo
@@ -354,6 +355,13 @@ class TestUpdater(unittest.TestCase, ui_class):
     def test_perform_update(self):
         self.fill_basic_config({'config_updatechannel': 'Stable'})
         time.sleep(BOOT_TIME)
+        self.fill_thumbnail_config({'schedule_generate_book_covers': 1})
+        self.assertTrue(self.check_element_on_page((By.ID, "flash_success")))
+        self.restart_calibre_web()
+        time.sleep(3)
+        thumbail_cache_path = os.path.exists(os.path.join(CALIBRE_WEB_PATH, 'cps', 'cache', 'thumbnails'))
+        self.assertTrue(thumbail_cache_path)
+        self.assertEqual(count_files(thumbail_cache_path), 20)
         self.goto_page('admin_setup')
         update_table = self.check_element_on_page((By.ID, "current_version")).find_elements(By.TAG_NAME, 'td')
         version = [int(x) for x in (update_table[0].text.rstrip(' Beta')).split('.')]
@@ -386,6 +394,9 @@ class TestUpdater(unittest.TestCase, ui_class):
         self.assertTrue(os.path.isdir(os.path.join(CALIBRE_WEB_PATH, "venv")))
         self.assertTrue(os.path.isfile(os.path.join(CALIBRE_WEB_PATH, "calibre-web.log")))
         self.assertTrue(os.path.isfile(os.path.join(CALIBRE_WEB_PATH, "app.db")))
+        self.assertTrue(thumbail_cache_path)
+        self.assertEqual(count_files(thumbail_cache_path), 20)
+        self.fill_thumbnail_config({'schedule_generate_book_covers': 0})
         # ToDo: Additional folders, additional files
 
     # check cps files not writebale
@@ -437,4 +448,3 @@ class TestUpdater(unittest.TestCase, ui_class):
         resp = requests.get('http://127.0.0.1:8083/reconnect')
         self.assertEqual(404, resp.status_code)
         # self.assertDictEqual({}, resp.json())
-

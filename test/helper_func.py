@@ -156,6 +156,14 @@ def startup(inst, pyVersion, config, login=True, host="http://127.0.0.1:8083",
     except Exception:
         pass
     shutil.rmtree(TEST_DB, ignore_errors=True)
+
+    thumbail_cache_path = os.path.join(CALIBRE_WEB_PATH, 'cps', 'cache')
+    try:
+        os.chmod(thumbail_cache_path, 0o764)
+    except Exception as e:
+        pass
+    shutil.rmtree(thumbail_cache_path, ignore_errors=True)
+
     if not only_metadata:
         try:
             shutil.copytree(os.path.join(base_path, 'Calibre_db'), TEST_DB)
@@ -525,3 +533,19 @@ def change_comic_meta(zipname_new=None, zipname_org='./files/book1.cbz', element
         el = soup.find(k)
         el.string = v
     updateZip(zipname_new, zipname_org, 'ComicInfo.xml', str(soup))
+
+
+def create_2nd_database(new_path):
+    try:
+        shutil.rmtree(new_path, ignore_errors=True)
+        shutil.copytree(os.path.join(base_path, 'Calibre_db'), new_path)
+    except FileExistsError:
+        print('Test DB already present, might not be a clean version')
+
+
+def count_files(folder):
+    total_files = 0
+    for base, dirs, files in os.walk(folder):
+        for f in files:
+            total_files += 1
+    return total_files

@@ -13,6 +13,7 @@ from helper_func import save_logfiles, startup, change_epub_meta, updateZip
 from selenium.webdriver.support.ui import WebDriverWait
 from selenium.webdriver.support import expected_conditions as EC
 from diffimg import diff
+from io import BytesIO
 
 class TestUploadEPubs(TestCase, ui_class):
     p = None
@@ -21,7 +22,7 @@ class TestUploadEPubs(TestCase, ui_class):
     @classmethod
     def setUpClass(cls):
         try:
-            startup(cls, cls.py_version, {'config_calibre_dir': TEST_DB, 'config_uploading': 1})
+            startup(cls, cls.py_version, {'config_calibre_dir': TEST_DB, 'config_uploading': 1}, env = {"APP_MODE": "test"})
             time.sleep(3)
             WebDriverWait(cls.driver, 5).until(EC.presence_of_element_located((By.ID, "flash_success")))
         except Exception:
@@ -122,7 +123,7 @@ class TestUploadEPubs(TestCase, ui_class):
 
     def test_upload_epub_cover(self):
         orig = self.verify_upload(os.path.join(base_path, 'files', 'book.epub'))
-        self.save_cover_screenshot('original.png')
+        original = self.check_element_on_page((By.ID, "detailcover")).screenshot_as_png
         self.delete_book(orig['id'])
 
         # check cover-image is detected
@@ -130,9 +131,9 @@ class TestUploadEPubs(TestCase, ui_class):
         change_epub_meta(epub_file, meta={'title': "Coverimage", 'creator': "Testo"},
                          item={'change': {"find_id": "cover", 'id':'cover-image'}})
         ci = self.verify_upload(epub_file)
-        self.save_cover_screenshot('cover_image.png')
+        cover_image = self.check_element_on_page((By.ID, "detailcover")).screenshot_as_png
         self.delete_book(ci['id'])
-        self.assertAlmostEqual(diff('original.png', 'cover_image.png', delete_diff_file=True), 0.0, delta=0.0001)
+        self.assertAlmostEqual(diff(BytesIO(original), BytesIO(cover_image), delete_diff_file=True), 0.0, delta=0.0001)
 
         # check if multiple cover-image ids are detected correct
         change_epub_meta(epub_file, meta={'title': "Multi Coverimage", 'creator': "Testo"},
@@ -140,9 +141,9 @@ class TestUploadEPubs(TestCase, ui_class):
                          item={'change': {"find_id": "cover", 'id': 'cover-image', 'href': 'cover.html'},
                                'create': {"id": "cover-image", 'href': 'cover.jpeg', 'media-type': 'image/jpeg'}})
         ci = self.verify_upload(epub_file)
-        self.save_cover_screenshot('cover_image.png')
+        cover_image = self.check_element_on_page((By.ID, "detailcover")).screenshot_as_png
         self.delete_book(ci['id'])
-        self.assertAlmostEqual(diff('original.png', 'cover_image.png', delete_diff_file=True), 0.0, delta=0.0001)
+        self.assertAlmostEqual(diff(BytesIO(original), BytesIO(cover_image), delete_diff_file=True), 0.0, delta=0.0001)
 
         # check if properties as cover selector is detected with reference from meta
         change_epub_meta(epub_file, meta={'title': "Properties Cover", 'creator': "Testo"},
@@ -151,9 +152,9 @@ class TestUploadEPubs(TestCase, ui_class):
                                'create': {"id": "id_Images_jpg", "properties": "cover-imag", 'href': 'cover.jpeg',
                                           'media-type': 'image/jpeg'}})
         ci = self.verify_upload(epub_file)
-        self.save_cover_screenshot('cover_image.png')
+        cover_image = self.check_element_on_page((By.ID, "detailcover")).screenshot_as_png
         self.delete_book(ci['id'])
-        self.assertAlmostEqual(diff('original.png', 'cover_image.png', delete_diff_file=True), 0.0, delta=0.0001)
+        self.assertAlmostEqual(diff(BytesIO(original), BytesIO(cover_image), delete_diff_file=True), 0.0, delta=0.0001)
 
         # check if content cover selector is detected with reference from meta
         change_epub_meta(epub_file, meta={'title': "Cover", 'creator': "Testo"},
@@ -161,35 +162,32 @@ class TestUploadEPubs(TestCase, ui_class):
                          item={'delete': {"id": "cover"},
                                'create': {"id": "cover-imge", 'href': 'cover.jpeg', 'media-type': 'image/jpeg'}})
         ci = self.verify_upload(epub_file)
-        self.save_cover_screenshot('cover_image.png')
+        cover_image = self.check_element_on_page((By.ID, "detailcover")).screenshot_as_png
         self.delete_book(ci['id'])
-        self.assertAlmostEqual(diff('original.png', 'cover_image.png', delete_diff_file=True), 0.0, delta=0.0001)
+        self.assertAlmostEqual(diff(BytesIO(original), BytesIO(cover_image), delete_diff_file=True), 0.0, delta=0.0001)
 
         # check if guide reference can act as cover with reference from meta
         change_epub_meta(epub_file, meta={'title': "Cover", 'creator': "Testo"},
                          item={'delete': {"id": "cover"}},
                          guide={'change': {"find_title": "Cover", "href": 'cover.jpeg'}})
         ci = self.verify_upload(epub_file)
-        self.save_cover_screenshot('cover_image.png')
+        cover_image = self.check_element_on_page((By.ID, "detailcover")).screenshot_as_png
         self.delete_book(ci['id'])
-        self.assertAlmostEqual(diff('original.png', 'cover_image.png', delete_diff_file=True), 0.0, delta=0.0001)
+        self.assertAlmostEqual(diff(BytesIO(original), BytesIO(cover_image), delete_diff_file=True), 0.0, delta=0.0001)
 
         # check if multiple guide reference can act as cover with reference from meta
         change_epub_meta(epub_file, meta={'title': "Cover", 'creator': "Testo"},
                          item={'delete': {"id": "cover"}},
                          guide={'create': {"title": "Cover", "href": 'cover.jpeg'}})
         ci = self.verify_upload(epub_file)
-        self.save_cover_screenshot('cover_image.png')
+        cover_image = self.check_element_on_page((By.ID, "detailcover")).screenshot_as_png
         self.delete_book(ci['id'])
-        self.assertAlmostEqual(diff('original.png', 'cover_image.png', delete_diff_file=True), 0.0, delta=0.0001)
-
+        self.assertAlmostEqual(diff(BytesIO(original), BytesIO(cover_image), delete_diff_file=True), 0.0, delta=0.0001)
         os.remove(epub_file)
-        os.remove('cover_image.png')
-        os.remove('original.png')
 
     def test_upload_epub_cover_formats(self):
         orig = self.verify_upload(os.path.join(base_path, 'files', 'book.epub'))
-        self.save_cover_screenshot('original.png')
+        original = self.check_element_on_page((By.ID, "detailcover")).screenshot_as_png
         self.delete_book(orig['id'])
 
         # check cover-image is detected
@@ -202,11 +200,10 @@ class TestUploadEPubs(TestCase, ui_class):
         updateZip(epub_png, epub_file, 'cover.png', data)
 
         ci = self.verify_upload(epub_png)
-        self.save_cover_screenshot('cover_image.png')
+        cover_image = self.check_element_on_page((By.ID, "detailcover")).screenshot_as_png
         self.delete_book(ci['id'])
-        self.assertAlmostEqual(diff('original.png', 'cover_image.png', delete_diff_file=True), 0.0058, delta=0.0001)
+        self.assertAlmostEqual(diff(BytesIO(original), BytesIO(cover_image), delete_diff_file=True), 0.0058,
+                               delta=0.0001)
 
         os.remove(epub_file)
         os.remove(epub_png)
-        os.remove('cover_image.png')
-        os.remove('original.png')

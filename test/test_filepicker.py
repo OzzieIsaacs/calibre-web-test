@@ -22,7 +22,7 @@ class TestFilePicker(TestCase, ui_class):
     def setUpClass(cls):
         try:
             startup(cls, cls.py_version, {'config_calibre_dir': TEST_DB}, work_path=CALIBRE_WEB_PATH,
-                    only_startup=True, only_metadata=True)
+                    only_startup=True, only_metadata=True, env={"APP_MODE": "test"})
             cls.login("admin", "admin123")
         except Exception:
             cls.driver.quit()

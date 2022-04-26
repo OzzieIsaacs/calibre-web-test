@@ -22,7 +22,7 @@ class TestOAuthLogin(unittest.TestCase, ui_class):
         add_dependency(cls.dep_line, cls.__name__)
 
         try:
-            startup(cls, cls.py_version, {'config_calibre_dir':TEST_DB})
+            startup(cls, cls.py_version, {'config_calibre_dir':TEST_DB}, env={"APP_MODE": "test"})
         except Exception as e:
             print('setup failed')
             cls.driver.quit()

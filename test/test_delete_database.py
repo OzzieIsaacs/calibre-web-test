@@ -17,7 +17,7 @@ class TestDeleteDatabase(TestCase, ui_class):
     @classmethod
     def setUpClass(cls):
         try:
-            startup(cls, cls.py_version, {'config_calibre_dir': TEST_DB})
+            startup(cls, cls.py_version, {'config_calibre_dir': TEST_DB}, env={"APP_MODE": "test"})
             time.sleep(3)
         except Exception:
             cls.driver.quit()
