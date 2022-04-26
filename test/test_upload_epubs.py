@@ -183,10 +183,7 @@ class TestUploadEPubs(TestCase, ui_class):
         cover_image = self.check_element_on_page((By.ID, "detailcover")).screenshot_as_png
         self.delete_book(ci['id'])
         self.assertAlmostEqual(diff(BytesIO(original), BytesIO(cover_image), delete_diff_file=True), 0.0, delta=0.0001)
-
         os.remove(epub_file)
-        os.remove('cover_image.png')
-        os.remove('original.png')
 
     def test_upload_epub_cover_formats(self):
         orig = self.verify_upload(os.path.join(base_path, 'files', 'book.epub'))

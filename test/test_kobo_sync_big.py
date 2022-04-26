@@ -17,7 +17,7 @@ from helper_func import save_logfiles
 from selenium.webdriver.support.ui import WebDriverWait
 from selenium.webdriver.support import expected_conditions as EC
 
-BOOK_COUNT = 120
+BOOK_COUNT = 1520
 
 class TestKoboSyncBig(unittest.TestCase, ui_class):
 
@@ -471,12 +471,12 @@ class TestKoboSyncBig(unittest.TestCase, ui_class):
         self.fill_thumbnail_config({'schedule_generate_book_covers': 1})
         self.assertTrue(self.check_element_on_page((By.ID, "flash_success")))
         self.restart_calibre_web()
-        time.sleep(10)
+        time.sleep(120)
         self.assertTrue(os.path.exists(thumbnail_cache_path))
         self.assertEqual(count_files(thumbnail_cache_path), (BOOK_COUNT+10)*2)
         # get cover cache enabled
         books = self.inital_sync()
-        # metadata von nummer 0 und nummer 5 lesen
+        # read metadata of number 0 and number 5
         new_session = requests.session()
         uuid = books[0][0]['NewEntitlement']['BookEntitlement']['Id']
         r = new_session.get(self.kobo_address + "/v1/library/" + uuid + "/metadata",

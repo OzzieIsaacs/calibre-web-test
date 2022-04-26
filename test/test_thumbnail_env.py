@@ -23,7 +23,6 @@ class TestThumbnailsEnv(unittest.TestCase, ui_class):
 
     @classmethod
     def setUpClass(cls):
-        add_dependency(cls.json_line, cls.__name__)
 
         try:
             shutil.rmtree(TEST_DB + '_3', ignore_errors=True)
@@ -48,7 +47,6 @@ class TestThumbnailsEnv(unittest.TestCase, ui_class):
         # close the browser window and stop calibre-web
         shutil.rmtree(TEST_DB + '_2', ignore_errors=True)
         shutil.rmtree(TEST_DB + '_3', ignore_errors=True)
-        # remove_dependency(cls.json_line)
         save_logfiles(cls, cls.__name__)
 
 
