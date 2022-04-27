@@ -74,6 +74,7 @@ class TestCliGdrivedb(unittest.TestCase, ui_class):
 
     @classmethod
     def tearDownClass(cls):
+        os.chdir(base_path)
         try:
             cls.driver.get("http://127.0.0.1:8083")
             cls.stop_calibre_web()
@@ -110,6 +111,7 @@ class TestCliGdrivedb(unittest.TestCase, ui_class):
             os.remove(os.path.join(CALIBRE_WEB_PATH, 'app.db'))
         except Exception as e:
             print(e)
+        os.chdir(base_path)
 
     def wait_page_has_loaded(self):
         time.sleep(1)

@@ -30,7 +30,7 @@ class TestCli(unittest.TestCase, ui_class):
         shutil.copytree('./Calibre_db', TEST_DB)
 
     def setUp(self):
-        os.chdir(os.path.dirname(__file__))
+        os.chdir(base_path)
         try:
             os.remove(os.path.join(CALIBRE_WEB_PATH, 'app.db'))
         except Exception:
@@ -590,3 +590,8 @@ class TestCli(unittest.TestCase, ui_class):
         self.delete_shelf("database")
         self.assertTrue(self.check_element_on_page((By.ID, 'flash_success')))
         self.stop_calibre_web(p1)
+        try:
+            self.driver.switch_to.alert.accept()
+        except Exception:
+            pass
+
