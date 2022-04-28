@@ -14,14 +14,21 @@ def _get_updater_thread():
     return None
 
 
+class DummyCLI():
+    gd_path = ""
+
 class TestCalibreHelper(unittest.TestCase):
 
     @classmethod
     def setUpClass(cls):
         sys.path.append(CALIBRE_WEB_PATH)
+
         global helper
         global updater
+        # cli_param = DummyCLI()
         # if imported at top of file, the import is excecuted at startup and creates ghost calibre-web instance
+        from cps import cli_param
+        cli_param.gd_path = "gdrive.db"
         from cps import helper, updater
         # from cps import helper
         # startup function is not called, therfore direct print

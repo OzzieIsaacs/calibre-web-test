@@ -10,7 +10,6 @@ from helper_ui import ui_class
 from helper_func import kill_dead_cps
 from config_test import CALIBRE_WEB_PATH, TEST_DB, base_path, BOOT_TIME
 from subproc_wrapper import process_open
-import sys
 from helper_func import save_logfiles
 from build import make_release
 import venv

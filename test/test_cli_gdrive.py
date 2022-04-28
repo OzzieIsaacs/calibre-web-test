@@ -280,4 +280,8 @@ class TestCliGdrivedb(unittest.TestCase, ui_class):
         self.delete_shelf("database")
         self.assertTrue(self.check_element_on_page((By.ID, 'flash_success')))
         self.stop_calibre_web(p1)
+        try:
+            self.driver.switch_to.alert.accept()
+        except Exception:
+            pass
         os.unlink(os.path.join(CALIBRE_WEB_PATH, "gdrive.db"))

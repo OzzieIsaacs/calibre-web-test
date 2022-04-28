@@ -11,7 +11,6 @@ import tarfile
 import venv
 from subprocess import CalledProcessError
 from subproc_wrapper import process_open
-from helper_environment import environment, add_dependency
 import configparser
 import argparse
 import platform
@@ -19,7 +18,7 @@ import platform
 sys.path.append(os.path.dirname(os.path.abspath(__file__)))
 
 from config import FILEPATH, VENV_PATH, VENV_PYTHON
-
+from .helper_environment import environment, add_dependency
 
 def find_version(file_paths):
     with codecs.open(file_paths, 'r') as fp:

@@ -37,7 +37,6 @@ class TestKoboSyncBig(unittest.TestCase, ui_class):
             host = 'http://' + get_Host_IP() + ':8083'
             startup(cls, cls.py_version, {'config_calibre_dir': TEST_DB, 'config_kobo_sync': 1,
                                           'config_kepubifypath': "",
-                                          # 'config_log_level': 'DEBUG',
                                           'config_kobo_proxy': 0}, host=host, env={"APP_MODE": "test"})
             add_books(os.path.join(TEST_DB, "metadata.db"), BOOK_COUNT, cover=True, set_id=True)    # 1520
             time.sleep(3)
