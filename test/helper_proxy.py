@@ -1,6 +1,4 @@
-# updating to 8.0.0+ requires looking into run function of mitmproxy/tools/main -> start async loop
-from mitmproxy.addons.proxyserver import Proxyserver
-from mitmproxy.options import Options
+from mitmproxy import proxy, options
 from mitmproxy.tools.dump import DumpMaster
 from mitmproxy import http
 
@@ -300,19 +298,21 @@ class Github_Proxy:
 class Proxy(threading.Thread):
     def __init__(self):
         threading.Thread.__init__(self)
-        opts = Options(listen_host='127.0.0.1', listen_port=8080)
+        opts = options.Options(listen_host='127.0.0.1', listen_port=8080)
         opts.add_option("body_size_limit", int, 0, "")
-        self.m = DumpMaster(opts, with_termlog=False, with_dumper=False)
 
-        self.m.server = Proxyserver()
-        if self.m.event_loop.is_closed():
-            self.m.event_loop = asyncio.new_event_loop()
+        pconf = proxy.config.ProxyConfig(opts)
+
+        self.m = DumpMaster(None, with_termlog=False, with_dumper=False)
+        self.m.server = proxy.server.ProxyServer(pconf)
+        if self.m.server.channel.loop.is_closed():
+            self.m.server.channel.loop = asyncio.new_event_loop()
         self.m.addons.add(Github_Proxy())
         self.m.addons.add(wsgiapp.WSGIApp(app, "gitty.local", 443))
 
     def run(self):
         try:
-            asyncio.set_event_loop(self.m.event_loop)
+            asyncio.set_event_loop(self.m.server.channel.loop)
             self.m.run()
         except Exception as e:
             print(e)

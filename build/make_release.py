@@ -1,5 +1,6 @@
 # #!/usr/bin/env python
 # # -*- coding: utf-8 -*-
+__package__ = "build"
 import os
 import glob
 import shutil
