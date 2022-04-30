@@ -24,6 +24,8 @@ class TestUpdater(unittest.TestCase, ui_class):
     @classmethod
     def setUpClass(cls):
         if cls.copy_cw():
+            thumbnail_cache_path = os.path.join(CALIBRE_WEB_PATH, 'cps', 'cache', 'thumbnails')
+            shutil.rmtree(thumbnail_cache_path, ignore_errors=True)
             cls.proxy = Proxy()
             cls.proxy.start()
             pem_file = os.path.join(os.path.expanduser('~'), '.mitmproxy', 'mitmproxy-ca-cert.pem')
@@ -31,6 +33,7 @@ class TestUpdater(unittest.TestCase, ui_class):
             my_env["http_proxy"] = 'http://localhost:8080'
             my_env["https_proxy"] = 'http://localhost:8080'
             my_env["REQUESTS_CA_BUNDLE"] = pem_file
+            my_env["APP_MODE"] = "test"
             startup(cls, cls.py_version, {'config_calibre_dir': TEST_DB}, env=my_env)
         else:
             cls.assertTrue(False, "Target Directory present")
@@ -56,6 +59,8 @@ class TestUpdater(unittest.TestCase, ui_class):
             pass
         # Move original image back in place
         cls.return_cw()
+        thumbnail_cache_path = os.path.join(CALIBRE_WEB_PATH, 'cps', 'cache', 'thumbnails')
+        shutil.rmtree(thumbnail_cache_path, ignore_errors=True)
 
     def tearDown(self):
         os.chmod(os.path.join(CALIBRE_WEB_PATH, "cps"), 0o764)
@@ -359,9 +364,9 @@ class TestUpdater(unittest.TestCase, ui_class):
         self.assertTrue(self.check_element_on_page((By.ID, "flash_success")))
         self.restart_calibre_web()
         time.sleep(3)
-        thumbail_cache_path = os.path.exists(os.path.join(CALIBRE_WEB_PATH, 'cps', 'cache', 'thumbnails'))
-        self.assertTrue(thumbail_cache_path)
-        self.assertEqual(count_files(thumbail_cache_path), 20)
+        thumbnail_cache_path = os.path.join(CALIBRE_WEB_PATH, 'cps', 'cache', 'thumbnails')
+        self.assertTrue(os.path.isdir(thumbnail_cache_path))
+        self.assertEqual(20, count_files(thumbnail_cache_path))
         self.goto_page('admin_setup')
         update_table = self.check_element_on_page((By.ID, "current_version")).find_elements(By.TAG_NAME, 'td')
         version = [int(x) for x in (update_table[0].text.rstrip(' Beta')).split('.')]
@@ -394,8 +399,8 @@ class TestUpdater(unittest.TestCase, ui_class):
         self.assertTrue(os.path.isdir(os.path.join(CALIBRE_WEB_PATH, "venv")))
         self.assertTrue(os.path.isfile(os.path.join(CALIBRE_WEB_PATH, "calibre-web.log")))
         self.assertTrue(os.path.isfile(os.path.join(CALIBRE_WEB_PATH, "app.db")))
-        self.assertTrue(thumbail_cache_path)
-        self.assertEqual(count_files(thumbail_cache_path), 20)
+        self.assertTrue(os.path.isdir(thumbnail_cache_path))
+        self.assertEqual(20, count_files(thumbnail_cache_path))
         self.fill_thumbnail_config({'schedule_generate_book_covers': 0})
         # ToDo: Additional folders, additional files
 

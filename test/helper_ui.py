@@ -225,7 +225,7 @@ class ui_class():
         process_options = dict()
         process_checkboxes = dict()
 
-        checkboxes = ['schedule_generate_book_covers', 'schedule_generate_series_covers']
+        checkboxes = ['schedule_generate_book_covers', 'schedule_generate_series_covers', 'schedule_reconnect']
         options = ['schedule_end_time', 'schedule_start_time']
         # check if checkboxes are in list and separate lists
         for element,key in enumerate(elements):

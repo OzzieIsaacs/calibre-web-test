@@ -183,6 +183,7 @@ class TestEbookConvertCalibreGDrive(unittest.TestCase, ui_class):
     # check email received
     def test_convert_email(self):
         self.setup_server(True, {'mail_password': '10234', 'mail_use_ssl': 'None'})
+        time.sleep(2)
         tasks = self.check_tasks()
         details = self.get_book_details(9)
         self.assertEqual(len(details['kindle']), 1)

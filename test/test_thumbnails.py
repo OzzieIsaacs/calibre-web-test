@@ -95,8 +95,8 @@ class TestThumbnails(unittest.TestCase, ui_class):
         self.assertEqual(len(res2), len(res) + 1)
         #self.assertEqual(res[0]['user'], "System")
         #self.assertTrue(res[0]['task'].startswith, "Cover Thumbnails")
-        self.assertEqual(res[-1]['user'], "System")
-        self.assertTrue(res[-1]['task'].startswith, "Cover Thumbnails")
+        self.assertEqual(res2[-1]['user'], "System")
+        self.assertTrue(res2[-1]['task'].startswith, "Cover Thumbnails")
         self.restart_calibre_web()
         # check cover folder is filled with new covers
         time.sleep(3) # give system time to create cache
@@ -109,7 +109,7 @@ class TestThumbnails(unittest.TestCase, ui_class):
         self.check_element_on_page((By.ID, "btnConfirmYes-GeneralChangeModal")).click()
         self.assertTrue(self.check_element_on_page((By.ID, "flash_success")))
         time.sleep(1)
-        # check cover folder is empty
+        # check cover folder is still full
         self.assertEqual(count_files(thumbnail_cache_path), 0)
 
     def test_cover_change_on_upload_new_cover(self):
@@ -123,7 +123,7 @@ class TestThumbnails(unittest.TestCase, ui_class):
         self.assertLessEqual(len(res), 1)
         thumbnail_cache_path = os.path.join(CALIBRE_WEB_PATH, 'cps', 'cache', 'thumbnails')
         self.assertTrue(os.path.exists(thumbnail_cache_path))
-        self.assertEqual(count_files(thumbnail_cache_path), 110*2)
+        self.assertEqual(110*2, count_files(thumbnail_cache_path))
         self.get_book_details(104)
         original_cover = self.check_element_on_page((By.ID, "detailcover")).screenshot_as_png
         new_cover = os.path.join(base_path, 'files', 'cover.jpg')
@@ -134,7 +134,7 @@ class TestThumbnails(unittest.TestCase, ui_class):
         updated_cover = self.check_element_on_page((By.ID, "detailcover")).screenshot_as_png
         self.assertGreaterEqual(diff(BytesIO(updated_cover), BytesIO(original_cover), delete_diff_file=True), 0.05)
         # number of covers unchanged
-        self.assertEqual(count_files(thumbnail_cache_path), 110*2)
+        self.assertEqual(110*2, count_files(thumbnail_cache_path),)
         # ToDo: do the same with cover from url
         self.fill_basic_config({'config_uploading': 0})
         time.sleep(3)
