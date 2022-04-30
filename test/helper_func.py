@@ -301,7 +301,7 @@ def add_dependency(name, testclass_name):
         if element.lower().startswith('git'):
             element_version[indx] = element[element.rfind('#egg=')+5:]
 
-    environment.add_Environment(testclass_name, element_version)
+    environment.add_environment(testclass_name, element_version)
 
 
 def remove_dependency(names):

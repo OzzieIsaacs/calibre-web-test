@@ -40,7 +40,6 @@ class TestReadOnlyDatabase(TestCase, ui_class):
         cls.p.terminate()
         save_logfiles(cls, cls.__name__)
 
-
     @unittest.skipIf(os.name == 'nt', 'readonly database on windows is not checked')
     # @unittest.skipIf(is_unrar_not_present(), "Skipping convert, unrar not found")
     def test_readonly_path(self):

@@ -31,7 +31,7 @@ class Environment:
             if element[0].replace('_', '-').upper() in normalized_dep:
                 self.result.append((element[0], element[1], 'Basic'))
 
-    def init_Environment(self, initial, sub_dependencies=None):
+    def init_environment(self, initial, sub_dependencies=None):
         if sub_dependencies is None:
             sub_dependencies = list()
         self.initial = initial
@@ -62,7 +62,7 @@ class Environment:
             if element[0].replace('_', '-').upper() in normalized_dep:
                 self.result.append((element[0], element[1], 'Basic'))
 
-    def add_Environment(self, test, extension):
+    def add_environment(self, test, extension):
         if self.initial:
             try:
                 p = process_open([self.initial, "-m", "pip", "freeze"], [0])

@@ -71,7 +71,7 @@ if __name__ == '__main__':
             p.stdout.readline()
     else:
         p.wait()
-    environment.init_Environment(VENV_PYTHON, sub_dependencies)
+    environment.init_environment(VENV_PYTHON, sub_dependencies)
 
     all_tests = unittest.TestLoader().discover('.')
     # configure HTMLTestRunner options
@@ -89,7 +89,7 @@ if __name__ == '__main__':
                                            verbosity=2)
     # run the suite using HTMLTestRunner
     runner.run(all_tests)
-    print("\nAll tests finished, please check testresults")
+    print("\nAll tests finished, please check test results")
     kill_dead_cps()
     # E-Mail tests finished
     result_file = os.path.join(outfile, "Calibre-Web TestSummary_" + TEST_OS + ".html")

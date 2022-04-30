@@ -10,6 +10,7 @@ import pkg_resources
 import importlib
 import json
 
+
 class Environment:
     def __init__(self):
         self.initial = None
@@ -33,7 +34,7 @@ class Environment:
             if element[0].replace('_', '-').upper() in normalized_dep:
                 self.result.append((element[0], element[1], 'Basic'))
 
-    def init_Environment(self, initial, sub_dependencies=None):
+    def init_environment(self, initial, sub_dependencies=None):
         if sub_dependencies is None:
             sub_dependencies = list()
         self.initial = initial
@@ -64,7 +65,7 @@ class Environment:
             if element[0].replace('_', '-').upper() in normalized_dep:
                 self.result.append((element[0], element[1], 'Basic'))
 
-    def add_Environment(self, test, extension):
+    def add_environment(self, test, extension):
         if self.initial:
             try:
                 p = process_open([self.initial, "-m", "pip", "freeze"], [0])
@@ -128,7 +129,7 @@ def add_dependency(name, testclass_name):
         if element.lower().startswith('git'):
             element_version[indx] = element[element.rfind('#egg=')+5:]
 
-    environment.add_Environment(testclass_name, element_version)
+    environment.add_environment(testclass_name, element_version)
 
 
 def remove_dependency(names):
