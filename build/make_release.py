@@ -84,11 +84,13 @@ def update_requirements():
     with open(os.path.join(FILEPATH, "setup.cfg"), 'w') as configfile:
         cfg.write(configfile)
 
+
 def parse_arguments(*args):
     parser = argparse.ArgumentParser(description='Build files installer files of Calibre-web\n', prog='make_release.py')
     parser.add_argument('-u', action='store_true', help='Update setup.cfg file')
     parser.add_argument('-p', action='store_true', help='Only generate pypi package file')
     return parser.parse_args(*args)
+
 
 def prepare_folders():
     # create source folder
@@ -152,15 +154,15 @@ def generate_package():
 
     # Change home-config setting back
     print('* Change "homeconfig" settings back to false')
-    change_config(target_file,"HOME_CONFIG", "False")
+    change_config(target_file, "HOME_CONFIG", "False")
 
     # move files back in original place
     print('* Moving files back to origin')
-    shutil.move(os.path.join(FILEPATH, 'src', 'calibreweb', '__init__.py'), os.path.join(FILEPATH,'cps.py'))
+    shutil.move(os.path.join(FILEPATH, 'src', 'calibreweb', '__init__.py'), os.path.join(FILEPATH, 'cps.py'))
     os.remove(os.path.join(FILEPATH, 'src/calibreweb/__main__.py'))
     shutil.move(os.path.join(FILEPATH, 'src/calibreweb/cps'), FILEPATH)
-    shutil.move(os.path.join(FILEPATH,'src/calibreweb/requirements.txt'), FILEPATH)
-    shutil.move(os.path.join(FILEPATH,'src/calibreweb/optional-requirements.txt'), FILEPATH)
+    shutil.move(os.path.join(FILEPATH, 'src/calibreweb/requirements.txt'), FILEPATH)
+    shutil.move(os.path.join(FILEPATH, 'src/calibreweb/optional-requirements.txt'), FILEPATH)
 
     print('* Deleting "src" directory')
     shutil.rmtree(os.path.join(FILEPATH, 'src'), ignore_errors=True)
@@ -178,12 +180,6 @@ def create_python_environment():
     except CalledProcessError:
         print("## Error Creating virtual environment ##")
         venv.create(VENV_PATH, system_site_packages=True, with_pip=False)
-
-    #print("* Adding wheel to virtual environment")
-    #p = process_open([VENV_PYTHON, "-m", "pip", "install", "wheel"], (0,))
-    #while p.poll() is None:
-    #    out = p.stdout.readline()
-    #    out != "" and print(out.strip("\n"))
 
     print("* Adding dependencies for executable from requirements file")
     requirements_file = os.path.join(FILEPATH, 'requirements.txt')
@@ -330,7 +326,8 @@ def create_deb_package():
         f.write("Version: {}\n".format(version_string))
         f.write("Architecture: {}\n".format(arch))
         f.write("Maintainer: Ozzie Isaacs <Ozzie.Fernandez.Isaacs@googlemail.com>\n")
-        f.write("Description: Calibre-Web is a web app providing a clean interface for browsing, reading and downloading eBooks using a valid Calibre database.\n")
+        f.write("Description: Calibre-Web is a web app providing a clean interface for browsing, "
+                "reading and downloading eBooks using a valid Calibre database.\n")
     target_dir = "calibre-web_" + version_string + "_" + arch
     os.makedirs(os.path.join(FILEPATH, target_dir))
     os.makedirs(os.path.join(FILEPATH, target_dir, "DEBIAN"))
@@ -347,7 +344,7 @@ def create_deb_package():
     lines = p.stdout.readlines()
     dep_line = "".join([line.decode('utf-8') for line in lines])
     print("* Output dpkg-shlibdeps: {}".format(dep_line))
-    dep_line =  dep_line[15:].rstrip("\n")
+    dep_line = dep_line[15:].rstrip("\n")
     # check successful
     if p.returncode != 0:
         print('## Error: dpkg-shlibdeps returned an error, aborting ##')
@@ -359,7 +356,8 @@ def create_deb_package():
         f.write("Architecture: {}\n".format(arch))
         f.write("Depends: {}\n".format(dep_line))
         f.write("Maintainer: Ozzie Isaacs <Ozzie.Fernandez.Isaacs@googlemail.com>\n")
-        f.write("Description: Calibre-Web is a web app providing a clean interface for browsing, reading and downloading eBooks using a valid Calibre database.\n")
+        f.write("Description: Calibre-Web is a web app providing a clean interface for browsing, "
+                "reading and downloading eBooks using a valid Calibre database.\n")
 
     command = ("dpkg-deb --build --root-owner-group " + target_dir)
     p = subprocess.Popen(command,
