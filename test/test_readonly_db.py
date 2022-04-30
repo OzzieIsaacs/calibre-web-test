@@ -21,7 +21,6 @@ from helper_func import save_logfiles
 class TestReadOnlyDatabase(TestCase, ui_class):
     p = None
     driver = None
-    # dependencys = ['comicapi', 'rarfile']
 
     @classmethod
     def setUpClass(cls):

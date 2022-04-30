@@ -17,11 +17,11 @@ from subprocess import CalledProcessError
 
 if __name__ == '__main__':
     generate_ssl_testing_files()
-    sub_dependencys = ["Werkzeug", "Jinja2", "singledispatch"]
-    result=False
-    retry=0
+    sub_dependencies = ["Werkzeug", "Jinja2", "singledispatch"]
+    result = False
+    retry = 0
 
-    power = input('Poweroff after finishing tests? [y/N]').lower() == 'y'
+    power = input('Power off after finishing tests? [y/N]').lower() == 'y'
     if power:
         print('!!!! PC will shutdown after tests finished !!!!')
 
@@ -71,7 +71,7 @@ if __name__ == '__main__':
             p.stdout.readline()
     else:
         p.wait()
-    environment.init_Environment(VENV_PYTHON, sub_dependencys)
+    environment.init_Environment(VENV_PYTHON, sub_dependencies)
 
     all_tests = unittest.TestLoader().discover('.')
     # configure HTMLTestRunner options
