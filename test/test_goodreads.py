@@ -38,7 +38,7 @@ class TestGoodreads(unittest.TestCase, ui_class):
 
         try:
             startup(cls, cls.py_version, {'config_calibre_dir':TEST_DB,
-                                          'config_use_goodreads':1})
+                                          'config_use_goodreads':1}, env={"APP_MODE": "test"})
             WebDriverWait(cls.driver, 5).until(EC.presence_of_element_located((By.ID, "flash_success")))
         except Exception as e:
             print(e)

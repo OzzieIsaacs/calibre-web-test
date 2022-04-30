@@ -49,7 +49,7 @@ class TestSetupGdrive(unittest.TestCase, ui_class):
             if os.path.exists(gdauth):
                 os.unlink(gdauth)
 
-            startup(cls, cls.py_version, {}, only_startup=True)
+            startup(cls, cls.py_version, {}, only_startup=True, env={"APP_MODE": "test"})
         except Exception as e:
             try:
                 print(e)

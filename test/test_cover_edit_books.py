@@ -14,6 +14,7 @@ from helper_func import startup
 from helper_proxy import Proxy, val
 from helper_func import save_logfiles
 from diffimg import diff
+from io import BytesIO
 
 
 class TestCoverEditBooks(TestCase, ui_class):
@@ -32,6 +33,7 @@ class TestCoverEditBooks(TestCase, ui_class):
             my_env["http_proxy"] = 'http://localhost:8080'
             my_env["https_proxy"] = 'http://localhost:8080'
             my_env["REQUESTS_CA_BUNDLE"] = pem_file
+            my_env["APP_MODE"] = "test"
             # my_env["LANG"] = 'de_DE.UTF-8'
             startup(cls, cls.py_version, {'config_calibre_dir': TEST_DB, 'config_uploading': 1}, env=my_env,
                     parameter=["-l"])
@@ -67,38 +69,33 @@ class TestCoverEditBooks(TestCase, ui_class):
         self.check_element_on_page((By.ID, "edit_book")).click()
         self.edit_book(content={'cover_url': u'https://api.github.com/repos/janeczku/calibre-web/cover/test.jpg'})
         self.assertTrue("Error Downloading Cover" in self.check_element_on_page((By.ID, "flash_danger")).text)
-        self.save_cover_screenshot('original.png')
+        original = self.check_element_on_page((By.ID, "detailcover")).screenshot_as_png
         self.check_element_on_page((By.ID, "edit_book")).click()
         self.edit_book(content={'cover_url': u'https://api.github.com/repos/janeczku/calibre-web/cover/test.jpg'})
         self.assertFalse(self.check_element_on_page((By.ID, 'flash_danger')))
-        self.save_cover_screenshot('jpg.png')
-        self.assertGreater(diff('original.png', 'jpg.png', delete_diff_file=True), 0.03)
-        os.unlink('original.png')
+        jpg = self.check_element_on_page((By.ID, "detailcover")).screenshot_as_png
+        self.assertGreaterEqual(diff(BytesIO(original), BytesIO(jpg), delete_diff_file=True), 0.03)
         self.check_element_on_page((By.ID, "edit_book")).click()
         self.edit_book(content={'cover_url': u'https://api.github.com/repos/janeczku/calibre-web/cover/test.webp'})
         self.assertFalse(self.check_element_on_page((By.ID, 'flash_danger')))
-        self.save_cover_screenshot('web.png')
-        self.assertGreater(diff('web.png', 'jpg.png', delete_diff_file=True), 0.005)
+        web = self.check_element_on_page((By.ID, "detailcover")).screenshot_as_png
+        self.assertGreater(diff(BytesIO(web), BytesIO(jpg), delete_diff_file=True), 0.005)
         self.check_element_on_page((By.ID, "edit_book")).click()
         self.edit_book(content={'cover_url': u'https://api.github.com/repos/janeczku/calibre-web/cover/test.png'})
         self.assertFalse(self.check_element_on_page((By.ID, 'flash_danger')))
-        self.save_cover_screenshot('png.png')
-        self.assertGreater(diff('web.png', 'png.png', delete_diff_file=True), 0.01)
-        os.unlink('web.png')
+        png = self.check_element_on_page((By.ID, "detailcover")).screenshot_as_png
+        self.assertGreater(diff(BytesIO(web), BytesIO(png), delete_diff_file=True), 0.01)
         self.check_element_on_page((By.ID, "edit_book")).click()
         self.edit_book(content={'cover_url': u'https://api.github.com/repos/janeczku/calibre-web/cover/test.bmp'})
         self.assertFalse(self.check_element_on_page((By.ID, 'flash_danger')))
-        self.save_cover_screenshot('bmp.png')
-        self.assertGreater(diff('bmp.png', 'png.png', delete_diff_file=True), 0.006)
-        os.unlink('png.png')
+        bmp = self.check_element_on_page((By.ID, "detailcover")).screenshot_as_png
+        self.assertGreater(diff(BytesIO(bmp), BytesIO(png), delete_diff_file=True), 0.006)
         self.check_element_on_page((By.ID, "edit_book")).click()
         self.edit_book(content={'cover_url': u'https://api.github.com/repos/janeczku/calibre-web/cover/test.jol'})
         # Check if file content is detected correct
         self.assertFalse(self.check_element_on_page((By.ID, 'flash_danger')), "BMP file is not detected")
-        self.save_cover_screenshot('bmp2.png')
-        self.assertAlmostEqual(diff('bmp.png', 'bmp2.png', delete_diff_file=True), 0.0, delta=0.0001)
-        os.unlink('bmp2.png')
-        os.unlink('bmp.png')
+        bmp2 = self.check_element_on_page((By.ID, "detailcover")).screenshot_as_png
+        self.assertAlmostEqual(diff(BytesIO(bmp), BytesIO(bmp2), delete_diff_file=True), 0.0, delta=0.0001)
         self.check_element_on_page((By.ID, "edit_book")).click()
         self.edit_book(content={'cover_url': u'https://api.github.com/repos/janeczku/calibre-web/cover/test.brk'})
         self.assertTrue(self.check_element_on_page((By.ID, 'flash_danger')))
@@ -106,12 +103,9 @@ class TestCoverEditBooks(TestCase, ui_class):
         self.edit_book(
             content={'cover_url': u'https://api.github.com/repos/janeczku/calibre-web/cover/test.jpg?size=500'})
         self.assertFalse(self.check_element_on_page((By.ID, 'flash_danger')))
-        self.save_cover_screenshot('last.png')
-        self.assertAlmostEqual(diff('last.png', 'jpg.png', delete_diff_file=True), 0.0, delta=0.0001,
+        last = self.check_element_on_page((By.ID, "detailcover")).screenshot_as_png
+        self.assertAlmostEqual(diff(BytesIO(last), BytesIO(jpg), delete_diff_file=True), 0.0, delta=0.0001,
                                msg="Browser-Cache Problem: Old Cover is displayed instead of New Cover")
-        os.unlink('last.png')
-        os.unlink('jpg.png')
-        os.unlink('page.png')
 
     def test_invalid_jpg_hdd(self):
         invalid_cover = os.path.join(base_path, 'files', 'invalid.jpg')

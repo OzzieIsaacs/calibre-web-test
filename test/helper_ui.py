@@ -52,6 +52,8 @@ page['nav_unread'] = {'check': (By.CLASS_NAME, "unread"), 'click': [(By.ID, "nav
 page['nav_archived'] = {'check': (By.CLASS_NAME, "archived"), 'click': [(By.ID, "nav_archived")]}
 page['db_config'] = {'check': (By.ID, "config_calibre_dir"),
                         'click': [(By.ID, "top_admin"), (By.ID, "db_config")]}
+page['thumbnail_config'] = {'check': (By.ID, "schedule_start_time"),
+                        'click': [(By.ID, "top_admin"), (By.ID, "admin_edit_scheduled_tasks")]}
 page['basic_config'] = {'check': (By.ID, "config_port"),
                         'click': [(By.ID, "top_admin"), (By.ID, "basic_config")]}
 page['view_config'] = {'check': (By.NAME, "submit"), 'click': [(By.ID, "top_admin"), (By.ID, "view_config")]}
@@ -216,6 +218,33 @@ class ui_class():
         cls.check_element_on_page((By.ID, "password")).send_keys(new_passwd)
         cls.driver.find_element(By.ID, "user_submit").click()
         return cls.check_element_on_page((By.ID, "flash_success"))
+
+    @classmethod
+    def fill_thumbnail_config(cls, elements=None):
+        cls.goto_page('thumbnail_config')
+        process_options = dict()
+        process_checkboxes = dict()
+
+        checkboxes = ['schedule_generate_book_covers', 'schedule_generate_series_covers', 'schedule_reconnect']
+        options = ['schedule_end_time', 'schedule_start_time']
+        # check if checkboxes are in list and separate lists
+        for element,key in enumerate(elements):
+            if key in checkboxes:
+                process_checkboxes[key] = elements[key]
+            else:
+                process_options[key] = elements[key]
+        # process all checkboxes Todo: If status was wrong before is not included in response
+        for checkbox in process_checkboxes:
+            ele = cls.driver.find_element(By.ID, checkbox)
+            if (elements[checkbox] == 1 and not ele.is_selected() ) or elements[checkbox] == 0 and ele.is_selected():
+                ele.click()
+
+        # process all selects
+        for option, key in enumerate(process_options):
+            select = Select(cls.driver.find_element(By.ID, key))
+            select.select_by_visible_text(process_options[key])
+        # finally submit settings
+        cls.driver.find_element(By.NAME, "submit").click()
 
     @classmethod
     def fill_db_config(cls,elements=None):
@@ -419,20 +448,20 @@ class ui_class():
         # finally submit settings
         cls.driver.find_element(By.NAME, "submit").click()
 
-
-    def restart_calibre_web(self):
-        self.goto_page('admin_setup')
-        self.driver.find_element(By.ID, 'admin_restart').click()
-        element = self.check_element_on_page((By.ID, "restart"))
+    @classmethod
+    def restart_calibre_web(cls):
+        cls.goto_page('admin_setup')
+        cls.driver.find_element(By.ID, 'admin_restart').click()
+        element = cls.check_element_on_page((By.ID, "restart"))
         element.click()
-        time.sleep (10)
+        time.sleep(10)
 
     def reconnect_database(self):
         self.goto_page('admin_setup')
         self.driver.find_element(By.ID, 'restart_database').click()
         element = self.check_element_on_page((By.ID, "DialogFinished"))
         element.click()
-        time.sleep (3)
+        time.sleep(3)
 
     @classmethod
     def stop_calibre_web(cls, proc=None):
@@ -440,7 +469,7 @@ class ui_class():
             cls.goto_page('admin_setup')
         except:
             cls.driver.get("http://127.0.0.1:8083")
-            if not cls.check_user_logged_in("admin",True):
+            if not cls.check_user_logged_in("admin", True):
                 cls.login('admin','admin123')
             cls.goto_page('admin_setup')
         cls.driver.find_element(By.ID, 'admin_stop').click()
@@ -455,6 +484,9 @@ class ui_class():
         if proc:
             time.sleep(3)
             proc.poll()
+            proc.stdout.close()
+            proc.stderr.close()
+
 
     def list_domains(self, allow=True):
         if not self.check_element_on_page((By.ID, "mail_server")):
@@ -1582,7 +1614,7 @@ class ui_class():
             for va in vals:
                 try:
                     go = va.getchildren()
-                    if len(go) == 6:
+                    if len(go) == 7:
                         val.append({'user':' '.join(go[0].itertext()),
                                     'task': ''.join(go[1].itertext()),
                                     'result': ''.join(go[2].itertext()),
@@ -1724,19 +1756,6 @@ class ui_class():
         submit = cls.check_element_on_page((By.ID, "submit"))
         submit.click()
         return
-
-    def save_cover_screenshot(self, filename):
-        element = self.driver.find_element(By.TAG_NAME, 'img')
-        location = element.location
-        size = element.size
-        self.driver.save_screenshot("page.png")
-        x = location['x']
-        y = location['y']
-        width = location['x'] + size['width']
-        height = location['y'] + size['height']
-        im = Image.open('page.png')
-        im = im.crop((int(x), int(y), int(width), int(height)))
-        im.save(filename)
 
     def add_identifier(self, key, value):
         add_button = self.check_element_on_page((By.ID, "add-identifier-line"))

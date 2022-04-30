@@ -1,5 +1,6 @@
 # #!/usr/bin/env python
 # # -*- coding: utf-8 -*-
+__package__ = "build"
 import os
 import glob
 import shutil
@@ -11,7 +12,6 @@ import tarfile
 import venv
 from subprocess import CalledProcessError
 from subproc_wrapper import process_open
-from helper_environment import environment, add_dependency
 import configparser
 import argparse
 import platform
@@ -19,7 +19,7 @@ import platform
 sys.path.append(os.path.dirname(os.path.abspath(__file__)))
 
 from config import FILEPATH, VENV_PATH, VENV_PYTHON
-
+from .helper_environment import environment, add_dependency
 
 def find_version(file_paths):
     with codecs.open(file_paths, 'r') as fp:
@@ -209,7 +209,7 @@ def create_python_environment():
     environment.save_environment(os.path.join(FILEPATH, '.pip_installed'))
 
     print("Adding pyinstaller to virtual environment")
-    p = process_open([VENV_PYTHON, "-m", "pip", "install", "pyinstaller==4.10"], (0,))
+    p = process_open([VENV_PYTHON, "-m", "pip", "install", "pyinstaller"], (0,))
     while p.poll() is None:
         out = p.stdout.readline()
         out != "" and print(out.strip("\n"))

@@ -22,7 +22,7 @@ class TestShelf(unittest.TestCase, ui_class):
     def setUpClass(cls):
         try:
             # Upload needed for generating csrf token for edit shelf
-            startup(cls, cls.py_version,{'config_calibre_dir':TEST_DB, 'config_uploading': 1})
+            startup(cls, cls.py_version,{'config_calibre_dir':TEST_DB, 'config_uploading': 1}, env={"APP_MODE": "test"})
             cls.create_user('shelf', {'edit_shelf_role':1, "upload_role": 1, 'password':'123', 'email':'a@b.com'})
             cls.edit_user('admin',{'edit_shelf_role':1, 'email':'e@fe.de'})
         except Exception:

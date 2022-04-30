@@ -31,7 +31,7 @@ class TestEditAdditionalBooks(TestCase, ui_class):
         add_dependency(cls.dependencys, cls.__name__)
 
         try:
-            startup(cls, cls.py_version, {'config_calibre_dir': TEST_DB})
+            startup(cls, cls.py_version, {'config_calibre_dir': TEST_DB}, env={"APP_MODE": "test"})
             time.sleep(3)
         except Exception:
             cls.driver.quit()

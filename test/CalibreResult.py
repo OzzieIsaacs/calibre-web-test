@@ -31,7 +31,6 @@ SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 """
 
 # URL: http://tungwaiyip.info/software/HTMLTestRunner.html
-from __future__ import print_function
 
 import os
 import sys
@@ -43,19 +42,13 @@ from unittest.result import failfast
 from helper_environment import environment
 from jinja2 import Template
 
-PY3K = (sys.version_info[0] > 2)
-if PY3K:
-    import io as StringIO
-else:
-    import StringIO
+import io as StringIO
 
 DEFAULT_TEMPLATE = os.path.join(os.path.dirname(__file__), "template", "report_template.html")
 
 
 def to_unicode(s):
     try:
-        if not PY3K:
-            return unicode(s)
         return s
     except UnicodeDecodeError:
         # s is non ascii byte string
@@ -582,9 +575,6 @@ class CalibreResult(TextTestResult):
             name = cls.__name__
             doc = cls.__doc__ and cls.__doc__.split("\n")[0] or ""
             desc = doc and '%s: %s' % (name, doc) or name
-            if not PY3K:
-                if isinstance(desc, str):
-                    desc = desc.decode("utf-8")
 
             s = ne > 0 and 'errorClass' \
                 or nf > 0 and 'failClass' \
@@ -640,32 +630,12 @@ class CalibreResult(TextTestResult):
         doc = t.shortDescription() or ""
         desc = doc and ('%s: %s' % (name, doc)) or name
 
-        if not PY3K:
-            if isinstance(desc, str):
-                desc = desc.decode("utf-8")
         # o and e should be byte string because
         # they are collected from stdout and stderr?
         if output is None:
             output = ""
-        if isinstance(output, str):
-            # TODO: some problem with 'string_escape':
-            # it escape \n and mess up formatting
-            if not PY3K:
-                uo = output.decode('latin-1')
-            else:
-                uo = output
-        else:
-            uo = output
-        if isinstance(e, str):
-            # TODO: some problem with 'string_escape':
-            # it escape \n and mess up formatting
-            # ue = unicode(e.encode('string_escape'))
-            if not PY3K:
-                ue = e.decode('latin-1')
-            else:
-                ue = e
-        else:
-            ue = e
+        uo = output
+        ue = e
 
         script = dict(
             id=test_id,

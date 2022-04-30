@@ -5,17 +5,17 @@
 from unittest import TestCase
 import os
 import time
-import requests
-# from diffimg import diff
-from fpdf import FPDF
 import pikepdf
+from fpdf import FPDF
+
 from selenium.webdriver.common.by import By
 from helper_ui import ui_class
-from config_test import TEST_DB, base_path, BOOT_TIME
-from helper_func import startup, debug_startup, add_dependency, remove_dependency
+from config_test import TEST_DB, base_path
+from helper_func import startup
 from helper_func import save_logfiles
 from selenium.webdriver.support.ui import WebDriverWait
 from selenium.webdriver.support import expected_conditions as EC
+
 
 class TestUploadPDF(TestCase, ui_class):
     p = None
@@ -23,17 +23,8 @@ class TestUploadPDF(TestCase, ui_class):
 
     @classmethod
     def setUpClass(cls):
-        '''with pikepdf.open(os.path.join(base_path, 'files', 'book1.pdf'), allow_overwriting_input=True) as pdf:
-            with pdf.open_metadata() as meta:
-                print(meta)
-
-        with pikepdf.open("/home/ozzie/Downloads/1.pdf", allow_overwriting_input=True) as pdf:
-            pdf.docinfo.Keywords = "123434\r\n32434"
-            #with pdf.open_metadata() as meta:
-            #    print(meta["pdf:Authors"])
-            pdf.save()'''
         try:
-            startup(cls, cls.py_version, {'config_calibre_dir': TEST_DB, 'config_uploading': 1})
+            startup(cls, cls.py_version, {'config_calibre_dir': TEST_DB, 'config_uploading': 1}, env={"APP_MODE": "test"})
             time.sleep(3)
             WebDriverWait(cls.driver, 5).until(EC.presence_of_element_located((By.ID, "flash_success")))
         except Exception:
@@ -56,7 +47,7 @@ class TestUploadPDF(TestCase, ui_class):
     def check_uploaded_pdf(self, book_properties, check_properties):
         self.goto_page('nav_new')
         upload_file = os.path.join(base_path, 'files', 'book1.pdf')
-        #generate pdf
+        # generate pdf
         self.generate_pdf(upload_file, book_properties)
         upload = self.check_element_on_page((By.ID, 'btn-upload'))
         upload.send_keys(upload_file)
@@ -87,7 +78,7 @@ class TestUploadPDF(TestCase, ui_class):
             else:
                 self.assertTrue(all(elem in details['tag'] for elem in check_properties['tag']),
                                 "Wrong tags: {} instead of {}".format(details['tag'],
-                                                                           check_properties['tag']))
+                                                                      check_properties['tag']))
         if 'comment' in check_properties:
             if check_properties['comment'] is None:
                 self.assertTrue('comment' not in details)
@@ -101,7 +92,8 @@ class TestUploadPDF(TestCase, ui_class):
         except FileNotFoundError:
             pass
 
-    def generate_pdf(self, filename, book_properties):
+    @staticmethod
+    def generate_pdf(filename, book_properties):
         pdf = FPDF()
         pdf.add_page()
         pdf.set_font('helvetica', 'B', 16)
@@ -133,7 +125,7 @@ class TestUploadPDF(TestCase, ui_class):
         self.goto_page('nav_new')
         # invalid author and language and no title
         self.check_uploaded_pdf({'author': "Mani Mücks",
-                                 "lang":"en",
+                                 "lang": "en",
                                  "cover": os.path.join(base_path, 'files', 'cover.jpg')},
                                 {'title': "book1",
                                  'author': ["Unknown"],
@@ -171,7 +163,7 @@ class TestUploadPDF(TestCase, ui_class):
                                  "cover": os.path.join(base_path, 'files', 'cover.jpg')},
                                 {'title': "tit",
                                  'author': ["No Name"],
-                                 'comment' : "Holla die 执Wü",
+                                 'comment': "Holla die 执Wü",
                                  'tag': ["Hoä执"],
                                  }
                                 )
@@ -267,4 +259,3 @@ class TestUploadPDF(TestCase, ui_class):
                                  'publishers': ["Hölder, Kurt"],
                                  }
                                 )
-
