@@ -201,7 +201,7 @@ def create_python_environment():
         out != "" and print(out.strip("\n"))
 
     print("* Saving installed requirement versions")
-    environment.init_Environment(VENV_PYTHON)
+    environment.init_environment(VENV_PYTHON)
     environment.save_environment(os.path.join(FILEPATH, '.pip_installed'))
 
     print("Adding pyinstaller to virtual environment")

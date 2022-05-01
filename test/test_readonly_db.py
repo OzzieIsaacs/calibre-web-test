@@ -21,7 +21,6 @@ from helper_func import save_logfiles
 class TestReadOnlyDatabase(TestCase, ui_class):
     p = None
     driver = None
-    # dependencys = ['comicapi', 'rarfile']
 
     @classmethod
     def setUpClass(cls):
@@ -40,7 +39,6 @@ class TestReadOnlyDatabase(TestCase, ui_class):
         cls.driver.quit()
         cls.p.terminate()
         save_logfiles(cls, cls.__name__)
-
 
     @unittest.skipIf(os.name == 'nt', 'readonly database on windows is not checked')
     # @unittest.skipIf(is_unrar_not_present(), "Skipping convert, unrar not found")

@@ -132,7 +132,7 @@ class TestThumbnails(unittest.TestCase, ui_class):
         self.get_book_details(104)
         time.sleep(5)
         updated_cover = self.check_element_on_page((By.ID, "detailcover")).screenshot_as_png
-        self.assertGreaterEqual(diff(BytesIO(updated_cover), BytesIO(original_cover), delete_diff_file=True), 0.05)
+        self.assertGreaterEqual(diff(BytesIO(updated_cover), BytesIO(original_cover), delete_diff_file=True), 0.03)
         # number of covers unchanged
         self.assertEqual(110*2, count_files(thumbnail_cache_path),)
         # ToDo: do the same with cover from url
@@ -305,7 +305,7 @@ class TestThumbnails(unittest.TestCase, ui_class):
         list_cover = cover_books[1][2]['ele'].screenshot_as_png
         self.get_book_details(112)
         cover = self.check_element_on_page((By.ID, "detailcover")).screenshot_as_png
-        self.assertGreaterEqual(diff(BytesIO(cover), BytesIO(old_cover), delete_diff_file=True), 0.04)
+        self.assertGreaterEqual(diff(BytesIO(cover), BytesIO(old_cover), delete_diff_file=True), 0.03)
         # Problem: Cover cache is not updated
         self.assertAlmostEqual(diff(BytesIO(list_cover), BytesIO(old_list_cover), delete_diff_file=True), 0.0,
                                delta=0.0001)

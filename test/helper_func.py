@@ -175,7 +175,7 @@ def startup(inst, pyVersion, config, login=True, host="http://127.0.0.1:8083",
             shutil.copy(os.path.join(base_path, 'Calibre_db', 'metadata.db'), os.path.join(TEST_DB, 'metadata.db'))
         except FileExistsError:
             print('Metadata.db already present, might not be a clean version')
-    command = [pyVersion, "-B", os.path.join(CALIBRE_WEB_PATH, u'cps.py')]
+    command = [pyVersion, os.path.join(CALIBRE_WEB_PATH, u'cps.py')]
     if parameter:
         command.extend(parameter)
     inst.p = process_open(command, [1], sout=None, env=env, cwd=work_path)
@@ -301,7 +301,7 @@ def add_dependency(name, testclass_name):
         if element.lower().startswith('git'):
             element_version[indx] = element[element.rfind('#egg=')+5:]
 
-    environment.add_Environment(testclass_name, element_version)
+    environment.add_environment(testclass_name, element_version)
 
 
 def remove_dependency(names):

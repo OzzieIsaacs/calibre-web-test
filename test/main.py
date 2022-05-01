@@ -17,11 +17,11 @@ from subprocess import CalledProcessError
 
 if __name__ == '__main__':
     generate_ssl_testing_files()
-    sub_dependencys = ["Werkzeug", "Jinja2", "singledispatch"]
-    result=False
-    retry=0
+    sub_dependencies = ["Werkzeug", "Jinja2", "singledispatch"]
+    result = False
+    retry = 0
 
-    power = input('Poweroff after finishing tests? [y/N]').lower() == 'y'
+    power = input('Power off after finishing tests? [y/N]').lower() == 'y'
     if power:
         print('!!!! PC will shutdown after tests finished !!!!')
 
@@ -71,7 +71,7 @@ if __name__ == '__main__':
             p.stdout.readline()
     else:
         p.wait()
-    environment.init_Environment(VENV_PYTHON, sub_dependencys)
+    environment.init_environment(VENV_PYTHON, sub_dependencies)
 
     all_tests = unittest.TestLoader().discover('.')
     # configure HTMLTestRunner options
@@ -89,7 +89,7 @@ if __name__ == '__main__':
                                            verbosity=2)
     # run the suite using HTMLTestRunner
     runner.run(all_tests)
-    print("\nAll tests finished, please check testresults")
+    print("\nAll tests finished, please check test results")
     kill_dead_cps()
     # E-Mail tests finished
     result_file = os.path.join(outfile, "Calibre-Web TestSummary_" + TEST_OS + ".html")

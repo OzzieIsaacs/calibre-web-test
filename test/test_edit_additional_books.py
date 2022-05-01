@@ -33,6 +33,10 @@ class TestEditAdditionalBooks(TestCase, ui_class):
         try:
             startup(cls, cls.py_version, {'config_calibre_dir': TEST_DB}, env={"APP_MODE": "test"})
             time.sleep(3)
+            cls.fill_thumbnail_config({'schedule_generate_book_covers': 1})
+            time.sleep(3)
+            cls.restart_calibre_web()
+            time.sleep(3)
         except Exception:
             cls.driver.quit()
             cls.p.kill()
