@@ -66,6 +66,16 @@ class TestCalibreHelper(unittest.TestCase):
                 u'901234567890123456789012345678901234567890123456789012345678901234567890'), u'123456789012345678901'
                 u'23456789012345678901234567890123456789012345678901234567890123456789012345678901234567890123456789'
                 u'012345678')
+        self.assertEqual(helper.get_valid_filename(u'执执执执执执执执执执执执执执执执执执执执执执执执执执执执执执执执执执执执执执执'
+                u'执执执执执执执执执执执执执执执执执执执执执执执执执执执执执执执执执执执执执执执', chars=96),
+                         '执执执执执执执执执执执执执执执执执执执执执执执执执执执执执执执执')
+        self.assertEqual(helper.get_valid_filename(u'1执执执执执执执执执执执执执执执执执执执执执执执执执执执执执执执执执执执执执执执'
+                u'执执执执执执执执执执执执执执执执执执执执执执执执执执执执执执执执执执执执执执执', chars=96),
+                         '1执执执执执执执执执执执执执执执执执执执执执执执执执执执执执执执')
+        self.assertEqual(helper.get_valid_filename(u'12执执执执执执执执执执执执执执执执执执执执执执执执执执执执执执执执执执执执执执执'
+                u'执执执执执执执执执执执执执执执执执执执执执执执执执执执执执执执执执执执执执执执', chars=96),
+                         '12执执执执执执执执执执执执执执执执执执执执执执执执执执执执执执执')
+
 
     def test_check_char_replacement(self):
         helper.config.config_unicode_filename = False
@@ -106,7 +116,9 @@ class TestCalibreHelper(unittest.TestCase):
     def test_split_authors(self):
         self.assertEqual(helper.split_authors([u'Single, name']), [u'name Single'])
         self.assertEqual(helper.split_authors(['']), [u''])
-        self.assertEqual(helper.split_authors(['Marilyn Allman Maye, Harold S. Buchanan, Jannette O. Domingo, Joyce Frisby Baynes, Marilyn Holifield, Myra E. Rose, Bridget Van Gronigen Warren & Aundrea White Kelley']),
+        self.assertEqual(helper.split_authors(['Marilyn Allman Maye, Harold S. Buchanan, Jannette O. Domingo, '
+                                               'Joyce Frisby Baynes, Marilyn Holifield, Myra E. Rose, '
+                                               'Bridget Van Gronigen Warren & Aundrea White Kelley']),
                          ['Marilyn Allman Maye', 'Harold S. Buchanan', 'Jannette O. Domingo', 'Joyce Frisby Baynes',
                           'Marilyn Holifield', 'Myra E. Rose', 'Bridget Van Gronigen Warren', 'Aundrea White Kelley'])
         self.assertEqual(helper.split_authors([u'Single, Name, Pöo']), [u'Single', 'Name', 'Pöo'])
