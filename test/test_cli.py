@@ -6,6 +6,7 @@ import os
 import time
 import shutil
 import re
+import requests
 
 from helper_ui import ui_class
 from helper_func import get_Host_IP, kill_dead_cps, save_logfiles
@@ -595,3 +596,44 @@ class TestCli(unittest.TestCase, ui_class):
         except Exception:
             pass
 
+    def test_enable_reconnect(self):
+        my_env = os.environ.copy()
+        my_env["CALIBRE_RECONNECT"] = '1'
+        p = process_open([self.py_version,  "-B", os.path.join(CALIBRE_WEB_PATH, u'cps.py')], [1], env=my_env)
+        time.sleep(BOOT_TIME)
+        # navigate to the application home page
+        self.driver.get("http://127.0.0.1:8083")
+        # Wait for config screen to show up
+        self.fill_db_config({'config_calibre_dir': TEST_DB})
+        # wait for cw to reboot
+        time.sleep(2)
+        self.assertTrue(self.check_element_on_page((By.ID, 'flash_success')))
+        r = requests.get("http://127.0.0.1:8083/reconnect")
+        self.assertEqual(200, r.status_code)
+        self.assertDictEqual({}, r.json())
+        self.stop_calibre_web(p)
+        try:
+            self.driver.switch_to.alert.accept()
+        except Exception:
+            pass
+        my_env = os.environ.copy()
+        p = process_open([self.py_version,  "-B", os.path.join(CALIBRE_WEB_PATH, u'cps.py')], [1], env=my_env)
+        time.sleep(BOOT_TIME)
+        r = requests.get("http://127.0.0.1:8083/reconnect")
+        self.assertEqual(404, r.status_code)
+        self.stop_calibre_web(p)
+        try:
+            self.driver.switch_to.alert.accept()
+        except Exception:
+            pass
+        p = process_open([self.py_version,  "-B", os.path.join(CALIBRE_WEB_PATH, u'cps.py'), "-r"], [1])
+        time.sleep(BOOT_TIME)
+        r = requests.get("http://127.0.0.1:8083/reconnect")
+        self.assertEqual(200, r.status_code)
+        self.assertDictEqual({}, r.json())
+        self.stop_calibre_web(p)
+        try:
+            self.driver.switch_to.alert.accept()
+        except Exception:
+            pass
+        os.remove(os.path.join(CALIBRE_WEB_PATH, u'app.db'))
