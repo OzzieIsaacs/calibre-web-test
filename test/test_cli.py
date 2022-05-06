@@ -136,6 +136,10 @@ class TestCli(unittest.TestCase, ui_class):
         time.sleep(3)
         self.assertTrue(os.path.isfile(new_db), "New settingsfile location not accepted")
         os.remove(new_db)
+        try:
+            self.driver.switch_to.alert.accept()
+        except Exception:
+            pass
 
     def test_cli_SSL_files(self):
         os.chdir(os.path.dirname(__file__))

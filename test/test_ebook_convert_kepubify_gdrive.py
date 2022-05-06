@@ -108,7 +108,7 @@ class TestEbookConvertGDriveKepubify(unittest.TestCase, ui_class):
         time.sleep(WAIT_GDRIVE)
         self.fill_basic_config({'config_kepubifypath': ""})
         self.goto_page('nav_about')
-        element = self.check_element_on_page((By.XPATH, "//tr/th[text()='kepubify']/following::td[1]"))
+        element = self.check_element_on_page((By.XPATH, "//tr/th[text()='Kepubify']/following::td[1]"))
         self.assertEqual(element.text, 'not installed')
         details = self.get_book_details(5)
         self.assertFalse(details['kindlebtn'])
@@ -123,7 +123,7 @@ class TestEbookConvertGDriveKepubify(unittest.TestCase, ui_class):
     def test_convert_wrong_excecutable(self):
         self.fill_basic_config({'config_kepubifypath':'/opt/kepubify/ebook-polish'})
         self.goto_page('nav_about')
-        element = self.check_element_on_page((By.XPATH, "//tr/th[text()='kepubify']/following::td[1]"))
+        element = self.check_element_on_page((By.XPATH, "//tr/th[text()='Kepubify']/following::td[1]"))
         self.assertEqual(element.text, 'not installed')
         details = self.get_book_details(5)
         self.assertFalse(details['kindlebtn'])
@@ -135,7 +135,7 @@ class TestEbookConvertGDriveKepubify(unittest.TestCase, ui_class):
         nonexec = os.path.join(CALIBRE_WEB_PATH, 'app.db')
         self.fill_basic_config({'config_kepubifypath': nonexec})
         self.goto_page('nav_about')
-        element = self.check_element_on_page((By.XPATH, "//tr/th[text()='kepubify']/following::td[1]"))
+        element = self.check_element_on_page((By.XPATH, "//tr/th[text()='Kepubify']/following::td[1]"))
         self.assertEqual(element.text, 'Execution permissions missing')
         self.fill_basic_config({'config_kepubifypath': helper_email_convert.calibre_path()})
 
