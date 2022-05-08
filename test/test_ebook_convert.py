@@ -177,14 +177,36 @@ class TestEbookConvertCalibre(unittest.TestCase, ui_class):
         self.assertEqual(2, task_len)
         self.assertEqual(ret[-1]['result'], 'Failed')
         self.fill_basic_config({'config_calibre': ''})
+        self.assertTrue(self.check_element_on_page((By.ID, "flash_success")))
 
     # press send to kindle for not converted book
     # wait for finished
     # check email received
     def test_convert_email(self):
-        self.setup_server(True, {'mail_password': '10234', 'mail_use_ssl':'None'})
+        self.setup_server(True, {'mail_password': '10234', 'mail_use_ssl': 'None'})
+        time.sleep(2)
         tasks = self.check_tasks()
-        details = self.get_book_details(9)
+        vals = self.get_convert_book(1)
+        select = Select(vals['btn_from'])
+        select.select_by_visible_text('TXT')
+        select = Select(vals['btn_to'])
+        select.select_by_visible_text('AZW3')
+        self.check_element_on_page((By.ID, "btn-book-convert")).click()
+        time.sleep(1)
+        self.assertTrue(self.check_element_on_page((By.ID, "flash_success")))
+        time.sleep(4)
+        i = 0
+        while i < 20:
+            time.sleep(2)
+            task_len, ret = self.check_tasks(tasks)
+            if task_len == 1:
+                if ret[-1]['result'] == 'Finished' or ret[-1]['result'] == 'Failed':
+                    break
+            i += 1
+        self.assertEqual(1, task_len)
+
+        tasks = self.check_tasks()
+        details = self.get_book_details(1)
         self.assertEqual(len(details['kindle']), 1)
         details['kindlebtn'].click()
         i = 0
@@ -195,9 +217,14 @@ class TestEbookConvertCalibre(unittest.TestCase, ui_class):
                 if ret[-1]['result'] == 'Finished' or ret[-1]['result'] == 'Failed':
                     break
             i += 1
+        self.assertTrue("E-mail" in ret[-1]['task'])
+        self.assertTrue("Convert" in ret[-2]['task'])
         self.assertEqual(ret[-2]['result'], 'Finished')
         self.assertEqual(ret[-1]['result'], 'Finished')
         self.setup_server(True, {'mail_password': '1234'})
+        self.assertTrue(self.check_element_on_page((By.ID, "flash_info")))
+        self.delete_book_format(1, "AZW3")
+        self.delete_book_format(1, "EPUB")
 
 
     # check visiblility kindle button for user with not set kindle-email
@@ -351,6 +378,7 @@ class TestEbookConvertCalibre(unittest.TestCase, ui_class):
 
         self.login('solo', '123')
         ret_user = self.check_tasks()
+        # No tasks logged
         self.assertEqual(0, len(ret_user))
 
         vals = self.get_convert_book(7)
