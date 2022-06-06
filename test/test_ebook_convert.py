@@ -255,7 +255,7 @@ class TestEbookConvertCalibre(unittest.TestCase, ui_class):
         self.check_element_on_page((By.ID, "btn-book-convert")).click()
         time.sleep(1)
         self.assertTrue(self.check_element_on_page((By.ID, "flash_success")))
-        time.sleep(4)
+        time.sleep(5)
         task_len, ret = self.check_tasks(tasks)
         self.assertEqual(1, task_len)
         self.assertEqual(ret[-1]['result'], 'Finished')
