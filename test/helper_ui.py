@@ -304,9 +304,11 @@ class ui_class():
         checkboxes = ['config_uploading', 'config_anonbrowse', 'config_public_reg', 'config_remote_login',
                       'config_access_log', 'config_kobo_sync', 'config_kobo_proxy', 'config_ldap_openldap',
                       'config_use_goodreads', 'config_register_email', 'config_use_google_drive',
-                      'config_allow_reverse_proxy_header_login', 'config_unicode_filename']
+                      'config_allow_reverse_proxy_header_login', 'config_unicode_filename', 'config_password_policy',
+                      'config_password_number', 'config_password_lower', 'config_password_upper',
+                      'config_password_special']
         options = ['config_log_level', 'config_google_drive_folder', 'config_updatechannel', 'config_login_type',
-                   'config_ldap_encryption', 'config_ldap_authentication', 'ldap_import_user_filter']
+                   'config_ldap_encryption', 'config_ldap_authentication', 'ldap_import_user_filter', 'config_session']
         selects = ['config_ebookconverter']
         # depending on elements open accordions or not
         if any(key in elements for key in ['config_port', 'config_certfile','config_keyfile', 'config_updatechannel']):
@@ -335,6 +337,9 @@ class ui_class():
         if any(key in elements for key in ['config_ebookconverter', 'config_calibre', 'config_kepubifypath',
                                            'config_converterpath', 'config_rarfile_location']):
             opener.append(3)
+        if any(key in elements for key in ['config_password_policy', 'config_password_number', 'config_password_lower',
+                                           'config_password_upper', 'config_password_special', 'config_session']):
+            opener.append(4)
 
         # open all necessary accordions
         accordions = cls.driver.find_elements(By.CLASS_NAME, "accordion-toggle")

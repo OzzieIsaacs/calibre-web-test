@@ -273,9 +273,9 @@ class TestCalibreWebListOrders(unittest.TestCase, ui_class):
         list_element = self.get_list_books_displayed()
         self.assertEqual(list_element[0]['count'], "2")
         # create new ueser and download a book as this user
-        self.create_user('down', {'email': 'd@a.com', 'password': '1234', 'download_role': 1})
+        self.create_user('down', {'email': 'd@a.com', 'password': '123AbC*!', 'download_role': 1})
         self.assertTrue(self.check_element_on_page((By.ID, "flash_success")))
-        self.download_book(11, "down", "1234")
+        self.download_book(11, "down", "123AbC*!")
         # check content of downloaded book section (2 users listed, admin still has 2 books downloaded)
         self.goto_page('nav_download')
         list_element = self.get_list_books_displayed()
@@ -298,7 +298,7 @@ class TestCalibreWebListOrders(unittest.TestCase, ui_class):
         self.check_element_on_page((By.ID, "asc")).click()
         # login as user down and check he sees only his downloads
         self.logout()
-        self.login("down","1234")
+        self.login("down","123AbC*!")
         self.goto_page('nav_download')
         elements = self.get_books_displayed()
         self.assertEqual(1, len(elements[1]))

@@ -226,7 +226,7 @@ class TestLdapLogin(unittest.TestCase, ui_class):
         time.sleep(BOOT_TIME)
         # create new user
         # give user password different form ldap
-        self.create_user('user0',{'email':'user0@exi.com','password':'1234'})
+        self.create_user('user0',{'email':'user0@exi.com','password':'123AbC*!'})
         self.assertTrue(self.check_element_on_page((By.ID, "flash_success")))
         # logout
         self.logout()
@@ -247,7 +247,7 @@ class TestLdapLogin(unittest.TestCase, ui_class):
         # logout
         self.logout()
         # try login fallback password -> fail
-        self.login('user0', '1234')
+        self.login('user0', '123AbC*!')
         self.assertTrue(self.check_element_on_page((By.ID, "flash_danger")))
 
         #login as admin
@@ -548,7 +548,7 @@ class TestLdapLogin(unittest.TestCase, ui_class):
         time.sleep(BOOT_TIME)
         # create new user
         # give user password different form ldap
-        self.create_user('user0',{'email':'user0@exi.com','password':'1235'})
+        self.create_user('user0',{'email':'user0@exi.com','password':'1235AbC*!'})
         self.assertTrue(self.check_element_on_page((By.ID, "flash_success")))
         # start SSl LDAP
         self.server.relisten(config=1, port=3268, encrypt="SSL")
@@ -609,7 +609,7 @@ class TestLdapLogin(unittest.TestCase, ui_class):
         self.assertTrue(self.check_element_on_page((By.ID, "flash_success")))
         # create new user
         # give user password different form ldap
-        self.create_user('user0',{'email':'user0@exi.com','password':'1235'})
+        self.create_user('user0',{'email':'user0@exi.com','password':'1235AbC*!'})
         self.assertTrue(self.check_element_on_page((By.ID, "flash_success")))
         # start SSl LDAP
         self.server.relisten(config=1, port=3268, encrypt="SSL", validate=True)
@@ -660,7 +660,7 @@ class TestLdapLogin(unittest.TestCase, ui_class):
         self.assertTrue(self.check_element_on_page((By.ID, "flash_success")))
         time.sleep(BOOT_TIME)
         # create user
-        self.create_user('user0',{'email':'user0@exi.com','password':'1236'})
+        self.create_user('user0',{'email':'user0@exi.com','password':'1236AbC*!'})
         self.assertTrue(self.check_element_on_page((By.ID, "flash_success")))
         # start SSl LDAP
         self.server.relisten(config=1, port=3268, encrypt="TLS")
@@ -764,7 +764,7 @@ class TestLdapLogin(unittest.TestCase, ui_class):
         self.assertTrue(self.check_element_on_page((By.ID, "flash_success")))
         time.sleep(BOOT_TIME)
         # create user
-        self.create_user('user0',{'email':'user0@exi.com','password':'1236'})
+        self.create_user('user0',{'email':'user0@exi.com','password':'1236AbC*!'})
         self.assertTrue(self.check_element_on_page((By.ID, "flash_success")))
 
         self.server.relisten(config=1, port=3268, encrypt=None, auth=0)
@@ -847,7 +847,7 @@ class TestLdapLogin(unittest.TestCase, ui_class):
         # start ldap
         self.server.relisten(config=2, port=3268, encrypt=None)
         # create new user
-        self.create_user('执一',{'email':'use10@oxi.com','password':'1234', 'download_role': 1})
+        self.create_user('执一',{'email':'use10@oxi.com','password':'1234AbC*!', 'download_role': 1})
         self.assertTrue(self.check_element_on_page((By.ID, "flash_success")))
         self.logout()
 
@@ -1035,7 +1035,7 @@ class TestLdapLogin(unittest.TestCase, ui_class):
         # start ldap
         self.server.relisten(config=2, port=3268, encrypt=None)
         # create new user
-        self.create_user('执一',{'email':'use10@oxi.com','password':'1234', 'download_role': 1})
+        self.create_user('执一',{'email':'use10@oxi.com','password':'1234AbC*!', 'download_role': 1})
         self.assertTrue(self.check_element_on_page((By.ID, "flash_success")))
         host = 'http://' + get_Host_IP() + ':8083'
         self.fill_basic_config({'config_kobo_sync': 1})

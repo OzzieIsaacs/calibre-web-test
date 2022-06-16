@@ -305,10 +305,10 @@ class TestKoboSync(unittest.TestCase, ui_class):
         self.assertEqual('UserTag', data[0]['NewTag']['Tag']['Type'])
         self.assertEqual([], data[0]['NewTag']['Tag']['Items'])
         # create additional public shelf
-        self.create_user('user0', {'password': '1234', 'email': 'a@b.com', 'edit_shelf_role': 1})
+        self.create_user('user0', {'password': '1234AbC*!', 'email': 'a@b.com', 'edit_shelf_role': 1})
         self.assertTrue(self.check_element_on_page((By.ID, "flash_success")))
         self.logout()
-        self.login('user0', '1234')
+        self.login('user0', '1234AbC*!')
         self.assertTrue(self.check_element_on_page((By.ID, "flash_success")))
         self.create_shelf('adminShelf', True)
         self.assertTrue(self.check_element_on_page((By.ID, "flash_success")))
@@ -417,7 +417,7 @@ class TestKoboSync(unittest.TestCase, ui_class):
 
         # logout, login new user, create shelf for new user
         # self.logout()
-        # self.login('user0','1234')
+        # self.login('user0','123AbC*!')
         # self.create_shelf('new_user', True)
         # data = self.sync_kobo() # sync to get id of shelf
         # self.change_shelf('new_user', public=0)
@@ -616,12 +616,12 @@ class TestKoboSync(unittest.TestCase, ui_class):
         data3 = self.sync_kobo()  # 1 book synced, reading state changed as book was modified due to adding to shelf(?)
         self.assertIn("NewTag", data3[1])
         self.assertIn("NewEntitlement", data3[0])
-        self.create_user('kobosync', {'password': '123', 'email': 'da@b.com', "kobo_only_shelves_sync": 1})
+        self.create_user('kobosync', {'password': '123AbC*!', 'email': 'da@b.com', "kobo_only_shelves_sync": 1})
         user_settings = self.get_user_settings('kobosync')
         self.assertTrue(user_settings["kobo_only_shelves_sync"])
         # check kobo only
         self.logout()
-        self.login("kobosync","123")
+        self.login("kobosync","123AbC*!")
         # 2.user erzeuge neuen shelf mit sync füge Bücher hinzu
         self.create_shelf("syncd_shelf_u2", sync=1)
         self.get_book_details(9)

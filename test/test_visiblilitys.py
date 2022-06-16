@@ -419,11 +419,18 @@ class TestCalibreWebVisibilitys(unittest.TestCase, ui_class):
 
     # checks if admin can change its own password
     def test_admin_change_password(self):
-        self.change_current_user_password("1234")
+        self.change_current_user_password("123AbC*!")
         self.logout()
         self.assertFalse(self.login("admin", "admin123"))
-        self.assertTrue(self.login("admin", "1234"))
+        self.assertTrue(self.login("admin", "123AbC*!"))
+        # remove password restrictions
+        self.fill_basic_config({'config_password_policy':0})
+        self.assertTrue(self.check_element_on_page((By.ID, "flash_success")))
         self.assertTrue(self.change_current_user_password("admin123"))
+        # reenable  password restrictions
+        self.fill_basic_config({'config_password_policy':1})
+        self.assertTrue(self.check_element_on_page((By.ID, "flash_success")))
+
 
     # checks if admin can enter edit email-server settings
     def test_admin_SMTP_Settings(self):
@@ -454,7 +461,7 @@ class TestCalibreWebVisibilitys(unittest.TestCase, ui_class):
             self.assertTrue(self.check_element_on_page((By.ID, "flash_danger")))
             self.create_user('User', {'email': 'alfa@web.com'})
             self.assertTrue(self.check_element_on_page((By.ID, "flash_danger")))
-            self.create_user('User', {'password': u"Guêst", 'email': 'alfa@web.com'})
+            self.create_user('User', {'password': u"Guêst123AbC*!", 'email': 'alfa@web.com'})
             self.assertTrue(self.check_element_on_page((By.ID, "flash_success")))
             # check if on admin page
             self.goto_page("admin_setup")

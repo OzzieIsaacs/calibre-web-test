@@ -366,7 +366,7 @@ class TestEbookConvertCalibreGDrive(unittest.TestCase, ui_class):
         self.check_element_on_page((By.ID, "btn-book-convert")).click()
         self.assertTrue(self.check_element_on_page((By.ID, "flash_success")))
 
-        self.create_user('solo', {'password': '123', 'email': 'a@b.com', 'edit_role':1})
+        self.create_user('solo', {'password': '123AbC*!', 'email': 'a@b.com', 'edit_role':1})
         i = 0
         while i < 50:
             time.sleep(2)
@@ -384,7 +384,7 @@ class TestEbookConvertCalibreGDrive(unittest.TestCase, ui_class):
         memory = len(ret)
 
         self.logout()
-        self.login('solo', '123')
+        self.login('solo', '123AbC*!')
         ret_user = self.check_tasks()
         # No tasks logged
         self.assertEqual(0, len(ret_user))

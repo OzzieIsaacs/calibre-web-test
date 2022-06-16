@@ -103,7 +103,7 @@ class TestSTARTTLS(unittest.TestCase, ui_class):
 
 
     def test_STARTTLS_resend_password(self):
-        self.create_user('paswd_resend', {'password': '123', 'email': 'a@b.com', 'edit_role': 1})
+        self.create_user('paswd_resend', {'password': '123AbC*!', 'email': 'a@b.com', 'edit_role': 1})
         self.setup_server(False, {'mail_use_ssl': 'STARTTLS'})
         self.assertTrue(self.edit_user(u'paswd_resend', { 'resend_password': 1}))
         self.edit_user('paswd_resend', element={})

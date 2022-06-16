@@ -232,9 +232,9 @@ class TestEbookConvertCalibre(unittest.TestCase, ui_class):
     # logout, login new user
     # check button send to kindle not visible
     def test_kindle_send_not_configured(self):
-        self.create_user('kindle', {'password': '123', 'email': 'da@b.com', 'edit_role':1})
+        self.create_user('kindle', {'password': '123AbC*!', 'email': 'da@b.com', 'edit_role':1})
         self.logout()
-        self.login('kindle', '123')
+        self.login('kindle', '123AbC*!')
         details = self.get_book_details(5)
         self.assertIsNone(details['kindlebtn'])
         self.logout()
@@ -365,7 +365,7 @@ class TestEbookConvertCalibre(unittest.TestCase, ui_class):
         self.check_element_on_page((By.ID, "btn-book-convert")).click()
         self.assertTrue(self.check_element_on_page((By.ID, "flash_success")))
 
-        self.create_user('solo', {'password': '123', 'email': 'a@b.com', 'edit_role':1})
+        self.create_user('solo', {'password': '123AbC*!', 'email': 'a@b.com', 'edit_role':1})
         time.sleep(2)
         ret_orig = self.check_tasks()
         self.assertEqual(ret_orig[-6]['result'], 'Finished')
@@ -376,7 +376,7 @@ class TestEbookConvertCalibre(unittest.TestCase, ui_class):
         self.assertEqual(ret_orig[-1]['result'], 'Finished')
         self.logout()
 
-        self.login('solo', '123')
+        self.login('solo', '123AbC*!')
         ret_user = self.check_tasks()
         # No tasks logged
         self.assertEqual(0, len(ret_user))
@@ -555,11 +555,11 @@ class TestEbookConvertCalibre(unittest.TestCase, ui_class):
 
     def test_user_convert_xss(self):
         tasks = self.check_tasks()
-        self.create_user('<p>calibre Quick Start Guide</p><img src=x onerror=alert("jo")>', {'password': '123',
+        self.create_user('<p>calibre Quick Start Guide</p><img src=x onerror=alert("jo")>', {'password': '123AbC*!',
                                                                                              'email': 'das@b.com',
                                                                                              'edit_role':1})
         self.logout()
-        self.login('<p>calibre Quick Start Guide</p><img src=x onerror=alert("jo")>', '123')
+        self.login('<p>calibre Quick Start Guide</p><img src=x onerror=alert("jo")>', '123AbC*!')
         vals = self.get_convert_book(11)
 
         select = Select(vals['btn_from'])

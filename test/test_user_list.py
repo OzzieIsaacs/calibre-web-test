@@ -21,7 +21,7 @@ def user_change(user):
     r = requests.session()
     login_page = r.get('http://127.0.0.1:8083/login')
     token = re.search('<input type="hidden" name="csrf_token" value="(.*)">', login_page.text)
-    payload = {'username': user, 'password': "1234", 'submit': "", 'next': "/", "csrf_token": token.group(1)}
+    payload = {'username': user, 'password': "123AbC*!", 'submit': "", 'next': "/", "csrf_token": token.group(1)}
     r.post('http://127.0.0.1:8083/login', data=payload)
     for i in range(0, 200):
         time.sleep(random.random() * 0.05)
@@ -131,18 +131,18 @@ class TestUserList(TestCase, ui_class):
 
     @classmethod
     def mass_create_users(cls, count):
-        cls.create_user('no_one', {'password': '1234', 'email': 'muki1al@b.com', 'kindle_mail': 'muki1al@b.com'})
-        cls.create_user('no_two', {'password': '1234', 'email': 'muki2al@b.com', "download_role": 1, "locale":"Deutsch"})
-        cls.create_user('no_three', {'password': '1234', 'email': 'muki3al@b.com', 'kindle_mail': 'm11uklial@bds.com'})
-        cls.create_user('no_four', {'password': '1234', 'email': 'muki4al@b.com', "download_role": 1, 'show_16': 1, "upload_role":1})
-        cls.create_user('no_5', {'password': '1234', 'email': 'muki5al@b.com', 'kindle_mail': 'muki5al@bad.com'})
-        cls.create_user('no_6', {'password': '1234', 'email': 'muki6al@b.com', "edit_role": 1, "locale":"Italiano", 'show_16': 1})
-        cls.create_user('no_1', {'password': '1234', 'email': 'muki7al@b.com', "locale": "Polski", "passwd_role":1})
-        cls.create_user('1_no', {'password': '1234', 'email': 'muki8al@b.com', 'kindle_mail': 'muki8al@bcd.com', "admin_role":1})
-        cls.create_user('2_no', {'password': '1234', 'email': 'muki9al@b.com', "edit_role": 1, 'default_language': "English"})
-        cls.create_user('3_no', {'password': '1234', 'email': 'muki10al@b.com', 'kindle_mail': 'muki1al@b.com', 'default_language': "Norwegian Bokmål"})
+        cls.create_user('no_one', {'password': '123AbC*!', 'email': 'muki1al@b.com', 'kindle_mail': 'muki1al@b.com'})
+        cls.create_user('no_two', {'password': '123AbC*!', 'email': 'muki2al@b.com', "download_role": 1, "locale":"Deutsch"})
+        cls.create_user('no_three', {'password': '123AbC*!', 'email': 'muki3al@b.com', 'kindle_mail': 'm11uklial@bds.com'})
+        cls.create_user('no_four', {'password': '123AbC*!', 'email': 'muki4al@b.com', "download_role": 1, 'show_16': 1, "upload_role":1})
+        cls.create_user('no_5', {'password': '123AbC*!', 'email': 'muki5al@b.com', 'kindle_mail': 'muki5al@bad.com'})
+        cls.create_user('no_6', {'password': '123AbC*!', 'email': 'muki6al@b.com', "edit_role": 1, "locale":"Italiano", 'show_16': 1})
+        cls.create_user('no_1', {'password': '123AbC*!', 'email': 'muki7al@b.com', "locale": "Polski", "passwd_role":1})
+        cls.create_user('1_no', {'password': '123AbC*!', 'email': 'muki8al@b.com', 'kindle_mail': 'muki8al@bcd.com', "admin_role":1})
+        cls.create_user('2_no', {'password': '123AbC*!', 'email': 'muki9al@b.com', "edit_role": 1, 'default_language': "English"})
+        cls.create_user('3_no', {'password': '123AbC*!', 'email': 'muki10al@b.com', 'kindle_mail': 'muki1al@b.com', 'default_language': "Norwegian Bokmål"})
         for i in range(0, count):
-            cls.create_user('user_' + str(count), {'password': '1234', 'email': str(count) + 'al@b.com'})
+            cls.create_user('user_' + str(count), {'password': '123AbC*!', 'email': str(count) + 'al@b.com'})
 
     def test_user_list_edit_button(self):
         ul = self.get_user_table(2)
@@ -444,7 +444,7 @@ class TestUserList(TestCase, ui_class):
         ul = self.get_user_table(-1)
         self.assertEqual(1, len(ul['table']))
         self.logout()
-        self.login("1_no", "1234")
+        self.login("1_no", "123AbC*!")
         ul = self.get_user_table(1)
         ul['table'][0]['role_Admin']['element'].click()
         self.logout()

@@ -23,7 +23,7 @@ class TestShelf(unittest.TestCase, ui_class):
         try:
             # Upload needed for generating csrf token for edit shelf
             startup(cls, cls.py_version,{'config_calibre_dir':TEST_DB, 'config_uploading': 1}, env={"APP_MODE": "test"})
-            cls.create_user('shelf', {'edit_shelf_role':1, "upload_role": 1, 'password':'123', 'email':'a@b.com'})
+            cls.create_user('shelf', {'edit_shelf_role':1, "upload_role": 1, 'password':'123AbC*!', 'email':'a@b.com'})
             cls.edit_user('admin',{'edit_shelf_role':1, 'email':'e@fe.de'})
         except Exception:
             cls.driver.quit()
@@ -56,14 +56,14 @@ class TestShelf(unittest.TestCase, ui_class):
         self.create_shelf('Pü 执', False)
         self.assertTrue(self.check_element_on_page((By.ID, "flash_success")))
         self.logout()
-        self.login('shelf','123')
+        self.login('shelf','123AbC*!')
         # other user can't see shelf
         self.assertFalse(len(self.list_shelfs()))
         # other user is not able to add books
         r = requests.session()
         login_page = r.get('http://127.0.0.1:8083/login')
         token = re.search('<input type="hidden" name="csrf_token" value="(.*)">', login_page.text)
-        payload = {'username': 'shelf', 'password': '123', 'submit':"", 'next':"/", "remember_me":"on", "csrf_token": token.group(1)}
+        payload = {'username': 'shelf', 'password': '123AbC*!', 'submit':"", 'next':"/", "remember_me":"on", "csrf_token": token.group(1)}
         r.post('http://127.0.0.1:8083/login', data=payload)
         shelf_page = r.get('http://127.0.0.1:8083/shelf/create')
         token = re.search('<input type="hidden" name="csrf_token" value="(.*)">', shelf_page.text)
@@ -85,13 +85,13 @@ class TestShelf(unittest.TestCase, ui_class):
 
         # check shelf still invisible
         self.logout()
-        self.login('shelf','123')
+        self.login('shelf','123AbC*!')
         # other user can't see shelf
         self.assertFalse(len(self.list_shelfs()))
         # other user is not able to add books
         login_page = r.get('http://127.0.0.1:8083/login')
         token = re.search('<input type="hidden" name="csrf_token" value="(.*)">', login_page.text)
-        payload = {'username': 'shelf', 'password': '123', 'submit':"", 'next':"/", "remember_me":"on", "csrf_token": token.group(1)}
+        payload = {'username': 'shelf', 'password': '123AbC*!', 'submit':"", 'next':"/", "remember_me":"on", "csrf_token": token.group(1)}
         r.post('http://127.0.0.1:8083/login', data=payload)
         shelf_page = r.get('http://127.0.0.1:8083/shelf/create')
         token = re.search('<input type="hidden" name="csrf_token" value="(.*)">', shelf_page.text)
@@ -117,7 +117,7 @@ class TestShelf(unittest.TestCase, ui_class):
         self.create_shelf('Gü 执',True)
         self.assertTrue(self.check_element_on_page((By.ID, "flash_success")))
         self.logout()
-        self.login('shelf','123')
+        self.login('shelf','123AbC*!')
         # other user can see shelf
         shelfs = self.list_shelfs(u'Gü 执 (Public)')
         self.assertTrue(shelfs)
@@ -125,7 +125,7 @@ class TestShelf(unittest.TestCase, ui_class):
         r = requests.session()
         login_page = r.get('http://127.0.0.1:8083/login')
         token = re.search('<input type="hidden" name="csrf_token" value="(.*)">', login_page.text)
-        payload = {'username': 'shelf', 'password': '123', 'submit':"", 'next':"/", "remember_me":"on", "csrf_token": token.group(1)}
+        payload = {'username': 'shelf', 'password': '123AbC*!', 'submit':"", 'next':"/", "remember_me":"on", "csrf_token": token.group(1)}
         r.post('http://127.0.0.1:8083/login', data=payload)
         shelf_page = r.get('http://127.0.0.1:8083/shelf/create')
         token = re.search('<input type="hidden" name="csrf_token" value="(.*)">', shelf_page.text)
@@ -178,12 +178,12 @@ class TestShelf(unittest.TestCase, ui_class):
 
 
     def test_create_public_shelf(self):
-        self.create_user('invalid', {'edit_shelf_role': 0, 'password': '1234', 'email': 'bac@b.com'})
+        self.create_user('invalid', {'edit_shelf_role': 0, 'password': '123AbC*!', 'email': 'bac@b.com'})
         self.assertTrue(self.check_element_on_page((By.ID, "flash_success")))
         r = requests.session()
         login_page = r.get('http://127.0.0.1:8083/login')
         token = re.search('<input type="hidden" name="csrf_token" value="(.*)">', login_page.text)
-        payload = {'username': 'invalid', 'password': '1234', 'submit':"", 'next':"/", "remember_me":"on", "csrf_token": token.group(1)}
+        payload = {'username': 'invalid', 'password': '123AbC*!', 'submit':"", 'next':"/", "remember_me":"on", "csrf_token": token.group(1)}
         r.post('http://127.0.0.1:8083/login', data=payload)
         shelf_page = r.get('http://127.0.0.1:8083/shelf/create')
         token = re.search('<input type="hidden" name="csrf_token" value="(.*)">', shelf_page.text)
@@ -237,7 +237,7 @@ class TestShelf(unittest.TestCase, ui_class):
         self.assertTrue(self.check_element_on_page((By.ID, "flash_danger")))
         self.logout()
         # logout and try to create another shelf with same name, even if user can't see shelfs name
-        self.login('shelf','123')
+        self.login('shelf','123AbC*!')
         self.create_shelf('Lolu', True)
         self.assertTrue(self.check_element_on_page((By.ID, "flash_success")))
         self.create_shelf('Lolo', False)
@@ -247,7 +247,7 @@ class TestShelf(unittest.TestCase, ui_class):
         r = requests.session()
         login_page = r.get('http://127.0.0.1:8083/login')
         token = re.search('<input type="hidden" name="csrf_token" value="(.*)">', login_page.text)
-        payload = {'username': 'shelf', 'password': '123', 'submit':"", 'next':"/", "remember_me":"on", "csrf_token": token.group(1)}
+        payload = {'username': 'shelf', 'password': '123AbC*!', 'submit':"", 'next':"/", "remember_me":"on", "csrf_token": token.group(1)}
         book_page = r.post('http://127.0.0.1:8083/login', data=payload)
 
         token = re.search('<input type="hidden" name="csrf_token" value="(.*)">', book_page.text)
@@ -356,7 +356,7 @@ class TestShelf(unittest.TestCase, ui_class):
         self.assertTrue(self.check_element_on_page((By.ID, "flash_success")))
         self.logout()
         # logout and try to create another shelf with same name, even if user can't see shelfs name
-        self.login('shelf','123')
+        self.login('shelf','123AbC*!')
         self.delete_shelf('shelf_private (Public)')
         self.logout()
         self.login('admin','admin123')
@@ -373,10 +373,10 @@ class TestShelf(unittest.TestCase, ui_class):
         self.edit_user('admin', {'edit_shelf_role': 0, 'email': 'e@fe.de'})
         self.assertTrue(self.check_element_on_page((By.ID, "flash_success")))
         # create user with edit_shlefs role
-        self.create_user('user0', {'edit_shelf_role': 1, 'password': '1234', 'email': 'a1@b.com'})
+        self.create_user('user0', {'edit_shelf_role': 1, 'password': '123AbC*!', 'email': 'a1@b.com'})
         self.assertTrue(self.check_element_on_page((By.ID, "flash_success")))
         self.logout()
-        self.login('user0','1234')
+        self.login('user0','123AbC*!')
         self.create_shelf('noright', True)
         self.goto_page('nav_new')
         books = self.get_books_displayed()
@@ -554,11 +554,11 @@ class TestShelf(unittest.TestCase, ui_class):
 
 
     def test_create_public_shelf_no_permission(self):
-        self.create_user("test1", {'password': '1234', 'email': 'a11@bc.com'})
+        self.create_user("test1", {'password': '123AbC*!', 'email': 'a11@bc.com'})
         r = requests.session()
         login_page = r.get('http://127.0.0.1:8083/login')
         token = re.search('<input type="hidden" name="csrf_token" value="(.*)">', login_page.text)
-        payload = {'username': 'test1', 'password': '1234', 'submit':"", 'next':"/", "remember_me":"on", "csrf_token": token.group(1)}
+        payload = {'username': 'test1', 'password': '123AbC*!', 'submit':"", 'next':"/", "remember_me":"on", "csrf_token": token.group(1)}
         r.post('http://127.0.0.1:8083/login', data=payload)
         shelf_page = r.get('http://127.0.0.1:8083/shelf/create')
         token = re.search('<input type="hidden" name="csrf_token" value="(.*)">', shelf_page.text)
@@ -569,13 +569,13 @@ class TestShelf(unittest.TestCase, ui_class):
         self.edit_user("test1", {"delete":1})
 
     def test_access_shelf(self):
-        self.create_user("tester", {'password': '1234', 'email': 'a12@bc.com'})
+        self.create_user("tester", {'password': '123A4bC*!', 'email': 'a12@bc.com'})
         self.create_shelf("access", False)
         shelf = self.list_shelfs("access")
         r = requests.session()
         login_page = r.get('http://127.0.0.1:8083/login')
         token = re.search('<input type="hidden" name="csrf_token" value="(.*)">', login_page.text)
-        payload = {'username': 'tester', 'password': '1234', 'submit':"", 'next':"/", "remember_me":"on", "csrf_token": token.group(1)}
+        payload = {'username': 'tester', 'password': '123A4bC*!', 'submit':"", 'next':"/", "remember_me":"on", "csrf_token": token.group(1)}
         r.post('http://127.0.0.1:8083/login', data=payload)
         shelf_page = r.get('http://127.0.0.1:8083/shelf/create')
         token = re.search('<input type="hidden" name="csrf_token" value="(.*)">', shelf_page.text)
