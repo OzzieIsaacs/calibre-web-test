@@ -1520,7 +1520,7 @@ class ui_class():
             ele = tree.xpath("//*[starts-with(@id,'sendbtn')]")
             # bk['ele'] = cls.check_element_on_page((By.XPATH, "//a[@href='" + bk['link'] + "']/img"))
             if len(ele):
-                all = tree.findall("//*[@aria-labelledby='send-to-kindle']/li/a")
+                all = tree.findall("//*[@aria-labelledby='send-to-ereader']/li/a")
                 if all:
                     ret['kindlebtn'] = cls.driver.find_element(By.ID, "sendbtn2")
                     ret['kindle'] = all

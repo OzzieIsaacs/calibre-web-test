@@ -134,7 +134,7 @@ class TestThumbnails(unittest.TestCase, ui_class):
         updated_cover = self.check_element_on_page((By.ID, "detailcover")).screenshot_as_png
         self.assertGreaterEqual(diff(BytesIO(updated_cover), BytesIO(original_cover), delete_diff_file=True), 0.03)
         # number of covers unchanged
-        self.assertEqual(110*2, count_files(thumbnail_cache_path),)
+        self.assertEqual(110*2, count_files(thumbnail_cache_path))
         # ToDo: do the same with cover from url
         self.fill_basic_config({'config_uploading': 0})
         time.sleep(3)

@@ -6,6 +6,7 @@ import os
 import time
 import shutil
 import re
+import requests
 
 from helper_ui import ui_class
 from helper_func import get_Host_IP, kill_dead_cps, save_logfiles
@@ -135,6 +136,10 @@ class TestCli(unittest.TestCase, ui_class):
         time.sleep(3)
         self.assertTrue(os.path.isfile(new_db), "New settingsfile location not accepted")
         os.remove(new_db)
+        try:
+            self.driver.switch_to.alert.accept()
+        except Exception:
+            pass
 
     def test_cli_SSL_files(self):
         os.chdir(os.path.dirname(__file__))
@@ -595,3 +600,95 @@ class TestCli(unittest.TestCase, ui_class):
         except Exception:
             pass
 
+    def test_enable_reconnect(self):
+        my_env = os.environ.copy()
+        my_env["CALIBRE_RECONNECT"] = '1'
+        p = process_open([self.py_version,  "-B", os.path.join(CALIBRE_WEB_PATH, u'cps.py')], [1], env=my_env)
+        time.sleep(BOOT_TIME)
+        # navigate to the application home page
+        self.driver.get("http://127.0.0.1:8083")
+        # Wait for config screen to show up
+        self.fill_db_config({'config_calibre_dir': TEST_DB})
+        # wait for cw to reboot
+        time.sleep(2)
+        self.assertTrue(self.check_element_on_page((By.ID, 'flash_success')))
+        r = requests.get("http://127.0.0.1:8083/reconnect")
+        self.assertEqual(200, r.status_code)
+        self.assertDictEqual({}, r.json())
+        self.stop_calibre_web(p)
+        try:
+            self.driver.switch_to.alert.accept()
+        except Exception:
+            pass
+        my_env = os.environ.copy()
+        p = process_open([self.py_version,  "-B", os.path.join(CALIBRE_WEB_PATH, u'cps.py')], [1], env=my_env)
+        time.sleep(BOOT_TIME)
+        r = requests.get("http://127.0.0.1:8083/reconnect")
+        self.assertEqual(404, r.status_code)
+        self.stop_calibre_web(p)
+        try:
+            self.driver.switch_to.alert.accept()
+        except Exception:
+            pass
+        p = process_open([self.py_version,  "-B", os.path.join(CALIBRE_WEB_PATH, u'cps.py'), "-r"], [1])
+        time.sleep(BOOT_TIME)
+        r = requests.get("http://127.0.0.1:8083/reconnect")
+        self.assertEqual(200, r.status_code)
+        self.assertDictEqual({}, r.json())
+        self.stop_calibre_web(p)
+        try:
+            self.driver.switch_to.alert.accept()
+        except Exception:
+            pass
+        os.remove(os.path.join(CALIBRE_WEB_PATH, u'app.db'))
+
+    def test_writeonly_static_files(self):
+        p = process_open([self.py_version,  "-B", os.path.join(CALIBRE_WEB_PATH, u'cps.py')], [1])
+        time.sleep(BOOT_TIME)
+        # navigate to the application home page
+        self.driver.get("http://127.0.0.1:8083")
+        # Wait for config screen to show up
+        self.fill_db_config({'config_calibre_dir': TEST_DB})
+        # wait for cw to reboot
+        time.sleep(2)
+        self.assertTrue(self.check_element_on_page((By.ID, 'flash_success')))
+        # readonly template "tasks.html"
+        mode = os.path.join(CALIBRE_WEB_PATH, "cps", "templates", "tasks.html")
+        os.chmod(mode, 0o200)
+        r = requests.session()
+        login_page = r.get('http://127.0.0.1:8083/login')
+        token = re.search('<input type="hidden" name="csrf_token" value="(.*)">', login_page.text)
+        payload = {'username': 'admin', 'password': 'admin123', 'submit': "", 'next': "/", "csrf_token": token.group(1)}
+        r.post('http://127.0.0.1:8083/login', data=payload)
+        resp = r.get("http://127.0.0.1:8083/tasks")
+        self.assertEqual(403, resp.status_code)
+        os.chmod(mode, 0o644)
+        resp = r.get("http://127.0.0.1:8083/tasks")
+        self.assertEqual(200, resp.status_code)
+        # readonly "static" folder
+        mode = os.path.join(CALIBRE_WEB_PATH, "cps", "static")
+        os.chmod(mode, 0o200)
+        resp = r.get("http://127.0.0.1:8083/static/js/main.js")
+        self.assertEqual(404, resp.status_code)
+        resp = r.get("http://127.0.0.1:8083/tasks")
+        self.assertEqual(200, resp.status_code)
+        os.chmod(mode, 0o755)
+        resp = r.get("http://127.0.0.1:8083/static/js/main.js")
+        self.assertEqual(200, resp.status_code)
+        # readonly "main.js" folder
+        mode = os.path.join(CALIBRE_WEB_PATH, "cps", "static", "js", "main.js")
+        os.chmod(mode, 0o200)
+        resp = r.get("http://127.0.0.1:8083/static/js/main.js")
+        self.assertEqual(500, resp.status_code)
+        resp = r.get("http://127.0.0.1:8083/tasks")
+        self.assertEqual(200, resp.status_code)
+        os.chmod(mode, 0o644)
+        resp = r.get("http://127.0.0.1:8083/static/js/main.js")
+        self.assertEqual(200, resp.status_code)
+
+        self.stop_calibre_web(p)
+        try:
+            self.driver.switch_to.alert.accept()
+        except Exception:
+            pass
+        os.remove(os.path.join(CALIBRE_WEB_PATH, u'app.db'))

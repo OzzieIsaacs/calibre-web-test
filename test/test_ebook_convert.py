@@ -73,11 +73,11 @@ class TestEbookConvertCalibre(unittest.TestCase, ui_class):
     def test_convert_deactivate(self):
         self.fill_basic_config({'config_converterpath': ""})
         self.goto_page('nav_about')
-        element = self.check_element_on_page((By.XPATH, "//tr/th[text()='ebook converter']/following::td[1]"))
+        element = self.check_element_on_page((By.XPATH, "//tr/th[text()='Ebook converter']/following::td[1]"))
         self.assertEqual(element.text, 'not installed')
-        details = self.get_book_details(5)
+        details = self.get_book_details(1)
         self.assertFalse(details['kindlebtn'])
-        vals = self.get_convert_book(5)
+        vals = self.get_convert_book(1)
         self.assertFalse(vals['btn_from'])
         self.assertFalse(vals['btn_to'])
         # self.fill_basic_config({'config_converterpath': ""})
@@ -90,7 +90,7 @@ class TestEbookConvertCalibre(unittest.TestCase, ui_class):
         tasks = self.check_tasks()
         self.fill_basic_config({'config_converterpath':'/opt/calibre/ebook-polish'})
         self.goto_page('nav_about')
-        element = self.check_element_on_page((By.XPATH, "//tr/th[text()='ebook converter']/following::td[1]"))
+        element = self.check_element_on_page((By.XPATH, "//tr/th[text()='Ebook converter']/following::td[1]"))
         self.assertEqual(element.text, 'not installed')
         details = self.get_book_details(5)
         self.assertEqual(len(details['kindle']), 1)
@@ -109,7 +109,7 @@ class TestEbookConvertCalibre(unittest.TestCase, ui_class):
         # conv.click()
         self.assertTrue(self.check_element_on_page((By.ID, "flash_success")))
         self.goto_page('nav_about')
-        element = self.check_element_on_page((By.XPATH, "//tr/th[text()='ebook converter']/following::td[1]"))
+        element = self.check_element_on_page((By.XPATH, "//tr/th[text()='Ebook converter']/following::td[1]"))
         self.assertEqual(element.text, 'not installed')
         # ToDo: check convert function
         vals = self.get_convert_book(5)
@@ -119,7 +119,7 @@ class TestEbookConvertCalibre(unittest.TestCase, ui_class):
         nonexec = os.path.join(CALIBRE_WEB_PATH, 'app.db')
         self.fill_basic_config({'config_converterpath': nonexec})
         self.goto_page('nav_about')
-        element = self.check_element_on_page((By.XPATH, "//tr/th[text()='ebook converter']/following::td[1]"))
+        element = self.check_element_on_page((By.XPATH, "//tr/th[text()='Ebook converter']/following::td[1]"))
         self.assertEqual(element.text, 'Execution permissions missing')
         details = self.get_book_details(5)
         self.assertEqual(len(details['kindle']), 1)
@@ -177,14 +177,36 @@ class TestEbookConvertCalibre(unittest.TestCase, ui_class):
         self.assertEqual(2, task_len)
         self.assertEqual(ret[-1]['result'], 'Failed')
         self.fill_basic_config({'config_calibre': ''})
+        self.assertTrue(self.check_element_on_page((By.ID, "flash_success")))
 
     # press send to kindle for not converted book
     # wait for finished
     # check email received
     def test_convert_email(self):
-        self.setup_server(True, {'mail_password': '10234', 'mail_use_ssl':'None'})
+        self.setup_server(True, {'mail_password': '10234', 'mail_use_ssl': 'None'})
+        time.sleep(2)
         tasks = self.check_tasks()
-        details = self.get_book_details(9)
+        vals = self.get_convert_book(1)
+        select = Select(vals['btn_from'])
+        select.select_by_visible_text('TXT')
+        select = Select(vals['btn_to'])
+        select.select_by_visible_text('AZW3')
+        self.check_element_on_page((By.ID, "btn-book-convert")).click()
+        time.sleep(1)
+        self.assertTrue(self.check_element_on_page((By.ID, "flash_success")))
+        time.sleep(4)
+        i = 0
+        while i < 20:
+            time.sleep(2)
+            task_len, ret = self.check_tasks(tasks)
+            if task_len == 1:
+                if ret[-1]['result'] == 'Finished' or ret[-1]['result'] == 'Failed':
+                    break
+            i += 1
+        self.assertEqual(1, task_len)
+
+        tasks = self.check_tasks()
+        details = self.get_book_details(1)
         self.assertEqual(len(details['kindle']), 1)
         details['kindlebtn'].click()
         i = 0
@@ -195,9 +217,14 @@ class TestEbookConvertCalibre(unittest.TestCase, ui_class):
                 if ret[-1]['result'] == 'Finished' or ret[-1]['result'] == 'Failed':
                     break
             i += 1
+        self.assertTrue("E-mail" in ret[-1]['task'])
+        self.assertTrue("Convert" in ret[-2]['task'])
         self.assertEqual(ret[-2]['result'], 'Finished')
         self.assertEqual(ret[-1]['result'], 'Finished')
         self.setup_server(True, {'mail_password': '1234'})
+        self.assertTrue(self.check_element_on_page((By.ID, "flash_info")))
+        self.delete_book_format(1, "AZW3")
+        self.delete_book_format(1, "EPUB")
 
 
     # check visiblility kindle button for user with not set kindle-email
@@ -219,16 +246,31 @@ class TestEbookConvertCalibre(unittest.TestCase, ui_class):
     # delete ranom file and move invalid filename back to vaild filename
     # convert valid file
     def test_convert_failed_and_email(self):
-        orig_file = os.path.join(TEST_DB, u'Leo Baskerville/book8 (8)',
-                                 u'book8 - Leo Baskerville.epub').encode('UTF-8')
-        moved_file = os.path.join(TEST_DB, u'Leo Baskerville/book8 (8)',
-                                  u'book8.epub').encode('UTF-8')
+        tasks = self.check_tasks()
+        vals = self.get_convert_book(1)
+        select = Select(vals['btn_from'])
+        select.select_by_visible_text('TXT')
+        select = Select(vals['btn_to'])
+        select.select_by_visible_text('AZW3')
+        self.check_element_on_page((By.ID, "btn-book-convert")).click()
+        time.sleep(1)
+        self.assertTrue(self.check_element_on_page((By.ID, "flash_success")))
+        time.sleep(5)
+        task_len, ret = self.check_tasks(tasks)
+        self.assertEqual(1, task_len)
+        self.assertEqual(ret[-1]['result'], 'Finished')
+
+        # convert book1 to azw3 -> rename azw3 as before and start conversion
+        orig_file = os.path.join(TEST_DB, 'Frodo Beutlin', 'Der Buchtitel (1)',
+                                 'Der Buchtitel - Frodo Beutlin.azw3').encode('UTF-8')
+        moved_file = os.path.join(TEST_DB, 'Frodo Beutlin', 'Der Buchtitel (1)',
+                                  u'book1.azw3').encode('UTF-8')
         os.rename(orig_file, moved_file)
         with open(orig_file, 'wb') as fout:
             fout.write(os.urandom(124))
         self.setup_server(True, {'mail_password': '10234'})
-        tasks = self.check_tasks()
-        details = self.get_book_details(8)
+        t_len, tasks = self.check_tasks(ret)
+        details = self.get_book_details(1)
         self.assertEqual(len(details['kindle']), 1)
         details['kindlebtn'].click()
         i = 0
@@ -243,6 +285,7 @@ class TestEbookConvertCalibre(unittest.TestCase, ui_class):
         self.setup_server(True, {'mail_password': '1234'})
         os.remove(orig_file)
         os.rename(moved_file, orig_file)
+        self.delete_book_format(1, "AZW3")
 
 
     # convert everything to everything
@@ -335,6 +378,7 @@ class TestEbookConvertCalibre(unittest.TestCase, ui_class):
 
         self.login('solo', '123')
         ret_user = self.check_tasks()
+        # No tasks logged
         self.assertEqual(0, len(ret_user))
 
         vals = self.get_convert_book(7)
@@ -383,7 +427,7 @@ class TestEbookConvertCalibre(unittest.TestCase, ui_class):
     def test_email_only(self):
         self.setup_server(True, {'mail_use_ssl': 'None', 'mail_password': '10234'})
         tasks = self.check_tasks()
-        vals = self.get_convert_book(8)
+        '''vals = self.get_convert_book(8)
         select = Select(vals['btn_from'])
         select.select_by_visible_text('EPUB')
         select = Select(vals['btn_to'])
@@ -398,8 +442,8 @@ class TestEbookConvertCalibre(unittest.TestCase, ui_class):
                 if ret[-1]['result'] == 'Finished' or ret[-1]['result'] == 'Failed':
                     break
             i += 1
-        self.assertEqual(ret[-1]['result'], 'Finished')
-        details = self.get_book_details(8)
+        self.assertEqual(ret[-1]['result'], 'Finished')'''
+        details = self.get_book_details(10)
         details['kindlebtn'].click()
         # conv = self.check_element_on_page((By.LINK_TEXT, details['kindle'][0].text))
         # self.assertTrue(conv)
@@ -409,12 +453,12 @@ class TestEbookConvertCalibre(unittest.TestCase, ui_class):
         while i < 10:
             time.sleep(2)
             task_len, ret = self.check_tasks(tasks)
-            if task_len == 2:
+            if task_len == 1:
                 if ret[-1]['result'] == 'Finished' or ret[-1]['result'] == 'Failed':
                     break
             i += 1
         self.assertEqual(ret[-1]['result'], 'Finished')
-        self.assertGreaterEqual(self.email_server.handler.message_size, 17477)
+        self.assertGreaterEqual(self.email_server.handler.message_size, 5996)
         self.setup_server(False, {'mail_password':'1234'})
 
 

@@ -63,7 +63,8 @@ class TestCoverEditBooks(TestCase, ui_class):
         val.set_type(['HTTPError'])
         self.get_book_details(8)
         self.check_element_on_page((By.ID, "edit_book")).click()
-        self.edit_book(content={'cover_url': u'https://api.github.com/repos/janeczku/calibre-web/cover/test.jpg'})
+        # check spaces in request are stripped
+        self.edit_book(content={'cover_url': u' https://api.github.com/repos/janeczku/calibre-web/cover/test.jpg '})
         self.assertTrue("Error Downloading Cover" in self.check_element_on_page((By.ID, "flash_danger")).text)
         val.set_type(['ConnectionError'])
         self.check_element_on_page((By.ID, "edit_book")).click()
