@@ -425,10 +425,12 @@ class TestCalibreWebVisibilitys(unittest.TestCase, ui_class):
         self.assertTrue(self.login("admin", "123AbC*!"))
         # remove password restrictions
         self.fill_basic_config({'config_password_policy':0})
+        time.sleep(5)
         self.assertTrue(self.check_element_on_page((By.ID, "flash_success")))
         self.assertTrue(self.change_current_user_password("admin123"))
         # reenable  password restrictions
         self.fill_basic_config({'config_password_policy':1})
+        time.sleep(5)
         self.assertTrue(self.check_element_on_page((By.ID, "flash_success")))
 
 

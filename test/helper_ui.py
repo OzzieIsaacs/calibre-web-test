@@ -338,7 +338,8 @@ class ui_class():
                                            'config_converterpath', 'config_rarfile_location']):
             opener.append(3)
         if any(key in elements for key in ['config_password_policy', 'config_password_number', 'config_password_lower',
-                                           'config_password_upper', 'config_password_special', 'config_session']):
+                                           'config_password_upper', 'config_password_special', 'config_session',
+                                           'config_password_min_length']):
             opener.append(4)
 
         # open all necessary accordions
