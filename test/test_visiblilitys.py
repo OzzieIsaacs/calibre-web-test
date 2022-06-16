@@ -863,6 +863,8 @@ class TestCalibreWebVisibilitys(unittest.TestCase, ui_class):
         self.goto_page("nav_unread")
         list_element = self.get_books_displayed()
         self.assertEqual(len(list_element[1]), 10)
+        self.assertEqual(len(self.adv_search({"read_status": "Yes"})), 1)
+        self.assertEqual(len(self.adv_search({"read_status": "No"})), 10)
         details = self.get_book_details(5)
         self.assertFalse(details['read'])
         self.assertEqual(len(details['cust_columns']), 0)
@@ -874,6 +876,7 @@ class TestCalibreWebVisibilitys(unittest.TestCase, ui_class):
         self.assertEqual(len(details['cust_columns']), 0)
         self.check_element_on_page((By.ID, "edit_book")).click()
         self.check_element_on_page((By.ID, "custom_column_3"))
+
         search = self.adv_search('', get=True)
         self.assertFalse('Custom Bool 1 Ä' in search['cust_columns'],
                          'Bool column linked to read function, should not visible')
@@ -907,6 +910,8 @@ class TestCalibreWebVisibilitys(unittest.TestCase, ui_class):
     def test_read_status_visible(self):
         self.get_book_details(7)
         self.check_element_on_page((By.XPATH, "//*[@id='have_read_cb']")).click()
+        self.assertEqual(len(self.adv_search({"read_status": "Yes"})), 1)
+        self.assertEqual(len(self.adv_search({"read_status": "No"})), 10)
         self.goto_page("nav_read")
         list_element = self.get_books_displayed()
         self.assertEqual(len(list_element[1]), 1)
