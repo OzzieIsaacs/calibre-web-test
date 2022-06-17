@@ -426,9 +426,9 @@ def finishing_notifier(result_file):
 
 def createSSHClient(server, port, user, password):
     client = paramiko.SSHClient()
-    client.load_system_host_keys()
+    client.load_system_host_keys("/home/matthias/.ssh/known_hosts")
     client.set_missing_host_key_policy(paramiko.AutoAddPolicy())
-    client.connect(server, int(port), user, password)
+    client.connect(server, int(port), user, password, look_for_keys=False, allow_agent=False)
     return client
 
 def result_upload(TEST_OS):
