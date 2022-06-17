@@ -428,7 +428,7 @@ def createSSHClient(server, port, user, password):
     client = paramiko.SSHClient()
     client.load_system_host_keys()
     client.set_missing_host_key_policy(paramiko.AutoAddPolicy())
-    client.connect(server, port, user, password)
+    client.connect(server, int(port), user, password)
     return client
 
 def result_upload(TEST_OS):

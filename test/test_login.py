@@ -269,6 +269,9 @@ class TestLogin(unittest.TestCase, ui_class):
         self.driver.get("http://127.0.0.1:8083/login")
         self.login('admin', 'admin123')
         self.assertTrue(self.check_element_on_page((By.ID, "flash_success")))
+        self.fill_basic_config({'config_password_policy': 0})
+        time.sleep(5)
+        self.assertTrue(self.check_element_on_page((By.ID, "flash_success")))
         self.create_user('admin2', {'password': '123AbC*!', 'admin_role': 1, 'email': 'a3@b.com'})
         self.assertTrue(self.check_element_on_page((By.ID, "flash_success")))
         self.logout()
@@ -290,6 +293,9 @@ class TestLogin(unittest.TestCase, ui_class):
         self.assertTrue(self.check_element_on_page((By.ID, "flash_danger")))
         self.edit_user('admin', {'delete': 1})
         self.assertTrue(self.check_element_on_page((By.ID, "flash_danger")))
+        self.fill_basic_config({'config_password_policy':1})
+        time.sleep(5)
+        self.assertTrue(self.check_element_on_page((By.ID, "flash_success")))
         self.logout()
 
     def test_password_policy(self):
