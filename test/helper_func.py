@@ -1,6 +1,5 @@
 #!/usr/bin/env python
 # -*- coding: utf-8 -*-
-import os
 import shutil
 import re
 import mimetypes
@@ -38,7 +37,7 @@ except ImportError:
 try:
     from config_email import E_MAIL_ADDRESS, E_MAIL_SERVER_ADDRESS, STARTSSL, EMAIL_SERVER_PORT
     from config_email import E_MAIL_LOGIN, E_MAIL_PASSWORD
-    if E_MAIL_ADDRESS != '' and E_MAIL_SERVER_ADDRESS !='' and E_MAIL_LOGIN !='' and E_MAIL_PASSWORD !='':
+    if E_MAIL_ADDRESS != '' and E_MAIL_SERVER_ADDRESS != '' and E_MAIL_LOGIN != '' and E_MAIL_PASSWORD != '':
         email_config = True
     else:
         email_config = False
@@ -48,7 +47,7 @@ except ImportError:
 
 try:
     from config_email import SERVER_PASSWORD, SERVER_NAME, SERVER_FILE_DESTINATION, SERVER_USER, SERVER_PORT
-    if SERVER_PASSWORD != '' and SERVER_NAME !='' and SERVER_FILE_DESTINATION !='' and SERVER_USER !='':
+    if SERVER_PASSWORD != '' and SERVER_NAME != '' and SERVER_FILE_DESTINATION != '' and SERVER_USER != '':
         server_config = True
     else:
         print('config_email.py Server not configured')
@@ -92,7 +91,7 @@ def is_port_in_use(port):
 
 # Function to return IP address
 def get_Host_IP():
-    if os.name!='nt':
+    if os.name != 'nt':
         addrs = psutil.net_if_addrs()
         for ele, key in enumerate(addrs):
             if key != 'lo':
@@ -160,7 +159,7 @@ def startup(inst, pyVersion, config, login=True, host="http://127.0.0.1:8083",
     thumbail_cache_path = os.path.join(CALIBRE_WEB_PATH, 'cps', 'cache')
     try:
         os.chmod(thumbail_cache_path, 0o764)
-    except Exception as e:
+    except Exception:
         pass
     shutil.rmtree(thumbail_cache_path, ignore_errors=True)
 
@@ -293,10 +292,10 @@ def add_dependency(name, testclass_name):
         with process_open([VENV_PYTHON, "-m", "pip", "install", element], (0, 4)) as r:
             while r.poll() == None:
                 r.stdout.readline().strip("\n")
-            #if os.name == 'nt':
+            # if os.name == 'nt':
             #    while r.poll() == None:
             #        r.stdout.readline()
-            #else:
+            # else:
             #    r.wait()
         if element.lower().startswith('git'):
             element_version[indx] = element[element.rfind('#egg=')+5:]
@@ -361,6 +360,7 @@ def unrar_path():
 def is_unrar_not_present():
     return unrar_path() is None
 
+
 def save_logfiles(inst, module_name):
     result = ""
     if not os.path.isdir(os.path.join(base_path, 'outcome')):
@@ -377,8 +377,9 @@ def save_logfiles(inst, module_name):
             with open(src) as fc:
                 if "Traceback" in fc.read():
                     result = file
-            shutil.move(src,dest)
+            shutil.move(src, dest)
     inst.assertTrue(result == "", "Exception in File {}".format(result))
+
 
 def get_attachment(filename):
     file_ = open(filename, 'rb')
@@ -393,6 +394,7 @@ def get_attachment(filename):
     encoders.encode_base64(attachment)
     attachment.add_header('Content-Disposition', 'attachment', filename=filename)
     return attachment
+
 
 def finishing_notifier(result_file):
     try:
@@ -424,6 +426,7 @@ def finishing_notifier(result_file):
     if convert_config:
         os.remove('out.pdf')
 
+
 def createSSHClient(server, port, user, password):
     client = paramiko.SSHClient()
     client.load_system_host_keys()
@@ -431,12 +434,15 @@ def createSSHClient(server, port, user, password):
     client.connect(server, int(port), user, password, look_for_keys=False, allow_agent=False)
     return client
 
-def result_upload(TEST_OS):
+
+def result_upload(test_os):
     ssh = createSSHClient(SERVER_NAME, SERVER_PORT, SERVER_USER, SERVER_PASSWORD)
     ftp_client = ssh.open_sftp()
-    file_destination = os.path.normpath(os.path.join(SERVER_FILE_DESTINATION, 'Calibre-Web TestSummary_' + TEST_OS + '.html')).replace('\\','/')
-    ftp_client.put('./../../calibre-web/test/Calibre-Web TestSummary_' + TEST_OS + '.html', file_destination)
+    file_destination = os.path.normpath(os.path.join(SERVER_FILE_DESTINATION,
+                                                     'Calibre-Web TestSummary_' + test_os + '.html')).replace('\\', '/')
+    ftp_client.put('./../../calibre-web/test/Calibre-Web TestSummary_' + test_os + '.html', file_destination)
     ftp_client.close()
+
 
 def poweroff(power):
     if power:
@@ -448,10 +454,11 @@ def poweroff(power):
 
 
 def createcbz(zipname, filenames, finalnames):
-    with zipfile.ZipFile(zipname, 'w') as zip:
+    with zipfile.ZipFile(zipname, 'w') as zp:
         for indx, item in enumerate(filenames):
             with open(item, "rb") as f:
-                zip.writestr(finalnames[indx], f.read())
+                zp.writestr(finalnames[indx], f.read())
+
 
 def updateZip(zipname_new, zipname_org, filename, data):
     # create a temp copy of the archive without filename
@@ -468,7 +475,7 @@ def updateZip(zipname_new, zipname_org, filename, data):
 
 
 def change_epub_meta(zipname_new=None, zipname_org='./files/book.epub', meta={}, item={}, guide={}, meta_change={}):
-    with codecs.open(os.path.join(base_path, 'files','test.opf'), "r", "utf-8") as f:
+    with codecs.open(os.path.join(base_path, 'files', 'test.opf'), "r", "utf-8") as f:
         soup = BeautifulSoup(f.read(), "xml")
     for el in soup.findAll("meta"):
         el.prefix = ""
@@ -546,6 +553,6 @@ def create_2nd_database(new_path):
 def count_files(folder):
     total_files = 0
     for base, dirs, files in os.walk(folder):
-        for f in files:
+        for _ in files:
             total_files += 1
     return total_files
