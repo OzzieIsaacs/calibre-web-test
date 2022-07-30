@@ -403,7 +403,11 @@ def finishing_notifier(result_file):
     except Exception as e:
         print(e)
     if convert_config:
-        pdfkit.from_url(result_file, 'out.pdf')
+        # needed for newer versions of wkhtmltopdf
+        options = {
+            "enable-local-file-access": None
+        }
+        pdfkit.from_file(result_file, 'out.pdf', options=options)
     try:
         if email_config:
             msg = MIMEMultipart()
