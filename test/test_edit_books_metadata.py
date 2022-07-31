@@ -161,7 +161,7 @@ class TestLoadMetadata(TestCase, ui_class):
         self.check_element_on_page((By.ID, "do-search")).click()
         time.sleep(3)
         results = self.find_metadata_results()
-        results[1]['cover_element'].click()
+        results[0]['cover_element'].click()
         time.sleep(3)
         cover = self.check_element_on_page((By.ID, "detailcover")).screenshot_as_png
         self.assertGreaterEqual(diff(BytesIO(cover), BytesIO(original_cover), delete_diff_file=True), 0.05)
@@ -183,7 +183,7 @@ class TestLoadMetadata(TestCase, ui_class):
         self.check_element_on_page((By.ID, "do-search")).click()
         time.sleep(2)
         results = self.find_metadata_results()
-        results[0]['cover_element'].click()
+        results[1]['cover_element'].click()
         time.sleep(1)
         cover = self.check_element_on_page((By.ID, "detailcover")).screenshot_as_png
         self.assertLessEqual(diff(BytesIO(cover), BytesIO(original_cover), delete_diff_file=True), 0.001)
