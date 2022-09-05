@@ -59,47 +59,44 @@ It's recommended to have gevent compatible debugging set to **no** and also **do
 # Compiling Language files
 
 The script translate.py in the build folder is used for generating the binary translation files (.mo) and also to generate the language name translation table file 'iso_language_names.py' in the calibre-web cps folder. The script runs under python 3 (3.6 and 3.7 tested).\
-The used languages were taken from the file iso639.calibre_msgpack. This is a magically (can't remember how I did it) shrinked file from the Calibre resources directory. The original file has over 7000 languages in it. Somewhere in the Calibre code there is a routine which is extracting several language names from this file (the 400 remaining), all other languages are not supported by calibre (at least at the time I created the file). By increasing the number of supported languages to the 7000, the speed of the language typeahead drops to nearly zero.
-The language translations are taken from Calibre's iso639 folder in the transifex translation project. By adding up a new language the corresponding file has to be grabbed from this project. Before it can be used the timezonemarker in the header has to be changed from +MDT to +000.
+The used languages were taken from the file iso639.calibre_msgpack. This is a magically (can't remember how I did it) shrank file from the Calibre resources directory. The original file has over 7000 languages in it. Somewhere in the Calibre code there is a routine which is extracting several language names from this file (the 400 remaining), all other languages are not supported by calibre (at least at the time I created the file). By increasing the number of supported languages to the 7000, the speed of the language typeahead drops to nearly zero.
+The language translations are taken from Calibre's iso639 folder in the transifex translation project. By adding up a new language the corresponding file has to be grabbed from this project. Before it can be used the timezone marker in the header has to be changed from +MDT to +000.
 
 # Build package files and executables
 
-Edit the file config.py in the build folder and change the pathnames to the correct ones for you installation
+Edit the file config.py in the build folder and change the path names to the correct ones for you installation
 
-For builing the exe installer on Windows, use Inno Setup, which can be downloaded from here https://jrsoftware.org/isinfo.php
+For building the exe installer on Windows, use Inno Setup, which can be downloaded from here https://jrsoftware.org/isinfo.php
 
-Execute the build script make_release.py in the build folder, there will be a dist subfolder in calibre-web folder containing the sourcefile and the wheel file for publishing it on pypi
+Execute the build script make_release.py in the build folder, there will be a dist sub folder in calibre-web folder containing the sourcefile and the wheel file for publishing it on pypi
 Furthermore there will be a new folder executable containing the executable files for the current platform. Uploading to pypi is done with the command "twine upload dist/*" afterwards, run from the calibre-web folder. 
-On Windows you need to have the precompilied binaries for python Levenshtein and python-ldap on your harddrive and point to them in the config file
+On Windows you need to have the precompilied binaries for python Levenshtein and python-ldap on your hard drive and point to them in the config file
 On Windows you can start the installer packaging afterwards  using innosetup, by using the installer_script_windows.iss script file
 
 # Update JS libs
 ## Making new versions of pdf Reader work
 
-- Reported in https://github.com/janeczku/calibre-web/issues/2004 the original sources of pdf reader don't work well in Safari (iOS and Mac), all buttons disapearing. Safari seems not to handle double declaration of the images in "cps/static/css/libs/viewer.css" , like
- ``` 
-  ...
-  content: url(images/toolbarButton-menuArrow.svg);
-  content: var(--toolbarButton-menuArrow-icon);
-  ...
- ```
- Comment out all url definitions in `:root` block:
+- In our viewer some buttons disappear (download/print button) depending on the settings. This has also to be handled in viewer.js file by putting an "if button is present" query around it. The exact position differs form version to version.
 ```
- :root {
-  ...  	
-  /*--loading-icon: url(images/loading.svg);
-  ...*/
-  }
- ```
-All comment out all content: `var(--...);` occurences after the `url(images/` definitions.
-
-- In our viewer some buttons disappear (download button) depending on the settings. This has also to be handled in pdf.js file by putting a "if button is present do, else not" query arount it. The exact positon differs form version to version.
+if ( element !== null ) {       // Newline in line 14417 and 14428 of viewer.js
+    element.addEventListener("click", evt => {
+```
+- furthermore it's needed to disable the file upload button. This is done in pdfviewer.html by deleting the corresponding "fileInput" entries. Furthermore, search for all reference in viewer.js like:
+```
+  const fileInput = appConfig.openFileInput;
+  fileInput.value = null;
+```
+and 
+```
+eventBus._on("fileinputchange", webViewerFileInputChange);
+eventBus._on("openfile", webViewerOpenFile);
+```
 
 ## Bootstrap-Table
 
 ### 1) Handling special html chars
 Reported in https://github.com/janeczku/calibre-web/issues/2097 the original sources of bootstrap-table (editable) having a bug displaying html special characters (',",\,<,>)
-The problem is the escaped charcters are displayed after editiing. To prevent this the order of some commands has to be replaced
+The problem is the escaped characters are displayed after editing. To prevent this the order of some commands has to be replaced
 This has to be done in bootstrap-table-editable.min.js (located in /cps/static/js/libs/bootstrap-table). Bold text is the final order. 
 
 **l[r.field]=a,a=wn.escapeHTML(a)**,u.data("value",a),e.trigger("editable-save"
@@ -112,7 +109,7 @@ The fix has to be applied in bootstrap-table-editable.min.js (located in /cps/st
 i.off("save").on("save",(function(t,o){var i=t.currentTarget,a=o.**newValue**,u=n.default(i)
 
 # Debug outputs and more
-The following enviroment variables can be set to control debugging output
+The following environment variables can be set to control debugging output
 
 SQLALCHEMY_WARN_20 = 1 -> Outputs compatibility warnings for sqlalchemy 2.0
 FLASK_DEBUG = 1 -> routes debug output to stream console
