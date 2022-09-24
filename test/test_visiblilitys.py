@@ -419,6 +419,7 @@ class TestCalibreWebVisibilitys(unittest.TestCase, ui_class):
 
     # checks if admin can change its own password
     def test_admin_change_password(self):
+        self.edit_user('admin', {'email': 'a1@b.com'})
         self.change_current_user_password("1234")
         self.logout()
         self.assertFalse(self.login("admin", "admin123"))

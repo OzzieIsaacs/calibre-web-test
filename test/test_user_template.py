@@ -544,7 +544,7 @@ class TestUserTemplate(unittest.TestCase, ui_class):
         self.edit_user('drand', {'delete': 1})
 
     def test_ui_language_settings(self):
-        self.edit_user('admin', {'locale': 'Deutsch'})
+        self.edit_user('admin', {'locale': 'Deutsch', 'email': 'a1@b.com'})
         self.goto_page('user_setup')
         username = self.check_element_on_page((By.XPATH, '//label[@for="name"]'))
         self.assertEqual(username.text, 'Benutzername')
