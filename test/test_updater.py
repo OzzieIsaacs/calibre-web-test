@@ -16,7 +16,7 @@ from zipfile import ZipFile, ZipInfo
 from helper_func import save_logfiles
 
 
-class TestUpdater(unittest.TestCase, ui_class):test_sync_reading_state
+class TestUpdater(unittest.TestCase, ui_class):
     p = None
     driver = None
     proxy = None

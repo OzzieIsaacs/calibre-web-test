@@ -553,7 +553,7 @@ class TestUserList(TestCase, ui_class):
         self.assertEqual("E-mail Address", ul['header'][3]['text'])
         ul['header'][3]['sort'].click()
         ul = self.get_user_table(-1)
-        self.assertEqual("+", ul['table'][0]['E-mail Address']['text'])
+        self.assertEqual("1al@b.com", ul['table'][0]['E-mail Address']['text'])
         ul['header'][3]['sort'].click()
         ul = self.get_user_table(-1)
         self.assertEqual("muki9al@b.com", ul['table'][0]['E-mail Address']['text'])

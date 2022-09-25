@@ -102,12 +102,12 @@ class TestGoodreads(unittest.TestCase, ui_class):
         list_element = self.goto_page('nav_author')
         self.assertIsNotNone(list_element)
         for el in list_element:
-            if el.text == u'Sigurd Lindgren':
+            if el.text == u'Norbert Halagal':
                 el.click()
                 break
         self.assertFalse(self.check_element_on_page((By.CLASS_NAME, "author-photo")))
         self.assertFalse(self.check_element_on_page((By.XPATH, "//*/h3[contains(text(), 'More by')]")))
-        self.assertEqual(1, len(self.get_books_displayed()[1]))
+        self.assertEqual(2, len(self.get_books_displayed()[1]))
 
     def test_goodreads_about(self):
         self.assertTrue(self.goto_page('nav_about'))
