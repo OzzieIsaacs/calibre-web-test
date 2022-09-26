@@ -489,7 +489,12 @@ def change_epub_meta(zipname_new=None, zipname_org='./files/book.epub', meta={},
         if k == "author":
             pass
         el = soup.find(k)
-        el.string = v
+        if el is not None:
+            el.string = v
+        else:
+            new_element = soup.new_tag("dc:" + k)
+            new_element[k] = v
+            soup.find("metadata").append(new_element)
 
     # handle meta_handle block
     for task, to_do in meta_change.items():
@@ -501,6 +506,14 @@ def change_epub_meta(zipname_new=None, zipname_org='./files/book.epub', meta={},
         elif task == 'delete':
             for key, value in to_do.items():
                 soup.find(key).extract()
+        if task == 'change':
+            element = soup.find(to_do.pop('find_title', None))
+            # to_do.pop('find_title', None)
+            for key, value in to_do.items():
+                if key == "string":
+                    element.string = value
+                else:
+                    element[key] = value
 
     # handle item block
     for task, to_do in item.items():
@@ -512,7 +525,7 @@ def change_epub_meta(zipname_new=None, zipname_org='./files/book.epub', meta={},
         elif task == 'create':
             new_element = soup.new_tag("item")
             for key, value in to_do.items():
-                new_element[key] = value
+                new_element["id"] = value
             soup.find("manifest").append(new_element)
         elif task == 'delete':
             for key, value in to_do.items():

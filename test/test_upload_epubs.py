@@ -207,3 +207,17 @@ class TestUploadEPubs(TestCase, ui_class):
 
         os.remove(epub_file)
         os.remove(epub_png)
+
+    def test_upload_epub_identifier(self):
+        # check cover-image is detected
+        epub_file = os.path.join(base_path, 'files', 'identifier.epub')
+        change_epub_meta(epub_file, meta={'title': "Coverimage", 'creator': "Testo", "identifier": "bookid"})
+        self.assertFalse(self.check_element_on_page((By.ID, 'flash_danger')))
+        ci = self.verify_upload(epub_file)
+        self.assertListEqual([], ci['identifier'])
+        self.delete_book(ci['id'])
+        change_epub_meta(epub_file, meta={'title': "Coverimage", 'creator': "Testo", "identifier": "bookid"},
+                         meta_change={'change': {"find_title": "dc:identifier", 'string': 'test'}})
+        ci = self.verify_upload(epub_file)
+        self.assertListEqual([{"bookid": "test"}], ci['identifier'])
+        self.delete_book(ci['id'])
