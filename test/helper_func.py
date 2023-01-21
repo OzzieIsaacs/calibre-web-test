@@ -525,7 +525,7 @@ def change_epub_meta(zipname_new=None, zipname_org='./files/book.epub', meta={},
         elif task == 'create':
             new_element = soup.new_tag("item")
             for key, value in to_do.items():
-                new_element["id"] = value
+                new_element[key] = value
             soup.find("manifest").append(new_element)
         elif task == 'delete':
             for key, value in to_do.items():

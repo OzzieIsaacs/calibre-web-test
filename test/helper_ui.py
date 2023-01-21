@@ -1923,6 +1923,7 @@ class ui_class():
         self.driver.switch_to.frame(self.driver.find_element(By.CLASS_NAME, "wysihtml5-sandbox"))
         ele = self.check_element_on_page((By.CLASS_NAME, 'wysihtml5-editor'))
         ele.clear()
+        ele.click()
         ele.send_keys(new_value)
         self.driver.switch_to.default_content()
         if not cancel:
