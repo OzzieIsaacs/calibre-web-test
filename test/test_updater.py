@@ -136,7 +136,7 @@ class TestUpdater(unittest.TestCase, ui_class):
         self.goto_page('admin_setup')
         update_table = self.check_element_on_page((By.ID, "current_version")).find_elements(By.TAG_NAME, 'td')
         # self.assertEqual(update_table[0].text,'')  # ToDo Check current version correct
-        self.assertEqual(update_table[1].text, 'Current version')
+        self.assertEqual(update_table[1].text, 'Current Version')
         version = [int(x) for x in (update_table[0].text.rstrip(' Beta')).split('.')]
         beta = 'Beta' in update_table[0].text
         version3 = [version[0], version[1], version[2]+2]
@@ -164,7 +164,7 @@ class TestUpdater(unittest.TestCase, ui_class):
         self.goto_page('admin_setup')
         update_table = self.check_element_on_page((By.ID, "current_version")).find_elements(By.TAG_NAME, 'td')
         # ToDo Check current version correct
-        self.assertEqual(update_table[1].text, 'Current version')
+        self.assertEqual(update_table[1].text, 'Current Version')
         version = [int(x) for x in (update_table[0].text.rstrip(' Beta')).split('.')]
         beta = 'Beta' in update_table[0].text
         version3 = [version[0], version[1], version[2]+2]
@@ -224,7 +224,7 @@ class TestUpdater(unittest.TestCase, ui_class):
         self.goto_page('admin_setup')
         update_table = self.check_element_on_page((By.ID, "current_version")).find_elements(By.TAG_NAME, 'td')
         # self.assertEqual(update_table[0],'')  # ToDo Check current version correct
-        self.assertEqual(update_table[1].text, 'Current version')
+        self.assertEqual(update_table[1].text, 'Current Version')
         val.set_type(['Timeout'])
         self.check_updater('Timeout', "alert", 13)
 
@@ -252,7 +252,7 @@ class TestUpdater(unittest.TestCase, ui_class):
         self.goto_page('admin_setup')
         update_table = self.check_element_on_page((By.ID, "current_version")).find_elements(By.TAG_NAME, 'td')
         # self.assertEqual(update_table[0],'')  # ToDo Check current version correct
-        self.assertEqual(update_table[1].text, 'Current version')
+        self.assertEqual(update_table[1].text, 'Current Version')
         val.set_type([None, 'Timeout'])
         self.check_updater('Timeout', "alert", 13)
 

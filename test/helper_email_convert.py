@@ -110,7 +110,7 @@ class MyMessage:
             # self.message = email.message_from_string(self.message).get_payload(0).
             message = base64.b64decode(self.message)
             # get_payload(decode=True).decode('utf-8')
-            username = re.findall('User name:\s(.*)\r', message.decode('utf-8'))
+            username = re.findall('Username:\s(.*)\r', message.decode('utf-8'))
             password = re.findall('Password:\s(.*)\r', message.decode('utf-8'))
             if len(username) and len(password):
                 return [username[0], password[0]]

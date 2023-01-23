@@ -458,7 +458,7 @@ class TestEbookConvertCalibreGDrive(unittest.TestCase, ui_class):
                     break
             i += 1
         self.assertEqual(ret[-1]['result'], 'Finished')
-        self.assertGreaterEqual(self.email_server.handler.message_size, 5996)
+        self.assertGreaterEqual(self.email_server.handler.message_size, 5995)
         self.setup_server(False, {'mail_password':'1234'})
 
 
