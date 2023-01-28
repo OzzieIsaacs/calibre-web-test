@@ -403,7 +403,11 @@ def finishing_notifier(result_file):
     except Exception as e:
         print(e)
     if convert_config:
-        pdfkit.from_url(result_file, 'out.pdf')
+        # needed for newer versions of wkhtmltopdf
+        options = {
+            "enable-local-file-access": None
+        }
+        pdfkit.from_file(result_file, 'out.pdf', options=options)
     try:
         if email_config:
             msg = MIMEMultipart()
@@ -485,7 +489,12 @@ def change_epub_meta(zipname_new=None, zipname_org='./files/book.epub', meta={},
         if k == "author":
             pass
         el = soup.find(k)
-        el.string = v
+        if el is not None:
+            el.string = v
+        else:
+            new_element = soup.new_tag("dc:" + k)
+            new_element[k] = v
+            soup.find("metadata").append(new_element)
 
     # handle meta_handle block
     for task, to_do in meta_change.items():
@@ -497,6 +506,14 @@ def change_epub_meta(zipname_new=None, zipname_org='./files/book.epub', meta={},
         elif task == 'delete':
             for key, value in to_do.items():
                 soup.find(key).extract()
+        if task == 'change':
+            element = soup.find(to_do.pop('find_title', None))
+            # to_do.pop('find_title', None)
+            for key, value in to_do.items():
+                if key == "string":
+                    element.string = value
+                else:
+                    element[key] = value
 
     # handle item block
     for task, to_do in item.items():

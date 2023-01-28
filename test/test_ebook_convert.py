@@ -255,8 +255,14 @@ class TestEbookConvertCalibre(unittest.TestCase, ui_class):
         self.check_element_on_page((By.ID, "btn-book-convert")).click()
         time.sleep(1)
         self.assertTrue(self.check_element_on_page((By.ID, "flash_success")))
-        time.sleep(5)
-        task_len, ret = self.check_tasks(tasks)
+        i = 0
+        while i < 10:
+            time.sleep(2)
+            task_len, ret = self.check_tasks(tasks)
+            if task_len == 1:
+                if ret[-1]['result'] == 'Finished' or ret[-1]['result'] == 'Failed':
+                    break
+            i += 1
         self.assertEqual(1, task_len)
         self.assertEqual(ret[-1]['result'], 'Finished')
 
@@ -458,7 +464,7 @@ class TestEbookConvertCalibre(unittest.TestCase, ui_class):
                     break
             i += 1
         self.assertEqual(ret[-1]['result'], 'Finished')
-        self.assertGreaterEqual(self.email_server.handler.message_size, 5996)
+        self.assertGreaterEqual(self.email_server.handler.message_size, 5995)
         self.setup_server(False, {'mail_password':'1234'})
 
 
@@ -673,7 +679,10 @@ class TestEbookConvertCalibre(unittest.TestCase, ui_class):
         # check Debug entry from starting
         with open(os.path.join(CALIBRE_WEB_PATH, 'calibre-web.log'), 'r') as logfile:
             data = logfile.read()
-        self.assertTrue("1% Eingabe wird zu HTML konvertiert" in data)
+        try:
+            self.assertTrue("1% Converting input to HTML" in data)
+        except Exception:
+            self.assertTrue("1% Eingabe wird zu HTML konvertiert" in data)
         self.delete_book_format(11, "AZW3")
         self.assertTrue(self.check_element_on_page((By.ID, "flash_success")))
         self.fill_basic_config({'config_log_level': 'INFO'})

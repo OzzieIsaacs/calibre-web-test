@@ -3,6 +3,8 @@ import random
 from OpenSSL import crypto
 import os
 
+files_path = os.path.dirname(os.path.abspath(__file__))
+
 def _gen_cert_pkey():
     pkey = crypto.PKey()
     pkey.generate_key(crypto.TYPE_RSA, 2048)
@@ -53,10 +55,10 @@ def _generate_CA():
                              subject=ca),
     ])
     ca.sign(key, "sha1")
-    with open(os.path.join('files', 'ca.cert.pem'),'wb') as f:
+    with open(os.path.join(files_path, 'files', 'ca.cert.pem'),'wb') as f:
         f.write(crypto.dump_certificate(crypto.FILETYPE_PEM, ca))
 
-    with open(os.path.join('files', 'ca.cert.key'),'wb') as f:
+    with open(os.path.join(files_path, 'files', 'ca.cert.key'),'wb') as f:
         f.write(crypto.dump_privatekey(crypto.FILETYPE_PEM, key))
 
 
@@ -70,21 +72,21 @@ def _generate_certificate_signing_request(filename):
     req.sign(key, "sha256")
 
     # Write server private key
-    with open(os.path.join('files', filename + '.key'),'wb') as f:
+    with open(os.path.join(files_path, 'files', filename + '.key'),'wb') as f:
         f.write(crypto.dump_privatekey(crypto.FILETYPE_PEM, key))
 
     # Write request for signing
-    with open(os.path.join('files', filename + '.csr'),'wb') as f:
+    with open(os.path.join(files_path, files_path, 'files', filename + '.csr'),'wb') as f:
         f.write(crypto.dump_certificate_request(crypto.FILETYPE_PEM, req))
 
 
 def _generate_certificate_from_signing_request(filename):
     ca_cert = crypto.load_certificate(crypto.FILETYPE_PEM,
-                                      open(os.path.join('files', 'ca.cert.pem')).read())
+                                      open(os.path.join(files_path, 'files', 'ca.cert.pem')).read())
     ca_key = crypto.load_privatekey(crypto.FILETYPE_PEM,
-                                    open(os.path.join('files', 'ca.cert.key')).read())
+                                    open(os.path.join(files_path, 'files', 'ca.cert.key')).read())
     req = crypto.load_certificate_request(crypto.FILETYPE_PEM,
-                                          open(os.path.join('files', filename + ".csr")).read())
+                                          open(os.path.join(files_path, 'files', filename + ".csr")).read())
 
     cert = crypto.X509()
     cert.set_subject(req.get_subject())
@@ -96,13 +98,15 @@ def _generate_certificate_from_signing_request(filename):
     cert.set_version(2)
     cert.sign(ca_key, "sha256")
 
-    with open(os.path.join('files', filename + '.crt'),'wb') as f:
+    with open(os.path.join(files_path, 'files', filename + '.crt'),'wb') as f:
         f.write(crypto.dump_certificate(crypto.FILETYPE_PEM, cert))
 
 
 def generate_ssl_testing_files():
     for f in ['ca.cert.pem', 'server.key', 'server.crt', 'client.crt', 'client.key']:
-        if not os.path.isfile(os.path.join('files', f)):
+        if not os.path.isdir(os.path.join(files_path, 'files')):
+            os.mkdir(os.path.join(files_path, 'files'))
+        if not os.path.isfile(os.path.join(files_path, 'files', f)):
             _generate_CA()
             # Create server pkey, signing request -> signed certificate
             _generate_certificate_signing_request('server')
@@ -110,7 +114,7 @@ def generate_ssl_testing_files():
             # Create client pkey, signing request -> signed certificate
             _generate_certificate_signing_request('client')
             _generate_certificate_from_signing_request('client')
-            os.unlink(os.path.join('files', 'server.csr'))
-            os.unlink(os.path.join('files', 'client.csr'))
+            os.unlink(os.path.join(files_path, 'files', 'server.csr'))
+            os.unlink(os.path.join(files_path, 'files', 'client.csr'))
 
 

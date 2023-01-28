@@ -127,7 +127,7 @@ class TestSSL(unittest.TestCase, ui_class):
         time.sleep(5)
         with open(os.path.join(CALIBRE_WEB_PATH,'calibre-web.log'),'r') as logfile:
             data = logfile.read()
-        self.assertTrue(len(re.findall('Subject: Calibre-Web test e-mail', data)), "Email logging not working")
+        self.assertTrue(len(re.findall('Subject: Calibre-Web Test Email', data)), "Email logging not working")
 
 
     def test_email_limit(self):

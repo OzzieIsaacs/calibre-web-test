@@ -8,6 +8,7 @@ from selenium.webdriver.support import expected_conditions as EC
 from selenium.common.exceptions import TimeoutException
 from selenium.common.exceptions import NoSuchElementException
 from config_test import PY_BIN, BOOT_TIME
+import copy
 try:
     import requests
 except ImportError:
@@ -1637,8 +1638,14 @@ class ui_class():
                 except IndexError:
                     pass
             if isinstance(ref, list):
-                res = len([i for i in val if i in ref])
-                return (len(val) - res), val
+                # res = len([i for i in val if i in ref])
+                counter = 0
+                cp = copy.deepcopy(ref)
+                for i in val:
+                    if i in cp:
+                        cp.pop(cp.index(i))
+                        counter += 1
+                return (len(val) - counter), val
             return val
         else:
             return False
@@ -1922,6 +1929,7 @@ class ui_class():
         self.driver.switch_to.frame(self.driver.find_element(By.CLASS_NAME, "wysihtml5-sandbox"))
         ele = self.check_element_on_page((By.CLASS_NAME, 'wysihtml5-editor'))
         ele.clear()
+        ele.click()
         ele.send_keys(new_value)
         self.driver.switch_to.default_content()
         if not cancel:
