@@ -83,7 +83,7 @@ class TestEbookConvertCalibreGDrive(unittest.TestCase, ui_class):
             time.sleep(2)
             cls.edit_user('admin', {'email': 'a5@b.com', 'kindle_mail': 'a1@b.com'})
             cls.setup_server(True, {'mail_server': '127.0.0.1', 'mail_port': '1025',
-                                    'mail_use_ssl': 'None', 'mail_login': 'name@host.com', 'mail_password': '1234',
+                                    'mail_use_ssl': 'None', 'mail_login': 'name@host.com', 'mail_password_e': '1234',
                                     'mail_from': 'name@host.com'})
             time.sleep(2)
             cls.fill_thumbnail_config({'schedule_generate_book_covers': 1})
@@ -186,7 +186,7 @@ class TestEbookConvertCalibreGDrive(unittest.TestCase, ui_class):
     # wait for finished
     # check email received
     def test_convert_email(self):
-        self.setup_server(True, {'mail_password': '10234', 'mail_use_ssl': 'None'})
+        self.setup_server(True, {'mail_password_e': '10234', 'mail_use_ssl': 'None'})
         time.sleep(2)
         tasks = self.check_tasks()
         vals = self.get_convert_book(1)
@@ -224,7 +224,7 @@ class TestEbookConvertCalibreGDrive(unittest.TestCase, ui_class):
         self.assertTrue("Convert" in ret[-2]['task'])
         self.assertEqual(ret[-2]['result'], 'Finished')
         self.assertEqual(ret[-1]['result'], 'Finished')
-        self.setup_server(True, {'mail_password': '1234'})
+        self.setup_server(True, {'mail_password_e': '1234'})
         self.assertTrue(self.check_element_on_page((By.ID, "flash_info")))
         self.delete_book_format(1, "AZW3")
         self.delete_book_format(1, "EPUB")
@@ -267,7 +267,7 @@ class TestEbookConvertCalibreGDrive(unittest.TestCase, ui_class):
         fout.write(os.urandom(124))
         fs.upload(orig_file, fout)
         fout.close()
-        self.setup_server(True, {'mail_password': '10234'})
+        self.setup_server(True, {'mail_password_e': '10234'})
         t_len, tasks = self.check_tasks(ret)
         details = self.get_book_details(1)
         self.assertEqual(len(details['kindle']), 1)
@@ -281,7 +281,7 @@ class TestEbookConvertCalibreGDrive(unittest.TestCase, ui_class):
                     break
             i += 1
         self.assertEqual(ret[-1]['result'], 'Failed')
-        self.setup_server(True, {'mail_password': '1234'})
+        self.setup_server(True, {'mail_password_e': '1234'})
         fs.remove(orig_file)
         fs.move(moved_file, orig_file, overwrite=True)
         fs.close()
@@ -425,7 +425,7 @@ class TestEbookConvertCalibreGDrive(unittest.TestCase, ui_class):
     # check email received
     # check filename
     def test_email_only(self):
-        self.setup_server(True, {'mail_use_ssl': 'None', 'mail_password': '10234'})
+        self.setup_server(True, {'mail_use_ssl': 'None', 'mail_password_e': '10234'})
         tasks = self.check_tasks()
         '''vals = self.get_convert_book(8)
         select = Select(vals['btn_from'])
@@ -459,13 +459,13 @@ class TestEbookConvertCalibreGDrive(unittest.TestCase, ui_class):
             i += 1
         self.assertEqual(ret[-1]['result'], 'Finished')
         self.assertGreaterEqual(self.email_server.handler.message_size, 5995)
-        self.setup_server(False, {'mail_password':'1234'})
+        self.setup_server(False, {'mail_password_e':'1234'})
 
 
     # check behavior for failed email (size)
     # conversion okay, email failed
     def test_email_failed(self):
-        self.setup_server(False, {'mail_password': '10234'})
+        self.setup_server(False, {'mail_password_e': '10234'})
         tasks = self.check_tasks()
         details = self.get_book_details(5)
         self.email_server.handler.set_return_value(552)
@@ -482,7 +482,7 @@ class TestEbookConvertCalibreGDrive(unittest.TestCase, ui_class):
             i += 1
         self.assertEqual(ret[-1]['result'], 'Failed')
         self.email_server.handler.set_return_value(0)
-        self.setup_server(False, {'mail_password':'1234'})
+        self.setup_server(False, {'mail_password_e':'1234'})
 
     @unittest.expectedFailure
     def test_thumbnail_cache(self):

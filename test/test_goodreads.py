@@ -59,7 +59,7 @@ class TestGoodreads(unittest.TestCase, ui_class):
 
     def test_author_page_invalid(self):
         self.fill_basic_config({'config_goodreads_api_key': 'rgg',
-                                'config_goodreads_api_secret': 'rgfg'
+                                'config_goodreads_api_secret_e': 'rgfg'
                                 })
         self.assertTrue(self.check_element_on_page((By.ID, 'flash_success')))
         self.get_book_details(5)
@@ -81,7 +81,7 @@ class TestGoodreads(unittest.TestCase, ui_class):
 
     def test_author_page(self):
         self.fill_basic_config({'config_goodreads_api_key': GOODREADS_API_KEY,
-                                'config_goodreads_api_secret': GOODREADS_API_SECRET
+                                'config_goodreads_api_secret_e': GOODREADS_API_SECRET
                                 })
         self.assertTrue(self.check_element_on_page((By.ID, 'flash_success')))
         self.get_book_details(7)

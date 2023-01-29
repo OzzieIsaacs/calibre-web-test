@@ -42,7 +42,7 @@ class TestSTARTTLS(unittest.TestCase, ui_class):
 
             cls.edit_user('admin', {'email': 'a5@b.com','kindle_mail': 'a1@b.com'})
             cls.setup_server(True, {'mail_server': '127.0.0.1', 'mail_port': '1026',
-                                    'mail_use_ssl': 'SSL/TLS', 'mail_login': 'name@host.com', 'mail_password':'10234',
+                                    'mail_use_ssl': 'SSL/TLS', 'mail_login': 'name@host.com', 'mail_password_e':'10234',
                                     'mail_from': 'name@host.com'})
         except:
             cls.driver.quit()

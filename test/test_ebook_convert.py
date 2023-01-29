@@ -42,10 +42,11 @@ class TestEbookConvertCalibre(unittest.TestCase, ui_class):
 
             cls.edit_user('admin', {'email': 'a5@b.com', 'kindle_mail': 'a1@b.com'})
             cls.setup_server(True, {'mail_server':'127.0.0.1', 'mail_port':'1025',
-                                    'mail_use_ssl':'None', 'mail_login':'name@host.com', 'mail_password':'1234',
+                                    'mail_use_ssl':'None', 'mail_login':'name@host.com', 'mail_password_e':'1234',
                                     'mail_from':'name@host.com'})
             time.sleep(2)
-        except Exception:
+        except Exception as e:
+            print(e)
             cls.driver.quit()
             cls.p.kill()
 
@@ -183,7 +184,7 @@ class TestEbookConvertCalibre(unittest.TestCase, ui_class):
     # wait for finished
     # check email received
     def test_convert_email(self):
-        self.setup_server(True, {'mail_password': '10234', 'mail_use_ssl': 'None'})
+        self.setup_server(True, {'mail_password_e': '10234', 'mail_use_ssl': 'None'})
         time.sleep(2)
         tasks = self.check_tasks()
         vals = self.get_convert_book(1)
@@ -221,7 +222,7 @@ class TestEbookConvertCalibre(unittest.TestCase, ui_class):
         self.assertTrue("Convert" in ret[-2]['task'])
         self.assertEqual(ret[-2]['result'], 'Finished')
         self.assertEqual(ret[-1]['result'], 'Finished')
-        self.setup_server(True, {'mail_password': '1234'})
+        self.setup_server(True, {'mail_password_e': '1234'})
         self.assertTrue(self.check_element_on_page((By.ID, "flash_info")))
         self.delete_book_format(1, "AZW3")
         self.delete_book_format(1, "EPUB")
@@ -274,7 +275,7 @@ class TestEbookConvertCalibre(unittest.TestCase, ui_class):
         os.rename(orig_file, moved_file)
         with open(orig_file, 'wb') as fout:
             fout.write(os.urandom(124))
-        self.setup_server(True, {'mail_password': '10234'})
+        self.setup_server(True, {'mail_password_e': '10234'})
         t_len, tasks = self.check_tasks(ret)
         details = self.get_book_details(1)
         self.assertEqual(len(details['kindle']), 1)
@@ -288,7 +289,7 @@ class TestEbookConvertCalibre(unittest.TestCase, ui_class):
                     break
             i += 1
         self.assertEqual(ret[-1]['result'], 'Failed')
-        self.setup_server(True, {'mail_password': '1234'})
+        self.setup_server(True, {'mail_password_e': '1234'})
         os.remove(orig_file)
         os.rename(moved_file, orig_file)
         self.delete_book_format(1, "AZW3")
@@ -431,7 +432,7 @@ class TestEbookConvertCalibre(unittest.TestCase, ui_class):
     # check email received
     # check filename
     def test_email_only(self):
-        self.setup_server(True, {'mail_use_ssl': 'None', 'mail_password': '10234'})
+        self.setup_server(True, {'mail_use_ssl': 'None', 'mail_password_e': '10234'})
         tasks = self.check_tasks()
         '''vals = self.get_convert_book(8)
         select = Select(vals['btn_from'])
@@ -465,13 +466,13 @@ class TestEbookConvertCalibre(unittest.TestCase, ui_class):
             i += 1
         self.assertEqual(ret[-1]['result'], 'Finished')
         self.assertGreaterEqual(self.email_server.handler.message_size, 5995)
-        self.setup_server(False, {'mail_password':'1234'})
+        self.setup_server(False, {'mail_password_e':'1234'})
 
 
     # check behavior for failed email (size)
     # conversion okay, email failed
     def test_email_failed(self):
-        self.setup_server(False, {'mail_password': '10234'})
+        self.setup_server(False, {'mail_password_e': '10234'})
         tasks = self.check_tasks()
         details = self.get_book_details(5)
         self.email_server.handler.set_return_value(552)
@@ -488,13 +489,13 @@ class TestEbookConvertCalibre(unittest.TestCase, ui_class):
             i += 1
         self.assertEqual(ret[-1]['result'], 'Failed')
         self.email_server.handler.set_return_value(0)
-        self.setup_server(False, {'mail_password':'1234'})
+        self.setup_server(False, {'mail_password_e':'1234'})
 
 
     # check behavior for failed server setup (STARTTLS)
     def test_starttls_smtp_setup_error(self):
         tasks = self.check_tasks()
-        self.setup_server(False, {'mail_use_ssl':'STARTTLS', 'mail_password':'10234'})
+        self.setup_server(False, {'mail_use_ssl':'STARTTLS', 'mail_password_e':'10234'})
         details = self.get_book_details(7)
         details['kindlebtn'].click()
         conv = self.check_element_on_page((By.LINK_TEXT, details['kindle'][0].text))
@@ -514,7 +515,7 @@ class TestEbookConvertCalibre(unittest.TestCase, ui_class):
     # check behavior for failed server setup (SSL)
     def test_ssl_smtp_setup_error(self):
         tasks = self.check_tasks()
-        self.setup_server(False, {'mail_use_ssl':'SSL/TLS', 'mail_password':'10234'})
+        self.setup_server(False, {'mail_use_ssl':'SSL/TLS', 'mail_password_e':'10234'})
         details = self.get_book_details(7)
         details['kindlebtn'].click()
         conv = self.check_element_on_page((By.LINK_TEXT, details['kindle'][0].text))
