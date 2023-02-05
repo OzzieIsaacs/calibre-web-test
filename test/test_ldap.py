@@ -908,7 +908,7 @@ class TestLdapLogin(unittest.TestCase, ui_class):
         time.sleep(3)
         # try to login without ldap reachable
         r = requests.get('http://127.0.0.1:8083/opds', auth=('执一'.encode('utf-8'), 'eekretsay'))
-        self.assertEqual(424, r.status_code)
+        self.assertEqual(401, r.status_code)
         # user is logged in via cookies, admin is not allowed to download
         r = req_session.get('http://127.0.0.1:8083' + entries['elements'][0]['download'])
         self.assertEqual(401, r.status_code)
