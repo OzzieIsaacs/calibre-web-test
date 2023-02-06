@@ -520,8 +520,10 @@ class TestCalibreWebVisibilitys(unittest.TestCase, ui_class):
         login_page = r.get('http://127.0.0.1:8083/login')
         token = re.search('<input type="hidden" name="csrf_token" value="(.*)">', login_page.text)
         payload = {'username': 'admin', 'password': 'admin123', 'submit': "", 'next': "/", "remember_me": "on", "csrf_token": token.group(1)}
-        r.post('http://127.0.0.1:8083/login', data=payload)
-        resp = r.get('http://127.0.0.1:8083/search')
+        result = r.post('http://127.0.0.1:8083/login', data=payload)
+        token = re.search('<input type="hidden" name="csrf_token" value="(.*)">', result.text)
+        payload = {"csrf_token": token.group(1)}
+        resp = r.post('http://127.0.0.1:8083/search', data=payload)
         self.assertEqual(200, resp.status_code)
         resp = r.get('http://127.0.0.1:8083/advsearch')
         self.assertEqual(200, resp.status_code)

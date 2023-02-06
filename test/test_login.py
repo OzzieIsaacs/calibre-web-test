@@ -148,7 +148,7 @@ class TestLogin(unittest.TestCase, ui_class):
         # self.assertEqual(self.fail_access_page("http://127.0.0.1:8083/gdrive/watch/callback"),0)
         self.assertEqual(self.fail_access_page("http://127.0.0.1:8083/shutdown"), 2)
         self.assertEqual(self.fail_access_page("http://127.0.0.1:8083/update"), 2)
-        self.assertEqual(self.fail_access_page("http://127.0.0.1:8083/search"), 1)
+        self.assertEqual(self.fail_access_page("http://127.0.0.1:8083/search"), 2)
         self.assertEqual(self.fail_access_page("http://127.0.0.1:8083/advsearch"), 1)
         self.assertEqual(self.fail_access_page("http://127.0.0.1:8083/cover"), 2)
         self.assertEqual(self.fail_access_page("http://127.0.0.1:8083/cover/213"), 1)
@@ -403,7 +403,6 @@ class TestLogin(unittest.TestCase, ui_class):
         self.assertTrue(digest_login(url, 200))
 
     # Check proxy login
-    # ToDO: Proxy Login with acitvated anonymous browsing
     def test_proxy_login(self):
         self.driver.get("http://127.0.0.1:8083/login")
         self.login('admin', 'admin123')
@@ -476,6 +475,29 @@ class TestLogin(unittest.TestCase, ui_class):
         # ToDo: Additional test with reverse proxy
         self.assertTrue(self.login('admin', 'admin123'))
         self.fill_basic_config({'config_allow_reverse_proxy_header_login': 0, 'config_anonbrowse': 0})
+        time.sleep(3)
+        self.assertTrue(self.check_element_on_page((By.ID, "flash_success")))
+        self.logout()
+
+    def test_proxy_login_opds(self):
+        self.driver.get("http://127.0.0.1:8083/login")
+        self.login('admin', 'admin123')
+        self.fill_basic_config({'config_allow_reverse_proxy_header_login': 1 })
+        time.sleep(3)
+        self.assertTrue(self.check_element_on_page((By.ID, "flash_success")))
+        # login not possible to access opds with empty header
+        r = requests.session()
+        resp = r.get("http://127.0.0.1:8083/opds")
+        self.assertEqual(resp.status_code, 401)
+        self.fill_basic_config({'config_reverse_proxy_login_header_name': "X-LOGIN" })
+        self.assertTrue(self.check_element_on_page((By.ID, "flash_success")))
+        self.logout()
+        r.headers['X-LoGiN'] = "admin"
+        resp = r.get("http://127.0.0.1:8083/opds")
+        self.assertEqual(resp.status_code, 200)
+        r.close()
+        self.assertTrue(self.login('admin', 'admin123'))
+        self.fill_basic_config({'config_allow_reverse_proxy_header_login': 0})
         time.sleep(3)
         self.assertTrue(self.check_element_on_page((By.ID, "flash_success")))
         self.logout()
