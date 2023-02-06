@@ -852,8 +852,8 @@ class TestLdapLogin(unittest.TestCase, ui_class):
         self.logout()
 
         r = requests.get('http://127.0.0.1:8083/opds', auth=('admin', 'admin123'))
-        self.assertEqual(401, r.status_code)
-        # try to login with wron password for user
+        self.assertEqual(200, r.status_code)
+        # try to login with wrong password for user
         r = requests.get('http://127.0.0.1:8083/opds', auth=('执一'.encode('utf-8'), 'wrong'))
         self.assertEqual(401, r.status_code)
         # login user and check content
@@ -996,11 +996,11 @@ class TestLdapLogin(unittest.TestCase, ui_class):
         self.edit_user('admin', {'download_role': 1})
         time.sleep(3)
         self.logout()
-        # try download with invalid credentials -> annoymous role is taken, download granted
+        # try download with invalid credentials -> annoymous role is not taken, download denied
         r = requests.get('http://127.0.0.1:8083/opds/', auth=('admin', 'admin131'))
-        self.assertEqual(200, r.status_code)
+        self.assertEqual(401, r.status_code)
         # try download with valid credentials
-        r = requests.get('http://127.0.0.1:8083/opds/', auth=('hudo', 'admin123'))
+        r = requests.get('http://127.0.0.1:8083/opds/', auth=('admin', 'admin123'))
         self.assertEqual(200, r.status_code)
 
         # reset everything back to default

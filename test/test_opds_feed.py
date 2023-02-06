@@ -177,11 +177,13 @@ class TestOPDSFeed(unittest.TestCase, ui_class):
         time.sleep(3)
         self.logout()
         # try download with invalid credentials, using anonymous browsing
+        # as credential are invalid, access is blocked
         r = requests.get('http://127.0.0.1:8083/opds/', auth=('admin', 'admin131'))
-        self.assertEqual(200, r.status_code)
+        self.assertEqual(401, r.status_code)
         # try download with invalid credentials, using anonymous browsing
+        # as credential are invalid, access is blocked
         r = requests.get('http://127.0.0.1:8083/opds/', auth=('hudo', 'admin123'))
-        self.assertEqual(200, r.status_code)
+        self.assertEqual(401, r.status_code)
         self.login("admin", "admin123")
         self.fill_basic_config({'config_anonbrowse': 0})
         time.sleep(BOOT_TIME)
