@@ -99,7 +99,7 @@ class ui_class():
         password.send_keys(passwd)
         submit.click()
         try:
-            WebDriverWait(cls.driver, 5).until(EC.presence_of_element_located((By.NAME, "query")))
+            # WebDriverWait(cls.driver, 5).until(EC.presence_of_element_located((By.NAME, "query")))
             return True
         except:
             return False
@@ -311,7 +311,7 @@ class ui_class():
                       'config_use_goodreads', 'config_register_email', 'config_use_google_drive',
                       'config_allow_reverse_proxy_header_login', 'config_unicode_filename', 'config_password_policy',
                       'config_password_number', 'config_password_lower', 'config_password_upper',
-                      'config_password_special']
+                      'config_password_special', 'config_ratelimiter']
         options = ['config_log_level', 'config_google_drive_folder', 'config_updatechannel', 'config_login_type',
                    'config_ldap_encryption', 'config_ldap_authentication', 'ldap_import_user_filter', 'config_session']
         selects = ['config_ebookconverter']
@@ -344,7 +344,7 @@ class ui_class():
             opener.append(3)
         if any(key in elements for key in ['config_password_policy', 'config_password_number', 'config_password_lower',
                                            'config_password_upper', 'config_password_special', 'config_session',
-                                           'config_password_min_length']):
+                                           'config_password_min_length', 'config_ratelimiter']):
             opener.append(4)
 
         # open all necessary accordions
