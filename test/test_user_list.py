@@ -137,8 +137,8 @@ class TestUserList(TestCase, ui_class):
         cls.create_user('no_four', {'password': '123AbC*!', 'email': 'muki4al@b.com', "download_role": 1, 'show_16': 1, "upload_role":1})
         cls.create_user('no_5', {'password': '123AbC*!', 'email': 'muki5al@b.com', 'kindle_mail': 'muki5al@bad.com'})
         cls.create_user('no_6', {'password': '123AbC*!', 'email': 'muki6al@b.com', "edit_role": 1, "locale":"Italiano", 'show_16': 1})
-        cls.create_user('no_1', {'password': '123AbC*!', 'email': 'muki7al@b.com', "locale": "Polski", "passwd_role":1})
-        cls.create_user('1_no', {'password': '123AbC*!', 'email': 'muki8al@b.com', 'kindle_mail': 'muki8al@bcd.com', "admin_role":1})
+        cls.create_user('no_1', {'password': '123AbC*!', 'email': 'muki7al@b.com', "locale": "Polski", "passwd_role": 1})
+        cls.create_user('1_no', {'password': '123AbC*!', 'email': 'muki8al@b.com', 'kindle_mail': 'muki8al@bcd.com', "admin_role": 1})
         cls.create_user('2_no', {'password': '123AbC*!', 'email': 'muki9al@b.com', "edit_role": 1, 'default_language': "English"})
         cls.create_user('3_no', {'password': '123AbC*!', 'email': 'muki10al@b.com', 'kindle_mail': 'muki1al@b.com', 'default_language': "Norwegian Bokmål"})
         for i in range(0, count):

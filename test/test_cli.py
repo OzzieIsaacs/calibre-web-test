@@ -429,9 +429,10 @@ class TestCli(unittest.TestCase, ui_class):
 
     def test_change_password(self):
         os.chdir(CALIBRE_WEB_PATH)
-        self.check_password_change("admin:admin12", "Password for user 'admin' changed")
-        self.check_password_change("admin:adm:in12", "Password for user 'admin' changed")
+        self.check_password_change("admin:aDmin12!", "Password for user 'admin' changed")
+        self.check_password_change("admin:aDm:in12", "Password for user 'admin' changed")
         self.check_password_change("admin.kolo", "No valid username:password.*")
+        self.check_password_change("admin:adm:in12", "Password for user 'admin' changed")
         self.check_password_change("admin:", "Empty password")
         p1 = process_open([self.py_version,  "-B", u'cps.py'], [1])
         time.sleep(BOOT_TIME)
@@ -440,7 +441,7 @@ class TestCli(unittest.TestCase, ui_class):
             self.driver.get("http://127.0.0.1:8083")
 
             # Wait for config screen to show up
-            self.login("admin", "adm:in12")
+            self.login("admin", "aDm:in12")
             self.fill_db_config({'config_calibre_dir': TEST_DB})
             # wait for cw to reboot
             time.sleep(2)
