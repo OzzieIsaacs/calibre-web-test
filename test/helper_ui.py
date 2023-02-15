@@ -99,7 +99,7 @@ class ui_class():
         password.send_keys(passwd)
         submit.click()
         try:
-            # WebDriverWait(cls.driver, 5).until(EC.presence_of_element_located((By.NAME, "query")))
+            WebDriverWait(cls.driver, 5).until(EC.presence_of_element_located((By.NAME, "query")))
             return True
         except:
             return False
