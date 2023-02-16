@@ -134,7 +134,7 @@ class TestCalibreHelper(unittest.TestCase):
 
     def test_random_password(self):
         for i in range(1,100):
-            self.assertTrue(helper.generate_random_password())
+            self.assertTrue(helper.generate_random_password(8))
 
 
     @classmethod

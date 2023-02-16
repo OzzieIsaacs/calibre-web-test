@@ -3,7 +3,7 @@
 
 from helper_email_convert import AIOSMTPServer
 from selenium.webdriver.common.by import By
-from config_test import TEST_DB
+from config_test import TEST_DB, BOOT_TIME
 from helper_func import startup, wait_Email_received
 # from parameterized import parameterized_class
 import unittest
@@ -31,7 +31,7 @@ class TestRegister(unittest.TestCase, ui_class):
 
         try:
             startup(cls, cls.py_version, {'config_calibre_dir':TEST_DB,
-                                          'config_public_reg': 1}, env={"APP_MODE": "test"})
+                                          'config_public_reg': 1, "config_ratelimiter": 0}, env={"APP_MODE": "test"})
             WebDriverWait(cls.driver, 5).until(EC.presence_of_element_located((By.ID, "flash_success")))
             cls.edit_user('admin', {'email': 'a5@b.com','kindle_mail': 'a1@b.com'})
             cls.setup_server(False, {'mail_server':'127.0.0.1', 'mail_port':'1025',
