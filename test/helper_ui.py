@@ -1158,7 +1158,11 @@ class ui_class():
             key = 0
             for element in tree.xpath("/html/body/feed/entry"):
                 el = dict()
-                el['link'] = element.find('link').attrib['href']
+                e = element.find('link')
+                if e.get('rel', "") in ["http://opds-spec.org/image", "subsection"]:
+                    el['link'] = e.attrib['href']
+                else:
+                    el['link'] = ""
                 el['id'] = element.find('id').text
                 el['title'] = element.find('title').text
                 ele =  element.find('language')
@@ -1172,12 +1176,13 @@ class ui_class():
                         el['filesize'] = ele[2].attrib['length']
                         el['filetype'] = ele[2].attrib['type']
                         el['time'] = ele[2].attrib['mtime']
-                ele = element.find('author')
-                if ele is not None:
+                ele = element.findall('author')
+                if ele != []:
                     author_list = list()
-                    for aut in ele.getchildren():
-                        author_list.append(aut.text)
-                    el['author']=author_list
+                    for e in ele:
+                        for aut in e.getchildren():
+                            author_list.append(aut.text)
+                    el['author']= author_list
                     el['author_len'] = len(el['author'])
                 ele = element.find('summary')
                 if ele is not None:
