@@ -253,7 +253,22 @@ class TestOPDSFeed(unittest.TestCase, ui_class):
         time.sleep(3)
 
     def test_opds_books(self):
-        pass  # ToDo: Test new section
+        r = requests.get('http://127.0.0.1:8083/opds/', auth=('admin', 'admin123'))
+        self.assertEqual(200, r.status_code)
+        elements = self.get_opds_index(r.text)
+        r = requests.get('http://127.0.0.1:8083' + elements['Alphabetical Books']['link'], auth=('admin', 'admin123'))
+        entries = self.get_opds_feed(r.text)
+        self.assertEqual(len(entries['elements']), 5)
+        self.assertEqual(len(entries['links']), 5)
+        # Select letter "B"
+        r = requests.get('http://127.0.0.1:8083' + entries['elements'][1]['link'], auth=('admin', 'admin123'))
+        entries = self.get_opds_feed(r.text)
+        self.assertEqual(len(entries['elements']), 8)
+        self.assertEqual(len(entries['links']), 5)
+        self.assertEqual(entries['elements'][5]['title'], 'book9')
+        self.assertEqual(len(entries['elements'][5]['author']), 2)
+        self.assertEqual(entries['elements'][5]['author'][1], "Unbekannt")
+
 
     def test_opds_series(self):
         r = requests.get('http://127.0.0.1:8083/opds/', auth=('admin', 'admin123'))
@@ -338,7 +353,7 @@ class TestOPDSFeed(unittest.TestCase, ui_class):
         self.assertEqual(200, r.status_code)
         elements = self.get_opds_index(r.text)
         # Get letter view
-        r = requests.get('http://127.0.0.1:8083'+elements['Authors']['link'], auth=('admin', 'admin123'))
+        r = requests.get('http://127.0.0.1:8083' + elements['Authors']['link'], auth=('admin', 'admin123'))
         entries = self.get_opds_feed(r.text)
         self.assertEqual(len(entries['elements']), 6)
         self.assertEqual(len(entries['links']), 6)
