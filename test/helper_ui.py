@@ -1617,6 +1617,11 @@ class ui_class():
         r.close()
         return resp.status_code, resp.content
 
+    def queue_metadata_backup(self):
+        self.goto_page("admin_setup")
+        self.check_element_on_page((By.ID, "metadata_backup")).click()
+        self.check_element_on_page((By.ID, "DialogFinished")).click()
+
     @classmethod
     def check_tasks(cls, ref=None):
         if cls.goto_page('tasks'):
