@@ -110,7 +110,7 @@ class TestLdapLogin(unittest.TestCase, ui_class):
                                 'config_ldap_dn': 'dc=example,dc=org',
                                 'config_ldap_authentication' : 'Simple',
                                 'config_ldap_serv_username': 'cn=admin,dc=example,dc=org',
-                                'config_ldap_serv_password': '1',
+                                'config_ldap_serv_password_e': '1',
                                 'config_ldap_user_object': 'uid=%s',
                                 'config_ldap_group_object_filter': '(&(objectclass=posixGroup)(cn=%s))',
                                 'config_ldap_openldap': 1,
@@ -147,7 +147,7 @@ class TestLdapLogin(unittest.TestCase, ui_class):
         #self.assertTrue(message)
         #self.assertTrue('Service Account' in message.text)
         # leave DN empty
-        self.fill_basic_config({'config_ldap_serv_password': 'secret', 'config_ldap_dn': ''})
+        self.fill_basic_config({'config_ldap_serv_password_e': 'secret', 'config_ldap_dn': ''})
         message= self.check_element_on_page((By.ID, "flash_danger"))
         self.assertTrue(message)
         self.assertTrue('DN' in message.text)
@@ -217,7 +217,7 @@ class TestLdapLogin(unittest.TestCase, ui_class):
                                 'config_ldap_authentication': 'Simple',
                                 'config_ldap_dn': 'ou=people,dc=calibreweb,dc=com',
                                 'config_ldap_serv_username': 'cn=root,dc=calibreweb,dc=com',
-                                'config_ldap_serv_password': 'secret',
+                                'config_ldap_serv_password_e': 'secret',
                                 'config_ldap_user_object': '(uid=%s)',
                                 'config_ldap_group_object_filter': '',
                                 'config_ldap_openldap': 1
@@ -226,7 +226,7 @@ class TestLdapLogin(unittest.TestCase, ui_class):
         time.sleep(BOOT_TIME)
         # create new user
         # give user password different form ldap
-        self.create_user('user0',{'email':'user0@exi.com','password':'1234'})
+        self.create_user('user0',{'email':'user0@exi.com','password':'123AbC*!'})
         self.assertTrue(self.check_element_on_page((By.ID, "flash_success")))
         # logout
         self.logout()
@@ -247,7 +247,7 @@ class TestLdapLogin(unittest.TestCase, ui_class):
         # logout
         self.logout()
         # try login fallback password -> fail
-        self.login('user0', '1234')
+        self.login('user0', '123AbC*!')
         self.assertTrue(self.check_element_on_page((By.ID, "flash_danger")))
 
         #login as admin
@@ -273,7 +273,7 @@ class TestLdapLogin(unittest.TestCase, ui_class):
                                 'config_ldap_authentication': 'Simple',
                                 'config_ldap_dn': 'dc=calibreweb,dc=com',
                                 'config_ldap_serv_username': 'cn=root,dc=calibreweb,dc=com',
-                                'config_ldap_serv_password': 'secret',
+                                'config_ldap_serv_password_e': 'secret',
                                 'config_ldap_user_object': '(sAMAccountName=%s)',
                                 'config_ldap_group_object_filter': '(& (objectclass=groupofnames)(cn=%s))',
                                 'config_ldap_openldap': 1,
@@ -330,7 +330,7 @@ class TestLdapLogin(unittest.TestCase, ui_class):
                                 'config_ldap_authentication': 'Simple',
                                 'config_ldap_dn': 'dc=calibreweb,dc=com',
                                 'config_ldap_serv_username': 'cn=root,dc=calibreweb,dc=com',
-                                'config_ldap_serv_password': 'secret',
+                                'config_ldap_serv_password_e': 'secret',
                                 'config_ldap_user_object': '(uid=%s)',
                                 'config_ldap_group_object_filter': '',
                                 'config_ldap_openldap': 1,
@@ -489,8 +489,8 @@ class TestLdapLogin(unittest.TestCase, ui_class):
         # print('new setup config 4')
         self.fill_basic_config({'config_ldap_group_object_filter': '(& (objectclass=groupofnames)(cn=%s))',
                                 'config_ldap_group_members_field':'member'})
-        self.assertTrue(self.check_element_on_page((By.ID, "flash_success")))
         time.sleep(BOOT_TIME)
+        self.assertTrue(self.check_element_on_page((By.ID, "flash_success")))
         # start import -> error
         self.goto_page('admin_setup')
         imprt = self.check_element_on_page((By.ID, "import_ldap_users"))
@@ -519,8 +519,8 @@ class TestLdapLogin(unittest.TestCase, ui_class):
 
         # connect with wrong encryption
         self.fill_basic_config({'config_ldap_openldap':0,'config_ldap_encryption':'None'})
-        self.assertTrue(self.check_element_on_page((By.ID, "flash_success")))
         time.sleep(BOOT_TIME)
+        self.assertTrue(self.check_element_on_page((By.ID, "flash_success")))
         self.goto_page('admin_setup')
         imprt = self.check_element_on_page((By.ID, "import_ldap_users"))
         self.assertTrue(imprt)
@@ -538,7 +538,7 @@ class TestLdapLogin(unittest.TestCase, ui_class):
                                 'config_ldap_authentication': 'Simple',
                                 'config_ldap_dn': 'ou=people,dc=calibreweb,dc=com',
                                 'config_ldap_serv_username': 'cn=root,dc=calibreweb,dc=com',
-                                'config_ldap_serv_password': 'secret',
+                                'config_ldap_serv_password_e': 'secret',
                                 'config_ldap_user_object': '(uid=%s)',
                                 'config_ldap_group_object_filter': '',
                                 'config_ldap_openldap': 1,
@@ -548,7 +548,7 @@ class TestLdapLogin(unittest.TestCase, ui_class):
         time.sleep(BOOT_TIME)
         # create new user
         # give user password different form ldap
-        self.create_user('user0',{'email':'user0@exi.com','password':'1235'})
+        self.create_user('user0',{'email':'user0@exi.com','password':'1235AbC*!'})
         self.assertTrue(self.check_element_on_page((By.ID, "flash_success")))
         # start SSl LDAP
         self.server.relisten(config=1, port=3268, encrypt="SSL")
@@ -596,7 +596,7 @@ class TestLdapLogin(unittest.TestCase, ui_class):
                                 'config_ldap_authentication': 'Simple',
                                 'config_ldap_dn': 'ou=people,dc=calibreweb,dc=com',
                                 'config_ldap_serv_username': 'cn=root,dc=calibreweb,dc=com',
-                                'config_ldap_serv_password': 'secret',
+                                'config_ldap_serv_password_e': 'secret',
                                 'config_ldap_user_object': '(uid=%s)',
                                 'config_ldap_group_object_filter': '',
                                 'config_ldap_openldap': 1,
@@ -609,7 +609,7 @@ class TestLdapLogin(unittest.TestCase, ui_class):
         self.assertTrue(self.check_element_on_page((By.ID, "flash_success")))
         # create new user
         # give user password different form ldap
-        self.create_user('user0',{'email':'user0@exi.com','password':'1235'})
+        self.create_user('user0',{'email':'user0@exi.com','password':'1235AbC*!'})
         self.assertTrue(self.check_element_on_page((By.ID, "flash_success")))
         # start SSl LDAP
         self.server.relisten(config=1, port=3268, encrypt="SSL", validate=True)
@@ -651,7 +651,7 @@ class TestLdapLogin(unittest.TestCase, ui_class):
                                 'config_ldap_authentication': 'Simple',
                                 'config_ldap_dn': 'ou=people,dc=calibreweb,dc=com',
                                 'config_ldap_serv_username': 'cn=root,dc=calibreweb,dc=com',
-                                'config_ldap_serv_password': 'secret',
+                                'config_ldap_serv_password_e': 'secret',
                                 'config_ldap_user_object': '(uid=%s)',
                                 'config_ldap_group_object_filter': '',
                                 'config_ldap_openldap': 1,
@@ -660,7 +660,7 @@ class TestLdapLogin(unittest.TestCase, ui_class):
         self.assertTrue(self.check_element_on_page((By.ID, "flash_success")))
         time.sleep(BOOT_TIME)
         # create user
-        self.create_user('user0',{'email':'user0@exi.com','password':'1236'})
+        self.create_user('user0',{'email':'user0@exi.com','password':'1236AbC*!'})
         self.assertTrue(self.check_element_on_page((By.ID, "flash_success")))
         # start SSl LDAP
         self.server.relisten(config=1, port=3268, encrypt="TLS")
@@ -725,7 +725,7 @@ class TestLdapLogin(unittest.TestCase, ui_class):
         # check login with wrong admins password
         self.login('admin', 'admin123')
         self.assertTrue(self.check_element_on_page((By.ID, "flash_warning")))
-        self.fill_basic_config({'config_ldap_serv_password': 'sercet',
+        self.fill_basic_config({'config_ldap_serv_password_e': 'sercet',
                                 'config_ldap_dn':'ou=people,dc=calibreweb,dc=com'})
         time.sleep(BOOT_TIME)
         self.logout()
@@ -736,7 +736,7 @@ class TestLdapLogin(unittest.TestCase, ui_class):
         # ToDo:
         self.login('admin', 'admin123')
         self.assertTrue(self.check_element_on_page((By.ID, "flash_warning")))
-        self.fill_basic_config({'config_ldap_serv_password': 'secret',
+        self.fill_basic_config({'config_ldap_serv_password_e': 'secret',
                                 'config_ldap_serv_username':'cn=rot,dc=calibreweb,dc=com'})
         time.sleep(BOOT_TIME)
         self.logout()
@@ -764,7 +764,7 @@ class TestLdapLogin(unittest.TestCase, ui_class):
         self.assertTrue(self.check_element_on_page((By.ID, "flash_success")))
         time.sleep(BOOT_TIME)
         # create user
-        self.create_user('user0',{'email':'user0@exi.com','password':'1236'})
+        self.create_user('user0',{'email':'user0@exi.com','password':'1236AbC*!'})
         self.assertTrue(self.check_element_on_page((By.ID, "flash_success")))
 
         self.server.relisten(config=1, port=3268, encrypt=None, auth=0)
@@ -813,7 +813,7 @@ class TestLdapLogin(unittest.TestCase, ui_class):
         self.assertTrue(self.check_element_on_page((By.ID, "flash_warning")))
         # change config to Unauthenticated
         self.fill_basic_config({'config_ldap_authentication': 'Simple',
-                                'config_ldap_serv_password': 'secret'})
+                                'config_ldap_serv_password_e': 'secret'})
         self.assertTrue(self.check_element_on_page((By.ID, "flash_success")))
         time.sleep(BOOT_TIME)
 
@@ -834,7 +834,7 @@ class TestLdapLogin(unittest.TestCase, ui_class):
                                 'config_ldap_authentication': 'Simple',
                                 'config_ldap_dn': 'ou=people,dc=calibreweb,dc=com',
                                 'config_ldap_serv_username': 'cn=root,dc=calibreweb,dc=com',
-                                'config_ldap_serv_password': 'secret',
+                                'config_ldap_serv_password_e': 'secret',
                                 'config_ldap_user_object': '(uid=%s)',
                                 'config_ldap_group_object_filter': '',
                                 'config_ldap_openldap': 1
@@ -847,7 +847,7 @@ class TestLdapLogin(unittest.TestCase, ui_class):
         # start ldap
         self.server.relisten(config=2, port=3268, encrypt=None)
         # create new user
-        self.create_user('执一',{'email':'use10@oxi.com','password':'1234', 'download_role': 1})
+        self.create_user('执一',{'email':'use10@oxi.com','password':'1234AbC*!', 'download_role': 1})
         self.assertTrue(self.check_element_on_page((By.ID, "flash_success")))
         self.logout()
 
@@ -924,7 +924,7 @@ class TestLdapLogin(unittest.TestCase, ui_class):
                                 'config_ldap_authentication': 'Simple',
                                 'config_ldap_dn': 'ou=people,dc=calibreweb,dc=com',
                                 'config_ldap_serv_username': 'cn=root,dc=calibreweb,dc=com',
-                                'config_ldap_serv_password': 'secret',
+                                'config_ldap_serv_password_e': 'secret',
                                 'config_ldap_user_object': '(uid=%s)',
                                 'config_ldap_group_object_filter': '',
                                 'config_ldap_openldap': 1
@@ -1025,7 +1025,7 @@ class TestLdapLogin(unittest.TestCase, ui_class):
                                 'config_ldap_authentication': 'Simple',
                                 'config_ldap_dn': 'ou=people,dc=calibreweb,dc=com',
                                 'config_ldap_serv_username': 'cn=root,dc=calibreweb,dc=com',
-                                'config_ldap_serv_password': 'secret',
+                                'config_ldap_serv_password_e': 'secret',
                                 'config_ldap_user_object': '(uid=%s)',
                                 'config_ldap_group_object_filter': '',
                                 'config_ldap_openldap': 1
@@ -1035,7 +1035,7 @@ class TestLdapLogin(unittest.TestCase, ui_class):
         # start ldap
         self.server.relisten(config=2, port=3268, encrypt=None)
         # create new user
-        self.create_user('执一',{'email':'use10@oxi.com','password':'1234', 'download_role': 1})
+        self.create_user('执一',{'email':'use10@oxi.com','password':'1234AbC*!', 'download_role': 1})
         self.assertTrue(self.check_element_on_page((By.ID, "flash_success")))
         host = 'http://' + get_Host_IP() + ':8083'
         self.fill_basic_config({'config_kobo_sync': 1})

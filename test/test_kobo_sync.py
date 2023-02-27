@@ -8,8 +8,8 @@ import unittest
 import requests
 
 from helper_ui import ui_class
-from config_test import TEST_DB, base_path
-from helper_func import startup, debug_startup, get_Host_IP, add_dependency, remove_dependency
+from config_test import TEST_DB, base_path, BOOT_TIME
+from helper_func import startup, get_Host_IP, add_dependency, remove_dependency
 from selenium.webdriver.common.by import By
 from helper_func import save_logfiles
 from selenium.webdriver.support.ui import WebDriverWait
@@ -305,10 +305,10 @@ class TestKoboSync(unittest.TestCase, ui_class):
         self.assertEqual('UserTag', data[0]['NewTag']['Tag']['Type'])
         self.assertEqual([], data[0]['NewTag']['Tag']['Items'])
         # create additional public shelf
-        self.create_user('user0', {'password': '1234', 'email': 'a@b.com', 'edit_shelf_role': 1})
+        self.create_user('user0', {'password': '1234AbC*!', 'email': 'a@b.com', 'edit_shelf_role': 1})
         self.assertTrue(self.check_element_on_page((By.ID, "flash_success")))
         self.logout()
-        self.login('user0', '1234')
+        self.login('user0', '1234AbC*!')
         self.assertTrue(self.check_element_on_page((By.ID, "flash_success")))
         self.create_shelf('adminShelf', True)
         self.assertTrue(self.check_element_on_page((By.ID, "flash_success")))
@@ -417,7 +417,7 @@ class TestKoboSync(unittest.TestCase, ui_class):
 
         # logout, login new user, create shelf for new user
         # self.logout()
-        # self.login('user0','1234')
+        # self.login('user0','123AbC*!')
         # self.create_shelf('new_user', True)
         # data = self.sync_kobo() # sync to get id of shelf
         # self.change_shelf('new_user', public=0)
@@ -616,12 +616,12 @@ class TestKoboSync(unittest.TestCase, ui_class):
         data3 = self.sync_kobo()  # 1 book synced, reading state changed as book was modified due to adding to shelf(?)
         self.assertIn("NewTag", data3[1])
         self.assertIn("NewEntitlement", data3[0])
-        self.create_user('kobosync', {'password': '123', 'email': 'da@b.com', "kobo_only_shelves_sync": 1})
+        self.create_user('kobosync', {'password': '123AbC*!', 'email': 'da@b.com', "kobo_only_shelves_sync": 1})
         user_settings = self.get_user_settings('kobosync')
         self.assertTrue(user_settings["kobo_only_shelves_sync"])
         # check kobo only
         self.logout()
-        self.login("kobosync","123")
+        self.login("kobosync","123AbC*!")
         # 2.user erzeuge neuen shelf mit sync füge Bücher hinzu
         self.create_shelf("syncd_shelf_u2", sync=1)
         self.get_book_details(9)
@@ -661,3 +661,47 @@ class TestKoboSync(unittest.TestCase, ui_class):
         data = self.sync_kobo()
         print(data) # todo check result
 
+    def test_kobo_limit(self):
+        host = 'http://' + get_Host_IP() + ':8083'
+        payload = {
+            "AffiliateName": "Kobo",
+            "AppVersion": "4.19.14123",
+            "ClientKey": "MDAwMDAwMDAtMDAwMC0wMDAwLTAwMDAtMDAwMDAwMDAwMzc1",
+            "DeviceId": "lnez00rs6cox274bx8c97kyr67ga3tnn0c1745tbjd9rmsmcywxmmcrw2zcayu6d",
+            "PlatformId": "00000000-0000-0000-0000-000000000375",
+            "UserKey": "12345678-9012-abcd-efgh-a7b6c0d8e7f2"
+        }
+        # request several times the same endpoint with different hashes within one minute, from same ip address
+        for i in range(1, 4):
+            r = requests.post(host + '/kobo/tesit/v1/auth/device', json=payload)
+            self.assertEqual(401, r.status_code)
+        # after x tries get 429
+        r = requests.post(host + '/kobo/tesit/v1/auth/device', json=payload)
+        self.assertEqual(429, r.status_code)
+        # try to use working endpoint not working
+        r = requests.post(self.kobo_adress + '/v1/auth/device', json=payload)
+        self.assertEqual(429, r.status_code)
+        # wait one minute
+        time.sleep(61)
+        # access wrong endpoint again -> error 401
+        r = requests.post(host + '/kobo/tesit/v1/auth/device', json=payload)
+        self.assertEqual(401, r.status_code)
+        # access right endpoint -> working
+        r = requests.post(self.kobo_adress + '/v1/auth/device', json=payload)
+        self.assertEqual(200, r.status_code)
+        # switch of limit, logout
+        self.fill_basic_config({"config_ratelimiter": 0})
+        time.sleep(BOOT_TIME)
+        self.assertTrue(self.check_element_on_page((By.ID, "flash_success")))
+        self.logout()
+        # request several times the same endpoint with different hashes within one minute, from same ip address -> working all the time
+        for i in range(1, 5):
+            r = requests.post(host + '/kobo/tesit/v1/auth/device', json=payload)
+            self.assertEqual(401, r.status_code)
+        r = requests.post(self.kobo_adress + '/v1/auth/device', json=payload)
+        self.assertEqual(200, r.status_code)
+        # switch on limit again
+        self.login("admin", "admin123")
+        self.fill_basic_config({"config_ratelimiter":1, 'config_public_reg':0})
+        time.sleep(BOOT_TIME)
+        self.assertTrue(self.check_element_on_page((By.ID, "flash_success")))

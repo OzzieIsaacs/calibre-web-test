@@ -1,0 +1,105 @@
+#!/usr/bin/env python
+# -*- coding: utf-8 -*-
+import os
+from unittest import TestCase
+import time
+import glob
+from diffimg import diff
+from io import BytesIO
+
+from selenium.webdriver.common.by import By
+from helper_ui import ui_class
+from config_test import TEST_DB
+from helper_func import startup, add_dependency, remove_dependency
+from helper_func import save_logfiles
+
+
+class TestBackupMetadata(TestCase, ui_class):
+    p = None
+    driver = None
+
+    @classmethod
+    def setUpClass(cls):
+        try:
+            startup(cls, cls.py_version, {'config_calibre_dir': TEST_DB}, env={"APP_MODE": "test"})
+            time.sleep(3)
+        except Exception:
+            cls.driver.quit()
+            cls.p.kill()
+
+    @classmethod
+    def tearDownClass(cls):
+        cls.driver.get("http://127.0.0.1:8083")
+        cls.stop_calibre_web()
+        # close the browser window and stop calibre-web
+        cls.driver.quit()
+        cls.p.terminate()
+        save_logfiles(cls, cls.__name__)
+
+    def test_backup_all(self):
+        # backup all drücken
+        ref = self.check_tasks()
+        self.queue_metadata_backup()
+        tasks = self.check_tasks(ref)
+        self.restart_calibre_web()
+        res = self.check_tasks()
+        # schauen das alle opd dateien vorhanden sind
+        all_files = glob.glob(TEST_DB + '/**/*.opf', recursive=True)
+        # alle opf daten löschen
+        for f in all_files:
+            os.unlink(f)
+        # Gesamt Ordner Schreibrechte entziehen
+        rights = os.stat(TEST_DB).st_mode & 0o777
+        os.chmod(TEST_DB, 0o400)
+        # backup all drücken
+        self.queue_metadata_backup()
+        self.restart_calibre_web()
+        # müsste Fehlermeldung geben
+        res = self.check_tasks()
+        # Gesamt Ordner Schreibrechte geben
+        os.chmod(TEST_DB, rights)
+        # einem Author ordner Schreibrechte entziehen
+
+        # backup all drücken
+        self.queue_metadata_backup()
+        self.restart_calibre_web()
+        # müsste Fehlermeldung geben
+        # Author Ordner Schreibrechte geben
+        # einem Buch Ordner Schreibrechte entziehen
+        # backup all drücken
+        self.queue_metadata_backup()
+        self.restart_calibre_web()
+        # müsste Fehlermeldung geben
+        # Buch Ordner Schreibrechte wieder geben
+        pass
+
+    def test_backup_change_book_title(self):
+        pass
+
+    def test_backup_change_book_author(self):
+        pass
+
+    def test_backup_change_book_series(self):
+        pass
+
+    def test_backup_change_book_seriesindex(self):
+        pass
+
+    def test_backup_change_book_publisher(self):
+        pass
+
+    def test_backup_change_book_publishing_date(self):
+        pass
+
+    def test_backup_change_book_tags(self):
+        pass
+
+    def test_backup_change_book_custom_bool(self):
+        pass
+
+    def test_backup_change_book_read_status(self):
+        pass
+
+    def test_grdive(self):
+        pass
+        # repeat all tests on gdrive

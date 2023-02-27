@@ -250,9 +250,9 @@ class TestThumbnails(unittest.TestCase, ui_class):
         self.delete_book(details['id'])
         time.sleep(2)
         # Check normal user isn't seeing System task
-        self.create_user('thumb', {'password': '123', 'email': 'a@b.com'})
+        self.create_user('thumb', {'password': '123AbC*!', 'email': 'a@b.com'})
         self.logout()
-        self.login("thumb", "123")
+        self.login("thumb", "123AbC*!")
         res = self.check_tasks()
         self.assertEqual(len(res), 0)
         self.logout()

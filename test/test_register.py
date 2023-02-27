@@ -3,7 +3,7 @@
 
 from helper_email_convert import AIOSMTPServer
 from selenium.webdriver.common.by import By
-from config_test import TEST_DB
+from config_test import TEST_DB, BOOT_TIME
 from helper_func import startup, wait_Email_received
 # from parameterized import parameterized_class
 import unittest
@@ -31,11 +31,11 @@ class TestRegister(unittest.TestCase, ui_class):
 
         try:
             startup(cls, cls.py_version, {'config_calibre_dir':TEST_DB,
-                                          'config_public_reg': 1}, env={"APP_MODE": "test"})
+                                          'config_public_reg': 1, "config_ratelimiter": 0}, env={"APP_MODE": "test"})
             WebDriverWait(cls.driver, 5).until(EC.presence_of_element_located((By.ID, "flash_success")))
             cls.edit_user('admin', {'email': 'a5@b.com','kindle_mail': 'a1@b.com'})
             cls.setup_server(False, {'mail_server':'127.0.0.1', 'mail_port':'1025',
-                                'mail_use_ssl':'None','mail_login':'name@host.com','mail_password':'10234',
+                                'mail_use_ssl':'None','mail_login':'name@host.com','mail_password_e':'10234',
                                 'mail_from':'name@host.com'})
 
         except Exception as e:
@@ -175,9 +175,9 @@ class TestRegister(unittest.TestCase, ui_class):
         user, passw = self.email_server.handler.extract_register_info()
         self.email_server.handler.reset_email_received()
         self.assertTrue(self.login(user, passw))
-        self.assertTrue(self.change_current_user_password('new_passwd'))
+        self.assertTrue(self.change_current_user_password('new_passwd123AbC*!'))
         self.logout()
-        self.assertTrue(self.login(user, 'new_passwd'))
+        self.assertTrue(self.login(user, 'new_passwd123AbC*!'))
         self.logout()
         self.assertTrue(self.forgot_password(u'upasswd'))
         self.assertTrue(wait_Email_received(self.email_server.handler.check_email_received))
@@ -200,7 +200,7 @@ class TestRegister(unittest.TestCase, ui_class):
             self.login('admin', 'admin123')
             self.assertTrue(self.check_element_on_page((By.ID, "flash_success")))
         self.email_server.handler.reset_email_received()
-        self.create_user('forget', {'passwd_role': 0, 'password': '123', 'email': 'alfa@b.com'})
+        self.create_user('forget', {'passwd_role': 0, 'password': '123AbC*!', 'email': 'alfa@b.com'})
         self.logout()
         self.assertTrue(self.forgot_password('forget'))
         time.sleep(3)

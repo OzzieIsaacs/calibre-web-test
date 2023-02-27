@@ -192,15 +192,15 @@ class TestLogin(unittest.TestCase, ui_class):
         self.login('admin', 'admin123')
         self.create_user('epass', {'email': 'a5@b.com'})
         self.assertTrue(self.check_element_on_page((By.ID, 'flash_danger')))
-        self.create_user('epass', {'email': 'a5@b.com', 'password': '1', 'passwd_role': 1})
+        self.create_user('epass', {'email': 'a5@b.com', 'password': '123AbC*!', 'passwd_role': 1})
         self.assertTrue(self.check_element_on_page((By.ID, 'flash_success')))
         self.logout()
-        self.assertTrue(self.login('epass', '1'))
+        self.assertTrue(self.login('epass', '123AbC*!'))
         self.change_visibility_me({'password': ''})
         self.assertTrue(self.check_element_on_page((By.ID, 'flash_success')))
         self.logout()
         self.assertFalse(self.login('epass', ''))
-        self.assertTrue(self.login('epass', '1'))
+        self.assertTrue(self.login('epass', '123AbC*!'))
         self.logout()
 
     # login with admin
@@ -213,13 +213,13 @@ class TestLogin(unittest.TestCase, ui_class):
     def test_login_capital_letters_user_unicode_password(self):
         self.driver.get("http://127.0.0.1:8083/login")
         self.login('admin', 'admin123')
-        self.create_user('KaPiTaL', {'password': u'Kß ü执', 'email': 'a@b.com'})
+        self.create_user('KaPiTaL', {'password': u'Kß ü执123AbC*!', 'email': 'a@b.com'})
         self.logout()
-        self.assertTrue(self.login('KAPITAL', u'Kß ü执'))
+        self.assertTrue(self.login('KAPITAL', u'Kß ü执123AbC*!'))
         self.logout()
-        self.assertTrue(self.login('kapital', u'Kß ü执'))
+        self.assertTrue(self.login('kapital', u'Kß ü执123AbC*!'))
         self.logout()
-        self.assertFalse(self.login('KaPiTaL', u'kß ü执'))
+        self.assertFalse(self.login('KaPiTaL', u'kß ü执123AbC*!'))
 
     # login with admin
     # create new user (unicode characters), password with spaces at beginning
@@ -230,11 +230,11 @@ class TestLogin(unittest.TestCase, ui_class):
     def test_login_unicode_user_space_end_password(self):
         self.driver.get("http://127.0.0.1:8083/login")
         self.login('admin', 'admin123')
-        self.create_user(u'Kß ü执', {'password': ' space', 'email': 'a1@b.com'})
+        self.create_user(u'Kß ü执', {'password': ' space123AbC*!', 'email': 'a1@b.com'})
         self.logout()
-        self.assertTrue(self.login(u'Kß ü执', ' space'))
+        self.assertTrue(self.login(u'Kß ü执', ' space123AbC*!'))
         self.logout()
-        self.assertFalse(self.login(u'Kß ü执', 'space'))
+        self.assertFalse(self.login(u'Kß ü执', 'space123AbC*!'))
 
     # login with admin
     # create new user (spaces within), password with space at end
@@ -246,13 +246,13 @@ class TestLogin(unittest.TestCase, ui_class):
     def test_login_user_with_space_password_end_space(self):
         self.driver.get("http://127.0.0.1:8083/login")
         self.login('admin', 'admin123')
-        self.create_user('Klaus peter', {'password': 'space ', 'email': 'a2@b.com'})
+        self.create_user('Klaus peter', {'password': '123AbC*!space ', 'email': 'a2@b.com'})
         self.logout()
-        self.assertTrue(self.login('Klaus peter', 'space '))
+        self.assertTrue(self.login('Klaus peter', '123AbC*!space '))
         self.logout()
-        self.assertFalse(self.login('Klauspeter', 'space'))
+        self.assertFalse(self.login('Klauspeter', '123AbC*!space'))
         self.logout()
-        self.assertFalse(self.login('Klaus peter', 'space'))
+        self.assertFalse(self.login('Klaus peter', '123AbC*!space'))
 
     # login with admin
     # create new user as admin user
@@ -269,16 +269,19 @@ class TestLogin(unittest.TestCase, ui_class):
         self.driver.get("http://127.0.0.1:8083/login")
         self.login('admin', 'admin123')
         self.assertTrue(self.check_element_on_page((By.ID, "flash_success")))
-        self.create_user('admin2', {'password': 'admin2', 'admin_role': 1, 'email': 'a3@b.com'})
+        self.fill_basic_config({'config_password_policy': 0})
+        time.sleep(5)
+        self.assertTrue(self.check_element_on_page((By.ID, "flash_success")))
+        self.create_user('admin2', {'password': '123AbC*!', 'admin_role': 1, 'email': 'a3@b.com'})
         self.assertTrue(self.check_element_on_page((By.ID, "flash_success")))
         self.logout()
-        self.assertTrue(self.login('admin2', 'admin2'))
+        self.assertTrue(self.login('admin2', '123AbC*!'))
         self.assertTrue(self.check_element_on_page((By.ID, "flash_success")))
         self.edit_user('admin', {'delete': 1})
         self.assertTrue(self.check_element_on_page((By.ID, "flash_success")))
         self.logout()
         self.assertFalse(self.login('admin', 'admin123'))
-        self.login('admin2', 'admin2')
+        self.login('admin2', '123AbC*!')
         self.assertTrue(self.check_element_on_page((By.ID, "flash_success")))
         self.create_user('admin', {'password': 'admin123', 'admin_role': 1, 'email': 'a4@b.com'})
         self.assertTrue(self.check_element_on_page((By.ID, "flash_success")))
@@ -290,7 +293,79 @@ class TestLogin(unittest.TestCase, ui_class):
         self.assertTrue(self.check_element_on_page((By.ID, "flash_danger")))
         self.edit_user('admin', {'delete': 1})
         self.assertTrue(self.check_element_on_page((By.ID, "flash_danger")))
+        self.fill_basic_config({'config_password_policy':1})
+        time.sleep(5)
+        self.assertTrue(self.check_element_on_page((By.ID, "flash_success")))
         self.logout()
+
+    def test_password_policy(self):
+        self.driver.get("http://127.0.0.1:8083/login")
+        self.login('admin', 'admin123')
+        self.assertTrue(self.check_element_on_page((By.ID, "flash_success")))
+        # number of chars to less
+        self.create_user('passwd_user', {'password': '1235lP+', 'email': 'a3@b.com'})
+        self.assertTrue(self.check_element_on_page((By.ID, "flash_danger")))
+        # no lowercase
+        self.create_user('passwd_user', {'password': '123456P+', 'email': 'a3@b.com'})
+        self.assertTrue(self.check_element_on_page((By.ID, "flash_danger")))
+        # no uppercase
+        self.create_user('passwd_user', {'password': '123456l+', 'email': 'a3@b.com'})
+        self.assertTrue(self.check_element_on_page((By.ID, "flash_danger")))
+        # no specialchar
+        self.create_user('passwd_user', {'password': '123456lP', 'email': 'a3@b.com'})
+        self.assertTrue(self.check_element_on_page((By.ID, "flash_danger")))
+        # no number
+        self.create_user('passwd_user', {'password': 'accHUlP+#', 'email': 'a3@b.com'})
+        self.assertTrue(self.check_element_on_page((By.ID, "flash_danger")))
+        # no policy
+        self.fill_basic_config({'config_password_policy': 0})
+        time.sleep(5)
+        self.assertTrue(self.check_element_on_page((By.ID, "flash_success")))
+        self.create_user('no_user', {'password': '1', 'email': 'a3@b.com'})
+        self.assertTrue(self.check_element_on_page((By.ID, "flash_success")))
+        self.edit_user("no_user", {'delete': 1})
+        # no policy
+        self.fill_basic_config({'config_password_policy': 1, 'config_password_number': 0})
+        time.sleep(5)
+        self.assertTrue(self.check_element_on_page((By.ID, "flash_success")))
+        # no number
+        self.create_user('number_user', {'password': 'accHUlP+#', 'email': 'a3@b.com'})
+        self.assertTrue(self.check_element_on_page((By.ID, "flash_success")))
+        self.edit_user("number_user", {'delete': 1})
+
+        self.fill_basic_config({ 'config_password_number': 1, 'config_password_lower': 0})
+        # no lowercase
+        self.create_user('lower_user', {'password': '123456P+', 'email': 'a3@b.com'})
+        self.assertTrue(self.check_element_on_page((By.ID, "flash_success")))
+        self.edit_user("lower_user", {'delete': 1})
+        time.sleep(1)
+
+        self.fill_basic_config({'config_password_lower': 1, 'config_password_upper': 0})
+        # no uppercase
+        self.create_user('upper_user', {'password': '123456l+', 'email': 'a3@b.com'})
+        self.assertTrue(self.check_element_on_page((By.ID, "flash_success")))
+        self.edit_user("upper_user", {'delete': 1})
+        time.sleep(1)
+
+        self.fill_basic_config({ 'config_password_upper': 1, 'config_password_special': 0})
+        # no specialchar
+        self.create_user('special_user', {'password': '123456lP', 'email': 'a3@b.com'})
+        self.assertTrue(self.check_element_on_page((By.ID, "flash_success")))
+        self.edit_user("special_user", {'delete': 1})
+        time.sleep(1)
+
+        self.fill_basic_config({'config_password_special': 1, 'config_password_min_length': 5})
+        # shorter length password
+        self.create_user('short_user', {'password': '45lP+', 'email': 'a3@b.com'})
+        self.assertTrue(self.check_element_on_page((By.ID, "flash_success")))
+        self.edit_user("short_user", {'delete': 1})
+        time.sleep(1)
+        self.create_user('short_user', {'password': '5lP+', 'email': 'a3@b.com'})
+        self.assertTrue(self.check_element_on_page((By.ID, "flash_danger")))
+
+        self.fill_basic_config({'config_password_special': 1, 'config_password_min_length': 8})
+        self.logout()
+
 
     @unittest.skipIf(not curl_available, "Skipping language detection, pycurl not available")
     def test_login_locale_select(self):
@@ -430,10 +505,10 @@ class TestLogin(unittest.TestCase, ui_class):
     def test_login_rename_user(self):
         self.driver.get("http://127.0.0.1:8083/login")
         self.login('admin', 'admin123')
-        self.create_user('new_user', {'password': '1234', 'email': 'a12@b.com'})
+        self.create_user('new_user', {'password': '123AbC*!', 'email': 'a12@b.com'})
         self.assertTrue(self.check_element_on_page((By.ID, "flash_success")))
         self.logout()
-        self.assertTrue(self.login('new_user', '1234'))
+        self.assertTrue(self.login('new_user', '123AbC*!'))
         self.goto_page('user_setup')
         self.assertFalse(self.check_element_on_page((By.ID, "name")))
         self.logout()
@@ -442,8 +517,8 @@ class TestLogin(unittest.TestCase, ui_class):
         self.edit_user('new_user', {'name': 'old_user'})
         self.assertTrue(self.check_element_on_page((By.ID, "flash_success")))
         self.logout()
-        self.assertFalse(self.login('new_user', '1234'))
-        self.assertTrue(self.login('old_user', '1234'))
+        self.assertFalse(self.login('new_user', '123AbC*!'))
+        self.assertTrue(self.login('old_user', '123AbC*!'))
         self.logout()
         self.assertTrue(self.login('admin', 'admin123'))
         self.edit_user('old_user', {'delete': 1})

@@ -292,12 +292,12 @@ class TestKoboSyncBig(unittest.TestCase, ui_class):
         self.assertIn("NewTag", data3[0][-1])
         # self.assertFalse('DeletedTag' in data[0][-2])
         self.assertIn("NewEntitlement", data3[0][0])
-        self.create_user('kobosync', {'password': '123', 'email': 'da@b.com', "kobo_only_shelves_sync": 1})
+        self.create_user('kobosync', {'password': '123AbC*!', 'email': 'da@b.com', "kobo_only_shelves_sync": 1})
         user_settings = self.get_user_settings('kobosync')
         self.assertTrue(user_settings["kobo_only_shelves_sync"])
         # check kobo only
         self.logout()
-        self.login("kobosync", "123")
+        self.login("kobosync", "123AbC*!")
         # 2.user creates new shelf and adds books
         self.create_shelf("syncd_shelf_u2", sync=1)
         self.get_book_details(9)
@@ -330,8 +330,8 @@ class TestKoboSyncBig(unittest.TestCase, ui_class):
 
     def test_kobo_sync_multi_user(self):
         # create 2 users
-        self.create_user('user1', {'password': '123', 'email': 'ada@b.com', "edit_role": 1, "download_role": 1})
-        self.create_user('user2', {'password': '321', 'email': 'aba@b.com', "edit_role": 1, "download_role": 1})
+        self.create_user('user1', {'password': '123AbC*!', 'email': 'ada@b.com', "edit_role": 1, "download_role": 1})
+        self.create_user('user2', {'password': '321AbC*!', 'email': 'aba@b.com', "edit_role": 1, "download_role": 1})
         host = 'http://' + get_Host_IP() + ':8083'
         self.driver.get(host)   # still logged in
         # create links for both users
@@ -395,7 +395,7 @@ class TestKoboSyncBig(unittest.TestCase, ui_class):
         self.assertEqual(0, len(data2[0]))
         # archive one book for user 1 in cw (is archived last_modified value?)
         self.logout()
-        self.login("user1", "123")
+        self.login("user1", "123AbC*!")
         self.get_book_details(110, host)
         self.check_element_on_page((By.XPATH, "//*[@id='archived_cb']")).click()
         # sync books for both user -> only archived for user1
@@ -406,7 +406,7 @@ class TestKoboSyncBig(unittest.TestCase, ui_class):
         self.assertIn('ChangedEntitlement', data1[0][0])
         self.logout()
         # archive one book for user 2 on kobo
-        self.login("user2", "321")
+        self.login("user2", "321AbC*!")
         self.get_book_details(140, host)
         self.check_element_on_page((By.XPATH, "//*[@id='archived_cb']")).click()
         self.logout()
@@ -418,7 +418,7 @@ class TestKoboSyncBig(unittest.TestCase, ui_class):
         self.assertIn('ChangedEntitlement', data2[0][0])
         # create shelf for one user add books
         # sync books for both user -> only changed for user1
-        self.login("user1", "123")
+        self.login("user1", "123AbC*!")
         self.create_shelf('syncShelf', False)
         self.assertTrue(self.check_element_on_page((By.ID, "flash_success")))
         self.get_book_details(122, host)
@@ -435,7 +435,7 @@ class TestKoboSyncBig(unittest.TestCase, ui_class):
         self.assertIn('NewTag', data1[0][0])
         self.assertEqual(2, len(data1[0][0]['NewTag']['Tag']['Items']))
         # switch user2 to sync selected shelfs and add books
-        self.login("user2", "321")
+        self.login("user2", "321AbC*!")
         self.create_shelf('syncShelf2', False)
         self.get_book_details(122, host)
         self.check_element_on_page((By.ID, "add-to-shelf")).click()

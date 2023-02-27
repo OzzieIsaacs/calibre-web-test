@@ -21,7 +21,7 @@ def user_change(user, result, index):
     r = requests.session()
     login_page = r.get('http://127.0.0.1:8083/login')
     token = re.search('<input type="hidden" name="csrf_token" value="(.*)">', login_page.text)
-    payload = {'username': user, 'password': "1234", 'submit': "", 'next': "/", "csrf_token": token.group(1)}
+    payload = {'username': user, 'password': "123AbC*!", 'submit': "", 'next': "/", "csrf_token": token.group(1)}
     r.post('http://127.0.0.1:8083/login', data=payload)
     # random.seed(123)
     for i in range(0, 200):
@@ -99,7 +99,7 @@ class TestUserLoad(TestCase, ui_class):
             token = re.search('<input type="hidden" name="csrf_token" value="(.*)">', new_user_page.text)
             user_load = {'name': 'user' + str(i),
                         'email': 'alfa' + str(i) + '@email.com',
-                        'password': "1234",
+                        'password': "123AbC*!",
                         'locale': "en",
                         'default_language': "all",
                         'show_16': "on",

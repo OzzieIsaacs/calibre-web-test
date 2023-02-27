@@ -64,7 +64,7 @@ class TestCli(unittest.TestCase, ui_class):
         if p.poll() is None:
             p.kill()
         nextline = p.communicate()[0]
-        self.assertIsNotNone(re.findall(expectation, nextline))
+        self.assertTrue(re.findall(expectation, nextline))
         p.terminate()
         p.stdout.close()
         p.stderr.close()
@@ -429,9 +429,10 @@ class TestCli(unittest.TestCase, ui_class):
 
     def test_change_password(self):
         os.chdir(CALIBRE_WEB_PATH)
-        self.check_password_change("admin:admin12", "Password for user 'admin' changed")
-        self.check_password_change("admin:adm:in12", "Password for user 'admin' changed")
-        self.check_password_change("admin.kolo", "No valid username:password.*")
+        self.check_password_change("admin:aDmin12!", "Password for user 'admin' changed")
+        self.check_password_change("admin:aDm:in12", "Password for user 'admin' changed")
+        self.check_password_change("admin.kolo", "No valid 'username:password.*")
+        self.check_password_change("admin:aDm:in12", "Password for user 'admin' changed")
         self.check_password_change("admin:", "Empty password")
         p1 = process_open([self.py_version,  "-B", u'cps.py'], [1])
         time.sleep(BOOT_TIME)
@@ -440,7 +441,7 @@ class TestCli(unittest.TestCase, ui_class):
             self.driver.get("http://127.0.0.1:8083")
 
             # Wait for config screen to show up
-            self.login("admin", "adm:in12")
+            self.login("admin", "aDm:in12")
             self.fill_db_config({'config_calibre_dir': TEST_DB})
             # wait for cw to reboot
             time.sleep(2)
@@ -448,10 +449,12 @@ class TestCli(unittest.TestCase, ui_class):
 
         except Exception as e:
             self.assertFalse(e)
-        self.check_password_change("admin:@hukl", "Password for user 'admin' changed")
+        self.check_password_change("admin:@hukl123AbC*!", "Password for user 'admin' changed")
         if os.name != "nt":
             self.assertFalse(self.login("admin", "admin123"))
-            self.assertTrue(self.login("admin", "@hukl"))
+            self.assertTrue(self.login("admin", "@hukl123AbC*!"))
+        self.fill_basic_config({"config_password_policy": 0})
+        time.sleep(BOOT_TIME)
         self.check_password_change("admin:admin123", "Password for user 'admin' changed")
         p1.terminate()
         time.sleep(3)

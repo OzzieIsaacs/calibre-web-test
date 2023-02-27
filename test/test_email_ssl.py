@@ -42,7 +42,7 @@ class TestSSL(unittest.TestCase, ui_class):
 
         cls.edit_user('admin', {'email': 'a5@b.com','kindle_mail': 'a1@b.com'})
         cls.setup_server(False, {'mail_server':'127.0.0.1', 'mail_port':'1027',
-                            'mail_use_ssl':'SSL/TLS','mail_login':'name@host.com','mail_password':'10234',
+                            'mail_use_ssl':'SSL/TLS','mail_login':'name@host.com','mail_password_e':'10234',
                             'mail_from':'name@host.com'})
 
 
@@ -174,10 +174,10 @@ class TestSSL(unittest.TestCase, ui_class):
     # start sending e-mail
     # check email received
     def test_SSL_non_admin_user(self):
-        self.create_user('ssl_email', {'password': '123', 'email': 'answer@beta.com', 'kindle_mail': 'answer@beta.com', 'download_role': 1})
+        self.create_user('ssl_email', {'password': '123AbC*!', 'email': 'answer@beta.com', 'kindle_mail': 'answer@beta.com', 'download_role': 1})
         self.setup_server(False, {'mail_use_ssl': 'SSL/TLS'})
         self.logout()
-        self.login("ssl_email", "123")
+        self.login("ssl_email", "123AbC*!")
         tasks = self.check_tasks()
         details = self.get_book_details(7)
         details['kindlebtn'].click()

@@ -122,14 +122,14 @@ class TestEbookConvertKepubify(unittest.TestCase, ui_class):
         self.assertTrue(self.check_element_on_page((By.ID, "flash_success")))
         time.sleep(2)
 
-        self.create_user('solo', {'password': '123', 'email': 'a@b.com', 'edit_role':1})
+        self.create_user('solo', {'password': '123AbC*!', 'email': 'a@b.com', 'edit_role':1})
         time.sleep(2)
         ret = self.check_tasks()
         self.assertEqual(ret[-1]['result'], 'Finished')
         memory = len(ret)
 
         self.logout()
-        self.login('solo', '123')
+        self.login('solo', '123AbC*!')
         ret = self.check_tasks()
         self.assertEqual(0, len(ret))
 

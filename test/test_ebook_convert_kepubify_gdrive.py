@@ -169,7 +169,7 @@ class TestEbookConvertGDriveKepubify(unittest.TestCase, ui_class):
         self.assertTrue(self.check_element_on_page((By.ID, "flash_success")))
         time.sleep(WAIT_GDRIVE)
 
-        self.create_user('solo', {'password': '123', 'email': 'a@b.com', 'edit_role':1})
+        self.create_user('solo', {'password': '123AbC*!', 'email': 'a@b.com', 'edit_role': 1})
         self.assertTrue(self.check_element_on_page((By.ID, "flash_success")))
         time.sleep(WAIT_GDRIVE*2 + 5)
         ret = self.check_tasks()
@@ -177,7 +177,7 @@ class TestEbookConvertGDriveKepubify(unittest.TestCase, ui_class):
         memory = len(ret)
 
         self.logout()
-        self.login('solo', '123')
+        self.login('solo', '123AbC*!')
         ret = self.check_tasks()
         self.assertEqual(0, len(ret))
 

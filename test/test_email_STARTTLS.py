@@ -42,7 +42,7 @@ class TestSTARTTLS(unittest.TestCase, ui_class):
 
             cls.edit_user('admin', {'email': 'a5@b.com','kindle_mail': 'a1@b.com'})
             cls.setup_server(True, {'mail_server': '127.0.0.1', 'mail_port': '1026',
-                                    'mail_use_ssl': 'SSL/TLS', 'mail_login': 'name@host.com', 'mail_password':'10234',
+                                    'mail_use_ssl': 'SSL/TLS', 'mail_login': 'name@host.com', 'mail_password_e':'10234',
                                     'mail_from': 'name@host.com'})
         except:
             cls.driver.quit()
@@ -103,7 +103,7 @@ class TestSTARTTLS(unittest.TestCase, ui_class):
 
 
     def test_STARTTLS_resend_password(self):
-        self.create_user('paswd_resend', {'password': '123', 'email': 'a@b.com', 'edit_role': 1})
+        self.create_user('paswd_resend', {'password': '123AbC*!', 'email': 'a@b.com', 'edit_role': 1})
         self.setup_server(False, {'mail_use_ssl': 'STARTTLS'})
         self.assertTrue(self.edit_user(u'paswd_resend', { 'resend_password': 1}))
         self.edit_user('paswd_resend', element={})
