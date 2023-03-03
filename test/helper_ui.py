@@ -1620,7 +1620,9 @@ class ui_class():
     def queue_metadata_backup(self):
         self.goto_page("admin_setup")
         self.check_element_on_page((By.ID, "metadata_backup")).click()
+        time.sleep(1)
         self.check_element_on_page((By.ID, "DialogFinished")).click()
+        time.sleep(1)
 
     @classmethod
     def check_tasks(cls, ref=None):
