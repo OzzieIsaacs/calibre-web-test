@@ -1,6 +1,11 @@
 import ast
 import os
 from datetime import datetime
+import random
+import shutil
+import string
+from uuid import uuid4
+from PIL import Image, ImageDraw
 
 from sqlalchemy import create_engine
 from sqlalchemy import Column
@@ -8,11 +13,8 @@ from sqlalchemy import String, Integer, Boolean
 from sqlalchemy import ForeignKey
 from sqlalchemy.orm import sessionmaker, scoped_session
 from sqlalchemy import TIMESTAMP
-import random
-import shutil
-import string
-from uuid import uuid4
-from PIL import Image, ImageDraw
+
+from config_test import base_path
 
 try:
     # Compatibility with sqlalchemy 2.0
@@ -199,9 +201,11 @@ def add_books(location, number, cover=False, set_id=False):
         book_folder = os.path.join(book.author_sort, book.title + " ({})".format(book.id))
         os.makedirs(os.path.join(database_root, book_folder))
         book.path = book_folder
-        book_name = os.path.join(database_root, book_folder, "file.epub")
-        with open(book_name, 'wb') as f_out:
-            f_out.write(os.urandom(30))
+        # copy real book info
+        epub_file = os.path.join(base_path, 'files', 'book.epub')
+        #with open(book_name, 'wb') as f_out:
+        #    f_out.write(os.urandom(30))
+        shutil.copy(epub_file, os.path.join(database_root, book_folder, "file.epub"))
         if cover:
             _generate_random_cover(os.path.join(database_root, book_folder, 'cover.jpg'))
         new_format = Data(name="file",
