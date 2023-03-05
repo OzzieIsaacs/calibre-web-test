@@ -5,16 +5,74 @@ import unittest
 from unittest import TestCase
 import time
 import glob
-from diffimg import diff
-from io import BytesIO
+from bs4 import BeautifulSoup
+import codecs
 
-from selenium.webdriver.common.by import By
 from helper_ui import ui_class
 from config_test import TEST_DB
 from helper_func import startup, add_dependency, remove_dependency
 from helper_func import save_logfiles
 
-@unittest.SkipTest
+
+def read_opf_metadata(filename):
+    result = {}
+    with codecs.open(filename, "r", "utf-8") as f:
+        soup = BeautifulSoup(f.read(), "xml")
+    result['identifier'] = soup.findAll("identifier")
+    cover = soup.find("reference")
+    result['cover'] = cover.attrs if cover else ""
+    title = soup.find("dc:title")
+    result['title'] = title.contents[0] if title else ""
+    author = soup.findAll("dc:creator")
+    result['author'] = [a.contents[0] for a in author]
+    result['author_attr'] = [a.attrs for a in author]
+    contributor = soup.find("dc:contributor")
+    if contributor:
+        result['contributor'] = contributor.contents
+        result['contributor_attr'] = contributor.attrs
+    else:
+        result['contributor'] = ""
+        result['contributor_attr'] = ""
+    date = soup.find("dc:date")
+    result['date'] = date.contents if date else ""
+    language = soup.find("dc:language")
+    result['language'] = language.contents if language else []
+    publisher = soup.find("dc:publisher")
+    result['publisher'] = publisher.contents[0] if publisher else ""
+    subject = soup.find("dc:subject")
+    result['subject'] = subject.contents if subject else []
+    series_index = soup.find("meta", {"name": "calibre:series_index"})
+    result['series_index'] = series_index.attrs if series_index else ""
+    author_link_map = soup.find("meta", {"name": "calibre:author_link_map"})
+    result['author_link_map'] = author_link_map.attrs if author_link_map else ""
+    series = soup.find("meta", {"name": "calibre:series"})
+    result['series'] = series.attrs if series else ""
+    timestamp = soup.find("meta", {"name": "calibre:timestamp"})
+    result['timestamp'] = timestamp.attrs if timestamp else ""
+    title_sort = soup.find("meta", {"name": "calibre:title_sort"})
+    result['title_sort'] = title_sort.attrs if title_sort else ""
+    custom_1 = soup.find("meta", {"name": "calibre:user_metadata:#cust1"})
+    result['custom_1'] = custom_1.attrs if custom_1 else ""
+    custom_2 = soup.find("meta", {"name": "calibre:user_metadata:#cust2"})
+    result['custom_2'] = custom_2.attrs if custom_2 else ""
+    custom_3 = soup.find("meta", {"name": "calibre:user_metadata:#cust3"})
+    result['custom_3'] = custom_3.attrs if custom_3 else ""
+    custom_4 = soup.find("meta", {"name": "calibre:user_metadata:#cust4"})
+    result['custom_4'] = custom_4.attrs if custom_4 else ""
+    custom_5 = soup.find("meta", {"name": "calibre:user_metadata:#cust5"})
+    result['custom_5'] = custom_5.attrs if custom_5 else ""
+    custom_6 = soup.find("meta", {"name": "calibre:user_metadata:#cust6"})
+    result['custom_6'] = custom_6.attrs if custom_6 else ""
+    custom_7 = soup.find("meta", {"name": "calibre:user_metadata:#cust7"})
+    result['custom_7'] = custom_7.attrs if custom_7 else ""
+    custom_8 = soup.find("meta", {"name": "calibre:user_metadata:#cust8"})
+    result['custom_8'] = custom_8.attrs if custom_8 else ""
+    custom_9 = soup.find("meta", {"name": "calibre:user_metadata:#cust9"})
+    result['custom_9'] = custom_9.attrs if custom_9 else ""
+    return result
+
+
+# @unittest.SkipTest
 class TestBackupMetadata(TestCase, ui_class):
     p = None
     driver = None
@@ -94,20 +152,100 @@ class TestBackupMetadata(TestCase, ui_class):
         # Buch Ordner Schreibrechte wieder geben
         os.chmod(book_path, rights)
 
-    def test_backup_change_book_title(self):
-        pass
-
-    def test_backup_change_book_author(self):
-        pass
-
-    def test_backup_change_book_series(self):
-        pass
-
     def test_backup_change_book_seriesindex(self):
-        pass
+        meta_path = os.path.join(TEST_DB, "Frodo Beutlin", "Der Buchtitel (1)", "metadata.opf")
+        # generate all metadata.opf files
+        self.queue_metadata_backup()
+        self.restart_calibre_web()
+        # check seriesindex content of metadata.opf file
+        metadata = read_opf_metadata(meta_path)
+        # edit seriesindex
+        self.assertEqual(metadata['series_index'], "")
+        self.assertEqual(metadata['series'], "")
+        self.edit_book(1, content={'series_index':'1.53'})
+        # restart cw
+        self.restart_calibre_web()
+        # check seriesindex content of metadata.opf file -> as long as no series is set, the index is not present
+        metadata = read_opf_metadata(meta_path)
+        self.assertEqual(metadata['series_index'], "")
+        self.assertEqual(metadata['series'], "")
+        self.edit_book(1, content={'series':'test'})
+        # restart cw
+        self.restart_calibre_web()
+        # check seriesindex content of metadata.opf file
+        metadata = read_opf_metadata(meta_path)
+        self.assertEqual(metadata['series_index']['content'], "1.53")
+        self.assertEqual(metadata['series']['content'], "test")
+        self.edit_book(1, content={'series': 'tEst', 'series_index':'1.0'})
+        # restart cw
+        self.restart_calibre_web()
+        # check seriesindex content of metadata.opf file
+        metadata = read_opf_metadata(meta_path)
+        self.assertEqual(metadata['series']['content'], "tEst")
+        self.assertEqual(metadata['series_index']['content'], "1.0")
+        self.edit_book(1, content={'series': 't,st'})
+        # restart cw
+        self.restart_calibre_web()
+        # check seriesindex content of metadata.opf file
+        metadata = read_opf_metadata(meta_path)
+        self.assertEqual(metadata['series']['content'], "t,st")
+        self.edit_book(1, content={'series': ''})
 
     def test_backup_change_book_publisher(self):
-        pass
+        meta_path = os.path.join(TEST_DB, "Frodo Beutlin", "Der Buchtitel (1)", "metadata.opf")
+        # generate all metadata.opf files
+        self.queue_metadata_backup()
+        self.restart_calibre_web()
+        # check publisher content of metadata.opf file
+        metadata = read_opf_metadata(meta_path)
+        self.assertEqual(metadata['publisher'], "")
+        # edit Publisher
+        self.edit_book(1, content={'publisher':'Lo,执|1u'})
+        self.restart_calibre_web()
+        # check seriesindex content of metadata.opf file
+        metadata = read_opf_metadata(meta_path)
+        self.assertEqual(metadata['publisher'], 'Lo,执|1u')
+        self.edit_book(1, content={'publisher': ''})
+
+    def test_backup_change_book_title(self):
+        meta_path = os.path.join(TEST_DB, "John Doe", "Buuko (7)", "metadata.opf")
+        # generate all metadata.opf files
+        self.queue_metadata_backup()
+        self.restart_calibre_web()
+        # check publisher content of metadata.opf file
+        metadata = read_opf_metadata(meta_path)
+        self.assertEqual(metadata['title'], "Buuko")
+        # edit Title
+        self.edit_book(7, content={'book_title':'The bok Lo,执|1u'})
+        self.restart_calibre_web()
+        # check title content of metadata.opf file
+        metadata = read_opf_metadata(os.path.join(TEST_DB, "John Döe", "The bok Lo,执,1u (7)", "metadata.opf"))
+        self.assertEqual(metadata['title'], 'The bok Lo,执|1u')
+        self.edit_book(7, content={'title': 'Buuko'})
+
+    def test_backup_change_book_author(self):
+        meta_path = os.path.join(TEST_DB, "Frodo Beutlin", "Der Buchtitel (1)", "metadata.opf")
+        # generate all metadata.opf files
+        self.queue_metadata_backup()
+        self.restart_calibre_web()
+        # check author content of metadata.opf file
+        metadata = read_opf_metadata(meta_path)
+        self.assertEqual(["Frodo Beutlin","Norbert Halagal","Liu Yang","Hector Gonçalves"], metadata['author'])
+        self.assertEqual("Beutlin, Frodo & Halagal, Norbert & Yang, Liu & Gonçalves, Hector", metadata['author_attr'][0]['opf:file-as'])
+        # edit author
+        self.edit_book(1, content={'bookAuthor': 'Frodo Beutlin & Norbert Halagal & Hector Gonçalves'})
+        self.restart_calibre_web()
+        # check author content of metadata.opf file
+        metadata = read_opf_metadata(meta_path)
+        self.assertEqual(["Frodo Beutlin","Norbert Halagal", "Hector Gonçalves"], metadata['author'])
+        self.assertEqual("Beutlin, Frodo & Halagal, Norbert & Gonçalves, Hector", metadata['author_attr'][0]['opf:file-as'])
+
+        self.edit_book(1, content={'bookAuthor': 'Hector Gonçalves'})
+        self.restart_calibre_web()
+        metadata = read_opf_metadata(os.path.join(TEST_DB, "Hector Gonçalves", "Der Buchtitel (1)", "metadata.opf"))
+        self.assertEqual(["Hector Gonçalves"], metadata['author'])
+        self.assertEqual("Gonçalves, Hector", metadata['author_attr'][0]['opf:file-as'])
+        self.edit_book(1, content={'bookAuthor': 'Frodo Beutlin & Norbert Halagal & Liu Yang & Hector Gonçalves'})
 
     def test_backup_change_book_publishing_date(self):
         pass
@@ -121,6 +259,10 @@ class TestBackupMetadata(TestCase, ui_class):
     def test_backup_change_book_read_status(self):
         pass
 
-    def test_grdive(self):
+    def test_upload_book(self):
+        pass
+
+
+    def test_gdrive(self):
         pass
         # repeat all tests on gdrive
