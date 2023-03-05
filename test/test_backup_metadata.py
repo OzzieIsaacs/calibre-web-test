@@ -1,15 +1,16 @@
 #!/usr/bin/env python
 # -*- coding: utf-8 -*-
 import os
-import unittest
+from datetime import datetime, date
 from unittest import TestCase
 import time
 import glob
 from bs4 import BeautifulSoup
 import codecs
 
+from selenium.webdriver.common.by import By
 from helper_ui import ui_class
-from config_test import TEST_DB
+from config_test import TEST_DB, base_path, BOOT_TIME
 from helper_func import startup, add_dependency, remove_dependency
 from helper_func import save_logfiles
 
@@ -33,22 +34,21 @@ def read_opf_metadata(filename):
     else:
         result['contributor'] = ""
         result['contributor_attr'] = ""
-    date = soup.find("dc:date")
-    result['date'] = date.contents if date else ""
+    result['pub_date'] = datetime.strptime(soup.find("dc:date").contents[0], "%Y-%m-%dT%H:%M:%S")
     language = soup.find("dc:language")
     result['language'] = language.contents if language else []
     publisher = soup.find("dc:publisher")
     result['publisher'] = publisher.contents[0] if publisher else ""
-    subject = soup.find("dc:subject")
-    result['subject'] = subject.contents if subject else []
+    tags = soup.findAll("dc:subject")
+    result['tags'] = [t.contents[0] for t in tags] if tags else []
     series_index = soup.find("meta", {"name": "calibre:series_index"})
     result['series_index'] = series_index.attrs if series_index else ""
     author_link_map = soup.find("meta", {"name": "calibre:author_link_map"})
     result['author_link_map'] = author_link_map.attrs if author_link_map else ""
     series = soup.find("meta", {"name": "calibre:series"})
     result['series'] = series.attrs if series else ""
-    timestamp = soup.find("meta", {"name": "calibre:timestamp"})
-    result['timestamp'] = timestamp.attrs if timestamp else ""
+    result['timestamp'] = datetime.strptime(soup.find("meta", {"name": "calibre:timestamp"}).attrs['content'],
+                                            "%Y-%m-%dT%H:%M:%S")
     title_sort = soup.find("meta", {"name": "calibre:title_sort"})
     result['title_sort'] = title_sort.attrs if title_sort else ""
     custom_1 = soup.find("meta", {"name": "calibre:user_metadata:#cust1"})
@@ -239,7 +239,6 @@ class TestBackupMetadata(TestCase, ui_class):
         metadata = read_opf_metadata(meta_path)
         self.assertEqual(["Frodo Beutlin","Norbert Halagal", "Hector Gonçalves"], metadata['author'])
         self.assertEqual("Beutlin, Frodo & Halagal, Norbert & Gonçalves, Hector", metadata['author_attr'][0]['opf:file-as'])
-
         self.edit_book(1, content={'bookAuthor': 'Hector Gonçalves'})
         self.restart_calibre_web()
         metadata = read_opf_metadata(os.path.join(TEST_DB, "Hector Gonçalves", "Der Buchtitel (1)", "metadata.opf"))
@@ -248,9 +247,49 @@ class TestBackupMetadata(TestCase, ui_class):
         self.edit_book(1, content={'bookAuthor': 'Frodo Beutlin & Norbert Halagal & Liu Yang & Hector Gonçalves'})
 
     def test_backup_change_book_publishing_date(self):
-        pass
+        meta_path = os.path.join(TEST_DB, "Hector Goncalves", "book9 (11)", "metadata.opf")
+        # generate all metadata.opf files
+        self.queue_metadata_backup()
+        self.restart_calibre_web()
+        # check tags content of metadata.opf file
+        metadata = read_opf_metadata(meta_path)
+        self.assertEqual(metadata['pub_date'].date(), date(101, 1, 1))
+        # edit Publisher
+        self.edit_book(11, content={'pubdate': '3/6/2023'})
+        self.restart_calibre_web()
+        # check tags content of metadata.opf file
+        metadata = read_opf_metadata(meta_path)
+        self.assertEqual(metadata['pub_date'].date(), date(2023, 6, 3))
+        self.edit_book(11, content={'pubdate': ''})
 
     def test_backup_change_book_tags(self):
+        meta_path = os.path.join(TEST_DB, "Peter Parker", "Very long extra super turbo cool tit (4)", "metadata.opf")
+        # generate all metadata.opf files
+        self.queue_metadata_backup()
+        self.restart_calibre_web()
+        # check tags content of metadata.opf file
+        metadata = read_opf_metadata(meta_path)
+        self.assertEqual(metadata['tags'], [])
+        # edit Publisher
+        self.edit_book(4, content={'tags': 'Lo执|1u'})
+        self.restart_calibre_web()
+        # check tags content of metadata.opf file
+        metadata = read_opf_metadata(meta_path)
+        self.assertEqual(metadata['tags'], ['Lo执|1u'])
+        self.edit_book(4, content={'tags': 'Ku,kOl'})
+        self.restart_calibre_web()
+        # check tags content of metadata.opf file
+        metadata = read_opf_metadata(meta_path)
+        self.assertCountEqual(metadata['tags'], ['Ku','kOl'])
+        self.edit_book(4, content={'tags': ''})
+
+    def test_backup_change_book_language(self):
+        pass
+
+    def test_backup_change_book_rating(self):
+        pass
+
+    def test_backup_change_book_description(self):
         pass
 
     def test_backup_change_book_custom_bool(self):
@@ -260,8 +299,24 @@ class TestBackupMetadata(TestCase, ui_class):
         pass
 
     def test_upload_book(self):
-        pass
-
+        self.fill_basic_config({'config_uploading': 1})
+        time.sleep(BOOT_TIME)
+        self.assertTrue(self.check_element_on_page((By.ID, "flash_success")))
+        epub_file = os.path.join(base_path, 'files', 'book.epub')
+        self.goto_page('nav_new')
+        upload = self.check_element_on_page((By.ID, 'btn-upload'))
+        upload.send_keys(epub_file)
+        time.sleep(3)
+        self.check_element_on_page((By.ID, 'edit_cancel')).click()
+        time.sleep(2)
+        details = self.get_book_details()
+        self.restart_calibre_web()
+        meta_path = os.path.join(TEST_DB, details['author'][0], details['title']+ " (15)", "metadata.opf")
+        metadata = read_opf_metadata(meta_path)
+        self.assertEqual(metadata['title'], details['title'])
+        self.delete_book(details['id'])
+        self.fill_basic_config({'config_uploading': 0})
+        self.assertTrue(self.check_element_on_page((By.ID, "flash_success")))
 
     def test_gdrive(self):
         pass
