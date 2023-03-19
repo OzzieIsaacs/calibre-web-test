@@ -7,6 +7,7 @@ import time
 import glob
 from bs4 import BeautifulSoup
 import codecs
+import json
 
 from selenium.webdriver.common.by import By
 from helper_ui import ui_class
@@ -35,18 +36,22 @@ def read_opf_metadata(filename):
         result['contributor'] = ""
         result['contributor_attr'] = ""
     result['pub_date'] = datetime.strptime(soup.find("dc:date").contents[0], "%Y-%m-%dT%H:%M:%S")
-    language = soup.find("dc:language")
-    result['language'] = language.contents if language else []
+    language = soup.findAll("dc:language")
+    result['language'] = [lang.contents[0] for lang in language] if language else []
     publisher = soup.find("dc:publisher")
     result['publisher'] = publisher.contents[0] if publisher else ""
     tags = soup.findAll("dc:subject")
     result['tags'] = [t.contents[0] for t in tags] if tags else []
+    comment = soup.find("dc:description")
+    result['description'] = comment.contents[0] if comment else ""
     series_index = soup.find("meta", {"name": "calibre:series_index"})
     result['series_index'] = series_index.attrs if series_index else ""
     author_link_map = soup.find("meta", {"name": "calibre:author_link_map"})
     result['author_link_map'] = author_link_map.attrs if author_link_map else ""
     series = soup.find("meta", {"name": "calibre:series"})
     result['series'] = series.attrs if series else ""
+    rating = soup.find("meta", {"name": "calibre:rating"})
+    result['rating'] = rating.attrs if rating else ""
     result['timestamp'] = datetime.strptime(soup.find("meta", {"name": "calibre:timestamp"}).attrs['content'],
                                             "%Y-%m-%dT%H:%M:%S")
     title_sort = soup.find("meta", {"name": "calibre:title_sort"})
@@ -284,19 +289,189 @@ class TestBackupMetadata(TestCase, ui_class):
         self.edit_book(4, content={'tags': ''})
 
     def test_backup_change_book_language(self):
-        pass
+        meta_path = os.path.join(TEST_DB, "Asterix Lionherd", "comicdemo (3)", "metadata.opf")
+        # generate all metadata.opf files
+        self.queue_metadata_backup()
+        self.restart_calibre_web()
+        # check tags content of metadata.opf file
+        metadata = read_opf_metadata(meta_path)
+        self.assertEqual(metadata['language'], ["en"])
+        # edit Language
+        self.edit_book(3, content={'languages': 'German, English'})
+        self.restart_calibre_web()
+        # check tags content of metadata.opf file
+        metadata = read_opf_metadata(meta_path)
+        self.assertCountEqual(metadata['language'], ["eng", "deu"])
+        self.edit_book(3, content={'languages': 'Italian'})
+        self.restart_calibre_web()
+        # check tags content of metadata.opf file
+        metadata = read_opf_metadata(meta_path)
+        self.assertEqual(metadata['language'], ["ita"])
+        self.edit_book(3, content={'languages': ''})
 
     def test_backup_change_book_rating(self):
-        pass
+        meta_path = os.path.join(TEST_DB, "Asterix Lionherd", "comicdemo (3)", "metadata.opf")
+        # generate all metadata.opf files
+        self.queue_metadata_backup()
+        self.restart_calibre_web()
+        # check tags content of metadata.opf file
+        metadata = read_opf_metadata(meta_path)
+        self.assertEqual(metadata['rating'], "")
+        # edit ratings
+        self.edit_book(3, content={'rating': 3})
+        self.restart_calibre_web()
+        # check ratings content of metadata.opf file
+        metadata = read_opf_metadata(meta_path)
+        self.assertCountEqual(metadata['rating']['content'], "6")
+        self.edit_book(3, content={'rating': 0})
+        self.restart_calibre_web()
+        metadata = read_opf_metadata(meta_path)
+        self.assertEqual(metadata['rating'], "")
 
     def test_backup_change_book_description(self):
-        pass
+        meta_path = os.path.join(TEST_DB, "Asterix Lionherd", "comicdemo (3)", "metadata.opf")
+        # generate all metadata.opf files
+        self.queue_metadata_backup()
+        self.restart_calibre_web()
+        # check tags content of metadata.opf file
+        metadata = read_opf_metadata(meta_path)
+        self.assertEqual(metadata['description'], "")
+        # edit description
+        self.edit_book(3, content={'description': "<strong>Test</strong>"})
+        self.restart_calibre_web()
+        # check description content of metadata.opf file
+        metadata = read_opf_metadata(meta_path)
+        self.assertCountEqual(metadata['description'], "<p><strong>Test</strong></p>")
+        self.edit_book(3, content={'description': ""})
+        self.restart_calibre_web()
+        metadata = read_opf_metadata(meta_path)
+        self.assertEqual(metadata['description'], "")
 
-    def test_backup_change_book_custom_bool(self):
-        pass
+    def test_backup_change_custom_bool(self):
+        meta_path = os.path.join(TEST_DB, "Asterix Lionherd", "comicdemo (3)", "metadata.opf")
+        # generate all metadata.opf files
+        self.queue_metadata_backup()
+        self.restart_calibre_web()
+        # check tags content of metadata.opf file
+        metadata = read_opf_metadata(meta_path)
+        custom = json.loads(metadata['custom_1']['content'])
+        self.assertEqual(custom["datatype"], "bool")
+        self.assertEqual(custom["name"], "Custom Bool 1 Ä")
+        self.assertEqual(custom["#value#"], None)
+        self.assertEqual(custom["#extra#"], None)
+        # edit custom column
+        self.edit_book(3, custom_content={'Custom Bool 1 Ä': 'Yes'})
+        self.restart_calibre_web()
+        # check custom column content of metadata.opf file
+        metadata = read_opf_metadata(meta_path)
+        custom = json.loads(metadata['custom_1']['content'])
+        self.assertEqual(custom["#value#"], True)
+        self.assertEqual(custom["#extra#"], None)
+        self.edit_book(3, custom_content={'Custom Bool 1 Ä': 'No'})
+        self.restart_calibre_web()
+        metadata = read_opf_metadata(meta_path)
+        custom = json.loads(metadata['custom_1']['content'])
+        self.assertEqual(custom["#value#"], False)
+        self.assertEqual(custom["#extra#"], None)
+        self.edit_book(3, custom_content={'Custom Bool 1 Ä': ''})
+        self.restart_calibre_web()
+        metadata = read_opf_metadata(meta_path)
+        custom = json.loads(metadata['custom_1']['content'])
+        self.assertEqual(custom["#value#"], None)
+        self.assertEqual(custom["#extra#"], None)
 
-    def test_backup_change_book_read_status(self):
-        pass
+    def test_backup_change_custom_float(self):
+        meta_path = os.path.join(TEST_DB, "Asterix Lionherd", "comicdemo (3)", "metadata.opf")
+        # generate all metadata.opf files
+        self.queue_metadata_backup()
+        self.restart_calibre_web()
+        # check tags content of metadata.opf file
+        metadata = read_opf_metadata(meta_path)
+        custom = json.loads(metadata['custom_5']['content'])
+        self.assertEqual(custom["datatype"], "float")
+        self.assertEqual(custom["name"], "Custom Float 人物")
+        self.assertEqual(custom["#value#"], None)
+        self.assertEqual(custom["#extra#"], None)
+        # edit custom column
+        self.edit_book(3, custom_content={'Custom Float 人物': '3.33'})
+        self.restart_calibre_web()
+        # check custom column content of metadata.opf file
+        metadata = read_opf_metadata(meta_path)
+        custom = json.loads(metadata['custom_5']['content'])
+        self.assertEqual(custom["#value#"], 3.33)
+        self.assertEqual(custom["#extra#"], None)
+        self.edit_book(3, custom_content={'Custom Float 人物': '-34'})
+        self.restart_calibre_web()
+        metadata = read_opf_metadata(meta_path)
+        custom = json.loads(metadata['custom_5']['content'])
+        self.assertEqual(custom["#value#"], -34.0)
+        self.assertEqual(custom["#extra#"], None)
+        self.edit_book(3, custom_content={'Custom Float 人物': ''})
+        self.restart_calibre_web()
+        metadata = read_opf_metadata(meta_path)
+        custom = json.loads(metadata['custom_5']['content'])
+        self.assertEqual(custom["#value#"], None)
+        self.assertEqual(custom["#extra#"], None)
+
+    def test_backup_change_custom_int(self):
+        meta_path = os.path.join(TEST_DB, "Asterix Lionherd", "comicdemo (3)", "metadata.opf")
+        # generate all metadata.opf files
+        self.queue_metadata_backup()
+        self.restart_calibre_web()
+        # check tags content of metadata.opf file
+        metadata = read_opf_metadata(meta_path)
+        custom = json.loads(metadata['custom_4']['content'])
+        self.assertEqual(custom["datatype"], "int")
+        self.assertEqual(custom["name"], "Custom Integer 人物")
+        self.assertEqual(custom["#value#"], None)
+        self.assertEqual(custom["#extra#"], None)
+        # edit custom column
+        self.edit_book(3, custom_content={'Custom Integer 人物': '213213123'})
+        self.restart_calibre_web()
+        # check custom column content of metadata.opf file
+        metadata = read_opf_metadata(meta_path)
+        custom = json.loads(metadata['custom_4']['content'])
+        self.assertEqual(custom["#value#"], 213213123)
+        self.assertEqual(custom["#extra#"], None)
+        self.edit_book(3, custom_content={'Custom Integer 人物': '-34213213123'})
+        self.restart_calibre_web()
+        metadata = read_opf_metadata(meta_path)
+        custom = json.loads(metadata['custom_4']['content'])
+        self.assertEqual(custom["#value#"], -34213213123)
+        self.assertEqual(custom["#extra#"], -None)
+        self.edit_book(3, custom_content={'Custom Integer 人物': ''})
+        self.restart_calibre_web()
+        metadata = read_opf_metadata(meta_path)
+        custom = json.loads(metadata['custom_4']['content'])
+        self.assertEqual(custom["#value#"], None)
+        self.assertEqual(custom["#extra#"], None)
+
+    def test_backup_change_custom_rating(self):
+        meta_path = os.path.join(TEST_DB, "Asterix Lionherd", "comicdemo (3)", "metadata.opf")
+        # generate all metadata.opf files
+        self.queue_metadata_backup()
+        self.restart_calibre_web()
+        # check tags content of metadata.opf file
+        metadata = read_opf_metadata(meta_path)
+        custom = json.loads(metadata['custom_3']['content'])
+        self.assertEqual(custom["datatype"], "rating")
+        self.assertEqual(custom["name"], "Custom Rating 人物")
+        self.assertEqual(custom["#value#"], None)
+        self.assertEqual(custom["#extra#"], None)
+        # edit custom column
+        self.edit_book(3, custom_content={'Custom Rating 人物': '3.5'})
+        self.restart_calibre_web()
+        # check custom column content of metadata.opf file
+        metadata = read_opf_metadata(meta_path)
+        custom = json.loads(metadata['custom_3']['content'])
+        self.assertEqual(custom["#value#"], 7)
+        self.assertEqual(custom["#extra#"], None)
+        self.edit_book(3, custom_content={'Custom Rating 人物': ''})
+        self.restart_calibre_web()
+        metadata = read_opf_metadata(meta_path)
+        custom = json.loads(metadata['custom_3']['content'])
+        #self.assertEqual(custom["#value#"], None)
+        #self.assertEqual(custom["#extra#"], None)
 
     def test_upload_book(self):
         self.fill_basic_config({'config_uploading': 1})
