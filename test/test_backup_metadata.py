@@ -74,6 +74,9 @@ def read_opf_metadata(filename):
     result['custom_8'] = custom_8.attrs if custom_8 else ""
     custom_9 = soup.find("meta", {"name": "calibre:user_metadata:#cust9"})
     result['custom_9'] = custom_9.attrs if custom_9 else ""
+    custom_10 = soup.find("meta", {"name": "calibre:user_metadata:#cust10"})
+    result['custom_10'] = custom_10.attrs if custom_10 else ""
+
     return result
 
 
@@ -470,8 +473,153 @@ class TestBackupMetadata(TestCase, ui_class):
         self.restart_calibre_web()
         metadata = read_opf_metadata(meta_path)
         custom = json.loads(metadata['custom_3']['content'])
-        #self.assertEqual(custom["#value#"], None)
-        #self.assertEqual(custom["#extra#"], None)
+        self.assertEqual(custom["#value#"], None)
+        self.assertEqual(custom["#extra#"], None)
+
+    def test_backup_change_custom_text(self):
+        meta_path = os.path.join(TEST_DB, "Asterix Lionherd", "comicdemo (3)", "metadata.opf")
+        # generate all metadata.opf files
+        self.queue_metadata_backup()
+        self.restart_calibre_web()
+        # check tags content of metadata.opf file
+        metadata = read_opf_metadata(meta_path)
+        custom = json.loads(metadata['custom_10']['content'])
+        self.assertEqual(custom["datatype"], "text")
+        self.assertEqual(custom["name"], "Custom Text 人物 *'()&")
+        self.assertEqual(custom["#value#"], None)
+        self.assertEqual(custom["#extra#"], None)
+        # edit custom column
+        self.edit_book(3, custom_content={"Custom Text 人物 *'()&": "人物 *'(}\""})
+        self.restart_calibre_web()
+        # check custom column content of metadata.opf file
+        metadata = read_opf_metadata(meta_path)
+        custom = json.loads(metadata['custom_10']['content'])
+        self.assertEqual(custom["#value#"], "人物 *'(}\"")
+        self.assertEqual(custom["#extra#"], None)
+        self.edit_book(3, custom_content={"Custom Text 人物 *'()&": ''})
+        self.restart_calibre_web()
+        metadata = read_opf_metadata(meta_path)
+        custom = json.loads(metadata['custom_10']['content'])
+        self.assertEqual(custom["#value#"], None)
+        self.assertEqual(custom["#extra#"], None)
+
+    def test_backup_change_custom_date(self):
+        meta_path = os.path.join(TEST_DB, "Asterix Lionherd", "comicdemo (3)", "metadata.opf")
+        # generate all metadata.opf files
+        self.queue_metadata_backup()
+        self.restart_calibre_web()
+        # check tags content of metadata.opf file
+        metadata = read_opf_metadata(meta_path)
+        custom = json.loads(metadata['custom_2']['content'])
+        self.assertEqual(custom["datatype"], "datetime")
+        self.assertEqual(custom["name"], "Custom Date Column 人物")
+        self.assertEqual(custom["#value#"], None)
+        self.assertEqual(custom["#extra#"], None)
+        # edit custom column
+        self.edit_book(3, custom_content={"Custom Date Column 人物": "3/8/2023"})
+        self.restart_calibre_web()
+        # check custom column content of metadata.opf file
+        metadata = read_opf_metadata(meta_path)
+        custom = json.loads(metadata['custom_2']['content'])
+        self.assertEqual(custom["#value#"]['__class__'], "datetime-datetime")
+        self.assertEqual(custom["#value#"]['__value__'], "'2023-08-03T00:00:00+00:00'")
+        self.assertEqual(custom["#extra#"], None)
+        self.edit_book(3, custom_content={"Custom Date Column 人物": ''})
+        self.restart_calibre_web()
+        metadata = read_opf_metadata(meta_path)
+        custom = json.loads(metadata['custom_2']['content'])
+        self.assertEqual(custom["#value#"], None)
+        self.assertEqual(custom["#extra#"], None)
+
+    def test_backup_change_custom_Comment(self):
+        meta_path = os.path.join(TEST_DB, "Asterix Lionherd", "comicdemo (3)", "metadata.opf")
+        # generate all metadata.opf files
+        self.queue_metadata_backup()
+        self.restart_calibre_web()
+        # check tags content of metadata.opf file
+        metadata = read_opf_metadata(meta_path)
+        custom = json.loads(metadata['custom_8']['content'])
+        self.assertEqual(custom["datatype"], "comments")
+        self.assertEqual(custom["name"], "Custom Comment 人物")
+        self.assertEqual(custom["#value#"], None)
+        self.assertEqual(custom["#extra#"], None)
+        # edit custom column
+        self.edit_book(3, custom_content={"Custom Comment 人物": "<strong>Test</strong>"})
+        self.restart_calibre_web()
+        # check custom column content of metadata.opf file
+        metadata = read_opf_metadata(meta_path)
+        custom = json.loads(metadata['custom_8']['content'])
+        self.assertEqual(custom["#value#"], "<p><strong>Test</strong></p>")
+        self.assertEqual(custom["#extra#"], None)
+        self.edit_book(3, custom_content={"Custom Comment 人物": ''})
+        self.restart_calibre_web()
+        metadata = read_opf_metadata(meta_path)
+        custom = json.loads(metadata['custom_8']['content'])
+        self.assertEqual(custom["#value#"], None)
+        self.assertEqual(custom["#extra#"], None)
+
+    def test_backup_change_custom_categories(self):
+        meta_path = os.path.join(TEST_DB, "Asterix Lionherd", "comicdemo (3)", "metadata.opf")
+        # generate all metadata.opf files
+        self.queue_metadata_backup()
+        self.restart_calibre_web()
+        # check tags content of metadata.opf file
+        metadata = read_opf_metadata(meta_path)
+        custom = json.loads(metadata['custom_9']['content'])
+        self.assertEqual(custom["datatype"], "text")
+        self.assertEqual(custom["name"], "Custom categories\|, 人物")
+        self.assertEqual(custom["#value#"], None)
+        self.assertEqual(custom["#extra#"], None)
+        self.assertEqual(custom["is_multiple"], "|")
+        self.assertEqual(custom["is_multiple2"], {"cache_to_list": "|", "ui_to_list": ",", "list_to_ui": ", "})
+        # edit custom column
+        self.edit_book(3, custom_content={"Custom categories\|, 人物": "Kulo, Smudo"})
+        self.restart_calibre_web()
+        # check custom column content of metadata.opf file
+        metadata = read_opf_metadata(meta_path)
+        custom = json.loads(metadata['custom_9']['content'])
+        self.assertCountEqual(custom["#value#"], ["Kulo", "Smudo"])
+        self.assertEqual(custom["#extra#"], None)
+        self.assertEqual(custom["is_multiple"], "|")
+        self.assertEqual(custom["is_multiple"], "|")
+        self.assertEqual(custom["is_multiple2"], {"cache_to_list": "|", "ui_to_list": ",", "list_to_ui": ", "})
+        self.edit_book(3, custom_content={"Custom categories\|, 人物": ''})
+        self.restart_calibre_web()
+        metadata = read_opf_metadata(meta_path)
+        custom = json.loads(metadata['custom_9']['content'])
+        self.assertEqual(custom["is_multiple"], "|")
+        self.assertEqual(custom["#value#"], None)
+        self.assertEqual(custom["#extra#"], None)
+        self.assertEqual(custom["is_multiple2"], {"cache_to_list": "|", "ui_to_list": ",", "list_to_ui": ", "})
+
+    def test_backup_change_custom_Enum(self):
+        meta_path = os.path.join(TEST_DB, "Asterix Lionherd", "comicdemo (3)", "metadata.opf")
+        # generate all metadata.opf files
+        self.queue_metadata_backup()
+        self.restart_calibre_web()
+        # check tags content of metadata.opf file
+        metadata = read_opf_metadata(meta_path)
+        custom = json.loads(metadata['custom_6']['content'])
+        self.assertEqual(custom["datatype"], "enumeration")
+        self.assertEqual(custom["name"], "Custom 人物 Enum")
+        self.assertEqual(custom["#value#"], None)
+        self.assertEqual(custom["#extra#"], None)
+        self.assertEqual(custom["display"], {"enum_colors": [], "enum_values": ["Alfa", "人物", "Huji"], "description": "Enum Colum 人物", "use_decorations": 0})
+        # edit custom column
+        self.edit_book(3, custom_content={"Custom 人物 Enum": "Huji"})
+        self.restart_calibre_web()
+        # check custom column content of metadata.opf file
+        metadata = read_opf_metadata(meta_path)
+        custom = json.loads(metadata['custom_6']['content'])
+        self.assertEqual(custom["#value#"], "Huji")
+        self.assertEqual(custom["#extra#"], None)
+        self.assertEqual(custom["display"], {"enum_colors": [], "enum_values": ["Alfa", "人物", "Huji"], "description": "Enum Colum 人物", "use_decorations": 0})
+        self.edit_book(3, custom_content={"Custom 人物 Enum": ''})
+        self.restart_calibre_web()
+        metadata = read_opf_metadata(meta_path)
+        custom = json.loads(metadata['custom_6']['content'])
+        self.assertEqual(custom["#value#"], None)
+        self.assertEqual(custom["#extra#"], None)
 
     def test_upload_book(self):
         self.fill_basic_config({'config_uploading': 1})
