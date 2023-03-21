@@ -573,3 +573,66 @@ def count_files(folder):
         for _ in files:
             total_files += 1
     return total_files
+
+def read_opf_metadata(filename):
+    result = {}
+    with codecs.open(filename, "r", "utf-8") as f:
+        soup = BeautifulSoup(f.read(), "xml")
+    result['identifier'] = soup.findAll("identifier")
+    cover = soup.find("reference")
+    result['cover'] = cover.attrs if cover else ""
+    title = soup.find("dc:title")
+    result['title'] = title.contents[0] if title else ""
+    author = soup.findAll("dc:creator")
+    result['author'] = [a.contents[0] for a in author]
+    result['author_attr'] = [a.attrs for a in author]
+    contributor = soup.find("dc:contributor")
+    if contributor:
+        result['contributor'] = contributor.contents
+        result['contributor_attr'] = contributor.attrs
+    else:
+        result['contributor'] = ""
+        result['contributor_attr'] = ""
+    result['pub_date'] = datetime.strptime(soup.find("dc:date").contents[0], "%Y-%m-%dT%H:%M:%S")
+    language = soup.findAll("dc:language")
+    result['language'] = [lang.contents[0] for lang in language] if language else []
+    publisher = soup.find("dc:publisher")
+    result['publisher'] = publisher.contents[0] if publisher else ""
+    tags = soup.findAll("dc:subject")
+    result['tags'] = [t.contents[0] for t in tags] if tags else []
+    comment = soup.find("dc:description")
+    result['description'] = comment.contents[0] if comment else ""
+    series_index = soup.find("meta", {"name": "calibre:series_index"})
+    result['series_index'] = series_index.attrs if series_index else ""
+    author_link_map = soup.find("meta", {"name": "calibre:author_link_map"})
+    result['author_link_map'] = author_link_map.attrs if author_link_map else ""
+    series = soup.find("meta", {"name": "calibre:series"})
+    result['series'] = series.attrs if series else ""
+    rating = soup.find("meta", {"name": "calibre:rating"})
+    result['rating'] = rating.attrs if rating else ""
+    result['timestamp'] = datetime.strptime(soup.find("meta", {"name": "calibre:timestamp"}).attrs['content'],
+                                            "%Y-%m-%dT%H:%M:%S")
+    title_sort = soup.find("meta", {"name": "calibre:title_sort"})
+    result['title_sort'] = title_sort.attrs if title_sort else ""
+    custom_1 = soup.find("meta", {"name": "calibre:user_metadata:#cust1"})
+    result['custom_1'] = custom_1.attrs if custom_1 else ""
+    custom_2 = soup.find("meta", {"name": "calibre:user_metadata:#cust2"})
+    result['custom_2'] = custom_2.attrs if custom_2 else ""
+    custom_3 = soup.find("meta", {"name": "calibre:user_metadata:#cust3"})
+    result['custom_3'] = custom_3.attrs if custom_3 else ""
+    custom_4 = soup.find("meta", {"name": "calibre:user_metadata:#cust4"})
+    result['custom_4'] = custom_4.attrs if custom_4 else ""
+    custom_5 = soup.find("meta", {"name": "calibre:user_metadata:#cust5"})
+    result['custom_5'] = custom_5.attrs if custom_5 else ""
+    custom_6 = soup.find("meta", {"name": "calibre:user_metadata:#cust6"})
+    result['custom_6'] = custom_6.attrs if custom_6 else ""
+    custom_7 = soup.find("meta", {"name": "calibre:user_metadata:#cust7"})
+    result['custom_7'] = custom_7.attrs if custom_7 else ""
+    custom_8 = soup.find("meta", {"name": "calibre:user_metadata:#cust8"})
+    result['custom_8'] = custom_8.attrs if custom_8 else ""
+    custom_9 = soup.find("meta", {"name": "calibre:user_metadata:#cust9"})
+    result['custom_9'] = custom_9.attrs if custom_9 else ""
+    custom_10 = soup.find("meta", {"name": "calibre:user_metadata:#cust10"})
+    result['custom_10'] = custom_10.attrs if custom_10 else ""
+
+    return result

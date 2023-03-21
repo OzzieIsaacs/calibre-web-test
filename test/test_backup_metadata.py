@@ -2,85 +2,21 @@
 # -*- coding: utf-8 -*-
 import os
 from datetime import datetime, date
-from unittest import TestCase
+from unittest import TestCase, SkipTest
 import time
 import glob
-from bs4 import BeautifulSoup
-import codecs
 import json
 
 from selenium.webdriver.common.by import By
 from helper_ui import ui_class
 from config_test import TEST_DB, base_path, BOOT_TIME
-from helper_func import startup, add_dependency, remove_dependency
-from helper_func import save_logfiles
+from helper_func import startup
+from helper_func import save_logfiles, read_opf_metadata
 
 
-def read_opf_metadata(filename):
-    result = {}
-    with codecs.open(filename, "r", "utf-8") as f:
-        soup = BeautifulSoup(f.read(), "xml")
-    result['identifier'] = soup.findAll("identifier")
-    cover = soup.find("reference")
-    result['cover'] = cover.attrs if cover else ""
-    title = soup.find("dc:title")
-    result['title'] = title.contents[0] if title else ""
-    author = soup.findAll("dc:creator")
-    result['author'] = [a.contents[0] for a in author]
-    result['author_attr'] = [a.attrs for a in author]
-    contributor = soup.find("dc:contributor")
-    if contributor:
-        result['contributor'] = contributor.contents
-        result['contributor_attr'] = contributor.attrs
-    else:
-        result['contributor'] = ""
-        result['contributor_attr'] = ""
-    result['pub_date'] = datetime.strptime(soup.find("dc:date").contents[0], "%Y-%m-%dT%H:%M:%S")
-    language = soup.findAll("dc:language")
-    result['language'] = [lang.contents[0] for lang in language] if language else []
-    publisher = soup.find("dc:publisher")
-    result['publisher'] = publisher.contents[0] if publisher else ""
-    tags = soup.findAll("dc:subject")
-    result['tags'] = [t.contents[0] for t in tags] if tags else []
-    comment = soup.find("dc:description")
-    result['description'] = comment.contents[0] if comment else ""
-    series_index = soup.find("meta", {"name": "calibre:series_index"})
-    result['series_index'] = series_index.attrs if series_index else ""
-    author_link_map = soup.find("meta", {"name": "calibre:author_link_map"})
-    result['author_link_map'] = author_link_map.attrs if author_link_map else ""
-    series = soup.find("meta", {"name": "calibre:series"})
-    result['series'] = series.attrs if series else ""
-    rating = soup.find("meta", {"name": "calibre:rating"})
-    result['rating'] = rating.attrs if rating else ""
-    result['timestamp'] = datetime.strptime(soup.find("meta", {"name": "calibre:timestamp"}).attrs['content'],
-                                            "%Y-%m-%dT%H:%M:%S")
-    title_sort = soup.find("meta", {"name": "calibre:title_sort"})
-    result['title_sort'] = title_sort.attrs if title_sort else ""
-    custom_1 = soup.find("meta", {"name": "calibre:user_metadata:#cust1"})
-    result['custom_1'] = custom_1.attrs if custom_1 else ""
-    custom_2 = soup.find("meta", {"name": "calibre:user_metadata:#cust2"})
-    result['custom_2'] = custom_2.attrs if custom_2 else ""
-    custom_3 = soup.find("meta", {"name": "calibre:user_metadata:#cust3"})
-    result['custom_3'] = custom_3.attrs if custom_3 else ""
-    custom_4 = soup.find("meta", {"name": "calibre:user_metadata:#cust4"})
-    result['custom_4'] = custom_4.attrs if custom_4 else ""
-    custom_5 = soup.find("meta", {"name": "calibre:user_metadata:#cust5"})
-    result['custom_5'] = custom_5.attrs if custom_5 else ""
-    custom_6 = soup.find("meta", {"name": "calibre:user_metadata:#cust6"})
-    result['custom_6'] = custom_6.attrs if custom_6 else ""
-    custom_7 = soup.find("meta", {"name": "calibre:user_metadata:#cust7"})
-    result['custom_7'] = custom_7.attrs if custom_7 else ""
-    custom_8 = soup.find("meta", {"name": "calibre:user_metadata:#cust8"})
-    result['custom_8'] = custom_8.attrs if custom_8 else ""
-    custom_9 = soup.find("meta", {"name": "calibre:user_metadata:#cust9"})
-    result['custom_9'] = custom_9.attrs if custom_9 else ""
-    custom_10 = soup.find("meta", {"name": "calibre:user_metadata:#cust10"})
-    result['custom_10'] = custom_10.attrs if custom_10 else ""
-
-    return result
 
 
-@unittest.SkipTest
+@SkipTest
 class TestBackupMetadata(TestCase, ui_class):
     p = None
     driver = None
@@ -290,6 +226,28 @@ class TestBackupMetadata(TestCase, ui_class):
         metadata = read_opf_metadata(meta_path)
         self.assertCountEqual(metadata['tags'], ['Ku','kOl'])
         self.edit_book(4, content={'tags': ''})
+
+    def test_backup_change_book_identifier(self):
+        pass
+        '''meta_path = os.path.join(TEST_DB, "Peter Parker", "Very long extra super turbo cool tit (4)", "metadata.opf")
+        # generate all metadata.opf files
+        self.queue_metadata_backup()
+        self.restart_calibre_web()
+        # check tags content of metadata.opf file
+        metadata = read_opf_metadata(meta_path)
+        self.assertEqual(metadata['tags'], [])
+        # edit Publisher
+        self.edit_book(4, content={'tags': 'Lo执|1u'})
+        self.restart_calibre_web()
+        # check tags content of metadata.opf file
+        metadata = read_opf_metadata(meta_path)
+        self.assertEqual(metadata['tags'], ['Lo执|1u'])
+        self.edit_book(4, content={'tags': 'Ku,kOl'})
+        self.restart_calibre_web()
+        # check tags content of metadata.opf file
+        metadata = read_opf_metadata(meta_path)
+        self.assertCountEqual(metadata['tags'], ['Ku','kOl'])
+        self.edit_book(4, content={'tags': ''})'''
 
     def test_backup_change_book_language(self):
         meta_path = os.path.join(TEST_DB, "Asterix Lionherd", "comicdemo (3)", "metadata.opf")
