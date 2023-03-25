@@ -593,7 +593,7 @@ def read_opf_metadata(filename):
     else:
         result['contributor'] = ""
         result['contributor_attr'] = ""
-    result['pub_date'] = datetime.strptime(soup.find("dc:date").contents[0], "%Y-%m-%dT%H:%M:%S")
+    result['pub_date'] = datetime.datetime.strptime(soup.find("dc:date").contents[0], "%Y-%m-%dT%H:%M:%S")
     language = soup.findAll("dc:language")
     result['language'] = [lang.contents[0] for lang in language] if language else []
     publisher = soup.find("dc:publisher")
@@ -610,7 +610,7 @@ def read_opf_metadata(filename):
     result['series'] = series.attrs if series else ""
     rating = soup.find("meta", {"name": "calibre:rating"})
     result['rating'] = rating.attrs if rating else ""
-    result['timestamp'] = datetime.strptime(soup.find("meta", {"name": "calibre:timestamp"}).attrs['content'],
+    result['timestamp'] = datetime.datetime.strptime(soup.find("meta", {"name": "calibre:timestamp"}).attrs['content'],
                                             "%Y-%m-%dT%H:%M:%S")
     title_sort = soup.find("meta", {"name": "calibre:title_sort"})
     result['title_sort'] = title_sort.attrs if title_sort else ""

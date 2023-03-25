@@ -20,7 +20,7 @@ from helper_gdrive import prepare_gdrive, connect_gdrive
 @unittest.skipIf(not os.path.exists(os.path.join(base_path, "files", "client_secrets.json")) or
                  not os.path.exists(os.path.join(base_path, "files", "gdrive_credentials")),
                  "client_secrets.json and/or gdrive_credentials file is missing")
-class TestBackupMetadata(TestCase, ui_class):
+class TestBackupMetadataGdrive(TestCase, ui_class):
     p=None
     driver = None
     dependency = ["oauth2client", "PyDrive2", "PyYAML", "google-api-python-client", "httplib2"]

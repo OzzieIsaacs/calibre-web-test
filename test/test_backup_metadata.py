@@ -1,7 +1,7 @@
 #!/usr/bin/env python
 # -*- coding: utf-8 -*-
 import os
-from datetime import datetime, date
+from datetime import date
 from unittest import TestCase, SkipTest
 import time
 import glob
@@ -14,9 +14,7 @@ from helper_func import startup
 from helper_func import save_logfiles, read_opf_metadata
 
 
-
-
-@SkipTest
+#@SkipTest
 class TestBackupMetadata(TestCase, ui_class):
     p = None
     driver = None
@@ -165,7 +163,7 @@ class TestBackupMetadata(TestCase, ui_class):
         # check title content of metadata.opf file
         metadata = read_opf_metadata(os.path.join(TEST_DB, "John Döe", "The bok Lo,执,1u (7)", "metadata.opf"))
         self.assertEqual(metadata['title'], 'The bok Lo,执|1u')
-        self.edit_book(7, content={'title': 'Buuko'})
+        self.edit_book(7, content={'book_title': 'Buuko'})
 
     def test_backup_change_book_author(self):
         meta_path = os.path.join(TEST_DB, "Frodo Beutlin", "Der Buchtitel (1)", "metadata.opf")
@@ -399,7 +397,7 @@ class TestBackupMetadata(TestCase, ui_class):
         metadata = read_opf_metadata(meta_path)
         custom = json.loads(metadata['custom_4']['content'])
         self.assertEqual(custom["#value#"], -34213213123)
-        self.assertEqual(custom["#extra#"], -None)
+        self.assertEqual(custom["#extra#"], None)
         self.edit_book(3, custom_content={'Custom Integer 人物': ''})
         self.restart_calibre_web()
         metadata = read_opf_metadata(meta_path)
@@ -479,8 +477,8 @@ class TestBackupMetadata(TestCase, ui_class):
         # check custom column content of metadata.opf file
         metadata = read_opf_metadata(meta_path)
         custom = json.loads(metadata['custom_2']['content'])
-        self.assertEqual(custom["#value#"]['__class__'], "datetime-datetime")
-        self.assertEqual(custom["#value#"]['__value__'], "'2023-08-03T00:00:00+00:00'")
+        self.assertEqual(custom["#value#"]['__class__'], "datetime.datetime")
+        self.assertEqual(custom["#value#"]['__value__'], "2023-08-03T00:00:00+00:00")
         self.assertEqual(custom["#extra#"], None)
         self.edit_book(3, custom_content={"Custom Date Column 人物": ''})
         self.restart_calibre_web()
