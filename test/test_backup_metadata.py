@@ -14,7 +14,6 @@ from helper_func import startup
 from helper_func import save_logfiles, read_opf_metadata
 
 
-#@SkipTest
 class TestBackupMetadata(TestCase, ui_class):
     p = None
     driver = None
@@ -24,6 +23,8 @@ class TestBackupMetadata(TestCase, ui_class):
         try:
             startup(cls, cls.py_version, {'config_calibre_dir': TEST_DB}, env={"APP_MODE": "test"})
             time.sleep(3)
+            cls.fill_thumbnail_config({'schedule_metadata_backup': 1})
+            # cls.restart_calibre_web()
         except Exception:
             cls.driver.quit()
             cls.p.kill()

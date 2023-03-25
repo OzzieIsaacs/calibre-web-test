@@ -62,7 +62,8 @@ class TestBackupMetadataGdrive(TestCase, ui_class):
             time.sleep(2)
             cls.fill_db_config({'config_google_drive_folder': 'test'})
             time.sleep(2)
-
+            cls.fill_thumbnail_config({'schedule_metadata_backup': 1})
+            cls.restart_calibre_web()
         except Exception:
             cls.driver.quit()
             cls.p.kill()
