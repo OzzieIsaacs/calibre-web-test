@@ -388,7 +388,6 @@ class TestEditBooks(TestCase, ui_class):
         values = self.get_book_details()
         self.assertEqual(u'Gênot', values['publisher'][0])
 
-
     # choose language not part ob lib
     def test_edit_language(self):
         self.get_book_details(3)
@@ -414,7 +413,6 @@ class TestEditBooks(TestCase, ui_class):
         self.assertEqual(len(values['languages']), 2)
         self.assertEqual('German', values['languages'][1])
         self.assertEqual('English', values['languages'][0])
-
 
     # change rating, delete rating
     # check if book with rating of 4 stars appears in list of hot books
