@@ -6,9 +6,11 @@ from helper_ui import ui_class
 from config_test import TEST_DB, base_path
 from helper_func import startup, debug_startup, add_dependency, remove_dependency
 from selenium.webdriver.common.by import By
-from helper_func import save_logfiles
+from helper_func import save_logfiles, createcbz
 import time
 import os
+from diffimg import diff
+from io import BytesIO
 
 
 class TestReader(unittest.TestCase, ui_class):
@@ -164,8 +166,6 @@ class TestReader(unittest.TestCase, ui_class):
         self.login('admin', 'admin123')
         self.fill_basic_config({'config_anonbrowse': 0})
 
-
-
     def test_comic_reader(self):
         self.get_book_details(3)
         self.assertFalse(self.check_element_on_page((By.ID, "read-in-browser")))
@@ -178,9 +178,50 @@ class TestReader(unittest.TestCase, ui_class):
         if len(new_handle) != 1:
             self.assertFalse('Not exactly one new tab was opened')
         self.driver.switch_to.window(new_handle[0])
-        content = self.check_element_on_page((By.ID, "mainContent"))
-        self.assertTrue(content)
+        self.assertTrue(self.check_element_on_page((By.ID, "mainContent")))
         # ToDO: Check displayed content
+
+    def test_comic_MACOS_files(self):
+        upload_file = os.path.join(base_path, 'files', 'book1.cbz')
+        # upload webp book
+        zipdata = [os.path.join(base_path, 'files', 'cover.webp'), os.path.join(base_path, 'files', 'cover.jpg')]
+        names = ['cover1.weBp', "/__MACOSX/cover.jpg"]
+        createcbz(upload_file, zipdata, names)
+        self.fill_basic_config({'config_uploading': 1})
+        time.sleep(3)
+        self.assertTrue(self.check_element_on_page((By.ID, "flash_success")))
+        createcbz(upload_file, zipdata, names)
+        self.goto_page('nav_new')
+        upload = self.check_element_on_page((By.ID, 'btn-upload'))
+        upload.send_keys(upload_file)
+        time.sleep(2)
+        self.check_element_on_page((By.ID, 'edit_cancel')).click()
+        time.sleep(2)
+        details = self.get_book_details()
+        current_handles = self.driver.window_handles
+        read_button = self.check_element_on_page((By.ID, "readbtn"))
+        self.assertTrue("cbz" in read_button.text)
+        read_button.click()
+        new_handle = [x for x in self.driver.window_handles if x not in current_handles]
+        if len(new_handle) != 1:
+            self.assertFalse('Not exactly one new tab was opened')
+        self.driver.switch_to.window(new_handle[0])
+        self.assertTrue(self.check_element_on_page((By.ID, "mainContent")))
+        page = self.check_element_on_page((By.CLASS_NAME, "mainImage")).screenshot_as_png
+        right = self.check_element_on_page((By.ID, "right"))
+        self.assertTrue(right)
+        right.click()
+        right_page = self.check_element_on_page((By.CLASS_NAME, "mainImage")).screenshot_as_png
+        self.assertAlmostEqual(diff(BytesIO(page), BytesIO(right_page), delete_diff_file=True), 0.0, delta=0.0001)
+        left = self.check_element_on_page((By.ID, "left"))
+        self.assertTrue(left)
+        left.click()
+        left_page = self.check_element_on_page((By.CLASS_NAME, "mainImage")).screenshot_as_png
+        self.assertAlmostEqual(diff(BytesIO(page), BytesIO(left_page), delete_diff_file=True), 0.0, delta=0.0001)
+        self.driver.close()
+        self.driver.switch_to.window(current_handles[0])
+        self.delete_book(details['id'])
+        os.remove(upload_file)
 
     def sound_test(self, file_name, title, duration):
         self.goto_page('nav_new')
