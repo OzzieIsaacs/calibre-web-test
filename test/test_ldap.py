@@ -32,8 +32,8 @@ class TestLdapLogin(unittest.TestCase, ui_class):
         try:
             cls.server = TestLDAPServer(config=4, port=3268, encrypt=None)
             cls.server.start()
-            startup(cls, cls.py_version, {'config_calibre_dir':TEST_DB,'config_login_type':'Use LDAP Authentication'}, env={"APP_MODE": "test"})
-            # print('stop in setup')
+            startup(cls, cls.py_version, {'config_calibre_dir':TEST_DB,'config_login_type':'Use LDAP Authentication'},
+                    env={"APP_MODE": "test"})
             cls.server.stopListen()
         except Exception as e:
             print(e)
