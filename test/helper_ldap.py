@@ -116,6 +116,16 @@ gn: Chinese
 sn: Character
 userPassword: eekretsay
 
+dn: uid=us@er13,ou=people, dc=calibreweb,dc=com
+objectClass: person
+objectClass: organizationalPerson
+objectClass: inetOrgPerson
+uid: us@er13
+mail: onny@gzu.org
+gn: German
+sn: Character
+userPassword: rest
+
 dn: uid=Dot.to,ou=people, dc=calibreweb,dc=com
 objectClass: person
 objectClass: organizationalPerson
@@ -138,6 +148,7 @@ cn: cps
 member: uid=Mümmy 7,ou=People,dc=calibreweb,dc=com
 member: uid=执一,ou=People,dc=calibreweb,dc=com
 member: uid=Dot.to,ou=People,dc=calibreweb,dc=com
+member: uid=us@er13,ou=People,dc=calibreweb,dc=com
 
 """.encode('utf-8')
 

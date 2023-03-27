@@ -129,9 +129,8 @@ def AIOSMTPServer(hostname='', port=1025, authenticate=True, startSSL=False, onl
                   certfile=None, keyfile=None, timeout=300):
     # logging.basicConfig(level=logging.INFO)
     print("Starting E-Mail Server")
-    loop = asyncio.get_event_loop()
+    # loop = asyncio.get_event_loop()
     # SSL
-    # controller= amain(authenticate=True, startSSL=False, ssl_only=True)
     if only_ssl:
         only_ssl = get_server_context(certfile, keyfile)
     if only_ssl is False:

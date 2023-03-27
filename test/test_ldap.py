@@ -32,8 +32,8 @@ class TestLdapLogin(unittest.TestCase, ui_class):
         try:
             cls.server = TestLDAPServer(config=4, port=3268, encrypt=None)
             cls.server.start()
-            startup(cls, cls.py_version, {'config_calibre_dir':TEST_DB,'config_login_type':'Use LDAP Authentication'}, env={"APP_MODE": "test"})
-            # print('stop in setup')
+            startup(cls, cls.py_version, {'config_calibre_dir':TEST_DB,'config_login_type':'Use LDAP Authentication'},
+                    env={"APP_MODE": "test"})
             cls.server.stopListen()
         except Exception as e:
             print(e)
@@ -406,8 +406,8 @@ class TestLdapLogin(unittest.TestCase, ui_class):
         time.sleep(2)
 
         userlist = self.get_user_list()
-        self.assertEqual(len(userlist), 4)
-        users = ['执一','Mümmy 7', "Dot.to"]
+        self.assertEqual(len(userlist), 5)
+        users = ['执一','Mümmy 7', "Dot.to", "us@er13"]
         self.assertTrue(all(elem in userlist for elem in users))
 
         # check access right of user match template access rights
@@ -457,6 +457,7 @@ class TestLdapLogin(unittest.TestCase, ui_class):
         self.edit_user('Mümmy 7', {'delete': 1})
         self.edit_user('执一', {'delete': 1})
         self.edit_user('Dot.to', {'delete': 1})
+        self.edit_user('us@er13', {'delete': 1})
         # stop/start ldap with poxixusergroup, no email, 2 email adresses
         # print('new setup config 3')
         self.server.relisten(config=3, port=3268, encrypt=None)

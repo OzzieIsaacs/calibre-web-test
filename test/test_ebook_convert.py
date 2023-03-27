@@ -222,11 +222,30 @@ class TestEbookConvertCalibre(unittest.TestCase, ui_class):
         self.assertTrue("Convert" in ret[-2]['task'])
         self.assertEqual(ret[-2]['result'], 'Finished')
         self.assertEqual(ret[-1]['result'], 'Finished')
-        self.setup_server(True, {'mail_password_e': '1234'})
-        self.assertTrue(self.check_element_on_page((By.ID, "flash_info")))
         self.delete_book_format(1, "AZW3")
         self.delete_book_format(1, "EPUB")
-
+        # convert mobi to epub and send via email
+        tasks = self.check_tasks()
+        details = self.get_book_details(7)
+        self.assertEqual(len(details['kindle']), 2)
+        details['kindlebtn'].click()
+        actions = self.driver.find_elements(By.CLASS_NAME, "sendbtn-form")
+        self.assertEqual(len(actions), 2)
+        actions[1].click()
+        self.assertTrue(self.check_element_on_page((By.ID, "flash_success")))
+        i = 0
+        while i < 10:
+            time.sleep(2)
+            task_len, ret = self.check_tasks(tasks)
+            if task_len == 2:
+                if ret[-1]['result'] == 'Finished' or ret[-1]['result'] == 'Failed':
+                    break
+            i += 1
+        self.delete_book_format(7, "EPUB")
+        self.assertEqual(ret[-2]['result'], 'Finished')
+        self.assertEqual(ret[-1]['result'], 'Finished')
+        self.setup_server(True, {'mail_password_e': '1234'})
+        self.assertTrue(self.check_element_on_page((By.ID, "flash_info")))
 
     # check visiblility kindle button for user with not set kindle-email
     # create user -> no kindle email
@@ -434,22 +453,6 @@ class TestEbookConvertCalibre(unittest.TestCase, ui_class):
     def test_email_only(self):
         self.setup_server(True, {'mail_use_ssl': 'None', 'mail_password_e': '10234'})
         tasks = self.check_tasks()
-        '''vals = self.get_convert_book(8)
-        select = Select(vals['btn_from'])
-        select.select_by_visible_text('EPUB')
-        select = Select(vals['btn_to'])
-        select.select_by_visible_text('MOBI')
-        self.check_element_on_page((By.ID, "btn-book-convert")).click()
-        self.assertTrue(self.check_element_on_page((By.ID, "flash_success")))
-        i = 0
-        while i < 10:
-            time.sleep(2)
-            task_len, ret = self.check_tasks(tasks)
-            if task_len == 1:
-                if ret[-1]['result'] == 'Finished' or ret[-1]['result'] == 'Failed':
-                    break
-            i += 1
-        self.assertEqual(ret[-1]['result'], 'Finished')'''
         details = self.get_book_details(10)
         details['kindlebtn'].click()
         # conv = self.check_element_on_page((By.LINK_TEXT, details['kindle'][0].text))
@@ -490,7 +493,6 @@ class TestEbookConvertCalibre(unittest.TestCase, ui_class):
         self.assertEqual(ret[-1]['result'], 'Failed')
         self.email_server.handler.set_return_value(0)
         self.setup_server(False, {'mail_password_e':'1234'})
-
 
     # check behavior for failed server setup (STARTTLS)
     def test_starttls_smtp_setup_error(self):
