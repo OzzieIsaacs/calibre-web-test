@@ -635,7 +635,7 @@ class TestLogin(unittest.TestCase, ui_class):
         r = requests.session()
         login_page = r.get('http://127.0.0.1:8083/login')
         token = re.search('<input type="hidden" name="csrf_token" value="(.*)">', login_page.text)
-        payload = {'username': 'admin', 'password': 'admin123', 'submit':"", 'next':"/", "remember_me":"on", "csrf_token": token.group(1)}
+        payload = {'username': 'admin', 'password': 'admin123', 'submit':"", 'next':"/", "remember_me": "on", "csrf_token": token.group(1)}
         resp = r.post('http://127.0.0.1:8083/login', data=payload)
         self.assertEqual(resp.status_code, 200)
         cookies = r.cookies.get_dict()
