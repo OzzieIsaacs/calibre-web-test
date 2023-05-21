@@ -148,7 +148,7 @@ class TestLogin(unittest.TestCase, ui_class):
         # self.assertEqual(self.fail_access_page("http://127.0.0.1:8083/gdrive/watch/callback"),0)
         self.assertEqual(self.fail_access_page("http://127.0.0.1:8083/shutdown"), 2)
         self.assertEqual(self.fail_access_page("http://127.0.0.1:8083/update"), 2)
-        self.assertEqual(self.fail_access_page("http://127.0.0.1:8083/search"), 2)
+        self.assertEqual(self.fail_access_page("http://127.0.0.1:8083/search"), 1)
         self.assertEqual(self.fail_access_page("http://127.0.0.1:8083/advsearch"), 1)
         self.assertEqual(self.fail_access_page("http://127.0.0.1:8083/cover"), 2)
         self.assertEqual(self.fail_access_page("http://127.0.0.1:8083/cover/213"), 1)
@@ -635,7 +635,7 @@ class TestLogin(unittest.TestCase, ui_class):
         r = requests.session()
         login_page = r.get('http://127.0.0.1:8083/login')
         token = re.search('<input type="hidden" name="csrf_token" value="(.*)">', login_page.text)
-        payload = {'username': 'admin', 'password': 'admin123', 'submit':"", 'next':"/", "remember_me":"on", "csrf_token": token.group(1)}
+        payload = {'username': 'admin', 'password': 'admin123', 'submit':"", 'next':"/", "remember_me": "on", "csrf_token": token.group(1)}
         resp = r.post('http://127.0.0.1:8083/login', data=payload)
         self.assertEqual(resp.status_code, 200)
         cookies = r.cookies.get_dict()
