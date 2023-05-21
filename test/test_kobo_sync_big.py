@@ -118,7 +118,7 @@ class TestKoboSyncBig(unittest.TestCase, ui_class):
             r = session.get(kobo_address + '/v1/library/sync',
                             params=params,
                             headers=TestKoboSyncBig.syncToken.get(kobo_address),
-                            timeout=10000)
+                            timeout=10)
             self.assertEqual(r.status_code, 200)
             data.append(r.json())
             TestKoboSyncBig.data[kobo_address] = data

@@ -104,8 +104,8 @@ for file in sorted(glob.glob1("translations", "*.po")):
     LanguageTranslation=pofile.read_po(languageFile)
     languageFile.close()
     lang_name = LC.parse(langcode).english_name
-    translation_list.append("| {} | {} of strings {} translated |".format(lang_name, count, allMsg))
-    print("{} language: {} of strings {} translated".format(lang_name, count, allMsg))
+    translation_list.append("| {} | {} of {} strings translated |".format(lang_name, count, allMsg))
+    print("{} language: {} of {} strings translated".format(lang_name, count, allMsg))
     iso_translations = dict()
     # Add missing translated language names to translation
     for msg in LanguageTranslation:

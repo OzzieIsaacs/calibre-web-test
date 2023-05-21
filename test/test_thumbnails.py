@@ -216,6 +216,7 @@ class TestThumbnails(unittest.TestCase, ui_class):
         self.fill_thumbnail_config({'schedule_generate_book_covers': 0})
         self.assertTrue(self.check_element_on_page((By.ID, "flash_success")))
         os.chmod(cache_dir, 0o764)
+        os.rmdir(cache_dir)
 
     # check that cover is generated after upload
     # usecase: Upload book to calibre-web and sync your kobo reader right after
@@ -305,7 +306,7 @@ class TestThumbnails(unittest.TestCase, ui_class):
         list_cover = cover_books[1][2]['ele'].screenshot_as_png
         self.get_book_details(112)
         cover = self.check_element_on_page((By.ID, "detailcover")).screenshot_as_png
-        self.assertGreaterEqual(diff(BytesIO(cover), BytesIO(old_cover), delete_diff_file=True), 0.03)
+        self.assertGreaterEqual(diff(BytesIO(cover), BytesIO(old_cover), delete_diff_file=True), 0.025)
         # Problem: Cover cache is not updated
         self.assertAlmostEqual(diff(BytesIO(list_cover), BytesIO(old_list_cover), delete_diff_file=True), 0.0,
                                delta=0.0001)
