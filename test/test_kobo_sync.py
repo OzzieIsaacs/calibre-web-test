@@ -384,7 +384,8 @@ class TestKoboSync(unittest.TestCase, ui_class):
         self.assertEqual(1, len(shelfnames))
 
         # create shelf with empty payload
-        r = newSession.post(self.kobo_adress + '/v1/library/tags')
+        request_header = {"Content-Type": "application/json; charset=utf-8"}
+        r = newSession.post(self.kobo_adress + '/v1/library/tags', headers=request_header)
         self.assertEqual(400, r.status_code)
 
         # create shelf with empty name and Items
@@ -458,7 +459,8 @@ class TestKoboSync(unittest.TestCase, ui_class):
         ItemDefect = {'Typ': 'ProductRevisionTagItem', 'RevisionId': '1'}
 
         # post empty request
-        r = newSession.post(self.kobo_adress + '/v1/library/tags/' + tagId + '/items')
+        request_header = {"Content-Type": "application/json; charset=utf-8"}
+        r = newSession.post(self.kobo_adress + '/v1/library/tags/' + tagId + '/items', headers=request_header)
         self.assertEqual(400, r.status_code)
         r = newSession.post(self.kobo_adress + '/v1/library/tags/' + tagId + '/items', json={'Item': []})
         self.assertEqual(400, r.status_code)
@@ -480,7 +482,7 @@ class TestKoboSync(unittest.TestCase, ui_class):
         self.assertEqual('5', books[0]['id'])
 
         # Delete books from shelf
-        r = newSession.post(self.kobo_adress + '/v1/library/tags/' + tagId + '/items/delete')
+        r = newSession.post(self.kobo_adress + '/v1/library/tags/' + tagId + '/items/delete', headers=request_header)
         self.assertEqual(400, r.status_code)
         r = newSession.post(self.kobo_adress + '/v1/library/tags/' + tagId + '/items/delete', json={'Item': []})
         self.assertEqual(400, r.status_code)
@@ -526,7 +528,8 @@ class TestKoboSync(unittest.TestCase, ui_class):
         self.assertEqual('8f1b72c1-e9a4-4212-b538-8e4f4837d201', data[0]['EntitlementId'])
         self.assertEqual('ReadyToRead', data[0]['StatusInfo']['Status'])
 
-        r = newSession.put(self.kobo_adress + '/v1/library/8f1b72c1-e9a4-4212-b538-8e4f4837d201/state')
+        headers = {"Content-Type": "application/json; charset=utf-8"}
+        r = newSession.put(self.kobo_adress + '/v1/library/8f1b72c1-e9a4-4212-b538-8e4f4837d201/state', headers=headers)
         self.assertEqual(400, r.status_code)
         postData = {
             "ReadingStates":[{
