@@ -384,7 +384,8 @@ class TestKoboSync(unittest.TestCase, ui_class):
         self.assertEqual(1, len(shelfnames))
 
         # create shelf with empty payload
-        r = newSession.post(self.kobo_adress + '/v1/library/tags')
+        request_header = {"Content-Type": "application/json; charset=utf-8"}
+        r = newSession.post(self.kobo_adress + '/v1/library/tags', headers=request_header)
         self.assertEqual(400, r.status_code)
 
         # create shelf with empty name and Items
