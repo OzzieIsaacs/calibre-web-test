@@ -60,11 +60,11 @@ class TestCli(unittest.TestCase, ui_class):
 
     def check_password_change(self, parameter, expectation):
         p = process_open([self.py_version, "-B", 'cps.py', "-s", parameter], [1])
-        time.sleep(2)
+        time.sleep(3)
         if p.poll() is None:
             p.kill()
         nextline = p.communicate()[0]
-        self.assertTrue(re.findall(expectation, nextline))
+        self.assertTrue(re.findall(expectation, nextline), nextline)
         p.terminate()
         p.stdout.close()
         p.stderr.close()
