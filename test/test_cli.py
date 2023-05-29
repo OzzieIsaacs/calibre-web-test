@@ -466,7 +466,7 @@ class TestCli(unittest.TestCase, ui_class):
         p1 = process_open([self.py_version, "-B", u'cps.py', "-d"], [1])
         output = list()
         while p1.poll() is None:
-            output.append(p1.stdout.readline())
+            output.append(p1.stderr.readline())
         self.assertEqual(0, p1.returncode)
         p1.stdout.close()
         p1.stderr.close()
@@ -602,6 +602,81 @@ class TestCli(unittest.TestCase, ui_class):
             self.driver.switch_to.alert.accept()
         except Exception:
             pass
+
+    def test_logfile(self):
+        # no logfile parameter
+        os.chdir(os.path.dirname(CALIBRE_WEB_PATH))
+        logdir = os.path.join(CALIBRE_WEB_PATH, 'logdir')
+        log_file = os.path.join(logdir, "test.log")
+        shutil.rmtree(logdir, ignore_errors=True)
+        os.makedirs(logdir)
+        p = process_open([self.py_version, "-B", os.path.join(CALIBRE_WEB_PATH, u'cps.py'),
+                          '-o'], [1])        
+        time.sleep(1)
+        output = list()
+        output.append(p.stderr.readline())
+        lines = "".join(output)
+        self.assertTrue("usage: cps.py" in lines, lines)
+        p.terminate()
+        p.stdout.close()
+        p.stderr.close()
+
+        # stream log
+        p3 = process_open([self.py_version, "-B", os.path.join(CALIBRE_WEB_PATH, u'cps.py'),
+                          '-o', "/dev/stdout"], [1])
+        output = list()
+        for i in range (0,5):
+            #while p.poll() is not None:
+            output.append(p3.stdout.readline())
+            time.sleep(1)
+        lines = "".join(output)
+        p3.terminate()
+        p3.stdout.close()
+        p3.stderr.close()
+        p3.kill()
+        self.assertTrue("Starting Calibre Web..." in lines, lines)
+
+        # logfile not writeable        
+        if os.path.exists(os.path.join(CALIBRE_WEB_PATH, "calibre-web.log")):
+            os.unlink(os.path.join(CALIBRE_WEB_PATH, "calibre-web.log"))
+        rights = os.stat(logdir).st_mode & 0o777
+        os.chmod(logdir, 0o500)
+        self.assertFalse(os.path.exists(os.path.join(CALIBRE_WEB_PATH, "calibre-web.log")))
+        
+        p1 = process_open([self.py_version, "-B", os.path.join(CALIBRE_WEB_PATH, u'cps.py'),
+                          '-o', log_file], [1])
+        time.sleep(BOOT_TIME)
+        self.assertTrue(os.path.exists(os.path.join(CALIBRE_WEB_PATH, "calibre-web.log")))
+        p1.terminate()
+        p1.stdout.close()
+        p1.stderr.close()
+        p1.kill()
+
+        os.chmod(logdir, rights)
+        self.assertFalse(os.path.exists(log_file))
+
+        # check logfile in gui = param change logfile in gui -> after reboot the commandline logfile
+        p2 = process_open([self.py_version, "-B", os.path.join(CALIBRE_WEB_PATH, u'cps.py'),
+                          '-o', log_file], [1])
+        time.sleep(BOOT_TIME)
+        # navigate to the application home page
+        self.driver.get("http://127.0.0.1:8083")
+        # Wait for config screen to show up
+        self.fill_db_config({'config_calibre_dir': TEST_DB})
+        # wait for cw to reboot
+        time.sleep(2)
+        self.fill_basic_config({'config_logfile': os.path.join(CALIBRE_WEB_PATH, "new.log")})
+        time.sleep(2)
+        self.assertTrue(self.check_element_on_page((By.ID, "flash_success")))
+        old_size = os.path.getsize(log_file)
+        self.restart_calibre_web()
+        self.assertGreater(os.path.getsize(log_file)-1000, old_size)
+        self.assertFalse(os.path.exists(os.path.join(CALIBRE_WEB_PATH, "test.log")))
+        p2.terminate()
+        p2.stdout.close()
+        p2.stderr.close()
+        p2.kill()
+        shutil.rmtree(logdir, ignore_errors=True)
 
     def test_enable_reconnect(self):
         my_env = os.environ.copy()
