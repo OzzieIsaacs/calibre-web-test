@@ -309,7 +309,15 @@ class TestEditBooks(TestCase, ui_class):
         self.edit_book(4, content={'series':u''})
         values = self.get_book_details(4)
         self.assertFalse('series' in values)
-
+        # check rename Upper-Lowercase
+        self.edit_book(7,content={'series': u'"djüngel"'})
+        values = self.get_book_details()
+        self.assertEqual(u'djüngel', values['series'])
+        values = self.get_book_details(3)
+        self.assertEqual(u'djüngel', values['series'])
+        self.edit_book(3, content={'series': u'"Djüngel"'})
+        values = self.get_book_details()
+        self.assertEqual(u'Djüngel', values['series'])
 
     def test_edit_category(self):
         self.get_book_details(12)
@@ -347,8 +355,24 @@ class TestEditBooks(TestCase, ui_class):
         self.assertEqual(u'gênot', values['tag'][0])
         self.get_book_details(12)
         self.check_element_on_page((By.ID, "edit_book")).click()
-        self.edit_book(content={'tags':'Gênot'})
-
+        self.edit_book(content={'tags':'Gênot'})'''
+        # Test rename upper lowercase
+        self.edit_book(12, content={'tags': 'GênДt'})
+        values = self.get_book_details()
+        self.assertEqual('GênДt', values['tag'][0])
+        self.assertEqual(1, len(values['tag']))
+        values = self.get_book_details(11)
+        self.assertEqual('Gênot', values['tag'][0])
+        self.edit_book(11, content={'tags': 'Gênдt'})
+        values = self.get_book_details()
+        self.assertEqual('Gênдt', values['tag'][0])
+        values = self.get_book_details(12)
+        self.assertEqual('Gênдt', values['tag'][0])
+        self.edit_book(11, content={'tags': 'GênДt'})
+        values = self.get_book_details(12)
+        self.assertEqual('GênДt', values['tag'][0])
+        self.edit_book(12, content={'tags': 'Gênot'})
+        self.edit_book(11, content={'tags': 'Gênot'})'''
 
     def test_edit_publisher(self):
         self.get_book_details(7)
@@ -387,6 +411,18 @@ class TestEditBooks(TestCase, ui_class):
         self.edit_book(content={'publisher':u'Gênot'})
         values = self.get_book_details()
         self.assertEqual(u'Gênot', values['publisher'][0])
+        #Check rename upper/lowrcase
+        self.edit_book(7, content={'publisher':u'randomhäus'})
+        values = self.get_book_details()
+        self.assertEqual(u'randomhäus', values['publisher'][0])
+        values = self.get_book_details(5)
+        self.assertEqual(u'randomhäus', values['publisher'][0])
+        self.edit_book(5, content={'publisher': u'Randomhäus'})
+        self.edit_book(7, content={'publisher': u''})
+        values = self.get_book_details()
+        self.assertEqual(u'', values['publisher'][0])
+        values = self.get_book_details(5)
+        self.assertEqual(u'randomhäus', values['publisher'][0])
 
     # choose language not part ob lib
     def test_edit_language(self):
