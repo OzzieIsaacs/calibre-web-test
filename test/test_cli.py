@@ -466,7 +466,7 @@ class TestCli(unittest.TestCase, ui_class):
         p1 = process_open([self.py_version, "-B", u'cps.py', "-d"], [1])
         output = list()
         while p1.poll() is None:
-            output.append(p1.stderr.readline())
+            output.append(p1.stdout.readline())
         self.assertEqual(0, p1.returncode)
         p1.stdout.close()
         p1.stderr.close()
