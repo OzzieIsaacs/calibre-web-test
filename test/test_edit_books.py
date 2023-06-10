@@ -18,7 +18,7 @@ from helper_ui import ui_class
 from config_test import TEST_DB, base_path, BOOT_TIME
 from helper_func import startup, debug_startup, createcbz
 from helper_func import save_logfiles
-
+import time
 
 class TestEditBooks(TestCase, ui_class):
     p = None
@@ -320,7 +320,7 @@ class TestEditBooks(TestCase, ui_class):
         self.assertEqual(u'Djüngel', values['series'])
 
     def test_edit_category(self):
-        self.get_book_details(12)
+        '''self.get_book_details(12)
         self.check_element_on_page((By.ID, "edit_book")).click()
         self.edit_book(content={'tags':u'O0ü 执'})
         values = self.get_book_details()
@@ -372,7 +372,7 @@ class TestEditBooks(TestCase, ui_class):
         values = self.get_book_details(12)
         self.assertEqual('GênДt', values['tag'][0])
         self.edit_book(12, content={'tags': 'Gênot'})
-        self.edit_book(11, content={'tags': 'Gênot'})'''
+        self.edit_book(11, content={'tags': 'Gênot'})
 
     def test_edit_publisher(self):
         self.get_book_details(7)
