@@ -423,7 +423,7 @@ class TestEditBooks(TestCase, ui_class):
         values = self.get_book_details()
         self.assertEqual(0, len(values['publisher']))
         values = self.get_book_details(5)
-        self.assertEqual(u'randomhäus', values['publisher'][0])
+        self.assertEqual(u'Randomhäus', values['publisher'][0])
 
     # choose language not part ob lib
     def test_edit_language(self):
@@ -750,7 +750,7 @@ class TestEditBooks(TestCase, ui_class):
         self.assertEqual(details['series'], 'Djüngel')
         self.get_book_details(5)
         self.check_element_on_page((By.ID, "edit_book")).click()
-        self.edit_book(content={u'series':u''})
+        self.edit_book(content={u'series': u''})
 
     def test_typeahead_author(self):
         self.get_book_details(5)
