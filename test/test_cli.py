@@ -466,7 +466,7 @@ class TestCli(unittest.TestCase, ui_class):
         p1 = process_open([self.py_version, "-B", u'cps.py', "-d"], [1])
         output = list()
         while p1.poll() is None:
-            output.append(p1.stderr.readline())
+            output.append(p1.stdout.readline())
         self.assertEqual(0, p1.returncode)
         p1.stdout.close()
         p1.stderr.close()
@@ -671,7 +671,7 @@ class TestCli(unittest.TestCase, ui_class):
         old_size = os.path.getsize(log_file)
         self.restart_calibre_web()
         self.assertGreater(os.path.getsize(log_file)-1000, old_size)
-        self.assertFalse(os.path.exists(os.path.join(CALIBRE_WEB_PATH, "test.log")))
+        self.assertFalse(os.path.exists(os.path.join(CALIBRE_WEB_PATH, "new.log")))
         p2.terminate()
         p2.stdout.close()
         p2.stderr.close()
