@@ -1,6 +1,8 @@
 # #!/usr/bin/env python
 # # -*- coding: utf-8 -*-
 
+# Source translation files for the language namescan be found here: https://github.com/kovidgoyal/calibre-translations/tree/master/iso_639
+
 import subprocess
 import sys
 import glob, os
