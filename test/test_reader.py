@@ -269,7 +269,7 @@ class TestReader(unittest.TestCase, ui_class):
         self.assertTrue(self.check_element_on_page((By.ID, "flash_success")))
         self.edit_user('admin', {'upload_role': 1})
         self.sound_test('music.flac', 'Unknown - music', '0:02')
-        self.sound_test('music.mp3', 'Unknown - music', '0:03')
+        self.sound_test('music.mp3', 'Unknown - music', '0:02')
         self.sound_test('music.ogg', 'Unknown - music', '0:02')
         self.sound_test('music.opus', 'Unknown - music', '0:02')
         self.sound_test('music.wav', 'Unknown - music', '0:02')
