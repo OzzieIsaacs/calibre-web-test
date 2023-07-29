@@ -65,6 +65,9 @@ class TestSTARTTLS(unittest.TestCase, ui_class):
     def test_STARTTLS(self):
         tasks = self.check_tasks()
         self.setup_server(False, {'mail_use_ssl': 'STARTTLS'})
+        # self.goto_page('mail_server')
+        password = self.check_element_on_page((By.ID, "mail_password_e"))
+        self.assertEqual("", password.text)
         details = self.get_book_details(7)
         details['kindlebtn'].click()
         conv = self.check_element_on_page((By.LINK_TEXT, details['kindle'][0].text))
