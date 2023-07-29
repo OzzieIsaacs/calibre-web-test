@@ -580,6 +580,8 @@ class TestEditAdditionalBooks(TestCase, ui_class):
         self.add_identifier('kurl', '9876ä4')
         self.add_identifier('knöffi', 'http://susi.com/huhu')
         self.add_identifier('javascript', 'javascript:alert(1)')
+        self.add_identifier('data', 'data:text/html;base64,PHNjcmlwdD5hbGVydCgxKTwvc2NyaXB0Pg==')
+        self.add_identifier('data2', 'data:text/html;base64')
         self.check_element_on_page((By.ID, "submit")).click()
         result = self.get_book_details()
 
@@ -597,6 +599,8 @@ class TestEditAdditionalBooks(TestCase, ui_class):
         self.check_identifier(result, 'knöffi', '', 'http://susi.com/huhu', True)
         self.check_identifier(result, 'Amazon.de', 'amazon.de', 'a1b2c3', True)
         self.check_identifier(result, 'javascript', '', 'javascript%3Aalert%281%29', True)
+        self.check_identifier(result, 'data', '', 'data:text/html;base64', True)
+        self.check_identifier(result, 'data2', '', 'data:text/html;base64', True)
 
         self.check_element_on_page((By.ID, "edit_book")).click()
         self.delete_identifier('aMazon')
@@ -613,6 +617,8 @@ class TestEditAdditionalBooks(TestCase, ui_class):
         self.delete_identifier('kurl')
         self.delete_identifier('knöffi')
         self.delete_identifier('javascript')
+        self.delete_identifier('data')
+        self.delete_identifier('data2')
         self.check_element_on_page((By.ID, "submit")).click()
         final_length = len(self.get_book_details(4)['identifier'])
         self.assertEqual(final_length, reference_length)

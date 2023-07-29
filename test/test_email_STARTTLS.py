@@ -5,6 +5,7 @@ import unittest
 import time
 import re
 import requests
+import socket
 
 from helper_email_convert import AIOSMTPServer
 import helper_email_convert
@@ -26,7 +27,7 @@ class TestSTARTTLS(unittest.TestCase, ui_class):
     def setUpClass(cls):
         # start email server
         cls.email_server = AIOSMTPServer(
-            hostname='127.0.0.1',
+            hostname=socket.gethostname(),
             port=1026,
             only_ssl=False,
             startSSL=True,
@@ -41,7 +42,7 @@ class TestSTARTTLS(unittest.TestCase, ui_class):
                                           'config_ebookconverter': 'converter2'}, env={"APP_MODE": "test"})
 
             cls.edit_user('admin', {'email': 'a5@b.com','kindle_mail': 'a1@b.com'})
-            cls.setup_server(True, {'mail_server': '127.0.0.1', 'mail_port': '1026',
+            cls.setup_server(True, {'mail_server': socket.gethostname(), 'mail_port': '1026',
                                     'mail_use_ssl': 'SSL/TLS', 'mail_login': 'name@host.com', 'mail_password_e':'10234',
                                     'mail_from': 'name@host.com'})
         except:
@@ -64,6 +65,9 @@ class TestSTARTTLS(unittest.TestCase, ui_class):
     def test_STARTTLS(self):
         tasks = self.check_tasks()
         self.setup_server(False, {'mail_use_ssl': 'STARTTLS'})
+        # self.goto_page('mail_server')
+        password = self.check_element_on_page((By.ID, "mail_password_e"))
+        self.assertEqual("", password.text)
         details = self.get_book_details(7)
         details['kindlebtn'].click()
         conv = self.check_element_on_page((By.LINK_TEXT, details['kindle'][0].text))

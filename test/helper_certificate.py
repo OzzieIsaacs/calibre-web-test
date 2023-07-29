@@ -118,3 +118,6 @@ def generate_ssl_testing_files():
             os.unlink(os.path.join(files_path, 'files', 'client.csr'))
 
 
+# For emailtesting:
+# after the files are generated copy ca.cert.pem to /usr/local/share/ca-certificates and rename the ending to crt (ca.cert.crt)
+# now run "sudo update-ca-cert" and the certificate is added to the certificate storage
