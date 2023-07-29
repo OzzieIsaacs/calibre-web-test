@@ -6,6 +6,7 @@ import re
 import sys
 import time
 import unittest
+import socket
 
 from selenium.webdriver.common.by import By
 from helper_email_convert import AIOSMTPServer
@@ -28,7 +29,7 @@ class TestSSL(unittest.TestCase, ui_class):
         # start email server
         # generate_ssl_testing_files()
         cls.email_server = AIOSMTPServer(
-            hostname='127.0.0.1',port=1027,
+            hostname=socket.gethostname(), port=1027,
             only_ssl=True,
             certfile='files/server.crt',
             keyfile='files/server.key',
@@ -41,7 +42,7 @@ class TestSSL(unittest.TestCase, ui_class):
                                       'config_log_level':cls.LOG_LEVEL}, env={"APP_MODE": "test"})
 
         cls.edit_user('admin', {'email': 'a5@b.com','kindle_mail': 'a1@b.com'})
-        cls.setup_server(False, {'mail_server':'127.0.0.1', 'mail_port':'1027',
+        cls.setup_server(False, {'mail_server':socket.gethostname(), 'mail_port':'1027',
                             'mail_use_ssl':'SSL/TLS','mail_login':'name@host.com','mail_password_e':'10234',
                             'mail_from':'name@host.com'})
 

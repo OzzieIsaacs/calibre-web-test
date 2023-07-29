@@ -5,7 +5,6 @@ import unittest
 import os
 import time
 
-from helper_email_convert import AIOSMTPServer
 import helper_email_convert
 from selenium.webdriver.common.by import By
 from selenium.webdriver.support.ui import Select
