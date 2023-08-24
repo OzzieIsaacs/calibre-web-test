@@ -17,7 +17,7 @@ from selenium.common.exceptions import UnexpectedAlertPresentException
 from helper_ui import ui_class
 from config_test import TEST_DB, base_path, BOOT_TIME
 from helper_func import startup, debug_startup, createcbz
-from helper_func import save_logfiles
+from helper_func import save_logfiles, add_dependency, remove_dependency
 
 class TestEditBooks(TestCase, ui_class):
     p = None
@@ -858,7 +858,7 @@ class TestEditBooks(TestCase, ui_class):
         pngcover = os.path.join(base_path, 'files', 'cover.webp')
         self.edit_book(content={'local_cover': pngcover})
         time.sleep(5)
-        self.get_book_details(5)
+        details = self.get_book_details(5)
         webp = self.check_element_on_page((By.ID, "detailcover")).screenshot_as_png
         self.assertGreater(diff(BytesIO(webp), BytesIO(png), delete_diff_file=True), 0.005)
         self.fill_basic_config({'config_uploading': 0})

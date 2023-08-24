@@ -24,7 +24,7 @@ from helper_func import save_logfiles
 class TestEditAdditionalBooks(TestCase, ui_class):
     p = None
     driver = None
-    dependencys = ['comicapi', 'rarfile']
+    dependencys = ['comicapi', 'rarfile', "py7zr"]
 
     @classmethod
     def setUpClass(cls):
