@@ -17,14 +17,16 @@ from selenium.common.exceptions import UnexpectedAlertPresentException
 from helper_ui import ui_class
 from config_test import TEST_DB, base_path, BOOT_TIME
 from helper_func import startup, debug_startup, createcbz
-from helper_func import save_logfiles
+from helper_func import save_logfiles, add_dependency, remove_dependency
 
 class TestEditBooks(TestCase, ui_class):
     p = None
     driver = None
+    dependencys = ['py7zr']
 
     @classmethod
     def setUpClass(cls):
+        add_dependency(cls.dependencys, cls.__name__)
         try:
             startup(cls, cls.py_version, {'config_calibre_dir': TEST_DB}, env={"APP_MODE": "test"})
             time.sleep(3)
@@ -34,6 +36,7 @@ class TestEditBooks(TestCase, ui_class):
 
     @classmethod
     def tearDownClass(cls):
+        remove_dependency(cls.dependencys)
         cls.driver.get("http://127.0.0.1:8083")
         cls.stop_calibre_web()
         # close the browser window and stop calibre-web
@@ -855,11 +858,12 @@ class TestEditBooks(TestCase, ui_class):
         pngcover = os.path.join(base_path, 'files', 'cover.webp')
         self.edit_book(content={'local_cover': pngcover})
         time.sleep(5)
-        self.get_book_details(5)
+        details = self.get_book_details(5)
         webp = self.check_element_on_page((By.ID, "detailcover")).screenshot_as_png
         self.assertGreater(diff(BytesIO(webp), BytesIO(png), delete_diff_file=True), 0.005)
         self.fill_basic_config({'config_uploading': 0})
         time.sleep(5)
+        self.delete_book(details['id'])
 
     # check metadata recognition
     def test_upload_book_pdf(self):
@@ -887,6 +891,7 @@ class TestEditBooks(TestCase, ui_class):
         self.assertLess('23300', resp.headers['Content-Length'])
         self.fill_basic_config({'config_uploading': 0})
         r.close()
+        self.delete_book(details['id'])
 
     # check metadata recognition
     def test_upload_book_fb2(self):
@@ -914,6 +919,7 @@ class TestEditBooks(TestCase, ui_class):
         self.assertEqual('19501', resp.headers['Content-Length'])
         self.fill_basic_config({'config_uploading': 0})
         r.close()
+        self.delete_book(details['id'])
 
     def test_upload_book_lit(self):
         self.fill_basic_config({'config_uploading':1})
@@ -940,6 +946,7 @@ class TestEditBooks(TestCase, ui_class):
         self.assertEqual('19501', resp.headers['Content-Length'])
         self.fill_basic_config({'config_uploading': 0})
         r.close()
+        self.delete_book(details['id'])
 
     def test_upload_book_mobi(self):
         self.fill_basic_config({'config_uploading':1})
@@ -965,6 +972,7 @@ class TestEditBooks(TestCase, ui_class):
         self.assertEqual('19501', resp.headers['Content-Length'])
         self.fill_basic_config({'config_uploading': 0})
         r.close()
+        self.delete_book(details['id'])
 
 
     def test_upload_book_epub(self):
@@ -1005,6 +1013,7 @@ class TestEditBooks(TestCase, ui_class):
         self.assertEqual('8936', resp.headers['Content-Length'])
         self.fill_basic_config({'config_uploading': 0})
         r.close()
+        self.delete_book(details['id'])
 
     def test_upload_book_cbz(self):
         self.fill_basic_config({'config_uploading':1})
@@ -1031,6 +1040,7 @@ class TestEditBooks(TestCase, ui_class):
         self.assertEqual('8936', resp.headers['Content-Length'])
         self.fill_basic_config({'config_uploading': 0})
         r.close()
+        self.delete_book(details['id'])
 
     def test_upload_book_cbt(self):
         self.fill_basic_config({'config_uploading':1})
@@ -1057,6 +1067,7 @@ class TestEditBooks(TestCase, ui_class):
         self.assertEqual('8936', resp.headers['Content-Length'])
         self.fill_basic_config({'config_uploading': 0})
         r.close()
+        self.delete_book(details['id'])
 
     def test_upload_cbz_coverformats(self):
         self.get_book_details(1)
@@ -1075,8 +1086,7 @@ class TestEditBooks(TestCase, ui_class):
         time.sleep(2)
         cover = self.check_element_on_page((By.ID, "detailcover")).screenshot_as_png
         self.assertGreaterEqual(diff(BytesIO(cover), BytesIO(original_cover), delete_diff_file=True), 0.05)
-        self.check_element_on_page((By.ID, "delete")).click()
-        self.check_element_on_page((By.ID, "delete_confirm")).click()
+        self.delete_book(-1)
         time.sleep(2)
 
         # upload png book
@@ -1089,8 +1099,7 @@ class TestEditBooks(TestCase, ui_class):
         time.sleep(2)
         cover = self.check_element_on_page((By.ID, "detailcover")).screenshot_as_png
         self.assertGreaterEqual(diff(BytesIO(cover), BytesIO(original_cover), delete_diff_file=True), 0.05)
-        self.check_element_on_page((By.ID, "delete")).click()
-        self.check_element_on_page((By.ID, "delete_confirm")).click()
+        self.delete_book(-1)
         time.sleep(2)
 
         # upload bmp book
@@ -1103,8 +1112,7 @@ class TestEditBooks(TestCase, ui_class):
         time.sleep(2)
         cover = self.check_element_on_page((By.ID, "detailcover")).screenshot_as_png
         self.assertGreaterEqual(diff(BytesIO(cover), BytesIO(original_cover), delete_diff_file=True), 0.049)
-        self.check_element_on_page((By.ID, "delete")).click()
-        self.check_element_on_page((By.ID, "delete_confirm")).click()
+        self.delete_book(-1)
         time.sleep(2)
 
         self.fill_basic_config({'config_uploading': 0})
@@ -1136,6 +1144,33 @@ class TestEditBooks(TestCase, ui_class):
         self.assertEqual('19501', resp.headers['Content-Length'])
         self.fill_basic_config({'config_uploading': 0})
         r.close()
+        self.delete_book(details['id'])
+
+    def test_upload_book_cb7(self):
+        self.fill_basic_config({'config_uploading':1})
+        time.sleep(BOOT_TIME)
+        self.assertTrue(self.check_element_on_page((By.ID, "flash_success")))
+        self.edit_user('admin', {'upload_role': 1})
+        self.goto_page('nav_new')
+        upload_file = os.path.join(base_path, 'files', 'book.cb7')
+        upload = self.check_element_on_page((By.ID, 'btn-upload'))
+        upload.send_keys(upload_file)
+        time.sleep(3)
+        self.check_element_on_page((By.ID, 'edit_cancel')).click()
+        time.sleep(2)
+        details = self.get_book_details()
+        self.assertEqual('book', details['title'])
+        self.assertEqual('Unknown', details['author'][0])
+        r = requests.session()
+        login_page = r.get('http://127.0.0.1:8083/login')
+        token = re.search('<input type="hidden" name="csrf_token" value="(.*)">', login_page.text)
+        payload = {'username': 'admin', 'password': 'admin123', 'submit':"", 'next':"/", "remember_me":"on", "csrf_token": token.group(1)}
+        r.post('http://127.0.0.1:8083/login', data=payload)
+        resp = r.get('http://127.0.0.1:8083' + details['cover'])
+        self.assertEqual('8936', resp.headers['Content-Length'])
+        self.fill_basic_config({'config_uploading': 0})
+        r.close()
+        self.delete_book(details['id'])
 
     # download of books
     def test_download_book(self):

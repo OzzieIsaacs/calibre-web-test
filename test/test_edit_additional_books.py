@@ -24,7 +24,7 @@ from helper_func import save_logfiles
 class TestEditAdditionalBooks(TestCase, ui_class):
     p = None
     driver = None
-    dependencys = ['comicapi', 'rarfile']
+    dependencys = ['comicapi', 'rarfile', "py7zr"]
 
     @classmethod
     def setUpClass(cls):
@@ -151,14 +151,14 @@ class TestEditAdditionalBooks(TestCase, ui_class):
     def test_upload_metadata_cbr(self):
         self.fill_basic_config({'config_uploading': 1})
         time.sleep(3)
-        '''self.assertTrue(self.check_element_on_page((By.ID, "flash_success")))
+        self.assertTrue(self.check_element_on_page((By.ID, "flash_success")))
         self.fill_basic_config({'config_rarfile_location': '/bin/ur'})
         self.assertTrue(self.check_element_on_page((By.ID, "flash_danger")))
         self.fill_basic_config({'config_rarfile_location': base_path})
         self.assertTrue(self.check_element_on_page((By.ID, "flash_danger")))
         self.fill_basic_config({'config_rarfile_location': unrar_path()})
         self.assertTrue(self.check_element_on_page((By.ID, "flash_success")))
-        time.sleep(3)'''
+        time.sleep(3)
         self.goto_page('nav_new')
         upload_file = os.path.join(base_path, 'files', 'book.cbr')
         upload = self.check_element_on_page((By.ID, 'btn-upload'))
@@ -211,6 +211,25 @@ class TestEditAdditionalBooks(TestCase, ui_class):
         self.assertEqual('8936', resp.headers['Content-Length'])
         r.close()
         time.sleep(2)
+        self.assertTrue(self.check_element_on_page((By.ID, "flash_success")))
+
+    def test_upload_metadata_cb7(self):
+        self.fill_basic_config({'config_uploading': 1})
+        time.sleep(3)
+        self.assertTrue(self.check_element_on_page((By.ID, "flash_success")))
+        self.goto_page('nav_new')
+        upload_file = os.path.join(base_path, 'files', 'book.cb7')
+        upload = self.check_element_on_page((By.ID, 'btn-upload'))
+        upload.send_keys(upload_file)
+        time.sleep(2)
+        self.check_element_on_page((By.ID, 'edit_cancel')).click()
+        time.sleep(2)
+        details = self.get_book_details()
+        self.assertEqual('Test 执 to', details['title'])
+        self.assertEqual('Author Nameless', details['author'][0])
+        self.assertEqual('2', details['series_index'])
+        self.assertEqual('No S', details['series'])
+        self.delete_book(int(self.driver.current_url.split('/')[-1]))
         self.assertTrue(self.check_element_on_page((By.ID, "flash_success")))
 
     # limit upload formats to epub -> check pdf -> denied, upload epub allowed
@@ -343,7 +362,7 @@ class TestEditAdditionalBooks(TestCase, ui_class):
         time.sleep(3)
         self.assertTrue(self.check_element_on_page((By.ID, "flash_success")))
 
-    '''@unittest.skipIf(os.name == 'nt', 'writeonly database on windows is not checked')
+    @unittest.skipIf(os.name == 'nt', 'writeonly database on windows is not checked')
     def test_writeonly_path(self):
         self.fill_basic_config({'config_rarfile_location': unrar_path(), "config_unicode_filename": 1})
         time.sleep(BOOT_TIME)
@@ -409,7 +428,7 @@ class TestEditAdditionalBooks(TestCase, ui_class):
 
     @unittest.skip('Not implemented')
     def test_writeonly_calibre_database(self):
-        pass'''
+        pass
 
     def test_edit_book_identifier(self):
         reference_length = len(self.get_book_details(9)['identifier'])

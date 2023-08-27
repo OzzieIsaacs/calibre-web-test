@@ -1,6 +1,6 @@
 #!/usr/bin/env python
 # -*- coding: utf-8 -*-
-
+import json
 import unittest
 from selenium.webdriver.common.by import By
 from helper_ui import ui_class, RESTRICT_TAG_ME
@@ -710,3 +710,16 @@ class TestOPDSFeed(unittest.TestCase, ui_class):
         self.delete_shelf(u'Pü 执')
         self.logout()
         time.sleep(2)
+
+    def test_opds_stats(self):
+        r = requests.get('http://127.0.0.1:8083/opds/stats', auth=('admin', 'admin123'))
+        self.assertEqual(200, r.status_code)
+        fields = json.loads(r.text)
+        self.assertEqual(fields['books'], 11)
+        self.assertEqual(fields['authors'], 11)
+        self.assertEqual(fields['categories'], 1)
+        self.assertEqual(fields['series'], 2)
+        self.assertEqual(len(fields), 4)
+
+
+
