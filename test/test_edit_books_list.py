@@ -180,6 +180,7 @@ class TestEditBooksList(TestCase, ui_class):
         bl = self.get_books_list(-1)
         self.assertEqual("Djüngel,Te|s@t", bl['table'][3]['Series']['text'])
         self.goto_page("nav_serie")
+        self.check_element_on_page((By.ID, "list-button")).click()
         elements = self.get_list_books_displayed()
         self.assertEqual(3, len(elements))
         self.assertEqual("Djüngel,Te|s@t", elements[1]['title'])

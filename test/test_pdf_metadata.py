@@ -258,7 +258,7 @@ class TestUploadPDF(TestCase, ui_class):
                                  'author': ["Now Name"],
                                  'publishers': ["Hölder, Kurt"],
                                  }
-                                )'''
+                                )
         # Empty title
         self.check_uploaded_pdf({'title': " ",
                                  'author': ["Now Name"],
