@@ -221,7 +221,7 @@ class TestEditAdditionalBooks(TestCase, ui_class):
         upload_file = os.path.join(base_path, 'files', 'book.cb7')
         upload = self.check_element_on_page((By.ID, 'btn-upload'))
         upload.send_keys(upload_file)
-        time.sleep(2)
+        time.sleep(3)
         self.check_element_on_page((By.ID, 'edit_cancel')).click()
         time.sleep(2)
         details = self.get_book_details()

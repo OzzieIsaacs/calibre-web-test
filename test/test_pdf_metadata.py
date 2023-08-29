@@ -259,3 +259,12 @@ class TestUploadPDF(TestCase, ui_class):
                                  'publishers': ["Hölder, Kurt"],
                                  }
                                 )
+        # Empty title
+        self.check_uploaded_pdf({'title': " ",
+                                 'author': ["Now Name"],
+                                 'publishers': set(["Hölder, Kurt"]),
+                                 "cover": os.path.join(base_path, 'files', 'cover.jpg')},
+                                {'title': "book1",
+                                 'author': ["Now Name"],
+                                 }
+                                )
