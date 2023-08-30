@@ -294,7 +294,8 @@ class TestEditAdditionalBooks(TestCase, ui_class):
         formats = self.check_element_on_page((By.ID, 'config_upload_formats'))
         self.assertEqual('epub', formats.get_attribute('value'))
         self.fill_basic_config({'config_upload_formats': 'txt,pdf,epub,kepub,mobi,azw,azw3,cbr,cbz,cbt,djvu,prc,doc,'
-                                                         'docx,fb2,html,rtf,lit,odt,mp3,mp4,ogg,opus,wav,flac,m4a,m4b'})
+                                                         'docx,fb2,html,rtf,lit,odt,mp3,mp4,ogg,opus,wav,flac,m4a,m4b,'
+                                                         'cb7'})
         self.assertTrue(self.check_element_on_page((By.ID, "flash_success")))
 
     def test_delete_book(self):
