@@ -2,7 +2,7 @@
 # -*- coding: utf-8 -*-
 import os
 from datetime import date
-from unittest import TestCase, SkipTest
+from unittest import TestCase
 import time
 import glob
 import json
@@ -39,7 +39,7 @@ class TestBackupMetadata(TestCase, ui_class):
         save_logfiles(cls, cls.__name__)
 
     def test_backup_all(self):
-        # backup all drücken
+        # press backup all
         ref = self.check_tasks()
         self.queue_metadata_backup()
         count, tasks = self.check_tasks(ref)
@@ -47,7 +47,7 @@ class TestBackupMetadata(TestCase, ui_class):
         self.restart_calibre_web()
         res = self.check_tasks()
         self.assertEqual(1, len(res))
-        # schauen das alle opd dateien vorhanden sind
+        # check alle opf files present
         all_files = glob.glob(TEST_DB + '/**/*.opf', recursive=True)
         self.assertEqual(11, len(all_files))
         # alle opf daten löschen
@@ -95,41 +95,41 @@ class TestBackupMetadata(TestCase, ui_class):
         # Buch Ordner Schreibrechte wieder geben
         os.chmod(book_path, rights)
 
-    def test_backup_change_book_seriesindex(self):
+    def test_backup_change_book_series_index(self):
         meta_path = os.path.join(TEST_DB, "Frodo Beutlin", "Der Buchtitel (1)", "metadata.opf")
         # generate all metadata.opf files
         self.queue_metadata_backup()
         self.restart_calibre_web()
-        # check seriesindex content of metadata.opf file
+        # check series_index content of metadata.opf file
         metadata = read_opf_metadata(meta_path)
-        # edit seriesindex
+        # edit series_index
         self.assertEqual(metadata['series_index'], "")
         self.assertEqual(metadata['series'], "")
         self.edit_book(1, content={'series_index':'1.53'})
         # restart cw
         self.restart_calibre_web()
-        # check seriesindex content of metadata.opf file -> as long as no series is set, the index is not present
+        # check series_index content of metadata.opf file -> as long as no series is set, the index is not present
         metadata = read_opf_metadata(meta_path)
         self.assertEqual(metadata['series_index'], "")
         self.assertEqual(metadata['series'], "")
         self.edit_book(1, content={'series':'test'})
         # restart cw
         self.restart_calibre_web()
-        # check seriesindex content of metadata.opf file
+        # check series_index content of metadata.opf file
         metadata = read_opf_metadata(meta_path)
         self.assertEqual(metadata['series_index']['content'], "1.53")
         self.assertEqual(metadata['series']['content'], "test")
         self.edit_book(1, content={'series': 'tEst', 'series_index':'1.0'})
         # restart cw
         self.restart_calibre_web()
-        # check seriesindex content of metadata.opf file
+        # check series_index content of metadata.opf file
         metadata = read_opf_metadata(meta_path)
         self.assertEqual(metadata['series']['content'], "tEst")
         self.assertEqual(metadata['series_index']['content'], "1.0")
         self.edit_book(1, content={'series': 't,st'})
         # restart cw
         self.restart_calibre_web()
-        # check seriesindex content of metadata.opf file
+        # check series_index content of metadata.opf file
         metadata = read_opf_metadata(meta_path)
         self.assertEqual(metadata['series']['content'], "t,st")
         self.edit_book(1, content={'series': ''})
@@ -145,7 +145,7 @@ class TestBackupMetadata(TestCase, ui_class):
         # edit Publisher
         self.edit_book(1, content={'publisher':'Lo,执|1u'})
         self.restart_calibre_web()
-        # check seriesindex content of metadata.opf file
+        # check series_index content of metadata.opf file
         metadata = read_opf_metadata(meta_path)
         self.assertEqual(metadata['publisher'], 'Lo,执|1u')
         self.edit_book(1, content={'publisher': ''})
