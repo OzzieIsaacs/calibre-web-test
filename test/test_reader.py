@@ -11,7 +11,8 @@ import time
 import os
 from diffimg import diff
 from io import BytesIO
-
+import rarfile
+from PIL import Image
 
 class TestReader(unittest.TestCase, ui_class):
 
@@ -179,7 +180,64 @@ class TestReader(unittest.TestCase, ui_class):
             self.assertFalse('Not exactly one new tab was opened')
         self.driver.switch_to.window(new_handle[0])
         self.assertTrue(self.check_element_on_page((By.ID, "mainContent")))
+        with rarfile.RarFile(os.path.join(TEST_DB,"Asterix Lionherd", "comicdemo (3)",
+                                          "comicdemo - Asterix Lionherd.cbr")) as rf:
+            pic1 = rf.read("comic0.jpg")
+            pic2 = rf.read("comic1.jpg")
+            pic3 = rf.read("comic2.jpg")
+        img1 = Image.open(BytesIO(pic1)).convert(mode="RGBA")
+        img2 = Image.open(BytesIO(pic2)).convert(mode="RGBA")
+        img3 = Image.open(BytesIO(pic3)).convert(mode="RGBA")
+        with BytesIO() as output:
+            img1.save(output, format="PNG")
+            pic1 = output.getvalue()
+        with BytesIO() as output:
+            img2.save(output, format="PNG")
+            pic2 = output.getvalue()
+        with BytesIO() as output:
+            img3.save(output, format="PNG")
+            pic3 = output.getvalue()
         # ToDO: Check displayed content
+        first_page = self.check_element_on_page((By.ID, "mainContent"))
+        self.assertTrue(first_page)
+        pic = first_page.screenshot_as_png
+        self.assertLessEqual(diff(BytesIO(pic1), BytesIO(pic), delete_diff_file=True), 0.02)
+        self.assertFalse(self.check_element_on_page((By.ID, "left")).is_displayed())
+        right = self.check_element_on_page((By.ID, "right"))
+        self.assertTrue(right.is_displayed())
+        right.click()
+        second_page = self.check_element_on_page((By.ID, "mainContent"))
+        self.assertTrue(second_page)
+        pic_2 = second_page.screenshot_as_png
+        self.assertLessEqual(diff(BytesIO(pic2), BytesIO(pic_2), delete_diff_file=True), 0.04)
+        time.sleep(0.5)
+        self.assertTrue(right.is_displayed())
+        self.assertTrue(self.check_element_on_page((By.ID, "left")).is_displayed())
+        right.click()
+        third_page = self.check_element_on_page((By.ID, "mainContent"))
+        self.assertTrue(third_page)
+        pic_3 = third_page.screenshot_as_png
+        self.assertLessEqual(diff(BytesIO(pic2), BytesIO(pic_3), delete_diff_file=True), 0.04)
+        # Last page arrow not visible
+        self.assertFalse(right.is_displayed())
+        self.assertTrue(self.check_element_on_page((By.ID, "left")).is_displayed())
+        setting = self.check_element_on_page((By.ID, "setting"))
+        window_size = self.driver.get_window_size()
+        self.assertTrue(setting)
+        setting.click()
+        setting = self.check_element_on_page((By.ID, "fitWidth"))
+        self.assertTrue(setting)
+        setting.click()
+        self.check_element_on_page((By.CLASS_NAME, "closer")).click()
+        '''Scale auf width einstellen
+            Bild muss viel größer erscheinen
+
+        Bild muss größer als Ansicht sein (scale width):
+            Scrollbar rechts in Hauptanzeige sichtbar
+            umstellen hide scrollbar rechts in Hauptanzeige nicht sichtbar
+        Scrollbar auf sichtbar einstellen'''
+        horizontal_scroll_status = self.driver.execute_script(
+            "return document.documentElement.scrollWidth>document.documentElement.clientWidth;")
 
     def test_comic_MACOS_files(self):
         upload_file = os.path.join(base_path, 'files', 'book1.cbz')
