@@ -10,7 +10,7 @@ import sys
 import venv
 from CalibreResult import CalibreResult
 from helper_environment import environment
-from helper_func import kill_dead_cps, finishing_notifier, poweroff
+from helper_func import kill_dead_cps, finishing_notifier, poweroff, result_move
 from helper_certificate import generate_ssl_testing_files
 from subprocess import CalledProcessError
 
@@ -77,12 +77,13 @@ if __name__ == '__main__':
     # configure HTMLTestRunner options
     outfile = os.path.join(CALIBRE_WEB_PATH, 'test')
     template = os.path.join(os.path.dirname(__file__), 'htmltemplate', 'report_template.html')
+    template2 = os.path.join(os.path.dirname(__file__), 'htmltemplate', 'report_template2.html')
     runner = HTMLTestRunner.HTMLTestRunner(output=outfile,
                                            report_name="Calibre-Web TestSummary_" + TEST_OS,
                                            report_title='Calibre-Web Tests',
                                            description='Systemtests for Calibre-web',
                                            combine_reports=True,
-                                           template=template,
+                                           template=[template, template2],
                                            stream=sys.stdout,
                                            resultclass=CalibreResult,
                                            open_in_browser=not power,
@@ -94,6 +95,7 @@ if __name__ == '__main__':
     # E-Mail tests finished
     result_file = os.path.join(outfile, "Calibre-Web TestSummary_" + TEST_OS + ".html")
     finishing_notifier(result_file)
-
+    result_file2 = os.path.join(outfile, "Calibre-Web TestSummary_" + TEST_OS + "_1.html")
+    result_move(result_file2)
     poweroff(power)
     sys.exit(0)
