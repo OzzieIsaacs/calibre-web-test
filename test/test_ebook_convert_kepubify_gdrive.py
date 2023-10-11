@@ -153,6 +153,7 @@ class TestEbookConvertGDriveKepubify(unittest.TestCase, ui_class):
     # login as admin
     # check conversion result conversion of other user visible
     def test_convert_only(self):
+        tasks = self.check_tasks()
         vals = self.get_convert_book(7)
         self.assertFalse(vals['btn_from'])
         self.assertFalse(vals['btn_to'])
@@ -172,7 +173,14 @@ class TestEbookConvertGDriveKepubify(unittest.TestCase, ui_class):
         self.create_user('solo', {'password': '123AbC*!', 'email': 'a@b.com', 'edit_role': 1})
         self.assertTrue(self.check_element_on_page((By.ID, "flash_success")))
         time.sleep(WAIT_GDRIVE*2 + 5)
-        ret = self.check_tasks()
+        i = 0
+        while i < 10:
+            time.sleep(2)
+            task_len, ret = self.check_tasks(tasks)
+            if task_len == 1:
+                if ret[-1]['result'] == 'Finished' or ret[-1]['result'] == 'Failed':
+                    break
+            i += 1
         self.assertEqual(ret[-1]['result'], 'Finished')
         memory = len(ret)
 
@@ -192,7 +200,15 @@ class TestEbookConvertGDriveKepubify(unittest.TestCase, ui_class):
         time.sleep(1)
         self.assertTrue(self.check_element_on_page((By.ID, "flash_success")))
         time.sleep(WAIT_GDRIVE*2)
-        ret = self.check_tasks()
+        i = 0
+        tasks = ret
+        while i < 10:
+            time.sleep(2)
+            task_len, ret = self.check_tasks(ret)
+            if task_len == 1:
+                if ret[-1]['result'] == 'Finished' or ret[-1]['result'] == 'Failed':
+                    break
+            i += 1
         self.assertEqual(ret[-1]['result'], 'Finished')
 
         self.logout()
@@ -210,6 +226,15 @@ class TestEbookConvertGDriveKepubify(unittest.TestCase, ui_class):
         time.sleep(1)
         self.assertTrue(self.check_element_on_page((By.ID, "flash_success")))
         time.sleep(WAIT_GDRIVE*2)
-        ret = self.check_tasks()
+        i = 0
+        tasks = ret
+        while i < 10:
+            time.sleep(2)
+            task_len, ret = self.check_tasks(tasks)
+            if task_len == 1:
+                if ret[-1]['result'] == 'Finished' or ret[-1]['result'] == 'Failed':
+                    break
+            i += 1
+        self.assertEqual(ret[-1]['result'], 'Finished')
         # self.assertEqual(len(ret), len(ret2), "Reconvert of book started")
         self.assertEqual(ret[-1]['result'], 'Finished')

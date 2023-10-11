@@ -242,8 +242,10 @@ class TestReader(unittest.TestCase, ui_class):
     def test_comic_MACOS_files(self):
         upload_file = os.path.join(base_path, 'files', 'book1.cbz')
         # upload webp book
-        zipdata = [os.path.join(base_path, 'files', 'cover.webp'), os.path.join(base_path, 'files', 'cover.jpg')]
-        names = ['cover1.weBp', "/__MACOSX/cover.jpg"]
+        zipdata = [os.path.join(base_path, 'files', 'cover.webp'),
+                   os.path.join(base_path, 'files', 'cover.webp'),
+                   os.path.join(base_path, 'files', 'cover.jpg')]
+        names = ['cover1.weBp', 'cover2.weBp', "/__MACOSX/cover.jpg"]
         createcbz(upload_file, zipdata, names)
         self.fill_basic_config({'config_uploading': 1})
         time.sleep(3)
@@ -269,12 +271,12 @@ class TestReader(unittest.TestCase, ui_class):
         right = self.check_element_on_page((By.ID, "right"))
         self.assertTrue(right)
         right.click()
-        right_page = self.check_element_on_page((By.CLASS_NAME, "mainImage")).screenshot_as_png
+        right_page = self.driver.find_elements(By.CLASS_NAME, "mainImage")[1].screenshot_as_png
         self.assertAlmostEqual(diff(BytesIO(page), BytesIO(right_page), delete_diff_file=True), 0.0, delta=0.0001)
         left = self.check_element_on_page((By.ID, "left"))
         self.assertTrue(left)
         left.click()
-        left_page = self.check_element_on_page((By.CLASS_NAME, "mainImage")).screenshot_as_png
+        left_page = self.driver.find_elements(By.CLASS_NAME, "mainImage")[0].screenshot_as_png
         self.assertAlmostEqual(diff(BytesIO(page), BytesIO(left_page), delete_diff_file=True), 0.0, delta=0.0001)
         self.driver.close()
         self.driver.switch_to.window(current_handles[0])

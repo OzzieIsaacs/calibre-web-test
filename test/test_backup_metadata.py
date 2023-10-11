@@ -323,6 +323,7 @@ class TestBackupMetadata(TestCase, ui_class):
         self.edit_book(3, custom_content={'Custom Bool 1 Ä': 'Yes'})
         self.restart_calibre_web()
         # check custom column content of metadata.opf file
+        time.sleep(2)
         metadata = read_opf_metadata(meta_path)
         custom = json.loads(metadata['custom_1']['content'])
         self.assertEqual(custom["#value#"], True)

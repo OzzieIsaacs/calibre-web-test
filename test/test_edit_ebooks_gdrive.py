@@ -167,7 +167,7 @@ class TestEditBooksOnGdrive(unittest.TestCase, ui_class):
         self.edit_book(content={'book_title': ''})
         time.sleep(4)
         self.wait_page_has_loaded()
-        time.sleep(2)
+        time.sleep(5)
         values = self.get_book_details()
         # os.path.join(TEST_DB, values['author'][0], 'Unknown')
         self.assertEqual('Unknown', values['title'])
