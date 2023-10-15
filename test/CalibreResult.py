@@ -481,23 +481,29 @@ class CalibreResult(TextTestResult):
                 testRunner.start_time,
                 testRunner.start_time + testRunner.time_taken
             )
-            html_file = render_html(
-                testRunner.template,
-                title=testRunner.report_title,
-                header_info=header_info,
-                all_results=all_results,
-                results=report,
-                status_tags=status_tags,
-                summaries=summaries,
-                environ=environment.get_Environment(),
-                **testRunner.template_args
-            )
-            # if available, use user report name
-            if testRunner.report_name is not None:
-                report_name_body = testRunner.report_name
-            else:
-                report_name_body = self.default_prefix + "_".join(strip_module_names(list(all_results.keys())))
-            self.generate_file(testRunner, report_name_body, html_file)
+            if not isinstance(testRunner.template,list):
+                testRunner.template = [testRunner.template]
+            for index, temp in enumerate(testRunner.template):
+                html_file = render_html(
+                    temp,
+                    title=testRunner.report_title,
+                    header_info=header_info,
+                    all_results=all_results,
+                    results=report,
+                    status_tags=status_tags,
+                    summaries=summaries,
+                    environ=environment.get_Environment(),
+                    **testRunner.template_args
+                )
+                # if available, use user report name
+                if testRunner.report_name is not None:
+                    if index == 0:
+                        report_name_body = testRunner.report_name
+                    else:
+                        report_name_body = testRunner.report_name + "_" + str(index)
+                else:
+                    report_name_body = self.default_prefix + "_".join(strip_module_names(list(all_results.keys())))
+                self.generate_file(testRunner, report_name_body, html_file)
 
     def generate_file(self, testRunner, report_name, report):
         """ Generate the report file in the given path. """

@@ -56,6 +56,12 @@ except ImportError:
     server_config = False
 
 try:
+    from config_email import SERVER_MOVE
+    move_config = True
+except ImportError:
+    move_config = False
+
+try:
     import paramiko
 except ImportError:
     print('Create config_email.py file to email finishing message')
@@ -407,8 +413,8 @@ def finishing_notifier(result_file):
         options = {
             "enable-local-file-access": None
         }
-        pdfkit.from_file(result_file, 'out.pdf', options=options)
     try:
+        pdfkit.from_file(result_file, 'out.pdf', options=options)
         if email_config:
             msg = MIMEMultipart()
             message = MIMEText('Calibre-Web Tests finished')
@@ -425,10 +431,11 @@ def finishing_notifier(result_file):
                 s.login(E_MAIL_LOGIN, E_MAIL_PASSWORD)
             s.send_message(msg)
             s.quit()
+        if convert_config:
+            os.remove('out.pdf')
     except Exception as e:
         print(e)
-    if convert_config:
-        os.remove('out.pdf')
+
 
 
 def createSSHClient(server, port, user, password):
@@ -446,6 +453,10 @@ def result_upload(test_os):
                                                      'Calibre-Web TestSummary_' + test_os + '.html')).replace('\\', '/')
     ftp_client.put('./../../calibre-web/test/Calibre-Web TestSummary_' + test_os + '.html', file_destination)
     ftp_client.close()
+
+def result_move(file):
+    if move_config:
+        shutil.move(file, SERVER_MOVE)
 
 
 def poweroff(power):

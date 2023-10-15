@@ -292,11 +292,12 @@ class TestCli(unittest.TestCase, ui_class):
         time.sleep(2)
         if p.poll() is None:
             p.kill()
+        nextline = p.stdout.readline()
         p.stdout.close()
         p.stderr.close()
 
-        nextline = p.communicate()[0]
-        self.assertIsNotNone(re.findall('Illegal IP address string', nextline))
+        # nextline = p.communicate()[0]
+        self.assertIsNotNone(re.search('illegal IP address string', nextline))
         p = process_open([self.py_version,  "-B", os.path.join(CALIBRE_WEB_PATH, u'cps.py'), '-i', address], [1])
 
         time.sleep(BOOT_TIME)
