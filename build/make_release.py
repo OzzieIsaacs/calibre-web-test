@@ -191,7 +191,7 @@ def create_python_environment():
     # Adding precompiled dependencies for Windows
     if os.name == "nt":
         print("* Adding precompiled dependencies for executable for Windows")
-        add_dependency(["local|LDAP_WHL|python-ldap", "local|LEVENSHTEIN_WHL|python-Levenshtein"], "")
+        add_dependency(["local|LDAP_WHL|python-ldap"], "")
 
     print("* Adding dependencies for executable from optional_requirements file")
     optional_requirements_file = os.path.join(FILEPATH, 'optional-requirements.txt')
