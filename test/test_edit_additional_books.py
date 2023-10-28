@@ -91,6 +91,10 @@ class TestEditAdditionalBooks(TestCase, ui_class):
         self.delete_book(details['id'])
         os.remove(upload_file)
         os.remove(other_file)
+        self.fill_basic_config({'config_uploading': 0})
+        time.sleep(3)
+        self.assertTrue(self.check_element_on_page((By.ID, "flash_success")))
+        
 
     def test_upload_cbz_coverformats(self):
         self.fill_basic_config({'config_uploading': 1})
@@ -184,6 +188,10 @@ class TestEditAdditionalBooks(TestCase, ui_class):
         r.close()
         time.sleep(2)
         self.assertTrue(self.check_element_on_page((By.ID, "flash_success")))
+        self.fill_basic_config({'config_uploading': 0})
+        time.sleep(3)
+        self.assertTrue(self.check_element_on_page((By.ID, "flash_success")))
+        
 
     def test_upload_metadata_cbt(self):
         self.fill_basic_config({'config_uploading': 1})
@@ -212,6 +220,10 @@ class TestEditAdditionalBooks(TestCase, ui_class):
         r.close()
         time.sleep(2)
         self.assertTrue(self.check_element_on_page((By.ID, "flash_success")))
+        self.fill_basic_config({'config_uploading': 0})
+        time.sleep(3)
+        self.assertTrue(self.check_element_on_page((By.ID, "flash_success")))
+        
 
     def test_upload_metadata_cb7(self):
         self.fill_basic_config({'config_uploading': 1})
@@ -231,6 +243,10 @@ class TestEditAdditionalBooks(TestCase, ui_class):
         self.assertEqual('No S', details['series'])
         self.delete_book(int(self.driver.current_url.split('/')[-1]))
         self.assertTrue(self.check_element_on_page((By.ID, "flash_success")))
+        self.fill_basic_config({'config_uploading': 0})
+        time.sleep(3)
+        self.assertTrue(self.check_element_on_page((By.ID, "flash_success")))
+        
 
     # limit upload formats to epub -> check pdf -> denied, upload epub allowed
     # limit upload formats to FB2 -> upload fb2 allowed
@@ -295,8 +311,8 @@ class TestEditAdditionalBooks(TestCase, ui_class):
         self.assertEqual('epub', formats.get_attribute('value'))
         self.fill_basic_config({'config_upload_formats': 'txt,pdf,epub,kepub,mobi,azw,azw3,cbr,cbz,cbt,djvu,prc,doc,'
                                                          'docx,fb2,html,rtf,lit,odt,mp3,mp4,ogg,opus,wav,flac,m4a,m4b,'
-                                                         'cb7'})
-        self.assertTrue(self.check_element_on_page((By.ID, "flash_success")))
+                                                         'cb7', 'config_uploading': 0})
+        self.assertTrue(self.check_element_on_page((By.ID, "flash_success")))       
 
     def test_delete_book(self):
         self.get_book_details(7)
