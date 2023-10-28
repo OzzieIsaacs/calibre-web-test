@@ -2,6 +2,7 @@
 # -*- coding: utf-8 -*-
 
 import unittest
+from unittest import skip
 from selenium.webdriver.common.by import By
 from selenium.common.exceptions import WebDriverException
 import re
@@ -471,7 +472,6 @@ class TestLogin(unittest.TestCase, ui_class):
         self.assertEqual(resp.status_code, 200)
         self.assertTrue('class="hidden-sm">Admin</span>' in resp.text)
         r.close()
-
         # ToDo: Additional test with reverse proxy
         self.assertTrue(self.login('admin', 'admin123'))
         self.fill_basic_config({'config_allow_reverse_proxy_header_login': 0, 'config_anonbrowse': 0})
@@ -497,6 +497,36 @@ class TestLogin(unittest.TestCase, ui_class):
         self.assertEqual(resp.status_code, 200)
         r.close()
         self.assertTrue(self.login('admin', 'admin123'))
+        self.fill_basic_config({'config_allow_reverse_proxy_header_login': 0})
+        time.sleep(3)
+        self.assertTrue(self.check_element_on_page((By.ID, "flash_success")))
+        self.logout()
+
+    def test_proxy_login_multi_user(self):
+        self.driver.get("http://127.0.0.1:8083/login")
+        self.login('admin', 'admin123')
+        self.create_user('new_user1', {'password': '123AbC*!', 'email': 'a123@b.com'})
+        self.assertTrue(self.check_element_on_page((By.ID, "flash_success")))
+        self.fill_basic_config({'config_allow_reverse_proxy_header_login': 1,
+                                'config_reverse_proxy_login_header_name': "X-LOGIN" })
+        time.sleep(3)
+        self.assertTrue(self.check_element_on_page((By.ID, "flash_success")))
+        self.logout()
+        # login not possible with empty header or with "X-LOGIN" header
+        r = requests.session()
+        r.headers['X-LOGIN'] = "admin"
+        resp = r.get("http://127.0.0.1:8083/me")
+        self.assertEqual(resp.status_code, 200)
+        self.assertFalse("Calibre-Web | Login" in resp.text)
+        self.assertTrue('<input type="text" class="form-control" name="name" id="name" value="admin" autocomplete="off">' in resp.text)
+        r.headers['X-LOGIN'] = "new_user1"
+        resp = r.get("http://127.0.0.1:8083/me")
+        self.assertEqual(resp.status_code, 200)
+        self.assertTrue('<input type="text" class="form-control" name="name" id="name" value="new_user1" autocomplete="off">' in resp.text)
+        r.close()
+
+        self.assertTrue(self.login('admin', 'admin123'))
+        self.edit_user('new_user1', {'delete': 1})
         self.fill_basic_config({'config_allow_reverse_proxy_header_login': 0})
         time.sleep(3)
         self.assertTrue(self.check_element_on_page((By.ID, "flash_success")))

@@ -1,6 +1,6 @@
 # #!/usr/bin/env python
 # # -*- coding: utf-8 -*-
-__package__ = "build"
+__package__ = "build_release"
 import os
 import glob
 import shutil
@@ -140,12 +140,13 @@ def generate_package():
     # Generate package
     print('* Generating package')
     error = False
-    p = subprocess.Popen(sys.executable + " setup.py sdist bdist_wheel",
-                         shell=True,
-                         stdout=subprocess.PIPE,
-                         stdin=subprocess.PIPE)
-    p.communicate()[0]
-    p.wait()
+    p = process_open([sys.executable, "-m", "build"])
+    while p.poll() is None:
+        out = p.stdout.readline()
+        out != "" and print(out.strip("\n"))
+
+    err = p.stderr.readlines()
+    print("".join(err), file=sys.stderr)
 
     # check successful
     if p.returncode != 0:
@@ -380,26 +381,35 @@ def create_deb_package():
     shutil.rmtree(os.path.join(FILEPATH, target_dir), ignore_errors=True)
     return False
 
+def clean_folders():
+    cache_folders = glob.glob('cps/**/__pycache__', recursive=True)
+    for folder in cache_folders:
+        shutil.rmtree(os.path.join(FILEPATH, folder), ignore_errors=True)
+    shutil.rmtree(os.path.join(FILEPATH, "debian"), ignore_errors=True)
+    shutil.rmtree(os.path.join(FILEPATH, "executable"), ignore_errors=True)
+    shutil.rmtree(os.path.join(FILEPATH, "dist"), ignore_errors=True)
+    shutil.rmtree(os.path.join(FILEPATH, "src"), ignore_errors=True)
 
 def main(args):
-    # args = parse_arguments()
     update_requirements()
     if args.u:
         return 0
-        # sys.exit(0)
 
     # Change workdir to calibre folder
     workdir = os.getcwd()
     os.chdir(FILEPATH)
 
+    # clean old build results
+    clean_folders()
+
     # Generate pypi package
     # if package generation had an error stop
     if generate_package():
         return 1
-        # sys.exit(1)
+
     if args.p:
         return 0
-        # sys.exit(0)
+
     # move files for pyinstaller
     prepare_files_pyinstaller()
     # Prepare environment for pyinstaller
@@ -411,14 +421,12 @@ def main(args):
     if error:
         print('## Pyinstaller finished with error, aborting ##')
         return 1
-        # sys.exit(1)
 
     if sys.platform.lower() == "linux":
         print('* Generating Debian DEB package')
         if create_deb_package():
             print('## Generate DEB-package finished with error, aborting ##')
             return 1
-            # sys.exit(1)
     print('* Build Successfully Finished')
     return 0
 
