@@ -2,7 +2,7 @@
 # -*- coding: utf-8 -*-
 
 
-from unittest import TestCase, skipIf, skip
+from unittest import TestCase, skipIf
 import time
 import os
 import shutil
