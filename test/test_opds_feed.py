@@ -57,8 +57,11 @@ class TestOPDSFeed(unittest.TestCase, ui_class):
         r = requests.get('http://127.0.0.1:8083/opds', auth=('admin', 'admin123'))
         self.assertEqual(200, r.status_code)
         elements = self.get_opds_index(r.text)
+        self.assertEqual("/static/favicon.ico", elements['favicon'])
         r = requests.get('http://127.0.0.1:8083' + elements['Authors']['link'], auth=('admin', 'admin123'))
         self.assertEqual(200, r.status_code)
+        entries = self.get_opds_feed(r.text)
+        self.assertEqual("/static/favicon.ico", entries['favicon'])
         r = requests.get('http://127.0.0.1:8083' + elements['Top Rated Books']['link'], auth=('admin', 'admin123'))
         self.assertEqual(200, r.status_code)
         r = requests.get('http://127.0.0.1:8083' + elements['Categories']['link'], auth=('admin', 'admin123'))
@@ -526,7 +529,6 @@ class TestOPDSFeed(unittest.TestCase, ui_class):
         self.edit_user('uv:i', {'delete': 1})
         self.assertTrue(self.check_element_on_page((By.ID, "flash_success")))
         self.logout()
-
 
     def test_opds_cover(self):
         r = requests.get('http://127.0.0.1:8083/opds', auth=('admin', 'admin123'))

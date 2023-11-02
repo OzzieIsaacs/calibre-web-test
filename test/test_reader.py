@@ -239,6 +239,66 @@ class TestReader(unittest.TestCase, ui_class):
         horizontal_scroll_status = self.driver.execute_script(
             "return document.documentElement.scrollWidth>document.documentElement.clientWidth;")
 
+    def test_single_file_comic(self):
+        upload_file = os.path.join(base_path, 'files', 'book_test.cbz')
+        # upload webp book
+        zipdata = [os.path.join(base_path, 'files', 'cover.jpg')]
+        names = ['cover1.jpg']
+        createcbz(upload_file, zipdata, names)
+        self.fill_basic_config({'config_uploading': 1})
+        time.sleep(3)
+        self.assertTrue(self.check_element_on_page((By.ID, "flash_success")))
+        self.goto_page('nav_new')
+        upload = self.check_element_on_page((By.ID, 'btn-upload'))
+        upload.send_keys(upload_file)
+        time.sleep(2)
+        self.check_element_on_page((By.ID, 'edit_cancel')).click()
+        time.sleep(2)
+        details = self.get_book_details()
+        current_handles = self.driver.window_handles
+        read_button = self.check_element_on_page((By.ID, "readbtn"))
+        self.assertTrue("cbz" in read_button.text)
+        read_button.click()
+        new_handle = [x for x in self.driver.window_handles if x not in current_handles]
+        if len(new_handle) != 1:
+            self.assertFalse('Not exactly one new tab was opened')
+        self.driver.switch_to.window(new_handle[0])
+        self.assertFalse(self.check_element_on_page((By.ID, "left")).is_displayed())
+        self.assertFalse(self.check_element_on_page((By.ID, "right")).is_displayed())
+        self.driver.close()
+        self.driver.switch_to.window(current_handles[0])
+        self.delete_book(details['id'])
+        os.remove(upload_file)
+
+        self.fill_basic_config({'config_uploading': 0})
+        time.sleep(3)
+        self.assertTrue(self.check_element_on_page((By.ID, "flash_success")))
+        
+        # Comic file mit einer Datei
+
+    def test_cb7_reader(self):
+        self.fill_basic_config({'config_uploading': 1})
+        time.sleep(3)
+        self.assertTrue(self.check_element_on_page((By.ID, "flash_success")))
+        self.goto_page('nav_new')
+        upload_file = os.path.join(base_path, 'files', 'book.cb7')
+        upload = self.check_element_on_page((By.ID, 'btn-upload'))
+        upload.send_keys(upload_file)
+        time.sleep(3)
+        self.check_element_on_page((By.ID, 'edit_cancel')).click()
+        time.sleep(2)
+        details = self.get_book_details()
+        self.assertEqual('Test 执 to', details['title'])
+        self.assertEqual('Author Nameless', details['author'][0])
+        self.assertEqual('2', details['series_index'])
+        self.assertEqual('No S', details['series'])
+        self.delete_book(int(self.driver.current_url.split('/')[-1]))
+        self.assertTrue(self.check_element_on_page((By.ID, "flash_success")))
+        self.fill_basic_config({'config_uploading': 1})
+        time.sleep(3)
+        self.assertTrue(self.check_element_on_page((By.ID, "flash_success")))
+        
+
     def test_comic_MACOS_files(self):
         upload_file = os.path.join(base_path, 'files', 'book1.cbz')
         # upload webp book
@@ -282,6 +342,10 @@ class TestReader(unittest.TestCase, ui_class):
         self.driver.switch_to.window(current_handles[0])
         self.delete_book(details['id'])
         os.remove(upload_file)
+        self.fill_basic_config({'config_uploading': 0})
+        time.sleep(3)
+        self.assertTrue(self.check_element_on_page((By.ID, "flash_success")))
+        
 
     def sound_test(self, file_name, title, duration):
         self.goto_page('nav_new')

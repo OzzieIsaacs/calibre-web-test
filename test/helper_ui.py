@@ -1102,6 +1102,7 @@ class ui_class():
         try:
             tree = lxml.etree.fromstring(text.encode('utf-8'), parser)
             ret['updated'] = tree.xpath("/html/body/feed/updated")[0].text
+            ret['favicon'] = tree.xpath("/html/body/feed/icon")[0].text
             links= tree.xpath("/html/body/feed/link")
             ret['links'] = links
             for link in links:
@@ -1139,6 +1140,7 @@ class ui_class():
             # tree = lxml.etree.parse(StringIO(text.encode('utf-8')), parser)
             ret['title'] = tree.xpath("/html/body/feed/title")[0].text
             ret['id'] = tree.xpath("/html/body/feed/id")[0].text
+            ret['favicon'] = tree.xpath("/html/body/feed/icon")[0].text
             links= tree.xpath("/html/body/feed/link")
             ret['links'] = links
             for link in links:
