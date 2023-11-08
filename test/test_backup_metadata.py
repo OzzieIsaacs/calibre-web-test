@@ -305,6 +305,7 @@ class TestBackupMetadata(TestCase, ui_class):
         self.edit_book(3, content={'description': ""})
         self.restart_calibre_web()
         metadata = read_opf_metadata(meta_path)
+        time.sleep(1)
         self.assertEqual(metadata['description'], "")
 
     def test_backup_change_custom_bool(self):

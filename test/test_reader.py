@@ -18,10 +18,11 @@ class TestReader(unittest.TestCase, ui_class):
 
     p = None
     driver = None
+    dependencys = ['py7zr']
 
     @classmethod
     def setUpClass(cls):
-
+        add_dependency(cls.dependencys, cls.__name__)
         try:
             startup(cls, cls.py_version, {'config_calibre_dir':TEST_DB}, env={"APP_MODE": "test"})
             cls.current_handle = cls.driver.current_window_handle
@@ -40,6 +41,7 @@ class TestReader(unittest.TestCase, ui_class):
 
     @classmethod
     def tearDownClass(cls):
+        remove_dependency(cls.dependencys)
         cls.driver.switch_to.window(cls.current_handle)
         cls.driver.get("http://127.0.0.1:8083")
         cls.stop_calibre_web()
