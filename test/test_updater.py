@@ -8,7 +8,7 @@ import requests
 
 from helper_ui import ui_class
 from config_test import TEST_DB, BOOT_TIME, CALIBRE_WEB_PATH
-from helper_func import startup, debug_startup, add_dependency, remove_dependency
+from helper_func import startup
 from helper_func import count_files
 from helper_proxy import Proxy, val
 from selenium.webdriver.common.by import By

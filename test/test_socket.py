@@ -67,8 +67,8 @@ class TestSocket(unittest.TestCase, ui_class):
                 self.driver.get("http://127.0.0.1:8083")
             except WebDriverException as e:
                 error = e.msg
-            self.assertTrue(re.findall('Reached error page:\sabout:neterror\?e=connectionFailure', error))
-
+            self.assertTrue(re.findall(r'Reached error page:\sabout:neterror\?e=connectionFailure', error))
+            time.sleep(3)
             self.driver.get("http://127.0.0.1:8000")
             self.check_element_on_page((By.ID, "username"))
 
@@ -80,7 +80,7 @@ class TestSocket(unittest.TestCase, ui_class):
                 self.driver.get("http://127.0.0.1:8000")
             except WebDriverException as e:
                 error = e.msg
-            self.assertTrue(re.findall('Reached error page:\sabout:neterror\?e=connectionFailure', error))
+            self.assertTrue(re.findall(r'Reached error page:\sabout:neterror\?e=connectionFailure', error))
 
         finally:
             server.stop_server()
