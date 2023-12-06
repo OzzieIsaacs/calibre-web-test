@@ -15,6 +15,9 @@ from helper_func import save_logfiles
 from helper_gdrive import prepare_gdrive
 from subproc_wrapper import process_open
 
+RESOURCES = {'ports': 1}
+
+PORTS = ['8083']
 
 # test gdrive database
 @unittest.skipIf(not os.path.exists(os.path.join(base_path, "files", "client_secrets.json")) or
@@ -76,7 +79,7 @@ class TestCliGdrivedb(unittest.TestCase, ui_class):
     def tearDownClass(cls):
         os.chdir(base_path)
         try:
-            cls.driver.get("http://127.0.0.1:8083")
+            cls.driver.get("http://127.0.0.1:" + PORTS[0])
             cls.stop_calibre_web()
             # close the browser window and stop calibre-web
             cls.p.terminate()
@@ -132,7 +135,7 @@ class TestCliGdrivedb(unittest.TestCase, ui_class):
         # create a new Firefox session
         time.sleep(BOOT_TIME)
         # navigate to the application home page
-        self.driver.get("http://127.0.0.1:8083")
+        self.driver.get("http://127.0.0.1:" + PORTS[0])
 
         # Wait for config screen to show up
         self.fill_db_config({'config_calibre_dir': TEST_DB})
@@ -148,7 +151,7 @@ class TestCliGdrivedb(unittest.TestCase, ui_class):
         time.sleep(BOOT_TIME)
         self.fill_db_config({'config_google_drive_folder': 'test'})
         time.sleep(BOOT_TIME)
-        self.driver.get("http://127.0.0.1:8083")
+        self.driver.get("http://127.0.0.1:" + PORTS[0])
         self.stop_calibre_web()
         time.sleep(5)  # shutdowntime
         self.p.terminate()
@@ -163,7 +166,7 @@ class TestCliGdrivedb(unittest.TestCase, ui_class):
         # create a new Firefox session
         time.sleep(BOOT_TIME)
         # navigate to the application home page
-        self.driver.get("http://127.0.0.1:8083")
+        self.driver.get("http://127.0.0.1:" + PORTS[0])
         os.chmod(gdrive_db, 0o654)
         self.stop_calibre_web()
         self.p.terminate()
@@ -180,7 +183,7 @@ class TestCliGdrivedb(unittest.TestCase, ui_class):
         time.sleep(BOOT_TIME)
         self.fill_db_config({'config_google_drive_folder': 'test'})
         time.sleep(BOOT_TIME)
-        self.driver.get("http://127.0.0.1:8083")
+        self.driver.get("http://127.0.0.1:" + PORTS[0])
         time.sleep(WAIT_GDRIVE)
         self.stop_calibre_web()
         time.sleep(5)  # shutdowntime
@@ -200,7 +203,7 @@ class TestCliGdrivedb(unittest.TestCase, ui_class):
         self.fill_db_config({'config_google_drive_folder': 'test'})
         time.sleep(BOOT_TIME)
         self.assertTrue(self.check_element_on_page((By.ID, "flash_success")))
-        self.driver.get("http://127.0.0.1:8083")
+        self.driver.get("http://127.0.0.1:" + PORTS[0])
         time.sleep(WAIT_GDRIVE)
         self.stop_calibre_web()
         time.sleep(5)  # shutdowntime
@@ -218,7 +221,7 @@ class TestCliGdrivedb(unittest.TestCase, ui_class):
         time.sleep(BOOT_TIME)
         try:
             # navigate to the application home page
-            self.driver.get("http://127.0.0.1:8083")
+            self.driver.get("http://127.0.0.1:" + PORTS[0])
             # Wait for config screen to show up
             self.fill_db_config({'config_calibre_dir': TEST_DB})
             # wait for cw to reboot

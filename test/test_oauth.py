@@ -10,6 +10,11 @@ from selenium.webdriver.common.by import By
 from helper_func import save_logfiles
 
 
+RESOURCES = {'ports': 1}
+
+PORTS = ['8083']
+
+
 class TestOAuthLogin(unittest.TestCase, ui_class):
 
     p = None
@@ -22,7 +27,7 @@ class TestOAuthLogin(unittest.TestCase, ui_class):
         add_dependency(cls.dep_line, cls.__name__)
 
         try:
-            startup(cls, cls.py_version, {'config_calibre_dir':TEST_DB}, env={"APP_MODE": "test"})
+            startup(cls, cls.py_version, {'config_calibre_dir':TEST_DB}, port=PORTS[0], env={"APP_MODE": "test"})
         except Exception as e:
             print('setup failed')
             cls.driver.quit()
@@ -30,7 +35,7 @@ class TestOAuthLogin(unittest.TestCase, ui_class):
 
     @classmethod
     def tearDownClass(cls):
-        cls.driver.get("http://127.0.0.1:8083")
+        cls.driver.get("http://127.0.0.1:" + PORTS[0])
         cls.stop_calibre_web()
         cls.p.terminate()
         cls.driver.quit()

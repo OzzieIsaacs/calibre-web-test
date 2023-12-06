@@ -16,6 +16,11 @@ from helper_gdrive import prepare_gdrive, connect_gdrive
 from selenium.webdriver.common.by import By
 
 
+RESOURCES = {'ports': 1}
+
+PORTS = ['8083']
+
+
 @skipIf(not os.path.exists(os.path.join(base_path, "files", "client_secrets.json")) or
                  not os.path.exists(os.path.join(base_path, "files", "gdrive_credentials")),
                  "client_secrets.json and/or gdrive_credentials file is missing")
@@ -60,7 +65,7 @@ class TestEditAuthorsGdrive(TestCase, ui_class):
                                           # 'config_log_level': 'DEBUG',
                                           'config_kepubifypath': '',
                                           'config_binariesdir': ''},
-                    only_metadata=True, env={"APP_MODE": "test"})
+                    port=PORTS[0], only_metadata=True, env={"APP_MODE": "test"})
             cls.fill_db_config({'config_use_google_drive': 1})
             time.sleep(2)
             cls.fill_db_config({'config_google_drive_folder': 'test'})
@@ -75,7 +80,7 @@ class TestEditAuthorsGdrive(TestCase, ui_class):
 
     @classmethod
     def tearDownClass(cls):
-        cls.driver.get("http://127.0.0.1:8083")
+        cls.driver.get("http://127.0.0.1:" + PORTS[0])
         cls.stop_calibre_web()
         # close the browser window and stop calibre-web
         cls.driver.quit()

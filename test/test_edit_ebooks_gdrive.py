@@ -19,6 +19,11 @@ from helper_func import save_logfiles
 from helper_gdrive import prepare_gdrive, connect_gdrive, check_path_gdrive
 
 
+RESOURCES = {'ports': 1}
+
+PORTS = ['8083']
+
+
 # test editing books on gdrive
 @unittest.skipIf(not os.path.exists(os.path.join(base_path, "files", "client_secrets.json")) or
                  not os.path.exists(os.path.join(base_path, "files", "gdrive_credentials")),
@@ -62,6 +67,7 @@ class TestEditBooksOnGdrive(unittest.TestCase, ui_class):
             startup(cls,
                     cls.py_version,
                     {'config_calibre_dir': TEST_DB},
+                    port=PORTS[0],
                     only_metadata=True, env={"APP_MODE": "test"})
             cls.fill_db_config({'config_use_google_drive': 1})
             time.sleep(4)
@@ -81,7 +87,7 @@ class TestEditBooksOnGdrive(unittest.TestCase, ui_class):
     @classmethod
     def tearDownClass(cls):
         try:
-            cls.driver.get("http://127.0.0.1:8083")
+            cls.driver.get("http://127.0.0.1:" + PORTS[0])
             cls.stop_calibre_web()
             # close the browser window and stop calibre-web
             cls.driver.quit()
@@ -376,7 +382,7 @@ class TestEditBooksOnGdrive(unittest.TestCase, ui_class):
         old_book_path = os.path.join('test', 'Sigurd Lindgren', 'book8 (8)').replace('\\', '/')
         gdrive_path = check_path_gdrive(fs, old_book_path)
         self.assertFalse(gdrive_path)
-        self.driver.get("http://127.0.0.1:8083/admin/book/8")
+        self.driver.get("http://127.0.0.1:{}/admin/book/8".format(PORTS[0]))
         time.sleep(5)
         self.wait_page_has_loaded()
         time.sleep(4)
@@ -837,12 +843,12 @@ class TestEditBooksOnGdrive(unittest.TestCase, ui_class):
         self.assertEqual('book', details['title'])
         self.assertEqual('Unknown', details['author'][0])
         r = requests.session()
-        login_page = r.get('http://127.0.0.1:8083/login')
+        login_page = r.get('http://127.0.0.1:{}/login'.format(PORTS[0]))
         token = re.search('<input type="hidden" name="csrf_token" value="(.*)">', login_page.text)
         payload = {'username': 'admin', 'password': 'admin123', 'submit': "", 'next': "/", "remember_me": "on",
                    "csrf_token": token.group(1)}
-        r.post('http://127.0.0.1:8083/login', data=payload)
-        resp = r.get('http://127.0.0.1:8083' + details['cover'])
+        r.post('http://127.0.0.1:{}/login'.format(PORTS[0]), data=payload)
+        resp = r.get('http://127.0.0.1:{}'.format(PORTS[0]) + details['cover'])
         self.assertEqual('19501', resp.headers['Content-Length'])
         self.fill_basic_config({'config_uploading': 0})
         r.close()
@@ -865,11 +871,11 @@ class TestEditBooksOnGdrive(unittest.TestCase, ui_class):
         self.assertEqual('book9', details['title'])
         self.assertEqual('Noname 23', details['author'][0])
         r = requests.session()
-        login_page = r.get('http://127.0.0.1:8083/login')
+        login_page = r.get('http://127.0.0.1:{}/login'.format(PORTS[0]))
         token = re.search('<input type="hidden" name="csrf_token" value="(.*)">', login_page.text)
         payload = {'username': 'admin', 'password': 'admin123', 'submit': "",
                    'next': "/", "remember_me": "on", "csrf_token": token.group(1)}
-        r.post('http://127.0.0.1:8083/login', data=payload)
+        r.post('http://127.0.0.1:{}/login'.format(PORTS[0]), data=payload)
         resp = r.get('http://127.0.0.1:8083' + details['cover'])
         self.assertEqual('8936', resp.headers['Content-Length'])
         self.fill_basic_config({'config_uploading': 0})
@@ -887,11 +893,11 @@ class TestEditBooksOnGdrive(unittest.TestCase, ui_class):
         self.assertTrue(download_link.endswith('/5.epub'),
                         'Download Link has invalid format for kobo browser, has to end with filename')
         r = requests.session()
-        login_page = r.get('http://127.0.0.1:8083/login')
+        login_page = r.get('http://127.0.0.1:{}/login'.format(PORTS[0]))
         token = re.search('<input type="hidden" name="csrf_token" value="(.*)">', login_page.text)
         payload = {'username': 'admin', 'password': 'admin123', 'submit': "",
                    'next': "/", "remember_me": "on", "csrf_token": token.group(1)}
-        r.post('http://127.0.0.1:8083/login', data=payload)
+        r.post('http://127.0.0.1:{}/login'.format(PORTS[0]), data=payload)
         resp = r.get(download_link)
         self.assertEqual(resp.headers['Content-Type'], 'application/epub+zip')
         self.assertEqual(resp.status_code, 200)

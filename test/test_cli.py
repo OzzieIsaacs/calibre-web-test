@@ -16,6 +16,9 @@ from selenium import webdriver
 from selenium.webdriver.common.by import By
 from selenium.common.exceptions import WebDriverException
 
+RESOURCES = {'ports': 2}
+
+PORTS = ['8083', '8082']
 
 class TestCli(unittest.TestCase, ui_class):
     driver = None
@@ -77,7 +80,7 @@ class TestCli(unittest.TestCase, ui_class):
             # create a new Firefox session
             time.sleep(15)
             # navigate to the application home page
-            self.driver.get("http://127.0.0.1:8083")
+            self.driver.get("http://127.0.0.1:" + PORTS[0])
 
             # Wait for config screen to show up
             self.fill_db_config({'config_calibre_dir': TEST_DB})
@@ -118,7 +121,7 @@ class TestCli(unittest.TestCase, ui_class):
             self.driver.switch_to.alert.accept()
         except Exception:
             pass
-        self.driver.get("http://127.0.0.1:8083")
+        self.driver.get("http://127.0.0.1:" + PORTS[0])
 
         # Wait for config screen to show up
         self.check_element_on_page((By.ID, "username"))
@@ -254,7 +257,7 @@ class TestCli(unittest.TestCase, ui_class):
 
         # navigate to the application home page
         try:
-            self.driver.get("https://127.0.0.1:8083")
+            self.driver.get("https://127.0.0.1:" + PORTS[0])
             self.assertIsNone("Error", "HTTPS Connection could established with wrong key/cert file")
         except WebDriverException as e:
             self.assertIsNotNone(re.findall('Reached error page: about:neterror?nssFailure', e.msg))
@@ -274,7 +277,7 @@ class TestCli(unittest.TestCase, ui_class):
 
         # navigate to the application home page
         try:
-            self.driver.get("https://127.0.0.1:8083")
+            self.driver.get("https://127.0.0.1:" + PORTS[0])
         except WebDriverException:
             self.assertIsNone("Error", "HTTPS Connection could not established with key/cert file")
 
@@ -308,12 +311,12 @@ class TestCli(unittest.TestCase, ui_class):
             pass
         try:
             error = ""
-            self.driver.get("http://127.0.0.1:8083")
+            self.driver.get("http://127.0.0.1:" + PORTS[0])
         except WebDriverException as e:
             error = e.msg
         self.assertTrue(re.findall('Reached error page:\sabout:neterror\?e=connectionFailure', error))
         try:
-            self.driver.get("http://" + address + ":8083")
+            self.driver.get("http://" + address + ":" + PORTS[0])
         except WebDriverException:
             self.assertIsNone('Limit listening address not working')
         self.assertTrue(self.check_element_on_page((By.ID, "username")))
@@ -325,7 +328,7 @@ class TestCli(unittest.TestCase, ui_class):
 
     def test_environ_port_setting(self):
         my_env = os.environ.copy()
-        my_env["CALIBRE_PORT"] = '8082'
+        my_env["CALIBRE_PORT"] = PORTS[1]
         p = process_open([self.py_version,  "-B", os.path.join(CALIBRE_WEB_PATH, u'cps.py')], [1], env=my_env)
 
         time.sleep(BOOT_TIME)
@@ -336,7 +339,7 @@ class TestCli(unittest.TestCase, ui_class):
             pass
         try:
             error = ""
-            self.driver.get("http://127.0.0.1:8082")
+            self.driver.get("http://127.0.0.1:" + PORTS[1])
         except WebDriverException as e:
             error = e.msg
         self.assertFalse(re.findall('Reached error page:\sabout:neterror\?e=connectionFailure', error))
@@ -400,7 +403,7 @@ class TestCli(unittest.TestCase, ui_class):
         time.sleep(BOOT_TIME)
         try:
             # navigate to the application home page
-            self.driver.get("http://127.0.0.1:8083")
+            self.driver.get("http://127.0.0.1:" + PORTS[0])
 
             # Wait for config screen to show up
             self.fill_db_config({'config_calibre_dir': TEST_DB})
@@ -439,7 +442,7 @@ class TestCli(unittest.TestCase, ui_class):
         time.sleep(BOOT_TIME)
         try:
             # navigate to the application home page
-            self.driver.get("http://127.0.0.1:8083")
+            self.driver.get("http://127.0.0.1:" + PORTS[0])
 
             # Wait for config screen to show up
             self.login("admin", "aDm:in12")
@@ -545,7 +548,7 @@ class TestCli(unittest.TestCase, ui_class):
         time.sleep(BOOT_TIME)
         try:
             # navigate to the application home page
-            self.driver.get("http://127.0.0.1:8083")
+            self.driver.get("http://127.0.0.1:" + PORTS[0])
             # Wait for config screen to show up
             self.fill_db_config({'config_calibre_dir': TEST_DB})
             # wait for cw to reboot
@@ -661,7 +664,7 @@ class TestCli(unittest.TestCase, ui_class):
                           '-o', log_file], [1])
         time.sleep(BOOT_TIME)
         # navigate to the application home page
-        self.driver.get("http://127.0.0.1:8083")
+        self.driver.get("http://127.0.0.1:" + PORTS[0])
         # Wait for config screen to show up
         self.fill_db_config({'config_calibre_dir': TEST_DB})
         # wait for cw to reboot
@@ -685,13 +688,13 @@ class TestCli(unittest.TestCase, ui_class):
         p = process_open([self.py_version,  "-B", os.path.join(CALIBRE_WEB_PATH, u'cps.py')], [1], env=my_env)
         time.sleep(BOOT_TIME)
         # navigate to the application home page
-        self.driver.get("http://127.0.0.1:8083")
+        self.driver.get("http://127.0.0.1:" + PORTS[0])
         # Wait for config screen to show up
         self.fill_db_config({'config_calibre_dir': TEST_DB})
         # wait for cw to reboot
         time.sleep(2)
         self.assertTrue(self.check_element_on_page((By.ID, 'flash_success')))
-        r = requests.get("http://127.0.0.1:8083/reconnect")
+        r = requests.get("http://127.0.0.1:" + PORTS[0] + "/reconnect")
         self.assertEqual(200, r.status_code)
         self.assertDictEqual({}, r.json())
         self.stop_calibre_web(p)
@@ -702,7 +705,7 @@ class TestCli(unittest.TestCase, ui_class):
         my_env = os.environ.copy()
         p = process_open([self.py_version,  "-B", os.path.join(CALIBRE_WEB_PATH, u'cps.py')], [1], env=my_env)
         time.sleep(BOOT_TIME)
-        r = requests.get("http://127.0.0.1:8083/reconnect")
+        r = requests.get("http://127.0.0.1:" + PORTS[0] + "/reconnect")
         self.assertEqual(404, r.status_code)
         self.stop_calibre_web(p)
         try:
@@ -711,7 +714,7 @@ class TestCli(unittest.TestCase, ui_class):
             pass
         p = process_open([self.py_version,  "-B", os.path.join(CALIBRE_WEB_PATH, u'cps.py'), "-r"], [1])
         time.sleep(BOOT_TIME)
-        r = requests.get("http://127.0.0.1:8083/reconnect")
+        r = requests.get("http://127.0.0.1:" + PORTS[0] + "/reconnect")
         self.assertEqual(200, r.status_code)
         self.assertDictEqual({}, r.json())
         self.stop_calibre_web(p)
@@ -725,7 +728,7 @@ class TestCli(unittest.TestCase, ui_class):
         p = process_open([self.py_version,  "-B", os.path.join(CALIBRE_WEB_PATH, u'cps.py')], [1])
         time.sleep(BOOT_TIME)
         # navigate to the application home page
-        self.driver.get("http://127.0.0.1:8083")
+        self.driver.get("http://127.0.0.1:" + PORTS[0])
         # Wait for config screen to show up
         self.fill_db_config({'config_calibre_dir': TEST_DB})
         # wait for cw to reboot
@@ -735,34 +738,34 @@ class TestCli(unittest.TestCase, ui_class):
         mode = os.path.join(CALIBRE_WEB_PATH, "cps", "templates", "tasks.html")
         os.chmod(mode, 0o200)
         r = requests.session()
-        login_page = r.get('http://127.0.0.1:8083/login')
+        login_page = r.get('http://127.0.0.1:" + PORTS[0] + "/login')
         token = re.search('<input type="hidden" name="csrf_token" value="(.*)">', login_page.text)
         payload = {'username': 'admin', 'password': 'admin123', 'submit': "", 'next': "/", "csrf_token": token.group(1)}
-        r.post('http://127.0.0.1:8083/login', data=payload)
-        resp = r.get("http://127.0.0.1:8083/tasks")
+        r.post('http://127.0.0.1:" + PORTS[0] + "/login', data=payload)
+        resp = r.get("http://127.0.0.1:" + PORTS[0] + "/tasks")
         self.assertEqual(403, resp.status_code)
         os.chmod(mode, 0o644)
-        resp = r.get("http://127.0.0.1:8083/tasks")
+        resp = r.get("http://127.0.0.1:" + PORTS[0] + "/tasks")
         self.assertEqual(200, resp.status_code)
         # readonly "static" folder
         mode = os.path.join(CALIBRE_WEB_PATH, "cps", "static")
         os.chmod(mode, 0o200)
-        resp = r.get("http://127.0.0.1:8083/static/js/main.js")
+        resp = r.get("http://127.0.0.1:" + PORTS[0] + "/static/js/main.js")
         self.assertEqual(404, resp.status_code)
-        resp = r.get("http://127.0.0.1:8083/tasks")
+        resp = r.get("http://127.0.0.1:" + PORTS[0] + "/tasks")
         self.assertEqual(200, resp.status_code)
         os.chmod(mode, 0o755)
-        resp = r.get("http://127.0.0.1:8083/static/js/main.js")
+        resp = r.get("http://127.0.0.1:" + PORTS[0] + "/static/js/main.js")
         self.assertEqual(200, resp.status_code)
         # readonly "main.js" folder
         mode = os.path.join(CALIBRE_WEB_PATH, "cps", "static", "js", "main.js")
         os.chmod(mode, 0o200)
-        resp = r.get("http://127.0.0.1:8083/static/js/main.js")
+        resp = r.get("http://127.0.0.1:" + PORTS[0] + "/static/js/main.js")
         self.assertEqual(500, resp.status_code)
-        resp = r.get("http://127.0.0.1:8083/tasks")
+        resp = r.get("http://127.0.0.1:" + PORTS[0] + "/tasks")
         self.assertEqual(200, resp.status_code)
         os.chmod(mode, 0o644)
-        resp = r.get("http://127.0.0.1:8083/static/js/main.js")
+        resp = r.get("http://127.0.0.1:" + PORTS[0] + "/static/js/main.js")
         self.assertEqual(200, resp.status_code)
 
         self.stop_calibre_web(p)

@@ -15,6 +15,12 @@ from helper_func import save_logfiles
 from selenium.webdriver.support.ui import WebDriverWait
 from selenium.webdriver.support import expected_conditions as EC
 
+
+RESOURCES = {'ports': 1}
+
+PORTS = ['8083']
+
+
 class TestKoboSync(unittest.TestCase, ui_class):
 
     p = None
@@ -29,10 +35,10 @@ class TestKoboSync(unittest.TestCase, ui_class):
         add_dependency(cls.json_line, cls.__name__)
 
         try:
-            host = 'http://' + get_Host_IP() + ':8083'
+            host = 'http://' + get_Host_IP() + ':' + PORTS[0]
             startup(cls, cls.py_version, {'config_calibre_dir':TEST_DB, 'config_log_level': 'DEBUG', 'config_kobo_sync':1,
                                           'config_kepubifypath': "",
-                                          'config_kobo_proxy':0}, host=host, env={"APP_MODE": "test"})
+                                          'config_kobo_proxy':0}, host=host, port=PORTS[0], env={"APP_MODE": "test"})
             time.sleep(3)
             WebDriverWait(cls.driver, 5).until(EC.presence_of_element_located((By.ID, "flash_success")))
             cls.goto_page('user_setup')
@@ -40,7 +46,7 @@ class TestKoboSync(unittest.TestCase, ui_class):
             link = cls.check_element_on_page((By.CLASS_NAME, "well"))
             cls.kobo_adress = host + '/kobo/' + re.findall(".*/kobo/(.*)", link.text)[0]
             cls.check_element_on_page((By.ID, "kobo_close")).click()
-            cls.driver.get('http://127.0.0.1:8083')
+            cls.driver.get("http://127.0.0.1:" + PORTS[0])
             cls.login('admin', 'admin123')
             time.sleep(2)
         except Exception as e:
@@ -51,7 +57,7 @@ class TestKoboSync(unittest.TestCase, ui_class):
 
     @classmethod
     def tearDownClass(cls):
-        cls.driver.get("http://127.0.0.1:8083")
+        cls.driver.get("http://127.0.0.1:" + PORTS[0])
         cls.stop_calibre_web()
         cls.driver.quit()
         cls.p.terminate()
@@ -665,7 +671,7 @@ class TestKoboSync(unittest.TestCase, ui_class):
         print(data) # todo check result
 
     def test_kobo_limit(self):
-        host = 'http://' + get_Host_IP() + ':8083'
+        host = 'http://' + get_Host_IP() + PORTS[0]
         payload = {
             "AffiliateName": "Kobo",
             "AppVersion": "4.19.14123",

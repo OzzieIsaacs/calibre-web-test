@@ -14,6 +14,11 @@ from config_test import TEST_DB
 from helper_func import startup, debug_startup
 
 
+RESOURCES = {'ports': 1}
+
+PORTS = ['8083']
+
+
 class TestCalibreWebVisibilitys(unittest.TestCase, ui_class):
 
     p = None
@@ -29,7 +34,7 @@ class TestCalibreWebVisibilitys(unittest.TestCase, ui_class):
 
     @classmethod
     def tearDownClass(cls):
-        cls.driver.get("http://127.0.0.1:8083")
+        cls.driver.get("http://127.0.0.1:" + PORTS[0])
         cls.stop_calibre_web()
         # close the browser window and stop calibre-web
         cls.driver.quit()
@@ -517,13 +522,13 @@ class TestCalibreWebVisibilitys(unittest.TestCase, ui_class):
 
     def test_search_functions(self):
         r = requests.session()
-        login_page = r.get('http://127.0.0.1:8083/login')
+        login_page = r.get('http://127.0.0.1:{}/login'.format(PORTS[0]))
         token = re.search('<input type="hidden" name="csrf_token" value="(.*)">', login_page.text)
         payload = {'username': 'admin', 'password': 'admin123', 'submit': "", 'next': "/", "remember_me": "on", "csrf_token": token.group(1)}
-        r.post('http://127.0.0.1:8083/login', data=payload)
-        resp = r.get('http://127.0.0.1:8083/search')
+        r.post('http://127.0.0.1:{}/login'.format(PORTS[0]), data=payload)
+        resp = r.get('http://127.0.0.1:{}/search'.format(PORTS[0]))
         self.assertEqual(200, resp.status_code)
-        resp = r.get('http://127.0.0.1:8083/advsearch')
+        resp = r.get('http://127.0.0.1:{}/advsearch'.format(PORTS[0]))
         self.assertEqual(200, resp.status_code)
         r.close()
 
@@ -899,20 +904,20 @@ class TestCalibreWebVisibilitys(unittest.TestCase, ui_class):
 
     def test_request_link_column_to_read_status(self):
         r = requests.session()
-        login_page = r.get('http://127.0.0.1:8083/login')
+        login_page = r.get('http://127.0.0.1:{}/login'.format(PORTS[0]))
         token = re.search('<input type="hidden" name="csrf_token" value="(.*)">', login_page.text)
         payload = {'username': 'admin', 'password': 'admin123', 'submit':"",
                    'next':"/", "remember_me":"on", "csrf_token": token.group(1)}
-        result = r.post('http://127.0.0.1:8083/login', data=payload)
+        result = r.post('http://127.0.0.1:{}/login'.format(PORTS[0]), data=payload)
         self.assertEqual(200, result.status_code)
-        config_page = r.get('http://127.0.0.1:8083/admin/viewconfig')
+        config_page = r.get('http://127.0.0.1:{}/admin/viewconfig'.format(PORTS[0]))
         token = re.search('<input type="hidden" name="csrf_token" value="(.*)">', config_page.text)
         payload = {"config_read_column": "-1", "csrf_token": token.group(1)}
-        result = r.post('http://127.0.0.1:8083/admin/viewconfig', data=payload)
+        result = r.post('http://127.0.0.1:{}/admin/viewconfig'.format(PORTS[0]), data=payload)
         self.assertTrue("flash_danger" in result.text)
         token = re.search('<input type="hidden" name="csrf_token" value="(.*)">', result.text)
         payload = {"config_read_column": "2", "csrf_token": token.group(1)}
-        result = r.post('http://127.0.0.1:8083/admin/viewconfig', data=payload)
+        result = r.post('http://127.0.0.1:{}/admin/viewconfig'.format(PORTS[0]), data=payload)
         self.assertTrue("flash_danger" in result.text)
         r.close()
 
@@ -1079,11 +1084,11 @@ class TestCalibreWebVisibilitys(unittest.TestCase, ui_class):
         self.assertTrue(self.check_element_on_page((By.ID, "book_title")))
         # check right cover of book is visible
         r = requests.session()
-        login_page = r.get('http://127.0.0.1:8083/login')
+        login_page = r.get('http://127.0.0.1:{}/login'.format(PORTS[0]))
         token = re.search('<input type="hidden" name="csrf_token" value="(.*)">', login_page.text)
         payload = {'username': 'admin', 'password': 'admin123', 'submit': "", 'next': "/", "remember_me": "on", "csrf_token": token.group(1)}
-        r.post('http://127.0.0.1:8083/login', data=payload)
-        resp = r.get('http://127.0.0.1:8083/cover/'+list_element[1][0]['id'])
+        r.post('http://127.0.0.1:{}/login'.format(PORTS[0]), data=payload)
+        resp = r.get('http://127.0.0.1:{}/cover/{}'.format(PORTS[0], list_element[1][0]['id']))
         self.assertEqual('16790', resp.headers['Content-Length'])
         r.close()
         # check archive book visible in search result

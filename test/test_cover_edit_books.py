@@ -16,6 +16,9 @@ from helper_func import save_logfiles
 from diffimg import diff
 from io import BytesIO
 
+RESOURCES = {'ports':2}
+
+PORTS = ['8083', '8080']
 
 class TestCoverEditBooks(TestCase, ui_class):
     p = None
@@ -30,8 +33,8 @@ class TestCoverEditBooks(TestCase, ui_class):
             cls.proxy.start()
             pem_file = os.path.join(os.path.expanduser('~'), '.mitmproxy', 'mitmproxy-ca-cert.pem')
             my_env = os.environ.copy()
-            my_env["http_proxy"] = 'http://localhost:8080'
-            my_env["https_proxy"] = 'http://localhost:8080'
+            my_env["http_proxy"] = 'http://localhost:' + PORTS[1]
+            my_env["https_proxy"] = 'http://localhost:' + PORTS[1]
             my_env["REQUESTS_CA_BUNDLE"] = pem_file
             my_env["APP_MODE"] = "test"
             # my_env["LANG"] = 'de_DE.UTF-8'
@@ -44,7 +47,7 @@ class TestCoverEditBooks(TestCase, ui_class):
 
     @classmethod
     def tearDownClass(cls):
-        cls.driver.get("http://127.0.0.1:8083")
+        cls.driver.get("http://127.0.0.1:" + PORTS[0])
         cls.stop_calibre_web()
         cls.driver.quit()
         cls.proxy.stop_proxy()

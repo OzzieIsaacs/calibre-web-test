@@ -15,6 +15,11 @@ from helper_func import save_logfiles
 # test editing books on gdrive
 
 
+RESOURCES = {'ports': 1}
+
+PORTS = ['8083']
+
+
 @unittest.skipIf(not os.path.exists(os.path.join(base_path, "files", "client_secrets.json")) or
                  not os.path.exists(os.path.join(base_path, "files", "gdrive_credentials")),
                  "client_secrets.json and/or gdrive_credentials file is missing")
@@ -49,7 +54,8 @@ class TestSetupGdrive(unittest.TestCase, ui_class):
             if os.path.exists(gdauth):
                 os.unlink(gdauth)
 
-            startup(cls, cls.py_version, {}, only_startup=True, env={"APP_MODE": "test"})
+            startup(cls, cls.py_version, {}, port=PORTS[0], 
+                    only_startup=True, env={"APP_MODE": "test"})
         except Exception as e:
             try:
                 print(e)
@@ -61,7 +67,7 @@ class TestSetupGdrive(unittest.TestCase, ui_class):
     @classmethod
     def tearDownClass(cls):
         try:
-            cls.driver.get("http://127.0.0.1:8083")
+            cls.driver.get("http://127.0.0.1:" + PORTS[0])
             cls.stop_calibre_web()
             # close the browser window and stop calibre-web
             cls.driver.quit()

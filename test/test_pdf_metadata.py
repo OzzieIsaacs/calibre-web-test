@@ -17,6 +17,11 @@ from selenium.webdriver.support.ui import WebDriverWait
 from selenium.webdriver.support import expected_conditions as EC
 
 
+RESOURCES = {'ports': 1}
+
+PORTS = ['8083']
+
+
 class TestUploadPDF(TestCase, ui_class):
     p = None
     driver = None
@@ -37,7 +42,7 @@ class TestUploadPDF(TestCase, ui_class):
             os.remove(os.path.join(base_path, 'files', 'book1.pdf'))
         except FileNotFoundError:
             pass
-        cls.driver.get("http://127.0.0.1:8083")
+        cls.driver.get("http://127.0.0.1:" + PORTS[0])
         cls.stop_calibre_web()
         # close the browser window and stop calibre-web
         cls.driver.quit()

@@ -17,6 +17,11 @@ import glob
 import time
 
 
+RESOURCES = {'ports': 1}
+
+PORTS = ['8083']
+
+
 class TestPipInstall(unittest.TestCase, ui_class):
     package_path = None
     @classmethod
@@ -68,7 +73,7 @@ class TestPipInstall(unittest.TestCase, ui_class):
         # create a new Firefox session
         time.sleep(BOOT_TIME)
         # navigate to the application home page
-        self.driver.get("http://127.0.0.1:8083")
+        self.driver.get("http://127.0.0.1:" + PORTS[0])
         self.login("admin", "admin123")
         self.fill_db_config({'config_calibre_dir': TEST_DB})
         self.assertTrue(self.check_element_on_page((By.ID, "flash_success")))
@@ -87,7 +92,7 @@ class TestPipInstall(unittest.TestCase, ui_class):
         # create a new Firefox session
         time.sleep(BOOT_TIME)
         # navigate to the application home page
-        self.driver.get("http://127.0.0.1:8083")
+        self.driver.get("http://127.0.0.1:" + PORTS[0])
         self.login("admin", "admin123")
         self.fill_db_config({'config_calibre_dir': TEST_DB})
         self.assertTrue(self.check_element_on_page((By.ID, "flash_success")))
@@ -104,7 +109,7 @@ class TestPipInstall(unittest.TestCase, ui_class):
         # create a new Firefox session
         time.sleep(BOOT_TIME)
         # navigate to the application home page
-        self.driver.get("http://127.0.0.1:8083")
+        self.driver.get("http://127.0.0.1:" + PORTS[0])
         self.login("admin", "admin123")
         self.fill_db_config({'config_calibre_dir': TEST_DB})
         self.assertTrue(self.check_element_on_page((By.ID, "flash_success")))

@@ -116,7 +116,7 @@ def get_Host_IP():
         return IP
 
 
-def debug_startup(inst, __, ___, login=True, host="http://127.0.0.1:8083", env=None):
+def debug_startup(inst, __, ___, login=True, host="http://127.0.0.1", port="8083", env=None):
 
     # create a new Firefox session
     inst.driver = webdriver.Firefox()
@@ -132,7 +132,7 @@ def debug_startup(inst, __, ___, login=True, host="http://127.0.0.1:8083", env=N
         inst.logout()
 
 
-def startup(inst, pyVersion, config, login=True, host="http://127.0.0.1:8083",
+def startup(inst, pyVersion, config, login=True, host="http://127.0.0.1", port="8083",
             env=None, parameter=None, work_path=None, only_startup=False, only_metadata=False):
     print("\n%s - %s: " % (inst.py_version, inst.__name__))
     try:
@@ -197,7 +197,7 @@ def startup(inst, pyVersion, config, login=True, host="http://127.0.0.1:8083",
     inst.driver.maximize_window()
 
     # navigate to the application home page
-    inst.driver.get(host)
+    inst.driver.get(host + ":" + port)
     WebDriverWait(inst.driver, 5).until(EC.title_contains("Calibre-Web"))
     if not only_startup:
         # Wait for config screen to show up

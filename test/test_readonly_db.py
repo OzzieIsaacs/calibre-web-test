@@ -17,6 +17,11 @@ from helper_func import change_comic_meta
 from helper_func import save_logfiles
 
 
+RESOURCES = {'ports': 1}
+
+PORTS = ['8083']
+
+
 @unittest.skipIf(os.name == 'nt', 'writeonly database on windows is not checked')
 class TestReadOnlyDatabase(TestCase, ui_class):
     p = None
@@ -25,7 +30,7 @@ class TestReadOnlyDatabase(TestCase, ui_class):
     @classmethod
     def setUpClass(cls):
         try:
-            startup(cls, cls.py_version, {'config_calibre_dir': TEST_DB})
+            startup(cls, cls.py_version, {'config_calibre_dir': TEST_DB}, port=PORTS[0])
             time.sleep(3)
         except Exception:
             cls.driver.quit()
@@ -33,7 +38,7 @@ class TestReadOnlyDatabase(TestCase, ui_class):
 
     @classmethod
     def tearDownClass(cls):
-        cls.driver.get("http://127.0.0.1:8083")
+        cls.driver.get("http://127.0.0.1:" + PORTS[0])
         cls.stop_calibre_web()
         # close the browser window and stop calibre-web
         cls.driver.quit()

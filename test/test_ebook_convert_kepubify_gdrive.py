@@ -16,6 +16,11 @@ from helper_func import save_logfiles, add_dependency, remove_dependency
 from helper_gdrive import prepare_gdrive
 
 
+RESOURCES = {'ports': 1}
+
+PORTS = ['8083']
+
+
 @unittest.skipIf(not os.path.exists(os.path.join(base_path, "files", "client_secrets.json")) or
                  not os.path.exists(os.path.join(base_path, "files", "gdrive_credentials")),
                  "client_secrets.json and/or gdrive_credentials file is missing")
@@ -58,7 +63,8 @@ class TestEbookConvertGDriveKepubify(unittest.TestCase, ui_class):
 
             startup(cls, cls.py_version, {'config_calibre_dir':TEST_DB,
                                           'config_binariesdir':'',
-                                          'config_kepubifypath':helper_email_convert.kepubify_path()}, env={"APP_MODE": "test"})
+                                          'config_kepubifypath':helper_email_convert.kepubify_path()},
+                    port=PORTS[0], env={"APP_MODE": "test"})
             cls.fill_db_config({'config_use_google_drive': 1})
             time.sleep(2)
 
@@ -72,7 +78,7 @@ class TestEbookConvertGDriveKepubify(unittest.TestCase, ui_class):
     def tearDownClass(cls):
         try:
             # close the browser window and stop calibre-web
-            cls.driver.get("http://127.0.0.1:8083")
+            cls.driver.get("http://127.0.0.1:" + PORTS[0])
             cls.stop_calibre_web()
             cls.driver.quit()
             cls.p.terminate()

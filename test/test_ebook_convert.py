@@ -17,6 +17,11 @@ from helper_func import startup
 from helper_func import save_logfiles
 
 
+RESOURCES = {'ports': 2}
+
+PORTS = ['8083', '1025']
+
+
 @unittest.skipIf(helper_email_convert.is_calibre_not_present(), "Skipping convert, calibre not found")
 class TestEbookConvertCalibre(unittest.TestCase, ui_class):
     p = None
@@ -28,7 +33,7 @@ class TestEbookConvertCalibre(unittest.TestCase, ui_class):
         # start email server
         cls.email_server = AIOSMTPServer(
             hostname='127.0.0.1',
-            port=1025,
+            port=int(PORTS[1]),
             only_ssl=False,
             timeout=10
         )
@@ -38,10 +43,10 @@ class TestEbookConvertCalibre(unittest.TestCase, ui_class):
         try:
             startup(cls, cls.py_version, {'config_calibre_dir':TEST_DB,
                                           'config_kepubifypath':'',
-                                          'config_binariesdir':helper_email_convert.calibre_path()}, env={"APP_MODE": "test"})
+                                          'config_binariesdir':helper_email_convert.calibre_path()}, port=PORTS[0], env={"APP_MODE": "test"})
 
             cls.edit_user('admin', {'email': 'a5@b.com', 'kindle_mail': 'a1@b.com'})
-            cls.setup_server(True, {'mail_server':'127.0.0.1', 'mail_port':'1025',
+            cls.setup_server(True, {'mail_server':'127.0.0.1', 'mail_port':PORTS[1],
                                     'mail_use_ssl':'None', 'mail_login':'name@host.com', 'mail_password_e':'1234',
                                     'mail_from':'name@host.com'})
             time.sleep(2)
@@ -52,7 +57,7 @@ class TestEbookConvertCalibre(unittest.TestCase, ui_class):
 
     @classmethod
     def tearDownClass(cls):
-        cls.driver.get("http://127.0.0.1:8083")
+        cls.driver.get("http://127.0.0.1:" + PORTS[0])
         cls.email_server.stop()
         try:
             cls.stop_calibre_web()
@@ -81,7 +86,7 @@ class TestEbookConvertCalibre(unittest.TestCase, ui_class):
         vals = self.get_convert_book(1)
         self.assertFalse(vals['btn_from'])
         self.assertFalse(vals['btn_to'])
-        # self.fill_basic_config({'config_converterpath': ""})
+        # self.fill_basic_config({'config_binariesdir': ""})
         self.fill_basic_config({'config_binariesdir':helper_email_convert.calibre_path()})
 
     # Set excecutable to wrong exe and start convert
@@ -441,7 +446,7 @@ class TestEbookConvertCalibre(unittest.TestCase, ui_class):
         self.assertTrue(len(formats7), 9)
         formats1 = self.driver.find_elements(By.XPATH, "//*[starts-with(@id,'btnGroupDrop1')]")
         self.assertTrue(len(formats1), 1)
-        self.driver.get("http://127.0.0.1:8083/")
+        self.driver.get("http://127.0.0.1:{}/".format(PORTS[0]))
         self.delete_shelf('bookFORMAT')
 
 

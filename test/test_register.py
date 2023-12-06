@@ -15,6 +15,12 @@ import requests
 from selenium.webdriver.support.ui import WebDriverWait
 from selenium.webdriver.support import expected_conditions as EC
 
+
+RESOURCES = {'ports': 1}
+
+PORTS = ['8083']
+
+
 class TestRegister(unittest.TestCase, ui_class):
     p = None
     driver = None
@@ -31,7 +37,8 @@ class TestRegister(unittest.TestCase, ui_class):
 
         try:
             startup(cls, cls.py_version, {'config_calibre_dir':TEST_DB,
-                                          'config_public_reg': 1, "config_ratelimiter": 0}, env={"APP_MODE": "test"})
+                                          'config_public_reg': 1, "config_ratelimiter": 0}, 
+                    port=PORTS[0], env={"APP_MODE": "test"})
             WebDriverWait(cls.driver, 5).until(EC.presence_of_element_located((By.ID, "flash_success")))
             cls.edit_user('admin', {'email': 'a5@b.com','kindle_mail': 'a1@b.com'})
             cls.setup_server(False, {'mail_server':'127.0.0.1', 'mail_port':'1025',
@@ -45,7 +52,7 @@ class TestRegister(unittest.TestCase, ui_class):
 
     @classmethod
     def tearDownClass(cls):
-        cls.driver.get("http://127.0.0.1:8083")
+        cls.driver.get("http://127.0.0.1:" + PORTS[0])
         cls.login('admin', 'admin123')
         cls.stop_calibre_web()
         # close the browser window and stop calibre-web
@@ -232,34 +239,34 @@ class TestRegister(unittest.TestCase, ui_class):
 
     def test_illegal_email(self):
         r = requests.session()
-        login_page = r.get('http://127.0.0.1:8083/login')
+        login_page = r.get('http://127.0.0.1:{}/login'.format(PORTS[0]))
         token = re.search('<input type="hidden" name="csrf_token" value="(.*)">', login_page.text)
         payload = {'name': 'user0 negativ', 'email': '1234', "csrf_token": token.group(1)}
-        resp = r.post('http://127.0.0.1:8083/register', data=payload)
+        resp = r.post('http://127.0.0.1:{}/register'.format(PORTS[0]), data=payload)
         self.assertTrue("flash_danger" in resp.text)
         payload = {'email': '1234@gr.de', "csrf_token": token.group(1)}
-        resp = r.post('http://127.0.0.1:8083/register', data=payload)
+        resp = r.post('http://127.0.0.1:{}/register'.format(PORTS[0]), data=payload)
         self.assertTrue("flash_danger" in resp.text)
         payload = {'name': 'user0 negativ', "csrf_token": token.group(1)}
-        resp = r.post('http://127.0.0.1:8083/register', data=payload)
+        resp = r.post('http://127.0.0.1:{}/register'.format(PORTS[0]), data=payload)
         self.assertTrue("flash_danger" in resp.text)
         payload = {'name': '/etc/./passwd', 'email': '/etc/./passwd', "csrf_token": token.group(1)}
-        resp = r.post('http://127.0.0.1:8083/register', data=payload)
+        resp = r.post('http://127.0.0.1:{}/register'.format(PORTS[0]), data=payload)
         self.assertTrue("flash_danger" in resp.text)
         payload = {"name": "abc123@mycom.com'\"[]()", 'email': "abc123@mycom.com'\"[]()", "csrf_token": token.group(1)}
-        resp = r.post('http://127.0.0.1:8083/register', data=payload)
+        resp = r.post('http://127.0.0.1:{}/register'.format(PORTS[0]), data=payload)
         self.assertTrue("flash_danger" in resp.text)
         payload = {"name": "abc123@mycom.com anD 1028=1028", 'email': "abc123@mycom.com anD 1028=1028", "csrf_token": token.group(1)}
-        resp = r.post('http://127.0.0.1:8083/register', data=payload)
+        resp = r.post('http://127.0.0.1:{}/register'.format(PORTS[0]), data=payload)
         self.assertTrue("flash_danger" in resp.text)
         payload = {"name": "abc123@myc@om.com", 'email': "abc123@myc@om.com", "csrf_token": token.group(1)}
-        resp = r.post('http://127.0.0.1:8083/register', data=payload)
+        resp = r.post('http://127.0.0.1:{}/register'.format(PORTS[0]), data=payload)
         self.assertTrue("flash_danger" in resp.text)
         payload = {"name": "1234456", 'email': "1@2.3", "csrf_token": token.group(1)}
-        resp = r.post('http://127.0.0.1:8083/register', data=payload)
+        resp = r.post('http://127.0.0.1:{}/register'.format(PORTS[0]), data=payload)
         self.assertTrue("flash_success" in resp.text)
         payload = {"name": "9dsfaf", 'email': "ü执1@ü执1.3", "csrf_token": token.group(1)}
-        resp = r.post('http://127.0.0.1:8083/register', data=payload)
+        resp = r.post('http://127.0.0.1:{}/register'.format(PORTS[0]), data=payload)
         self.assertTrue("flash_success" in resp.text)
 
 

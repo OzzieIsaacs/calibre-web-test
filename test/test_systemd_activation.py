@@ -13,6 +13,10 @@ from config_test import CALIBRE_WEB_PATH, TEST_DB, BOOT_TIME, base_path
 from selenium import webdriver
 from selenium.webdriver.common.by import By
 
+
+RESOURCES = {'fix_ports': 5555}
+
+
 @unittest.skipIf(os.name=="nt", "Sockets are not available on Windows")
 class TestSystemdActivation(unittest.TestCase, ui_class):
     driver = None

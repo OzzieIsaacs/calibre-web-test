@@ -14,6 +14,12 @@ from io import BytesIO
 import rarfile
 from PIL import Image
 
+
+RESOURCES = {'ports': 1}
+
+PORTS = ['8083']
+
+
 class TestReader(unittest.TestCase, ui_class):
 
     p = None
@@ -24,7 +30,7 @@ class TestReader(unittest.TestCase, ui_class):
     def setUpClass(cls):
         #add_dependency(cls.dependencys, cls.__name__)
         try:
-            startup(cls, cls.py_version, {'config_calibre_dir':TEST_DB}, env={"APP_MODE": "test"})
+            startup(cls, cls.py_version, {'config_calibre_dir':TEST_DB}, port=PORTS[0], env={"APP_MODE": "test"})
             cls.current_handle = cls.driver.current_window_handle
 
         except Exception:
@@ -43,7 +49,7 @@ class TestReader(unittest.TestCase, ui_class):
     def tearDownClass(cls):
         #remove_dependency(cls.dependencys)
         cls.driver.switch_to.window(cls.current_handle)
-        cls.driver.get("http://127.0.0.1:8083")
+        cls.driver.get("http://127.0.0.1:" + PORTS[0])
         cls.stop_calibre_web()
         cls.driver.quit()
         cls.p.terminate()

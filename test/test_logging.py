@@ -18,6 +18,12 @@ import requests
 import zipfile
 import io
 
+
+RESOURCES = {'ports': 1}
+
+PORTS = ['8083']
+
+
 class TestLogging(unittest.TestCase, ui_class):
     p = None
 
@@ -29,13 +35,13 @@ class TestLogging(unittest.TestCase, ui_class):
             os.remove(os.path.join(CALIBRE_WEB_PATH, 'calibre-web.log.2'))
         except Exception:
             pass
-        startup(cls, cls.py_version, {'config_calibre_dir': TEST_DB, 'config_log_level': 'DEBUG'}, env={"APP_MODE": "test"})
+        startup(cls, cls.py_version, {'config_calibre_dir': TEST_DB, 'config_log_level': 'DEBUG'}, port=PORTS[0], env={"APP_MODE": "test"})
         time.sleep(3)
         WebDriverWait(cls.driver, 5).until(EC.presence_of_element_located((By.ID, "flash_success")))
 
     @classmethod
     def tearDownClass(cls):
-        cls.driver.get("http://127.0.0.1:8083")
+        cls.driver.get("http://127.0.0.1:" + PORTS[0])
         cls.stop_calibre_web()
         # close the browser window and stop calibre-web
         cls.driver.quit()
@@ -71,10 +77,10 @@ class TestLogging(unittest.TestCase, ui_class):
         time.sleep(BOOT_TIME)
         WebDriverWait(self.driver, 5).until(EC.presence_of_element_located((By.ID, "flash_success")))
         # error entry by deleting book with subfolder
-        self.driver.get("http://127.0.0.1:8083/delete/5")
+        self.driver.get("http://127.0.0.1:{}/delete/5".format(PORTS[0]))
         time.sleep(4)
         # No Info entry by adding shelf
-        self.driver.get("http://127.0.0.1:8083/shelf/add/7/7")
+        self.driver.get("http://127.0.0.1:{}/shelf/add/7/7".format(PORTS[0]))
         time.sleep(4)
 
         with open(os.path.join(CALIBRE_WEB_PATH, 'calibre-web.log'), 'r') as logfile:
@@ -86,7 +92,7 @@ class TestLogging(unittest.TestCase, ui_class):
         # Info entry by adding shelf
         self.fill_basic_config({'config_log_level': 'INFO'})
         time.sleep(BOOT_TIME)
-        self.driver.get("http://127.0.0.1:8083/shelf/add/7/7")
+        self.driver.get("http://127.0.0.1:{}/shelf/add/7/7".format(PORTS[0]))
         time.sleep(4)
         with open(os.path.join(CALIBRE_WEB_PATH, 'calibre-web.log'), 'r') as logfile:
             data = logfile.read()
@@ -240,11 +246,11 @@ class TestLogging(unittest.TestCase, ui_class):
 
     def test_debuginfo_download(self):
         r = requests.session()
-        login_page = r.get('http://127.0.0.1:8083/login')
+        login_page = r.get('http://127.0.0.1:{}/login'.format(PORTS[0]))
         token = re.search('<input type="hidden" name="csrf_token" value="(.*)">', login_page.text)
         payload = {'username': 'admin', 'password': 'admin123', 'submit':"", 'next':"/", "remember_me":"on", "csrf_token": token.group(1)}
-        r.post('http://127.0.0.1:8083/login', data=payload)
-        resp = r.get('http://127.0.0.1:8083/admin/debug')
+        r.post('http://127.0.0.1:{}/login'.format(PORTS[0]), data=payload)
+        resp = r.get('http://127.0.0.1:{}/admin/debug'.format(PORTS[0]))
         self.assertGreater(len(resp.content), 2600)
         self.assertEqual(resp.headers['Content-Type'], 'application/zip')
         zip = zipfile.ZipFile(io.BytesIO(resp.content))
@@ -260,12 +266,12 @@ class TestLogging(unittest.TestCase, ui_class):
         self.assertTrue(self.check_element_on_page((By.ID, "log_file_0")))
         self.assertTrue(self.check_element_on_page((By.ID, "log_file_1")))
         r = requests.session()
-        login_page = r.get('http://127.0.0.1:8083/login')
+        login_page = r.get('http://127.0.0.1:{}/login'.format(PORTS[0]))
         token = re.search('<input type="hidden" name="csrf_token" value="(.*)">', login_page.text)
         payload = {'username': 'admin', 'password': 'admin123', 'submit':"", 'next':"/", "remember_me":"on", "csrf_token": token.group(1)}
-        r.post('http://127.0.0.1:8083/login', data=payload)
-        resp = r.get('http://127.0.0.1:8083/admin/logdownload/0')
+        r.post('http://127.0.0.1:{}/login'.format(PORTS[0]), data=payload)
+        resp = r.get('http://127.0.0.1:{}/admin/logdownload/0'.format(PORTS[0]))
         self.assertTrue(resp.headers['Content-Type'].startswith('application/octet-stream'))
-        resp = r.get('http://127.0.0.1:8083/admin/logdownload/1')
+        resp = r.get('http://127.0.0.1:{}/admin/logdownload/1'.format(PORTS[0]))
         self.assertTrue(resp.headers['Content-Type'].startswith('application/octet-stream'))
         r.close()

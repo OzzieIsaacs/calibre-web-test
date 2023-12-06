@@ -16,6 +16,11 @@ from zipfile import ZipFile, ZipInfo
 from helper_func import save_logfiles
 
 
+RESOURCES = {'ports': 2}
+
+PORTS = ['8083', '8080']
+
+
 class TestUpdater(unittest.TestCase, ui_class):
     p = None
     driver = None
@@ -30,11 +35,11 @@ class TestUpdater(unittest.TestCase, ui_class):
             cls.proxy.start()
             pem_file = os.path.join(os.path.expanduser('~'), '.mitmproxy', 'mitmproxy-ca-cert.pem')
             my_env = os.environ.copy()
-            my_env["http_proxy"] = 'http://localhost:8080'
-            my_env["https_proxy"] = 'http://localhost:8080'
+            my_env["http_proxy"] = 'http://localhost:' + PORTS[1]
+            my_env["https_proxy"] = 'http://localhost:'  + PORTS[1]
             my_env["REQUESTS_CA_BUNDLE"] = pem_file
             my_env["APP_MODE"] = "test"
-            startup(cls, cls.py_version, {'config_calibre_dir': TEST_DB}, env=my_env)
+            startup(cls, cls.py_version, {'config_calibre_dir': TEST_DB}, port=PORTS[0], env=my_env)
         else:
             cls.assertTrue(False, "Target Directory present")
 
@@ -44,7 +49,7 @@ class TestUpdater(unittest.TestCase, ui_class):
         try:
             cls.stop_calibre_web()
         except:
-            cls.driver.get("http://127.0.0.1:8083")
+            cls.driver.get("http://127.0.0.1:" + PORTS[0])
             time.sleep(2)
             try:
                 cls.stop_calibre_web()
@@ -69,7 +74,7 @@ class TestUpdater(unittest.TestCase, ui_class):
             try:
                 self.logout()
             except:
-                self.driver.get("http://127.0.0.1:8083")
+                self.driver.get("http://127.0.0.1:" + PORTS[0])
                 time.sleep(3)
                 self.logout()
             self.login('admin', 'admin123')
@@ -393,7 +398,7 @@ class TestUpdater(unittest.TestCase, ui_class):
         if button:
             button.click()
         else:
-            self.driver.get("http://127.0.0.1:8083")
+            self.driver.get("http://127.0.0.1:" + PORTS[0])
         time.sleep(3)
         # Check all relevant files are kept, venv folder
         self.assertTrue(os.path.isdir(os.path.join(CALIBRE_WEB_PATH, "venv")))
@@ -446,10 +451,10 @@ class TestUpdater(unittest.TestCase, ui_class):
         os.chmod(os.path.join(CALIBRE_WEB_PATH, "cps", "web.py"), 0o766)
 
     def test_reconnect_database(self):
-        self.driver.get("http://127.0.0.1:8083")
+        self.driver.get("http://127.0.0.1:" + PORTS[0])
         self.reconnect_database()
         self.assertTrue(self.check_element_on_page((By.ID, "check_for_update")))
         # deactivated by default
-        resp = requests.get('http://127.0.0.1:8083/reconnect')
+        resp = requests.get('http://127.0.0.1:{}/reconnect'.format(PORTS[0]))
         self.assertEqual(404, resp.status_code)
         # self.assertDictEqual({}, resp.json())

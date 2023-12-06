@@ -19,6 +19,12 @@ from helper_gdrive import prepare_gdrive, connect_gdrive
 from selenium.webdriver.support.ui import WebDriverWait
 from selenium.webdriver.support import expected_conditions as EC
 
+
+RESOURCES = {'ports': 1}
+
+PORTS = ['8083']
+
+
 @unittest.skipIf(not os.path.exists(os.path.join(base_path, "files", "client_secrets.json")) or
                  not os.path.exists(os.path.join(base_path, "files", "gdrive_credentials")),
                  "client_secrets.json and/or gdrive_credentials file is missing")
@@ -76,6 +82,7 @@ class TestEbookConvertCalibreGDrive(unittest.TestCase, ui_class):
                                           'config_log_level': 'DEBUG',
                                           'config_kepubifypath': '',
                                           'config_binariesdir': helper_email_convert.calibre_path()},
+                    port=PORTS[0],
                     only_metadata=True, env={"APP_MODE": "test"})
             cls.fill_db_config({'config_use_google_drive': 1})
             time.sleep(2)
@@ -103,7 +110,7 @@ class TestEbookConvertCalibreGDrive(unittest.TestCase, ui_class):
         thumbnail_cache_path = os.path.join(CALIBRE_WEB_PATH, 'cps', 'cache', 'thumbnails')
         shutil.rmtree(thumbnail_cache_path, ignore_errors=True)
         try:
-            cls.driver.get("http://127.0.0.1:8083")
+            cls.driver.get("http://127.0.0.1:" + PORTS[0])
             cls.stop_calibre_web()
             # close the browser window and stop calibre-web
             cls.driver.quit()

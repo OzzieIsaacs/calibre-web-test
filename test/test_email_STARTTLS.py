@@ -17,6 +17,11 @@ from helper_func import startup, wait_Email_received
 from helper_func import save_logfiles
 
 
+RESOURCES = {'ports': 2}
+
+PORTS = ['8083', '1026']
+
+
 @unittest.skipIf(helper_email_convert.is_calibre_not_present(),"Skipping convert, calibre not found")
 class TestSTARTTLS(unittest.TestCase, ui_class):
     p = None
@@ -28,7 +33,7 @@ class TestSTARTTLS(unittest.TestCase, ui_class):
         # start email server
         cls.email_server = AIOSMTPServer(
             hostname=socket.gethostname(),
-            port=1026,
+            port=int(PORTS[1]),
             only_ssl=False,
             startSSL=True,
             certfile='files/server.crt',
@@ -39,10 +44,10 @@ class TestSTARTTLS(unittest.TestCase, ui_class):
         try:
             startup(cls, cls.py_version, {'config_calibre_dir': TEST_DB,
                                           'config_binariesdir': helper_email_convert.calibre_path()},
-                    env={"APP_MODE": "test"})
+                    port=PORTS[0], env={"APP_MODE": "test"})
 
             cls.edit_user('admin', {'email': 'a5@b.com','kindle_mail': 'a1@b.com'})
-            cls.setup_server(True, {'mail_server': socket.gethostname(), 'mail_port': '1026',
+            cls.setup_server(True, {'mail_server': socket.gethostname(), 'mail_port': PORTS[1],
                                     'mail_use_ssl': 'SSL/TLS', 'mail_login': 'name@host.com', 'mail_password_e':'10234',
                                     'mail_from': 'name@host.com'})
         except:
@@ -51,7 +56,7 @@ class TestSTARTTLS(unittest.TestCase, ui_class):
 
     @classmethod
     def tearDownClass(cls):
-        cls.driver.get("http://127.0.0.1:8083")
+        cls.driver.get("http://127.0.0.1:" + PORTS[0])
         cls.stop_calibre_web()
         # close the browser window and stop calibre-web
         cls.driver.quit()

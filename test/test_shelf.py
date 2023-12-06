@@ -14,6 +14,11 @@ import requests
 from helper_func import save_logfiles
 
 
+RESOURCES = {'ports': 1}
+
+PORTS = ['8083']
+
+
 class TestShelf(unittest.TestCase, ui_class):
     p = None
     driver = None
@@ -31,7 +36,7 @@ class TestShelf(unittest.TestCase, ui_class):
 
     @classmethod
     def tearDownClass(cls):
-        cls.driver.get("http://127.0.0.1:8083")
+        cls.driver.get("http://127.0.0.1:" + PORTS[0])
         cls.stop_calibre_web()
         # close the browser window and stop calibre-web
         cls.driver.quit()
@@ -61,18 +66,18 @@ class TestShelf(unittest.TestCase, ui_class):
         self.assertFalse(len(self.list_shelfs()))
         # other user is not able to add books
         r = requests.session()
-        login_page = r.get('http://127.0.0.1:8083/login')
+        login_page = r.get('http://127.0.0.1:{}/login'.format(PORTS[0]))
         token = re.search('<input type="hidden" name="csrf_token" value="(.*)">', login_page.text)
         payload = {'username': 'shelf', 'password': '123AbC*!', 'submit':"", 'next':"/", "remember_me":"on", "csrf_token": token.group(1)}
-        r.post('http://127.0.0.1:8083/login', data=payload)
-        shelf_page = r.get('http://127.0.0.1:8083/shelf/create')
+        r.post('http://127.0.0.1:{}/login'.format(PORTS[0]), data=payload)
+        shelf_page = r.get('http://127.0.0.1:{}/shelf/create'.format(PORTS[0]))
         token = re.search('<input type="hidden" name="csrf_token" value="(.*)">', shelf_page.text)
         payload = {"csrf_token": token.group(1)}
-        request = r.post("http://127.0.0.1:8083/shelf/add/1/1", data=payload)
+        request = r.post("http://127.0.0.1:{}/shelf/add/1/1".format(PORTS[0]), data=payload)
         self.assertTrue("flash_danger" in request.text)
-        # self.driver.get("http://127.0.0.1:8083/shelf/add/1/1")
+        # self.driver.get("http://127.0.0.1:{}/shelf/add/1/1".format(PORTS[0]))
         # self.assertTrue(self.check_element_on_page((By.ID, "flash_danger")))
-        r.get('http://127.0.0.1:8083/logout')
+        r.get('http://127.0.0.1:{}/logout'.format(PORTS[0]))
         self.logout()
         self.login('admin','admin123')
         books = self.get_books_displayed()
@@ -89,19 +94,19 @@ class TestShelf(unittest.TestCase, ui_class):
         # other user can't see shelf
         self.assertFalse(len(self.list_shelfs()))
         # other user is not able to add books
-        login_page = r.get('http://127.0.0.1:8083/login')
+        login_page = r.get('http://127.0.0.1:{}/login'.format(PORTS[0]))
         token = re.search('<input type="hidden" name="csrf_token" value="(.*)">', login_page.text)
         payload = {'username': 'shelf', 'password': '123AbC*!', 'submit':"", 'next':"/", "remember_me":"on", "csrf_token": token.group(1)}
-        r.post('http://127.0.0.1:8083/login', data=payload)
-        shelf_page = r.get('http://127.0.0.1:8083/shelf/create')
+        r.post('http://127.0.0.1:{}/login'.format(PORTS[0]), data=payload)
+        shelf_page = r.get('http://127.0.0.1:{}/shelf/create')
         token = re.search('<input type="hidden" name="csrf_token" value="(.*)">', shelf_page.text)
         payload = {"csrf_token": token.group(1)}
-        request = r.post("http://127.0.0.1:8083/shelf/add/1/1", data=payload)
+        request = r.post("http://127.0.0.1:{}/shelf/add/1/1.format(PORTS[0])", data=payload)
         self.assertTrue("flash_danger" in request.text)
-        r.get('http://127.0.0.1:8083/logout')
+        r.get('http://127.0.0.1:{}/logout'.format(PORTS[0]))
         r.close()
 
-        #self.driver.get("http://127.0.0.1:8083/shelf/add/1/1")
+        #self.driver.get("http://127.0.0.1:{}/shelf/add/1/1".format(PORTS[0]))
         #self.assertTrue(self.check_element_on_page((By.ID, "flash_danger")))
         self.create_shelf('Pü 执', False)
         self.assertTrue(len(self.list_shelfs()))
@@ -123,18 +128,18 @@ class TestShelf(unittest.TestCase, ui_class):
         self.assertTrue(shelfs)
         # other user is able to add books
         r = requests.session()
-        login_page = r.get('http://127.0.0.1:8083/login')
+        login_page = r.get('http://127.0.0.1:{}/login'.format(PORTS[0]))
         token = re.search('<input type="hidden" name="csrf_token" value="(.*)">', login_page.text)
         payload = {'username': 'shelf', 'password': '123AbC*!', 'submit':"", 'next':"/", "remember_me":"on", "csrf_token": token.group(1)}
-        r.post('http://127.0.0.1:8083/login', data=payload)
-        shelf_page = r.get('http://127.0.0.1:8083/shelf/create')
+        r.post('http://127.0.0.1:{}/login'.format(PORTS[0]), data=payload)
+        shelf_page = r.get('http://127.0.0.1:{}/shelf/create'.format(PORTS[0]))
         token = re.search('<input type="hidden" name="csrf_token" value="(.*)">', shelf_page.text)
         payload = {"csrf_token": token.group(1)}
-        request = r.post("http://127.0.0.1:8083/shelf/add/" + shelfs['id'] + '/1', data=payload)
+        request = r.post("http://127.0.0.1:{}/shelf/add/.format(PORTS[0])" + shelfs['id'] + '/1', data=payload)
         self.assertTrue("flash_success" in request.text)
-        r.get('http://127.0.0.1:8083/logout')
+        r.get('http://127.0.0.1:{}/logout'.format(PORTS[0]))
         r.close()
-        # self.driver.get("http://127.0.0.1:8083/shelf/add/" + shelfs['id'] + '/1')
+        # self.driver.get("http://127.0.0.1:{}/shelf/add/.format(PORTS[0])" + shelfs['id'] + '/1')
         # self.assertTrue(self.check_element_on_page((By.ID, "flash_success")))
         time.sleep(2)
         # 2nd way to add book
@@ -181,14 +186,14 @@ class TestShelf(unittest.TestCase, ui_class):
         self.create_user('invalid', {'edit_shelf_role': 0, 'password': '123AbC*!', 'email': 'bac@b.com'})
         self.assertTrue(self.check_element_on_page((By.ID, "flash_success")))
         r = requests.session()
-        login_page = r.get('http://127.0.0.1:8083/login')
+        login_page = r.get('http://127.0.0.1:{}/login'.format(PORTS[0]))
         token = re.search('<input type="hidden" name="csrf_token" value="(.*)">', login_page.text)
         payload = {'username': 'invalid', 'password': '123AbC*!', 'submit':"", 'next':"/", "remember_me":"on", "csrf_token": token.group(1)}
-        r.post('http://127.0.0.1:8083/login', data=payload)
-        shelf_page = r.get('http://127.0.0.1:8083/shelf/create')
+        r.post('http://127.0.0.1:{}/login'.format(PORTS[0]), data=payload)
+        shelf_page = r.get('http://127.0.0.1:{}/shelf/create'.format(PORTS[0]))
         token = re.search('<input type="hidden" name="csrf_token" value="(.*)">', shelf_page.text)
         payload = {'title': 'test', "is_public": "on", "csrf_token": token.group(1)}
-        r.post('http://127.0.0.1:8083/shelf/create', data=payload)
+        r.post('http://127.0.0.1:{}/shelf/create'.format(PORTS[0]), data=payload)
         r.close()
         self.goto_page('nav_new')
         shelfs = self.list_shelfs()
@@ -245,16 +250,16 @@ class TestShelf(unittest.TestCase, ui_class):
         self.logout()
         # Try to rename non public shelf form other user
         r = requests.session()
-        login_page = r.get('http://127.0.0.1:8083/login')
+        login_page = r.get('http://127.0.0.1:{}/login'.format(PORTS[0]))
         token = re.search('<input type="hidden" name="csrf_token" value="(.*)">', login_page.text)
         payload = {'username': 'shelf', 'password': '123AbC*!', 'submit':"", 'next':"/", "remember_me":"on", "csrf_token": token.group(1)}
-        book_page = r.post('http://127.0.0.1:8083/login', data=payload)
+        book_page = r.post('http://127.0.0.1:{}/login'.format(PORTS[0]), data=payload)
 
         token = re.search('<input type="hidden" name="csrf_token" value="(.*)">', book_page.text)
-        resp = r.post('http://127.0.0.1:8083/shelf/edit/'+ shelf_lolo['id'], data={"title": "tuto", "csrf_token": token.group(1)})
+        resp = r.post('http://127.0.0.1:{}/shelf/edit/'.format(PORTS[0]) + shelf_lolo['id'], data={"title": "tuto", "csrf_token": token.group(1)})
         self.assertTrue("flash_danger" in resp.text)
         token = re.search('<input type="hidden" name="csrf_token" value="(.*)">', book_page.text)
-        resp = r.post('http://127.0.0.1:8083/shelf/edit/'+ shelf_lolo['id'], data={"is_public": "on", "csrf_token": token.group(1)})
+        resp = r.post('http://127.0.0.1:{}/shelf/edit/'.format(PORTS[0]) + shelf_lolo['id'], data={"is_public": "on", "csrf_token": token.group(1)})
         self.assertTrue("flash_danger" in resp.text)
 
         self.login('admin','admin123')
@@ -314,13 +319,13 @@ class TestShelf(unittest.TestCase, ui_class):
         self.check_element_on_page((By.ID, "order_shelf")).click()
         self.get_order_shelf_list()
         r = requests.session()
-        login_page = r.get('http://127.0.0.1:8083/login')
+        login_page = r.get('http://127.0.0.1:{}/login'.format(PORTS[0]))
         token = re.search('<input type="hidden" name="csrf_token" value="(.*)">', login_page.text)
         payload = {'username': 'admin', 'password': 'admin123', 'submit':"", 'next':"/", "remember_me":"on", "csrf_token": token.group(1)}
-        r.post('http://127.0.0.1:8083/login', data=payload)
-        books_page = r.get('http://127.0.0.1:8083/shelf/order/1')
+        r.post('http://127.0.0.1:{}/login'.format(PORTS[0]), data=payload)
+        books_page = r.get('http://127.0.0.1:{}/shelf/order/1'.format(PORTS[0]))
         token = re.search('<input type="hidden" name="csrf_token" value="(.*)">', books_page.text)
-        r.post('http://127.0.0.1:8083/shelf/order/1', data={"9": "1","11": "2","13": "3", "csrf_token": token.group(1)})
+        r.post('http://127.0.0.1:{}/shelf/order/1'.format(PORTS[0]), data={"9": "1","11": "2","13": "3", "csrf_token": token.group(1)})
         self.driver.refresh() # reload page
         self.check_element_on_page((By.ID, "shelf_back")).click()
         shelf_books = self.get_shelf_books_displayed()
@@ -499,7 +504,7 @@ class TestShelf(unittest.TestCase, ui_class):
         self.fill_basic_config({'config_anonbrowse': 0})
         self.logout()
         # Check with deactivated anonymous browsing access to private shelfs not possible
-        self.driver.get('http://127.0.0.1:8083/shelf/' + anon_shelf[0]['id'])
+        self.driver.get('http://127.0.0.1:{}/shelf/' + anon_shelf[0]['id'])
         self.assertEqual(self.driver.title, u'Calibre-Web | Login')
         self.login('admin', 'admin123')
         self.delete_shelf(u'anon')
@@ -556,14 +561,14 @@ class TestShelf(unittest.TestCase, ui_class):
     def test_create_public_shelf_no_permission(self):
         self.create_user("test1", {'password': '123AbC*!', 'email': 'a11@bc.com'})
         r = requests.session()
-        login_page = r.get('http://127.0.0.1:8083/login')
+        login_page = r.get('http://127.0.0.1:{}/login'.format(PORTS[0]))
         token = re.search('<input type="hidden" name="csrf_token" value="(.*)">', login_page.text)
         payload = {'username': 'test1', 'password': '123AbC*!', 'submit':"", 'next':"/", "remember_me":"on", "csrf_token": token.group(1)}
-        r.post('http://127.0.0.1:8083/login', data=payload)
-        shelf_page = r.get('http://127.0.0.1:8083/shelf/create')
+        r.post('http://127.0.0.1:{}/login'.format(PORTS[0]), data=payload)
+        shelf_page = r.get('http://127.0.0.1:{}/shelf/create')
         token = re.search('<input type="hidden" name="csrf_token" value="(.*)">', shelf_page.text)
         payload = {'title': 'no_permission', "is_public": "off", "csrf_token": token.group(1)}
-        test = r.post('http://127.0.0.1:8083/shelf/create', data=payload)
+        test = r.post('http://127.0.0.1:{}/shelf/create'.format(PORTS[0]), data=payload)
         self.assertNotIn('no_permission (Public)'.lower(), test.text)
         r.close()
         self.edit_user("test1", {"delete":1})
@@ -573,27 +578,27 @@ class TestShelf(unittest.TestCase, ui_class):
         self.create_shelf("access", False)
         shelf = self.list_shelfs("access")
         r = requests.session()
-        login_page = r.get('http://127.0.0.1:8083/login')
+        login_page = r.get('http://127.0.0.1:{}/login'.format(PORTS[0]))
         token = re.search('<input type="hidden" name="csrf_token" value="(.*)">', login_page.text)
         payload = {'username': 'tester', 'password': '123A4bC*!', 'submit':"", 'next':"/", "remember_me":"on", "csrf_token": token.group(1)}
-        r.post('http://127.0.0.1:8083/login', data=payload)
-        shelf_page = r.get('http://127.0.0.1:8083/shelf/create')
+        r.post('http://127.0.0.1:{}/login'.format(PORTS[0]), data=payload)
+        shelf_page = r.get('http://127.0.0.1:{}/shelf/create'.format(PORTS[0]))
         token = re.search('<input type="hidden" name="csrf_token" value="(.*)">', shelf_page.text)
         payload = {"csrf_token": token.group(1)}
-        result = r.post('http://127.0.0.1:8083/shelf/delete/'+ shelf['id'], data=payload)
+        result = r.post('http://127.0.0.1:{}/shelf/delete/'.format(PORTS[0]) + shelf['id'], data=payload)
         self.assertIn('flash_danger'.lower(), result.text)
-        result = r.post('http://127.0.0.1:8083/shelf/delete/'+ str(int(shelf['id'])+1), data=payload)
+        result = r.post('http://127.0.0.1:{}/shelf/delete/'.format(PORTS[0]) + str(int(shelf['id'])+1), data=payload)
         self.assertIn('flash_danger'.lower(), result.text)
-        result = r.post('http://127.0.0.1:8083/shelf/add/' + shelf['id'] + '/10', data=payload)
+        result = r.post('http://127.0.0.1:{}/shelf/add/'.format(PORTS[0]) + shelf['id'] + '/10', data=payload)
         self.assertIn('flash_danger'.lower(), result.text)
-        shelf_page = r.get('http://127.0.0.1:8083/shelf/create')
-        result = r.post('http://127.0.0.1:8083/shelf/massadd/' + shelf['id'], data=payload)
+        shelf_page = r.get('http://127.0.0.1:{}/shelf/create'.format(PORTS[0]))
+        result = r.post('http://127.0.0.1:{}/shelf/massadd/'.format(PORTS[0]) + shelf['id'], data=payload)
         self.assertIn('flash_danger'.lower(), result.text)
-        result = r.post('http://127.0.0.1:8083/shelf/remove/' + shelf['id'] + '/10', data=payload)
+        result = r.post('http://127.0.0.1:{}/shelf/remove/'.format(PORTS[0]) + shelf['id'] + '/10', data=payload)
         self.assertIn('flash_danger'.lower(), result.text)
-        result = r.get('http://127.0.0.1:8083/simpleshelf/' + shelf['id'])
+        result = r.get('http://127.0.0.1:{}/simpleshelf/'.format(PORTS[0]) + shelf['id'])
         self.assertIn('flash_danger'.lower(), result.text)
-        result = r.get('http://127.0.0.1:8083/shelf/' + shelf['id'])
+        result = r.get('http://127.0.0.1:{}/shelf/'.format(PORTS[0]) + shelf['id'])
         self.assertIn('flash_danger'.lower(), result.text)
         r.close()
         self.edit_user("tester", {"delete": 1})

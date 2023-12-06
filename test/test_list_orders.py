@@ -10,6 +10,12 @@ from config_test import TEST_DB
 # from parameterized import parameterized_class
 from helper_func import startup, debug_startup
 
+
+RESOURCES = {'ports': 1}
+
+PORTS = ['8083']
+
+
 # other tests regardign order of elements is in test_visibilities
 class TestCalibreWebListOrders(unittest.TestCase, ui_class):
 
@@ -19,14 +25,14 @@ class TestCalibreWebListOrders(unittest.TestCase, ui_class):
     @classmethod
     def setUpClass(cls):
         try:
-            startup(cls, cls.py_version, {'config_calibre_dir': TEST_DB}, env={"APP_MODE": "test"})
+            startup(cls, cls.py_version, {'config_calibre_dir': TEST_DB}, port=PORTS[0], env={"APP_MODE": "test"})
         except Exception:
             cls.driver.quit()
             cls.p.kill()
 
     @classmethod
     def tearDownClass(cls):
-        cls.driver.get("http://127.0.0.1:8083")
+        cls.driver.get("http://127.0.0.1:" + PORTS[0])
         cls.stop_calibre_web()
         # close the browser window and stop calibre-web
         cls.driver.quit()

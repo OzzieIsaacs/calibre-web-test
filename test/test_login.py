@@ -15,6 +15,10 @@ import time
 from helper_func import save_logfiles
 
 
+RESOURCES = {'ports': 1}
+
+PORTS = ['8083']
+
 
 class TestLogin(unittest.TestCase, ui_class):
     p = None
@@ -30,7 +34,7 @@ class TestLogin(unittest.TestCase, ui_class):
 
     @classmethod
     def tearDownClass(cls):
-        cls.driver.get("http://127.0.0.1:8083/login")
+        cls.driver.get("http://127.0.0.1:" + PORTS[0] + "/login")
         cls.login('admin', 'admin123')
         cls.stop_calibre_web()
         # close the browser window and stop calibre-web

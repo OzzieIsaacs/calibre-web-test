@@ -13,6 +13,9 @@ from config_test import TEST_DB, base_path, BOOT_TIME
 from helper_func import startup
 from helper_func import save_logfiles, read_opf_metadata
 
+RESOURCES = {'ports': 1}
+
+PORTS = ['8083']
 
 class TestBackupMetadata(TestCase, ui_class):
     p = None
@@ -21,7 +24,7 @@ class TestBackupMetadata(TestCase, ui_class):
     @classmethod
     def setUpClass(cls):
         try:
-            startup(cls, cls.py_version, {'config_calibre_dir': TEST_DB}, env={"APP_MODE": "test"})
+            startup(cls, cls.py_version, {'config_calibre_dir': TEST_DB}, port=PORTS[0], env={"APP_MODE": "test"})
             time.sleep(3)
             cls.fill_thumbnail_config({'schedule_metadata_backup': 1})
             # cls.restart_calibre_web()
@@ -31,7 +34,7 @@ class TestBackupMetadata(TestCase, ui_class):
 
     @classmethod
     def tearDownClass(cls):
-        cls.driver.get("http://127.0.0.1:8083")
+        cls.driver.get("http://127.0.0.1:" + PORTS[0])
         cls.stop_calibre_web()
         # close the browser window and stop calibre-web
         cls.driver.quit()

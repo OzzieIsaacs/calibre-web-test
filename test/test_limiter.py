@@ -12,6 +12,12 @@ import requests
 from selenium.webdriver.support.ui import WebDriverWait
 from selenium.webdriver.support import expected_conditions as EC
 
+
+RESOURCES = {'ports': 1}
+
+PORTS = ['8083']
+
+
 class TestSecurity(unittest.TestCase, ui_class):
     p = None
     driver = None
@@ -19,7 +25,7 @@ class TestSecurity(unittest.TestCase, ui_class):
     @classmethod
     def setUpClass(cls):
         try:
-            startup(cls, cls.py_version, {'config_calibre_dir':TEST_DB}, env={"APP_MODE": "test"})
+            startup(cls, cls.py_version, {'config_calibre_dir':TEST_DB}, port=PORTS[0], env={"APP_MODE": "test"})
             WebDriverWait(cls.driver, 5).until(EC.presence_of_element_located((By.ID, "flash_success")))
         except Exception as e:
             print(e)
@@ -28,7 +34,7 @@ class TestSecurity(unittest.TestCase, ui_class):
 
     @classmethod
     def tearDownClass(cls):
-        cls.driver.get("http://127.0.0.1:8083")
+        cls.driver.get("http://127.0.0.1:" + PORTS[0])
         cls.stop_calibre_web()
         # close the browser window and stop calibre-web
         cls.driver.quit()
@@ -38,20 +44,20 @@ class TestSecurity(unittest.TestCase, ui_class):
     def test_opds_limit(self):
         # request several times the same endpoint within one minute,
         for i in range (1, 4):
-            r = requests.get('http://127.0.0.1:8083/opds', auth=('admin', '122'))
+            r = requests.get('http://127.0.0.1:{}/opds'.format(PORTS[0]), auth=('admin', '122'))
             self.assertEqual(401, r.status_code)
         # after x tries get 429 ?
-        r = requests.get('http://127.0.0.1:8083/opds', auth=('admin', '122'))
+        r = requests.get('http://127.0.0.1:{}/opds'.format(PORTS[0]), auth=('admin', '122'))
         self.assertEqual(429, r.status_code)
         # try to login with right credentials -> not working
-        r = requests.get('http://127.0.0.1:8083/opds', auth=('admin', 'admin123'))
+        r = requests.get('http://127.0.0.1:{}/opds'.format(PORTS[0]), auth=('admin', 'admin123'))
         self.assertEqual(429, r.status_code)
         # wait one minute try to login with wrong credentials
         time.sleep(61)
-        r = requests.get('http://127.0.0.1:8083/opds', auth=('admin', '122'))
+        r = requests.get('http://127.0.0.1:{}/opds'.format(PORTS[0]), auth=('admin', '122'))
         self.assertEqual(401, r.status_code)
         # login with right credentials
-        r = requests.get('http://127.0.0.1:8083/opds', auth=('admin', 'admin123'))
+        r = requests.get('http://127.0.0.1:{}/opds'.format(PORTS[0]), auth=('admin', 'admin123'))
         self.assertEqual(200, r.status_code)
         # switch of limit, logout
         self.fill_basic_config({"config_ratelimiter":0})
@@ -60,10 +66,10 @@ class TestSecurity(unittest.TestCase, ui_class):
         self.logout()
         # try to login with wrong credentials several times, every time 401,
         for i in range (1, 5):
-            r = requests.get('http://127.0.0.1:8083/opds', auth=('admin', '122'))
+            r = requests.get('http://127.0.0.1:{}/opds'.format(PORTS[0]), auth=('admin', '122'))
             self.assertEqual(401, r.status_code)
         # try to login with right credentials working instantaneously
-        r = requests.get('http://127.0.0.1:8083/opds', auth=('admin', 'admin123'))
+        r = requests.get('http://127.0.0.1:{}/opds'.format(PORTS[0]), auth=('admin', 'admin123'))
         self.assertEqual(200, r.status_code)
         # switch on limit, logout
         self.login('admin', 'admin123')

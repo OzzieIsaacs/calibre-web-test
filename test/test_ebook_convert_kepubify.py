@@ -15,6 +15,12 @@ from helper_func import save_logfiles
 from selenium.webdriver.support.ui import WebDriverWait
 from selenium.webdriver.support import expected_conditions as EC
 
+
+RESOURCES = {'ports': 1}
+
+PORTS = ['8083']
+
+
 @unittest.skipIf(helper_email_convert.is_kepubify_not_present(), "Skipping convert, kepubify not found")
 class TestEbookConvertKepubify(unittest.TestCase, ui_class):
     p = None
@@ -26,7 +32,8 @@ class TestEbookConvertKepubify(unittest.TestCase, ui_class):
         try:
             startup(cls, cls.py_version, {'config_calibre_dir':TEST_DB,
                                           'config_binariesdir':'',
-                                          'config_kepubifypath':helper_email_convert.kepubify_path()}, env={"APP_MODE": "test"})
+                                          'config_kepubifypath':helper_email_convert.kepubify_path()}, 
+                    port=PORTS[0], env={"APP_MODE": "test"})
 
             cls.edit_user('admin', {'email': 'a5@b.com', 'kindle_mail': 'a1@b.com'})
             time.sleep(2)
@@ -40,7 +47,7 @@ class TestEbookConvertKepubify(unittest.TestCase, ui_class):
     def tearDownClass(cls):
         try:
             # close the browser window and stop calibre-web
-            cls.driver.get("http://127.0.0.1:8083")
+            cls.driver.get("http://127.0.0.1:" + PORTS[0])
             cls.stop_calibre_web()
             cls.driver.quit()
             cls.p.terminate()

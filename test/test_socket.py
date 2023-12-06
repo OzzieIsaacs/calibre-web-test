@@ -16,6 +16,12 @@ from selenium.webdriver.common.by import By
 from selenium.common.exceptions import WebDriverException
 from helper_port_forward import SocketForwardServer
 
+
+RESOURCES = {'ports': 2}
+
+PORTS = ['8083', '8000']
+
+
 @unittest.skipIf(os.name=="nt", "Sockets are not available on Windows")
 class TestSocket(unittest.TestCase, ui_class):
     driver = None
@@ -59,17 +65,17 @@ class TestSocket(unittest.TestCase, ui_class):
         time.sleep(BOOT_TIME)
         try:
             # navigate to the application home page
-            server = SocketForwardServer('localhost', 8000, socket_file)
+            server = SocketForwardServer('localhost', int(PORTS[1]), socket_file)
             server.start()
             # Check server not reesponding on normal port
             try:
                 error = ""
-                self.driver.get("http://127.0.0.1:8083")
+                self.driver.get("http://127.0.0.1:" + PORTS[0])
             except WebDriverException as e:
                 error = e.msg
             self.assertTrue(re.findall(r'Reached error page:\sabout:neterror\?e=connectionFailure', error))
             time.sleep(3)
-            self.driver.get("http://127.0.0.1:8000")
+            self.driver.get("http://127.0.0.1:" + PORTS[1])
             self.check_element_on_page((By.ID, "username"))
 
             server.stop_server()
@@ -77,7 +83,7 @@ class TestSocket(unittest.TestCase, ui_class):
             # Check server not reesponding on forwarded socket port
             try:
                 error = ""
-                self.driver.get("http://127.0.0.1:8000")
+                self.driver.get("http://127.0.0.1:" + PORTS[1])
             except WebDriverException as e:
                 error = e.msg
             self.assertTrue(re.findall(r'Reached error page:\sabout:neterror\?e=connectionFailure', error))
