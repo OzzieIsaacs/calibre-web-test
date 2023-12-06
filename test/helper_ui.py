@@ -305,7 +305,7 @@ class ui_class():
         process_checkboxes = dict()
         process_elements = dict()
         process_options =dict()
-        process_select = dict()
+        # process_select = dict()
         # special handling for checkboxes
         checkboxes = ['config_uploading', 'config_anonbrowse', 'config_public_reg', 'config_remote_login',
                       'config_access_log', 'config_kobo_sync', 'config_kobo_proxy', 'config_ldap_openldap',
@@ -315,7 +315,6 @@ class ui_class():
                       'config_password_special', 'config_ratelimiter']
         options = ['config_log_level', 'config_google_drive_folder', 'config_updatechannel', 'config_login_type',
                    'config_ldap_encryption', 'config_ldap_authentication', 'ldap_import_user_filter', 'config_session']
-        selects = ['config_ebookconverter']
         # depending on elements open accordions or not
         if any(key in elements for key in ['config_port', 'config_certfile','config_keyfile', 'config_updatechannel']):
             opener.append(0)
@@ -340,8 +339,8 @@ class ui_class():
                                            'config_reverse_proxy_login_header_name', 'config_unicode_filename'
                                            ]):
             opener.append(2)
-        if any(key in elements for key in ['config_ebookconverter', 'config_calibre', 'config_kepubifypath',
-                                           'config_converterpath', 'config_rarfile_location']):
+        if any(key in elements for key in ['config_calibre', 'config_kepubifypath',
+                                           'config_binariesdir', 'config_rarfile_location']):
             opener.append(3)
         if any(key in elements for key in ['config_password_policy', 'config_password_number', 'config_password_lower',
                                            'config_password_upper', 'config_password_special', 'config_session',
@@ -359,8 +358,8 @@ class ui_class():
                 process_checkboxes[key] = elements[key]
             elif key in options:
                 process_options[key] = elements[key]
-            elif key in selects:
-                process_select[key] = elements[key]
+            # elif key in selects:
+            #     process_select[key] = elements[key]
             else:
                 process_elements[key] = elements[key]
         # process all checkboxes Todo: If status was wrong before is not included in response
@@ -369,13 +368,13 @@ class ui_class():
             if (elements[checkbox] == 1 and not ele.is_selected() ) or elements[checkbox] == 0 and ele.is_selected():
                 ele.click()
 
-        for select in process_select:
-            ele = cls.driver.find_elements(By.NAME, select)
-            time.sleep(1)
-            for el in ele:
-                if el.get_attribute('id') == elements[select]:
-                    el.click()
-                    break
+        # for select in process_select:
+        #    ele = cls.driver.find_elements(By.NAME, select)
+        #    time.sleep(1)
+        #    for el in ele:
+        #        if el.get_attribute('id') == elements[select]:
+        #            el.click()
+        #            break
 
         # process all selects
         for option, key in enumerate(process_options):

@@ -57,7 +57,7 @@ class TestEbookConvertGDriveKepubify(unittest.TestCase, ui_class):
             shutil.copy(src, dst)
 
             startup(cls, cls.py_version, {'config_calibre_dir':TEST_DB,
-                                          'config_converterpath':'',
+                                          'config_binariesdir':'',
                                           'config_kepubifypath':helper_email_convert.kepubify_path()}, env={"APP_MODE": "test"})
             cls.fill_db_config({'config_use_google_drive': 1})
             time.sleep(2)

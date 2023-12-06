@@ -38,7 +38,7 @@ class TestEbookConvertCalibre(unittest.TestCase, ui_class):
         try:
             startup(cls, cls.py_version, {'config_calibre_dir':TEST_DB,
                                           'config_kepubifypath':'',
-                                          'config_converterpath':helper_email_convert.calibre_path()}, env={"APP_MODE": "test"})
+                                          'config_binariesdir':helper_email_convert.calibre_path()}, env={"APP_MODE": "test"})
 
             cls.edit_user('admin', {'email': 'a5@b.com', 'kindle_mail': 'a1@b.com'})
             cls.setup_server(True, {'mail_server':'127.0.0.1', 'mail_port':'1025',
@@ -72,7 +72,7 @@ class TestEbookConvertCalibre(unittest.TestCase, ui_class):
 
     # deactivate converter and check send to kindle and convert are not visible anymore
     def test_convert_deactivate(self):
-        self.fill_basic_config({'config_converterpath': ""})
+        self.fill_basic_config({'config_binariesdir': ""})
         self.goto_page('nav_about')
         element = self.check_element_on_page((By.XPATH, "//tr/th[text()='Ebook converter']/following::td[1]"))
         self.assertEqual(element.text, 'not installed')
@@ -82,14 +82,14 @@ class TestEbookConvertCalibre(unittest.TestCase, ui_class):
         self.assertFalse(vals['btn_from'])
         self.assertFalse(vals['btn_to'])
         # self.fill_basic_config({'config_converterpath': ""})
-        self.fill_basic_config({'config_converterpath':helper_email_convert.calibre_path()})
+        self.fill_basic_config({'config_binariesdir':helper_email_convert.calibre_path()})
 
     # Set excecutable to wrong exe and start convert
     # set excecutable not existing and start convert
     # set excecutable non excecutable and start convert
     def test_convert_wrong_excecutable(self):
         tasks = self.check_tasks()
-        self.fill_basic_config({'config_converterpath':'/opt/calibre/ebook-polish'})
+        self.fill_basic_config({'config_binariesdir':'/opt/calibre/ebook-polish'})
         self.goto_page('nav_about')
         element = self.check_element_on_page((By.XPATH, "//tr/th[text()='Ebook converter']/following::td[1]"))
         self.assertEqual(element.text, 'not installed')
@@ -101,7 +101,7 @@ class TestEbookConvertCalibre(unittest.TestCase, ui_class):
         self.assertTrue(vals['btn_to'])
 
         # ToDo: change behavior convert should only be visible if ebookconverter has valid entry
-        self.fill_basic_config({'config_converterpath':'/opt/calibre/kuku'})
+        self.fill_basic_config({'config_binariesdir':'/opt/calibre/kuku'})
         details = self.get_book_details(5)
         self.assertEqual(len(details['kindle']), 1)
         details['kindlebtn'].click()
@@ -118,7 +118,7 @@ class TestEbookConvertCalibre(unittest.TestCase, ui_class):
         # self.assertFalse(vals['btn_to'])
 
         nonexec = os.path.join(CALIBRE_WEB_PATH, 'app.db')
-        self.fill_basic_config({'config_converterpath': nonexec})
+        self.fill_basic_config({'config_binariesdir': nonexec})
         self.goto_page('nav_about')
         element = self.check_element_on_page((By.XPATH, "//tr/th[text()='Ebook converter']/following::td[1]"))
         self.assertEqual(element.text, 'Execution permissions missing')
@@ -142,7 +142,7 @@ class TestEbookConvertCalibre(unittest.TestCase, ui_class):
         if len(ret) > 1:
             self.assertEqual(ret[-2]['result'], 'Failed')
         self.assertEqual(ret[-1]['result'], 'Failed')
-        self.fill_basic_config({'config_converterpath': helper_email_convert.calibre_path()})
+        self.fill_basic_config({'config_binariesdir': helper_email_convert.calibre_path()})
 
 
     # set parameters for convert ( --margin-right 11.9) and start conversion -> conversion okay

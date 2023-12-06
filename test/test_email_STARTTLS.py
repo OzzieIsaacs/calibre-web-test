@@ -38,8 +38,8 @@ class TestSTARTTLS(unittest.TestCase, ui_class):
         cls.email_server.start()
         try:
             startup(cls, cls.py_version, {'config_calibre_dir': TEST_DB,
-                                          'config_converterpath': helper_email_convert.calibre_path(),
-                                          'config_ebookconverter': 'converter2'}, env={"APP_MODE": "test"})
+                                          'config_binariesdir': helper_email_convert.calibre_path()},
+                    env={"APP_MODE": "test"})
 
             cls.edit_user('admin', {'email': 'a5@b.com','kindle_mail': 'a1@b.com'})
             cls.setup_server(True, {'mail_server': socket.gethostname(), 'mail_port': '1026',
