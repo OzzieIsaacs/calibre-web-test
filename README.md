@@ -2,7 +2,7 @@
 
 ## Prerequisites
 
-- Installed python3 accessible with the command "python3" (tests currently done using python3.8.x Windows10 and LinuxMint20)
+- Installed python3 accessible with the command "python3" (tests currently done using python3.10.x Windows10 and LinuxMint20)
 - installed calibre desktop program (optional)
 - installed kepubify program (optional)
 - for installing ldap requirements libsasl2-dev and libldap2-dev have to be installed (debian distro lib-names)
