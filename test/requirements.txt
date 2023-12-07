@@ -16,7 +16,7 @@ rarfile>=4.0
 
 #Running Updater Test
 flask>=2.0.0
-mitmproxy==6.0.2
+mitmproxy==8.0.0
 
 # For running tests on helper
 Babel>=2.6.0
