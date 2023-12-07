@@ -951,9 +951,9 @@ class TestLdapLogin(unittest.TestCase, ui_class):
         self.assertEqual(200, r.status_code)
         elements = self.get_opds_index(r.text)
         # check download from guest account is possible
-        r = requests.get('http://127.0.0.1:{}' + elements['Recently added Books']['link'])
+        r = requests.get('http://127.0.0.1:{}'.format(PORTS[0]) + elements['Recently added Books']['link'])
         entries = self.get_opds_feed(r.text)
-        r = requests.get('http://127.0.0.1:{}' + entries['elements'][0]['download'])
+        r = requests.get('http://127.0.0.1:{}'.format(PORTS[0]) + entries['elements'][0]['download'])
         self.assertEqual(200, r.status_code)
         self.assertEqual(len(r.content), 28590)
         self.assertEqual(r.headers['Content-Type'], 'application/pdf')
@@ -1043,7 +1043,7 @@ class TestLdapLogin(unittest.TestCase, ui_class):
         # create new user
         self.create_user('执一',{'email':'use10@oxi.com','password':'1234AbC*!', 'download_role': 1})
         self.assertTrue(self.check_element_on_page((By.ID, "flash_success")))
-        host = 'http://' + get_Host_IP() + PORT[0]
+        host = 'http://' + get_Host_IP() + PORTS[0]
         self.fill_basic_config({'config_kobo_sync': 1})
         time.sleep(BOOT_TIME)
         self.logout()

@@ -42,7 +42,7 @@ class TestReverseProxy(TestCase, ui_class):
     @classmethod
     def tearDownClass(cls):
         cls.proxy.stop()
-        cls.driver.get('http://' + get_Host_IP() + ':' + PORTS[0]))
+        cls.driver.get('http://' + get_Host_IP() + ':' + PORTS[0])
         cls.stop_calibre_web()
         # close the browser window and stop calibre-web
         cls.driver.quit()

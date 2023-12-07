@@ -199,7 +199,7 @@ class TestOPDSFeed(unittest.TestCase, ui_class):
         r = requests.get(host + entries['elements'][0]['download'])
         self.assertEqual(401, r.status_code)
         # try download with invalid credentials
-        r = requests.get(host 'opds/', auth=('admin', 'admin131'))
+        r = requests.get(host + 'opds/', auth=('admin', 'admin131'))
         self.assertEqual(401, r.status_code)
         # try download with invalid credentials
         r = requests.get(host + '/opds/', auth=('hudo', 'admin123'))
@@ -305,7 +305,7 @@ class TestOPDSFeed(unittest.TestCase, ui_class):
 
     def test_opds_publisher(self):
         host = 'http://127.0.0.1:' + PORTS[0]
-        r = requests.get(host + ('/opds/', auth=('admin', 'admin123'))
+        r = requests.get(host + '/opds/', auth=('admin', 'admin123'))
         self.assertEqual(200, r.status_code)
         elements = self.get_opds_index(r.text)
         r = requests.get(host + elements['Publishers']['link'], auth=('admin', 'admin123'))

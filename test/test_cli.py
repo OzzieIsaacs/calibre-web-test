@@ -738,10 +738,10 @@ class TestCli(unittest.TestCase, ui_class):
         mode = os.path.join(CALIBRE_WEB_PATH, "cps", "templates", "tasks.html")
         os.chmod(mode, 0o200)
         r = requests.session()
-        login_page = r.get('http://127.0.0.1:" + PORTS[0] + "/login')
+        login_page = r.get('http://127.0.0.1:{}/login'.format(PORTS[0]))
         token = re.search('<input type="hidden" name="csrf_token" value="(.*)">', login_page.text)
         payload = {'username': 'admin', 'password': 'admin123', 'submit': "", 'next': "/", "csrf_token": token.group(1)}
-        r.post('http://127.0.0.1:" + PORTS[0] + "/login', data=payload)
+        r.post('http://127.0.0.1:{}/login'.format(PORTS[0]), data=payload)
         resp = r.get("http://127.0.0.1:" + PORTS[0] + "/tasks")
         self.assertEqual(403, resp.status_code)
         os.chmod(mode, 0o644)

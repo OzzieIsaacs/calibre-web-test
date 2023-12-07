@@ -98,7 +98,7 @@ class TestShelf(unittest.TestCase, ui_class):
         token = re.search('<input type="hidden" name="csrf_token" value="(.*)">', login_page.text)
         payload = {'username': 'shelf', 'password': '123AbC*!', 'submit':"", 'next':"/", "remember_me":"on", "csrf_token": token.group(1)}
         r.post('http://127.0.0.1:{}/login'.format(PORTS[0]), data=payload)
-        shelf_page = r.get('http://127.0.0.1:{}/shelf/create')
+        shelf_page = r.get('http://127.0.0.1:{}/shelf/create'.format(PORTS[0]))
         token = re.search('<input type="hidden" name="csrf_token" value="(.*)">', shelf_page.text)
         payload = {"csrf_token": token.group(1)}
         request = r.post("http://127.0.0.1:{}/shelf/add/1/1.format(PORTS[0])", data=payload)
@@ -135,7 +135,7 @@ class TestShelf(unittest.TestCase, ui_class):
         shelf_page = r.get('http://127.0.0.1:{}/shelf/create'.format(PORTS[0]))
         token = re.search('<input type="hidden" name="csrf_token" value="(.*)">', shelf_page.text)
         payload = {"csrf_token": token.group(1)}
-        request = r.post("http://127.0.0.1:{}/shelf/add/.format(PORTS[0])" + shelfs['id'] + '/1', data=payload)
+        request = r.post("http://127.0.0.1:{}/shelf/add/".format(PORTS[0]) + shelfs['id'] + '/1', data=payload)
         self.assertTrue("flash_success" in request.text)
         r.get('http://127.0.0.1:{}/logout'.format(PORTS[0]))
         r.close()
@@ -504,7 +504,7 @@ class TestShelf(unittest.TestCase, ui_class):
         self.fill_basic_config({'config_anonbrowse': 0})
         self.logout()
         # Check with deactivated anonymous browsing access to private shelfs not possible
-        self.driver.get('http://127.0.0.1:{}/shelf/' + anon_shelf[0]['id'])
+        self.driver.get('http://127.0.0.1:{}/shelf/{}'.format(PORTS[0], anon_shelf[0]['id']))
         self.assertEqual(self.driver.title, u'Calibre-Web | Login')
         self.login('admin', 'admin123')
         self.delete_shelf(u'anon')
@@ -565,7 +565,7 @@ class TestShelf(unittest.TestCase, ui_class):
         token = re.search('<input type="hidden" name="csrf_token" value="(.*)">', login_page.text)
         payload = {'username': 'test1', 'password': '123AbC*!', 'submit':"", 'next':"/", "remember_me":"on", "csrf_token": token.group(1)}
         r.post('http://127.0.0.1:{}/login'.format(PORTS[0]), data=payload)
-        shelf_page = r.get('http://127.0.0.1:{}/shelf/create')
+        shelf_page = r.get('http://127.0.0.1:{}/shelf/create'.format(PORTS[0]))
         token = re.search('<input type="hidden" name="csrf_token" value="(.*)">', shelf_page.text)
         payload = {'title': 'no_permission', "is_public": "off", "csrf_token": token.group(1)}
         test = r.post('http://127.0.0.1:{}/shelf/create'.format(PORTS[0]), data=payload)

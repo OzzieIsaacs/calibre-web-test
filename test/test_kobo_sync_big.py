@@ -40,7 +40,7 @@ class TestKoboSyncBig(unittest.TestCase, ui_class):
         add_dependency(cls.json_line, cls.__name__)
 
         try:
-            host = 'http://' + get_Host_IP() + ': + PORTS[0]
+            host = 'http://' + get_Host_IP() #  + ':' + PORTS[0]
             startup(cls, cls.py_version, {'config_calibre_dir': TEST_DB, 'config_kobo_sync': 1,
                                           'config_kepubifypath': "",
                                           'config_kobo_proxy': 0}, port=PORTS[0], host=host, env={"APP_MODE": "test"})
@@ -50,7 +50,7 @@ class TestKoboSyncBig(unittest.TestCase, ui_class):
             cls.goto_page('user_setup')
             cls.check_element_on_page((By.ID, "config_create_kobo_token")).click()
             link = cls.check_element_on_page((By.CLASS_NAME, "well"))
-            cls.kobo_address = host + '/kobo/' + re.findall(".*/kobo/(.*)", link.text)[0]
+            cls.kobo_address = host + ':' + PORTS[0] + '/kobo/' + re.findall(".*/kobo/(.*)", link.text)[0]
             cls.check_element_on_page((By.ID, "kobo_close")).click()
             cls.driver.get("http://127.0.0.1:" + PORTS[0])
             cls.login('admin', 'admin123')

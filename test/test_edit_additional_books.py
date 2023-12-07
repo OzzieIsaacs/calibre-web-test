@@ -181,11 +181,11 @@ class TestEditAdditionalBooks(TestCase, ui_class):
         self.assertEqual('3', details['series_index'])
         self.assertEqual('No Series', details['series'])
         r = requests.session()
-        login_page = r.get('http://127.0.0.1:{}/login'.format(PORT[0]))
+        login_page = r.get('http://127.0.0.1:{}/login'.format(PORTS[0]))
         token = re.search('<input type="hidden" name="csrf_token" value="(.*)">', login_page.text)
         payload = {'username': 'admin', 'password': 'admin123', 'submit': "", 'next': "/", "remember_me": "on", "csrf_token": token.group(1)}
-        r.post('http://127.0.0.1:{}/login'.format(PORT[0]), data=payload)
-        resp = r.get('http://127.0.0.1:{}'.format(PORT[0]) + details['cover'])
+        r.post('http://127.0.0.1:{}/login'.format(PORTS[0]), data=payload)
+        resp = r.get('http://127.0.0.1:{}'.format(PORTS[0]) + details['cover'])
         self.assertEqual('8936', resp.headers['Content-Length'])
         #self.fill_basic_config({'config_rarfile_location': ''})
         #self.assertTrue(self.check_element_on_page((By.ID, "flash_success")))
@@ -215,11 +215,11 @@ class TestEditAdditionalBooks(TestCase, ui_class):
         self.assertEqual('2', details['series_index'])
         self.assertEqual('No S', details['series'])
         r = requests.session()
-        login_page = r.get('http://127.0.0.1:{}/login'.format(PORT[0]))
+        login_page = r.get('http://127.0.0.1:{}/login'.format(PORTS[0]))
         token = re.search('<input type="hidden" name="csrf_token" value="(.*)">', login_page.text)
         payload = {'username': 'admin', 'password': 'admin123', 'submit': "", 'next': "/", "remember_me": "on", "csrf_token": token.group(1)}
-        r.post('http://127.0.0.1:{}/login'.format(PORT[0]), data=payload)
-        resp = r.get('http://127.0.0.1:{}'.format(PORT[0]) + details['cover'])
+        r.post('http://127.0.0.1:{}/login'.format(PORTS[0]), data=payload)
+        resp = r.get('http://127.0.0.1:{}'.format(PORTS[0]) + details['cover'])
         self.fill_basic_config({'config_uploading': 0})
         self.assertEqual('8936', resp.headers['Content-Length'])
         r.close()
@@ -674,23 +674,23 @@ class TestEditAdditionalBooks(TestCase, ui_class):
         self.assertTrue(self.check_element_on_page((By.ID, "flash_success")))
         self.logout()
         r = requests.session()
-        login_page = r.get('http://127.0.0.1:{}/login'.format(PORT[0]))
+        login_page = r.get('http://127.0.0.1:{}/login'.format(PORTS[0]))
         token = re.search('<input type="hidden" name="csrf_token" value="(.*)">', login_page.text)
         payload = {'username': 'user0', 'password': '123AbC*!', 'submit': "", 'next': "/", "remember_me": "on", "csrf_token": token.group(1)}
-        r.post('http://127.0.0.1:{}/login'.format(PORT[0]), data=payload)
+        r.post('http://127.0.0.1:{}/login'.format(PORTS[0]), data=payload)
         upload_file = open(os.path.join(base_path, 'files', 'book.cbt'), 'rb')
         files = {'btn-upload': upload_file}
-        result = r.post('http://127.0.0.1:{}/upload'.format(PORT[0]), files=files, data={"csrf_token": token.group(1)})
+        result = r.post('http://127.0.0.1:{}/upload'.format(PORTS[0]), files=files, data={"csrf_token": token.group(1)})
         self.assertEqual(403, result.status_code)
         upload_file.close()
-        book_page = r.get('http://127.0.0.1:{}/admin/book/13'.format(PORT[0]))
+        book_page = r.get('http://127.0.0.1:{}/admin/book/13'.format(PORTS[0]))
         token = re.search('<input type="hidden" name="csrf_token" value="(.*)">', book_page.text)
         values = {'book_title': 'Buuko', 'author_name': 'John Döe', 'description': '',
                   'tags': 'Gênot', 'series': 'Djüngel', 'series_index': '3.0', 'ratings': '4',
                   'pubdate': '', 'languages': '', 'detail_view': 'on', "csrf_token": token.group(1)}
         upload_file = open(os.path.join(base_path, 'files', 'book.cbt'), 'rb')
         files_format = {'btn-upload-format': upload_file}
-        result = r.post('http://127.0.0.1:{}/admin/book/13'.format(PORT[0]), files=files_format, data=values)
+        result = r.post('http://127.0.0.1:{}/admin/book/13'.format(PORTS[0]), files=files_format, data=values)
         self.assertEqual(200, result.status_code)
         self.assertTrue("flash_danger" in result.text)
         upload_file.close()
@@ -698,14 +698,14 @@ class TestEditAdditionalBooks(TestCase, ui_class):
         files_cover = {'btn-upload-cover': cover_file}
         token = re.search('<input type="hidden" name="csrf_token" value="(.*)">', book_page.text)
         values['csrf_token'] = token.group(1)
-        result = r.post('http://127.0.0.1:{}/admin/book/13'.format(PORT[0]), files=files_cover, data=values)
+        result = r.post('http://127.0.0.1:{}/admin/book/13'.format(PORTS[0]), files=files_cover, data=values)
         self.assertEqual(200, result.status_code)
         self.assertTrue("flash_danger" in result.text)
         cover_file.close()
         values['cover_url'] = "/home/user/kurt.jpg"
         token = re.search('<input type="hidden" name="csrf_token" value="(.*)">', book_page.text)
         values['csrf_token'] = token.group(1)
-        result = r.post('http://127.0.0.1:{}/admin/book/13'.format(PORT[0]), data=values)
+        result = r.post('http://127.0.0.1:{}/admin/book/13'.format(PORTS[0]), data=values)
         self.assertEqual(200, result.status_code)
         self.assertTrue("flash_danger" in result.text)
         r.close()
@@ -736,11 +736,11 @@ class TestEditAdditionalBooks(TestCase, ui_class):
         self.assertFalse(self.check_element_on_page((By.ID, "edit_book")))
         self.logout()
         r = requests.session()
-        login_page = r.get('http://127.0.0.1:{}/login'.format(PORT[0]))
+        login_page = r.get('http://127.0.0.1:{}/login'.format(PORTS[0]))
         token = re.search('<input type="hidden" name="csrf_token" value="(.*)">', login_page.text)
         payload = {'username': 'user0', 'password': '123AbC*!', 'submit': "", 'next': "/", "remember_me": "on", "csrf_token": token.group(1)}
-        r.post('http://127.0.0.1:{}/login'.format(PORT[0]), data=payload)
-        result = r.get('http://127.0.0.1:{}/admin/book/13'.format(PORT[0]))
+        r.post('http://127.0.0.1:{}/login'.format(PORTS[0]), data=payload)
+        result = r.get('http://127.0.0.1:{}/admin/book/13'.format(PORTS[0]))
         self.assertEqual(403, result.status_code)
         r.close()
 
@@ -770,18 +770,18 @@ class TestEditAdditionalBooks(TestCase, ui_class):
         self.assertTrue(self.check_element_on_page((By.ID, "flash_success")))
         self.logout()
         r = requests.session()
-        login_page = r.get('http://127.0.0.1:{}/login'.format(PORT[0]))
+        login_page = r.get('http://127.0.0.1:{}/login'.format(PORTS[0]))
         token = re.search('<input type="hidden" name="csrf_token" value="(.*)">', login_page.text)
         payload = {'username': 'user2', 'password': '123AbC*!', 'submit': "", 'next': "/", "remember_me": "on", "csrf_token": token.group(1)}
-        r.post('http://127.0.0.1:{}/login'.format(PORT[0]), data=payload)
-        result = r.get('http://127.0.0.1:{}/book/12'.format(PORT[0]))
+        r.post('http://127.0.0.1:{}/login'.format(PORTS[0]), data=payload)
+        result = r.get('http://127.0.0.1:{}/book/12'.format(PORTS[0]))
         token = re.search('<input type="hidden" name="csrf_token" value="(.*)">', result.text)
         payload = {"csrf_token": token.group(1)}
-        result = r.post('http://127.0.0.1:{}/delete/12/FB2'.format(PORT[0]), data=payload)
+        result = r.post('http://127.0.0.1:{}/delete/12/FB2'.format(PORTS[0]), data=payload)
         self.assertEqual(403, result.status_code)
-        result = r.post('http://127.0.0.1:{}/delete/12'.format(PORT[0]), data=payload)
+        result = r.post('http://127.0.0.1:{}/delete/12'.format(PORTS[0]), data=payload)
         self.assertEqual(403, result.status_code)
-        result = r.post('http://127.0.0.1:{}/ajax/delete/12'.format(PORT[0]), data=payload)
+        result = r.post('http://127.0.0.1:{}/ajax/delete/12'.format(PORTS[0]), data=payload)
         self.assertEqual(200, result.status_code)
         self.assertEqual("danger", result.json()['type'])
 
@@ -793,10 +793,10 @@ class TestEditAdditionalBooks(TestCase, ui_class):
         self.check_element_on_page((By.ID, "edit_book")).click()
         self.assertFalse(self.check_element_on_page((By.ID, "delete")))
         self.logout()
-        result = r.post('http://127.0.0.1:{}/delete/12/FB2'.format(PORT[0]), data=payload)
+        result = r.post('http://127.0.0.1:{}/delete/12/FB2'.format(PORTS[0]), data=payload)
         self.assertEqual(200, result.status_code)
         self.assertTrue('flash_danger' in result.text)
-        result = r.post('http://127.0.0.1:{}/delete/12'.format(PORT[0]), data=payload)
+        result = r.post('http://127.0.0.1:{}/delete/12'.format(PORTS[0]), data=payload)
         self.assertEqual(200, result.status_code)
         self.assertTrue('flash_danger' in result.text)
         self.login('admin', 'admin123')
@@ -846,14 +846,14 @@ class TestEditAdditionalBooks(TestCase, ui_class):
 
     def test_xss_comment_edit(self):
         r = requests.session()
-        login_page = r.get('http://127.0.0.1:{}/login'.format(PORT[0]))
+        login_page = r.get('http://127.0.0.1:{}/login'.format(PORTS[0]))
         token = re.search('<input type="hidden" name="csrf_token" value="(.*)">', login_page.text)
         payload = {'username': 'admin', 'password': 'admin123', 'submit': "", 'next': "/", "remember_me": "on", "csrf_token": token.group(1)}
-        r.post('http://127.0.0.1:{}/login'.format(PORT[0]), data=payload)
-        book_page = r.get('http://127.0.0.1:{}/admin/book/3'.format(PORT[0]))
+        r.post('http://127.0.0.1:{}/login'.format(PORTS[0]), data=payload)
+        book_page = r.get('http://127.0.0.1:{}/admin/book/3'.format(PORTS[0]))
         token = re.search('<input type="hidden" name="csrf_token" value="(.*)">', book_page.text)
         book_payload = {'description': '<p>calibre Quick Start Guide</p><img src=x onerror=alert("Huhu")>', 'author_name': 'Asterix Lionherd', 'book_title': 'Comicdemo', 'tags':'', 'series':'Djüngel', 'series_index':'1', 'languages':'', 'publisher':'', 'pubdate':'', 'rating': '', 'custom_column_1':'', 'custom_column_2':'', 'custom_column_3':'', 'custom_column_4':'', 'custom_column_5':'', 'custom_column_6':'','custom_column_7':'', 'custom_column_8':'', 'custom_column_9':'', 'custom_column_10':'', "csrf_token": token.group(1)}
-        result = r.post('http://127.0.0.1:{}/admin/book/3'.format(PORT[0]), data=book_payload)
+        result = r.post('http://127.0.0.1:{}/admin/book/3'.format(PORTS[0]), data=book_payload)
         self.assertEqual(200, result.status_code)
         r.close()
         try:
@@ -867,11 +867,11 @@ class TestEditAdditionalBooks(TestCase, ui_class):
 
     def test_xss_custom_comment_edit(self):
         r = requests.session()
-        login_page = r.get('http://127.0.0.1:{}/login'.format(PORT[0]))
+        login_page = r.get('http://127.0.0.1:{}/login'.format(PORTS[0]))
         token = re.search('<input type="hidden" name="csrf_token" value="(.*)">', login_page.text)
         payload = {'username': 'admin', 'password': 'admin123', 'submit': "", 'next': "/", "remember_me": "on", "csrf_token": token.group(1)}
-        r.post('http://127.0.0.1:{}/login'.format(PORT[0]), data=payload)
-        book_page = r.get('http://127.0.0.1:{}/admin/book/3'.format(PORT[0]))
+        r.post('http://127.0.0.1:{}/login'.format(PORTS[0]), data=payload)
+        book_page = r.get('http://127.0.0.1:{}/admin/book/3'.format(PORTS[0]))
         token = re.search('<input type="hidden" name="csrf_token" value="(.*)">', book_page.text)
         book_payload = {'description': '', 'author_name': 'Asterix Lionherd', 'book_title': '<p>calibre Quick Start Guide</p><img src=x onerror=alert("hoho")>', 'tags':'<p>calibre Quick Start Guide</p><img src=x onerror=alert("ddd")>', 'series':'<p>calibre Quick Start Guide</p><img src=x onerror=alert("hh")>', 'series_index':'1', 'languages':'', 'publisher':'', 'pubdate':'', 'rating': '', 'custom_column_1':'', 'custom_column_2':'', 'custom_column_3':'', 'custom_column_4':'', 'custom_column_5':'<p>calibre Quick Start Guide</p><img src=x onerror=alert("Huhu")>', 'custom_column_6':'','custom_column_7':'', 'custom_column_8':'', 'custom_column_9':'', 'custom_column_10':'', "csrf_token": token.group(1)}
         result = r.post('http://127.0.0.1:{}/admin/book/3', data=book_payload)
@@ -890,14 +890,14 @@ class TestEditAdditionalBooks(TestCase, ui_class):
     @unittest.skip
     def test_xss_author_edit(self):
         r = requests.session()
-        login_page = r.get('http://127.0.0.1:{}/login'.format(PORT[0]))
+        login_page = r.get('http://127.0.0.1:{}/login'.format(PORTS[0]))
         #token = re.search('<input type="hidden" name="csrf_token" value="(.*)">', login_page.text)
         payload = {'username': 'admin', 'password': 'admin123', 'submit': "", 'next': "/", "remember_me": "on"} #, "csrf_token": token.group(1)}
-        r.post('http://127.0.0.1:{}/login'.format(PORT[0]), data=payload)
-        book_page = r.get('http://127.0.0.1:{}/admin/book/3'.format(PORT[0]))
+        r.post('http://127.0.0.1:{}/login'.format(PORTS[0]), data=payload)
+        book_page = r.get('http://127.0.0.1:{}/admin/book/3'.format(PORTS[0]))
         # token = re.search('<input type="hidden" name="csrf_token" value="(.*)">', book_page.text)
         book_payload = {'description': '', 'author_name': "-->'\"<script>alert(1)</script>", 'book_title': '<p>calibre Quick Start Guide</p><img src=x onerror=alert("hoho")>', 'tags':'<p>calibre Quick Start Guide</p><img src=x onerror=alert("ddd")>', 'series':'<p>calibre Quick Start Guide</p><img src=x onerror=alert("hh")>', 'series_index':'1', 'languages':'', 'publisher':'', 'pubdate':'', 'rating': '', 'custom_column_1':'', 'custom_column_2':'', 'custom_column_3':'', 'custom_column_4':'', 'custom_column_5':'<p>calibre Quick Start Guide</p><img src=x onerror=alert("Huhu")>', 'custom_column_6':'','custom_column_7':'', 'custom_column_8':'', 'custom_column_9':'', 'custom_column_10':''} #, "csrf_token": token.group(1)}
-        result = r.post('http://127.0.0.1:{}/admin/book/3'.format(PORT[0]), data=book_payload)
+        result = r.post('http://127.0.0.1:{}/admin/book/3'.format(PORTS[0]), data=book_payload)
         self.assertEqual(200, result.status_code)
         r.close()
         try:
