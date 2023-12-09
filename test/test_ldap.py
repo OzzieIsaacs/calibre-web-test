@@ -18,6 +18,7 @@ from helper_func import save_logfiles
 RESOURCES = {'ports': 2}
 
 PORTS = ['8083', '3268']
+INDEX = ""
 
 
 class TestLdapLogin(unittest.TestCase, ui_class):
@@ -37,8 +38,10 @@ class TestLdapLogin(unittest.TestCase, ui_class):
         try:
             cls.server = TestLDAPServer(config=4, port=int(PORTS[1]), encrypt=None)
             cls.server.start()
-            startup(cls, cls.py_version, {'config_calibre_dir':TEST_DB,'config_login_type':'Use LDAP Authentication'},
-                    port=PORTS[0], env={"APP_MODE": "test"})
+            startup(cls, cls.py_version, {'config_calibre_dir':TEST_DB,
+                                          'config_embed_metadata': 0,
+                                          'config_login_type':'Use LDAP Authentication'},
+                    port=PORTS[0], index=INDEX, env={"APP_MODE": "test"})
             cls.server.stopListen()
         except Exception as e:
             print(e)
@@ -60,7 +63,7 @@ class TestLdapLogin(unittest.TestCase, ui_class):
         # close the browser window and stop calibre-web
         # remove_dependency(cls.dep_line)
         save_logfiles(cls, cls.__name__)
-        shutil.rmtree(os.path.join(CALIBRE_WEB_PATH, 'files'), ignore_errors=True)
+        shutil.rmtree(os.path.join(CALIBRE_WEB_PATH + INDEX, 'files'), ignore_errors=True)
 
     @classmethod
     def tearDown(cls):
@@ -585,16 +588,16 @@ class TestLdapLogin(unittest.TestCase, ui_class):
     # if this test isn't running anymore delete all certificate files and regenerate them
     # @unittest.skip('Unknown how to test certificate')
     def test_LDAP_SSL_CERTIFICATE(self):
-        shutil.rmtree(os.path.join(CALIBRE_WEB_PATH, 'files'), ignore_errors=True)
-        os.makedirs(os.path.join(CALIBRE_WEB_PATH, 'files'))
+        shutil.rmtree(os.path.join(CALIBRE_WEB_PATH + INDEX, 'files'), ignore_errors=True)
+        os.makedirs(os.path.join(CALIBRE_WEB_PATH + INDEX, 'files'))
         for f in ['ca.cert.pem', 'client.crt', 'client.key']:
-            dest = os.path.join(CALIBRE_WEB_PATH, 'files', f)
+            dest = os.path.join(CALIBRE_WEB_PATH + INDEX, 'files', f)
             src = os.path.join(base_path, 'files', f)
             shutil.copy(src, dest)
 
-        real_ca_file = os.path.join(CALIBRE_WEB_PATH, 'files', 'ca.cert.pem')
-        real_cert_file = os.path.join(CALIBRE_WEB_PATH, 'files', 'client.crt')
-        real_key_file = os.path.join(CALIBRE_WEB_PATH, 'files', 'client.key')
+        real_ca_file = os.path.join(CALIBRE_WEB_PATH + INDEX, 'files', 'ca.cert.pem')
+        real_cert_file = os.path.join(CALIBRE_WEB_PATH + INDEX, 'files', 'client.crt')
+        real_key_file = os.path.join(CALIBRE_WEB_PATH + INDEX, 'files', 'client.key')
 
         # configure ssl LDAP
         self.fill_basic_config({'config_ldap_provider_url': socket.gethostname(),
@@ -1043,7 +1046,7 @@ class TestLdapLogin(unittest.TestCase, ui_class):
         # create new user
         self.create_user('执一',{'email':'use10@oxi.com','password':'1234AbC*!', 'download_role': 1})
         self.assertTrue(self.check_element_on_page((By.ID, "flash_success")))
-        host = 'http://' + get_Host_IP() + PORTS[0]
+        host = 'http://' + get_Host_IP() + ":" + PORTS[0]
         self.fill_basic_config({'config_kobo_sync': 1})
         time.sleep(BOOT_TIME)
         self.logout()

@@ -19,6 +19,7 @@ from io import BytesIO
 RESOURCES = {'ports': 1}
 
 PORTS = ['8083']
+INDEX = ""
 
 
 class TestUploadEPubs(TestCase, ui_class):
@@ -28,7 +29,7 @@ class TestUploadEPubs(TestCase, ui_class):
     @classmethod
     def setUpClass(cls):
         try:
-            startup(cls, cls.py_version, {'config_calibre_dir': TEST_DB, 'config_uploading': 1}, port=PORTS[0],
+            startup(cls, cls.py_version, {'config_calibre_dir': TEST_DB, 'config_uploading': 1}, port=PORTS[0], index=INDEX,
                     env = {"APP_MODE": "test"})
             time.sleep(3)
             WebDriverWait(cls.driver, 5).until(EC.presence_of_element_located((By.ID, "flash_success")))

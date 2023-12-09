@@ -19,6 +19,7 @@ from helper_gdrive import prepare_gdrive
 RESOURCES = {'ports': 1}
 
 PORTS = ['8083']
+INDEX = ""
 
 
 @unittest.skipIf(not os.path.exists(os.path.join(base_path, "files", "client_secrets.json")) or
@@ -37,25 +38,25 @@ class TestEbookConvertGDriveKepubify(unittest.TestCase, ui_class):
         prepare_gdrive()
         try:
             src = os.path.join(base_path, "files", "client_secrets.json")
-            dst = os.path.join(CALIBRE_WEB_PATH, "client_secrets.json")
+            dst = os.path.join(CALIBRE_WEB_PATH + INDEX, "client_secrets.json")
             os.chmod(src, 0o764)
             if os.path.exists(dst):
                 os.unlink(dst)
             shutil.copy(src, dst)
 
             # delete settings_yaml file
-            set_yaml = os.path.join(CALIBRE_WEB_PATH, "settings.yaml")
+            set_yaml = os.path.join(CALIBRE_WEB_PATH + INDEX, "settings.yaml")
             if os.path.exists(set_yaml):
                 os.unlink(set_yaml)
 
             # delete gdrive file
-            gdrive_db = os.path.join(CALIBRE_WEB_PATH, "gdrive.db")
+            gdrive_db = os.path.join(CALIBRE_WEB_PATH + INDEX, "gdrive.db")
             if os.path.exists(gdrive_db):
                 os.unlink(gdrive_db)
 
             # delete gdrive authenticated file
             src = os.path.join(base_path, 'files', "gdrive_credentials")
-            dst = os.path.join(CALIBRE_WEB_PATH, "gdrive_credentials")
+            dst = os.path.join(CALIBRE_WEB_PATH + INDEX, "gdrive_credentials")
             os.chmod(src, 0o764)
             if os.path.exists(dst):
                 os.unlink(dst)
@@ -64,7 +65,7 @@ class TestEbookConvertGDriveKepubify(unittest.TestCase, ui_class):
             startup(cls, cls.py_version, {'config_calibre_dir':TEST_DB,
                                           'config_binariesdir':'',
                                           'config_kepubifypath':helper_email_convert.kepubify_path()},
-                    port=PORTS[0], env={"APP_MODE": "test"})
+                    port=PORTS[0], index=INDEX, env={"APP_MODE": "test"})
             cls.fill_db_config({'config_use_google_drive': 1})
             time.sleep(2)
 
@@ -87,8 +88,8 @@ class TestEbookConvertGDriveKepubify(unittest.TestCase, ui_class):
         time.sleep(2)
         remove_dependency(cls.dependency)
 
-        src1 = os.path.join(CALIBRE_WEB_PATH, "client_secrets.json")
-        src = os.path.join(CALIBRE_WEB_PATH, "gdrive_credentials")
+        src1 = os.path.join(CALIBRE_WEB_PATH + INDEX, "client_secrets.json")
+        src = os.path.join(CALIBRE_WEB_PATH + INDEX, "gdrive_credentials")
         if os.path.exists(src):
             os.chmod(src, 0o764)
             try:
@@ -140,7 +141,7 @@ class TestEbookConvertGDriveKepubify(unittest.TestCase, ui_class):
         self.assertTrue(vals['btn_from'])
         self.assertTrue(vals['btn_to'])
 
-        nonexec = os.path.join(CALIBRE_WEB_PATH, 'app.db')
+        nonexec = os.path.join(CALIBRE_WEB_PATH + INDEX, 'app.db')
         self.fill_basic_config({'config_kepubifypath': nonexec})
         self.goto_page('nav_about')
         element = self.check_element_on_page((By.XPATH, "//tr/th[text()='Kepubify']/following::td[1]"))

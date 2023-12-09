@@ -20,6 +20,7 @@ from selenium.webdriver.support import expected_conditions as EC
 RESOURCES = {'ports': 1}
 
 PORTS = ['8083']
+INDEX = ""
 
 
 def user_change(user, result, index):
@@ -64,7 +65,7 @@ class TestUserLoad(TestCase, ui_class):
     def setUpClass(cls):
         try:
             startup(cls, cls.py_version, {'config_calibre_dir': TEST_DB, 'config_access_log': 1},
-                    env={"APP_MODE": "test"})
+                    port=PORTS[0], index=INDEX, env={"APP_MODE": "test"})
             time.sleep(3)
             WebDriverWait(cls.driver, 5).until(EC.presence_of_element_located((By.ID, "flash_success")))
         except Exception:

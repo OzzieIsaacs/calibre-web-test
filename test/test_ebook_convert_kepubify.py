@@ -19,6 +19,7 @@ from selenium.webdriver.support import expected_conditions as EC
 RESOURCES = {'ports': 1}
 
 PORTS = ['8083']
+INDEX = ""
 
 
 @unittest.skipIf(helper_email_convert.is_kepubify_not_present(), "Skipping convert, kepubify not found")
@@ -33,7 +34,7 @@ class TestEbookConvertKepubify(unittest.TestCase, ui_class):
             startup(cls, cls.py_version, {'config_calibre_dir':TEST_DB,
                                           'config_binariesdir':'',
                                           'config_kepubifypath':helper_email_convert.kepubify_path()}, 
-                    port=PORTS[0], env={"APP_MODE": "test"})
+                    port=PORTS[0], index=INDEX, env={"APP_MODE": "test"})
 
             cls.edit_user('admin', {'email': 'a5@b.com', 'kindle_mail': 'a1@b.com'})
             time.sleep(2)
@@ -93,7 +94,7 @@ class TestEbookConvertKepubify(unittest.TestCase, ui_class):
         self.assertTrue(vals['btn_from'])
         self.assertTrue(vals['btn_to'])
 
-        nonexec = os.path.join(CALIBRE_WEB_PATH, 'app.db')
+        nonexec = os.path.join(CALIBRE_WEB_PATH + INDEX, 'app.db')
         self.fill_basic_config({'config_kepubifypath': nonexec})
         self.assertTrue(self.check_element_on_page((By.ID, "flash_success")))
         self.goto_page('nav_about')

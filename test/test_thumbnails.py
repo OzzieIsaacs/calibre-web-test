@@ -23,6 +23,7 @@ from selenium.webdriver.support import expected_conditions as EC
 RESOURCES = {'ports': 1}
 
 PORTS = ['8083']
+INDEX = ""
 
 
 class TestThumbnails(unittest.TestCase, ui_class):
@@ -33,12 +34,12 @@ class TestThumbnails(unittest.TestCase, ui_class):
     @classmethod
     def setUpClass(cls):
         try:
-            startup(cls, cls.py_version, {'config_calibre_dir': TEST_DB}, port=PORTS[0], env={"APP_MODE": "test"})
+            startup(cls, cls.py_version, {'config_calibre_dir': TEST_DB}, port=PORTS[0], index=INDEX, env={"APP_MODE": "test"})
             time.sleep(3)
             WebDriverWait(cls.driver, 5).until(EC.presence_of_element_located((By.ID, "flash_success")))
             # generate new id for database to make calibre-web aware of database change
             add_books(os.path.join(TEST_DB, "metadata.db"), 100, cover=True, set_id=True)
-            thumbnail_cache_path = os.path.join(CALIBRE_WEB_PATH, 'cps', 'cache', 'thumbnails')
+            thumbnail_cache_path = os.path.join(CALIBRE_WEB_PATH + INDEX, 'cps', 'cache', 'thumbnails')
             shutil.rmtree(thumbnail_cache_path, ignore_errors=True)
         except Exception as e:
             print(e)
@@ -57,7 +58,7 @@ class TestThumbnails(unittest.TestCase, ui_class):
         save_logfiles(cls, cls.__name__)
 
     def tearDown(self):
-        thumbnail_cache_path = os.path.join(CALIBRE_WEB_PATH, 'cps', 'cache', 'thumbnails')
+        thumbnail_cache_path = os.path.join(CALIBRE_WEB_PATH + INDEX, 'cps', 'cache', 'thumbnails')
         shutil.rmtree(thumbnail_cache_path, ignore_errors=True)
 
     @unittest.skip
@@ -83,7 +84,7 @@ class TestThumbnails(unittest.TestCase, ui_class):
         res = self.check_tasks()
         self.assertLessEqual(len(res), 1, res)
         # check cover folder is filled
-        thumbnail_cache_path = os.path.join(CALIBRE_WEB_PATH, 'cps', 'cache', 'thumbnails')
+        thumbnail_cache_path = os.path.join(CALIBRE_WEB_PATH + INDEX, 'cps', 'cache', 'thumbnails')
         self.assertTrue(os.path.exists(thumbnail_cache_path))
         self.assertEqual(count_files(thumbnail_cache_path), 110*2)
         # change database
@@ -125,7 +126,7 @@ class TestThumbnails(unittest.TestCase, ui_class):
         self.assertTrue(self.check_element_on_page((By.ID, "flash_success")))
         res = self.check_tasks()
         self.assertLessEqual(len(res), 1)
-        thumbnail_cache_path = os.path.join(CALIBRE_WEB_PATH, 'cps', 'cache', 'thumbnails')
+        thumbnail_cache_path = os.path.join(CALIBRE_WEB_PATH + INDEX, 'cps', 'cache', 'thumbnails')
         self.assertTrue(os.path.exists(thumbnail_cache_path))
         self.assertEqual(110*2, count_files(thumbnail_cache_path))
         self.get_book_details(104)
@@ -156,11 +157,11 @@ class TestThumbnails(unittest.TestCase, ui_class):
         self.assertTrue(self.check_element_on_page((By.ID, "flash_success")))
         self.restart_calibre_web()
         time.sleep(2)
-        thumbnail_cache_path = os.path.join(CALIBRE_WEB_PATH, 'cps', 'cache', 'thumbnails')
+        thumbnail_cache_path = os.path.join(CALIBRE_WEB_PATH + INDEX, 'cps', 'cache', 'thumbnails')
         book_thumbnail_reference = count_files(thumbnail_cache_path)
         # open app.db file -> thumbnails table -> find entries for book5
         # delete covers of book 5
-        books = get_thumbnail_files(os.path.join(CALIBRE_WEB_PATH, "app.db"), 5)
+        books = get_thumbnail_files(os.path.join(CALIBRE_WEB_PATH + INDEX, "app.db"), 5)
         for book in books:
             os.remove(os.path.join(thumbnail_cache_path, book.uuid[:2], book.filename))
         self.get_book_details(5)
@@ -185,7 +186,7 @@ class TestThumbnails(unittest.TestCase, ui_class):
         upload = self.check_element_on_page((By.ID, 'btn-upload'))
         upload.send_keys(upload_file)
         time.sleep(2)
-        thumbnail_cache_path = os.path.join(CALIBRE_WEB_PATH, 'cps', 'cache', 'thumbnails')
+        thumbnail_cache_path = os.path.join(CALIBRE_WEB_PATH + INDEX, 'cps', 'cache', 'thumbnails')
         book_thumbnail_reference = count_files(thumbnail_cache_path)
         # covers for new books are generated directly after upload
         self.assertEqual(book_thumbnail_reference, 2)
@@ -206,14 +207,14 @@ class TestThumbnails(unittest.TestCase, ui_class):
 
     def test_cache_non_writable(self):
         # makedir cache
-        cache_dir = os.path.join(CALIBRE_WEB_PATH, 'cps', 'cache')
+        cache_dir = os.path.join(CALIBRE_WEB_PATH + INDEX, 'cps', 'cache')
         os.makedirs(cache_dir)
         # change to readonly
         os.chmod(cache_dir, 0o400)
         self.fill_thumbnail_config({'schedule_generate_book_covers': 1})
         self.assertTrue(self.check_element_on_page((By.ID, "flash_success")))
         self.restart_calibre_web()
-        thumbnail_cache_path = os.path.join(CALIBRE_WEB_PATH, 'cps', 'cache', 'thumbnails')
+        thumbnail_cache_path = os.path.join(CALIBRE_WEB_PATH + INDEX, 'cps', 'cache', 'thumbnails')
         book_thumbnail_reference = count_files(thumbnail_cache_path)
         self.assertEqual(book_thumbnail_reference, 0)
         # ToDo: check covers are still displayed properly
@@ -236,7 +237,7 @@ class TestThumbnails(unittest.TestCase, ui_class):
         if len(res):
             self.assertEqual(res[0]['user'], "System")
             self.assertTrue(res[0]['task'].startswith, "Cover Thumbnails")
-        thumbnail_cache_path = os.path.join(CALIBRE_WEB_PATH, 'cps', 'cache', 'thumbnails')
+        thumbnail_cache_path = os.path.join(CALIBRE_WEB_PATH + INDEX, 'cps', 'cache', 'thumbnails')
         book_thumbnail_reference = count_files(thumbnail_cache_path)
         upload_file = os.path.join(base_path, 'files', 'book.epub')
         self.goto_page('nav_new')
@@ -267,7 +268,7 @@ class TestThumbnails(unittest.TestCase, ui_class):
         self.fill_thumbnail_config({'schedule_generate_book_covers': 1})
         self.assertTrue(self.check_element_on_page((By.ID, "flash_success")))
         self.restart_calibre_web()
-        thumbnail_cache_path = os.path.join(CALIBRE_WEB_PATH, 'cps', 'cache', 'thumbnails')
+        thumbnail_cache_path = os.path.join(CALIBRE_WEB_PATH + INDEX, 'cps', 'cache', 'thumbnails')
         book_thumbnail_reference = count_files(thumbnail_cache_path)
 
         # sideload a book

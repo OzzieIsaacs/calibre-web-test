@@ -18,7 +18,7 @@ from PIL import Image
 RESOURCES = {'ports': 1}
 
 PORTS = ['8083']
-
+INDEX =""
 
 class TestReader(unittest.TestCase, ui_class):
 
@@ -30,7 +30,7 @@ class TestReader(unittest.TestCase, ui_class):
     def setUpClass(cls):
         #add_dependency(cls.dependencys, cls.__name__)
         try:
-            startup(cls, cls.py_version, {'config_calibre_dir':TEST_DB}, port=PORTS[0], env={"APP_MODE": "test"})
+            startup(cls, cls.py_version, {'config_calibre_dir':TEST_DB}, port=PORTS[0], index=INDEX, env={"APP_MODE": "test"})
             cls.current_handle = cls.driver.current_window_handle
 
         except Exception:

@@ -16,6 +16,8 @@ from helper_func import save_logfiles, read_opf_metadata
 RESOURCES = {'ports': 1}
 
 PORTS = ['8083']
+INDEX = ""
+
 
 class TestBackupMetadata(TestCase, ui_class):
     p = None
@@ -24,7 +26,7 @@ class TestBackupMetadata(TestCase, ui_class):
     @classmethod
     def setUpClass(cls):
         try:
-            startup(cls, cls.py_version, {'config_calibre_dir': TEST_DB}, port=PORTS[0], env={"APP_MODE": "test"})
+            startup(cls, cls.py_version, {'config_calibre_dir': TEST_DB}, port=PORTS[0], index=INDEX, env={"APP_MODE": "test"})
             time.sleep(3)
             cls.fill_thumbnail_config({'schedule_metadata_backup': 1})
             # cls.restart_calibre_web()
@@ -602,7 +604,3 @@ class TestBackupMetadata(TestCase, ui_class):
         self.delete_book(details['id'])
         self.fill_basic_config({'config_uploading': 0})
         self.assertTrue(self.check_element_on_page((By.ID, "flash_success")))
-
-    def test_gdrive(self):
-        pass
-        # repeat all tests on gdrive

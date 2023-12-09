@@ -17,6 +17,7 @@ from helper_func import save_logfiles
 RESOURCES = {'ports': 1}
 
 PORTS = ['8083']
+INDEX = ""
 
 
 class TestLoadMetadataScholar(TestCase, ui_class):
@@ -28,7 +29,7 @@ class TestLoadMetadataScholar(TestCase, ui_class):
     def setUpClass(cls):
         add_dependency(cls.dependency, cls.__name__)
         try:
-            startup(cls, cls.py_version, {'config_calibre_dir': TEST_DB}, port=PORTS[0], env={"APP_MODE": "test"})
+            startup(cls, cls.py_version, {'config_calibre_dir': TEST_DB}, port=PORTS[0], index=INDEX, env={"APP_MODE": "test"})
             time.sleep(3)
         except Exception:
             cls.driver.quit()

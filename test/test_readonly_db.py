@@ -20,6 +20,7 @@ from helper_func import save_logfiles
 RESOURCES = {'ports': 1}
 
 PORTS = ['8083']
+INDEX = ""
 
 
 @unittest.skipIf(os.name == 'nt', 'writeonly database on windows is not checked')
@@ -30,7 +31,7 @@ class TestReadOnlyDatabase(TestCase, ui_class):
     @classmethod
     def setUpClass(cls):
         try:
-            startup(cls, cls.py_version, {'config_calibre_dir': TEST_DB}, port=PORTS[0])
+            startup(cls, cls.py_version, {'config_calibre_dir': TEST_DB}, port=PORTS[0], index=INDEX,)
             time.sleep(3)
         except Exception:
             cls.driver.quit()

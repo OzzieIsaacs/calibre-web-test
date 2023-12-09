@@ -10,9 +10,10 @@ from selenium.webdriver.common.by import By
 from helper_func import save_logfiles
 
 
-RESOURCES = {'ports': 1}
+RESOURCES = {'ports': 1, "oauth":True}
 
 PORTS = ['8083']
+INDEX = ""
 
 
 class TestOAuthLogin(unittest.TestCase, ui_class):
@@ -27,7 +28,7 @@ class TestOAuthLogin(unittest.TestCase, ui_class):
         add_dependency(cls.dep_line, cls.__name__)
 
         try:
-            startup(cls, cls.py_version, {'config_calibre_dir':TEST_DB}, port=PORTS[0], env={"APP_MODE": "test"})
+            startup(cls, cls.py_version, {'config_calibre_dir':TEST_DB}, port=PORTS[0], index=INDEX, env={"APP_MODE": "test"})
         except Exception as e:
             print('setup failed')
             cls.driver.quit()

@@ -15,9 +15,10 @@ from helper_func import save_logfiles
 from helper_gdrive import prepare_gdrive
 from subproc_wrapper import process_open
 
-RESOURCES = {'ports': 1}
+RESOURCES = {'ports': 1, "gdrive": True}
 
 PORTS = ['8083']
+INDEX = ""
 
 # test gdrive database
 @unittest.skipIf(not os.path.exists(os.path.join(base_path, "files", "client_secrets.json")) or
@@ -34,31 +35,31 @@ class TestCliGdrivedb(unittest.TestCase, ui_class):
 
         prepare_gdrive()
         try:
-            shutil.rmtree(os.path.join(CALIBRE_WEB_PATH, 'hü lo'), ignore_errors=True)
+            shutil.rmtree(os.path.join(CALIBRE_WEB_PATH + INDEX, 'hü lo'), ignore_errors=True)
             try:
-                os.remove(os.path.join(CALIBRE_WEB_PATH, 'app.db'))
+                os.remove(os.path.join(CALIBRE_WEB_PATH + INDEX, 'app.db'))
             except Exception:
                 pass
             src = os.path.join(base_path, "files", "client_secrets.json")
-            dst = os.path.join(CALIBRE_WEB_PATH, "client_secrets.json")
+            dst = os.path.join(CALIBRE_WEB_PATH + INDEX, "client_secrets.json")
             os.chmod(src, 0o764)
             if os.path.exists(dst):
                 os.unlink(dst)
             shutil.copy(src, dst)
 
             # delete settings_yaml file
-            set_yaml = os.path.join(CALIBRE_WEB_PATH, "settings.yaml")
+            set_yaml = os.path.join(CALIBRE_WEB_PATH + INDEX, "settings.yaml")
             if os.path.exists(set_yaml):
                 os.unlink(set_yaml)
 
             # delete gdrive file
-            gdrive_db = os.path.join(CALIBRE_WEB_PATH, "gdrive.db")
+            gdrive_db = os.path.join(CALIBRE_WEB_PATH + INDEX, "gdrive.db")
             if os.path.exists(gdrive_db):
                 os.unlink(gdrive_db)
 
             # delete gdrive authenticated file
             src = os.path.join(base_path, 'files', "gdrive_credentials")
-            dst = os.path.join(CALIBRE_WEB_PATH, "gdrive_credentials")
+            dst = os.path.join(CALIBRE_WEB_PATH + INDEX, "gdrive_credentials")
             os.chmod(src, 0o764)
             if os.path.exists(dst):
                 os.unlink(dst)
@@ -91,8 +92,8 @@ class TestCliGdrivedb(unittest.TestCase, ui_class):
             pass
         remove_dependency(cls.dependency)
 
-        src1 = os.path.join(CALIBRE_WEB_PATH, "client_secrets.json")
-        src = os.path.join(CALIBRE_WEB_PATH, "gdrive_credentials")
+        src1 = os.path.join(CALIBRE_WEB_PATH + INDEX, "client_secrets.json")
+        src = os.path.join(CALIBRE_WEB_PATH + INDEX, "gdrive_credentials")
         if os.path.exists(src):
             os.chmod(src, 0o764)
             try:
@@ -109,9 +110,9 @@ class TestCliGdrivedb(unittest.TestCase, ui_class):
         save_logfiles(cls, cls.__name__)
 
     def tearDown(self):
-        shutil.rmtree(os.path.join(CALIBRE_WEB_PATH, 'hü lo'), ignore_errors=True)
+        shutil.rmtree(os.path.join(CALIBRE_WEB_PATH + INDEX, 'hü lo'), ignore_errors=True)
         try:
-            os.remove(os.path.join(CALIBRE_WEB_PATH, 'app.db'))
+            os.remove(os.path.join(CALIBRE_WEB_PATH + INDEX, 'app.db'))
         except Exception as e:
             print(e)
         os.chdir(base_path)
@@ -146,7 +147,7 @@ class TestCliGdrivedb(unittest.TestCase, ui_class):
         self.assertTrue(self.check_element_on_page((By.NAME, "query")))
 
     def test_gdrive_db_nonwrite(self):
-        self.start_cw(os.path.join(CALIBRE_WEB_PATH, u'cps.py'))
+        self.start_cw(os.path.join(CALIBRE_WEB_PATH + INDEX, u'cps.py'))
         self.fill_db_config({'config_use_google_drive': 1})
         time.sleep(BOOT_TIME)
         self.fill_db_config({'config_google_drive_folder': 'test'})
@@ -159,10 +160,10 @@ class TestCliGdrivedb(unittest.TestCase, ui_class):
             self.driver.switch_to.alert.accept()
         except Exception:
             pass
-        gdrive_db = os.path.join(CALIBRE_WEB_PATH, "gdrive.db")
+        gdrive_db = os.path.join(CALIBRE_WEB_PATH + INDEX, "gdrive.db")
         self.assertTrue(os.path.exists(gdrive_db))
         os.chmod(gdrive_db, 0o400)
-        self.p = process_open([self.py_version, os.path.join(CALIBRE_WEB_PATH, u'cps.py')], [1])
+        self.p = process_open([self.py_version, os.path.join(CALIBRE_WEB_PATH + INDEX, u'cps.py')], [1])
         # create a new Firefox session
         time.sleep(BOOT_TIME)
         # navigate to the application home page
@@ -176,9 +177,9 @@ class TestCliGdrivedb(unittest.TestCase, ui_class):
             pass
 
     def test_cli_gdrive_location(self):
-        gdrive_dir = os.path.join(CALIBRE_WEB_PATH, 'hü lo')
+        gdrive_dir = os.path.join(CALIBRE_WEB_PATH + INDEX, 'hü lo')
         os.makedirs(gdrive_dir)
-        self.start_cw(os.path.join(CALIBRE_WEB_PATH, u'cps.py'), os.path.join(gdrive_dir, u'gü dr.app'))
+        self.start_cw(os.path.join(CALIBRE_WEB_PATH + INDEX, u'cps.py'), os.path.join(gdrive_dir, u'gü dr.app'))
         self.fill_db_config({'config_use_google_drive': 1})
         time.sleep(BOOT_TIME)
         self.fill_db_config({'config_google_drive_folder': 'test'})
@@ -195,9 +196,9 @@ class TestCliGdrivedb(unittest.TestCase, ui_class):
         self.assertTrue(os.path.isfile(os.path.join(gdrive_dir, u'gü dr.app')))
 
     def test_cli_gdrive_folder(self):
-        gdrive_dir = os.path.join(CALIBRE_WEB_PATH, 'hü lo')
+        gdrive_dir = os.path.join(CALIBRE_WEB_PATH + INDEX, 'hü lo')
         os.makedirs(gdrive_dir)
-        self.start_cw(os.path.join(CALIBRE_WEB_PATH, u'cps.py'), gdrive_dir)
+        self.start_cw(os.path.join(CALIBRE_WEB_PATH + INDEX, u'cps.py'), gdrive_dir)
         self.fill_db_config({'config_use_google_drive': 1})
         time.sleep(BOOT_TIME)
         self.fill_db_config({'config_google_drive_folder': 'test'})
@@ -216,7 +217,7 @@ class TestCliGdrivedb(unittest.TestCase, ui_class):
 
     def test_no_database(self):
         # check unconfigured database
-        os.chdir(CALIBRE_WEB_PATH)
+        os.chdir(CALIBRE_WEB_PATH + INDEX)
         p1 = process_open([self.py_version, u'cps.py'], [1])
         time.sleep(BOOT_TIME)
         try:
@@ -287,4 +288,4 @@ class TestCliGdrivedb(unittest.TestCase, ui_class):
             self.driver.switch_to.alert.accept()
         except Exception:
             pass
-        os.unlink(os.path.join(CALIBRE_WEB_PATH, "gdrive.db"))
+        os.unlink(os.path.join(CALIBRE_WEB_PATH + INDEX, "gdrive.db"))

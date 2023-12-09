@@ -19,6 +19,8 @@ from io import BytesIO
 RESOURCES = {'ports':2}
 
 PORTS = ['8083', '8080']
+INDEX = ""
+
 
 class TestCoverEditBooks(TestCase, ui_class):
     p = None
@@ -38,7 +40,7 @@ class TestCoverEditBooks(TestCase, ui_class):
             my_env["REQUESTS_CA_BUNDLE"] = pem_file
             my_env["APP_MODE"] = "test"
             # my_env["LANG"] = 'de_DE.UTF-8'
-            startup(cls, cls.py_version, {'config_calibre_dir': TEST_DB, 'config_uploading': 1}, env=my_env,
+            startup(cls, cls.py_version, {'config_calibre_dir': TEST_DB, 'config_uploading': 1}, index=INDEX, env=my_env,
                     parameter=["-l"])
             time.sleep(3)
         except Exception:

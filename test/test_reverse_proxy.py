@@ -15,6 +15,7 @@ from helper_func import get_Host_IP
 RESOURCES = {'ports': 2}
 
 PORTS = ['8083', '8080']
+INDEX = ""
 
 
 class TestReverseProxy(TestCase, ui_class):
@@ -30,7 +31,7 @@ class TestReverseProxy(TestCase, ui_class):
             cls.proxy = Reverse_Proxy(sitename=host_port)
             cls.proxy.start()
             startup(cls, cls.py_version, {'config_calibre_dir':TEST_DB}, host=host, 
-                    port=PORTS[0], parameter=["-i", get_Host_IP()], env={"APP_MODE": "test"})
+                    port=PORTS[0], index=INDEX, parameter=["-i", get_Host_IP()], env={"APP_MODE": "test"})
 
             time.sleep(3)
             cls.driver.get('http://127.0.0.1:{}/cw'.format(PORTS[1]))

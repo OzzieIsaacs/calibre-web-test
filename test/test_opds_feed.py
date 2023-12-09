@@ -16,6 +16,7 @@ from urllib.parse import quote_plus
 RESOURCES = {'ports': 1}
 
 PORTS = ['8083']
+INDEX = ""
 
 
 class TestOPDSFeed(unittest.TestCase, ui_class):
@@ -24,7 +25,8 @@ class TestOPDSFeed(unittest.TestCase, ui_class):
 
     @classmethod
     def setUpClass(cls):
-        startup(cls, cls.py_version, {'config_calibre_dir': TEST_DB}, login=False, port=PORTS[0], env={"APP_MODE": "test"})
+        startup(cls, cls.py_version, {'config_calibre_dir': TEST_DB, 'config_embed_metadata': 0},
+                login=False, port=PORTS[0], index=INDEX, env={"APP_MODE": "test"})
 
     @classmethod
     def tearDownClass(cls):
@@ -101,7 +103,7 @@ class TestOPDSFeed(unittest.TestCase, ui_class):
         self.edit_user('admin', {'download_role': 0})
         time.sleep(3)
         self.logout()
-        r = requests.get('http://127.0.0.1:8083/opds')
+        r = requests.get('http://127.0.0.1:{}/opds'.format(PORTS[0]))
         self.assertEqual(200, r.status_code)
         elements = self.get_opds_index(r.text)
         r = requests.get(host + elements['Authors']['link'])
@@ -149,7 +151,7 @@ class TestOPDSFeed(unittest.TestCase, ui_class):
         # logout admin account, cookies now invalid,
         # now login is done via basic header, means no login, guest account can download
         req_session.get(host + '/logout')
-        r = req_session.get(host +  + entries['elements'][0]['download'])
+        r = req_session.get(host + entries['elements'][0]['download'])
         self.assertEqual(200, r.status_code)
         # Close session, delete cookies
         req_session.close()
@@ -159,7 +161,7 @@ class TestOPDSFeed(unittest.TestCase, ui_class):
         time.sleep(3)
         self.logout()
         # try download from guest account, fails
-        r = requests.get(host +  + entries['elements'][0]['download'])
+        r = requests.get(host +  entries['elements'][0]['download'])
         self.assertEqual(403, r.status_code)
         # create cookies by logging in to admin account and try to download book again
         req_session = requests.session()
@@ -199,7 +201,7 @@ class TestOPDSFeed(unittest.TestCase, ui_class):
         r = requests.get(host + entries['elements'][0]['download'])
         self.assertEqual(401, r.status_code)
         # try download with invalid credentials
-        r = requests.get(host + 'opds/', auth=('admin', 'admin131'))
+        r = requests.get(host + '/opds/', auth=('admin', 'admin131'))
         self.assertEqual(401, r.status_code)
         # try download with invalid credentials
         r = requests.get(host + '/opds/', auth=('hudo', 'admin123'))
@@ -533,9 +535,9 @@ class TestOPDSFeed(unittest.TestCase, ui_class):
         self.create_user('uv:i', {'email': 'a9@b.com', 'password': '1234123AbC*!'})
         self.assertTrue(self.check_element_on_page((By.ID, "flash_success")))
         self.logout()
-        r = requests.get(hot + '/opds', auth=('usi', '12:34123AbC*!'))
+        r = requests.get(host + '/opds', auth=('usi', '12:34123AbC*!'))
         self.assertEqual(200, r.status_code)
-        r = requests.get(hot + '/opds', auth=('uv:i', '1234123AbC*!'))
+        r = requests.get(host + '/opds', auth=('uv:i', '1234123AbC*!'))
         # Users with colon are invalid: rfc7617
         # Furthermore, a user-id containing a colon character is invalid, as
         # the first colon in a user-pass string separates user-id and password
@@ -559,7 +561,7 @@ class TestOPDSFeed(unittest.TestCase, ui_class):
         entries = self.get_opds_feed(r.text)
         r = requests.get(host + entries['elements'][0]['link'])
         self.assertEqual(401, r.status_code)
-        r = requests.get('http://127.0.0.1:8083' + entries['elements'][0]['link'], auth=('admin', 'admin123'))
+        r = requests.get('http://127.0.0.1:{}'.format(PORTS[0]) + entries['elements'][0]['link'], auth=('admin', 'admin123'))
         self.assertEqual(len(r.content), 37952)
         self.assertEqual(r.headers['Content-Type'], 'image/jpeg')
 
@@ -581,10 +583,10 @@ class TestOPDSFeed(unittest.TestCase, ui_class):
 
     def test_opds_calibre_companion(self):
         host = 'http://127.0.0.1:' + PORTS[0]
-        r = requests.get(host + 'opds', auth=('admin', 'admin123'))
+        r = requests.get(host + '/opds', auth=('admin', 'admin123'))
         self.assertEqual(200, r.status_code)
         elements = self.get_opds_index(r.text)
-        r = requests.get('http://127.0.0.1:8083'+elements['Recently added Books']['link'], auth=('admin', 'admin123'))
+        r = requests.get('http://127.0.0.1:{}'.format(PORTS[0]) + elements['Recently added Books']['link'], auth=('admin', 'admin123'))
         entries = self.get_opds_feed(r.text)
         r = requests.get(host + '/ajax/book/' + entries['elements'][1]['id'][9:],
                          auth=('admin', 'admin123'))

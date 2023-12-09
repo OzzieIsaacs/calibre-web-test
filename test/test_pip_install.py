@@ -20,7 +20,7 @@ import time
 RESOURCES = {'ports': 1}
 
 PORTS = ['8083']
-
+INDEX = ""
 
 class TestPipInstall(unittest.TestCase, ui_class):
     package_path = None
@@ -36,9 +36,9 @@ class TestPipInstall(unittest.TestCase, ui_class):
         #generate pypi install package
         args = make_release.parse_arguments(['-p'])
         make_release.main(args)
-        result = glob.glob(os.path.join(CALIBRE_WEB_PATH, "dist", "*.whl"))
+        result = glob.glob(os.path.join(CALIBRE_WEB_PATH + INDEX, "dist", "*.whl"))
         # generate new venv python
-        cls.package_path = CALIBRE_WEB_PATH + "_pack"
+        cls.package_path = CALIBRE_WEB_PATH + INDEX + "_pack"
         venv.create(cls.package_path, clear=True, with_pip=True)
         package_python = os.path.join(cls.package_path, "bin", "python3")
         with process_open([package_python, "-m", "pip", "install", result[0]]) as p:
@@ -54,14 +54,14 @@ class TestPipInstall(unittest.TestCase, ui_class):
 
     @classmethod
     def tearDownClass(cls):
-        shutil.rmtree(os.path.join(CALIBRE_WEB_PATH, "dist"), ignore_errors=True)
+        shutil.rmtree(os.path.join(CALIBRE_WEB_PATH + INDEX, "dist"), ignore_errors=True)
         shutil.rmtree(cls.package_path, ignore_errors=True)
         # close the browser window
         os.chdir(base_path)
         kill_dead_cps()
         cls.driver.quit()
         try:
-            os.remove(os.path.join(CALIBRE_WEB_PATH, 'app.db'))
+            os.remove(os.path.join(CALIBRE_WEB_PATH + INDEX, 'app.db'))
         except Exception:
             pass
         save_logfiles(cls, cls.__name__)

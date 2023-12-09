@@ -21,6 +21,7 @@ from helper_func import save_logfiles
 RESOURCES = {'ports': 1}
 
 PORTS = ['8083']
+INDEX = ""
 
 
 def user_change(user):
@@ -56,7 +57,7 @@ class TestUserList(TestCase, ui_class):
     @classmethod
     def setUpClass(cls):
         try:
-            startup(cls, cls.py_version, {'config_calibre_dir': TEST_DB, "config_uploading": 1}, env = {"APP_MODE": "test"})
+            startup(cls, cls.py_version, {'config_calibre_dir': TEST_DB, "config_uploading": 1}, port=PORTS[0], index=INDEX, env = {"APP_MODE": "test"})
             time.sleep(3)
             cls.mass_create_users(1)
         except Exception:

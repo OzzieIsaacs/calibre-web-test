@@ -17,6 +17,7 @@ from helper_func import startup, debug_startup
 RESOURCES = {'ports': 1}
 
 PORTS = ['8083']
+INDEX = ""
 
 
 class TestCalibreWebVisibilitys(unittest.TestCase, ui_class):
@@ -27,7 +28,7 @@ class TestCalibreWebVisibilitys(unittest.TestCase, ui_class):
     @classmethod
     def setUpClass(cls):
         try:
-            startup(cls, cls.py_version, {'config_calibre_dir': TEST_DB}, env = {"APP_MODE": "test"})
+            startup(cls, cls.py_version, {'config_calibre_dir': TEST_DB}, index=INDEX, env = {"APP_MODE": "test"})
         except Exception:
             cls.driver.quit()
             cls.p.kill()

@@ -15,9 +15,10 @@ from helper_func import save_logfiles
 # test editing books on gdrive
 
 
-RESOURCES = {'ports': 1}
+RESOURCES = {'ports': 1, "gdrive": True}
 
 PORTS = ['8083']
+INDEX = ""
 
 
 @unittest.skipIf(not os.path.exists(os.path.join(base_path, "files", "client_secrets.json")) or
@@ -35,26 +36,26 @@ class TestSetupGdrive(unittest.TestCase, ui_class):
 
         try:
             # remove client_secrets.file
-            dst = os.path.join(CALIBRE_WEB_PATH, "client_secrets.json")
+            dst = os.path.join(CALIBRE_WEB_PATH + INDEX, "client_secrets.json")
             if os.path.exists(dst):
                 os.unlink(dst)
 
             # delete settings_yaml file
-            set_yaml = os.path.join(CALIBRE_WEB_PATH, "settings.yaml")
+            set_yaml = os.path.join(CALIBRE_WEB_PATH + INDEX, "settings.yaml")
             if os.path.exists(set_yaml):
                 os.unlink(set_yaml)
 
             # delete gdrive file
-            gdrive_db = os.path.join(CALIBRE_WEB_PATH, "gdrive.db")
+            gdrive_db = os.path.join(CALIBRE_WEB_PATH + INDEX, "gdrive.db")
             if os.path.exists(gdrive_db):
                 os.unlink(gdrive_db)
 
             # delete gdrive authenticated file
-            gdauth = os.path.join(CALIBRE_WEB_PATH, "gdrive_credentials")
+            gdauth = os.path.join(CALIBRE_WEB_PATH + INDEX, "gdrive_credentials")
             if os.path.exists(gdauth):
                 os.unlink(gdauth)
 
-            startup(cls, cls.py_version, {}, port=PORTS[0], 
+            startup(cls, cls.py_version, {}, port=PORTS[0], index=INDEX, 
                     only_startup=True, env={"APP_MODE": "test"})
         except Exception as e:
             try:
@@ -77,8 +78,8 @@ class TestSetupGdrive(unittest.TestCase, ui_class):
 
         remove_dependency(cls.dependency)
 
-        src1 = os.path.join(CALIBRE_WEB_PATH, "client_secrets.json")
-        src = os.path.join(CALIBRE_WEB_PATH, "client_secret.json")
+        src1 = os.path.join(CALIBRE_WEB_PATH + INDEX, "client_secrets.json")
+        src = os.path.join(CALIBRE_WEB_PATH + INDEX, "client_secret.json")
         if os.path.exists(src1):
             os.chmod(src1, 0o764)
             try:
@@ -107,7 +108,7 @@ class TestSetupGdrive(unittest.TestCase, ui_class):
         self.assertTrue(use_gdrive)
         self.assertFalse(use_gdrive.is_selected())
 
-        dst = os.path.join(CALIBRE_WEB_PATH, "client_secrets.json")
+        dst = os.path.join(CALIBRE_WEB_PATH + INDEX, "client_secrets.json")
         src = os.path.join(base_path, "files", "client_secrets.json")
         shutil.copy(src, dst)
         os.chmod(dst, 0o040)

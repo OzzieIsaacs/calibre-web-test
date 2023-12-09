@@ -17,6 +17,7 @@ from selenium.webdriver.common.by import By
 RESOURCES = {'ports': 1}
 
 PORTS = ['8083']
+INDEX = ""
 
 
 class TestMergeBooksList(TestCase, ui_class):
@@ -26,7 +27,7 @@ class TestMergeBooksList(TestCase, ui_class):
     @classmethod
     def setUpClass(cls):
         try:
-            startup(cls, cls.py_version, {'config_calibre_dir': TEST_DB}, port=PORTS[0], env={"APP_MODE": "test"})
+            startup(cls, cls.py_version, {'config_calibre_dir': TEST_DB}, port=PORTS[0], index=INDEX, env={"APP_MODE": "test"})
             time.sleep(3)
             cls.goto_page("nav_new")
         except Exception:

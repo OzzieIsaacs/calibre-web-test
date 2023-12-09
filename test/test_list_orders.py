@@ -14,6 +14,7 @@ from helper_func import startup, debug_startup
 RESOURCES = {'ports': 1}
 
 PORTS = ['8083']
+INDEX = ""
 
 
 # other tests regardign order of elements is in test_visibilities
@@ -25,7 +26,7 @@ class TestCalibreWebListOrders(unittest.TestCase, ui_class):
     @classmethod
     def setUpClass(cls):
         try:
-            startup(cls, cls.py_version, {'config_calibre_dir': TEST_DB}, port=PORTS[0], env={"APP_MODE": "test"})
+            startup(cls, cls.py_version, {'config_calibre_dir': TEST_DB}, port=PORTS[0], index=INDEX, env={"APP_MODE": "test"})
         except Exception:
             cls.driver.quit()
             cls.p.kill()

@@ -17,6 +17,7 @@ from helper_func import save_logfiles
 RESOURCES = {'ports': 1}
 
 PORTS = ['8083']
+INDEX = ""
 
 
 class TestShelf(unittest.TestCase, ui_class):
@@ -27,8 +28,10 @@ class TestShelf(unittest.TestCase, ui_class):
     def setUpClass(cls):
         try:
             # Upload needed for generating csrf token for edit shelf
-            startup(cls, cls.py_version,{'config_calibre_dir':TEST_DB, 'config_uploading': 1}, env={"APP_MODE": "test"})
-            cls.create_user('shelf', {'edit_shelf_role':1, "upload_role": 1, 'password':'123AbC*!', 'email':'a@b.com'})
+            startup(cls, cls.py_version,{'config_calibre_dir':TEST_DB, 'config_uploading': 1},
+                    port=PORTS[0], index=INDEX, env={"APP_MODE": "test"})
+            cls.create_user('shelf', {'edit_shelf_role':1, "upload_role": 1,
+                                      'password':'123AbC*!', 'email':'a@b.com'})
             cls.edit_user('admin',{'edit_shelf_role':1, 'email':'e@fe.de'})
         except Exception:
             cls.driver.quit()
@@ -101,7 +104,7 @@ class TestShelf(unittest.TestCase, ui_class):
         shelf_page = r.get('http://127.0.0.1:{}/shelf/create'.format(PORTS[0]))
         token = re.search('<input type="hidden" name="csrf_token" value="(.*)">', shelf_page.text)
         payload = {"csrf_token": token.group(1)}
-        request = r.post("http://127.0.0.1:{}/shelf/add/1/1.format(PORTS[0])", data=payload)
+        request = r.post("http://127.0.0.1:{}/shelf/add/1/1".format(PORTS[0]), data=payload)
         self.assertTrue("flash_danger" in request.text)
         r.get('http://127.0.0.1:{}/logout'.format(PORTS[0]))
         r.close()

@@ -14,6 +14,7 @@ from selenium.webdriver.support.ui import Select
 RESOURCES = {'ports': 1}
 
 PORTS = ['8083']
+INDEX = ""
 
 
 class TestUserTemplate(unittest.TestCase, ui_class):
@@ -23,7 +24,7 @@ class TestUserTemplate(unittest.TestCase, ui_class):
     @classmethod
     def setUpClass(cls):
         try:
-            startup(cls, cls.py_version, {'config_calibre_dir': TEST_DB}, port=PORTS[0], env = {"APP_MODE": "test"})
+            startup(cls, cls.py_version, {'config_calibre_dir': TEST_DB}, port=PORTS[0], index=INDEX, env = {"APP_MODE": "test"})
         except Exception:
             cls.driver.quit()
             cls.p.kill()

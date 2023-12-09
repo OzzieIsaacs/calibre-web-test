@@ -21,6 +21,7 @@ from helper_func import startup, save_logfiles, wait_Email_received
 RESOURCES = {'ports': 2}
 
 PORTS = ['8083', '1027']
+INDEX = ""
 
 
 @unittest.skipIf(helper_email_convert.is_calibre_not_present(),"Skipping convert, calibre not found")
@@ -45,7 +46,7 @@ class TestSSL(unittest.TestCase, ui_class):
         startup(cls, cls.py_version, {'config_calibre_dir':TEST_DB,
                                       'config_binariesdir':helper_email_convert.calibre_path(),
                                       'config_log_level':cls.LOG_LEVEL}, 
-                port=PORTS[0], env={"APP_MODE": "test"})
+                port=PORTS[0], index=INDEX, env={"APP_MODE": "test"})
 
         cls.edit_user('admin', {'email': 'a5@b.com','kindle_mail': 'a1@b.com'})
         cls.setup_server(False, {'mail_server':socket.gethostname(), 'mail_port': PORTS[1],
@@ -132,7 +133,7 @@ class TestSSL(unittest.TestCase, ui_class):
     def test_SSL_logging_email(self):
         self.setup_server(True, {'mail_use_ssl': 'SSL/TLS'})
         time.sleep(5)
-        with open(os.path.join(CALIBRE_WEB_PATH,'calibre-web.log'),'r') as logfile:
+        with open(os.path.join(CALIBRE_WEB_PATH + INDEX,'calibre-web.log'),'r') as logfile:
             data = logfile.read()
         self.assertTrue(len(re.findall('Subject: Calibre-Web Test Email', data)), "Email logging not working")
 
@@ -206,7 +207,7 @@ class TestSSL(unittest.TestCase, ui_class):
         self.login("admin", "admin123")
         self.edit_user('ssl_email', {'delete': 1})
 
-    # Navigate to http://localhost:8083/admin/config
+    # Navigate to http://localhost:PORT_NUMBER/admin/config
     # Unfold "Server Configuration" section
     # Click the filepicker next to the text input under "SSL certfile location (leave it empty for non-SSL Servers)"
     # Navigate to an arbitrary location

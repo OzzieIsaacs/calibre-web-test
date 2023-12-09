@@ -17,10 +17,10 @@ from selenium.common.exceptions import WebDriverException
 from helper_port_forward import SocketForwardServer
 
 
-RESOURCES = {'ports': 2}
+RESOURCES = {'ports': 2, 'socket':True}
 
 PORTS = ['8083', '8000']
-
+INDEX = ""
 
 @unittest.skipIf(os.name=="nt", "Sockets are not available on Windows")
 class TestSocket(unittest.TestCase, ui_class):
@@ -39,7 +39,7 @@ class TestSocket(unittest.TestCase, ui_class):
     def setUp(self):
         os.chdir(base_path)
         try:
-            os.remove(os.path.join(CALIBRE_WEB_PATH, 'app.db'))
+            os.remove(os.path.join(CALIBRE_WEB_PATH + INDEX, 'app.db'))
         except Exception:
             pass
 
@@ -50,16 +50,16 @@ class TestSocket(unittest.TestCase, ui_class):
         kill_dead_cps()
         cls.driver.quit()
         try:
-            os.remove(os.path.join(CALIBRE_WEB_PATH, 'app.db'))
+            os.remove(os.path.join(CALIBRE_WEB_PATH + INDEX, 'app.db'))
         except Exception:
             pass
         save_logfiles(cls, cls.__name__)
 
     def test_socket_communication(self):
         my_env = os.environ.copy()
-        socket_file = os.path.join(CALIBRE_WEB_PATH, "socket_file.sock")
+        socket_file = os.path.join(CALIBRE_WEB_PATH + INDEX, "socket_file.sock")
         my_env["CALIBRE_UNIX_SOCKET"] = socket_file
-        self.p = process_open([self.py_version, os.path.join(CALIBRE_WEB_PATH, u'cps.py')],
+        self.p = process_open([self.py_version, os.path.join(CALIBRE_WEB_PATH + INDEX, u'cps.py')],
                               env=my_env,
                               quotes=[0, 1])
         time.sleep(BOOT_TIME)

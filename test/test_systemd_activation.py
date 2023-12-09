@@ -34,7 +34,7 @@ class TestSystemdActivation(unittest.TestCase, ui_class):
     def setUp(self):
         os.chdir(base_path)
         try:
-            os.remove(os.path.join(CALIBRE_WEB_PATH, 'app.db'))
+            os.remove(os.path.join(CALIBRE_WEB_PATH + INDEX, 'app.db'))
         except Exception:
             pass
 
@@ -44,7 +44,7 @@ class TestSystemdActivation(unittest.TestCase, ui_class):
         os.chdir(base_path)
         kill_dead_cps()
         try:
-            os.remove(os.path.join(CALIBRE_WEB_PATH, 'app.db'))
+            os.remove(os.path.join(CALIBRE_WEB_PATH + INDEX, 'app.db'))
         except Exception:
             print("Can't delete app.db")
             pass

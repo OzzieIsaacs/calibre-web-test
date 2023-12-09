@@ -4,7 +4,7 @@ from HTMLTestRunner import runner as HTMLTestRunner
 import os
 import re
 from subproc_wrapper import process_open
-from config_test import CALIBRE_WEB_PATH, VENV_PATH, VENV_PYTHON, TEST_OS
+from config_test import CALIBRE_WEB_PATH, VENV_PYTHON, TEST_OS
 import unittest
 import sys
 import venv
@@ -56,22 +56,24 @@ if __name__ == '__main__':
         exit()
 
     # generate virtual environment
+    venv_path = os.path.join(CALIBRE_WEB_PATH, "venv")
     try:
-        venv.create(VENV_PATH, clear=True, with_pip=True)
+        venv.create(venv_path, clear=True, with_pip=True)
     except CalledProcessError:
         print("Error Creating virtual environment")
-        venv.create(VENV_PATH, system_site_packages=True, with_pip=False)
+        venv.create(venv_path, system_site_packages=True, with_pip=False)
     print("Creating virtual environment for testing")
 
 
     requirements_file = os.path.join(CALIBRE_WEB_PATH, 'requirements.txt')
-    p = process_open([VENV_PYTHON, "-m", "pip", "install", "-r", requirements_file], (0, 5))
+    python_executable = os.path.join(CALIBRE_WEB_PATH, "venv", VENV_PYTHON)
+    p = process_open([python_executable, "-m", "pip", "install", "-r", requirements_file], (0, 5))
     if os.name == 'nt':
         while p.poll() == None:
             p.stdout.readline()
     else:
         p.wait()
-    environment.init_environment(VENV_PYTHON, sub_dependencies)
+    environment.init_environment(python_executable, sub_dependencies)
 
     all_tests = unittest.TestLoader().discover('.')
     # configure HTMLTestRunner options

@@ -19,9 +19,10 @@ from helper_func import save_logfiles
 from helper_gdrive import prepare_gdrive, connect_gdrive, check_path_gdrive
 
 
-RESOURCES = {'ports': 1}
+RESOURCES = {'ports': 1, "gdrive": True}
 
 PORTS = ['8083']
+INDEX = ""
 
 
 # test editing books on gdrive
@@ -40,25 +41,25 @@ class TestEditBooksOnGdrive(unittest.TestCase, ui_class):
         prepare_gdrive()
         try:
             src = os.path.join(base_path, "files", "client_secrets.json")
-            dst = os.path.join(CALIBRE_WEB_PATH, "client_secrets.json")
+            dst = os.path.join(CALIBRE_WEB_PATH + INDEX, "client_secrets.json")
             os.chmod(src, 0o764)
             if os.path.exists(dst):
                 os.unlink(dst)
             shutil.copy(src, dst)
 
             # delete settings_yaml file
-            set_yaml = os.path.join(CALIBRE_WEB_PATH, "settings.yaml")
+            set_yaml = os.path.join(CALIBRE_WEB_PATH + INDEX, "settings.yaml")
             if os.path.exists(set_yaml):
                 os.unlink(set_yaml)
 
             # delete gdrive file
-            gdrive_db = os.path.join(CALIBRE_WEB_PATH, "gdrive.db")
+            gdrive_db = os.path.join(CALIBRE_WEB_PATH + INDEX, "gdrive.db")
             if os.path.exists(gdrive_db):
                 os.unlink(gdrive_db)
 
             # delete gdrive authenticated file
             src = os.path.join(base_path, 'files', "gdrive_credentials")
-            dst = os.path.join(CALIBRE_WEB_PATH, "gdrive_credentials")
+            dst = os.path.join(CALIBRE_WEB_PATH + INDEX, "gdrive_credentials")
             os.chmod(src, 0o764)
             if os.path.exists(dst):
                 os.unlink(dst)
@@ -67,7 +68,7 @@ class TestEditBooksOnGdrive(unittest.TestCase, ui_class):
             startup(cls,
                     cls.py_version,
                     {'config_calibre_dir': TEST_DB},
-                    port=PORTS[0],
+                    port=PORTS[0], index=INDEX,
                     only_metadata=True, env={"APP_MODE": "test"})
             cls.fill_db_config({'config_use_google_drive': 1})
             time.sleep(4)
@@ -98,8 +99,8 @@ class TestEditBooksOnGdrive(unittest.TestCase, ui_class):
 
         remove_dependency(cls.dependency)
 
-        src1 = os.path.join(CALIBRE_WEB_PATH, "client_secrets.json")
-        src = os.path.join(CALIBRE_WEB_PATH, "gdrive_credentials")
+        src1 = os.path.join(CALIBRE_WEB_PATH + INDEX, "client_secrets.json")
+        src = os.path.join(CALIBRE_WEB_PATH + INDEX, "gdrive_credentials")
         if os.path.exists(src):
             os.chmod(src, 0o764)
             try:
@@ -876,7 +877,7 @@ class TestEditBooksOnGdrive(unittest.TestCase, ui_class):
         payload = {'username': 'admin', 'password': 'admin123', 'submit': "",
                    'next': "/", "remember_me": "on", "csrf_token": token.group(1)}
         r.post('http://127.0.0.1:{}/login'.format(PORTS[0]), data=payload)
-        resp = r.get('http://127.0.0.1:8083' + details['cover'])
+        resp = r.get('http://127.0.0.1:{}'.format(PORTS[0]) + details['cover'])
         self.assertEqual('8936', resp.headers['Content-Length'])
         self.fill_basic_config({'config_uploading': 0})
         self.assertTrue(self.check_element_on_page((By.ID, 'flash_success')))

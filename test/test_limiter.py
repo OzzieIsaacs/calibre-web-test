@@ -16,6 +16,7 @@ from selenium.webdriver.support import expected_conditions as EC
 RESOURCES = {'ports': 1}
 
 PORTS = ['8083']
+INDEX = ""
 
 
 class TestSecurity(unittest.TestCase, ui_class):
@@ -25,7 +26,7 @@ class TestSecurity(unittest.TestCase, ui_class):
     @classmethod
     def setUpClass(cls):
         try:
-            startup(cls, cls.py_version, {'config_calibre_dir':TEST_DB}, port=PORTS[0], env={"APP_MODE": "test"})
+            startup(cls, cls.py_version, {'config_calibre_dir':TEST_DB}, port=PORTS[0], index=INDEX, env={"APP_MODE": "test"})
             WebDriverWait(cls.driver, 5).until(EC.presence_of_element_located((By.ID, "flash_success")))
         except Exception as e:
             print(e)

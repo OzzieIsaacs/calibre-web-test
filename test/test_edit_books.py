@@ -23,6 +23,7 @@ from helper_func import save_logfiles, add_dependency, remove_dependency
 RESOURCES = {'ports': 1}
 
 PORTS = ['8083']
+INDEX = ""
 
 
 class TestEditBooks(TestCase, ui_class):
@@ -34,7 +35,7 @@ class TestEditBooks(TestCase, ui_class):
     def setUpClass(cls):
         add_dependency(cls.dependencys, cls.__name__)
         try:
-            startup(cls, cls.py_version, {'config_calibre_dir': TEST_DB}, port=PORTS[0], env={"APP_MODE": "test"})
+            startup(cls, cls.py_version, {'config_calibre_dir': TEST_DB}, port=PORTS[0], index=INDEX, env={"APP_MODE": "test"})
             time.sleep(3)
         except Exception:
             cls.driver.quit()

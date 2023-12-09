@@ -23,6 +23,7 @@ from helper_func import save_logfiles
 RESOURCES = {'ports': 1}
 
 PORTS = ['8083']
+INDEX = ""
 
 
 @unittest.skipIf(is_unrar_not_present(), "Skipping convert, unrar not found")
@@ -36,7 +37,7 @@ class TestEditAdditionalBooks(TestCase, ui_class):
         add_dependency(cls.dependencys, cls.__name__)
 
         try:
-            startup(cls, cls.py_version, {'config_calibre_dir': TEST_DB}, port=PORTS[0], env={"APP_MODE": "test"})
+            startup(cls, cls.py_version, {'config_calibre_dir': TEST_DB}, port=PORTS[0], index=INDEX, env={"APP_MODE": "test"})
             time.sleep(3)
             cls.fill_thumbnail_config({'schedule_generate_book_covers': 1})
             time.sleep(3)
@@ -874,7 +875,7 @@ class TestEditAdditionalBooks(TestCase, ui_class):
         book_page = r.get('http://127.0.0.1:{}/admin/book/3'.format(PORTS[0]))
         token = re.search('<input type="hidden" name="csrf_token" value="(.*)">', book_page.text)
         book_payload = {'description': '', 'author_name': 'Asterix Lionherd', 'book_title': '<p>calibre Quick Start Guide</p><img src=x onerror=alert("hoho")>', 'tags':'<p>calibre Quick Start Guide</p><img src=x onerror=alert("ddd")>', 'series':'<p>calibre Quick Start Guide</p><img src=x onerror=alert("hh")>', 'series_index':'1', 'languages':'', 'publisher':'', 'pubdate':'', 'rating': '', 'custom_column_1':'', 'custom_column_2':'', 'custom_column_3':'', 'custom_column_4':'', 'custom_column_5':'<p>calibre Quick Start Guide</p><img src=x onerror=alert("Huhu")>', 'custom_column_6':'','custom_column_7':'', 'custom_column_8':'', 'custom_column_9':'', 'custom_column_10':'', "csrf_token": token.group(1)}
-        result = r.post('http://127.0.0.1:{}/admin/book/3', data=book_payload)
+        result = r.post('http://127.0.0.1:{}/admin/book/3'.format(PORTS[0]), data=book_payload)
         self.assertEqual(200, result.status_code)
         r.close()
         try:

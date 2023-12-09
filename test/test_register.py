@@ -19,6 +19,7 @@ from selenium.webdriver.support import expected_conditions as EC
 RESOURCES = {'ports': 1}
 
 PORTS = ['8083']
+INDEX = ""
 
 
 class TestRegister(unittest.TestCase, ui_class):
@@ -38,7 +39,7 @@ class TestRegister(unittest.TestCase, ui_class):
         try:
             startup(cls, cls.py_version, {'config_calibre_dir':TEST_DB,
                                           'config_public_reg': 1, "config_ratelimiter": 0}, 
-                    port=PORTS[0], env={"APP_MODE": "test"})
+                    port=PORTS[0], index=INDEX, env={"APP_MODE": "test"})
             WebDriverWait(cls.driver, 5).until(EC.presence_of_element_located((By.ID, "flash_success")))
             cls.edit_user('admin', {'email': 'a5@b.com','kindle_mail': 'a1@b.com'})
             cls.setup_server(False, {'mail_server':'127.0.0.1', 'mail_port':'1025',

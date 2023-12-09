@@ -17,6 +17,7 @@ from helper_func import save_logfiles
 RESOURCES = {'ports': 1}
 
 PORTS = ['8083']
+INDEX = ""
 
 
 class TestFilePicker(TestCase, ui_class):
@@ -26,8 +27,8 @@ class TestFilePicker(TestCase, ui_class):
     @classmethod
     def setUpClass(cls):
         try:
-            startup(cls, cls.py_version, {'config_calibre_dir': TEST_DB}, work_path=CALIBRE_WEB_PATH,
-                    port=PORTS[0],
+            startup(cls, cls.py_version, {'config_calibre_dir': TEST_DB}, work_path=CALIBRE_WEB_PATH + INDEX,
+                    port=PORTS[0], index=INDEX,
                     only_startup=True, only_metadata=True, env={"APP_MODE": "test"})
             cls.login("admin", "admin123")
         except Exception:
@@ -52,8 +53,8 @@ class TestFilePicker(TestCase, ui_class):
         filepicker.click()
         element = self.check_element_on_page((By.ID, "element_selected"))
         self.assertTrue(element)
-        self.assertEqual(CALIBRE_WEB_PATH, element.text)
-        folder_depth = CALIBRE_WEB_PATH.count(os.sep)
+        self.assertEqual(CALIBRE_WEB_PATH + INDEX, element.text)
+        folder_depth = (CALIBRE_WEB_PATH + INDEX).count(os.sep)
         for i in range(0, folder_depth):
             path_entries = self.driver.find_elements(By.XPATH, "//tr[@class='tr-clickable']/td[2]")
             self.assertEqual(path_entries[0].text, "..")
@@ -76,7 +77,7 @@ class TestFilePicker(TestCase, ui_class):
         # put invalid path to field, open filepicker -> check back to original path, abort -> invalid path still present
 
     def test_two_filepickers(self):
-        CALIBRE_WEB_PATH_PARENT = CALIBRE_WEB_PATH[:CALIBRE_WEB_PATH.rfind(os.sep)]
+        CALIBRE_WEB_PATH_PARENT = (CALIBRE_WEB_PATH + INDEX)[:(CALIBRE_WEB_PATH + INDEX).rfind(os.sep)]
 
         self.fill_db_config(dict(config_calibre_dir=TEST_DB))
         self.goto_page('basic_config')
@@ -101,7 +102,7 @@ class TestFilePicker(TestCase, ui_class):
         self.check_element_on_page((By.ID, 'file_confirm')).click()
 
         time.sleep(3)
-        self.assertEqual(input1.get_attribute('value'), CALIBRE_WEB_PATH)
+        self.assertEqual(input1.get_attribute('value'), CALIBRE_WEB_PATH + INDEX)
         self.assertEqual(input2.get_attribute('value'), CALIBRE_WEB_PATH_PARENT)
 
     @skip("Not implemented")

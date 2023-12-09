@@ -19,6 +19,7 @@ from selenium.webdriver.support import expected_conditions as EC
 RESOURCES = {'ports': 1}
 
 PORTS = ['8083']
+INDEX = ""
 
 
 class TestKoboSync(unittest.TestCase, ui_class):
@@ -38,7 +39,7 @@ class TestKoboSync(unittest.TestCase, ui_class):
             host = 'http://' + get_Host_IP() #  + ':' + PORTS[0]
             startup(cls, cls.py_version, {'config_calibre_dir':TEST_DB, 'config_log_level': 'DEBUG', 'config_kobo_sync':1,
                                           'config_kepubifypath': "",
-                                          'config_kobo_proxy':0}, host=host, port=PORTS[0], env={"APP_MODE": "test"})
+                                          'config_kobo_proxy':0}, host=host, index=INDEX, port=PORTS[0], env={"APP_MODE": "test"})
             time.sleep(3)
             WebDriverWait(cls.driver, 5).until(EC.presence_of_element_located((By.ID, "flash_success")))
             cls.goto_page('user_setup')
