@@ -893,7 +893,7 @@ class TestLdapLogin(unittest.TestCase, ui_class):
         # logout admin account, cookies now invalid,
         # now login is done via not existing basic header, means no login, guest account is deactivated
         req_session.get('http://127.0.0.1:{}/logout'.format(PORTS[0]))
-        r = req_session.get('http://127.0.0.1:{}' + entries['elements'][0]['download'])
+        r = req_session.get('http://127.0.0.1:{}'.format(PORTS[0]) + entries['elements'][0]['download'])
         self.assertEqual(401, r.status_code)
         # auth credentials for user provided, invalid cookies
         r = req_session.get('http://127.0.0.1:{}'.format(PORTS[0]) + entries['elements'][0]['download'],
@@ -919,7 +919,7 @@ class TestLdapLogin(unittest.TestCase, ui_class):
         r = requests.get('http://127.0.0.1:{}/opds'.format(PORTS[0]), auth=('执一'.encode('utf-8'), 'eekretsay'))
         self.assertEqual(401, r.status_code)
         # user is logged in via cookies, admin is not allowed to download
-        r = req_session.get('http://127.0.0.1:{}' + entries['elements'][0]['download'])
+        r = req_session.get('http://127.0.0.1:{}'.format(PORTS[0]) + entries['elements'][0]['download'])
         self.assertEqual(401, r.status_code)
 
         # login admin and delete user0
@@ -966,13 +966,13 @@ class TestLdapLogin(unittest.TestCase, ui_class):
         token = re.search('<input type="hidden" name="csrf_token" value="(.*)">', login_page.text)
         payload = {'username': 'admin', 'password': 'admin123', 'submit': "", 'next': "/", "remember_me": "on", "csrf_token": token.group(1)}
         req_session.post('http://127.0.0.1:{}/login'.format(PORTS[0]), data=payload)
-        r = req_session.get('http://127.0.0.1:{}' + entries['elements'][0]['download'])
+        r = req_session.get('http://127.0.0.1:{}'.format(PORTS[0]) + entries['elements'][0]['download'])
         # logged in via cookies from admin account -> admin is not allowed to download
         self.assertEqual(403, r.status_code)
         # logout admin account, cookies now invalid,
         # now login is done via basic header, means no login, guest account can download
         req_session.get('http://127.0.0.1:{}/logout'.format(PORTS[0]))
-        r = req_session.get('http://127.0.0.1:{}' + entries['elements'][0]['download'])
+        r = req_session.get('http://127.0.0.1:{}'.format(PORTS[0]) + entries['elements'][0]['download'])
         self.assertEqual(200, r.status_code)
         # Close session, delete cookies
         req_session.close()
@@ -991,12 +991,12 @@ class TestLdapLogin(unittest.TestCase, ui_class):
         payload = {'username': 'admin', 'password': 'admin123', 'submit': "", 'next': "/", "remember_me": "on", "csrf_token": token.group(1)}
         req_session.post('http://127.0.0.1:{}/login'.format(PORTS[0]), data=payload)
         # user is logged in via cookies, admin is not allowed to download
-        r = req_session.get('http://127.0.0.1:{}' + entries['elements'][0]['download'])
+        r = req_session.get('http://127.0.0.1:{}'.format(PORTS[0]) + entries['elements'][0]['download'])
         self.assertEqual(403, r.status_code)
         # logout admin account, cookies now invalid,
         # now login is done via not existing basic header, means no login, guest account also not allowed to download
         req_session.get('http://127.0.0.1:{}/logout'.format(PORTS[0]))
-        r = req_session.get('http://127.0.0.1:{}' + entries['elements'][0]['download'])
+        r = req_session.get('http://127.0.0.1:{}'.format(PORTS[0]) + entries['elements'][0]['download'])
         self.assertEqual(403, r.status_code)
         # Close session, delete cookies
         req_session.close()
