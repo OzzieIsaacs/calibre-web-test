@@ -4,7 +4,7 @@ from HTMLTestRunner import runner as HTMLTestRunner
 import os
 import re
 from subproc_wrapper import process_open
-from config_test import CALIBRE_WEB_PATH, VENV_PYTHON, TEST_OS
+from config_test import CALIBRE_WEB_PATH, VENV_PYTHON, TEST_OS, base_path
 import unittest
 import sys
 import venv
@@ -75,7 +75,7 @@ if __name__ == '__main__':
         p.wait()
     environment.init_environment(python_executable, sub_dependencies)
 
-    all_tests = unittest.TestLoader().discover('.')
+    all_tests = unittest.TestLoader().discover(base_path)
     # configure HTMLTestRunner options
     outfile = os.path.join(CALIBRE_WEB_PATH, 'test')
     template = os.path.join(os.path.dirname(__file__), 'htmltemplate', 'report_template.html')
