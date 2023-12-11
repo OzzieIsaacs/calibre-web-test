@@ -60,6 +60,7 @@ page['basic_config'] = {'check': (By.ID, "config_port"),
 page['view_config'] = {'check': (By.NAME, "submit"), 'click': [(By.ID, "top_admin"), (By.ID, "view_config")]}
 page['mail_server'] = {'check': (By.ID, "mail_server"), 'click': [(By.ID, "top_admin"), (By.ID, "admin_edit_email")]}
 page['user_list'] = {'check': (By.ID, "user_delete_selection"), 'click': [(By.ID, "top_admin"), (By.ID, "admin_user_table")]}
+page['pages_config'] = {'check': (By.ID, "new_page"), 'click': [(By.ID, "top_admin"), (By.ID, "list_pages")]}
 page['admin_setup'] = {'check': (By.ID, "admin_edit_email"), 'click': [(By.ID, "top_admin")]}
 page['user_setup'] = {'check': (By.ID, "kindle_mail"), 'click': [(By.ID, "top_user")]}
 page['create_shelf'] = {'check': (By.ID, "title"), 'click': [(By.ID, "nav_createshelf")]}
