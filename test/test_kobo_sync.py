@@ -140,6 +140,9 @@ class TestKoboSync(unittest.TestCase, ui_class):
             self.assertEqual(data[3]['NewEntitlement']['BookMetadata']['DownloadUrls'][1]['Size'], 6720)
             self.assertEqual(data[3]['NewEntitlement']['BookMetadata']['DownloadUrls'][1]['Url'],
                              self.kobo_adress + "/download/5/epub")
+            # ToDo: Check!!!
+            self.assertEqual(data[0]['NewEntitlement']['BookMetadata']['Language'], "nb")
+            self.assertEqual(data[1]['NewEntitlement']['BookMetadata']['Language'], "en")
             self.assertEqual(data[3]['NewEntitlement']['BookMetadata']['Contributors'], ['John Döe执', 'Mon Go'])
             self.assertEqual(data[3]['NewEntitlement']['BookMetadata']['CoverImageId'], bood_uuid)
             self.assertEqual('<p>b物</p>', data[3]['NewEntitlement']['BookMetadata']['Description'])
@@ -264,7 +267,8 @@ class TestKoboSync(unittest.TestCase, ui_class):
         # Upload new book
         # sync and get this book and nothing else
         self.fill_basic_config({'config_uploading':1})
-        time.sleep(10)
+        time.sleep(3)
+        self.assertTrue(self.check_element_on_page((By.ID, 'flash_success')))
         self.goto_page('nav_new')
         upload_file = os.path.join(base_path, 'files', 'book.epub')
         upload = self.check_element_on_page((By.ID, 'btn-upload'))
@@ -277,7 +281,6 @@ class TestKoboSync(unittest.TestCase, ui_class):
         self.assertEqual(['Noname 23'], data[0]['NewEntitlement']['BookMetadata']['Contributors'])
         self.assertEqual('book9', data[0]['NewEntitlement']['BookMetadata']['Title'])
         self.delete_book(15)
-
 
     def test_sync_changed_book(self):
         self.inital_sync()
@@ -657,19 +660,7 @@ class TestKoboSync(unittest.TestCase, ui_class):
         self.get_book_details(5)
         self.check_element_on_page((By.XPATH, "//*[@id='archived_cb']")).click()
 
-    def test_kobo_upload_book(self):
-        self.inital_sync()
-        self.fill_basic_config({'config_uploading': 1})
-        time.sleep(3)
-        self.assertTrue(self.check_element_on_page((By.ID, 'flash_success')))
-        self.edit_user('admin', {'upload_role': 1})
-        self.goto_page('nav_new')
-        upload_file = os.path.join(base_path, 'files', 'book.epub')
-        upload = self.check_element_on_page((By.ID, 'btn-upload'))
-        upload.send_keys(upload_file)
-        time.sleep(3)
-        data = self.sync_kobo()
-        print(data) # todo check result
+
 
     def test_kobo_limit(self):
         host = 'http://{}:{}'.format(get_Host_IP(), PORTS[0])
