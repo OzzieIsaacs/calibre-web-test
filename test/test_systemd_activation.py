@@ -18,7 +18,6 @@ RESOURCES = {'fix_ports': 5555}
 
 
 @unittest.skipIf(os.name=="nt", "Sockets are not available on Windows")
-@unittest.skip("problem")
 class TestSystemdActivation(unittest.TestCase, ui_class):
     driver = None
 

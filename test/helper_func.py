@@ -27,7 +27,7 @@ from email import encoders
 import zipfile
 from bs4 import BeautifulSoup
 import codecs
-
+from io import StringIO
 
 try:
     import pdfkit
@@ -587,10 +587,20 @@ def count_files(folder):
             total_files += 1
     return total_files
 
-def read_opf_metadata(filename):
+
+def read_metadata_epub(content):
+    with zipfile.ZipFile(BytesIO(content)) as thezip:
+        contentopf = thezip.read("content.opf").decode('utf-8')
+    return read_opf_metadata(contentopf)
+
+
+def read_opf_metadata(file):
     result = {}
-    with codecs.open(filename, "r", "utf-8") as f:
-        soup = BeautifulSoup(f.read(), "xml")
+    if isinstance(file, os.PathLike):
+        with codecs.open(file, "r", "utf-8") as f:
+            soup = BeautifulSoup(f.read(), "xml")
+    if isinstance(file, str):
+        soup = BeautifulSoup(file, "xml")
     result['identifier'] = soup.findAll("identifier")
     cover = soup.find("reference")
     result['cover'] = cover.attrs if cover else ""
@@ -606,7 +616,14 @@ def read_opf_metadata(filename):
     else:
         result['contributor'] = ""
         result['contributor_attr'] = ""
-    result['pub_date'] = datetime.datetime.strptime(soup.find("dc:date").contents[0], "%Y-%m-%dT%H:%M:%S")
+    try:
+        format_string = "%Y-%m-%dT%H:%M:%S"
+        time_string = soup.find("dc:date").contents[0]
+        if "." in time_string:
+            format_string +=".%f"
+        result['pub_date'] = datetime.datetime.strptime(time_string, format_string)
+    except ValueError:
+        result['pub_date'] = datetime.datetime.strptime(time_string, format_string + "%z")
     language = soup.findAll("dc:language")
     result['language'] = [lang.contents[0] for lang in language] if language else []
     publisher = soup.find("dc:publisher")
@@ -623,8 +640,15 @@ def read_opf_metadata(filename):
     result['series'] = series.attrs if series else ""
     rating = soup.find("meta", {"name": "calibre:rating"})
     result['rating'] = rating.attrs if rating else ""
-    result['timestamp'] = datetime.datetime.strptime(soup.find("meta", {"name": "calibre:timestamp"}).attrs['content'],
-                                            "%Y-%m-%dT%H:%M:%S")
+    try:
+        format_string = "%Y-%m-%dT%H:%M:%S"
+        time_string = soup.find("meta", {"name": "calibre:timestamp"}).attrs['content']
+        if "." in time_string:
+            format_string +=".%f"
+        result['timestamp'] = datetime.datetime.strptime(time_string, format_string)
+    except ValueError:
+        result['timestamp'] = datetime.datetime.strptime(time_string, format_string + "%z")
+
     title_sort = soup.find("meta", {"name": "calibre:title_sort"})
     result['title_sort'] = title_sort.attrs if title_sort else ""
     custom_1 = soup.find("meta", {"name": "calibre:user_metadata:#cust1"})

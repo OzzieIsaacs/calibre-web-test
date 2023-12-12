@@ -23,7 +23,6 @@ PORTS = ['8083', '8000']
 INDEX = ""
 
 @unittest.skipIf(os.name=="nt", "Sockets are not available on Windows")
-@unittest.skip("problem")
 class TestSocket(unittest.TestCase, ui_class):
     driver = None
 
