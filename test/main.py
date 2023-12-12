@@ -8,6 +8,8 @@ from config_test import CALIBRE_WEB_PATH, VENV_PYTHON, TEST_OS, base_path
 import unittest
 import sys
 import venv
+import glob
+import shutil
 from CalibreResult import CalibreResult
 from helper_environment import environment
 from helper_func import kill_dead_cps, finishing_notifier, poweroff, result_move
@@ -64,6 +66,8 @@ if __name__ == '__main__':
         venv.create(venv_path, system_site_packages=True, with_pip=False)
     print("Creating virtual environment for testing")
 
+    for folder in glob.iglob(CALIBRE_WEB_PATH + "/cps/**/__pycache__/", recursive=True):
+        shutil.rmtree(folder)
 
     requirements_file = os.path.join(CALIBRE_WEB_PATH, 'requirements.txt')
     python_executable = os.path.join(CALIBRE_WEB_PATH, "venv", VENV_PYTHON)
