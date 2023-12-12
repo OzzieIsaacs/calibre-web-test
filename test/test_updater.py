@@ -160,7 +160,7 @@ class TestUpdater(unittest.TestCase, ui_class):
         val.set_type(['MissingTagName'])
         self.check_updater('Unexpected',  "alert")
         val.set_type(['MissingBody'])
-        self.check_updater('Unexpected',  "alert")
+        self.check_updater('Unexpected',  "alert", )
         val.set_type(['MissingZip'])
         self.check_updater('Unexpected',  "alert")
 

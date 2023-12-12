@@ -909,7 +909,7 @@ class TestLdapLogin(unittest.TestCase, ui_class):
         self.assertTrue(self.check_element_on_page((By.ID, "flash_success")))
         self.logout()
         # try to download book without download rights
-        r = requests.get('http://127.0.0.1:{}'+ entries['elements'][0]['download'],
+        r = requests.get('http://127.0.0.1:{}'.format(PORTS[0])+ entries['elements'][0]['download'],
                          auth=('执一'.encode('utf-8'), 'terces'))
         self.assertEqual(401, r.status_code)
         # stop ldap
@@ -982,7 +982,7 @@ class TestLdapLogin(unittest.TestCase, ui_class):
         time.sleep(3)
         self.logout()
         # try download from guest account, fails
-        r = requests.get('http://127.0.0.1:{}' + entries['elements'][0]['download'])
+        r = requests.get('http://127.0.0.1:{}'.format(PORTS[0]) + entries['elements'][0]['download'])
         self.assertEqual(403, r.status_code)
         # create cookies by logging in to admin account and try to download book again
         req_session = requests.session()
@@ -1019,7 +1019,7 @@ class TestLdapLogin(unittest.TestCase, ui_class):
         self.edit_user('admin', {'download_role': 1})
         time.sleep(3)
         # try download from guest account, fails
-        r = requests.get('http://127.0.0.1:{}' + entries['elements'][0]['download'])
+        r = requests.get('http://127.0.0.1:{}'.format(PORTS[0]) + entries['elements'][0]['download'])
         self.assertEqual(401, r.status_code)
         # try download with invalid credentials
         r = requests.get('http://127.0.0.1:{}/opds/'.format(PORTS[0]), auth=('admin', 'admin131'))
