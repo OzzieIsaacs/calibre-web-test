@@ -596,10 +596,10 @@ def read_metadata_epub(content):
 
 def read_opf_metadata(file):
     result = {}
-    if isinstance(file, os.PathLike):
+    if os.path.isfile(file):
         with codecs.open(file, "r", "utf-8") as f:
             soup = BeautifulSoup(f.read(), "xml")
-    if isinstance(file, str):
+    elif isinstance(file, str):
         soup = BeautifulSoup(file, "xml")
     result['identifier'] = soup.findAll("identifier")
     cover = soup.find("reference")
