@@ -189,6 +189,7 @@ class TestBackupMetadata(TestCase, ui_class):
         self.assertEqual("Beutlin, Frodo & Halagal, Norbert & Gonçalves, Hector", metadata['author_attr'][0]['opf:file-as'])
         self.edit_book(1, content={'bookAuthor': 'Hector Gonçalves'})
         self.restart_calibre_web()
+        time.sleep(3)
         metadata = read_opf_metadata(os.path.join(TEST_DB, "Hector Gonçalves", "Der Buchtitel (1)", "metadata.opf"))
         self.assertEqual(["Hector Gonçalves"], metadata['author'])
         self.assertEqual("Gonçalves, Hector", metadata['author_attr'][0]['opf:file-as'])
