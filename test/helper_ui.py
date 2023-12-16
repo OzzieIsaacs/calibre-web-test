@@ -1606,15 +1606,20 @@ class ui_class():
         return ret
 
     # works only if there is one format per book
-    def download_book(self, id, user, password):
+    def download_book(self, id, user, password, format=""):
         self.get_book_details(id)
         element = self.check_element_on_page((By.XPATH, "//*[starts-with(@id,'btnGroupDrop')]"))
         download_link = element.get_attribute("href")
+        if not download_link:
+            download_link = self.check_element_on_page(
+                (By.XPATH, "//ul[@class='dropdown-menu']/li/a[contains(text(),'{}')]".format(format))).get_attribute(
+                "href")
         r = requests.session()
         if user.lower() != "guest":
             login_page = r.get('http://127.0.0.1:8083/login')
             token = re.search('<input type="hidden" name="csrf_token" value="(.*)">', login_page.text)
-            payload = {'username': user, 'password': password, 'submit':"", 'next':"/", "remember_me":"on", "csrf_token": token.group(1)}
+            payload = {'username': user, 'password': password, 'submit': "", 'next': "/", "remember_me": "on",
+                       "csrf_token": token.group(1)}
             r.post('http://127.0.0.1:8083/login', data=payload)
         resp = r.get(download_link)
         r.close()

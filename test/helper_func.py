@@ -624,6 +624,8 @@ def read_opf_metadata(file):
         result['pub_date'] = datetime.datetime.strptime(time_string, format_string)
     except ValueError:
         result['pub_date'] = datetime.datetime.strptime(time_string, format_string + "%z")
+    except AttributeError:
+        result['pub_date'] = ""
     language = soup.findAll("dc:language")
     result['language'] = [lang.contents[0] for lang in language] if language else []
     publisher = soup.find("dc:publisher")
@@ -648,7 +650,8 @@ def read_opf_metadata(file):
         result['timestamp'] = datetime.datetime.strptime(time_string, format_string)
     except ValueError:
         result['timestamp'] = datetime.datetime.strptime(time_string, format_string + "%z")
-
+    except AttributeError:
+        result['timestamp'] = ""
     title_sort = soup.find("meta", {"name": "calibre:title_sort"})
     result['title_sort'] = title_sort.attrs if title_sort else ""
     custom_1 = soup.find("meta", {"name": "calibre:user_metadata:#cust1"})

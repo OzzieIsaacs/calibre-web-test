@@ -125,7 +125,7 @@ class TestEditBooksOnGdrive(unittest.TestCase, ui_class):
 
     def test_edit_title(self):
         self.fill_basic_config({"config_unicode_filename": 1})
-        self.check_element_on_page((By.ID, 'flash_success'))
+        self.assertTrue(self.check_element_on_page((By.ID, "flash_success")))
         fs = connect_gdrive("test")
         self.get_book_details(4)
         self.check_element_on_page((By.ID, "edit_book")).click()

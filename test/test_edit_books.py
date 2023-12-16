@@ -76,7 +76,7 @@ class TestEditBooks(TestCase, ui_class):
     # booktitle with ,;|
     def test_edit_title(self):
         self.fill_basic_config({"config_unicode_filename": 1})
-        self.check_element_on_page((By.ID, 'flash_success'))
+        self.assertTrue(self.check_element_on_page((By.ID, "flash_success")))
         self.get_book_details(4)
         self.check_element_on_page((By.ID, "edit_book")).click()
         self.edit_book(content={'book_title': u'O0ü 执'})
@@ -143,7 +143,7 @@ class TestEditBooks(TestCase, ui_class):
         self.check_element_on_page((By.ID, "edit_book")).click()
         self.edit_book(content={'book_title': u'book6'})
         self.fill_basic_config({"config_unicode_filename": 0})
-        self.check_element_on_page((By.ID, 'flash_success'))
+        self.assertTrue(self.check_element_on_page((By.ID, "flash_success")))
 
 
     # goto Book 2
@@ -184,7 +184,7 @@ class TestEditBooks(TestCase, ui_class):
     # Test Capital letters and lowercase characters
     def test_edit_author(self):
         self.fill_basic_config({"config_unicode_filename":1})
-        self.check_element_on_page((By.ID, 'flash_success'))
+        self.assertTrue(self.check_element_on_page((By.ID, "flash_success")))
         self.get_book_details(8)
         self.check_element_on_page((By.ID, "edit_book")).click()
         self.edit_book(content={'bookAuthor':u'O0ü 执'})
@@ -248,7 +248,7 @@ class TestEditBooks(TestCase, ui_class):
         self.check_element_on_page((By.ID, "edit_book")).click()
         self.edit_book(content={'bookAuthor': 'Leo Baskerville'}, detail_v=True)
         self.fill_basic_config({"config_unicode_filename": 0})
-        self.check_element_on_page((By.ID, 'flash_success'))
+        self.assertTrue(self.check_element_on_page((By.ID, "flash_success")))
 
     # series with unicode spaces, ,|,
     def test_edit_series(self):
