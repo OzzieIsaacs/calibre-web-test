@@ -495,6 +495,13 @@ class TestCalibreWebVisibilitys(unittest.TestCase, ui_class):
         self.assertEqual('Hallo', field.get_attribute('value'))
 
     def test_search_order(self):
+        # editing books changes pub date from 00:00:00.000 -> 00:00:00 which affects sorting order
+        self.edit_book(9, custom_content={"Custom Text 人物 *'()&": 'test'})
+        self.edit_book(9, custom_content={"Custom Text 人物 *'()&": ''})
+        self.edit_book(10, custom_content={"Custom Text 人物 *'()&": 'test'})
+        self.edit_book(10, custom_content={"Custom Text 人物 *'()&": ''})
+        self.edit_book(11, custom_content={"Custom Text 人物 *'()&": 'test'})
+        self.edit_book(11, custom_content={"Custom Text 人物 *'()&": ''})
         self.search('book')
         order = {'new': (13, 12, 11, 10),
                  'old': (5, 8, 9, 10),
@@ -502,8 +509,8 @@ class TestCalibreWebVisibilitys(unittest.TestCase, ui_class):
                  'desc': (5, 11, 8, 10),
                  'auth_az': (8, 5, 11, 13),
                  'auth_za': (10, 12, 9, 13),
-                 'pub_new': (5, 8 , 9, 10),
-                 'pub_old': (8, 9, 10, 11)
+                 'pub_new': (5, 9 , 10, 11),
+                 'pub_old': (8, 12, 13, 9)
                  }
         self.verify_order("search", order=order)
         self.search('book')
@@ -513,13 +520,11 @@ class TestCalibreWebVisibilitys(unittest.TestCase, ui_class):
                  'desc': (5, 11, 8, 10),
                  'auth_az': (8, 5, 11, 13),
                  'auth_za': (10, 12, 9, 13),
-                 'pub_new': (5, 8 , 9, 10),
-                 'pub_old': (8, 9, 10, 11)
+                 'pub_new': (5, 9 , 10, 11),
+                 'pub_old': (8, 12, 13, 9)
                  }
         self.verify_order("search", order=order)
         self.check_element_on_page((By.ID, "new")).click()
-
-
 
     def test_search_functions(self):
         r = requests.session()
@@ -683,7 +688,6 @@ class TestCalibreWebVisibilitys(unittest.TestCase, ui_class):
         close.click()
         time.sleep(2)
         self.delete_shelf(u'allow')
-
 
     def test_restrict_columns(self):
         self.edit_book(10, custom_content={"Custom Text 人物 *'()&": 'test'})
