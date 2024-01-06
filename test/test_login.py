@@ -676,3 +676,19 @@ class TestLogin(unittest.TestCase, ui_class):
         self.assertEqual(resp.status_code, 200)
         self.assertNotIn("logout", resp.text)
         cookie_stealer.close()
+
+    def test_login_log_hack(self):
+        r = requests.session()
+        login_page = r.get("http://127.0.0.1:" + PORTS[0] + "/login")
+        token = re.search('<input type="hidden" name="csrf_token" value="(.*)">', login_page.text)
+        user = "test\nHackdata"
+        payload = {'username': user, 'password': 'admin123', 'submit': "", 'next': "/", "remember_me": "on",
+                   "csrf_token": token.group(1)}
+        resp = r.post("http://127.0.0.1:" + PORTS[0] + "/login", data=payload)
+        self.assertEqual(resp.status_code, 200)
+        time.sleep(5)
+        with open(os.path.join(CALIBRE_WEB_PATH + INDEX,'calibre-web.log'),'r') as logfile:
+            data = logfile.read()
+        self.assertTrue(len(re.findall('Login failed for user "testhackdata"', data)), "Linefeed in username gives wrong loglines")
+        r.get("http://127.0.0.1:" + PORTS[0] + "/logout")
+        r.close()
