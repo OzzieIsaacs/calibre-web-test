@@ -107,6 +107,7 @@ class TestEbookConvertCalibreGDrive(unittest.TestCase, ui_class):
 
     @classmethod
     def tearDownClass(cls):
+        save_logfiles(cls, cls.__name__)
         cls.email_server.stop()
         thumbnail_cache_path = os.path.join(CALIBRE_WEB_PATH + INDEX, 'cps', 'cache', 'thumbnails')
         shutil.rmtree(thumbnail_cache_path, ignore_errors=True)
@@ -136,8 +137,6 @@ class TestEbookConvertCalibreGDrive(unittest.TestCase, ui_class):
                 os.unlink(src1)
             except PermissionError:
                 print('client_secrets.json delete failed')
-
-        save_logfiles(cls, cls.__name__)
 
     def tearDown(self):
         if not self.check_user_logged_in('admin'):
