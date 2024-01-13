@@ -11,7 +11,7 @@ from selenium.webdriver.support.ui import Select
 from helper_ui import ui_class
 from config_test import TEST_DB
 from helper_func import startup, save_logfiles, read_metadata_epub, read_opf_metadata
-from helper_email_convert import calibre_path
+from helper_email_convert import calibre_path, kepubify_path
 
 RESOURCES = {'ports': 1}
 
@@ -170,3 +170,55 @@ class TestEmbedMetadata(TestCase, ui_class):
         self.assertEqual("Sigurd Lindgren", epub_data['author'][0])
         self.assertEqual("en", epub_data['language'][0])
         self.delete_book_format(12, "KEPUB")
+
+    def test_download_kepub_embed_metadata(self):
+        self.fill_basic_config({'config_embed_metadata': 0})
+        time.sleep(5)
+        self.assertTrue(self.check_element_on_page((By.ID, "flash_success")))
+        tasks = self.check_tasks()
+
+        vals = self.get_convert_book(8)
+        select = Select(vals['btn_from'])
+        select.select_by_visible_text('EPUB')
+        select = Select(vals['btn_to'])
+        select.select_by_visible_text('KEPUB')
+        self.check_element_on_page((By.ID, "btn-book-convert")).click()
+        self.assertTrue(self.check_element_on_page((By.ID, "flash_success")))
+        i = 0
+        while i < 20:
+            time.sleep(2)
+            task_len, ret = self.check_tasks(tasks)
+            if task_len == 1:
+                if ret[-1]['result'] == 'Finished' or ret[-1]['result'] == 'Failed':
+                    break
+            i += 1
+        self.assertEqual(1, task_len)
+        epub_path = os.path.join(TEST_DB, "Leo Baskerville", "book8 (8)", "book8 - Leo Baskerville.kepub")
+        self.assertTrue(os.path.isfile(epub_path))
+        code, epub_content = self.download_book(8, "admin", "admin123", format="KEPUB")
+        self.assertEqual(200, code)
+        epub_data = read_metadata_epub(epub_content)
+        self.assertEqual("book8", epub_data['title'])
+        self.assertEqual("Unknown", epub_data['author'][0])
+        self.assertEqual("en", epub_data['language'][0])
+        self.assertEqual([], epub_data['tags'])
+        self.fill_basic_config({'config_kepubifypath': "", 'config_embed_metadata': 1})
+        self.assertTrue(self.check_element_on_page((By.ID, "flash_success")))
+        code, epub_content = self.download_book(8, "admin", "admin123", format="KEPUB")
+        self.assertEqual(200, code)
+        epub_data = read_metadata_epub(epub_content)
+        self.assertEqual("book8", epub_data['title'])
+        self.assertEqual("Unknown", epub_data['author'][0])
+        self.assertEqual("en", epub_data['language'][0])
+        self.assertEqual([], epub_data['tags'])
+        self.fill_basic_config({'config_kepubifypath': kepubify_path(), 'config_embed_metadata': 1})
+        code, epub_content = self.download_book(8, "admin", "admin123", format="KEPUB")
+        self.assertEqual(200, code)
+        # self.assertEqual(5954, len(epub_content))
+        epub_data = read_metadata_epub(epub_content)
+        self.assertEqual("book8", epub_data['title'])
+        self.assertEqual("Leo Baskerville", epub_data['author'][0])
+        self.assertEqual("nb", epub_data['language'][0])
+        self.assertEqual([], epub_data['tags'])
+
+        self.delete_book_format(8, "KEPUB")
