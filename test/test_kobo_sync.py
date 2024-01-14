@@ -66,7 +66,7 @@ class TestKoboSync(unittest.TestCase, ui_class):
         remove_dependency(cls.json_line)
         save_logfiles(cls, cls.__name__)
 
-    def inital_sync(self):
+    def inital_sync(self, sync=True):
         if TestKoboSync.syncToken:
             return TestKoboSync.data
         # change book 5 to have unicode char in title author, description
@@ -119,13 +119,19 @@ class TestKoboSync(unittest.TestCase, ui_class):
         r = session.get(self.kobo_adress+'/v1/analytics/gettests', headers=TestKoboSync.header, timeout=10)
         self.assertEqual(r.status_code, 200)
         self.assertEqual(r.json(), {'Result': 'Success', 'TestKey': '', 'Tests': {}})
+        if sync:
+            self.sync_request(session)
 
+    def sync_request(self, session):
         # perform sync request
         bood_uuid = '8f1b72c1-e9a4-4212-b538-8e4f4837d201'
         params = {'Filter': 'All', 'DownloadUrlFilter': 'Generic,Android', 'PrioritizeRecentReads':'true'}
-        data = {}
+        # data = {}
         while True:
-            r = session.get(self.kobo_adress+'/v1/library/sync', params=params, headers=TestKoboSync.syncToken, timeout=10)
+            r = session.get(self.kobo_adress+'/v1/library/sync',
+                            params=params,
+                            headers=TestKoboSync.syncToken,
+                            timeout=10)
             self.assertEqual(r.status_code, 200)
             data = r.json()
             TestKoboSync.data = data
@@ -587,9 +593,18 @@ class TestKoboSync(unittest.TestCase, ui_class):
         # final sync
         time.sleep(2)
         self.sync_kobo()
-
     def test_kobo_about(self):
         self.assertTrue(self.goto_page('nav_about'))
+
+    def test_kobo_no_download(self):
+        self.edit_user("admin", {"download_role":0})
+        self.inital_sync(sync=False)
+        self.edit_user("admin", {"download_role": 1})
+        params = {'Filter': 'All', 'DownloadUrlFilter': 'Generic,Android', 'PrioritizeRecentReads':'true'}
+        downloadSession = requests.session()
+        r = downloadSession.get(self.kobo_adress+'/v1/library/sync', params=params, headers=TestKoboSync.syncToken)
+        self.assertEqual(r.status_code, 403)
+
 
     def test_book_download(self):
         data = self.inital_sync()

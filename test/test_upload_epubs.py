@@ -8,7 +8,7 @@ import time
 
 from selenium.webdriver.common.by import By
 from helper_ui import ui_class
-from config_test import TEST_DB, base_path, BOOT_TIME
+from config_test import TEST_DB, base_path
 from helper_func import save_logfiles, startup, change_epub_meta, updateZip
 from selenium.webdriver.support.ui import WebDriverWait
 from selenium.webdriver.support import expected_conditions as EC
@@ -29,8 +29,9 @@ class TestUploadEPubs(TestCase, ui_class):
     @classmethod
     def setUpClass(cls):
         try:
-            startup(cls, cls.py_version, {'config_calibre_dir': TEST_DB, 'config_uploading': 1}, port=PORTS[0], index=INDEX,
-                    env = {"APP_MODE": "test"})
+            startup(cls, cls.py_version, {'config_calibre_dir': TEST_DB, 'config_uploading': 1},
+                    port=PORTS[0], index=INDEX,
+                    env={"APP_MODE": "test"})
             time.sleep(3)
             WebDriverWait(cls.driver, 5).until(EC.presence_of_element_located((By.ID, "flash_success")))
         except Exception:
@@ -136,7 +137,7 @@ class TestUploadEPubs(TestCase, ui_class):
         # check cover-image is detected
         epub_file = os.path.join(base_path, 'files', 'cover.epub')
         change_epub_meta(epub_file, meta={'title': "Coverimage", 'creator': "Testo"},
-                         item={'change': {"find_id": "cover", 'id':'cover-image'}})
+                         item={'change': {"find_id": "cover", 'id': 'cover-image'}})
         ci = self.verify_upload(epub_file)
         cover_image = self.check_element_on_page((By.ID, "detailcover")).screenshot_as_png
         self.delete_book(ci['id'])
@@ -200,7 +201,7 @@ class TestUploadEPubs(TestCase, ui_class):
         # check cover-image is detected
         epub_file = os.path.join(base_path, 'files', 'cover.epub')
         change_epub_meta(epub_file, meta={'title': "png Cover", 'creator': "Testo"},
-                         item={'change': {"find_id": "cover", 'id':'cover-image', 'href': 'cover.png'}})
+                         item={'change': {"find_id": "cover", 'id': 'cover-image', 'href': 'cover.png'}})
         with open(os.path.join(base_path, 'files', 'cover.png'), "rb") as f:
             data = f.read()
         epub_png = os.path.join(base_path, 'files', 'png.epub')
@@ -214,6 +215,26 @@ class TestUploadEPubs(TestCase, ui_class):
 
         os.remove(epub_file)
         os.remove(epub_png)
+
+    def test_upload_epub_comments(self):
+        epub_file = os.path.join(base_path, 'files', 'comments.epub')
+        # self.change_visibility_me({'locale': "Italiano"})
+        change_epub_meta(epub_file, meta={'title': "Comments", 'creator': "Nobody Perfect",
+                                          "description": "<p>None1</p>"})
+        details = self.verify_upload(epub_file)
+        self.assertEqual('Comments', details['title'])
+        self.assertEqual('Nobody Perfect', details['author'][0])
+        self.assertEqual('None1', details['comment'])
+        self.delete_book(details['id'])
+        change_epub_meta(epub_file, meta={'title': "Comments", 'creator': "Nobody Perfect", "description": "\n\n"})
+        details = self.verify_upload(epub_file)
+        self.assertEqual('', details['comment'])
+        self.delete_book(details['id'])
+        change_epub_meta(epub_file, meta={'title': "Comments", 'creator': "Nobody Perfect", "description": "<p>None1"})
+        details = self.verify_upload(epub_file)
+        self.assertEqual('None1', details['comment'])
+        self.delete_book(details['id'])
+        os.remove(epub_file)
 
     def test_upload_epub_identifier(self):
         # check cover-image is detected
