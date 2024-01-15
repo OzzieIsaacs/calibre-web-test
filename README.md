@@ -43,7 +43,7 @@ Calibre-web-test
 
 - Testing LDAP on Windows requires the installation of python-ldap in the tested environment, therefore you need the corresponding wheel, and you have to point to the file in config_test.py (variable LDAP_WHL)   
 
-- SSL Files for testing will be automatically generated. A Tutorial for generating ssl files can be found here [https://www.golinuxcloud.com/create-certificate-authority-root-ca-linux](https://www.golinuxcloud.com/create-certificate-authority-root-ca-linux) and here [https://www.golinuxcloud.com/openssl-create-client-server-certificate](https://www.golinuxcloud.com/openssl-create-client-server-certificate)
+- SSL Files for testing will be automatically generated. A Tutorial for generating ssl files can be found here [https://www.golinuxcloud.com/create-certificate-authority-root-ca-linux](https://www.golinuxcloud.com/create-certificate-authority-root-ca-linux) and here [https://www.golinuxcloud.com/openssl-create-client-server-certificate](https://www.golinuxcloud.com/openssl-create-client-server-certificate). The ca-certifcate needs to be added to the local trusted root certificates on the client. See here for a [https://manuals.gfi.com/en/kerio/connect/content/server-configuration/ssl-certificates/adding-trusted-root-certificates-to-the-server-1605.html](manual)  
 
 - Mitmporoxy for Windows is problematic, as several modules are no longer available for newer python versions, so download the mitmproxy source for version 6.02 and patch the setup file to accept cryptography 36.0 and zstandard>0.15. Afterwards install via pip from this source
 
