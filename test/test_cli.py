@@ -630,7 +630,7 @@ class TestCli(unittest.TestCase, ui_class):
         p3 = process_open([self.py_version, "-B", os.path.join(CALIBRE_WEB_PATH + INDEX, u'cps.py'),
                           '-o', "/dev/stdout"], [1])
         output = list()
-        for i in range (0,5):
+        for i in range (0,7):
             #while p.poll() is not None:
             output.append(p3.stdout.readline())
             time.sleep(1)

@@ -120,7 +120,7 @@ class TestKoboSync(unittest.TestCase, ui_class):
         self.assertEqual(r.status_code, 200)
         self.assertEqual(r.json(), {'Result': 'Success', 'TestKey': '', 'Tests': {}})
         if sync:
-            self.sync_request(session)
+            return self.sync_request(session)
 
     def sync_request(self, session):
         # perform sync request
@@ -275,6 +275,7 @@ class TestKoboSync(unittest.TestCase, ui_class):
         self.fill_basic_config({'config_uploading':1})
         time.sleep(3)
         self.assertTrue(self.check_element_on_page((By.ID, 'flash_success')))
+        self.edit_user('admin', {'upload_role': 1})
         self.goto_page('nav_new')
         upload_file = os.path.join(base_path, 'files', 'book.epub')
         upload = self.check_element_on_page((By.ID, 'btn-upload'))
@@ -599,12 +600,11 @@ class TestKoboSync(unittest.TestCase, ui_class):
     def test_kobo_no_download(self):
         self.edit_user("admin", {"download_role":0})
         self.inital_sync(sync=False)
-        self.edit_user("admin", {"download_role": 1})
         params = {'Filter': 'All', 'DownloadUrlFilter': 'Generic,Android', 'PrioritizeRecentReads':'true'}
         downloadSession = requests.session()
         r = downloadSession.get(self.kobo_adress+'/v1/library/sync', params=params, headers=TestKoboSync.syncToken)
         self.assertEqual(r.status_code, 403)
-
+        self.edit_user("admin", {"download_role": 1})
 
     def test_book_download(self):
         data = self.inital_sync()

@@ -33,7 +33,7 @@ class TestBackupMetadataGdrive(TestCase, ui_class):
 
     @classmethod
     def setUpClass(cls):
-        add_dependency(cls.dependency, cls.__name__)
+        # add_dependency(cls.dependency, cls.__name__)
         prepare_gdrive()
         try:
             src = os.path.join(base_path, "files", "client_secrets.json")
