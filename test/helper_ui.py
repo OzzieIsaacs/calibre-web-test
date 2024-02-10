@@ -1581,8 +1581,8 @@ class ui_class():
                     ret['series'] = ele.text
 
             cust_columns = tree.xpath("//div[@class='real_custom_columns']")
+            ret['cust_columns'] = list()
             if len(cust_columns) :      # we have custom columns
-                ret['cust_columns'] = list()
                 for col in cust_columns: # .getchildren()[0].getchildren()[1:]:
                     element = dict()
                     if len(col.text.strip()):

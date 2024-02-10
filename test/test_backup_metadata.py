@@ -219,7 +219,7 @@ class TestBackupMetadata(TestCase, ui_class):
         # check tags content of metadata.opf file
         metadata = read_opf_metadata(meta_path)
         self.assertEqual(metadata['tags'], [])
-        # edit Publisher
+        # edit tags
         self.edit_book(4, content={'tags': 'Lo执|1u'})
         self.restart_calibre_web()
         # check tags content of metadata.opf file
@@ -233,26 +233,31 @@ class TestBackupMetadata(TestCase, ui_class):
         self.edit_book(4, content={'tags': ''})
 
     def test_backup_change_book_identifier(self):
-        pass
-        '''meta_path = os.path.join(TEST_DB, "Peter Parker", "Very long extra super turbo cool tit (4)", "metadata.opf")
+        meta_path = os.path.join(TEST_DB, "Peter Parker", "Very long extra super turbo cool tit (4)", "metadata.opf")
         # generate all metadata.opf files
         self.queue_metadata_backup()
         self.restart_calibre_web()
-        # check tags content of metadata.opf file
+        # check identifier content of metadata.opf file
         metadata = read_opf_metadata(meta_path)
-        self.assertEqual(metadata['tags'], [])
-        # edit Publisher
-        self.edit_book(4, content={'tags': 'Lo执|1u'})
+        self.assertEqual(len(metadata['identifier']), 2)
+        # edit Identifier
+        self.get_book_details(4)
+        self.check_element_on_page((By.ID, "edit_book")).click()
+        self.add_identifier('Hallo', 'Lo执|1u')
+        self.check_element_on_page((By.ID, "submit")).click()
         self.restart_calibre_web()
         # check tags content of metadata.opf file
         metadata = read_opf_metadata(meta_path)
-        self.assertEqual(metadata['tags'], ['Lo执|1u'])
-        self.edit_book(4, content={'tags': 'Ku,kOl'})
+        self.assertEqual(len(metadata['identifier']), 3)
+        self.assertEqual(metadata['identifier'][2].contents, ["Lo执|1u"])
+        self.get_book_details(4)
+        self.check_element_on_page((By.ID, "edit_book")).click()
+        self.delete_identifier("Hallo")
+        self.check_element_on_page((By.ID, "submit")).click()
         self.restart_calibre_web()
-        # check tags content of metadata.opf file
+        # check identifier content of metadata.opf file
         metadata = read_opf_metadata(meta_path)
-        self.assertCountEqual(metadata['tags'], ['Ku','kOl'])
-        self.edit_book(4, content={'tags': ''})'''
+        self.assertEqual(len(metadata['identifier']), 2)
 
     def test_backup_change_book_language(self):
         meta_path = os.path.join(TEST_DB, "Asterix Lionherd", "comicdemo (3)", "metadata.opf")
