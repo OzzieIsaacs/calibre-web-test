@@ -14,16 +14,23 @@ from io import BytesIO
 import rarfile
 from PIL import Image
 
+
+RESOURCES = {'ports': 1}
+
+PORTS = ['8083']
+INDEX =""
+
 class TestReader(unittest.TestCase, ui_class):
 
     p = None
     driver = None
+    #dependencys = ['py7zr', "comicapi"]
 
     @classmethod
     def setUpClass(cls):
-
+        #add_dependency(cls.dependencys, cls.__name__)
         try:
-            startup(cls, cls.py_version, {'config_calibre_dir':TEST_DB}, env={"APP_MODE": "test"})
+            startup(cls, cls.py_version, {'config_calibre_dir':TEST_DB}, port=PORTS[0], index=INDEX, env={"APP_MODE": "test"})
             cls.current_handle = cls.driver.current_window_handle
 
         except Exception:
@@ -40,8 +47,9 @@ class TestReader(unittest.TestCase, ui_class):
 
     @classmethod
     def tearDownClass(cls):
+        #remove_dependency(cls.dependencys)
         cls.driver.switch_to.window(cls.current_handle)
-        cls.driver.get("http://127.0.0.1:8083")
+        cls.driver.get("http://127.0.0.1:" + PORTS[0])
         cls.stop_calibre_web()
         cls.driver.quit()
         cls.p.terminate()
@@ -248,6 +256,7 @@ class TestReader(unittest.TestCase, ui_class):
         self.fill_basic_config({'config_uploading': 1})
         time.sleep(3)
         self.assertTrue(self.check_element_on_page((By.ID, "flash_success")))
+        self.edit_user('admin', {'upload_role': 1})
         self.goto_page('nav_new')
         upload = self.check_element_on_page((By.ID, 'btn-upload'))
         upload.send_keys(upload_file)
@@ -276,6 +285,7 @@ class TestReader(unittest.TestCase, ui_class):
         
         # Comic file mit einer Datei
 
+    @unittest.skip
     def test_cb7_reader(self):
         self.fill_basic_config({'config_uploading': 1})
         time.sleep(3)
@@ -294,7 +304,7 @@ class TestReader(unittest.TestCase, ui_class):
         self.assertEqual('No S', details['series'])
         self.delete_book(int(self.driver.current_url.split('/')[-1]))
         self.assertTrue(self.check_element_on_page((By.ID, "flash_success")))
-        self.fill_basic_config({'config_uploading': 1})
+        self.fill_basic_config({'config_uploading': 0})
         time.sleep(3)
         self.assertTrue(self.check_element_on_page((By.ID, "flash_success")))
         

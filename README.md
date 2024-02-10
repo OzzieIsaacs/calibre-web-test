@@ -2,7 +2,7 @@
 
 ## Prerequisites
 
-- Installed python3 accessible with the command "python3" (tests currently done using python3.8.x Windows10 and LinuxMint20)
+- Installed python3 accessible with the command "python3" (tests currently done using python3.10.x Windows10 and LinuxMint20)
 - installed calibre desktop program (optional)
 - installed kepubify program (optional)
 - for installing ldap requirements libsasl2-dev and libldap2-dev have to be installed (debian distro lib-names)
@@ -43,7 +43,7 @@ Calibre-web-test
 
 - Testing LDAP on Windows requires the installation of python-ldap in the tested environment, therefore you need the corresponding wheel, and you have to point to the file in config_test.py (variable LDAP_WHL)   
 
-- SSL Files for testing will be automatically generated. A Tutorial for generating ssl files can be found here [https://www.golinuxcloud.com/create-certificate-authority-root-ca-linux](https://www.golinuxcloud.com/create-certificate-authority-root-ca-linux) and here [https://www.golinuxcloud.com/openssl-create-client-server-certificate](https://www.golinuxcloud.com/openssl-create-client-server-certificate)
+- SSL Files for testing will be automatically generated. A Tutorial for generating ssl files can be found here [https://www.golinuxcloud.com/create-certificate-authority-root-ca-linux](https://www.golinuxcloud.com/create-certificate-authority-root-ca-linux) and here [https://www.golinuxcloud.com/openssl-create-client-server-certificate](https://www.golinuxcloud.com/openssl-create-client-server-certificate). The ca-certifcate needs to be added to the local trusted root certificates on the client. See here for a [https://manuals.gfi.com/en/kerio/connect/content/server-configuration/ssl-certificates/adding-trusted-root-certificates-to-the-server-1605.html](manual)  
 
 - Mitmporoxy for Windows is problematic, as several modules are no longer available for newer python versions, so download the mitmproxy source for version 6.02 and patch the setup file to accept cryptography 36.0 and zstandard>0.15. Afterwards install via pip from this source
 
@@ -60,7 +60,7 @@ It's recommended to have gevent compatible debugging set to **no** and also **do
 
 The script translate.py in the build folder is used for generating the binary translation files (.mo) and also to generate the language name translation table file 'iso_language_names.py' in the calibre-web cps folder. The script runs under python 3 (3.6 and 3.7 tested).\
 The used languages were taken from the file iso639.calibre_msgpack. This is a magically (can't remember how I did it) shrank file from the Calibre resources directory. The original file has over 7000 languages in it. Somewhere in the Calibre code there is a routine which is extracting several language names from this file (the 400 remaining), all other languages are not supported by calibre (at least at the time I created the file). By increasing the number of supported languages to the 7000, the speed of the language typeahead drops to nearly zero.
-The language translations are taken from Calibre's iso639 folder in the transifex translation project. By adding up a new language the corresponding file has to be grabbed from this project. Before it can be used the timezone marker in the header has to be changed from +MDT to +000.
+The language translations are taken from Calibre's iso639 folder (https://github.com/kovidgoyal/calibre-translations/tree/master/iso_639) By adding up a new language the corresponding file has to be grabbed from this project. Before it can be used the timezone marker in the header has to be changed from +MDT to +000.
 
 # Build package files and executables
 

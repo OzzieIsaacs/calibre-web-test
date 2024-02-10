@@ -21,6 +21,13 @@ except ImportError:
     GR = False
 
 
+
+RESOURCES = {'ports': 1}
+
+PORTS = ['8083']
+INDEX = ""
+
+
 @unittest.skipIf(not GR, "Skipping Goodread Test, no config file found")
 class TestGoodreads(unittest.TestCase, ui_class):
 
@@ -38,7 +45,8 @@ class TestGoodreads(unittest.TestCase, ui_class):
 
         try:
             startup(cls, cls.py_version, {'config_calibre_dir':TEST_DB,
-                                          'config_use_goodreads':1}, env={"APP_MODE": "test"})
+                                          'config_use_goodreads':1}, 
+                                          port=PORTS[0], index=INDEX, env={"APP_MODE": "test"})
             WebDriverWait(cls.driver, 5).until(EC.presence_of_element_located((By.ID, "flash_success")))
         except Exception as e:
             print(e)
@@ -48,7 +56,7 @@ class TestGoodreads(unittest.TestCase, ui_class):
 
     @classmethod
     def tearDownClass(cls):
-        cls.driver.get("http://127.0.0.1:8083")
+        cls.driver.get("http://127.0.0.1:" + PORTS[0])
         cls.stop_calibre_web()
         cls.driver.quit()
         cls.p.terminate()

@@ -2,6 +2,7 @@
 # library. If you want to make a suggestion or fix something you can contact-me
 # at voorloop_at_gmail.com
 # Distributed over IDC(I Don't Care) license
+# based on: https://gist.github.com/darkwave/52842722c0c451807df4
 
 import socket
 import select

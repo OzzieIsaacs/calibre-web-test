@@ -1,12 +1,12 @@
 requests>=2.25.0
 selenium>=4.0.0
 lxml>=4.0.0
-virtualenv>=12.0
+virtualenv>=20.20.0
 ldaptor>=16.0
 psutil>=3.0.0
 public>=0.0.0
 pycurl>=7.19.0
-pyOpenSSL>=16.0.0
+pyOpenSSL>=16.0.0,<22.0.0
 Pillow >=7.1.0
 diffimg >=0.2.0
 fpdf2>=2.3.1
@@ -17,12 +17,14 @@ rarfile>=4.0
 #Running Updater Test
 flask>=2.0.0
 mitmproxy==6.0.2
+# protobuf max version, otherwise mitmproxy isn't working
+protobuf<=3.20.0
 
 # For running tests on helper
 Babel>=2.6.0
-Flask-Login>=0.4.0
+Flask-Login>=0.6.3
 Flask-Babel>=1.0.0
-sqlalchemy>=1.3.10
+sqlalchemy>=1.4.29
 iso-639>=0.4.5
 unidecode>=1.0.0
 Flask-Principal>=0.3.2

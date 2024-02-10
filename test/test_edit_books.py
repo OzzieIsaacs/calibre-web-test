@@ -19,6 +19,13 @@ from config_test import TEST_DB, base_path, BOOT_TIME
 from helper_func import startup, debug_startup, createcbz
 from helper_func import save_logfiles, add_dependency, remove_dependency
 
+
+RESOURCES = {'ports': 1}
+
+PORTS = ['8083']
+INDEX = ""
+
+
 class TestEditBooks(TestCase, ui_class):
     p = None
     driver = None
@@ -28,7 +35,7 @@ class TestEditBooks(TestCase, ui_class):
     def setUpClass(cls):
         add_dependency(cls.dependencys, cls.__name__)
         try:
-            startup(cls, cls.py_version, {'config_calibre_dir': TEST_DB}, env={"APP_MODE": "test"})
+            startup(cls, cls.py_version, {'config_calibre_dir': TEST_DB}, port=PORTS[0], index=INDEX, env={"APP_MODE": "test"})
             time.sleep(3)
         except Exception:
             cls.driver.quit()
@@ -37,7 +44,7 @@ class TestEditBooks(TestCase, ui_class):
     @classmethod
     def tearDownClass(cls):
         remove_dependency(cls.dependencys)
-        cls.driver.get("http://127.0.0.1:8083")
+        cls.driver.get("http://127.0.0.1:" + PORTS[0])
         cls.stop_calibre_web()
         # close the browser window and stop calibre-web
         cls.driver.quit()
@@ -69,7 +76,7 @@ class TestEditBooks(TestCase, ui_class):
     # booktitle with ,;|
     def test_edit_title(self):
         self.fill_basic_config({"config_unicode_filename": 1})
-        self.check_element_on_page((By.ID, 'flash_success'))
+        self.assertTrue(self.check_element_on_page((By.ID, "flash_success")))
         self.get_book_details(4)
         self.check_element_on_page((By.ID, "edit_book")).click()
         self.edit_book(content={'book_title': u'O0ü 执'})
@@ -136,7 +143,7 @@ class TestEditBooks(TestCase, ui_class):
         self.check_element_on_page((By.ID, "edit_book")).click()
         self.edit_book(content={'book_title': u'book6'})
         self.fill_basic_config({"config_unicode_filename": 0})
-        self.check_element_on_page((By.ID, 'flash_success'))
+        self.assertTrue(self.check_element_on_page((By.ID, "flash_success")))
 
 
     # goto Book 2
@@ -177,7 +184,7 @@ class TestEditBooks(TestCase, ui_class):
     # Test Capital letters and lowercase characters
     def test_edit_author(self):
         self.fill_basic_config({"config_unicode_filename":1})
-        self.check_element_on_page((By.ID, 'flash_success'))
+        self.assertTrue(self.check_element_on_page((By.ID, "flash_success")))
         self.get_book_details(8)
         self.check_element_on_page((By.ID, "edit_book")).click()
         self.edit_book(content={'bookAuthor':u'O0ü 执'})
@@ -241,7 +248,7 @@ class TestEditBooks(TestCase, ui_class):
         self.check_element_on_page((By.ID, "edit_book")).click()
         self.edit_book(content={'bookAuthor': 'Leo Baskerville'}, detail_v=True)
         self.fill_basic_config({"config_unicode_filename": 0})
-        self.check_element_on_page((By.ID, 'flash_success'))
+        self.assertTrue(self.check_element_on_page((By.ID, "flash_success")))
 
     # series with unicode spaces, ,|,
     def test_edit_series(self):
@@ -683,18 +690,18 @@ class TestEditBooks(TestCase, ui_class):
     def test_typeahead_functions(self):
         req = requests.session()
         payload = {'username': 'admin', 'password': 'admin123', 'submit':"", 'next':"/", "remember_me":"on"}
-        req.post('http://127.0.0.1:8083/login', data=payload)
-        resp = req.get('http://127.0.0.1:8083/get_languages_json')
+        req.post('http://127.0.0.1:{}/login'.format(PORTS[0]), data=payload)
+        resp = req.get('http://127.0.0.1:{}/get_languages_json'.format(PORTS[0]))
         self.assertEqual(200, resp.status_code)
-        resp = req.get('http://127.0.0.1:8083/get_matching_tags')
+        resp = req.get('http://127.0.0.1:{}/get_matching_tags'.format(PORTS[0]))
         self.assertEqual(200, resp.status_code)
-        resp = req.get('http://127.0.0.1:8083/get_series_json')
+        resp = req.get('http://127.0.0.1:{}/get_series_json'.format(PORTS[0]))
         self.assertEqual(200, resp.status_code)
-        resp = req.get('http://127.0.0.1:8083/get_tags_json')
+        resp = req.get('http://127.0.0.1:{}/get_tags_json'.format(PORTS[0]))
         self.assertEqual(200, resp.status_code)
-        resp = req.get('http://127.0.0.1:8083/get_publishers_json')
+        resp = req.get('http://127.0.0.1:{}/get_publishers_json'.format(PORTS[0]))
         self.assertEqual(200, resp.status_code)
-        resp = req.get('http://127.0.0.1:8083/get_authors_json')
+        resp = req.get('http://127.0.0.1:{}/get_authors_json'.format(PORTS[0]))
         self.assertEqual(200, resp.status_code)
         req.close()
 
@@ -882,12 +889,12 @@ class TestEditBooks(TestCase, ui_class):
         self.assertEqual('book', details['title'])
         self.assertEqual('Unknown', details['author'][0])
         r = requests.session()
-        login_page = r.get('http://127.0.0.1:8083/login')
+        login_page = r.get('http://127.0.0.1:{}/login'.format(PORTS[0]))
         token = re.search('<input type="hidden" name="csrf_token" value="(.*)">', login_page.text)
         payload = {'username': 'admin', 'password': 'admin123', 'submit':"", 'next':"/", "remember_me":"on",
                    "csrf_token": token.group(1)}
-        r.post('http://127.0.0.1:8083/login', data=payload)
-        resp = r.get('http://127.0.0.1:8083' + details['cover'])
+        r.post('http://127.0.0.1:{}/login'.format(PORTS[0]), data=payload)
+        resp = r.get('http://127.0.0.1:{}'.format(PORTS[0]) + details['cover'])
         self.assertLess('23300', resp.headers['Content-Length'])
         self.fill_basic_config({'config_uploading': 0})
         r.close()
@@ -911,11 +918,11 @@ class TestEditBooks(TestCase, ui_class):
         self.assertEqual('book55 - Lul执 de Marco', details['title'])
         self.assertEqual('Oli Köli', details['author'][0])
         r = requests.session()
-        login_page = r.get('http://127.0.0.1:8083/login')
+        login_page = r.get('http://127.0.0.1:{}/login'.format(PORTS[0]))
         token = re.search('<input type="hidden" name="csrf_token" value="(.*)">', login_page.text)
         payload = {'username': 'admin', 'password': 'admin123', 'submit':"", 'next':"/", "remember_me":"on", "csrf_token": token.group(1)}
-        r.post('http://127.0.0.1:8083/login', data=payload)
-        resp = r.get('http://127.0.0.1:8083' + details['cover'])
+        r.post('http://127.0.0.1:{}/login'.format(PORTS[0]), data=payload)
+        resp = r.get('http://127.0.0.1:{}'.format(PORTS[0]) + details['cover'])
         self.assertEqual('19501', resp.headers['Content-Length'])
         self.fill_basic_config({'config_uploading': 0})
         r.close()
@@ -938,11 +945,11 @@ class TestEditBooks(TestCase, ui_class):
         self.assertEqual('book', details['title'])
         self.assertEqual('Unknown', details['author'][0])
         r = requests.session()
-        login_page = r.get('http://127.0.0.1:8083/login')
+        login_page = r.get('http://127.0.0.1:{}/login'.format(PORTS[0]))
         token = re.search('<input type="hidden" name="csrf_token" value="(.*)">', login_page.text)
         payload = {'username': 'admin', 'password': 'admin123', 'submit':"", 'next':"/", "remember_me":"on", "csrf_token": token.group(1)}
-        r.post('http://127.0.0.1:8083/login', data=payload)
-        resp = r.get('http://127.0.0.1:8083' + details['cover'])
+        r.post('http://127.0.0.1:{}/login'.format(PORTS[0]), data=payload)
+        resp = r.get('http://127.0.0.1:{}'.format(PORTS[0]) + details['cover'])
         self.assertEqual('19501', resp.headers['Content-Length'])
         self.fill_basic_config({'config_uploading': 0})
         r.close()
@@ -964,11 +971,11 @@ class TestEditBooks(TestCase, ui_class):
         self.assertEqual('book', details['title'])
         self.assertEqual('Unknown', details['author'][0])
         r = requests.session()
-        login_page = r.get('http://127.0.0.1:8083/login')
+        login_page = r.get('http://127.0.0.1:{}/login'.format(PORTS[0]))
         token = re.search('<input type="hidden" name="csrf_token" value="(.*)">', login_page.text)
         payload = {'username': 'admin', 'password': 'admin123', 'submit':"", 'next':"/", "remember_me":"on", "csrf_token": token.group(1)}
-        r.post('http://127.0.0.1:8083/login', data=payload)
-        resp = r.get('http://127.0.0.1:8083' + details['cover'])
+        r.post('http://127.0.0.1:{}/login'.format(PORTS[0]), data=payload)
+        resp = r.get('http://127.0.0.1:{}'.format(PORTS[0]) + details['cover'])
         self.assertEqual('19501', resp.headers['Content-Length'])
         self.fill_basic_config({'config_uploading': 0})
         r.close()
@@ -1005,11 +1012,11 @@ class TestEditBooks(TestCase, ui_class):
         os.unlink(new_file)
 
         r = requests.session()
-        login_page = r.get('http://127.0.0.1:8083/login')
+        login_page = r.get('http://127.0.0.1:{}/login'.format(PORTS[0]))
         token = re.search('<input type="hidden" name="csrf_token" value="(.*)">', login_page.text)
         payload = {'username': 'admin', 'password': 'admin123', 'submit':"", 'next':"/", "remember_me":"on", "csrf_token": token.group(1)}
-        r.post('http://127.0.0.1:8083/login', data=payload)
-        resp = r.get('http://127.0.0.1:8083' + details['cover'])
+        r.post('http://127.0.0.1:{}/login'.format(PORTS[0]), data=payload)
+        resp = r.get('http://127.0.0.1:{}'.format(PORTS[0]) + details['cover'])
         self.assertEqual('8936', resp.headers['Content-Length'])
         self.fill_basic_config({'config_uploading': 0})
         r.close()
@@ -1032,11 +1039,11 @@ class TestEditBooks(TestCase, ui_class):
         self.assertEqual('book', details['title'])
         self.assertEqual('Unknown', details['author'][0])
         r = requests.session()
-        login_page = r.get('http://127.0.0.1:8083/login')
+        login_page = r.get('http://127.0.0.1:{}/login'.format(PORTS[0]))
         token = re.search('<input type="hidden" name="csrf_token" value="(.*)">', login_page.text)
         payload = {'username': 'admin', 'password': 'admin123', 'submit':"", 'next':"/", "remember_me":"on", "csrf_token": token.group(1)}
-        r.post('http://127.0.0.1:8083/login', data=payload)
-        resp = r.get('http://127.0.0.1:8083' + details['cover'])
+        r.post('http://127.0.0.1:{}/login'.format(PORTS[0]), data=payload)
+        resp = r.get('http://127.0.0.1:{}'.format(PORTS[0]) + details['cover'])
         self.assertEqual('8936', resp.headers['Content-Length'])
         self.fill_basic_config({'config_uploading': 0})
         r.close()
@@ -1059,11 +1066,11 @@ class TestEditBooks(TestCase, ui_class):
         self.assertEqual('book', details['title'])
         self.assertEqual('Unknown', details['author'][0])
         r = requests.session()
-        login_page = r.get('http://127.0.0.1:8083/login')
+        login_page = r.get('http://127.0.0.1:{}/login'.format(PORTS[0]))
         token = re.search('<input type="hidden" name="csrf_token" value="(.*)">', login_page.text)
         payload = {'username': 'admin', 'password': 'admin123', 'submit':"", 'next':"/", "remember_me":"on", "csrf_token": token.group(1)}
-        r.post('http://127.0.0.1:8083/login', data=payload)
-        resp = r.get('http://127.0.0.1:8083' + details['cover'])
+        r.post('http://127.0.0.1:{}/login'.format(PORTS[0]), data=payload)
+        resp = r.get('http://127.0.0.1:{}'.format(PORTS[0]) + details['cover'])
         self.assertEqual('8936', resp.headers['Content-Length'])
         self.fill_basic_config({'config_uploading': 0})
         r.close()
@@ -1136,11 +1143,11 @@ class TestEditBooks(TestCase, ui_class):
         self.assertEqual('book', details['title'])
         self.assertEqual('Unknown', details['author'][0])
         r = requests.session()
-        login_page = r.get('http://127.0.0.1:8083/login')
+        login_page = r.get('http://127.0.0.1:{}/login'.format(PORTS[0]))
         token = re.search('<input type="hidden" name="csrf_token" value="(.*)">', login_page.text)
         payload = {'username': 'admin', 'password': 'admin123', 'submit':"", 'next':"/", "remember_me":"on", "csrf_token": token.group(1)}
-        r.post('http://127.0.0.1:8083/login', data=payload)
-        resp = r.get('http://127.0.0.1:8083' + details['cover'])
+        r.post('http://127.0.0.1:{}/login'.format(PORTS[0]), data=payload)
+        resp = r.get('http://127.0.0.1:{}'.format(PORTS[0]) + details['cover'])
         self.assertEqual('19501', resp.headers['Content-Length'])
         self.fill_basic_config({'config_uploading': 0})
         r.close()
@@ -1162,11 +1169,11 @@ class TestEditBooks(TestCase, ui_class):
         self.assertEqual('book', details['title'])
         self.assertEqual('Unknown', details['author'][0])
         r = requests.session()
-        login_page = r.get('http://127.0.0.1:8083/login')
+        login_page = r.get('http://127.0.0.1:{}/login'.format(PORTS[0]))
         token = re.search('<input type="hidden" name="csrf_token" value="(.*)">', login_page.text)
         payload = {'username': 'admin', 'password': 'admin123', 'submit':"", 'next':"/", "remember_me":"on", "csrf_token": token.group(1)}
-        r.post('http://127.0.0.1:8083/login', data=payload)
-        resp = r.get('http://127.0.0.1:8083' + details['cover'])
+        r.post('http://127.0.0.1:{}/login'.format(PORTS[0]), data=payload)
+        resp = r.get('http://127.0.0.1:{}'.format(PORTS[0]) + details['cover'])
         self.assertEqual('8936', resp.headers['Content-Length'])
         self.fill_basic_config({'config_uploading': 0})
         r.close()
@@ -1182,10 +1189,10 @@ class TestEditBooks(TestCase, ui_class):
         self.assertTrue(download_link.endswith('/5.epub'),
                         'Download Link has invalid format for kobo browser, has to end with filename')
         r = requests.session()
-        login_page = r.get('http://127.0.0.1:8083/login')
+        login_page = r.get('http://127.0.0.1:{}/login'.format(PORTS[0]))
         token = re.search('<input type="hidden" name="csrf_token" value="(.*)">', login_page.text)
         payload = {'username': 'admin', 'password': 'admin123', 'submit':"", 'next':"/", "remember_me":"on", "csrf_token": token.group(1)}
-        r.post('http://127.0.0.1:8083/login', data=payload)
+        r.post('http://127.0.0.1:{}/login'.format(PORTS[0]), data=payload)
         resp = r.get(download_link)
         self.assertEqual(resp.headers['Content-Type'], 'application/epub+zip')
         self.assertEqual(resp.status_code, 200)

@@ -16,6 +16,13 @@ from helper_func import save_logfiles
 from selenium.webdriver.support.ui import WebDriverWait
 from selenium.webdriver.support import expected_conditions as EC
 
+
+RESOURCES = {'ports': 1}
+
+PORTS = ['8083']
+INDEX = ""
+
+
 class TestThumbnailsEnv(unittest.TestCase, ui_class):
 
     p = None
@@ -24,11 +31,11 @@ class TestThumbnailsEnv(unittest.TestCase, ui_class):
     @classmethod
     def setUpClass(cls):
         try:
-            thumbnail_cache_path = os.path.join(CALIBRE_WEB_PATH, 'cps', 'cache', 'thumbnails')
+            thumbnail_cache_path = os.path.join(CALIBRE_WEB_PATH + INDEX, 'cps', 'cache', 'thumbnails')
             shutil.rmtree(thumbnail_cache_path, ignore_errors=True)
 
             shutil.rmtree(TEST_DB + '_3', ignore_errors=True)
-            startup(cls, cls.py_version, {'config_calibre_dir': TEST_DB},
+            startup(cls, cls.py_version, {'config_calibre_dir': TEST_DB}, port=PORTS[0], index=INDEX,
                     env={"APP_MODE": "test", "CACHE_DIR": TEST_DB + '_3' })
             time.sleep(3)
             WebDriverWait(cls.driver, 5).until(EC.presence_of_element_located((By.ID, "flash_success")))
@@ -42,7 +49,7 @@ class TestThumbnailsEnv(unittest.TestCase, ui_class):
 
     @classmethod
     def tearDownClass(cls):
-        cls.driver.get("http://127.0.0.1:8083")
+        cls.driver.get("http://127.0.0.1:" + PORTS[0])
         cls.stop_calibre_web()
         cls.driver.quit()
         cls.p.terminate()
@@ -50,7 +57,7 @@ class TestThumbnailsEnv(unittest.TestCase, ui_class):
         shutil.rmtree(TEST_DB + '_2', ignore_errors=True)
         shutil.rmtree(TEST_DB + '_3', ignore_errors=True)
         save_logfiles(cls, cls.__name__)
-        thumbnail_cache_path = os.path.join(CALIBRE_WEB_PATH, 'cps', 'cache', 'thumbnails')
+        thumbnail_cache_path = os.path.join(CALIBRE_WEB_PATH + INDEX, 'cps', 'cache', 'thumbnails')
         shutil.rmtree(thumbnail_cache_path, ignore_errors=True)
 
     def test_cover_cache_env_on_database_change(self):

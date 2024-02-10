@@ -17,12 +17,19 @@ from config_test import TEST_DB, BOOT_TIME
 from helper_func import startup, debug_startup
 from helper_func import save_logfiles
 
+
+RESOURCES = {'ports': 1}
+
+PORTS = ['8083']
+INDEX = ""
+
+
 def user_change(user):
     r = requests.session()
-    login_page = r.get('http://127.0.0.1:8083/login')
+    login_page = r.get('http://127.0.0.1:{}/login'.format(PORTS[0]))
     token = re.search('<input type="hidden" name="csrf_token" value="(.*)">', login_page.text)
     payload = {'username': user, 'password': "123AbC*!", 'submit': "", 'next': "/", "csrf_token": token.group(1)}
-    r.post('http://127.0.0.1:8083/login', data=payload)
+    r.post('http://127.0.0.1:{}/login'.format(PORTS[0]), data=payload)
     for i in range(0, 200):
         time.sleep(random.random() * 0.05)
         parameter = int(random.uniform(2, 260))
@@ -35,7 +42,7 @@ def user_change(user):
         for bit_shift in range(1, 16):
             if (parameter >> bit_shift) & 1:
                 userload['show_'+ str(1 << bit_shift)] = "on"
-        resp = r.post('http://127.0.0.1:8083/me', data=userload)
+        resp = r.post('http://127.0.0.1:{}/me'.format(PORTS[0]), data=userload)
         if resp.status_code != 200:
             print('Error: ' + user)
             break
@@ -50,7 +57,7 @@ class TestUserList(TestCase, ui_class):
     @classmethod
     def setUpClass(cls):
         try:
-            startup(cls, cls.py_version, {'config_calibre_dir': TEST_DB, "config_uploading": 1}, env = {"APP_MODE": "test"})
+            startup(cls, cls.py_version, {'config_calibre_dir': TEST_DB, "config_uploading": 1}, port=PORTS[0], index=INDEX, env = {"APP_MODE": "test"})
             time.sleep(3)
             cls.mass_create_users(1)
         except Exception:
@@ -62,7 +69,7 @@ class TestUserList(TestCase, ui_class):
         try:
             cls.stop_calibre_web()
         except:
-            cls.driver.get("http://127.0.0.1:8083")
+            cls.driver.get("http://127.0.0.1:" + PORTS[0])
             time.sleep(2)
             try:
                 cls.stop_calibre_web()
@@ -628,183 +635,183 @@ class TestUserList(TestCase, ui_class):
 
     def test_user_list_requests(self):
         r = requests.session()
-        login_page = r.get('http://127.0.0.1:8083/login')
+        login_page = r.get('http://127.0.0.1:{}/login'.format(PORTS[0]))
         token = re.search('<input type="hidden" name="csrf_token" value="(.*)">', login_page.text)
         payload = {'username': 'admin', 'password': 'admin123', 'submit':"", 'next':"/", "remember_me":"on", "csrf_token": token.group(1)}
-        result = r.post('http://127.0.0.1:8083/login', data=payload)
+        result = r.post('http://127.0.0.1:{}/login'.format(PORTS[0]), data=payload)
         self.assertEqual(200, result.status_code)
-        result = r.post('http://127.0.0.1:8083/ajax/editlistusers/hugo', data={})
+        result = r.post('http://127.0.0.1:{}/ajax/editlistusers/hugo'.format(PORTS[0]), data={})
         self.assertEqual(400, result.status_code)
         payload = {'name': 'name', 'value': 'Guest', 'pk': "2", "csrf_token": token.group(1)}
-        result = r.post('http://127.0.0.1:8083/ajax/editlistusers/name', data=payload)
+        result = r.post('http://127.0.0.1:{}/ajax/editlistusers/name'.format(PORTS[0]), data=payload)
         self.assertEqual(400, result.status_code)
         payload = {'name': 'Nurm', 'value': 'Guest', 'pk': "2", "csrf_token": token.group(1)}
-        result = r.post('http://127.0.0.1:8083/ajax/editlistusers/name', data=payload)
+        result = r.post('http://127.0.0.1:{}/ajax/editlistusers/name'.format(PORTS[0]), data=payload)
         self.assertEqual(400, result.status_code)
         payload = {'name': 'Name', 'value': 'Guest', 'pk': "2", "csrf_token": token.group(1)}
-        result = r.post('http://127.0.0.1:8083/ajax/editlistusers/name', data=payload)
+        result = r.post('http://127.0.0.1:{}/ajax/editlistusers/name'.format(PORTS[0]), data=payload)
         self.assertEqual(400, result.status_code)
         payload = {'name': 'name', 'value': 'admin', 'pk': "7", "csrf_token": token.group(1)}
-        result = r.post('http://127.0.0.1:8083/ajax/editlistusers/name', data=payload)
+        result = r.post('http://127.0.0.1:{}/ajax/editlistusers/name'.format(PORTS[0]), data=payload)
         self.assertEqual(400, result.status_code)
         payload = {'value': 'admin', 'pk': "1", "csrf_token": token.group(1)}
-        result = r.post('http://127.0.0.1:8083/ajax/editlistusers/name', data=payload)
+        result = r.post('http://127.0.0.1:{}/ajax/editlistusers/name'.format(PORTS[0]), data=payload)
         self.assertEqual(400, result.status_code)
         payload = {'name': 'name', 'pk': "3", "csrf_token": token.group(1)}
-        result = r.post('http://127.0.0.1:8083/ajax/editlistusers/name', data=payload)
+        result = r.post('http://127.0.0.1:{}/ajax/editlistusers/name'.format(PORTS[0]), data=payload)
         self.assertEqual(400, result.status_code)
         payload = {'name': 'name', 'value': 'admin', "csrf_token": token.group(1)}
-        result = r.post('http://127.0.0.1:8083/ajax/editlistusers/name', data=payload)
+        result = r.post('http://127.0.0.1:{}/ajax/editlistusers/name'.format(PORTS[0]), data=payload)
         self.assertEqual(400, result.status_code)
         payload = {'name': 'locale', 'value': 'kk', 'pk': "1", "csrf_token": token.group(1)}
-        result = r.post('http://127.0.0.1:8083/ajax/editlistusers/locale', data=payload)
+        result = r.post('http://127.0.0.1:{}/ajax/editlistusers/locale'.format(PORTS[0]), data=payload)
         self.assertEqual(400, result.status_code)
         payload = {'name': 'locale', 'value': 'kk', 'pk': "0", "csrf_token": token.group(1)}
-        result = r.post('http://127.0.0.1:8083/ajax/editlistusers/locale', data=payload)
+        result = r.post('http://127.0.0.1:{}/ajax/editlistusers/locale'.format(PORTS[0]), data=payload)
         self.assertEqual(400, result.status_code)
         payload = {'name': 'default_language', 'value': 'kk', 'pk': "1", "csrf_token": token.group(1)}
-        result = r.post('http://127.0.0.1:8083/ajax/editlistusers/default_language', data=payload)
+        result = r.post('http://127.0.0.1:{}/ajax/editlistusers/default_language'.format(PORTS[0]), data=payload)
         self.assertEqual(400, result.status_code)
         # edit roles
         payload = {'name': 'default_language', 'value': 'kk', 'pk': "1", "csrf_token": token.group(1)}
-        result = r.post('http://127.0.0.1:8083/ajax/editlistusers/edit_role', data=payload)
+        result = r.post('http://127.0.0.1:{}/ajax/editlistusers/edit_role'.format(PORTS[0]), data=payload)
         self.assertEqual(400, result.status_code)
         payload = {'value': 'true', 'field_index': '-1', 'pk': "1", "csrf_token": token.group(1)}
-        result = r.post('http://127.0.0.1:8083/ajax/editlistusers/edit_role', data=payload)
+        result = r.post('http://127.0.0.1:{}/ajax/editlistusers/edit_role'.format(PORTS[0]), data=payload)
         self.assertEqual(400, result.status_code)
         payload = {'value': 'true', 'field_index': '3', 'pk': "1", "csrf_token": token.group(1)}
-        result = r.post('http://127.0.0.1:8083/ajax/editlistusers/edit_role', data=payload)
+        result = r.post('http://127.0.0.1:{}/ajax/editlistusers/edit_role'.format(PORTS[0]), data=payload)
         self.assertEqual(400, result.status_code)
         payload = {'value': 'true', 'field_index': '1', 'pk': "1", "csrf_token": token.group(1)}  # check 1 is also accepted as valid role
-        result = r.post('http://127.0.0.1:8083/ajax/editlistusers/edit_role', data=payload)
+        result = r.post('http://127.0.0.1:{}/ajax/editlistusers/edit_role'.format(PORTS[0]), data=payload)
         self.assertEqual(200, result.status_code)
         payload = {'value': 'kiki', 'pk': "1", "csrf_token": token.group(1)}
-        result = r.post('http://127.0.0.1:8083/ajax/editlistusers/edit_role', data=payload)
+        result = r.post('http://127.0.0.1:{}/ajax/editlistusers/edit_role'.format(PORTS[0]), data=payload)
         self.assertEqual(400, result.status_code)
         payload = {'value': 'kiki', 'field_index': '16', 'pk': "1", "csrf_token": token.group(1)}
-        result = r.post('http://127.0.0.1:8083/ajax/editlistusers/edit_role', data=payload)
+        result = r.post('http://127.0.0.1:{}/ajax/editlistusers/edit_role'.format(PORTS[0]), data=payload)
         self.assertEqual(400, result.status_code)
         # sidebar roles
         payload = {'value': 'true', 'field_index': '-1', 'pk': "1", "csrf_token": token.group(1)}
-        result = r.post('http://127.0.0.1:8083/ajax/editlistusers/sidebar_test', data=payload)
+        result = r.post('http://127.0.0.1:{}/ajax/editlistusers/sidebar_test'.format(PORTS[0]), data=payload)
         self.assertEqual(400, result.status_code)
         payload = {'value': 'true', 'field_index': '3', 'pk': "1", "csrf_token": token.group(1)}
-        result = r.post('http://127.0.0.1:8083/ajax/editlistusers/sidebar_test', data=payload)
+        result = r.post('http://127.0.0.1:{}/ajax/editlistusers/sidebar_test'.format(PORTS[0]), data=payload)
         self.assertEqual(400, result.status_code)
         payload = {'value': 'true', 'field_index': '1', 'pk': "1", "csrf_token": token.group(1)}  # check 1 is also accepted as valid role
-        result = r.post('http://127.0.0.1:8083/ajax/editlistusers/sidebar_test', data=payload)
+        result = r.post('http://127.0.0.1:{}/ajax/editlistusers/sidebar_test'.format(PORTS[0]), data=payload)
         self.assertEqual(200, result.status_code)
         payload = {'value': 'kiki', 'pk': "1", "csrf_token": token.group(1)}
-        result = r.post('http://127.0.0.1:8083/ajax/editlistusers/sidebar_test', data=payload)
+        result = r.post('http://127.0.0.1:{}/ajax/editlistusers/sidebar_test'.format(PORTS[0]), data=payload)
         self.assertEqual(400, result.status_code)
         payload = {'value': 'kiki', 'field_index': '16', 'pk': "1", "csrf_token": token.group(1)}
-        result = r.post('http://127.0.0.1:8083/ajax/editlistusers/sidebar_test', data=payload)
+        result = r.post('http://127.0.0.1:{}/ajax/editlistusers/sidebar_test'.format(PORTS[0]), data=payload)
         self.assertEqual(400, result.status_code)
         # edit of deny/allow column
         payload = {'name': 'densdied_tags', 'value': 'sdsakk', "csrf_token": token.group(1)}
-        result = r.post('http://127.0.0.1:8083/ajax/editlistusers/denied_tags', data=payload)
+        result = r.post('http://127.0.0.1:{}/ajax/editlistusers/denied_tags'.format(PORTS[0]), data=payload)
         self.assertEqual(400, result.status_code)
         payload = {'name': 'densdied_tags', 'pk': "1", "csrf_token": token.group(1)}
-        result = r.post('http://127.0.0.1:8083/ajax/editlistusers/denied_tags', data=payload)
+        result = r.post('http://127.0.0.1:{}/ajax/editlistusers/denied_tags'.format(PORTS[0]), data=payload)
         self.assertEqual(400, result.status_code)
 
         # delete invalid user
         payload = {'userid': '22', "csrf_token": token.group(1)}
-        result = r.post('http://127.0.0.1:8083/ajax/deleteuser', data=payload)
+        result = r.post('http://127.0.0.1:{}/ajax/deleteuser'.format(PORTS[0]), data=payload)
         self.assertEqual("danger", json.loads(result.text)['type'])
         payload = {'name': 'kiki', "csrf_token": token.group(1)}
-        result = r.post('http://127.0.0.1:8083/ajax/deleteuser', data=payload)
+        result = r.post('http://127.0.0.1:{}/ajax/deleteuser'.format(PORTS[0]), data=payload)
         self.assertEqual("danger", json.loads(result.text)['type'])
         payload = {'userid[]': ['22'], "csrf_token": token.group(1)}
-        result = r.post('http://127.0.0.1:8083/ajax/deleteuser', data=payload)
+        result = r.post('http://127.0.0.1:{}/ajax/deleteuser'.format(PORTS[0]), data=payload)
         self.assertEqual("danger", json.loads(result.text)['type'])
 
         # mass edit of name
         payload = {'pk[]': ['5', '4'], 'value': 'kk', "csrf_token": token.group(1)}
-        result = r.post('http://127.0.0.1:8083/ajax/editlistusers/name', data=payload)
+        result = r.post('http://127.0.0.1:{}/ajax/editlistusers/name'.format(PORTS[0]), data=payload)
         self.assertEqual(400, result.status_code)
         payload = {'pk[]': ['5', '4'], "csrf_token": token.group(1)}
-        result = r.post('http://127.0.0.1:8083/ajax/editlistusers/name', data=payload)
+        result = r.post('http://127.0.0.1:{}/ajax/editlistusers/name'.format(PORTS[0]), data=payload)
         self.assertEqual(400, result.status_code)
 
         # mass edit of allow, deny column
         payload = {'action': 'kiko', 'pk[]': ["1"], 'value[]': ["1"], "csrf_token": token.group(1)}
-        result = r.post('http://127.0.0.1:8083/ajax/editlistusers/denied_tags', data=payload)
+        result = r.post('http://127.0.0.1:{}/ajax/editlistusers/denied_tags'.format(PORTS[0]), data=payload)
         self.assertEqual(400, result.status_code)
         payload = {'action': 'kiko', 'value[]': ["1"], "csrf_token": token.group(1)}
-        result = r.post('http://127.0.0.1:8083/ajax/editlistusers/denied_tags', data=payload)
+        result = r.post('http://127.0.0.1:{}/ajax/editlistusers/denied_tags'.format(PORTS[0]), data=payload)
         self.assertEqual(400, result.status_code)
         payload = {'action': 'add', 'pk[]': ["1"], 'value[]': ["77"], "csrf_token": token.group(1)}
-        result = r.post('http://127.0.0.1:8083/ajax/editlistusers/denied_tags', data=payload)
+        result = r.post('http://127.0.0.1:{}/ajax/editlistusers/denied_tags'.format(PORTS[0]), data=payload)
         self.assertEqual(400, result.status_code)
         payload = {'action': 'add', 'pk[]': ["1"], "csrf_token": token.group(1)}
-        result = r.post('http://127.0.0.1:8083/ajax/editlistusers/denied_tags', data=payload)
+        result = r.post('http://127.0.0.1:{}/ajax/editlistusers/denied_tags'.format(PORTS[0]), data=payload)
         self.assertEqual(400, result.status_code)
 
         # mass edit role
         payload = {'pk[]': ['5', '4'], 'field_index':'256', 'value': 'guhu', "csrf_token": token.group(1)}
-        result = r.post('http://127.0.0.1:8083/ajax/editlistusers/role', data=payload)
+        result = r.post('http://127.0.0.1:{}/ajax/editlistusers/role'.format(PORTS[0]), data=payload)
         self.assertEqual(400, result.status_code)
         payload = {'pk[]': ['5', '4'], 'field_index':'255', 'value': 'true', "csrf_token": token.group(1)}
-        result = r.post('http://127.0.0.1:8083/ajax/editlistusers/role', data=payload)
+        result = r.post('http://127.0.0.1:{}/ajax/editlistusers/role'.format(PORTS[0]), data=payload)
         self.assertEqual(400, result.status_code)
         payload = {'pk[]': ['5', '4'], 'field_index':'256', "csrf_token": token.group(1)}
-        result = r.post('http://127.0.0.1:8083/ajax/editlistusers/role', data=payload)
+        result = r.post('http://127.0.0.1:{}/ajax/editlistusers/role'.format(PORTS[0]), data=payload)
         self.assertEqual(400, result.status_code)
         payload = {'pk[]': ['5', '4'], 'value': 'true', "csrf_token": token.group(1)}
-        result = r.post('http://127.0.0.1:8083/ajax/editlistusers/role', data=payload)
+        result = r.post('http://127.0.0.1:{}/ajax/editlistusers/role'.format(PORTS[0]), data=payload)
         self.assertEqual(400, result.status_code)
         payload = {'field_index':'255', 'value': 'true', "csrf_token": token.group(1)}
-        result = r.post('http://127.0.0.1:8083/ajax/editlistusers/role', data=payload)
+        result = r.post('http://127.0.0.1:{}/ajax/editlistusers/role'.format(PORTS[0]), data=payload)
         self.assertEqual(400, result.status_code)
 
         # mass edit view
         payload = {'pk[]': ['5', '4'], 'field_index':'256', 'value': 'guhu', "csrf_token": token.group(1)}
-        result = r.post('http://127.0.0.1:8083/ajax/editlistusers/sidebar_view', data=payload)
+        result = r.post('http://127.0.0.1:{}/ajax/editlistusers/sidebar_view'.format(PORTS[0]), data=payload)
         self.assertEqual(400, result.status_code)
         payload = {'pk[]': ['5', '4'], 'field_index':'255', 'value': 'true', "csrf_token": token.group(1)}
-        result = r.post('http://127.0.0.1:8083/ajax/editlistusers/sidebar_view', data=payload)
+        result = r.post('http://127.0.0.1:{}/ajax/editlistusers/sidebar_view'.format(PORTS[0]), data=payload)
         self.assertEqual(400, result.status_code)
         payload = {'pk[]': ['5', '4'], 'field_index':'256', "csrf_token": token.group(1)}
-        result = r.post('http://127.0.0.1:8083/ajax/editlistusers/sidebar_view', data=payload)
+        result = r.post('http://127.0.0.1:{}/ajax/editlistusers/sidebar_view'.format(PORTS[0]), data=payload)
         self.assertEqual(400, result.status_code)
         payload = {'pk[]': ['5', '4'], 'value': 'true', "csrf_token": token.group(1)}
-        result = r.post('http://127.0.0.1:8083/ajax/editlistusers/sidebar_view', data=payload)
+        result = r.post('http://127.0.0.1:{}/ajax/editlistusers/sidebar_view'.format(PORTS[0]), data=payload)
         self.assertEqual(400, result.status_code)
         payload = {'field_index':'255', 'value': 'true', "csrf_token": token.group(1)}
-        result = r.post('http://127.0.0.1:8083/ajax/editlistusers/sidebar_view', data=payload)
+        result = r.post('http://127.0.0.1:{}/ajax/editlistusers/sidebar_view'.format(PORTS[0]), data=payload)
         self.assertEqual(400, result.status_code)
 
         #mass edit locale/default language
         payload = {'pk[]': ['5', '4'], 'value': 'kk', "csrf_token": token.group(1)}
-        result = r.post('http://127.0.0.1:8083/ajax/editlistusers/locale', data=payload)
+        result = r.post('http://127.0.0.1:{}/ajax/editlistusers/locale'.format(PORTS[0]), data=payload)
         self.assertEqual(400, result.status_code)
         payload = {'pk[]': ['5', '4'], "csrf_token": token.group(1)}
-        result = r.post('http://127.0.0.1:8083/ajax/editlistusers/locale', data=payload)
+        result = r.post('http://127.0.0.1:{}/ajax/editlistusers/locale'.format(PORTS[0]), data=payload)
         self.assertEqual(400, result.status_code)
         payload = {'pk[]': ['5', '4'], 'value': 'kk', "csrf_token": token.group(1)}
-        result = r.post('http://127.0.0.1:8083/ajax/editlistusers/default_language', data=payload)
+        result = r.post('http://127.0.0.1:{}/ajax/editlistusers/default_language'.format(PORTS[0]), data=payload)
         self.assertEqual(400, result.status_code)
 
         self.fill_basic_config({'config_anonbrowse': 1})
         time.sleep(BOOT_TIME)
         payload = {'name': 'name', 'value': 'Gast', 'pk': "2", "csrf_token": token.group(1)}
-        result = r.post('http://127.0.0.1:8083/ajax/editlistusers/name', data=payload)
+        result = r.post('http://127.0.0.1:{}/ajax/editlistusers/name'.format(PORTS[0]), data=payload)
         self.assertEqual(400, result.status_code)
         payload = {'name': 'locale', 'value': 'it', 'pk': "2", "csrf_token": token.group(1)}
-        result = r.post('http://127.0.0.1:8083/ajax/editlistusers/locale', data=payload)
+        result = r.post('http://127.0.0.1:{}/ajax/editlistusers/locale'.format(PORTS[0]), data=payload)
         self.assertEqual(400, result.status_code)
         payload = {'value': 'true', 'field_index': '1', 'pk': "2", "csrf_token": token.group(1)}
-        result = r.post('http://127.0.0.1:8083/ajax/editlistusers/admin_role', data=payload)
+        result = r.post('http://127.0.0.1:{}/ajax/editlistusers/admin_role'.format(PORTS[0]), data=payload)
         self.assertEqual(400, result.status_code)
         payload = {'value': 'true', 'field_index': '64', 'pk': "2", "csrf_token": token.group(1)}
-        result = r.post('http://127.0.0.1:8083/ajax/editlistusers/edit_role', data=payload)
+        result = r.post('http://127.0.0.1:{}/ajax/editlistusers/edit_role'.format(PORTS[0]), data=payload)
         self.assertEqual(400, result.status_code)
         payload = {'value': 'true', 'field_index': '16', 'pk': "2", "csrf_token": token.group(1)}
-        result = r.post('http://127.0.0.1:8083/ajax/editlistusers/passwd_role', data=payload)
+        result = r.post('http://127.0.0.1:{}/ajax/editlistusers/passwd_role'.format(PORTS[0]), data=payload)
         self.assertEqual(400, result.status_code)
         payload = {'value': 'true', 'field_index': '256', 'pk': "2", "csrf_token": token.group(1)}
-        result = r.post('http://127.0.0.1:8083/ajax/editlistusers/sidebar_test', data=payload)
+        result = r.post('http://127.0.0.1:{}/ajax/editlistusers/sidebar_test'.format(PORTS[0]), data=payload)
         self.assertEqual(400, result.status_code)
         r.close()
         self.fill_basic_config({'config_anonbrowse': 0})

@@ -8,6 +8,11 @@ from config_test import TEST_DB
 from helper_func import startup
 from helper_func import save_logfiles
 
+RESOURCES = {'ports': 1}
+
+PORTS = ['8083']
+INDEX = ""
+
 
 class TestAnonymous(unittest.TestCase, ui_class):
     p = None
@@ -16,13 +21,13 @@ class TestAnonymous(unittest.TestCase, ui_class):
     @classmethod
     def setUpClass(cls):
         try:
-            startup(cls, cls.py_version, {'config_calibre_dir': TEST_DB, 'config_anonbrowse': 1}, env={"APP_MODE": "test"})
+            startup(cls, cls.py_version, {'config_calibre_dir': TEST_DB, 'config_anonbrowse': 1}, index=INDEX, env={"APP_MODE": "test"})
         except Exception as e:
             print(e)
 
     @classmethod
     def tearDownClass(cls):
-        cls.driver.get("http://127.0.0.1:8083")
+        cls.driver.get("http://127.0.0.1:" + PORTS[0])
         cls.stop_calibre_web()
         # close the browser window and stop calibre-web
         cls.driver.quit()
@@ -34,7 +39,7 @@ class TestAnonymous(unittest.TestCase, ui_class):
             try:
                 self.logout()
             except:
-                self.driver.get("http://127.0.0.1:8083")
+                self.driver.get("http://127.0.0.1:" + PORTS[0])
                 self.logout()
             self.check_element_on_page((By.ID, "top_user")).click()
             self.login('admin', 'admin123')

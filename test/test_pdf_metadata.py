@@ -17,6 +17,12 @@ from selenium.webdriver.support.ui import WebDriverWait
 from selenium.webdriver.support import expected_conditions as EC
 
 
+RESOURCES = {'ports': 1}
+
+PORTS = ['8083']
+INDEX = ""
+
+
 class TestUploadPDF(TestCase, ui_class):
     p = None
     driver = None
@@ -24,7 +30,7 @@ class TestUploadPDF(TestCase, ui_class):
     @classmethod
     def setUpClass(cls):
         try:
-            startup(cls, cls.py_version, {'config_calibre_dir': TEST_DB, 'config_uploading': 1}, env={"APP_MODE": "test"})
+            startup(cls, cls.py_version, {'config_calibre_dir': TEST_DB, 'config_uploading': 1}, port=PORTS[0], index=INDEX, env={"APP_MODE": "test"})
             time.sleep(3)
             WebDriverWait(cls.driver, 5).until(EC.presence_of_element_located((By.ID, "flash_success")))
         except Exception:
@@ -37,7 +43,7 @@ class TestUploadPDF(TestCase, ui_class):
             os.remove(os.path.join(base_path, 'files', 'book1.pdf'))
         except FileNotFoundError:
             pass
-        cls.driver.get("http://127.0.0.1:8083")
+        cls.driver.get("http://127.0.0.1:" + PORTS[0])
         cls.stop_calibre_web()
         # close the browser window and stop calibre-web
         cls.driver.quit()

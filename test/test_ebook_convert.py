@@ -15,6 +15,12 @@ from selenium.common.exceptions import UnexpectedAlertPresentException
 # from parameterized import parameterized_class
 from helper_func import startup
 from helper_func import save_logfiles
+import shutil
+
+RESOURCES = {'ports': 2}
+
+PORTS = ['8083', '1025']
+INDEX = ""
 
 
 @unittest.skipIf(helper_email_convert.is_calibre_not_present(), "Skipping convert, calibre not found")
@@ -28,7 +34,7 @@ class TestEbookConvertCalibre(unittest.TestCase, ui_class):
         # start email server
         cls.email_server = AIOSMTPServer(
             hostname='127.0.0.1',
-            port=1025,
+            port=int(PORTS[1]),
             only_ssl=False,
             timeout=10
         )
@@ -38,10 +44,10 @@ class TestEbookConvertCalibre(unittest.TestCase, ui_class):
         try:
             startup(cls, cls.py_version, {'config_calibre_dir':TEST_DB,
                                           'config_kepubifypath':'',
-                                          'config_converterpath':helper_email_convert.calibre_path()}, env={"APP_MODE": "test"})
+                                          'config_binariesdir':helper_email_convert.calibre_path()}, port=PORTS[0], index=INDEX, env={"APP_MODE": "test"})
 
             cls.edit_user('admin', {'email': 'a5@b.com', 'kindle_mail': 'a1@b.com'})
-            cls.setup_server(True, {'mail_server':'127.0.0.1', 'mail_port':'1025',
+            cls.setup_server(True, {'mail_server':'127.0.0.1', 'mail_port':PORTS[1],
                                     'mail_use_ssl':'None', 'mail_login':'name@host.com', 'mail_password_e':'1234',
                                     'mail_from':'name@host.com'})
             time.sleep(2)
@@ -52,7 +58,8 @@ class TestEbookConvertCalibre(unittest.TestCase, ui_class):
 
     @classmethod
     def tearDownClass(cls):
-        cls.driver.get("http://127.0.0.1:8083")
+        shutil.rmtree(os.path.join(CALIBRE_WEB_PATH + INDEX, 'exe dir'), ignore_errors=True)
+        cls.driver.get("http://127.0.0.1:" + PORTS[0])
         cls.email_server.stop()
         try:
             cls.stop_calibre_web()
@@ -72,7 +79,7 @@ class TestEbookConvertCalibre(unittest.TestCase, ui_class):
 
     # deactivate converter and check send to kindle and convert are not visible anymore
     def test_convert_deactivate(self):
-        self.fill_basic_config({'config_converterpath': ""})
+        self.fill_basic_config({'config_binariesdir': ""})
         self.goto_page('nav_about')
         element = self.check_element_on_page((By.XPATH, "//tr/th[text()='Ebook converter']/following::td[1]"))
         self.assertEqual(element.text, 'not installed')
@@ -81,55 +88,64 @@ class TestEbookConvertCalibre(unittest.TestCase, ui_class):
         vals = self.get_convert_book(1)
         self.assertFalse(vals['btn_from'])
         self.assertFalse(vals['btn_to'])
-        # self.fill_basic_config({'config_converterpath': ""})
-        self.fill_basic_config({'config_converterpath':helper_email_convert.calibre_path()})
+        # self.fill_basic_config({'config_binariesdir': ""})
+        self.fill_basic_config({'config_binariesdir':helper_email_convert.calibre_path()})
 
     # Set excecutable to wrong exe and start convert
     # set excecutable not existing and start convert
     # set excecutable non excecutable and start convert
     def test_convert_wrong_excecutable(self):
         tasks = self.check_tasks()
-        self.fill_basic_config({'config_converterpath':'/opt/calibre/ebook-polish'})
-        self.goto_page('nav_about')
-        element = self.check_element_on_page((By.XPATH, "//tr/th[text()='Ebook converter']/following::td[1]"))
-        self.assertEqual(element.text, 'not installed')
-        details = self.get_book_details(5)
-        self.assertEqual(len(details['kindle']), 1)
-        vals = self.get_convert_book(5)
-        # ToDo: Buttons should be invisible and convert should not be possible
-        self.assertTrue(vals['btn_from'])
-        self.assertTrue(vals['btn_to'])
-
-        # ToDo: change behavior convert should only be visible if ebookconverter has valid entry
-        self.fill_basic_config({'config_converterpath':'/opt/calibre/kuku'})
-        details = self.get_book_details(5)
-        self.assertEqual(len(details['kindle']), 1)
-        details['kindlebtn'].click()
-        # conv = self.check_element_on_page((By.LINK_TEXT, details['kindle'][0].text))
-        # self.assertTrue(conv)
-        # conv.click()
+        self.fill_basic_config({'config_binariesdir':'/opt/calibree/ebook-polish'})
+        self.assertTrue(self.check_element_on_page((By.ID, "flash_danger")))
+        self.fill_basic_config({'config_binariesdir': '/opt/calibre/bin'})
+        self.assertTrue(self.check_element_on_page((By.ID, "flash_danger")))
+        self.fill_basic_config({'config_binariesdir':'/opt'})
+        self.assertTrue(self.check_element_on_page((By.ID, "flash_danger")))
+        self.fill_basic_config({'config_binariesdir':''})
         self.assertTrue(self.check_element_on_page((By.ID, "flash_success")))
         self.goto_page('nav_about')
         element = self.check_element_on_page((By.XPATH, "//tr/th[text()='Ebook converter']/following::td[1]"))
         self.assertEqual(element.text, 'not installed')
-        # ToDo: check convert function
+        details = self.get_book_details(5)
+        self.assertEqual(len(details['kindle']), 1)
         vals = self.get_convert_book(5)
-        # self.assertFalse(vals['btn_from'])
-        # self.assertFalse(vals['btn_to'])
+        self.assertFalse(vals['btn_from'])
+        self.assertFalse(vals['btn_to'])
 
-        nonexec = os.path.join(CALIBRE_WEB_PATH, 'app.db')
-        self.fill_basic_config({'config_converterpath': nonexec})
+        dst_dir = os.path.join(CALIBRE_WEB_PATH + INDEX, 'exe dir')
+        # os.mkdir(dst_dir)
+        try:
+            shutil.copytree(helper_email_convert.calibre_path(), dst_dir)
+        except (shutil.Error, PermissionError):
+            pass
+        os.chmod(os.path.join(dst_dir, 'ebook-convert'), 0o664)
+        self.fill_basic_config({'config_binariesdir': dst_dir})
+        self.assertTrue(self.check_element_on_page((By.ID, "flash_danger")))
+        os.chmod(os.path.join(dst_dir, 'ebook-convert'), 0o755)
+        self.fill_basic_config({'config_binariesdir': dst_dir})
+        self.assertTrue(self.check_element_on_page((By.ID, "flash_success")))
+        os.chmod(os.path.join(dst_dir, 'ebook-convert'), 0o664)
+
         self.goto_page('nav_about')
         element = self.check_element_on_page((By.XPATH, "//tr/th[text()='Ebook converter']/following::td[1]"))
         self.assertEqual(element.text, 'Execution permissions missing')
         details = self.get_book_details(5)
         self.assertEqual(len(details['kindle']), 1)
         details['kindlebtn'].click()
-        # conv = self.check_element_on_page((By.LINK_TEXT, details['kindle'][0].text))
-        # self.assertTrue(conv)
-        # conv.click()
-        # ToDo: check convert function
+
         vals = self.get_convert_book(5)
+        self.assertTrue(vals['btn_from'])
+        self.assertTrue(vals['btn_to'])
+        select = Select(vals['btn_from'])
+        select.select_by_visible_text('EPUB')
+        select = Select(vals['btn_to'])
+        select.select_by_visible_text('LRF')
+        self.check_element_on_page((By.ID, "btn-book-convert")).click()
+        time.sleep(1)
+        self.assertTrue(self.check_element_on_page((By.ID, "flash_success")))
+        time.sleep(4)
+
         i = 0
         while i < 10:
             time.sleep(2)
@@ -142,7 +158,9 @@ class TestEbookConvertCalibre(unittest.TestCase, ui_class):
         if len(ret) > 1:
             self.assertEqual(ret[-2]['result'], 'Failed')
         self.assertEqual(ret[-1]['result'], 'Failed')
-        self.fill_basic_config({'config_converterpath': helper_email_convert.calibre_path()})
+        self.fill_basic_config({'config_binariesdir': helper_email_convert.calibre_path()})
+        self.assertTrue(self.check_element_on_page((By.ID, "flash_success")))
+        shutil.rmtree(dst_dir, ignore_errors=True)
 
 
     # set parameters for convert ( --margin-right 11.9) and start conversion -> conversion okay
@@ -441,7 +459,7 @@ class TestEbookConvertCalibre(unittest.TestCase, ui_class):
         self.assertTrue(len(formats7), 9)
         formats1 = self.driver.find_elements(By.XPATH, "//*[starts-with(@id,'btnGroupDrop1')]")
         self.assertTrue(len(formats1), 1)
-        self.driver.get("http://127.0.0.1:8083/")
+        self.driver.get("http://127.0.0.1:{}/".format(PORTS[0]))
         self.delete_shelf('bookFORMAT')
 
 
@@ -639,6 +657,7 @@ class TestEbookConvertCalibre(unittest.TestCase, ui_class):
     def test_calibre_log(self):
         tasks = self.check_tasks()
         self.fill_basic_config({'config_log_level': 'DEBUG'})
+        time.sleep(3)
         self.assertTrue(self.check_element_on_page((By.ID, "flash_success")))
         vals = self.get_convert_book(11)
         select = Select(vals['btn_from'])
@@ -658,7 +677,7 @@ class TestEbookConvertCalibre(unittest.TestCase, ui_class):
             i += 1
         self.assertEqual(ret[-1]['result'], 'Failed')
         # check Debug entry from starting
-        with open(os.path.join(CALIBRE_WEB_PATH, 'calibre-web.log'), 'r') as logfile:
+        with open(os.path.join(CALIBRE_WEB_PATH + INDEX, 'calibre-web.log'), 'r') as logfile:
             data = logfile.read()
         self.assertTrue("ValueError: No plugin to handle output format: odt" in data)
         self.assertTrue("ebook converter failed with error while converting book" in data)
@@ -680,7 +699,7 @@ class TestEbookConvertCalibre(unittest.TestCase, ui_class):
             i += 1
         self.assertEqual(ret1[-1]['result'], 'Finished')
         # check Debug entry from starting
-        with open(os.path.join(CALIBRE_WEB_PATH, 'calibre-web.log'), 'r') as logfile:
+        with open(os.path.join(CALIBRE_WEB_PATH + INDEX, 'calibre-web.log'), 'r') as logfile:
             data = logfile.read()
         try:
             self.assertTrue("1% Converting input to HTML" in data)

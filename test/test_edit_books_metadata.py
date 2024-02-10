@@ -14,6 +14,12 @@ from helper_func import startup, add_dependency, remove_dependency
 from helper_func import save_logfiles
 
 
+RESOURCES = {'ports': 1}
+
+PORTS = ['8083']
+INDEX = ""
+
+
 class TestLoadMetadata(TestCase, ui_class):
     p = None
     driver = None
@@ -23,7 +29,7 @@ class TestLoadMetadata(TestCase, ui_class):
     def setUpClass(cls):
         add_dependency(cls.dependency, cls.__name__)
         try:
-            startup(cls, cls.py_version, {'config_calibre_dir': TEST_DB}, env={"APP_MODE": "test"})
+            startup(cls, cls.py_version, {'config_calibre_dir': TEST_DB}, port=PORTS[0], index=INDEX, env={"APP_MODE": "test"})
             time.sleep(3)
         except Exception:
             cls.driver.quit()
@@ -31,7 +37,7 @@ class TestLoadMetadata(TestCase, ui_class):
 
     @classmethod
     def tearDownClass(cls):
-        cls.driver.get("http://127.0.0.1:8083")
+        cls.driver.get("http://127.0.0.1:" + PORTS[0])
         cls.stop_calibre_web()
         # close the browser window and stop calibre-web
         cls.driver.quit()

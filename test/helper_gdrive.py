@@ -8,6 +8,7 @@ import json
 import os
 import time
 from config_test import base_path
+import re
 
 
 def get_credentials():
@@ -33,6 +34,11 @@ def prepare_gdrive():
     except ResourceNotFound:
         # old path not found on googledrive
         pass
+    except RuntimeError as e:
+        id = re.search(".*with id (.*) has more.*", str(e))[1]
+        for ele in fs._childrenById(id):
+            fs.google_resource().files().delete(fileId=ele['id']).execute()
+        fs.removetree('test')
 
     # copy database from local to gdrive
     test = fs.makedir('test')

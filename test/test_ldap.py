@@ -15,6 +15,12 @@ import requests
 from helper_func import save_logfiles
 
 
+RESOURCES = {'ports': 2}
+
+PORTS = ['8083', '3268']
+INDEX = ""
+
+
 class TestLdapLogin(unittest.TestCase, ui_class):
 
     p = None
@@ -30,10 +36,12 @@ class TestLdapLogin(unittest.TestCase, ui_class):
         add_dependency(cls.dep_line, cls.__name__)
 
         try:
-            cls.server = TestLDAPServer(config=4, port=3268, encrypt=None)
+            cls.server = TestLDAPServer(config=4, port=int(PORTS[1]), encrypt=None)
             cls.server.start()
-            startup(cls, cls.py_version, {'config_calibre_dir':TEST_DB,'config_login_type':'Use LDAP Authentication'},
-                    env={"APP_MODE": "test"})
+            startup(cls, cls.py_version, {'config_calibre_dir':TEST_DB,
+                                          'config_embed_metadata': 0,
+                                          'config_login_type':'Use LDAP Authentication'},
+                    port=PORTS[0], index=INDEX, env={"APP_MODE": "test"})
             cls.server.stopListen()
         except Exception as e:
             print(e)
@@ -43,7 +51,7 @@ class TestLdapLogin(unittest.TestCase, ui_class):
     @classmethod
     def tearDownClass(cls):
         try:
-            cls.driver.get("http://127.0.0.1:8083")
+            cls.driver.get("http://127.0.0.1:{}".format(PORTS[0]))
             if not cls.check_user_logged_in('admin'):
                 cls.login('admin','admin123')
             cls.stop_calibre_web()
@@ -55,7 +63,7 @@ class TestLdapLogin(unittest.TestCase, ui_class):
         # close the browser window and stop calibre-web
         # remove_dependency(cls.dep_line)
         save_logfiles(cls, cls.__name__)
-        shutil.rmtree(os.path.join(CALIBRE_WEB_PATH, 'files'), ignore_errors=True)
+        shutil.rmtree(os.path.join(CALIBRE_WEB_PATH + INDEX, 'files'), ignore_errors=True)
 
     @classmethod
     def tearDown(cls):
@@ -65,7 +73,7 @@ class TestLdapLogin(unittest.TestCase, ui_class):
             print(e)
         if not cls.check_user_logged_in('admin'):
             try:
-                cls.driver.get("http://127.0.0.1:8083")
+                cls.driver.get("http://127.0.0.1:{}".format(PORTS[0]))
             except:
                 pass
 
@@ -213,7 +221,7 @@ class TestLdapLogin(unittest.TestCase, ui_class):
     def test_LDAP_login(self):
         # configure ldap correct
         self.fill_basic_config({'config_ldap_provider_url': '127.0.0.1',
-                                'config_ldap_port': '3268',
+                                'config_ldap_port': PORTS[1],
                                 'config_ldap_authentication': 'Simple',
                                 'config_ldap_dn': 'ou=people,dc=calibreweb,dc=com',
                                 'config_ldap_serv_username': 'cn=root,dc=calibreweb,dc=com',
@@ -236,7 +244,7 @@ class TestLdapLogin(unittest.TestCase, ui_class):
         self.assertTrue(message)
         self.assertTrue('LDAP Server' in message.text)
         # start ldap
-        self.server.relisten(config=1, port=3268, encrypt=None)
+        self.server.relisten(config=1, port=int(PORTS[1]), encrypt=None)
         # try login, wrong password
         self.login('user0', 'terce')
         message= self.check_element_on_page((By.ID, "flash_danger"))
@@ -269,7 +277,7 @@ class TestLdapLogin(unittest.TestCase, ui_class):
 
     def test_LDAP_import_memberfield(self):
         self.fill_basic_config({'config_ldap_provider_url': '127.0.0.1',
-                                'config_ldap_port': '3268',
+                                'config_ldap_port': PORTS[1],
                                 'config_ldap_authentication': 'Simple',
                                 'config_ldap_dn': 'dc=calibreweb,dc=com',
                                 'config_ldap_serv_username': 'cn=root,dc=calibreweb,dc=com',
@@ -284,7 +292,7 @@ class TestLdapLogin(unittest.TestCase, ui_class):
         self.assertTrue(self.check_element_on_page((By.ID, "flash_success")))
         time.sleep(BOOT_TIME)
         # stop/start ldap with missing user, wrong entry (no uid field, wrong dn field)
-        self.server.relisten(config=5, port=3268, encrypt=None)
+        self.server.relisten(config=5, port=int(PORTS[1]), encrypt=None)
         # start import -> error
         self.goto_page('admin_setup')
         imprt = self.check_element_on_page((By.ID, "import_ldap_users"))
@@ -326,7 +334,7 @@ class TestLdapLogin(unittest.TestCase, ui_class):
         # configure LDAP
         # ToDo: configuration of different authentication settings
         self.fill_basic_config({'config_ldap_provider_url': '127.0.0.1',
-                                'config_ldap_port': '3268',
+                                'config_ldap_port': PORTS[1],
                                 'config_ldap_authentication': 'Simple',
                                 'config_ldap_dn': 'dc=calibreweb,dc=com',
                                 'config_ldap_serv_username': 'cn=root,dc=calibreweb,dc=com',
@@ -352,7 +360,7 @@ class TestLdapLogin(unittest.TestCase, ui_class):
         self.check_element_on_page((By.ID, "DialogFinished")).click()
         time.sleep(2)
         # start ldap with no groups
-        self.server.relisten(config=1, port=3268, encrypt=None)
+        self.server.relisten(config=1, port=int(PORTS[1]), encrypt=None)
         # print('new setup config 1')
         time.sleep(3)
         # start import -> no user found
@@ -365,7 +373,7 @@ class TestLdapLogin(unittest.TestCase, ui_class):
         self.check_element_on_page((By.ID, "DialogFinished")).click()
         time.sleep(2)
         # stop/start ldap with groupofnames, 1 email adress, wrong group name, member name
-        self.server.relisten(config=2, port=3268, encrypt=None)
+        self.server.relisten(config=2, port=int(PORTS[1]), encrypt=None)
         # print('new setup config 2')
         time.sleep(5)
         self.fill_basic_config({'config_ldap_group_object_filter': '(& (objectclass=groupofnames)(cn=%s))',
@@ -460,7 +468,7 @@ class TestLdapLogin(unittest.TestCase, ui_class):
         self.edit_user('us@er13', {'delete': 1})
         # stop/start ldap with poxixusergroup, no email, 2 email adresses
         # print('new setup config 3')
-        self.server.relisten(config=3, port=3268, encrypt=None)
+        self.server.relisten(config=3, port=int(PORTS[1]), encrypt=None)
         time.sleep(3)
         self.fill_basic_config({'config_ldap_group_object_filter': '(& (objectclass=posixGroup)(cn=%s))',
                                 'config_ldap_group_name':'cps','config_ldap_group_members_field':'memberuid'})
@@ -486,7 +494,7 @@ class TestLdapLogin(unittest.TestCase, ui_class):
         self.edit_user('user12', {'delete': 1})
 
         # stop/start ldap with missing user, wrong entry (no uid field, wrong dn field)
-        self.server.relisten(config=4, port=3268, encrypt=None)
+        self.server.relisten(config=4, port=int(PORTS[1]), encrypt=None)
         # print('new setup config 4')
         self.fill_basic_config({'config_ldap_group_object_filter': '(& (objectclass=groupofnames)(cn=%s))',
                                 'config_ldap_group_members_field':'member'})
@@ -535,7 +543,7 @@ class TestLdapLogin(unittest.TestCase, ui_class):
     def test_LDAP_SSL(self):
         # configure ssl LDAP
         self.fill_basic_config({'config_ldap_provider_url': '127.0.0.1',
-                                'config_ldap_port': '3268',
+                                'config_ldap_port': PORTS[1],
                                 'config_ldap_authentication': 'Simple',
                                 'config_ldap_dn': 'ou=people,dc=calibreweb,dc=com',
                                 'config_ldap_serv_username': 'cn=root,dc=calibreweb,dc=com',
@@ -552,7 +560,7 @@ class TestLdapLogin(unittest.TestCase, ui_class):
         self.create_user('user0',{'email':'user0@exi.com','password':'1235AbC*!'})
         self.assertTrue(self.check_element_on_page((By.ID, "flash_success")))
         # start SSl LDAP
-        self.server.relisten(config=1, port=3268, encrypt="SSL")
+        self.server.relisten(config=1, port=int(PORTS[1]), encrypt="SSL")
         # logout
         self.logout()
         # login as LDAP user
@@ -580,20 +588,20 @@ class TestLdapLogin(unittest.TestCase, ui_class):
     # if this test isn't running anymore delete all certificate files and regenerate them
     # @unittest.skip('Unknown how to test certificate')
     def test_LDAP_SSL_CERTIFICATE(self):
-        shutil.rmtree(os.path.join(CALIBRE_WEB_PATH, 'files'), ignore_errors=True)
-        os.makedirs(os.path.join(CALIBRE_WEB_PATH, 'files'))
+        shutil.rmtree(os.path.join(CALIBRE_WEB_PATH + INDEX, 'files'), ignore_errors=True)
+        os.makedirs(os.path.join(CALIBRE_WEB_PATH + INDEX, 'files'))
         for f in ['ca.cert.pem', 'client.crt', 'client.key']:
-            dest = os.path.join(CALIBRE_WEB_PATH, 'files', f)
+            dest = os.path.join(CALIBRE_WEB_PATH + INDEX, 'files', f)
             src = os.path.join(base_path, 'files', f)
             shutil.copy(src, dest)
 
-        real_ca_file = os.path.join(CALIBRE_WEB_PATH, 'files', 'ca.cert.pem')
-        real_cert_file = os.path.join(CALIBRE_WEB_PATH, 'files', 'client.crt')
-        real_key_file = os.path.join(CALIBRE_WEB_PATH, 'files', 'client.key')
+        real_ca_file = os.path.join(CALIBRE_WEB_PATH + INDEX, 'files', 'ca.cert.pem')
+        real_cert_file = os.path.join(CALIBRE_WEB_PATH + INDEX, 'files', 'client.crt')
+        real_key_file = os.path.join(CALIBRE_WEB_PATH + INDEX, 'files', 'client.key')
 
         # configure ssl LDAP
         self.fill_basic_config({'config_ldap_provider_url': socket.gethostname(),
-                                'config_ldap_port': '3268',
+                                'config_ldap_port': PORTS[1],
                                 'config_ldap_authentication': 'Simple',
                                 'config_ldap_dn': 'ou=people,dc=calibreweb,dc=com',
                                 'config_ldap_serv_username': 'cn=root,dc=calibreweb,dc=com',
@@ -613,7 +621,7 @@ class TestLdapLogin(unittest.TestCase, ui_class):
         self.create_user('user0',{'email':'user0@exi.com','password':'1235AbC*!'})
         self.assertTrue(self.check_element_on_page((By.ID, "flash_success")))
         # start SSl LDAP
-        self.server.relisten(config=1, port=3268, encrypt="SSL", validate=True)
+        self.server.relisten(config=1, port=int(PORTS[1]), encrypt="SSL", validate=True)
         # logout
         self.logout()
         # login as LDAP user
@@ -648,7 +656,7 @@ class TestLdapLogin(unittest.TestCase, ui_class):
     def test_LDAP_STARTTLS(self):
         # configure LDAP STARTTLS
         self.fill_basic_config({'config_ldap_provider_url': '127.0.0.1',
-                                'config_ldap_port': '3268',
+                                'config_ldap_port': PORTS[1],
                                 'config_ldap_authentication': 'Simple',
                                 'config_ldap_dn': 'ou=people,dc=calibreweb,dc=com',
                                 'config_ldap_serv_username': 'cn=root,dc=calibreweb,dc=com',
@@ -664,7 +672,7 @@ class TestLdapLogin(unittest.TestCase, ui_class):
         self.create_user('user0',{'email':'user0@exi.com','password':'1236AbC*!'})
         self.assertTrue(self.check_element_on_page((By.ID, "flash_success")))
         # start SSl LDAP
-        self.server.relisten(config=1, port=3268, encrypt="TLS")
+        self.server.relisten(config=1, port=int(PORTS[1]), encrypt="TLS")
         # logout
         self.logout()
         # login as LDAP user
@@ -754,7 +762,7 @@ class TestLdapLogin(unittest.TestCase, ui_class):
 
     def test_ldap_authentication(self):
         self.fill_basic_config({'config_ldap_provider_url': '127.0.0.1',
-                                'config_ldap_port': '3268',
+                                'config_ldap_port': PORTS[1],
                                 'config_ldap_authentication': 'Anonymous',
                                 'config_ldap_dn': 'ou=people,dc=calibreweb,dc=com',
                                 'config_ldap_user_object': 'uid=%s',
@@ -768,7 +776,7 @@ class TestLdapLogin(unittest.TestCase, ui_class):
         self.create_user('user0',{'email':'user0@exi.com','password':'1236AbC*!'})
         self.assertTrue(self.check_element_on_page((By.ID, "flash_success")))
 
-        self.server.relisten(config=1, port=3268, encrypt=None, auth=0)
+        self.server.relisten(config=1, port=int(PORTS[1]), encrypt=None, auth=0)
         # logout
         self.logout()
         # login as LDAP user
@@ -778,7 +786,7 @@ class TestLdapLogin(unittest.TestCase, ui_class):
         self.logout()
 
         # Change server to min unauthenticated
-        self.server.relisten(config=1, port=3268, encrypt=None, auth=1)
+        self.server.relisten(config=1, port=int(PORTS[1]), encrypt=None, auth=1)
         # login as LDAP user
         self.login('user0', 'terces')
         message=self.check_element_on_page((By.ID, "flash_danger"))
@@ -800,7 +808,7 @@ class TestLdapLogin(unittest.TestCase, ui_class):
         # logout
         self.logout()
         # Change server to min authenticate
-        self.server.relisten(config=1, port=3268, encrypt=None, auth=2)
+        self.server.relisten(config=1, port=int(PORTS[1]), encrypt=None, auth=2)
 
         # login as LDAP user
         self.login('user0', 'terces')
@@ -831,7 +839,7 @@ class TestLdapLogin(unittest.TestCase, ui_class):
 
     def test_ldap_opds_download_book(self):
         self.fill_basic_config({'config_ldap_provider_url': '127.0.0.1',
-                                'config_ldap_port': '3268',
+                                'config_ldap_port': PORTS[1],
                                 'config_ldap_authentication': 'Simple',
                                 'config_ldap_dn': 'ou=people,dc=calibreweb,dc=com',
                                 'config_ldap_serv_username': 'cn=root,dc=calibreweb,dc=com',
@@ -846,26 +854,26 @@ class TestLdapLogin(unittest.TestCase, ui_class):
         self.edit_user('admin', {'download_role': 0})
         time.sleep(3)
         # start ldap
-        self.server.relisten(config=2, port=3268, encrypt=None)
+        self.server.relisten(config=2, port=int(PORTS[1]), encrypt=None)
         # create new user
         self.create_user('执一',{'email':'use10@oxi.com','password':'1234AbC*!', 'download_role': 1})
         self.assertTrue(self.check_element_on_page((By.ID, "flash_success")))
         self.logout()
 
-        r = requests.get('http://127.0.0.1:8083/opds', auth=('admin', 'admin123'))
+        r = requests.get('http://127.0.0.1:{}/opds'.format(PORTS[0]), auth=('admin', 'admin123'))
         self.assertEqual(200, r.status_code)
         # try to login with wrong password for user
-        r = requests.get('http://127.0.0.1:8083/opds', auth=('执一'.encode('utf-8'), 'wrong'))
+        r = requests.get('http://127.0.0.1:{}/opds'.format(PORTS[0]), auth=('执一'.encode('utf-8'), 'wrong'))
         self.assertEqual(401, r.status_code)
         # login user and check content
-        r = requests.get('http://127.0.0.1:8083/opds', auth=('执一'.encode('utf-8'), 'eekretsay'))
+        r = requests.get('http://127.0.0.1:{}/opds'.format(PORTS[0]), auth=('执一'.encode('utf-8'), 'eekretsay'))
         self.assertEqual(200, r.status_code)
         elements = self.get_opds_index(r.text)
-        r = requests.get('http://127.0.0.1:8083' + elements['Recently added Books']['link'],
+        r = requests.get('http://127.0.0.1:{}'.format(PORTS[0]) + elements['Recently added Books']['link'],
                          auth=('执一'.encode('utf-8'), 'eekretsay'))
         entries = self.get_opds_feed(r.text)
         # check download book
-        r = requests.get('http://127.0.0.1:8083' + entries['elements'][0]['download'],
+        r = requests.get('http://127.0.0.1:{}'.format(PORTS[0]) + entries['elements'][0]['download'],
                          auth=('执一'.encode('utf-8'), 'eekretsay'))
         self.assertEqual(len(r.content), 28590)
         self.assertEqual(r.headers['Content-Type'], 'application/pdf')
@@ -873,22 +881,22 @@ class TestLdapLogin(unittest.TestCase, ui_class):
         # create cookies by logging in to admin account and try to download book again
         req_session = requests.session()
         payload = {'username': 'admin', 'password': 'admin123', 'submit': "", 'next': "/", "remember_me": "on"}
-        req_session.post('http://127.0.0.1:8083/login', data=payload)
+        req_session.post('http://127.0.0.1:{}/login'.format(PORTS[0]), data=payload)
         # admin is logged in via cookies, admin is not allowed to download, no auth credentials provided
-        r = req_session.get('http://127.0.0.1:8083' + entries['elements'][0]['download'])
+        r = req_session.get('http://127.0.0.1:{}'.format(PORTS[0]) + entries['elements'][0]['download'])
         self.assertEqual(401, r.status_code)
         # admin is logged in via cookies, admin is not allowed to download, auth credentials for user provided
-        r = req_session.get('http://127.0.0.1:8083' + entries['elements'][0]['download'],
+        r = req_session.get('http://127.0.0.1:{}'.format(PORTS[0]) + entries['elements'][0]['download'],
                             auth=('执一'.encode('utf-8'), 'eekretsay'))
         self.assertEqual(200, r.status_code)
 
         # logout admin account, cookies now invalid,
         # now login is done via not existing basic header, means no login, guest account is deactivated
-        req_session.get('http://127.0.0.1:8083/logout')
-        r = req_session.get('http://127.0.0.1:8083' + entries['elements'][0]['download'])
+        req_session.get('http://127.0.0.1:{}/logout'.format(PORTS[0]))
+        r = req_session.get('http://127.0.0.1:{}'.format(PORTS[0]) + entries['elements'][0]['download'])
         self.assertEqual(401, r.status_code)
         # auth credentials for user provided, invalid cookies
-        r = req_session.get('http://127.0.0.1:8083' + entries['elements'][0]['download'],
+        r = req_session.get('http://127.0.0.1:{}'.format(PORTS[0]) + entries['elements'][0]['download'],
                             auth=('执一'.encode('utf-8'), 'eekretsay'))
         self.assertEqual(200, r.status_code)
         # Close session, delete cookies
@@ -901,17 +909,17 @@ class TestLdapLogin(unittest.TestCase, ui_class):
         self.assertTrue(self.check_element_on_page((By.ID, "flash_success")))
         self.logout()
         # try to download book without download rights
-        r = requests.get('http://127.0.0.1:8083'+ entries['elements'][0]['download'],
+        r = requests.get('http://127.0.0.1:{}'.format(PORTS[0])+ entries['elements'][0]['download'],
                          auth=('执一'.encode('utf-8'), 'terces'))
         self.assertEqual(401, r.status_code)
         # stop ldap
         self.server.stopListen()
         time.sleep(3)
         # try to login without ldap reachable
-        r = requests.get('http://127.0.0.1:8083/opds', auth=('执一'.encode('utf-8'), 'eekretsay'))
+        r = requests.get('http://127.0.0.1:{}/opds'.format(PORTS[0]), auth=('执一'.encode('utf-8'), 'eekretsay'))
         self.assertEqual(401, r.status_code)
         # user is logged in via cookies, admin is not allowed to download
-        r = req_session.get('http://127.0.0.1:8083' + entries['elements'][0]['download'])
+        r = req_session.get('http://127.0.0.1:{}'.format(PORTS[0]) + entries['elements'][0]['download'])
         self.assertEqual(401, r.status_code)
 
         # login admin and delete user0
@@ -921,7 +929,7 @@ class TestLdapLogin(unittest.TestCase, ui_class):
 
     def test_ldap_opds_anonymous(self):
         self.fill_basic_config({'config_ldap_provider_url': '127.0.0.1',
-                                'config_ldap_port': '3268',
+                                'config_ldap_port': PORTS[1],
                                 'config_ldap_authentication': 'Simple',
                                 'config_ldap_dn': 'ou=people,dc=calibreweb,dc=com',
                                 'config_ldap_serv_username': 'cn=root,dc=calibreweb,dc=com',
@@ -939,32 +947,32 @@ class TestLdapLogin(unittest.TestCase, ui_class):
         self.edit_user('Guest', {'download_role': 1})
         self.edit_user('admin', {'download_role': 0})
         # start ldap
-        self.server.relisten(config=2, port=3268, encrypt=None)
+        self.server.relisten(config=2, port=int(PORTS[1]), encrypt=None)
         self.logout()
         # access opds feed
-        r = requests.get('http://127.0.0.1:8083/opds')
+        r = requests.get('http://127.0.0.1:{}/opds'.format(PORTS[0]))
         self.assertEqual(200, r.status_code)
         elements = self.get_opds_index(r.text)
         # check download from guest account is possible
-        r = requests.get('http://127.0.0.1:8083' + elements['Recently added Books']['link'])
+        r = requests.get('http://127.0.0.1:{}'.format(PORTS[0]) + elements['Recently added Books']['link'])
         entries = self.get_opds_feed(r.text)
-        r = requests.get('http://127.0.0.1:8083' + entries['elements'][0]['download'])
+        r = requests.get('http://127.0.0.1:{}'.format(PORTS[0]) + entries['elements'][0]['download'])
         self.assertEqual(200, r.status_code)
         self.assertEqual(len(r.content), 28590)
         self.assertEqual(r.headers['Content-Type'], 'application/pdf')
         # create cookies by logging in to admin account and try to download book again
         req_session = requests.session()
-        login_page = req_session.get('http://127.0.0.1:8083/login')
+        login_page = req_session.get('http://127.0.0.1:{}/login'.format(PORTS[0]))
         token = re.search('<input type="hidden" name="csrf_token" value="(.*)">', login_page.text)
         payload = {'username': 'admin', 'password': 'admin123', 'submit': "", 'next': "/", "remember_me": "on", "csrf_token": token.group(1)}
-        req_session.post('http://127.0.0.1:8083/login', data=payload)
-        r = req_session.get('http://127.0.0.1:8083' + entries['elements'][0]['download'])
+        req_session.post('http://127.0.0.1:{}/login'.format(PORTS[0]), data=payload)
+        r = req_session.get('http://127.0.0.1:{}'.format(PORTS[0]) + entries['elements'][0]['download'])
         # logged in via cookies from admin account -> admin is not allowed to download
         self.assertEqual(403, r.status_code)
         # logout admin account, cookies now invalid,
         # now login is done via basic header, means no login, guest account can download
-        req_session.get('http://127.0.0.1:8083/logout')
-        r = req_session.get('http://127.0.0.1:8083' + entries['elements'][0]['download'])
+        req_session.get('http://127.0.0.1:{}/logout'.format(PORTS[0]))
+        r = req_session.get('http://127.0.0.1:{}'.format(PORTS[0]) + entries['elements'][0]['download'])
         self.assertEqual(200, r.status_code)
         # Close session, delete cookies
         req_session.close()
@@ -974,21 +982,21 @@ class TestLdapLogin(unittest.TestCase, ui_class):
         time.sleep(3)
         self.logout()
         # try download from guest account, fails
-        r = requests.get('http://127.0.0.1:8083' + entries['elements'][0]['download'])
+        r = requests.get('http://127.0.0.1:{}'.format(PORTS[0]) + entries['elements'][0]['download'])
         self.assertEqual(403, r.status_code)
         # create cookies by logging in to admin account and try to download book again
         req_session = requests.session()
-        login_page = req_session.get('http://127.0.0.1:8083/login')
+        login_page = req_session.get('http://127.0.0.1:{}/login'.format(PORTS[0]))
         token = re.search('<input type="hidden" name="csrf_token" value="(.*)">', login_page.text)
         payload = {'username': 'admin', 'password': 'admin123', 'submit': "", 'next': "/", "remember_me": "on", "csrf_token": token.group(1)}
-        req_session.post('http://127.0.0.1:8083/login', data=payload)
+        req_session.post('http://127.0.0.1:{}/login'.format(PORTS[0]), data=payload)
         # user is logged in via cookies, admin is not allowed to download
-        r = req_session.get('http://127.0.0.1:8083' + entries['elements'][0]['download'])
+        r = req_session.get('http://127.0.0.1:{}'.format(PORTS[0]) + entries['elements'][0]['download'])
         self.assertEqual(403, r.status_code)
         # logout admin account, cookies now invalid,
         # now login is done via not existing basic header, means no login, guest account also not allowed to download
-        req_session.get('http://127.0.0.1:8083/logout')
-        r = req_session.get('http://127.0.0.1:8083' + entries['elements'][0]['download'])
+        req_session.get('http://127.0.0.1:{}/logout'.format(PORTS[0]))
+        r = req_session.get('http://127.0.0.1:{}'.format(PORTS[0]) + entries['elements'][0]['download'])
         self.assertEqual(403, r.status_code)
         # Close session, delete cookies
         req_session.close()
@@ -998,10 +1006,10 @@ class TestLdapLogin(unittest.TestCase, ui_class):
         time.sleep(3)
         self.logout()
         # try download with invalid credentials -> annoymous role is not taken, download denied
-        r = requests.get('http://127.0.0.1:8083/opds/', auth=('admin', 'admin131'))
+        r = requests.get('http://127.0.0.1:{}/opds/'.format(PORTS[0]), auth=('admin', 'admin131'))
         self.assertEqual(401, r.status_code)
         # try download with valid credentials
-        r = requests.get('http://127.0.0.1:8083/opds/', auth=('admin', 'admin123'))
+        r = requests.get('http://127.0.0.1:{}/opds/'.format(PORTS[0]), auth=('admin', 'admin123'))
         self.assertEqual(200, r.status_code)
 
         # reset everything back to default
@@ -1011,18 +1019,18 @@ class TestLdapLogin(unittest.TestCase, ui_class):
         self.edit_user('admin', {'download_role': 1})
         time.sleep(3)
         # try download from guest account, fails
-        r = requests.get('http://127.0.0.1:8083' + entries['elements'][0]['download'])
+        r = requests.get('http://127.0.0.1:{}'.format(PORTS[0]) + entries['elements'][0]['download'])
         self.assertEqual(401, r.status_code)
         # try download with invalid credentials
-        r = requests.get('http://127.0.0.1:8083/opds/', auth=('admin', 'admin131'))
+        r = requests.get('http://127.0.0.1:{}/opds/'.format(PORTS[0]), auth=('admin', 'admin131'))
         self.assertEqual(401, r.status_code)
         # try download with invalid credentials
-        r = requests.get('http://127.0.0.1:8083/opds/', auth=('hudo', 'admin123'))
+        r = requests.get('http://127.0.0.1:{}/opds/'.format(PORTS[0]), auth=('hudo', 'admin123'))
         self.assertEqual(401, r.status_code)
 
     def test_ldap_kobo_sync(self):
         self.fill_basic_config({'config_ldap_provider_url': '127.0.0.1',
-                                'config_ldap_port': '3268',
+                                'config_ldap_port': PORTS[1],
                                 'config_ldap_authentication': 'Simple',
                                 'config_ldap_dn': 'ou=people,dc=calibreweb,dc=com',
                                 'config_ldap_serv_username': 'cn=root,dc=calibreweb,dc=com',
@@ -1034,11 +1042,11 @@ class TestLdapLogin(unittest.TestCase, ui_class):
         self.assertTrue(self.check_element_on_page((By.ID, "flash_success")))
         time.sleep(BOOT_TIME)
         # start ldap
-        self.server.relisten(config=2, port=3268, encrypt=None)
+        self.server.relisten(config=2, port=int(PORTS[1]), encrypt=None)
         # create new user
         self.create_user('执一',{'email':'use10@oxi.com','password':'1234AbC*!', 'download_role': 1})
         self.assertTrue(self.check_element_on_page((By.ID, "flash_success")))
-        host = 'http://' + get_Host_IP() + ':8083'
+        host = 'http://' + get_Host_IP() + ":" + PORTS[0]
         self.fill_basic_config({'config_kobo_sync': 1})
         time.sleep(BOOT_TIME)
         self.logout()

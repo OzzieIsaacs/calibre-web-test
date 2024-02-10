@@ -54,7 +54,7 @@ def _generate_CA():
         crypto.X509Extension(b"subjectKeyIdentifier", False, b"hash",
                              subject=ca),
     ])
-    ca.sign(key, "sha1")
+    ca.sign(key, "SHA256")
     with open(os.path.join(files_path, 'files', 'ca.cert.pem'),'wb') as f:
         f.write(crypto.dump_certificate(crypto.FILETYPE_PEM, ca))
 

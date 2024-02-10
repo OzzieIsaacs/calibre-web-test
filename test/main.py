@@ -4,10 +4,12 @@ from HTMLTestRunner import runner as HTMLTestRunner
 import os
 import re
 from subproc_wrapper import process_open
-from config_test import CALIBRE_WEB_PATH, VENV_PATH, VENV_PYTHON, TEST_OS
+from config_test import CALIBRE_WEB_PATH, VENV_PYTHON, TEST_OS, base_path
 import unittest
 import sys
 import venv
+import glob
+import shutil
 from CalibreResult import CalibreResult
 from helper_environment import environment
 from helper_func import kill_dead_cps, finishing_notifier, poweroff, result_move
@@ -56,24 +58,28 @@ if __name__ == '__main__':
         exit()
 
     # generate virtual environment
+    venv_path = os.path.join(CALIBRE_WEB_PATH, "venv")
     try:
-        venv.create(VENV_PATH, clear=True, with_pip=True)
+        venv.create(venv_path, clear=True, with_pip=True)
     except CalledProcessError:
         print("Error Creating virtual environment")
-        venv.create(VENV_PATH, system_site_packages=True, with_pip=False)
+        venv.create(venv_path, system_site_packages=True, with_pip=False)
     print("Creating virtual environment for testing")
 
+    for folder in glob.iglob(CALIBRE_WEB_PATH + "/cps/**/__pycache__/", recursive=True):
+        shutil.rmtree(folder)
 
     requirements_file = os.path.join(CALIBRE_WEB_PATH, 'requirements.txt')
-    p = process_open([VENV_PYTHON, "-m", "pip", "install", "-r", requirements_file], (0, 5))
+    python_executable = os.path.join(CALIBRE_WEB_PATH, "venv", VENV_PYTHON)
+    p = process_open([python_executable, "-m", "pip", "install", "-r", requirements_file], (0, 5))
     if os.name == 'nt':
         while p.poll() == None:
             p.stdout.readline()
     else:
         p.wait()
-    environment.init_environment(VENV_PYTHON, sub_dependencies)
+    environment.init_environment(python_executable, sub_dependencies)
 
-    all_tests = unittest.TestLoader().discover('.')
+    all_tests = unittest.TestLoader().discover(base_path)
     # configure HTMLTestRunner options
     outfile = os.path.join(CALIBRE_WEB_PATH, 'test')
     template = os.path.join(os.path.dirname(__file__), 'htmltemplate', 'report_template.html')

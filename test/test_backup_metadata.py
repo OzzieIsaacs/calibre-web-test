@@ -13,6 +13,11 @@ from config_test import TEST_DB, base_path, BOOT_TIME
 from helper_func import startup
 from helper_func import save_logfiles, read_opf_metadata
 
+RESOURCES = {'ports': 1}
+
+PORTS = ['8083']
+INDEX = ""
+
 
 class TestBackupMetadata(TestCase, ui_class):
     p = None
@@ -21,7 +26,7 @@ class TestBackupMetadata(TestCase, ui_class):
     @classmethod
     def setUpClass(cls):
         try:
-            startup(cls, cls.py_version, {'config_calibre_dir': TEST_DB}, env={"APP_MODE": "test"})
+            startup(cls, cls.py_version, {'config_calibre_dir': TEST_DB}, port=PORTS[0], index=INDEX, env={"APP_MODE": "test"})
             time.sleep(3)
             cls.fill_thumbnail_config({'schedule_metadata_backup': 1})
             # cls.restart_calibre_web()
@@ -31,7 +36,7 @@ class TestBackupMetadata(TestCase, ui_class):
 
     @classmethod
     def tearDownClass(cls):
-        cls.driver.get("http://127.0.0.1:8083")
+        cls.driver.get("http://127.0.0.1:" + PORTS[0])
         cls.stop_calibre_web()
         # close the browser window and stop calibre-web
         cls.driver.quit()
@@ -184,6 +189,7 @@ class TestBackupMetadata(TestCase, ui_class):
         self.assertEqual("Beutlin, Frodo & Halagal, Norbert & Gonçalves, Hector", metadata['author_attr'][0]['opf:file-as'])
         self.edit_book(1, content={'bookAuthor': 'Hector Gonçalves'})
         self.restart_calibre_web()
+        time.sleep(3)
         metadata = read_opf_metadata(os.path.join(TEST_DB, "Hector Gonçalves", "Der Buchtitel (1)", "metadata.opf"))
         self.assertEqual(["Hector Gonçalves"], metadata['author'])
         self.assertEqual("Gonçalves, Hector", metadata['author_attr'][0]['opf:file-as'])
@@ -305,6 +311,7 @@ class TestBackupMetadata(TestCase, ui_class):
         self.edit_book(3, content={'description': ""})
         self.restart_calibre_web()
         metadata = read_opf_metadata(meta_path)
+        time.sleep(1)
         self.assertEqual(metadata['description'], "")
 
     def test_backup_change_custom_bool(self):
@@ -598,7 +605,3 @@ class TestBackupMetadata(TestCase, ui_class):
         self.delete_book(details['id'])
         self.fill_basic_config({'config_uploading': 0})
         self.assertTrue(self.check_element_on_page((By.ID, "flash_success")))
-
-    def test_gdrive(self):
-        pass
-        # repeat all tests on gdrive

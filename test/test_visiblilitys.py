@@ -14,6 +14,12 @@ from config_test import TEST_DB
 from helper_func import startup, debug_startup
 
 
+RESOURCES = {'ports': 1}
+
+PORTS = ['8083']
+INDEX = ""
+
+
 class TestCalibreWebVisibilitys(unittest.TestCase, ui_class):
 
     p = None
@@ -22,14 +28,14 @@ class TestCalibreWebVisibilitys(unittest.TestCase, ui_class):
     @classmethod
     def setUpClass(cls):
         try:
-            startup(cls, cls.py_version, {'config_calibre_dir': TEST_DB}, env = {"APP_MODE": "test"})
+            startup(cls, cls.py_version, {'config_calibre_dir': TEST_DB}, index=INDEX, env = {"APP_MODE": "test"})
         except Exception:
             cls.driver.quit()
             cls.p.kill()
 
     @classmethod
     def tearDownClass(cls):
-        cls.driver.get("http://127.0.0.1:8083")
+        cls.driver.get("http://127.0.0.1:" + PORTS[0])
         cls.stop_calibre_web()
         # close the browser window and stop calibre-web
         cls.driver.quit()
@@ -489,6 +495,13 @@ class TestCalibreWebVisibilitys(unittest.TestCase, ui_class):
         self.assertEqual('Hallo', field.get_attribute('value'))
 
     def test_search_order(self):
+        # editing books changes pub date from 00:00:00.000 -> 00:00:00 which affects sorting order
+        self.edit_book(9, custom_content={"Custom Text 人物 *'()&": 'test'})
+        self.edit_book(9, custom_content={"Custom Text 人物 *'()&": ''})
+        self.edit_book(10, custom_content={"Custom Text 人物 *'()&": 'test'})
+        self.edit_book(10, custom_content={"Custom Text 人物 *'()&": ''})
+        self.edit_book(11, custom_content={"Custom Text 人物 *'()&": 'test'})
+        self.edit_book(11, custom_content={"Custom Text 人物 *'()&": ''})
         self.search('book')
         order = {'new': (13, 12, 11, 10),
                  'old': (5, 8, 9, 10),
@@ -496,8 +509,8 @@ class TestCalibreWebVisibilitys(unittest.TestCase, ui_class):
                  'desc': (5, 11, 8, 10),
                  'auth_az': (8, 5, 11, 13),
                  'auth_za': (10, 12, 9, 13),
-                 'pub_new': (5, 8 , 9, 10),
-                 'pub_old': (8, 9, 10, 11)
+                 'pub_new': (5, 9 , 10, 11),
+                 'pub_old': (8, 12, 13, 9)
                  }
         self.verify_order("search", order=order)
         self.search('book')
@@ -507,23 +520,21 @@ class TestCalibreWebVisibilitys(unittest.TestCase, ui_class):
                  'desc': (5, 11, 8, 10),
                  'auth_az': (8, 5, 11, 13),
                  'auth_za': (10, 12, 9, 13),
-                 'pub_new': (5, 8 , 9, 10),
-                 'pub_old': (8, 9, 10, 11)
+                 'pub_new': (5, 9 , 10, 11),
+                 'pub_old': (8, 12, 13, 9)
                  }
         self.verify_order("search", order=order)
         self.check_element_on_page((By.ID, "new")).click()
 
-
-
     def test_search_functions(self):
         r = requests.session()
-        login_page = r.get('http://127.0.0.1:8083/login')
+        login_page = r.get('http://127.0.0.1:{}/login'.format(PORTS[0]))
         token = re.search('<input type="hidden" name="csrf_token" value="(.*)">', login_page.text)
         payload = {'username': 'admin', 'password': 'admin123', 'submit': "", 'next': "/", "remember_me": "on", "csrf_token": token.group(1)}
-        r.post('http://127.0.0.1:8083/login', data=payload)
-        resp = r.get('http://127.0.0.1:8083/search')
+        r.post('http://127.0.0.1:{}/login'.format(PORTS[0]), data=payload)
+        resp = r.get('http://127.0.0.1:{}/search'.format(PORTS[0]))
         self.assertEqual(200, resp.status_code)
-        resp = r.get('http://127.0.0.1:8083/advsearch')
+        resp = r.get('http://127.0.0.1:{}/advsearch'.format(PORTS[0]))
         self.assertEqual(200, resp.status_code)
         r.close()
 
@@ -677,7 +688,6 @@ class TestCalibreWebVisibilitys(unittest.TestCase, ui_class):
         close.click()
         time.sleep(2)
         self.delete_shelf(u'allow')
-
 
     def test_restrict_columns(self):
         self.edit_book(10, custom_content={"Custom Text 人物 *'()&": 'test'})
@@ -899,20 +909,20 @@ class TestCalibreWebVisibilitys(unittest.TestCase, ui_class):
 
     def test_request_link_column_to_read_status(self):
         r = requests.session()
-        login_page = r.get('http://127.0.0.1:8083/login')
+        login_page = r.get('http://127.0.0.1:{}/login'.format(PORTS[0]))
         token = re.search('<input type="hidden" name="csrf_token" value="(.*)">', login_page.text)
         payload = {'username': 'admin', 'password': 'admin123', 'submit':"",
                    'next':"/", "remember_me":"on", "csrf_token": token.group(1)}
-        result = r.post('http://127.0.0.1:8083/login', data=payload)
+        result = r.post('http://127.0.0.1:{}/login'.format(PORTS[0]), data=payload)
         self.assertEqual(200, result.status_code)
-        config_page = r.get('http://127.0.0.1:8083/admin/viewconfig')
+        config_page = r.get('http://127.0.0.1:{}/admin/viewconfig'.format(PORTS[0]))
         token = re.search('<input type="hidden" name="csrf_token" value="(.*)">', config_page.text)
         payload = {"config_read_column": "-1", "csrf_token": token.group(1)}
-        result = r.post('http://127.0.0.1:8083/admin/viewconfig', data=payload)
+        result = r.post('http://127.0.0.1:{}/admin/viewconfig'.format(PORTS[0]), data=payload)
         self.assertTrue("flash_danger" in result.text)
         token = re.search('<input type="hidden" name="csrf_token" value="(.*)">', result.text)
         payload = {"config_read_column": "2", "csrf_token": token.group(1)}
-        result = r.post('http://127.0.0.1:8083/admin/viewconfig', data=payload)
+        result = r.post('http://127.0.0.1:{}/admin/viewconfig'.format(PORTS[0]), data=payload)
         self.assertTrue("flash_danger" in result.text)
         r.close()
 
@@ -1079,11 +1089,11 @@ class TestCalibreWebVisibilitys(unittest.TestCase, ui_class):
         self.assertTrue(self.check_element_on_page((By.ID, "book_title")))
         # check right cover of book is visible
         r = requests.session()
-        login_page = r.get('http://127.0.0.1:8083/login')
+        login_page = r.get('http://127.0.0.1:{}/login'.format(PORTS[0]))
         token = re.search('<input type="hidden" name="csrf_token" value="(.*)">', login_page.text)
         payload = {'username': 'admin', 'password': 'admin123', 'submit': "", 'next': "/", "remember_me": "on", "csrf_token": token.group(1)}
-        r.post('http://127.0.0.1:8083/login', data=payload)
-        resp = r.get('http://127.0.0.1:8083/cover/'+list_element[1][0]['id'])
+        r.post('http://127.0.0.1:{}/login'.format(PORTS[0]), data=payload)
+        resp = r.get('http://127.0.0.1:{}/cover/{}'.format(PORTS[0], list_element[1][0]['id']))
         self.assertEqual('16790', resp.headers['Content-Length'])
         r.close()
         # check archive book visible in search result

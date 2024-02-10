@@ -14,6 +14,12 @@ from selenium.webdriver.common.keys import Keys
 from selenium.webdriver.common.by import By
 
 
+RESOURCES = {'ports': 1}
+
+PORTS = ['8083']
+INDEX = ""
+
+
 class TestMergeBooksList(TestCase, ui_class):
     p = None
     driver = None
@@ -21,7 +27,7 @@ class TestMergeBooksList(TestCase, ui_class):
     @classmethod
     def setUpClass(cls):
         try:
-            startup(cls, cls.py_version, {'config_calibre_dir': TEST_DB}, env={"APP_MODE": "test"})
+            startup(cls, cls.py_version, {'config_calibre_dir': TEST_DB}, port=PORTS[0], index=INDEX, env={"APP_MODE": "test"})
             time.sleep(3)
             cls.goto_page("nav_new")
         except Exception:
@@ -30,7 +36,7 @@ class TestMergeBooksList(TestCase, ui_class):
 
     @classmethod
     def tearDownClass(cls):
-        cls.driver.get("http://127.0.0.1:8083")
+        cls.driver.get("http://127.0.0.1:" + PORTS[0])
         cls.stop_calibre_web()
         # close the browser window and stop calibre-web
         cls.driver.quit()

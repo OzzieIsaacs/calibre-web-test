@@ -15,6 +15,13 @@ from helper_func import save_logfiles
 from selenium.webdriver.support.ui import WebDriverWait
 from selenium.webdriver.support import expected_conditions as EC
 
+
+RESOURCES = {'ports': 1}
+
+PORTS = ['8083']
+INDEX = ""
+
+
 class TestKoboSync(unittest.TestCase, ui_class):
 
     p = None
@@ -29,18 +36,18 @@ class TestKoboSync(unittest.TestCase, ui_class):
         add_dependency(cls.json_line, cls.__name__)
 
         try:
-            host = 'http://' + get_Host_IP() + ':8083'
+            host = 'http://' + get_Host_IP() #  + ':' + PORTS[0]
             startup(cls, cls.py_version, {'config_calibre_dir':TEST_DB, 'config_log_level': 'DEBUG', 'config_kobo_sync':1,
                                           'config_kepubifypath': "",
-                                          'config_kobo_proxy':0}, host=host, env={"APP_MODE": "test"})
+                                          'config_kobo_proxy':0}, host=host, index=INDEX, port=PORTS[0], env={"APP_MODE": "test"})
             time.sleep(3)
             WebDriverWait(cls.driver, 5).until(EC.presence_of_element_located((By.ID, "flash_success")))
             cls.goto_page('user_setup')
             cls.check_element_on_page((By.ID, "config_create_kobo_token")).click()
             link = cls.check_element_on_page((By.CLASS_NAME, "well"))
-            cls.kobo_adress = host + '/kobo/' + re.findall(".*/kobo/(.*)", link.text)[0]
+            cls.kobo_adress = host + ':' + PORTS[0] + '/kobo/' + re.findall(".*/kobo/(.*)", link.text)[0]
             cls.check_element_on_page((By.ID, "kobo_close")).click()
-            cls.driver.get('http://127.0.0.1:8083')
+            cls.driver.get("http://127.0.0.1:" + PORTS[0])
             cls.login('admin', 'admin123')
             time.sleep(2)
         except Exception as e:
@@ -51,7 +58,7 @@ class TestKoboSync(unittest.TestCase, ui_class):
 
     @classmethod
     def tearDownClass(cls):
-        cls.driver.get("http://127.0.0.1:8083")
+        cls.driver.get("http://127.0.0.1:" + PORTS[0])
         cls.stop_calibre_web()
         cls.driver.quit()
         cls.p.terminate()
@@ -59,7 +66,7 @@ class TestKoboSync(unittest.TestCase, ui_class):
         remove_dependency(cls.json_line)
         save_logfiles(cls, cls.__name__)
 
-    def inital_sync(self):
+    def inital_sync(self, sync=True):
         if TestKoboSync.syncToken:
             return TestKoboSync.data
         # change book 5 to have unicode char in title author, description
@@ -112,13 +119,19 @@ class TestKoboSync(unittest.TestCase, ui_class):
         r = session.get(self.kobo_adress+'/v1/analytics/gettests', headers=TestKoboSync.header, timeout=10)
         self.assertEqual(r.status_code, 200)
         self.assertEqual(r.json(), {'Result': 'Success', 'TestKey': '', 'Tests': {}})
+        if sync:
+            return self.sync_request(session)
 
+    def sync_request(self, session):
         # perform sync request
         bood_uuid = '8f1b72c1-e9a4-4212-b538-8e4f4837d201'
         params = {'Filter': 'All', 'DownloadUrlFilter': 'Generic,Android', 'PrioritizeRecentReads':'true'}
-        data = {}
+        # data = {}
         while True:
-            r = session.get(self.kobo_adress+'/v1/library/sync', params=params, headers=TestKoboSync.syncToken, timeout=10)
+            r = session.get(self.kobo_adress+'/v1/library/sync',
+                            params=params,
+                            headers=TestKoboSync.syncToken,
+                            timeout=10)
             self.assertEqual(r.status_code, 200)
             data = r.json()
             TestKoboSync.data = data
@@ -133,6 +146,9 @@ class TestKoboSync(unittest.TestCase, ui_class):
             self.assertEqual(data[3]['NewEntitlement']['BookMetadata']['DownloadUrls'][1]['Size'], 6720)
             self.assertEqual(data[3]['NewEntitlement']['BookMetadata']['DownloadUrls'][1]['Url'],
                              self.kobo_adress + "/download/5/epub")
+            # ToDo: Check!!!
+            self.assertEqual(data[0]['NewEntitlement']['BookMetadata']['Language'], "nb")
+            self.assertEqual(data[1]['NewEntitlement']['BookMetadata']['Language'], "en")
             self.assertEqual(data[3]['NewEntitlement']['BookMetadata']['Contributors'], ['John Döe执', 'Mon Go'])
             self.assertEqual(data[3]['NewEntitlement']['BookMetadata']['CoverImageId'], bood_uuid)
             self.assertEqual('<p>b物</p>', data[3]['NewEntitlement']['BookMetadata']['Description'])
@@ -257,7 +273,9 @@ class TestKoboSync(unittest.TestCase, ui_class):
         # Upload new book
         # sync and get this book and nothing else
         self.fill_basic_config({'config_uploading':1})
-        time.sleep(10)
+        time.sleep(3)
+        self.assertTrue(self.check_element_on_page((By.ID, 'flash_success')))
+        self.edit_user('admin', {'upload_role': 1})
         self.goto_page('nav_new')
         upload_file = os.path.join(base_path, 'files', 'book.epub')
         upload = self.check_element_on_page((By.ID, 'btn-upload'))
@@ -270,7 +288,6 @@ class TestKoboSync(unittest.TestCase, ui_class):
         self.assertEqual(['Noname 23'], data[0]['NewEntitlement']['BookMetadata']['Contributors'])
         self.assertEqual('book9', data[0]['NewEntitlement']['BookMetadata']['Title'])
         self.delete_book(15)
-
 
     def test_sync_changed_book(self):
         self.inital_sync()
@@ -577,9 +594,17 @@ class TestKoboSync(unittest.TestCase, ui_class):
         # final sync
         time.sleep(2)
         self.sync_kobo()
-
     def test_kobo_about(self):
         self.assertTrue(self.goto_page('nav_about'))
+
+    def test_kobo_no_download(self):
+        self.edit_user("admin", {"download_role":0})
+        self.inital_sync(sync=False)
+        params = {'Filter': 'All', 'DownloadUrlFilter': 'Generic,Android', 'PrioritizeRecentReads':'true'}
+        downloadSession = requests.session()
+        r = downloadSession.get(self.kobo_adress+'/v1/library/sync', params=params, headers=TestKoboSync.syncToken)
+        self.assertEqual(r.status_code, 403)
+        self.edit_user("admin", {"download_role": 1})
 
     def test_book_download(self):
         data = self.inital_sync()
@@ -650,22 +675,10 @@ class TestKoboSync(unittest.TestCase, ui_class):
         self.get_book_details(5)
         self.check_element_on_page((By.XPATH, "//*[@id='archived_cb']")).click()
 
-    def test_kobo_upload_book(self):
-        self.inital_sync()
-        self.fill_basic_config({'config_uploading': 1})
-        time.sleep(3)
-        self.assertTrue(self.check_element_on_page((By.ID, 'flash_success')))
-        self.edit_user('admin', {'upload_role': 1})
-        self.goto_page('nav_new')
-        upload_file = os.path.join(base_path, 'files', 'book.epub')
-        upload = self.check_element_on_page((By.ID, 'btn-upload'))
-        upload.send_keys(upload_file)
-        time.sleep(3)
-        data = self.sync_kobo()
-        print(data) # todo check result
+
 
     def test_kobo_limit(self):
-        host = 'http://' + get_Host_IP() + ':8083'
+        host = 'http://{}:{}'.format(get_Host_IP(), PORTS[0])
         payload = {
             "AffiliateName": "Kobo",
             "AppVersion": "4.19.14123",

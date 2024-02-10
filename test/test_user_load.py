@@ -17,17 +17,23 @@ from selenium.webdriver.support.ui import WebDriverWait
 from selenium.webdriver.support import expected_conditions as EC
 
 
+RESOURCES = {'ports': 1}
+
+PORTS = ['8083']
+INDEX = ""
+
+
 def user_change(user, result, index):
     r = requests.session()
-    login_page = r.get('http://127.0.0.1:8083/login')
+    login_page = r.get('http://127.0.0.1:{}/login'.format(PORTS[0]))
     token = re.search('<input type="hidden" name="csrf_token" value="(.*)">', login_page.text)
     payload = {'username': user, 'password': "123AbC*!", 'submit': "", 'next': "/", "csrf_token": token.group(1)}
-    r.post('http://127.0.0.1:8083/login', data=payload)
+    r.post('http://127.0.0.1:{}/login'.format(PORTS[0]), data=payload)
     # random.seed(123)
     for i in range(0, 200):
         time.sleep(random.random() * 0.05)
         parameter = int(random.uniform(2, 260))
-        me_page = r.get('http://127.0.0.1:8083/me')
+        me_page = r.get('http://127.0.0.1:{}/me'.format(PORTS[0]))
         token = re.search('<input type="hidden" name="csrf_token" value="(.*)">', me_page.text)
         user_load = {'name': user,
                     'email': 'alfa' + re.findall("user(\d+)", user)[0] + '@email.com',
@@ -40,7 +46,7 @@ def user_change(user, result, index):
             if (parameter >> bit_shift) & 1:
                 user_load['show_'+ str(1 << bit_shift)] = "on"
 
-        resp = r.post('http://127.0.0.1:8083/me', data=user_load)
+        resp = r.post('http://127.0.0.1:{}/me'.format(PORTS[0]), data=user_load)
         if resp.status_code != 200 or "flash_danger" in resp.text:
             print('Error: ' + user)
             result[index] = False
@@ -59,7 +65,7 @@ class TestUserLoad(TestCase, ui_class):
     def setUpClass(cls):
         try:
             startup(cls, cls.py_version, {'config_calibre_dir': TEST_DB, 'config_access_log': 1},
-                    env={"APP_MODE": "test"})
+                    port=PORTS[0], index=INDEX, env={"APP_MODE": "test"})
             time.sleep(3)
             WebDriverWait(cls.driver, 5).until(EC.presence_of_element_located((By.ID, "flash_success")))
         except Exception:
@@ -71,7 +77,7 @@ class TestUserLoad(TestCase, ui_class):
         try:
             cls.stop_calibre_web()
         except:
-            cls.driver.get("http://127.0.0.1:8083")
+            cls.driver.get("http://127.0.0.1:" + PORTS[0])
             time.sleep()
             try:
                 cls.stop_calibre_web()
@@ -90,12 +96,12 @@ class TestUserLoad(TestCase, ui_class):
     def test_user_change_vis(self):
         user_count = 30
         r = requests.session()
-        login_page = r.get('http://127.0.0.1:8083/login')
+        login_page = r.get('http://127.0.0.1:{}/login'.format(PORTS[0]))
         token = re.search('<input type="hidden" name="csrf_token" value="(.*)">', login_page.text)
         payload = {'username': 'admin', 'password': 'admin123', 'submit': "", 'next': "/", "csrf_token": token.group(1)}
-        r.post('http://127.0.0.1:8083/login', data=payload)
+        r.post('http://127.0.0.1:{}/login'.format(PORTS[0]), data=payload)
         for i in range(0, user_count):
-            new_user_page = r.get('http://127.0.0.1:8083/admin/user/new')
+            new_user_page = r.get('http://127.0.0.1:{}/admin/user/new'.format(PORTS[0]))
             token = re.search('<input type="hidden" name="csrf_token" value="(.*)">', new_user_page.text)
             user_load = {'name': 'user' + str(i),
                         'email': 'alfa' + str(i) + '@email.com',
@@ -116,7 +122,7 @@ class TestUserLoad(TestCase, ui_class):
                         'edit_role': "on",
                         "csrf_token": token.group(1)
                         }
-            resp = r.post('http://127.0.0.1:8083/admin/user/new', data=user_load)
+            resp = r.post('http://127.0.0.1:{}/admin/user/new'.format(PORTS[0]), data=user_load)
             self.assertEqual(resp.status_code, 200)
         r.close()
         threads = [None] * user_count
