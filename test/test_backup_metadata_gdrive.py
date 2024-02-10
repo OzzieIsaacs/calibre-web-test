@@ -33,7 +33,7 @@ class TestBackupMetadataGdrive(TestCase, ui_class):
 
     @classmethod
     def setUpClass(cls):
-        # add_dependency(cls.dependency, cls.__name__)
+        add_dependency(cls.dependency, cls.__name__)
         prepare_gdrive()
         try:
             src = os.path.join(base_path, "files", "client_secrets.json")
@@ -75,6 +75,7 @@ class TestBackupMetadataGdrive(TestCase, ui_class):
 
     @classmethod
     def tearDownClass(cls):
+        save_logfiles(cls, cls.__name__)
         cls.driver.get("http://127.0.0.1:"+ PORTS[0])
         cls.stop_calibre_web()
         # close the browser window and stop calibre-web
@@ -96,7 +97,6 @@ class TestBackupMetadataGdrive(TestCase, ui_class):
                 os.unlink(src1)
             except PermissionError:
                 print('client_secrets.json delete failed')
-        save_logfiles(cls, cls.__name__)
 
     def test_backup_gdrive(self):
         fs = connect_gdrive("test")
