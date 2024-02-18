@@ -13,6 +13,7 @@ import requests
 import os
 import time
 from helper_func import save_logfiles
+import socket
 
 
 RESOURCES = {'ports': 1}
@@ -607,6 +608,63 @@ class TestLogin(unittest.TestCase, ui_class):
         self.assertTrue(self.check_element_on_page((By.ID, "flash_success")))
         self.assertTrue(self.check_element_on_page((By.ID, "kindle_mail")))
         self.logout()
+        # no next parameter
+        r = requests.session()
+        login_page = r.get("http://127.0.0.1:" + PORTS[0] + "/login")
+        token = re.search('<input type="hidden" name="csrf_token" value="(.*)">', login_page.text)
+        payload = {'username': 'admin', 'password': 'admin123', 'submit': "", "csrf_token": token.group(1)}
+        page = r.post("http://127.0.0.1:" + PORTS[0] + "/login", data=payload)
+        self.assertEqual(200, page.status_code)
+        self.assertTrue("<title>Calibre-Web | Books</title>" in page.text)
+        r.close()
+        r = requests.session()
+        login_page = r.get("http://127.0.0.1:" + PORTS[0] + "/login")
+        token = re.search('<input type="hidden" name="csrf_token" value="(.*)">', login_page.text)
+        payload = {'username': 'admin', 'password': 'admin123', 'submit': "",
+                   'next': "http:///example.com", "csrf_token": token.group(1)}
+        page = r.post("http://127.0.0.1:" + PORTS[0] + "/login", data=payload)
+        self.assertTrue("<title>Calibre-Web | Books</title>" in page.text)
+        r.close()
+        r = requests.session()
+        login_page = r.get("http://127.0.0.1:" + PORTS[0] + "/login")
+        token = re.search('<input type="hidden" name="csrf_token" value="(.*)">', login_page.text)
+        payload = {'username': 'admin', 'password': 'admin123', 'submit': "",
+                   'next': "https:///example.com", "csrf_token": token.group(1)}
+        page = r.post("http://127.0.0.1:" + PORTS[0] + "/login", data=payload)
+        self.assertTrue("<title>Calibre-Web | Books</title>" in page.text)
+        r.close()
+        r = requests.session()
+        login_page = r.get("http://127.0.0.1:" + PORTS[0] + "/login")
+        token = re.search('<input type="hidden" name="csrf_token" value="(.*)">', login_page.text)
+        payload = {'username': 'admin', 'password': 'admin123', 'submit': "",
+                   'next': "https:///example.com/test", "csrf_token": token.group(1)}
+        page = r.post("http://127.0.0.1:" + PORTS[0] + "/login", data=payload)
+        self.assertTrue("<title>Calibre-Web | Books</title>" in page.text)
+        r.close()
+        r = requests.session()
+        login_page = r.get("http://127.0.0.1:" + PORTS[0] + "/login")
+        token = re.search('<input type="hidden" name="csrf_token" value="(.*)">', login_page.text)
+        payload = {'username': 'admin', 'password': 'admin123', 'submit': "",
+                   'next': "/admin/1", "csrf_token": token.group(1)}
+        page = r.post("http://127.0.0.1:" + PORTS[0] + "/login", data=payload)
+        self.assertTrue("<title>Calibre-Web | Books</title>" in page.text)
+        r.close()
+        r = requests.session()
+        login_page = r.get("http://127.0.0.1:" + PORTS[0] + "/login")
+        token = re.search('<input type="hidden" name="csrf_token" value="(.*)">', login_page.text)
+        payload = {'username': 'admin', 'password': 'admin123', 'submit': "",
+                   'next': "../stats", "csrf_token": token.group(1)}
+        page = r.post("http://127.0.0.1:" + PORTS[0] + "/login", data=payload)
+        self.assertTrue("<title>Calibre-Web | Statistics</title>" in page.text)
+        r.close()
+        r = requests.session()
+        login_page = r.get("http://127.0.0.1:" + PORTS[0] + "/login")
+        token = re.search('<input type="hidden" name="csrf_token" value="(.*)">', login_page.text)
+        payload = {'username': 'admin', 'password': 'admin123', 'submit': "",
+                   'next': "ftp://" + socket.gethostname() + "/admin/view", "csrf_token": token.group(1)}
+        page = r.post("http://127.0.0.1:" + PORTS[0] + "/login", data=payload)
+        self.assertTrue("<title>Calibre-Web | Books</title>" in page.text)
+        r.close()
 
     def test_magic_remote_login(self):
         self.login('admin', 'admin123')
