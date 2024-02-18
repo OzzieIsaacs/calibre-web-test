@@ -112,6 +112,7 @@ class TestCalibreWebListOrders(unittest.TestCase, ui_class):
         list_element = self.get_list_books_displayed()
         self.assertEqual(list_element[0]['title'], "Liu Yang")
         self.assertEqual(list_element[10]['title'], "Leo Baskerville")
+        # check view save working
         self.driver.refresh()
         list_element = self.get_list_books_displayed()
         self.assertEqual(list_element[0]['title'], "Liu Yang")
@@ -169,6 +170,11 @@ class TestCalibreWebListOrders(unittest.TestCase, ui_class):
         self.assertEqual(list_element[0]['title'], "Randomhäus")
         self.assertEqual(list_element[1]['title'], "None")
         self.assertEqual(list_element[2]['title'], "Alfafa")
+        # check order is saved
+        self.driver.refresh()
+        list_element = self.get_list_books_displayed()
+        self.assertEqual(list_element[0]['title'], "Randomhäus")
+
         self.check_element_on_page((By.ID, "asc")).click()
         self.get_book_details(9)
         self.check_element_on_page((By.ID, "edit_book")).click()
@@ -186,6 +192,10 @@ class TestCalibreWebListOrders(unittest.TestCase, ui_class):
         self.assertEqual(list_element[4]['title'], "TXT")
         self.check_element_on_page((By.ID, "desc")).click()
         list_element = self.get_list_books_displayed()
+        self.assertEqual(list_element[0]['title'], "TXT")
+        self.assertEqual(list_element[4]['title'], "CBR")
+        # order is saved
+        self.driver.refresh()
         self.assertEqual(list_element[0]['title'], "TXT")
         self.assertEqual(list_element[4]['title'], "CBR")
         self.check_element_on_page((By.ID, "asc")).click()
@@ -217,6 +227,10 @@ class TestCalibreWebListOrders(unittest.TestCase, ui_class):
         self.assertEqual(list_element[0]['count'], "3")
         self.assertEqual(list_element[2]['count'], "1")
         self.assertEqual(list_element[1]['count'], "4")
+        # check order is saved
+        self.driver.refresh()
+        list_element = self.get_list_books_displayed()
+        self.assertEqual(list_element[0]['title'], "Norwegian Bokmål")
         self.check_element_on_page((By.ID, "asc")).click()
         self.get_book_details(9)
         self.check_element_on_page((By.ID, "edit_book")).click()
@@ -242,6 +256,10 @@ class TestCalibreWebListOrders(unittest.TestCase, ui_class):
         self.assertEqual(list_element[0]['title'], "Älfafa")
         self.assertEqual(list_element[1]['title'], "None")
         self.assertEqual(list_element[2]['title'], "Gênot")
+        # check order is saved
+        self.driver.refresh()
+        list_element = self.get_list_books_displayed()
+        self.assertEqual(list_element[0]['title'], "Älfafa")
         self.check_element_on_page((By.ID, "asc")).click()
         self.get_book_details(9)
         self.check_element_on_page((By.ID, "edit_book")).click()
@@ -261,6 +279,10 @@ class TestCalibreWebListOrders(unittest.TestCase, ui_class):
         list_element = self.get_list_books_displayed(True)
         self.assertEqual(list_element[0]['title'], "5")
         self.assertEqual(list_element[1]['title'], "2")
+        # check order is saved
+        self.driver.refresh()
+        list_element = self.get_list_books_displayed(True)
+        self.assertEqual(list_element[0]['title'], "5")
         self.check_element_on_page((By.ID, "asc")).click()
 
     def test_download_sort(self):
@@ -301,6 +323,10 @@ class TestCalibreWebListOrders(unittest.TestCase, ui_class):
         self.assertEqual(list_element[0]['title'], "down")
         self.assertEqual(list_element[1]['title'], "admin")
         self.assertEqual(list_element[1]['count'], "2")
+        # check order is saved
+        self.driver.refresh()
+        list_element = self.get_list_books_displayed()
+        self.assertEqual(list_element[0]['title'], "down")
         # put back default order
         self.check_element_on_page((By.ID, "asc")).click()
         # login as user down and check he sees only his downloads
@@ -459,3 +485,63 @@ class TestCalibreWebListOrders(unittest.TestCase, ui_class):
         self.assertEqual(books[1][1]['title'], "Buuko")
         self.check_element_on_page((By.ID, "new")).click()
         self.delete_shelf("Authors")
+
+    def test_ratings_click_none(self):
+        self.goto_page('nav_rate')
+        list_elements = self.get_list_books_displayed(True)
+        for element in list_elements:
+            if element['title'] == "0":
+                element['ele'].click()
+                break
+        books = self.get_books_displayed()
+        self.assertEqual(9, len(books[1]))
+
+    def test_series_click_none(self):
+        self.goto_page('nav_serie')
+        list = self.check_element_on_page((By.ID, "list-button"))
+        if list:
+            self.check_element_on_page((By.ID, "list-button")).click()
+        list_elements = self.get_list_books_displayed()
+        for element in list_elements:
+            if element['title'] == "None":
+                element['ele'].click()
+                break
+        books = self.get_books_displayed()
+        self.assertEqual(8, len(books[1]))
+        self.goto_page('nav_serie')
+        self.check_element_on_page((By.ID, "grid-button")).click()
+
+    def test_formats_click_none(self):
+        pass
+
+    def test_tags_click_none(self):
+        self.goto_page('nav_cat')
+        list_elements = self.get_list_books_displayed()
+        for element in list_elements:
+            if element['title'] == "None":
+                element['ele'].click()
+                break
+        books = self.get_books_displayed()
+        self.assertEqual(7, len(books[1]))
+
+    def test_language_click_none(self):
+        self.goto_page('nav_lang')
+        list_elements = self.get_list_books_displayed()
+        for element in list_elements:
+            if element['title'] == "None":
+                element['ele'].click()
+                break
+        self.assertTrue(int(element['count']) > 0)
+        books = self.get_books_displayed()
+        self.assertEqual(int(element['count']), len(books[1]))
+
+    def test_publisher_click_none(self):
+        self.goto_page('nav_publisher')
+        list_elements = self.get_list_books_displayed()
+        for element in list_elements:
+            if element['title'] == "None":
+                element['ele'].click()
+                break
+        self.assertTrue(int(element['count']) > 0)
+        books = self.get_books_displayed()
+        self.assertEqual(int(element['count']), len(books[1]))
