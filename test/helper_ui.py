@@ -1344,7 +1344,6 @@ class ui_class():
         b = cls.driver.find_elements(By.XPATH, "//*[@id='list']/div")
         books = list()
         for book in b:
-
             if not book.is_displayed():
                 continue
             ele = book.find_elements(By.XPATH, ".//*")

@@ -222,3 +222,11 @@ class TestEmbedMetadata(TestCase, ui_class):
         self.assertEqual([], epub_data['tags'])
 
         self.delete_book_format(8, "KEPUB")
+
+    def test_email_epub_embed_metadata(self):
+        self.fill_basic_config({'config_embed_metadata': 0})
+        time.sleep(5)
+        self.assertTrue(self.check_element_on_page((By.ID, "flash_success")))
+        tasks = self.check_tasks()
+
+        pass

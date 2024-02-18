@@ -118,8 +118,12 @@ def update_title_sort(session):
     def _title_sort(title):
         # calibre sort stuff
         return title.strip()
-
-    conn = session.connection().connection.connection
+    try:
+        # sqlalchemy <1.4.24 or > sqlalchemy 2.0
+        conn = session.connection().connection.driver_connection
+    except AttributeError:
+        # sqlalchemy >1.4.24 and sqlalchemy 2.0
+        conn = session.connection().connection.connection
     try:
         conn.create_function("title_sort", 1, _title_sort)
     except Exception:
@@ -169,7 +173,7 @@ def _generate_random_cover(output_path):
     image.save(output_path)
 
 
-def add_books(location, number, cover=False, set_id=False):
+def add_books(location, number, cover=False, set_id=False, no_data=False):
     engine = create_engine('sqlite:///{0}'.format(location), echo=False)
     Session = scoped_session(sessionmaker())
     Session.configure(bind=engine)
@@ -183,7 +187,13 @@ def add_books(location, number, cover=False, set_id=False):
     database_root = location[:-len("metadata.db")]
     for i in range(number):
         update_title_sort(session)
-        session.connection().connection.connection.create_function('uuid4', 0, lambda: str(uuid4()))
+        try:
+            # sqlalchemy <1.4.24
+            conn = session.connection().connection.driver_connection
+        except AttributeError:
+            # sqlalchemy >1.4.24 and sqlalchemy 2.0
+            conn = session.connection().connection.connection
+        conn.create_function('uuid4', 0, lambda: str(uuid4()))
         book = Books()
         book.title = _randStr()
         book.sort = ""
@@ -201,17 +211,17 @@ def add_books(location, number, cover=False, set_id=False):
         book_folder = os.path.join(book.author_sort, book.title + " ({})".format(book.id))
         os.makedirs(os.path.join(database_root, book_folder))
         book.path = book_folder
-        # copy real book info
-        epub_file = os.path.join(base_path, 'files', 'book.epub')
-        #with open(book_name, 'wb') as f_out:
-        #    f_out.write(os.urandom(30))
-        shutil.copy(epub_file, os.path.join(database_root, book_folder, "file.epub"))
+        if not no_data:
+            # copy real book info
+            epub_file = os.path.join(base_path, 'files', 'book.epub')
+            shutil.copy(epub_file, os.path.join(database_root, book_folder, "file.epub"))
+            new_format = Data(name="file",
+                              book_format="epub".upper(),
+                              book=book.id, uncompressed_size=30)
+            session.merge(new_format)
         if cover:
             _generate_random_cover(os.path.join(database_root, book_folder, 'cover.jpg'))
-        new_format = Data(name="file",
-                          book_format="epub".upper(),
-                          book=book.id, uncompressed_size=30)
-        session.merge(new_format)
+
         author = Authors(book.author_sort, book.author_sort)
         session.add(author)
         session.flush()

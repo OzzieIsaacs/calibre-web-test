@@ -10,7 +10,9 @@ from helper_func import save_logfiles
 from selenium.webdriver.common.by import By
 from helper_reverse_proxy import Reverse_Proxy
 from helper_func import get_Host_IP
-
+import requests
+import re
+import socket
 
 RESOURCES = {'ports': 2}
 
@@ -67,6 +69,80 @@ class TestReverseProxy(TestCase, ui_class):
         self.assertTrue(self.goto_page("logviewer"))
         self.assertTrue(self.goto_page("adv_search"))
         self.assertTrue(self.goto_page("mail_server"))
+
+    def test_next(self):
+        self.logout()
+        self.driver.get("http://127.0.0.1:" + PORTS[1] + "/cw/me")
+        self.login('admin', 'admin123')
+        self.assertTrue(self.check_element_on_page((By.ID, "flash_success")))
+        self.assertTrue(self.check_element_on_page((By.ID, "kindle_mail")))
+        # no next parameter
+        r = requests.session()
+        login_page = r.get("http://127.0.0.1:" + PORTS[1] + "/cw/login")
+        token = re.search('<input type="hidden" name="csrf_token" value="(.*)">', login_page.text)
+        payload = {'username': 'admin', 'password': 'admin123', 'submit': "", "csrf_token": token.group(1)}
+        page = r.post("http://127.0.0.1:" + PORTS[1] + "/cw/login", data=payload)
+        self.assertEqual(200, page.status_code)
+        self.assertTrue("<title>Calibre-Web | Books</title>" in page.text)
+        r.get("http://127.0.0.1:" + PORTS[1] + "/cw/logout")
+        login_page = r.get("http://127.0.0.1:" + PORTS[1] + "/cw/login")
+        token = re.search('<input type="hidden" name="csrf_token" value="(.*)">', login_page.text)
+        payload = {'username': 'admin', 'password': 'admin123', 'submit': "",
+                   'next': "http:///example.com", "csrf_token": token.group(1)}
+        page = r.post("http://127.0.0.1:" + PORTS[1] + "/cw/login", data=payload)
+        self.assertTrue("<title>Calibre-Web | Books</title>" in page.text)
+        r.get("http://127.0.0.1:" + PORTS[1] + "/cw/logout")
+        login_page = r.get("http://127.0.0.1:" + PORTS[1] + "/cw/login")
+        token = re.search('<input type="hidden" name="csrf_token" value="(.*)">', login_page.text)
+        payload = {'username': 'admin', 'password': 'admin123', 'submit': "",
+                   'next': "https:///example.com", "csrf_token": token.group(1)}
+        page = r.post("http://127.0.0.1:" + PORTS[1] + "/cw/login", data=payload)
+        self.assertTrue("<title>Calibre-Web | Books</title>" in page.text)
+        r.get("http://127.0.0.1:" + PORTS[1] + "/cw/logout")
+        login_page = r.get("http://127.0.0.1:" + PORTS[1] + "/cw/login")
+        token = re.search('<input type="hidden" name="csrf_token" value="(.*)">', login_page.text)
+        payload = {'username': 'admin', 'password': 'admin123', 'submit': "",
+                   'next': "https:///example.com/test", "csrf_token": token.group(1)}
+        page = r.post("http://127.0.0.1:" + PORTS[1] + "/cw/login", data=payload)
+        self.assertTrue("<title>Calibre-Web | Books</title>" in page.text)
+        r.get("http://127.0.0.1:" + PORTS[1] + "/cw/logout")
+        # with proxy this is an invalid path
+        login_page = r.get("http://127.0.0.1:" + PORTS[1] + "/cw/login")
+        token = re.search('<input type="hidden" name="csrf_token" value="(.*)">', login_page.text)
+        payload = {'username': 'admin', 'password': 'admin123', 'submit': "",
+                   'next': "/admin/1", "csrf_token": token.group(1)}
+        page = r.post("http://127.0.0.1:" + PORTS[1] + "/cw/login", data=payload)
+        self.assertTrue("<title>Calibre-Web | Books</title>" in page.text)
+        r.get("http://127.0.0.1:" + PORTS[1] + "/cw/logout")
+        login_page = r.get("http://127.0.0.1:" + PORTS[1] + "/cw/login")
+        token = re.search('<input type="hidden" name="csrf_token" value="(.*)">', login_page.text)
+        payload = {'username': 'admin', 'password': 'admin123', 'submit': "",
+                   'next': "../stats", "csrf_token": token.group(1)}
+        page = r.post("http://127.0.0.1:" + PORTS[1] + "/cw/login", data=payload)
+        self.assertTrue("<title>Calibre-Web | Books</title>" in page.text)
+        r.get("http://127.0.0.1:" + PORTS[1] + "/cw/logout")
+        login_page = r.get("http://127.0.0.1:" + PORTS[1] + "/cw/login")
+        token = re.search('<input type="hidden" name="csrf_token" value="(.*)">', login_page.text)
+        payload = {'username': 'admin', 'password': 'admin123', 'submit': "",
+                   'next': "ftp://" + socket.gethostname() + "/cw/admin/view", "csrf_token": token.group(1)}
+        page = r.post("http://127.0.0.1:" + PORTS[1] + "/cw/login", data=payload)
+        self.assertTrue("<title>Calibre-Web | Books</title>" in page.text)
+        r.get("http://127.0.0.1:" + PORTS[1] + "/cw/logout")
+        login_page = r.get("http://127.0.0.1:" + PORTS[1] + "/cw/login")
+        token = re.search('<input type="hidden" name="csrf_token" value="(.*)">', login_page.text)
+        payload = {'username': 'admin', 'password': 'admin123', 'submit': "",
+                   'next': "ftp://" + socket.gethostname() + "/admin/view", "csrf_token": token.group(1)}
+        page = r.post("http://127.0.0.1:" + PORTS[1] + "/cw/login", data=payload)
+        self.assertTrue("<title>Calibre-Web | Books</title>" in page.text)
+        r.get("http://127.0.0.1:" + PORTS[1] + "/cw/logout")
+        login_page = r.get("http://127.0.0.1:" + PORTS[1] + "/cw/login")
+        token = re.search('<input type="hidden" name="csrf_token" value="(.*)">', login_page.text)
+        payload = {'username': 'admin', 'password': 'admin123', 'submit': "",
+                   'next': "http://" + socket.gethostname() + "/cw/admin/view", "csrf_token": token.group(1)}
+        page = r.post("http://127.0.0.1:" + PORTS[1] + "/cw/login", data=payload)
+        self.assertTrue("<title>Calibre-Web | Books</title>" in page.text)
+        r.get("http://127.0.0.1:" + PORTS[1] + "/cw/logout")
+        r.close()
 
 
 
