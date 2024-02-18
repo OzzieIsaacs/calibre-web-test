@@ -2,11 +2,13 @@
 
 import unittest
 import time
+import os
 from selenium.webdriver.common.by import By
 
 from helper_func import save_logfiles
 from helper_ui import ui_class
 from config_test import TEST_DB
+from helper_db import add_books
 # from parameterized import parameterized_class
 from helper_func import startup, debug_startup
 
@@ -512,7 +514,16 @@ class TestCalibreWebListOrders(unittest.TestCase, ui_class):
         self.check_element_on_page((By.ID, "grid-button")).click()
 
     def test_formats_click_none(self):
-        pass
+        add_books(os.path.join(TEST_DB, "metadata.db"), 1, cover=True, set_id=False, no_data=True)  # 1520
+        self.goto_page('nav_format')
+        list_elements = self.get_list_books_displayed()
+        for element in list_elements:
+            if element['title'] == "None":
+                element['ele'].click()
+                break
+        books = self.get_books_displayed()
+        self.assertEqual(1, len(books[1]))
+        self.delete_book(int(books[1][0]['id']))
 
     def test_tags_click_none(self):
         self.goto_page('nav_cat')
