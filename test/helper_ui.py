@@ -268,7 +268,7 @@ class ui_class():
         process_elements = dict()
         process_options =dict()
         # special handling for checkboxes
-        checkboxes = ['config_use_google_drive']
+        checkboxes = ['config_use_google_drive', "config_calibre_split"]
         options = ['config_google_drive_folder']
 
         # check if checkboxes are in list and seperate lists
