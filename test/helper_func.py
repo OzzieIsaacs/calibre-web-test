@@ -133,7 +133,8 @@ def debug_startup(inst, __, ___, login=True, host="http://127.0.0.1", port="8083
 
 
 def startup(inst, pyVersion, config, login=True, host="http://127.0.0.1", port="8083", index = "",
-            env=None, parameter=None, work_path=None, only_startup=False, only_metadata=False):
+            env=None, parameter=None, work_path=None, only_startup=False, only_metadata=False,
+            split=False, lib_path=""):
     print("\n%s - %s: " % (inst.py_version, inst.__name__))
     try:
         os.remove(os.path.join(CALIBRE_WEB_PATH + index, 'app.db'))
@@ -161,6 +162,8 @@ def startup(inst, pyVersion, config, login=True, host="http://127.0.0.1", port="
     except Exception:
         pass
     shutil.rmtree(TEST_DB + index, ignore_errors=True)
+    if split:
+        shutil.rmtree(lib_path, ignore_errors=True)
 
     thumbail_cache_path = os.path.join(CALIBRE_WEB_PATH + index, 'cps', 'cache')
     try:
@@ -171,13 +174,22 @@ def startup(inst, pyVersion, config, login=True, host="http://127.0.0.1", port="
 
     if not only_metadata:
         try:
-            shutil.copytree(os.path.join(base_path, 'Calibre_db'), TEST_DB + index)
+            if not split:
+                shutil.copytree(os.path.join(base_path, 'Calibre_db'), TEST_DB + index)
+            else:
+                if not lib_path:
+                    print('No location for split library path given')
+                target_location = os.path.join(base_path, 'Calibre_db', lib_path)
+                shutil.copytree(os.path.join(base_path, 'Calibre_db'), target_location)
+                os.makedirs(TEST_DB + index)
+                shutil.move(os.path.join(target_location, "metadata.db"), os.path.join(TEST_DB + index, "metadata.db"))
         except FileExistsError:
             print('Test DB already present, might not be a clean version')
     else:
         try:
             os.makedirs(TEST_DB)
-            shutil.copy(os.path.join(base_path, 'Calibre_db', 'metadata.db'), os.path.join(TEST_DB + index, 'metadata.db'))
+            shutil.copy(os.path.join(base_path, 'Calibre_db', 'metadata.db'), os.path.join(TEST_DB + index,
+                                                                                           'metadata.db'))
         except FileExistsError:
             print('Metadata.db already present, might not be a clean version')
     command = [pyVersion, os.path.join(CALIBRE_WEB_PATH + index, u'cps.py')]
