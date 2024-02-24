@@ -84,12 +84,10 @@ class MyMessage:
         if isinstance(message_data, list):
             if len(message_data) == 1:
                 message_data = message_data[0].get_payload(decode=True)
+                self.attachment = None
             else:
-                message_data = message_data[0].get_payload(decode=True) + message_data[1].get_payload(decode=True)
-        # print('Receiving message from:', message.get('X-Peer'))
-        # print('Message addressed from:', message.get('From'))
-        # print('Message addressed to:', message.get('To'))
-        # print('Message length        :', len(message_data)) # len(message_data))
+                self.attachment = message_data[1].get_payload(decode=True)
+                message_data = message_data[0].get_payload(decode=True) + self.attachment
         self.size = len(message_data)
         if self.size < 1000:
             self.message = message_data
@@ -123,6 +121,9 @@ class MyMessage:
 
     def reset_email_received(self):
         self.size = 0
+
+    def get_email_attachment(self):
+        return self.attachment
 
 
 def AIOSMTPServer(hostname='', port=1025, authenticate=True, startSSL=False, only_ssl=None,

@@ -473,9 +473,6 @@ class TestEbookConvertCalibre(unittest.TestCase, ui_class):
         tasks = self.check_tasks()
         details = self.get_book_details(10)
         details['kindlebtn'].click()
-        # conv = self.check_element_on_page((By.LINK_TEXT, details['kindle'][0].text))
-        # self.assertTrue(conv)
-        # conv.click()
         self.assertTrue(self.check_element_on_page((By.ID, "flash_success")))
         i = 0
         while i < 10:

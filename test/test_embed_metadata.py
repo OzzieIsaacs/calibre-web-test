@@ -6,16 +6,17 @@ import os
 import shutil
 import zipfile
 
+from helper_email_convert import AIOSMTPServer
 from selenium.webdriver.common.by import By
 from selenium.webdriver.support.ui import Select
 from helper_ui import ui_class
 from config_test import TEST_DB
-from helper_func import startup, save_logfiles, read_metadata_epub, read_opf_metadata
+from helper_func import startup, save_logfiles, read_metadata_epub, read_opf_metadata, wait_Email_received
 from helper_email_convert import calibre_path, kepubify_path
 
-RESOURCES = {'ports': 1}
+RESOURCES = {'ports': 2}
 
-PORTS = ['8083']
+PORTS = ['8083', '1025']
 INDEX = ""
 
 class TestEmbedMetadata(TestCase, ui_class):
@@ -224,9 +225,60 @@ class TestEmbedMetadata(TestCase, ui_class):
         self.delete_book_format(8, "KEPUB")
 
     def test_email_epub_embed_metadata(self):
+        self.edit_user('admin', {'email': 'a5@b.com', 'kindle_mail': 'a1@b.com'})
+        self.setup_server(False, {'mail_server': '127.0.0.1', 'mail_port': PORTS[1],
+                        'mail_use_ssl': 'None', 'mail_login': 'name@host.com', 'mail_password_e': '10234',
+                        'mail_from': 'name@host.com'})
         self.fill_basic_config({'config_embed_metadata': 0})
         time.sleep(5)
         self.assertTrue(self.check_element_on_page((By.ID, "flash_success")))
         tasks = self.check_tasks()
+        self.email_server = AIOSMTPServer(
+            hostname='127.0.0.1',
+            port=int(PORTS[1]),
+            only_ssl=False,
+            timeout=10
+        )
+        self.email_server.start()
 
-        pass
+        details = self.get_book_details(10)
+        details['kindlebtn'].click()
+        self.assertTrue(self.check_element_on_page((By.ID, "flash_success")))
+        i = 0
+        while i < 10:
+            time.sleep(2)
+            task_len, ret = self.check_tasks(tasks)
+            if task_len == 1:
+                if ret[-1]['result'] == 'Finished' or ret[-1]['result'] == 'Failed':
+                    break
+            i += 1
+        self.assertEqual(ret[-1]['result'], 'Finished')
+        self.assertTrue(wait_Email_received(self.email_server.handler.check_email_received))
+        attachment = self.email_server.handler.get_email_attachment()
+        epub_data = read_metadata_epub(attachment)
+        self.assertEqual("book7", epub_data['title'])
+        self.assertEqual("Unknown", epub_data['author'][0])
+        self.assertEqual("en", epub_data['language'][0])
+        self.fill_basic_config({'config_embed_metadata': 1})
+        self.email_server.handler.reset_email_received()
+        details = self.get_book_details(10)
+        details['kindlebtn'].click()
+        self.assertTrue(self.check_element_on_page((By.ID, "flash_success")))
+        i = 0
+        while i < 10:
+            time.sleep(2)
+            task_len, ret = self.check_tasks(tasks)
+            if task_len == 1:
+                if ret[-1]['result'] == 'Finished' or ret[-1]['result'] == 'Failed':
+                    break
+            i += 1
+        self.assertEqual(ret[-1]['result'], 'Finished')
+        self.assertTrue(wait_Email_received(self.email_server.handler.check_email_received))
+        attachment = self.email_server.handler.get_email_attachment()
+        epub_data = read_metadata_epub(attachment)
+        self.assertEqual("book7", epub_data['title'])
+        self.assertEqual("Peter Parker", epub_data['author'][0])
+        self.assertEqual("en", epub_data['language'][0])
+        self.assertEqual("Gênot", epub_data['tags'][0])
+
+        self.email_server.stop()
