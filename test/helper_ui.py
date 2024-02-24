@@ -369,14 +369,6 @@ class ui_class():
             if (elements[checkbox] == 1 and not ele.is_selected() ) or elements[checkbox] == 0 and ele.is_selected():
                 ele.click()
 
-        # for select in process_select:
-        #    ele = cls.driver.find_elements(By.NAME, select)
-        #    time.sleep(1)
-        #    for el in ele:
-        #        if el.get_attribute('id') == elements[select]:
-        #            el.click()
-        #            break
-
         # process all selects
         for option, key in enumerate(process_options):
             select = Select(cls.driver.find_element(By.ID, key))

@@ -280,5 +280,4 @@ class TestEmbedMetadata(TestCase, ui_class):
         self.assertEqual("Peter Parker", epub_data['author'][0])
         self.assertEqual("en", epub_data['language'][0])
         self.assertEqual("Gênot", epub_data['tags'][0])
-
         self.email_server.stop()
