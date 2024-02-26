@@ -115,13 +115,13 @@ class TestEditBooksOnGdrive(unittest.TestCase, ui_class):
                 print('client_secrets.json delete failed')
 
     def wait_page_has_loaded(self):
-        time.sleep(1)
+        time.sleep(5)
         while True:
             time.sleep(1)
             page_state = self.driver.execute_script('return document.readyState;')
             if page_state == 'complete':
                 break
-        time.sleep(1)
+        time.sleep(5)
 
     def test_edit_title(self):
         self.fill_basic_config({"config_unicode_filename": 1})

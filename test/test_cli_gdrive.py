@@ -118,13 +118,13 @@ class TestCliGdrivedb(unittest.TestCase, ui_class):
         os.chdir(base_path)
 
     def wait_page_has_loaded(self):
-        time.sleep(1)
+        time.sleep(5)
         while True:
             time.sleep(1)
             page_state = self.driver.execute_script('return document.readyState;')
             if page_state == 'complete':
                 break
-        time.sleep(1)
+        time.sleep(5)
 
     def start_cw(self, cw_path, gdrive_path=None):
         parameter = [self.py_version, cw_path]
