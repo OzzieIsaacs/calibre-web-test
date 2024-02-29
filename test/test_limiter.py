@@ -173,13 +173,16 @@ class TestSecurity(unittest.TestCase, ui_class):
                          {'email': 'muki1al@b.com', 'kindle_mail': 'muki1al@b.com'})
         self.assertTrue(self.check_element_on_page((By.ID, "flash_danger")))
         self.fill_basic_config({"config_password_policy": 1, "config_password_number": 0, "config_password_lower": 0,
-                                "config_password_upper": 0, "config_password_special": 0, "config_password_min_length": 0})
+                                "config_password_upper": 0, "config_password_special": 0,
+                                "config_password_character": 0, "config_password_min_length": 0})
         self.assertTrue(self.check_element_on_page((By.ID, "flash_danger")))
         self.fill_basic_config({"config_password_policy": 1, "config_password_number": 0, "config_password_lower": 0,
-                                "config_password_upper": 0, "config_password_special": 0, "config_password_min_length": 41})
+                                "config_password_upper": 0, "config_password_special": 0,
+                                "config_password_character": 0, "config_password_min_length": 41})
         self.assertTrue(self.check_element_on_page((By.ID, "flash_danger")))
         self.fill_basic_config({"config_password_policy": 1, "config_password_number": 0, "config_password_lower": 0,
-                                "config_password_upper": 0, "config_password_special": 0, "config_password_min_length": 1})
+                                "config_password_upper": 0, "config_password_special": 0,
+                                "config_password_character": 0, "config_password_min_length": 1})
         self.assertTrue(self.check_element_on_page((By.ID, "flash_success")))
         # only min length
         self.create_user('test_min_length',
@@ -234,7 +237,7 @@ class TestSecurity(unittest.TestCase, ui_class):
                          {'password': 'abcd','email': 'muki1al@b.com', 'kindle_mail': 'muki1al@b.com'})
         self.assertTrue(self.check_element_on_page((By.ID, "flash_danger")))
         self.create_user('test_special',
-                         {'password': 'a执er','email': 'muki1al@b.com', 'kindle_mail': 'muki1al@b.com'})
+                         {'password': 'a￥er','email': 'muki1al@b.com', 'kindle_mail': 'muki1al@b.com'})
         self.assertTrue(self.check_element_on_page((By.ID, "flash_success")))
         self.edit_user('test_special', {'delete': 1})
         # everything

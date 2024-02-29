@@ -333,7 +333,8 @@ class TestLogin(unittest.TestCase, ui_class):
         self.assertTrue(self.check_element_on_page((By.ID, "flash_success")))
         self.edit_user("no_user", {'delete': 1})
         # no policy
-        self.fill_basic_config({'config_password_policy': 1, 'config_password_number': 0})
+        self.fill_basic_config({'config_password_policy': 1, 'config_password_number': 0,
+                                "config_password_character": 0})
         time.sleep(5)
         self.assertTrue(self.check_element_on_page((By.ID, "flash_success")))
         # no number
@@ -342,25 +343,66 @@ class TestLogin(unittest.TestCase, ui_class):
         self.edit_user("number_user", {'delete': 1})
 
         self.fill_basic_config({ 'config_password_number': 1, 'config_password_lower': 0})
-        # no lowercase
+        # no lowercase letter        
         self.create_user('lower_user', {'password': '123456P+', 'email': 'a3@b.com'})
         self.assertTrue(self.check_element_on_page((By.ID, "flash_success")))
         self.edit_user("lower_user", {'delete': 1})
         time.sleep(1)
 
         self.fill_basic_config({'config_password_lower': 1, 'config_password_upper': 0})
-        # no uppercase
+        # no uppercase; number, lowercase and special char needed
         self.create_user('upper_user', {'password': '123456l+', 'email': 'a3@b.com'})
         self.assertTrue(self.check_element_on_page((By.ID, "flash_success")))
         self.edit_user("upper_user", {'delete': 1})
         time.sleep(1)
-
+        # Umlaut lowercase
+        self.create_user('special_user', {'password': '123456+Ö', 'email': 'a3@b.com'})
+        self.assertTrue(self.check_element_on_page((By.ID, "flash_danger")))
+        self.create_user('special_user', {'password': '123456Иk', 'email': 'a3@b.com'})
+        self.assertTrue(self.check_element_on_page((By.ID, "flash_danger")))
+        self.create_user('special_user', {'password': '123456+Σ', 'email': 'a3@b.com'})
+        self.assertTrue(self.check_element_on_page((By.ID, "flash_danger")))
+        self.create_user('special_user', {'password': '123456+ら', 'email': 'a3@b.com'})
+        self.assertTrue(self.check_element_on_page((By.ID, "flash_danger")))
+        # unicode characters count as Character but not upper or lowercase character
+        self.create_user('special_user', {'password': '123456+六', 'email': 'a3@b.com'})
+        self.assertTrue(self.check_element_on_page((By.ID, "flash_danger")))
+        self.create_user('special_user', {'password': '123456＠六', 'email': 'a3@b.com'})
+        self.assertTrue(self.check_element_on_page((By.ID, "flash_danger")))
+        # Yen symbol counts as special character
+        self.create_user('special_user', {'password': '123456Ä￥', 'email': 'a3@b.com'})
+        self.assertTrue(self.check_element_on_page((By.ID, "flash_danger")))
+        self.create_user('special_user', {'password': '123456+ö', 'email': 'a3@b.com'})
+        self.assertTrue(self.check_element_on_page((By.ID, "flash_success")))
+        self.edit_user("special_user", {'delete': 1})
+        time.sleep(1)
         self.fill_basic_config({ 'config_password_upper': 1, 'config_password_special': 0})
         # no specialchar
         self.create_user('special_user', {'password': '123456lP', 'email': 'a3@b.com'})
         self.assertTrue(self.check_element_on_page((By.ID, "flash_success")))
         self.edit_user("special_user", {'delete': 1})
         time.sleep(1)
+
+        self.create_user('upper_user', {'password': '123456l六', 'email': 'a3@b.com'})
+        self.assertTrue(self.check_element_on_page((By.ID, "flash_danger")))
+        # Umlaut uppercase
+        self.create_user('special_user', {'password': '123456lÖ', 'email': 'a3@b.com'})
+        self.assertTrue(self.check_element_on_page((By.ID, "flash_success")))
+        self.edit_user("special_user", {'delete': 1})
+        time.sleep(1)
+        self.fill_basic_config({'config_password_policy': 1, 'config_password_upper': 0, 'config_password_lower': 0,
+                                "config_password_character": 1})
+        self.create_user('character_user', {'password': '1234567六', 'email': 'a3@b.com'})
+        self.assertTrue(self.check_element_on_page((By.ID, "flash_success")))
+        self.edit_user("character_user", {'delete': 1})
+        self.create_user('character_user', {'password': '1234567￥', 'email': 'a3@b.com'})
+        self.assertTrue(self.check_element_on_page((By.ID, "flash_danger")))
+        self.create_user('character_user', {'password': '1234567И', 'email': 'a3@b.com'})
+        self.assertTrue(self.check_element_on_page((By.ID, "flash_success")))
+        self.edit_user("character_user", {'delete': 1})
+        self.create_user('character_user', {'password': '1234567δ', 'email': 'a3@b.com'})
+        self.assertTrue(self.check_element_on_page((By.ID, "flash_success")))
+        self.edit_user("character_user", {'delete': 1})
 
         self.fill_basic_config({'config_password_special': 1, 'config_password_min_length': 5})
         # shorter length password
@@ -371,7 +413,8 @@ class TestLogin(unittest.TestCase, ui_class):
         self.create_user('short_user', {'password': '5lP+', 'email': 'a3@b.com'})
         self.assertTrue(self.check_element_on_page((By.ID, "flash_danger")))
 
-        self.fill_basic_config({'config_password_special': 1, 'config_password_min_length': 8})
+        self.fill_basic_config({'config_password_min_length': 8, 'config_password_upper': 1,
+                                'config_password_lower': 1 })
         self.logout()
 
 
