@@ -47,7 +47,7 @@ class TestOPDSFeed(unittest.TestCase, ui_class):
                 self.logout()
                 time.sleep(2)
         except Exception:
-            cls.driver.get("http://127.0.0.1:" + PORTS[0])
+            self.driver.get("http://127.0.0.1:" + PORTS[0])
             if self.check_user_logged_in('admin'):
                 self.logout()
                 time.sleep(2)
