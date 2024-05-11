@@ -100,8 +100,13 @@ class TestOPDSFeed(unittest.TestCase, ui_class):
         self.fill_basic_config({'config_anonbrowse': 1})
         time.sleep(BOOT_TIME)
         self.edit_user('Guest', {'download_role': 1})
+        self.assertTrue(self.check_element_on_page((By.ID, "flash_success")))
         self.edit_user('admin', {'download_role': 0})
-        time.sleep(3)
+        self.assertTrue(self.check_element_on_page((By.ID, "flash_success")))
+        self.edit_user('Guest', {'show_128': 1, 'show_2': 1, 'show_64': 1, 'show_8192': 1,
+                                 'show_16384': 1,
+                                 'show_16': 1, 'show_4': 1, 'show_4096': 1, 'show_8': 1, 'show_32': 1})
+        self.assertTrue(self.check_element_on_page((By.ID, "flash_success")))
         self.logout()
         r = requests.get('http://127.0.0.1:{}/opds'.format(PORTS[0]))
         self.assertEqual(200, r.status_code)
@@ -194,6 +199,9 @@ class TestOPDSFeed(unittest.TestCase, ui_class):
         r = requests.get(host + '/opds/', auth=('hudo', 'admin123'))
         self.assertEqual(401, r.status_code)
         self.login("admin", "admin123")
+        self.edit_user('Guest', {'show_128': 0, 'show_2': 0, 'show_64': 0, 'show_8192': 0,
+                                 'show_16384': 0,
+                                 'show_16': 0, 'show_4': 0, 'show_4096': 0, 'show_8': 0, 'show_32': 0})
         self.fill_basic_config({'config_anonbrowse': 0})
         time.sleep(BOOT_TIME)
         self.logout()
@@ -751,5 +759,114 @@ class TestOPDSFeed(unittest.TestCase, ui_class):
         self.assertEqual(fields['series'], 2)
         self.assertEqual(len(fields), 4)
 
+    def test_access_right_user(self):
+        self.login("admin","admin123")
+        self.edit_user('admin', {'show_128': 0, 'show_2': 0, 'show_64': 0, 'show_8192': 0,
+                                 'show_16384': 0, 'show_256': 0, 'show_32768': 0,
+                                 'show_16': 0, 'show_4': 0, 'show_4096': 0, 'show_8': 0, 'show_32': 0})
+        self.assertTrue(self.check_element_on_page((By.ID, 'flash_success')))
+        self.assertTrue(self.check_visibilities([], ("admin", "admin123")))
+        self.change_user({'show_2': 1})
+        self.assertTrue(self.check_element_on_page((By.ID, 'flash_success')))
+        self.assertTrue(self.check_visibilities(['Languages'], ("admin", "admin123")))
+        self.change_user({'show_2': 0, 'show_4': 1})
+        self.assertTrue(self.check_element_on_page((By.ID, 'flash_success')))
+        self.assertTrue(self.check_visibilities(['Series'], ("admin", "admin123")))
+        self.change_user({'show_4': 0, 'show_8': 1})
+        self.assertTrue(self.check_element_on_page((By.ID, 'flash_success')))
+        self.assertTrue(self.check_visibilities(['Categories'], ("admin", "admin123")))
+        self.change_user({'show_8': 0, 'show_16': 1})
+        self.assertTrue(self.check_element_on_page((By.ID, 'flash_success')))
+        self.assertTrue(self.check_visibilities(['Hot Books'], ("admin", "admin123")))
+        self.change_user({'show_16': 0, 'show_32': 1})
+        self.assertTrue(self.check_element_on_page((By.ID, 'flash_success')))
+        self.assertTrue(self.check_visibilities(['Random Books'], ("admin", "admin123")))
+        self.change_user({'show_32': 0, 'show_64': 1})
+        self.assertTrue(self.check_element_on_page((By.ID, 'flash_success')))
+        self.assertTrue(self.check_visibilities(["Authors"], ("admin", "admin123")))
+        self.change_user({'show_64': 0, 'show_128': 1})
+        self.assertTrue(self.check_element_on_page((By.ID, 'flash_success')))
+        self.assertTrue(self.check_visibilities(['Top Rated Books'], ("admin", "admin123")))
+        self.change_user({'show_128': 0, 'show_256': 1})
+        self.assertTrue(self.check_element_on_page((By.ID, 'flash_success')))
+        self.assertTrue(self.check_visibilities(['Unread Books', "Read Books"], ("admin", "admin123")))
+        self.change_user({'show_256': 0, 'show_4096': 1})
+        self.assertTrue(self.check_element_on_page((By.ID, 'flash_success')))
+        self.assertTrue(self.check_visibilities(['Publishers'], ("admin", "admin123")))
+        self.change_user({'show_4096': 0, 'show_8192': 1})
+        self.assertTrue(self.check_element_on_page((By.ID, 'flash_success')))
+        self.assertTrue(self.check_visibilities(['Ratings'], ("admin", "admin123")))
+        self.change_user({'show_8192': 0, 'show_16384': 1})
+        self.assertTrue(self.check_element_on_page((By.ID, 'flash_success')))
+        self.assertTrue(self.check_visibilities(['File formats'], ("admin", "admin123")))
+        self.edit_user('admin', {'show_128': 1, 'show_2': 1, 'show_64': 1, 'show_8192': 1,
+                                 'show_16384': 1, 'show_256': 1, 'show_32768': 1,
+                                 'show_16': 1, 'show_4': 1, 'show_4096': 1, 'show_8': 1, 'show_32': 1})
+        self.assertTrue(self.check_element_on_page((By.ID, 'flash_success')))
+        self.logout()
+    def test_access_right_guest(self):
+        self.login("admin","admin123")
+        self.fill_basic_config({'config_anonbrowse': 1})
+        time.sleep(BOOT_TIME)
+        self.edit_user('Guest', {'show_128': 0, 'show_2': 0, 'show_64': 0, 'show_8192': 0,
+                                 'show_16384': 0,
+                                 'show_16': 0, 'show_4': 0, 'show_4096': 0, 'show_8': 0, 'show_32': 0})
+        self.assertTrue(self.check_element_on_page((By.ID, 'flash_success')))
+        self.assertTrue(self.check_visibilities([]))
+        self.change_user({'show_2': 1})
+        self.assertTrue(self.check_element_on_page((By.ID, 'flash_success')))
+        self.assertTrue(self.check_visibilities(['Languages']))
+        self.change_user({'show_2': 0, 'show_4': 1})
+        self.assertTrue(self.check_element_on_page((By.ID, 'flash_success')))
+        self.assertTrue(self.check_visibilities(['Series']))
+        self.change_user({'show_4': 0, 'show_8': 1})
+        self.assertTrue(self.check_element_on_page((By.ID, 'flash_success')))
+        self.assertTrue(self.check_visibilities(['Categories']))
+        self.change_user({'show_8': 0, 'show_16': 1})
+        self.assertTrue(self.check_element_on_page((By.ID, 'flash_success')))
+        self.assertTrue(self.check_visibilities(['Hot Books']))
+        self.change_user({'show_16': 0, 'show_32': 1})
+        self.assertTrue(self.check_element_on_page((By.ID, 'flash_success')))
+        self.assertTrue(self.check_visibilities(['Random Books']))
+        self.change_user({'show_32': 0, 'show_64': 1})
+        self.assertTrue(self.check_element_on_page((By.ID, 'flash_success')))
+        self.assertTrue(self.check_visibilities(["Authors"]))
+        self.change_user({'show_64': 0, 'show_128': 1})
+        self.assertTrue(self.check_element_on_page((By.ID, 'flash_success')))
+        self.assertTrue(self.check_visibilities(['Top Rated Books']))
+        self.change_user({'show_128': 0, 'show_4096': 1})
+        self.assertTrue(self.check_element_on_page((By.ID, 'flash_success')))
+        self.assertTrue(self.check_visibilities(['Publishers']))
+        self.change_user({'show_4096': 0, 'show_8192': 1})
+        self.assertTrue(self.check_element_on_page((By.ID, 'flash_success')))
+        self.assertTrue(self.check_visibilities(['Ratings']))
+        self.change_user({'show_8192': 0, 'show_16384': 1})
+        self.assertTrue(self.check_element_on_page((By.ID, 'flash_success')))
+        self.assertTrue(self.check_visibilities(['File formats']))
+        #self.edit_user('Guest', {'show_128': 1, 'show_2': 1, 'show_64': 1, 'show_8192': 1,
+        #                         'show_16384': 1,
+        #                         'show_16': 1, 'show_4': 1, 'show_4096': 1, 'show_8': 1, 'show_32': 1})
+        self.fill_basic_config({'config_anonbrowse': 0})
+        time.sleep(BOOT_TIME)
+        self.assertTrue(self.check_element_on_page((By.ID, 'flash_success')))
+        self.logout()
 
+    def check_visibilities(self, visible=[], auth=None):
+        entries = ["Top Rated Books", "Categories", "Hot Books", "Publishers", "Authors",
+                   "Random Books", "Series", "Unread Books", "Read Books", "Languages", "File formats", "Ratings"]
+        found = 0
+        host = 'http://127.0.0.1:' + PORTS[0]
+        r = requests.get(host + '/opds', auth=auth)
+        elements = self.get_opds_index(r.text)
+        if r.status_code != 200:
+            return False
+        for el in entries:
+            if elements.get(el, {}).get("link"):
+                if el in visible:
+                    found += 1
+                    continue
+                else:
+                    print("found wrong element visible {}".format(el))
+                    return False
+        return True if found == len(visible) else False
 
