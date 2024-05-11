@@ -12,8 +12,8 @@ from selenium.webdriver.support.ui import WebDriverWait
 from selenium.webdriver.support import expected_conditions as EC
 
 try:
-    from config_goodreads import GOODREADS_API_KEY, GOODREADS_API_SECRET
-    if GOODREADS_API_KEY !='' and GOODREADS_API_SECRET !='':
+    from config_goodreads import GOODREADS_API_KEY
+    if GOODREADS_API_KEY !='':
         GR = True
     else:
         GR = False
@@ -66,9 +66,7 @@ class TestGoodreads(unittest.TestCase, ui_class):
 
 
     def test_author_page_invalid(self):
-        self.fill_basic_config({'config_goodreads_api_key': 'rgg',
-                                'config_goodreads_api_secret_e': 'rgfg'
-                                })
+        self.fill_basic_config({'config_goodreads_api_key': 'rgg'})
         self.assertTrue(self.check_element_on_page((By.ID, 'flash_success')))
         self.get_book_details(5)
         self.check_element_on_page((By.ID, "edit_book")).click()
@@ -88,9 +86,7 @@ class TestGoodreads(unittest.TestCase, ui_class):
 
 
     def test_author_page(self):
-        self.fill_basic_config({'config_goodreads_api_key': GOODREADS_API_KEY,
-                                'config_goodreads_api_secret_e': GOODREADS_API_SECRET
-                                })
+        self.fill_basic_config({'config_goodreads_api_key': GOODREADS_API_KEY})
         self.assertTrue(self.check_element_on_page((By.ID, 'flash_success')))
         self.get_book_details(7)
         self.check_element_on_page((By.ID, "edit_book")).click()

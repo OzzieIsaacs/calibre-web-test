@@ -312,8 +312,8 @@ class ui_class():
                       'config_access_log', 'config_kobo_sync', 'config_kobo_proxy', 'config_ldap_openldap',
                       'config_use_goodreads', 'config_register_email', 'config_use_google_drive',
                       'config_allow_reverse_proxy_header_login', 'config_unicode_filename', 'config_password_policy',
-                      'config_password_number', 'config_password_lower', 'config_password_upper',
-                      'config_password_special', 'config_ratelimiter', 'config_embed_metadata']
+                      'config_password_number', 'config_password_lower', 'config_password_character',
+                      'config_password_upper', 'config_password_special', 'config_ratelimiter', 'config_embed_metadata']
         options = ['config_log_level', 'config_google_drive_folder', 'config_updatechannel', 'config_login_type',
                    'config_ldap_encryption', 'config_ldap_authentication', 'ldap_import_user_filter', 'config_session']
         # depending on elements open accordions or not
@@ -345,7 +345,8 @@ class ui_class():
             opener.append(3)
         if any(key in elements for key in ['config_password_policy', 'config_password_number', 'config_password_lower',
                                            'config_password_upper', 'config_password_special', 'config_session',
-                                           'config_password_min_length', 'config_ratelimiter']):
+                                           'config_password_min_length', 'config_password_character',
+                                           'config_ratelimiter']):
             opener.append(4)
 
         # open all necessary accordions
@@ -368,14 +369,6 @@ class ui_class():
             ele = cls.driver.find_element(By.ID, checkbox)
             if (elements[checkbox] == 1 and not ele.is_selected() ) or elements[checkbox] == 0 and ele.is_selected():
                 ele.click()
-
-        # for select in process_select:
-        #    ele = cls.driver.find_elements(By.NAME, select)
-        #    time.sleep(1)
-        #    for el in ele:
-        #        if el.get_attribute('id') == elements[select]:
-        #            el.click()
-        #            break
 
         # process all selects
         for option, key in enumerate(process_options):
