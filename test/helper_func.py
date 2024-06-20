@@ -291,6 +291,12 @@ def add_dependency(name, testclass_name, index=""):
             # tmp = __import__('pkg', fromlist=['mod', 'mod2'])
             whl = importlib.__import__("config_test", fromlist=[element.split('|')[1]])
             element_version.append(whl.__dict__[element.split('|')[1]])
+        if element.lower().startswith('limit|'):
+            limit = True
+            element = element[6:]
+        else:
+            limit = False
+
         for line in requirements:
             if element.lower().startswith('git|') \
                     and not line.startswith('#') \
@@ -303,7 +309,10 @@ def add_dependency(name, testclass_name, index=""):
                     and not line.startswith('git') \
                     and not line.startswith('local') \
                     and line.upper().startswith(element.upper()):
-                element_version.append(line.split('=', 1)[0].strip('>'))
+                if not limit:
+                    element_version.append(line.split('=', 1)[0].strip('>'))
+                else:
+                    element_version.append(line.strip())
                 break
 
     for indx, element in enumerate(element_version):

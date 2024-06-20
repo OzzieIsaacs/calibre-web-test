@@ -30,7 +30,7 @@ INDEX = ""
 class TestEditAdditionalBooks(TestCase, ui_class):
     p = None
     driver = None
-    dependencys = ['comicapi', 'rarfile', "py7zr"]
+    dependencys = ["limit|py7zr", 'comicapi', 'rarfile']
 
     @classmethod
     def setUpClass(cls):
