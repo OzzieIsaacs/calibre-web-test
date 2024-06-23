@@ -279,6 +279,15 @@ def digest_login(url, expected_response):
     return True
 
 
+def add_hidden_dependency(names, test_classname, index=""):
+    for name in names:
+        python_exe = os.path.join(CALIBRE_WEB_PATH + index, 'venv', VENV_PYTHON)
+        with process_open([python_exe, "-m", "pip", "install", name], (0, 4)) as r:
+            while r.poll() is None:
+                r.stdout.readline().strip("\n")
+            environment.add_environment(test_classname, name)
+
+
 def add_dependency(name, testclass_name, index=""):
     print("Adding dependencies")
     element_version = list()
@@ -336,11 +345,11 @@ def remove_dependency(names, index=""):
     for name in names:
         if name.startswith('git|'):
             name = name[4:]
-        if name.startswith('local|'):
+        if name.startswith('local|') or name.startswith('limit|'):
             name = name.split('|')[2]
         with process_open([python_exe, "-m", "pip", "uninstall", "-y", name], (0, 5)) as q:
             if os.name == 'nt':
-                while q.poll() == None:
+                while q.poll() is None:
                     q.stdout.readline()
             else:
                 q.wait()

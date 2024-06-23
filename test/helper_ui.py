@@ -346,7 +346,7 @@ class ui_class():
         if any(key in elements for key in ['config_password_policy', 'config_password_number', 'config_password_lower',
                                            'config_password_upper', 'config_password_special', 'config_session',
                                            'config_password_min_length', 'config_password_character',
-                                           'config_ratelimiter']):
+                                           'config_ratelimiter', 'config_limiter_uri', 'config_limiter_options']):
             opener.append(4)
 
         # open all necessary accordions
