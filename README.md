@@ -83,6 +83,19 @@ if ( element !== null ) {       // Newline in line 14417 and 14428 of viewer.js
 ```
 - furthermore it's needed to disable the file upload button. This is done in pdfviewer.html by deleting the corresponding "fileInput" entries. Furthermore, search for all reference in viewer.js like:
 ```
+    <button id="secondaryOpenFile" class="secondaryToolbarButton" title="Open File" tabindex="51" data-l10n-id="pdfjs-open-file-button">
+      <span data-l10n-id="pdfjs-open-file-button-label">Open</span>
+    </button>
+    
+    <button id="secondaryPrint" class="secondaryToolbarButton visibleMediumView" title="Print" tabindex="52" data-l10n-id="pdfjs-print-button">
+      <span data-l10n-id="pdfjs-print-button-label">Print</span>
+    </button>
+    
+    <button id="secondaryDownload" class="secondaryToolbarButton visibleMediumView" title="Save" tabindex="53" data-l10n-id="pdfjs-save-button">
+      <span data-l10n-id="pdfjs-save-button-label">Save</span>
+    </button>
+```            
+```
   const fileInput = appConfig.openFileInput;
   fileInput.value = null;
 ```
