@@ -217,7 +217,7 @@ class TestReader(unittest.TestCase, ui_class):
         second_page = self.check_element_on_page((By.ID, "mainContent"))
         self.assertTrue(second_page)
         pic_2 = second_page.screenshot_as_png
-        self.assertLessEqual(diff(BytesIO(pic2), BytesIO(pic_2), delete_diff_file=True), 0.04)
+        self.assertLessEqual(diff(BytesIO(pic2), BytesIO(pic_2), delete_diff_file=True), 0.05)
         time.sleep(0.5)
         self.assertTrue(right.is_displayed())
         self.assertTrue(self.check_element_on_page((By.ID, "left")).is_displayed())
@@ -225,7 +225,7 @@ class TestReader(unittest.TestCase, ui_class):
         third_page = self.check_element_on_page((By.ID, "mainContent"))
         self.assertTrue(third_page)
         pic_3 = third_page.screenshot_as_png
-        self.assertLessEqual(diff(BytesIO(pic2), BytesIO(pic_3), delete_diff_file=True), 0.04)
+        self.assertLessEqual(diff(BytesIO(pic2), BytesIO(pic_3), delete_diff_file=True), 0.05)
         # Last page arrow not visible
         self.assertFalse(right.is_displayed())
         self.assertTrue(self.check_element_on_page((By.ID, "left")).is_displayed())

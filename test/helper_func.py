@@ -345,8 +345,10 @@ def remove_dependency(names, index=""):
     for name in names:
         if name.startswith('git|'):
             name = name[4:]
-        if name.startswith('local|') or name.startswith('limit|'):
+        if name.startswith('local|'):
             name = name.split('|')[2]
+        if name.startswith('limit|'):
+            name = name.split('|')[1]
         with process_open([python_exe, "-m", "pip", "uninstall", "-y", name], (0, 5)) as q:
             if os.name == 'nt':
                 while q.poll() is None:
