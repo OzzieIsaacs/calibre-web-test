@@ -144,7 +144,7 @@ class TestEditAuthors(TestCase, ui_class):
         self.assertEqual(200, ret_code)
 
     # 1 books of the author, one co-author
-    def test_change_capital_one_author_two_books(self):
+    def test_change_capital_one_author_two_books_coauthor(self):
         self.assertTrue(os.path.isfile(os.path.join(TEST_DB, 'Norbert Halagal/book11 (13)',
                                                     'cover.jpg')))
         self.assertTrue(os.path.isfile(os.path.join(TEST_DB, 'Norbert Halagal/book11 (13)',
