@@ -171,8 +171,8 @@ class TestEditAuthorsGdrive(TestCase, ui_class):
                                                     'book7 - Peter Parker.epub').replace('\\', '/')))
         # rename uppercase to lowercase only of author
         self.edit_book(10, content={'bookAuthor': "Peter parker"})
-        self.assertFalse(self.check_element_on_page((By.ID, "flash_danger")))
         time.sleep(WAIT_GDRIVE)
+        self.assertFalse(self.check_element_on_page((By.ID, "flash_danger")))
         details = self.get_book_details(-1)
         self.assertEqual(['Peter parker'], details['author'])
         self.assertTrue(fs.isfile(os.path.join('test', 'Peter parker/book7 (10)',
@@ -193,8 +193,8 @@ class TestEditAuthorsGdrive(TestCase, ui_class):
         self.assertEqual(200, ret_code)
         # rename book title and author in the same step
         self.edit_book(10, content={'bookAuthor': "Peter Parker", 'book_title': 'book 7'})
-        self.assertFalse(self.check_element_on_page((By.ID, "flash_danger")))
         time.sleep(WAIT_GDRIVE)
+        self.assertFalse(self.check_element_on_page((By.ID, "flash_danger")))
         details = self.get_book_details(-1)
         self.assertEqual(['Peter Parker'], details['author'])
         self.assertEqual('book 7', details['title'])
@@ -376,23 +376,22 @@ class TestEditAuthorsGdrive(TestCase, ui_class):
         ret_code, content = self.download_book(11, "admin", "admin123")
         self.assertEqual(200, ret_code)
 
-        # ToDo: currently empty folder Hector Goncalves remains
         self.edit_book(11, content={'bookAuthor': "hector Gonçalves & Unbekannt"})
-        self.assertFalse(self.check_element_on_page((By.ID, "flash_danger")))
         time.sleep(WAIT_GDRIVE)
+        self.assertFalse(self.check_element_on_page((By.ID, "flash_danger")))
         details = self.get_book_details(-1)
         self.assertEqual(['hector Gonçalves', 'Unbekannt'], details['author'])
 
         self.edit_book(11, content={'bookAuthor': "Hector Gonçalve"})
-        self.assertFalse(self.check_element_on_page((By.ID, "flash_danger")))
         time.sleep(WAIT_GDRIVE)
+        self.assertFalse(self.check_element_on_page((By.ID, "flash_danger")))
         self.edit_book(11, content={'bookAuthor': "Hector Gonçalves & unbekannt"})
-        self.assertFalse(self.check_element_on_page((By.ID, "flash_danger")))
         time.sleep(WAIT_GDRIVE)
+        self.assertFalse(self.check_element_on_page((By.ID, "flash_danger")))
         # rename uppercase to lowercase only of author
         self.edit_book(1, content={'bookAuthor': "Frodo Beutlin & Norbert Halagal & Liu Yang & Hector gonçalves"})
-        self.assertFalse(self.check_element_on_page((By.ID, "flash_danger")))
         time.sleep(WAIT_GDRIVE)
+        self.assertFalse(self.check_element_on_page((By.ID, "flash_danger")))
         details = self.get_book_details(-1)
         self.assertEqual(['Frodo Beutlin', 'Norbert Halagal', 'Liu Yang', 'Hector gonçalves'], details['author'])
         self.assertTrue(fs.isfile(os.path.join('test', 'Frodo Beutlin/Der Buchtitel (1)',
