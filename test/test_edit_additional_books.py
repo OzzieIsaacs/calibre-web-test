@@ -979,4 +979,3 @@ class TestEditAdditionalBooks(TestCase, ui_class):
         books = self.get_shelf_books_displayed()
         self.assertEqual(0, len(books))
         self.delete_shelf("Detail_shelf")
-
