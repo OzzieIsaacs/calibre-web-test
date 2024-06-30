@@ -193,6 +193,9 @@ def startup(inst, pyVersion, config, login=True, host="http://127.0.0.1", port="
         except FileExistsError:
             print('Metadata.db already present, might not be a clean version')
     command = [pyVersion, os.path.join(CALIBRE_WEB_PATH + index, u'cps.py')]
+    if env:
+        my_env = os.environ.copy()
+        env = {**my_env, **env}
     if parameter:
         command.extend(parameter)
     inst.p = process_open(command, [1], sout=None, env=env, cwd=work_path)

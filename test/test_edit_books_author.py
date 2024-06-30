@@ -5,6 +5,7 @@
 from unittest import TestCase, skip
 import time
 import os
+import glob
 
 from helper_ui import ui_class
 from config_test import TEST_DB, base_path, BOOT_TIME
@@ -26,9 +27,10 @@ class TestEditAuthors(TestCase, ui_class):
     @classmethod
     def setUpClass(cls):
         try:
-            startup(cls, cls.py_version, {'config_calibre_dir': TEST_DB}, port=PORTS[0], index=INDEX, env={"APP_MODE": "test"})
+            startup(cls, cls.py_version, {'config_calibre_dir': TEST_DB}, port=PORTS[0], index=INDEX,
+                    env={"APP_MODE": "test"})
             time.sleep(3)
-        except Exception:
+        except Exception as e:
             cls.driver.quit()
             cls.p.kill()
 
@@ -56,6 +58,7 @@ class TestEditAuthors(TestCase, ui_class):
                                                     'book8 - Leo baskerville.epub')))
         self.assertTrue(os.path.isfile(os.path.join(TEST_DB, 'Leo baskerville/book8 (8)',
                                                     'cover.jpg')))
+        # 'Leo baskerville' in os.listdir(TEST_DB)
         self.assertFalse(os.path.isdir(os.path.join(TEST_DB, 'Leo Baskerville')))
         ret_code, content = self.download_book(8, "admin", "admin123")
         self.assertEqual(200, ret_code)
