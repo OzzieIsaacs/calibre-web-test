@@ -11,6 +11,7 @@ from helper_func import kill_dead_cps
 from config_test import CALIBRE_WEB_PATH, TEST_DB, base_path, BOOT_TIME
 from subproc_wrapper import process_open
 from helper_func import save_logfiles
+from build_release import make_release
 import venv
 import glob
 import time
