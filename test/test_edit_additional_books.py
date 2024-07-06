@@ -30,7 +30,7 @@ INDEX = ""
 class TestEditAdditionalBooks(TestCase, ui_class):
     p = None
     driver = None
-    dependencys = ['comicapi', 'rarfile', "py7zr"]
+    dependencys = ["limit|py7zr", 'comicapi', 'rarfile']
 
     @classmethod
     def setUpClass(cls):
@@ -979,4 +979,3 @@ class TestEditAdditionalBooks(TestCase, ui_class):
         books = self.get_shelf_books_displayed()
         self.assertEqual(0, len(books))
         self.delete_shelf("Detail_shelf")
-

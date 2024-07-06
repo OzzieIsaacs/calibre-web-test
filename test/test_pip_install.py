@@ -32,7 +32,7 @@ class TestPipInstall(unittest.TestCase, ui_class):
         cls.driver.implicitly_wait(10)
         cls.driver.maximize_window()
         shutil.rmtree(TEST_DB, ignore_errors=True)
-        shutil.copytree('./Calibre_db', TEST_DB)
+        shutil.copytree(os.path.join(base_path, 'Calibre_db'), TEST_DB)
         #generate pypi install package
         args = make_release.parse_arguments(['-p'])
         make_release.main(args)

@@ -11,7 +11,8 @@ from helper_func import startup, debug_startup
 from helper_func import save_logfiles
 from selenium.webdriver.common.keys import Keys
 from selenium.webdriver.common.by import By
-
+import requests
+import re
 
 RESOURCES = {'ports': 1}
 
@@ -487,3 +488,24 @@ class TestEditBooksList(TestCase, ui_class):
         self.assertEqual("+", bl['table'][4]["Comments"]['text'])
         values = self.get_book_details(9)
         self.assertEqual("", values["comment"])
+
+    def test_booklist_xss(self):
+        r = requests.session()
+        login_page = r.get('http://127.0.0.1:{}/login'.format(PORTS[0]))
+        token = re.search('<input type="hidden" name="csrf_token" value="(.*)">', login_page.text)
+        payload = {'username': 'admin', 'password': 'admin123', 'submit': "", 'next': "/", "remember_me": "on", "csrf_token": token.group(1)}
+        r.post('http://127.0.0.1:{}/login'.format(PORTS[0]), data=payload)
+        table = r.get('http://127.0.0.1:{}/table?data=list&sort_param=stored'.format(PORTS[0]))
+        token = re.search('<input type="hidden" name="csrf_token" value="(.*)">', table.text)
+        data = {"name": "comments", "value": "<a href=javascr\x1bipt:alert()>Hello</a>", "pk": "10", "checkA": "true", "checkT": "true", "csrf_token": token.group(1)}
+        response = r.post('http://127.0.0.1:{}/ajax/editbooks/comments'.format(PORTS[0]), data=data)
+        self.assertEqual(200, response.status_code)
+        self.assertEqual("<a>Hello</a>", response.json()['newValue'])
+        data = {"name": "comments", "value": "", "pk": "10", "checkA": "true", "checkT": "true", "csrf_token": token.group(1)}
+        response = r.post('http://127.0.0.1:{}/ajax/editbooks/comments'.format(PORTS[0]), data=data)
+        self.assertEqual(200, response.status_code)
+        self.assertEqual("", response.json()['newValue'])
+        r.close()
+
+
+

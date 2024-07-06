@@ -193,6 +193,9 @@ def startup(inst, pyVersion, config, login=True, host="http://127.0.0.1", port="
         except FileExistsError:
             print('Metadata.db already present, might not be a clean version')
     command = [pyVersion, os.path.join(CALIBRE_WEB_PATH + index, u'cps.py')]
+    if env:
+        my_env = os.environ.copy()
+        env = {**my_env, **env}
     if parameter:
         command.extend(parameter)
     inst.p = process_open(command, [1], sout=None, env=env, cwd=work_path)
@@ -279,6 +282,15 @@ def digest_login(url, expected_response):
     return True
 
 
+def add_hidden_dependency(names, test_classname, index=""):
+    for name in names:
+        python_exe = os.path.join(CALIBRE_WEB_PATH + index, 'venv', VENV_PYTHON)
+        with process_open([python_exe, "-m", "pip", "install", name], (0, 4)) as r:
+            while r.poll() is None:
+                r.stdout.readline().strip("\n")
+            environment.add_environment(test_classname, name)
+
+
 def add_dependency(name, testclass_name, index=""):
     print("Adding dependencies")
     element_version = list()
@@ -291,6 +303,12 @@ def add_dependency(name, testclass_name, index=""):
             # tmp = __import__('pkg', fromlist=['mod', 'mod2'])
             whl = importlib.__import__("config_test", fromlist=[element.split('|')[1]])
             element_version.append(whl.__dict__[element.split('|')[1]])
+        if element.lower().startswith('limit|'):
+            limit = True
+            element = element[6:]
+        else:
+            limit = False
+
         for line in requirements:
             if element.lower().startswith('git|') \
                     and not line.startswith('#') \
@@ -303,7 +321,10 @@ def add_dependency(name, testclass_name, index=""):
                     and not line.startswith('git') \
                     and not line.startswith('local') \
                     and line.upper().startswith(element.upper()):
-                element_version.append(line.split('=', 1)[0].strip('>'))
+                if not limit:
+                    element_version.append(line.split('=', 1)[0].strip('>'))
+                else:
+                    element_version.append(line.strip())
                 break
 
     for indx, element in enumerate(element_version):
@@ -329,9 +350,11 @@ def remove_dependency(names, index=""):
             name = name[4:]
         if name.startswith('local|'):
             name = name.split('|')[2]
+        if name.startswith('limit|'):
+            name = name.split('|')[1]
         with process_open([python_exe, "-m", "pip", "uninstall", "-y", name], (0, 5)) as q:
             if os.name == 'nt':
-                while q.poll() == None:
+                while q.poll() is None:
                     q.stdout.readline()
             else:
                 q.wait()

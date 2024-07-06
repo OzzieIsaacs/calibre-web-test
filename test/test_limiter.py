@@ -1,17 +1,18 @@
 #!/usr/bin/env python
 # -*- coding: utf-8 -*-
 
+import os
 from selenium.webdriver.common.by import By
-from config_test import TEST_DB, BOOT_TIME
+from config_test import TEST_DB, BOOT_TIME, CALIBRE_WEB_PATH
 from helper_func import startup
 import unittest
 import time
 from helper_ui import ui_class
-from helper_func import save_logfiles
+from helper_func import save_logfiles, add_hidden_dependency, remove_dependency
 import requests
 from selenium.webdriver.support.ui import WebDriverWait
 from selenium.webdriver.support import expected_conditions as EC
-
+from helper_redis import Redis as redis_server
 
 RESOURCES = {'ports': 1}
 
@@ -22,11 +23,14 @@ INDEX = ""
 class TestSecurity(unittest.TestCase, ui_class):
     p = None
     driver = None
+    hidden_dependencys = ["redis"]
 
     @classmethod
     def setUpClass(cls):
+        add_hidden_dependency(cls.hidden_dependencys, cls.__name__)
         try:
-            startup(cls, cls.py_version, {'config_calibre_dir':TEST_DB}, port=PORTS[0], index=INDEX, env={"APP_MODE": "test"})
+            startup(cls, cls.py_version, {'config_calibre_dir':TEST_DB}, port=PORTS[0],
+                    index=INDEX, env={"APP_MODE": "test"})
             WebDriverWait(cls.driver, 5).until(EC.presence_of_element_located((By.ID, "flash_success")))
         except Exception as e:
             print(e)
@@ -35,6 +39,7 @@ class TestSecurity(unittest.TestCase, ui_class):
 
     @classmethod
     def tearDownClass(cls):
+        remove_dependency(cls.hidden_dependencys)
         cls.driver.get("http://127.0.0.1:" + PORTS[0])
         cls.stop_calibre_web()
         # close the browser window and stop calibre-web
@@ -77,6 +82,26 @@ class TestSecurity(unittest.TestCase, ui_class):
         self.fill_basic_config({"config_ratelimiter": 1})
         time.sleep(BOOT_TIME)
         self.assertTrue(self.check_element_on_page((By.ID, "flash_success")))
+
+    def test_redis_backend(self):
+        self.restart_calibre_web()
+        time.sleep(3)
+        with open(os.path.join(CALIBRE_WEB_PATH + INDEX, 'calibre-web.log'), 'r') as logfile:
+            data = logfile.readlines()
+        self.assertTrue(any('Using the in-memory storage for tracking rate limits' in line for line in data[-15:]))
+        server = redis_server()
+        server.start()
+        self.fill_basic_config({"config_limiter_uri": "redis://localhost:6379"})
+        time.sleep(BOOT_TIME)
+        self.assertTrue(self.check_element_on_page((By.ID, "flash_success")))
+        self.goto_page("nav_new")
+        with open(os.path.join(CALIBRE_WEB_PATH + INDEX, 'calibre-web.log'), 'r') as logfile:
+            data = logfile.readlines()
+        self.assertFalse(any('Using the in-memory storage for tracking rate limits' in line for line in data[-15:]))
+        self.fill_basic_config({"config_limiter_uri": ""})
+        time.sleep(BOOT_TIME)
+        self.assertTrue(self.check_element_on_page((By.ID, "flash_success")))
+        server.stop()
 
     def test_login_limit(self):
         self.create_user('second_user', {'password': '123AbC*!', 'email': 'muki1al@b.com', 'kindle_mail': 'muki1al@b.com'})

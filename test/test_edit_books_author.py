@@ -5,9 +5,10 @@
 from unittest import TestCase, skip
 import time
 import os
+import glob
 
 from helper_ui import ui_class
-from config_test import TEST_DB, base_path
+from config_test import TEST_DB, base_path, BOOT_TIME
 from helper_func import startup, change_epub_meta
 from helper_func import save_logfiles
 from selenium.webdriver.common.by import By
@@ -26,9 +27,10 @@ class TestEditAuthors(TestCase, ui_class):
     @classmethod
     def setUpClass(cls):
         try:
-            startup(cls, cls.py_version, {'config_calibre_dir': TEST_DB}, port=PORTS[0], index=INDEX, env={"APP_MODE": "test"})
+            startup(cls, cls.py_version, {'config_calibre_dir': TEST_DB}, port=PORTS[0], index=INDEX,
+                    env={"APP_MODE": "test"})
             time.sleep(3)
-        except Exception:
+        except Exception as e:
             cls.driver.quit()
             cls.p.kill()
 
@@ -56,6 +58,7 @@ class TestEditAuthors(TestCase, ui_class):
                                                     'book8 - Leo baskerville.epub')))
         self.assertTrue(os.path.isfile(os.path.join(TEST_DB, 'Leo baskerville/book8 (8)',
                                                     'cover.jpg')))
+        # 'Leo baskerville' in os.listdir(TEST_DB)
         self.assertFalse(os.path.isdir(os.path.join(TEST_DB, 'Leo Baskerville')))
         ret_code, content = self.download_book(8, "admin", "admin123")
         self.assertEqual(200, ret_code)
@@ -144,7 +147,7 @@ class TestEditAuthors(TestCase, ui_class):
         self.assertEqual(200, ret_code)
 
     # 1 books of the author, one co-author
-    def test_change_capital_one_author_two_books(self):
+    def test_change_capital_one_author_two_books_coauthor(self):
         self.assertTrue(os.path.isfile(os.path.join(TEST_DB, 'Norbert Halagal/book11 (13)',
                                                     'cover.jpg')))
         self.assertTrue(os.path.isfile(os.path.join(TEST_DB, 'Norbert Halagal/book11 (13)',
@@ -258,9 +261,9 @@ class TestEditAuthors(TestCase, ui_class):
                                                     'cover.jpg')))
         self.assertTrue(os.path.isfile(os.path.join(TEST_DB, 'Frodo Beutlin/Der Buchtitel (1)',
                                                     'Der Buchtitel - Frodo Beutlin.txt')))
-        self.assertTrue(os.path.isfile(os.path.join(TEST_DB, 'Hector Goncalves/book9 (11)',
-                                                    'book9 - Hector Goncalves.pdf')))
-        self.assertTrue(os.path.isfile(os.path.join(TEST_DB, 'Hector Goncalves/book9 (11)',
+        self.assertTrue(os.path.isfile(os.path.join(TEST_DB, 'hector Gonçalves/book9 (11)',
+                                                    'book9 - hector Gonçalves.pdf')))
+        self.assertTrue(os.path.isfile(os.path.join(TEST_DB, 'hector Gonçalves/book9 (11)',
                                                     'cover.jpg')))
         ret_code, content = self.download_book(1, "admin", "admin123")
         self.assertEqual(200, ret_code)
@@ -480,3 +483,42 @@ class TestEditAuthors(TestCase, ui_class):
         # ToDo: Upload file with multiple existing authors
         self.fill_basic_config({'config_uploading': 0})
         self.assertTrue(self.check_element_on_page((By.ID, "flash_success")))
+
+    def test_rename_author_accent_onupload(self):
+        self.fill_basic_config({'config_uploading': 1})
+        time.sleep(BOOT_TIME)
+        self.assertTrue(self.check_element_on_page((By.ID, "flash_success")))
+        # Upload book with one author in database
+        epub_file = os.path.join(base_path, 'files', 'author.epub')
+        change_epub_meta(epub_file, meta={'title': "Useless", 'creator': "Stanislav lem"})
+        self.goto_page('nav_new')
+        upload = self.check_element_on_page((By.ID, 'btn-upload'))
+        upload.send_keys(epub_file)
+        time.sleep(3)
+        self.check_element_on_page((By.ID, 'edit_cancel')).click()
+        time.sleep(2)
+        self.assertFalse(self.check_element_on_page((By.ID, "flash_danger")))
+        details = self.get_book_details()
+        self.assertEqual('Useless', details['title'])
+        self.assertEqual(['Stanislav lem'], details['author'])
+        change_epub_meta(epub_file, meta={'title': "More Useless", 'creator': "Stanislav łem"})
+        self.goto_page('nav_new')
+        upload = self.check_element_on_page((By.ID, 'btn-upload'))
+        upload.send_keys(epub_file)
+        time.sleep(3)
+        self.check_element_on_page((By.ID, 'edit_cancel')).click()
+        time.sleep(2)
+        self.assertFalse(self.check_element_on_page((By.ID, "flash_danger")))
+        new_details = self.get_book_details()
+        self.assertEqual('More Useless', new_details['title'])
+        self.assertEqual(['Stanislav łem'], new_details['author'])
+        first_details = self.get_book_details(details['id'])
+        self.assertEqual(['Stanislav łem'], first_details['author'])
+        self.delete_book(details['id'])
+        self.delete_book(new_details['id'])
+        self.fill_basic_config({'config_uploading': 0})
+        self.assertTrue(self.check_element_on_page((By.ID, "flash_success")))
+
+
+    def rename_tag_accent_onupload(self):
+        change_epub_meta()

@@ -475,9 +475,10 @@ class TestEbookConvertCalibreGDrive(unittest.TestCase, ui_class):
         self.email_server.handler.set_return_value(0)
         self.setup_server(False, {'mail_password_e':'1234'})
 
-    @unittest.expectedFailure
+    # @unittest.expectedFailure
     def test_thumbnail_cache(self):
         thumbnail_cache_path = os.path.join(CALIBRE_WEB_PATH + INDEX, 'cps', 'cache', 'thumbnails')
+        self.goto_page("nav_hot")
         self.assertTrue(os.path.exists(thumbnail_cache_path))
-        self.assertEqual(10*2, count_files(thumbnail_cache_path))
+        self.assertEqual(count_files(thumbnail_cache_path), 20)
 

@@ -37,3 +37,6 @@ fs.googledrivefs>=1.7.0
 keyring>=21.0.0
 paramiko>=2.7.0
 pdfkit>=0.6.0
+
+# redis limiter backend
+hiredis>=2.3.2

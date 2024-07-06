@@ -32,7 +32,7 @@ class TestCli(unittest.TestCase, ui_class):
         cls.driver.implicitly_wait(10)
         cls.driver.maximize_window()
         shutil.rmtree(TEST_DB, ignore_errors=True)
-        shutil.copytree('./Calibre_db', TEST_DB)
+        shutil.copytree(os.path.join(base_path, 'Calibre_db'), TEST_DB)
 
     def setUp(self):
         os.chdir(base_path)

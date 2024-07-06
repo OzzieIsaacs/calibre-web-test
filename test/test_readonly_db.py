@@ -47,7 +47,6 @@ class TestReadOnlyDatabase(TestCase, ui_class):
         save_logfiles(cls, cls.__name__)
 
     @unittest.skipIf(os.name == 'nt', 'readonly database on windows is not checked')
-    # @unittest.skipIf(is_unrar_not_present(), "Skipping convert, unrar not found")
     def test_readonly_path(self):
         self.fill_basic_config({"config_unicode_filename": 1})
         time.sleep(BOOT_TIME)
@@ -88,6 +87,7 @@ class TestReadOnlyDatabase(TestCase, ui_class):
         read = self.check_element_on_page((By.XPATH, "//*[@id='have_read_cb']"))
         self.assertTrue(read)
         read.click()
+        self.assertTrue(self.check_element_on_page((By.ID, "flash_danger")))
         values = self.get_book_details(8)
         self.assertFalse(values['read'])
 
