@@ -520,5 +520,24 @@ class TestEditAuthors(TestCase, ui_class):
         self.assertTrue(self.check_element_on_page((By.ID, "flash_success")))
 
 
-    def rename_tag_accent_onupload(self):
-        change_epub_meta()
+    def test_rename_tag_accent_onupload(self):
+        self.fill_basic_config({'config_uploading': 1})
+        time.sleep(BOOT_TIME)
+        self.assertTrue(self.check_element_on_page((By.ID, "flash_success")))
+        # Upload book with one author in database
+        epub_file = os.path.join(base_path, 'files', 'tag.epub')
+        change_epub_meta(epub_file, meta={'title': "Useless", 'creator': "Theo so", "subject": "Genot"})
+        self.goto_page('nav_new')
+        upload = self.check_element_on_page((By.ID, 'btn-upload'))
+        upload.send_keys(epub_file)
+        time.sleep(3)
+        self.check_element_on_page((By.ID, 'edit_cancel')).click()
+        time.sleep(2)
+        self.assertFalse(self.check_element_on_page((By.ID, "flash_danger")))
+        details = self.get_book_details()
+        self.assertEqual('Useless', details['title'])
+        self.assertEqual(['Theo so'], details['author'])
+        self.assertEqual(['Genot'], details['tag'])
+        self.delete_book(details['id'])
+        self.fill_basic_config({'config_uploading': 0})
+        self.assertTrue(self.check_element_on_page((By.ID, "flash_success")))
