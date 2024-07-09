@@ -2,12 +2,12 @@
 # -*- coding: utf-8 -*-
 
 
-from unittest import TestCase, skip
+from unittest import TestCase
 import time
 import os
-import glob
 
 from helper_ui import ui_class
+from helper_db import change_tag
 from config_test import TEST_DB, base_path, BOOT_TIME
 from helper_func import startup, change_epub_meta
 from helper_func import save_logfiles
@@ -484,7 +484,7 @@ class TestEditAuthors(TestCase, ui_class):
         self.fill_basic_config({'config_uploading': 0})
         self.assertTrue(self.check_element_on_page((By.ID, "flash_success")))
 
-    def test_rename_author_accent_onupload(self):
+    def test_rename_author_emphasis_mark_onupload(self):
         self.fill_basic_config({'config_uploading': 1})
         time.sleep(BOOT_TIME)
         self.assertTrue(self.check_element_on_page((By.ID, "flash_success")))
@@ -519,8 +519,7 @@ class TestEditAuthors(TestCase, ui_class):
         self.fill_basic_config({'config_uploading': 0})
         self.assertTrue(self.check_element_on_page((By.ID, "flash_success")))
 
-
-    def test_rename_tag_accent_onupload(self):
+    def test_rename_tag_emphasis_mark_onupload(self):
         self.fill_basic_config({'config_uploading': 1})
         time.sleep(BOOT_TIME)
         self.assertTrue(self.check_element_on_page((By.ID, "flash_success")))
@@ -538,6 +537,30 @@ class TestEditAuthors(TestCase, ui_class):
         self.assertEqual('Useless', details['title'])
         self.assertEqual(['Theo so'], details['author'])
         self.assertEqual(['Genot'], details['tag'])
+        list_element = self.goto_page("nav_cat")
+        self.assertTrue(list_element[0].text, "Genot")
+        self.assertEqual(len(list_element), 2)
+        self.edit_book(details['id'], content={u'tags': 'Gênot'})
         self.delete_book(details['id'])
+        self.edit_book(10, content={u'tags': 'Georg'})
+        change_tag(os.path.join(TEST_DB, "metadata.db"), "Georg", "Genot")
+        details = self.get_book_details(10)
+        self.assertEqual(['Genot'], details['tag'])
+        upload = self.check_element_on_page((By.ID, 'btn-upload'))
+        upload.send_keys(epub_file)
+        time.sleep(3)
+        self.check_element_on_page((By.ID, 'edit_cancel')).click()
+        time.sleep(2)
+        self.assertFalse(self.check_element_on_page((By.ID, "flash_danger")))
+        details = self.get_book_details()
+        self.assertEqual('Useless', details['title'])
+        self.assertEqual(['Theo so'], details['author'])
+        self.assertEqual(['Genot'], details['tag'])
+        list_element = self.goto_page("nav_cat")
+        self.assertTrue(list_element[0].text, "Genot")
+        self.assertTrue(list_element[1].text, "Gênot")
+        self.assertEqual(len(list_element), 3)
+        self.delete_book(details['id'])
+        self.edit_book(10, content={u'tags': 'Gênot'})
         self.fill_basic_config({'config_uploading': 0})
         self.assertTrue(self.check_element_on_page((By.ID, "flash_success")))
