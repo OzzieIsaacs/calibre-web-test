@@ -1622,7 +1622,7 @@ class ui_class():
         self.check_element_on_page((By.ID, "metadata_backup")).click()
         time.sleep(1)
         self.check_element_on_page((By.ID, "DialogFinished")).click()
-        time.sleep(1)
+        time.sleep(3)
 
     @classmethod
     def check_tasks(cls, ref=None):

@@ -570,7 +570,6 @@ class TestBackupMetadata(TestCase, ui_class):
         meta_path = os.path.join(TEST_DB, "Asterix Lionherd", "comicdemo (3)", "metadata.opf")
         # generate all metadata.opf files
         self.queue_metadata_backup()
-        self.queue_metadata_backup()
         self.restart_calibre_web()
         # check tags content of metadata.opf file
         metadata = read_opf_metadata(meta_path)
