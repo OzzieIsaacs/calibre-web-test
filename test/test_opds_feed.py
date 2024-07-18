@@ -151,8 +151,9 @@ class TestOPDSFeed(unittest.TestCase, ui_class):
         payload = {'username': 'admin', 'password': 'admin123', 'submit': "", 'next': "/", "remember_me": "on", "csrf_token": token.group(1)}
         req_session.post(host + '/login', data=payload)
         r = req_session.get(host + entries['elements'][0]['download'])
-        # logged in via cookies from admin account -> admin is not allowed to download
-        self.assertEqual(403, r.status_code)
+        # logged in via cookies from admin account, -> admin is not allowed to download, guest is allowed, cookies are
+        # irrelevant
+        self.assertEqual(200, r.status_code)
         # logout admin account, cookies now invalid,
         # now login is done via basic header, means no login, guest account can download
         req_session.get(host + '/logout')
@@ -174,7 +175,7 @@ class TestOPDSFeed(unittest.TestCase, ui_class):
         token = re.search('<input type="hidden" name="csrf_token" value="(.*)">', login_page.text)
         payload = {'username': 'admin', 'password': 'admin123', 'submit': "", 'next': "/", "remember_me": "on", "csrf_token": token.group(1)}
         req_session.post(host + '/login', data=payload)
-        # user is logged in via cookies, admin is not allowed to download
+        # user is logged in via cookies, admin is not allowed to download -> guest also not, guest is used
         r = req_session.get(host + entries['elements'][0]['download'])
         self.assertEqual(403, r.status_code)
         # logout admin account, cookies now invalid,
