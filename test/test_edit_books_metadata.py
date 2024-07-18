@@ -87,7 +87,7 @@ class TestLoadMetadata(TestCase, ui_class):
             am = 10
         elif 'https://amazon.com/' == results[0]['source']:
             am = 0
-        elif 'https://amazon.com/' == results[20]['source']:
+        elif len(results)>19 and 'https://amazon.com/' == results[20]['source']:
             am = 20
         else:
             am = -1
