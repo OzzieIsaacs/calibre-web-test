@@ -71,6 +71,16 @@ class Authors(Base):
         self.name = name
         self.sort = sort
 
+class Tags(Base):
+    __tablename__ = 'tags'
+
+    id = Column(Integer, primary_key=True, autoincrement=True)
+    name = Column(String(collation='NOCASE'), unique=True, nullable=False)
+
+    def __init__(self, name):
+        super().__init__()
+        self.name = name
+
 class Books(Base):
     __tablename__ = 'books'
 
@@ -155,6 +165,19 @@ def change_book_path(location, id):
     update_title_sort(session)
     book = session.query(Books).filter(Books.id == id).first()
     book.path = "G/" + book.path
+    session.commit()
+    session.close()
+    engine.dispose()
+
+def change_tag(location, old_name, new_name):
+    engine = create_engine('sqlite:///{0}'.format(location), echo=False)
+    Session = scoped_session(sessionmaker())
+    Session.configure(bind=engine)
+    session = Session()
+
+    Base.metadata.create_all(engine)
+    tag = session.query(Tags).filter(Tags.name == old_name).first()
+    tag.name = new_name
     session.commit()
     session.close()
     engine.dispose()

@@ -33,10 +33,7 @@ class TestGoodreads(unittest.TestCase, ui_class):
 
     p = None
     driver = None
-    if os.name == 'nt':
-        dependency = ["goodreads", "local|LEVENSHTEIN_WHL|python-Levenshtein"]
-    else:
-        dependency = ["goodreads", "python-Levenshtein"]
+    dependency = ["goodreads", "python-Levenshtein"]
 
 
     @classmethod
