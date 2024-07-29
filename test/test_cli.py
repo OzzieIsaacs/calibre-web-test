@@ -598,8 +598,8 @@ class TestCli(unittest.TestCase, ui_class):
         self.list_shelfs("database")['ele'].click()
         book_shelf = self.get_shelf_books_displayed()
         self.assertEqual(1, len(book_shelf))
-        os.remove(os.path.join(alt_location, "metadata.db"))
-        os.rmdir(alt_location)
+        # Fails on Samba drive, because file is new created before return of command
+        shutil.rmtree(alt_location, ignore_errors=True)
         self.delete_shelf("database")
         self.assertTrue(self.check_element_on_page((By.ID, 'flash_success')))
         self.stop_calibre_web(p1)
@@ -607,6 +607,7 @@ class TestCli(unittest.TestCase, ui_class):
             self.driver.switch_to.alert.accept()
         except Exception:
             pass
+        shutil.rmtree(alt_location, ignore_errors=True)
 
     def test_logfile(self):
         # no logfile parameter

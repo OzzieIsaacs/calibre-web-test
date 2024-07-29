@@ -72,7 +72,6 @@ class TestEditAuthorsSmb(TestCase, ui_class):
                                                     'book 9 - Leo Baskerville.epub')))
         self.assertTrue(os.path.isfile(os.path.join(SMB_LIB, 'Leo Baskerville/book 9 (8)',
                                                     'cover.jpg')))
-        # self.assertFalse(os.path.isdir(os.path.join(SMB_LIB, 'Leo baskerville')))
         self.assertFalse('Leo baskerville' in os.listdir(SMB_LIB))
         ret_code, content = self.download_book(8, "admin", "admin123")
         self.assertEqual(200, ret_code)
@@ -86,7 +85,6 @@ class TestEditAuthorsSmb(TestCase, ui_class):
                                                     'book8 - Leo Baskerville.epub')))
         self.assertTrue(os.path.isfile(os.path.join(SMB_LIB, 'Leo Baskerville/book8 (8)',
                                                     'cover.jpg')))
-        # self.assertFalse(os.path.isdir(os.path.join(SMB_LIB, 'Leo baskerville')))
         self.assertFalse('Leo baskerville' in os.listdir(SMB_LIB))
         ret_code, content = self.download_book(8, "admin", "admin123")
         self.assertEqual(200, ret_code)
@@ -110,7 +108,6 @@ class TestEditAuthorsSmb(TestCase, ui_class):
                                                     'cover.jpg')))
         self.assertTrue(os.path.isfile(os.path.join(SMB_LIB, 'Peter parker/Very long extra super turbo cool tit (4)',
                                                     'Very long extra super turbo cool title wit - Peter parker.pdf')))
-        # self.assertFalse(os.path.isdir(os.path.join(SMB_LIB, 'Peter Parker')))
         self.assertFalse('Peter Parker' in os.listdir(SMB_LIB))
         ret_code, content = self.download_book(10, "admin", "admin123")
         self.assertEqual(200, ret_code)
@@ -130,7 +127,6 @@ class TestEditAuthorsSmb(TestCase, ui_class):
                                                     'cover.jpg')))
         self.assertTrue(os.path.isfile(os.path.join(SMB_LIB, 'Peter Parker/Very long extra super turbo cool tit (4)',
                                                     'Very long extra super turbo cool title wit - Peter Parker.pdf')))
-        # self.assertFalse(os.path.isdir(os.path.join(SMB_LIB, 'Peter parker')))
         self.assertFalse('Peter parker' in os.listdir(SMB_LIB))
         ret_code, content = self.download_book(10, "admin", "admin123")
         self.assertEqual(200, ret_code)
@@ -146,7 +142,6 @@ class TestEditAuthorsSmb(TestCase, ui_class):
                                                     'book7 - Peter Parker.epub')))
         self.assertTrue(os.path.isfile(os.path.join(SMB_LIB, 'Peter Parker/book7 (10)',
                                                     'cover.jpg')))
-        # self.assertFalse(os.path.isdir(os.path.join(SMB_LIB, 'Peter parker')))
         self.assertFalse('Peter parker' in os.listdir(SMB_LIB))
         ret_code, content = self.download_book(8, "admin", "admin123")
         self.assertEqual(200, ret_code)
@@ -166,7 +161,6 @@ class TestEditAuthorsSmb(TestCase, ui_class):
                                                     'book11 - Norbert halagal.pdf')))
         self.assertTrue(os.path.isfile(os.path.join(SMB_LIB, 'Norbert halagal/book11 (13)',
                                                     'cover.jpg')))
-        # self.assertFalse(os.path.isdir(os.path.join(SMB_LIB, 'Norbert Halagal')))
         self.assertFalse('Norbert Halagal' in os.listdir(SMB_LIB))
         details = self.get_book_details(1)
         self.assertCountEqual(['Frodo Beutlin', 'Norbert halagal', 'Liu Yang', 'Hector Gonçalves'], details['author'])
@@ -185,7 +179,6 @@ class TestEditAuthorsSmb(TestCase, ui_class):
                                                     'book 11 - Norbert Halagal.pdf')))
         self.assertTrue(os.path.isfile(os.path.join(SMB_LIB, 'Norbert Halagal/book 11 (13)',
                                                     'cover.jpg')))
-        # self.assertFalse(os.path.isdir(os.path.join(SMB_LIB, 'Norbert halagal')))
         self.assertFalse('Norbert halagal' in os.listdir(SMB_LIB))
         ret_code, content = self.download_book(13, "admin", "admin123")
         self.assertEqual(200, ret_code)
@@ -201,7 +194,6 @@ class TestEditAuthorsSmb(TestCase, ui_class):
                                                     'book11 - Norbert Halagal.pdf')))
         self.assertTrue(os.path.isfile(os.path.join(SMB_LIB, 'Norbert Halagal/book11 (13)',
                                                     'cover.jpg')))
-        # self.assertFalse(os.path.isdir(os.path.join(SMB_LIB, 'Norbert halagal')))
         self.assertFalse('Norbert halagal' in os.listdir(SMB_LIB))
         ret_code, content = self.download_book(13, "admin", "admin123")
         self.assertEqual(200, ret_code)
@@ -299,7 +291,6 @@ class TestEditAuthorsSmb(TestCase, ui_class):
                                                     'book9 - Hector gonçalves.pdf')))
         self.assertTrue(os.path.isfile(os.path.join(SMB_LIB, 'Hector gonçalves/book9 (11)',
                                                     'cover.jpg')))
-        # self.assertFalse(os.path.isdir(os.path.join(SMB_LIB, 'Hector Gonçalves')))
         self.assertFalse('Hector Gonçalves' in os.listdir(SMB_LIB))
 
         ret_code, content = self.download_book(1, "admin", "admin123")
