@@ -227,6 +227,7 @@ class TestEditBooksList(TestCase, ui_class):
         bl = self.get_books_list(-1)
         self.assertEqual("German", bl['table'][3]['Languages']['text'])
         self.edit_table_element(bl['table'][3]['Languages']['element'], "+")
+        time.sleep(1)
         self.assertTrue("+" in self.check_element_on_page((By.XPATH,
                                                           "//div[contains(@class,'editable-error-block')]")).text)
         self.check_element_on_page((By.XPATH,"//button[contains(@class,'editable-cancel')]")).click()

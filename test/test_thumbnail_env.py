@@ -67,6 +67,7 @@ class TestThumbnailsEnv(unittest.TestCase, ui_class):
 
         # check cover folder is filled
         thumbnail_cache_path = os.path.join(TEST_DB + '_3', 'thumbnails')
+        time.sleep(20)
         self.assertTrue(os.path.exists(thumbnail_cache_path))
         self.assertEqual(count_files(thumbnail_cache_path), 110*2)
         # change database
