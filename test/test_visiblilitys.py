@@ -495,13 +495,6 @@ class TestCalibreWebVisibilitys(unittest.TestCase, ui_class):
         self.assertEqual('Hallo', field.get_attribute('value'))
 
     def test_search_order(self):
-        # editing books changes pub date from 00:00:00.000 -> 00:00:00 which affects sorting order
-        self.edit_book(9, custom_content={"Custom Text 人物 *'()&": 'test'})
-        self.edit_book(9, custom_content={"Custom Text 人物 *'()&": ''})
-        self.edit_book(10, custom_content={"Custom Text 人物 *'()&": 'test'})
-        self.edit_book(10, custom_content={"Custom Text 人物 *'()&": ''})
-        self.edit_book(11, custom_content={"Custom Text 人物 *'()&": 'test'})
-        self.edit_book(11, custom_content={"Custom Text 人物 *'()&": ''})
         self.search('book')
         order = {'new': (13, 12, 11, 10),
                  'old': (5, 8, 9, 10),
@@ -883,7 +876,10 @@ class TestCalibreWebVisibilitys(unittest.TestCase, ui_class):
         list_element = self.get_books_displayed()
         self.assertEqual(len(list_element[1]), 10)
         self.assertEqual(len(self.adv_search({"read_status": "Yes"})), 1)
-        self.assertEqual(len(self.adv_search({"read_status": "No"})), 10)
+        self.assertEqual(len(self.adv_search({"read_status": "No"})), 1)
+        self.assertEqual(len(self.adv_search({"book_title": "book", "read_status": "No"})), 1)
+        self.assertEqual(len(self.adv_search({"book_title": "book", "read_status": "Empty"})), 6)
+        self.assertEqual(len(self.adv_search({"book_title": "Buu", "read_status": "Yes"})), 1)
         details = self.get_book_details(5)
         self.assertFalse(details['read'])
         self.assertEqual(len(details['cust_columns']), 0)

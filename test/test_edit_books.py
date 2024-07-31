@@ -506,16 +506,20 @@ class TestEditBooks(TestCase, ui_class):
     # change state, delete state
     def test_edit_custom_bool(self):
         self.assertEqual(len(self.adv_search({u'custom_column_3': u'Yes'})), 0)
-        self.get_book_details(5)
-        self.check_element_on_page((By.ID, "edit_book")).click()
-        self.edit_book(custom_content={u'Custom Bool 1 Ä': u'Yes'})
+        self.edit_book(5, custom_content={u'Custom Bool 1 Ä': u'Yes'})
         vals = self.get_book_details(5)
         self.assertEqual(u'ok', vals['cust_columns'][0]['value'])
-        self.assertEqual(len(self.adv_search({u'custom_column_3': u'No'})), 0)
-        self.assertEqual(len(self.adv_search({u'custom_column_3': u'Yes'})), 1)
-        self.get_book_details(5)
-        self.check_element_on_page((By.ID, "edit_book")).click()
-        self.edit_book(custom_content={u'Custom Bool 1 Ä': u""})
+        self.assertEqual(len(self.adv_search({'custom_column_3': u'No'})), 0)
+        self.assertEqual(len(self.adv_search({'custom_column_3': u'Yes'})), 1)
+        self.edit_book(8, custom_content={'Custom Bool 1 Ä': 'No'})
+        vals = self.get_book_details(8)
+        self.assertEqual("remove", vals['cust_columns'][0]['value']) #ToDo: Check
+        self.assertEqual(len(self.adv_search({"book_title": "book", 'custom_column_3': 'No'})), 1)
+        self.assertEqual(len(self.adv_search({"book_title": "book", 'custom_column_3': 'Yes'})), 1)
+        self.assertEqual(len(self.adv_search({"book_title": "book", })), 7)
+        self.assertEqual(len(self.adv_search({"book_title": "book", 'custom_column_3': 'Empty'})), 5)
+        self.edit_book(5, custom_content={'Custom Bool 1 Ä': ""})
+        self.edit_book(8, custom_content={'Custom Bool 1 Ä': ""})
         vals = self.get_book_details(5)
         self.assertEqual(0, len(vals['cust_columns']))
 
