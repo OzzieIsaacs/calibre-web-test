@@ -114,6 +114,7 @@ class TestEbookConvertKepubify(unittest.TestCase, ui_class):
     # login as admin
     # check conversion result conversion of other user visible
     def test_convert_only(self):
+        tasks = self.check_tasks()
         vals = self.get_convert_book(7)
         self.assertFalse(vals['btn_from'])
         self.assertFalse(vals['btn_to'])
@@ -128,10 +129,9 @@ class TestEbookConvertKepubify(unittest.TestCase, ui_class):
         self.check_element_on_page((By.ID, "btn-book-convert")).click()
         self.assertTrue(self.check_element_on_page((By.ID, "flash_success")))
         time.sleep(2)
-
         self.create_user('solo', {'password': '123AbC*!', 'email': 'a@b.com', 'edit_role':1})
         time.sleep(2)
-        ret = self.check_tasks()
+        task_len, ret = self.wait_tasks(tasks, 1)
         self.assertEqual(ret[-1]['result'], 'Finished')
         memory = len(ret)
 

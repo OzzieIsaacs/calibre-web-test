@@ -161,15 +161,16 @@ class TestEbookConvertCalibreGDrive(unittest.TestCase, ui_class):
         self.check_element_on_page((By.ID, "btn-book-convert")).click()
         time.sleep(1)
         self.assertTrue(self.check_element_on_page((By.ID, "flash_success")))
-        i = 0
-        while i < 20:
-            time.sleep(2)
-            task_len, ret = self.check_tasks(tasks)
-            if task_len == 1:
-                if ret[-1]['result'] == 'Finished' or ret[-1]['result'] == 'Failed':
-                    break
-            i += 1
-        self.assertEqual(task_len, 1)
+        task_len, ret = self.wait_tasks(tasks, 1)
+        #i = 0
+        #while i < 20:
+        #    time.sleep(2)
+        #    task_len, ret = self.check_tasks(tasks)
+        #    if task_len == 1:
+        #        if ret[-1]['result'] == 'Finished' or ret[-1]['result'] == 'Failed':
+        #            break
+        #    i += 1
+        #self.assertEqual(task_len, 1)
         self.assertEqual(ret[-1]['result'], 'Finished')
 
         self.fill_basic_config({'config_calibre': '--margin-rght 11.9'})
@@ -182,8 +183,9 @@ class TestEbookConvertCalibreGDrive(unittest.TestCase, ui_class):
         self.check_element_on_page((By.ID, "btn-book-convert")).click()
         self.assertTrue(self.check_element_on_page((By.ID, "flash_success")))
         time.sleep(8)
-        task_len, ret = self.check_tasks(tasks)
-        self.assertEqual(2, task_len)
+        task_len, ret = self.wait_tasks(tasks, 2)
+        # task_len, ret = self.check_tasks(tasks)
+        # self.assertEqual(2, task_len)
         self.assertEqual(ret[-1]['result'], 'Failed')
         self.fill_basic_config({'config_calibre': ''})
         self.assertTrue(self.check_element_on_page((By.ID, "flash_success")))
@@ -205,32 +207,34 @@ class TestEbookConvertCalibreGDrive(unittest.TestCase, ui_class):
         time.sleep(1)
         self.assertTrue(self.check_element_on_page((By.ID, "flash_success")))
         time.sleep(4)
-        i = 0
-        while i < 20:
-            time.sleep(2)
-            task_len, ret = self.check_tasks(tasks)
-            if task_len == 1:
-                if ret[-1]['result'] == 'Finished' or ret[-1]['result'] == 'Failed':
-                    break
-            i += 1
-        self.assertEqual(1, task_len)
+        task_len, ret = self.wait_tasks(tasks, 1)
+        ##i = 0
+        #while i < 20:
+        #    time.sleep(2)
+        #    task_len, ret = self.check_tasks(tasks)
+        #    if task_len == 1:
+        #        if ret[-1]['result'] == 'Finished' or ret[-1]['result'] == 'Failed':
+        #            break
+        #    i += 1
+        #self.assertEqual(1, task_len)
 
-        t_len, tasks = self.check_tasks(ret)
+        # t_len, tasks = self.check_tasks(ret)
         details = self.get_book_details(1)
         self.assertEqual(len(details['kindle']), 1)
         details['kindlebtn'].click()
-        i = 0
-        while i < 40:
-            time.sleep(2)
-            task_len, ret = self.check_tasks(tasks)
-            if task_len == 2:
-                if ret[-1]['result'] == 'Finished' or ret[-1]['result'] == 'Failed':
-                    break
-            i += 1
-        self.assertTrue("E-mail" in ret[-1]['task'])
-        self.assertTrue("Convert" in ret[-2]['task'])
-        self.assertEqual(ret[-2]['result'], 'Finished')
-        self.assertEqual(ret[-1]['result'], 'Finished')
+        task_len, tasks = self.wait_tasks(ret, 2)
+        #i = 0
+        #while i < 40:
+        #    time.sleep(2)
+        #    task_len, ret = self.check_tasks(tasks)
+        #    if task_len == 2:
+        #        if ret[-1]['result'] == 'Finished' or ret[-1]['result'] == 'Failed':
+        #            break
+        #    i += 1
+        self.assertTrue("E-mail" in tasks[-1]['task'])
+        self.assertTrue("Convert" in tasks[-2]['task'])
+        self.assertEqual(tasks[-2]['result'], 'Finished')
+        self.assertEqual(tasks[-1]['result'], 'Finished')
         self.setup_server(True, {'mail_password_e': '1234'})
         self.assertTrue(self.check_element_on_page((By.ID, "flash_info")))
         self.delete_book_format(1, "AZW3")
@@ -253,14 +257,15 @@ class TestEbookConvertCalibreGDrive(unittest.TestCase, ui_class):
         time.sleep(1)
         self.assertTrue(self.check_element_on_page((By.ID, "flash_success")))
         time.sleep(4)
-        i = 0
-        while i < 20:
-            time.sleep(2)
-            task_len, ret = self.check_tasks(tasks)
-            if task_len == 1:
-                if ret[-1]['result'] == 'Finished' or ret[-1]['result'] == 'Failed':
-                    break
-            i += 1
+        task_len, ret = self.wait_tasks(tasks, 1)
+        #i = 0
+        #while i < 20:
+        #    time.sleep(2)
+        #    task_len, ret = self.check_tasks(tasks)
+        #    if task_len == 1:
+        #        if ret[-1]['result'] == 'Finished' or ret[-1]['result'] == 'Failed':
+        #            break
+        #    i += 1
         self.assertEqual(1, task_len)
         self.assertEqual('Finished', ret[-1]['result'])
         fs = connect_gdrive("test")
@@ -275,18 +280,20 @@ class TestEbookConvertCalibreGDrive(unittest.TestCase, ui_class):
         fs.upload(orig_file, fout)
         fout.close()
         self.setup_server(True, {'mail_password_e': '10234'})
-        t_len, tasks = self.check_tasks(ret)
+        time.sleep(3)
+        task_len, tasks = self.wait_tasks(ret, 1)
         details = self.get_book_details(1)
         self.assertEqual(len(details['kindle']), 1)
         details['kindlebtn'].click()
-        i = 0
-        while i < 20:
-            time.sleep(2)
-            task_len, ret = self.check_tasks(tasks)
-            if task_len == 1:
-                if ret[-1]['result'] == 'Finished' or ret[-1]['result'] == 'Failed':
-                    break
-            i += 1
+        task_len, ret = self.wait_tasks(tasks, 1)
+        #i = 0
+        #while i < 20:
+        #    time.sleep(2)
+        #    task_len, ret = self.check_tasks(tasks)
+        #    if task_len == 1:
+        #        if ret[-1]['result'] == 'Finished' or ret[-1]['result'] == 'Failed':
+        #            break
+        #    i += 1
         self.assertEqual(ret[-1]['result'], 'Failed')
         self.setup_server(True, {'mail_password_e': '1234'})
         fs.remove(orig_file)
@@ -374,21 +381,22 @@ class TestEbookConvertCalibreGDrive(unittest.TestCase, ui_class):
         self.assertTrue(self.check_element_on_page((By.ID, "flash_success")))
 
         self.create_user('solo', {'password': '123AbC*!', 'email': 'a@b.com', 'edit_role':1})
-        i = 0
-        while i < 50:
-            time.sleep(2)
-            task_len, ret = self.check_tasks(tasks)
-            if task_len == 6:
-                if ret[-1]['result'] == 'Finished' or ret[-1]['result'] == 'Failed':
-                    break
-            i += 1
+        task_len, ret = self.wait_tasks(tasks, 6)
+        #i = 0
+        #while i < 50:
+        #    time.sleep(2)
+        #    task_len, ret = self.check_tasks(tasks)
+        #    if task_len == 6:
+        #        if ret[-1]['result'] == 'Finished' or ret[-1]['result'] == 'Failed':
+        #            break
+        #    i += 1
         self.assertEqual(ret[-6]['result'], 'Finished')
         self.assertEqual(ret[-5]['result'], 'Finished')
         self.assertEqual(ret[-4]['result'], 'Finished')
         self.assertEqual(ret[-3]['result'], 'Finished')
         self.assertEqual(ret[-2]['result'], 'Finished')
         self.assertEqual(ret[-1]['result'], 'Finished')
-        memory = len(ret)
+        # memory = len(ret)
 
         self.logout()
         self.login('solo', '123AbC*!')
@@ -403,14 +411,15 @@ class TestEbookConvertCalibreGDrive(unittest.TestCase, ui_class):
         select.select_by_visible_text('RTF')
         self.check_element_on_page((By.ID, "btn-book-convert")).click()
         self.assertTrue(self.check_element_on_page((By.ID, "flash_success")))
-        i = 0
-        while i < 10:
-            time.sleep(2)
-            task_len, ret = self.check_tasks(ret)
-            if task_len == 1:
-                if ret[-1]['result'] == 'Finished' or ret[-1]['result'] == 'Failed':
-                    break
-            i += 1
+        task_len, ret = self.wait_tasks(ret, 1)
+        #i = 0
+        #while i < 10:
+        #    time.sleep(2)
+        #    task_len, ret = self.check_tasks(ret)
+        #    if task_len == 1:
+        #        if ret[-1]['result'] == 'Finished' or ret[-1]['result'] == 'Failed':
+        #            break
+        #    i += 1
         self.assertEqual(ret[-1]['result'], 'Finished')
 
         self.logout()
@@ -440,14 +449,15 @@ class TestEbookConvertCalibreGDrive(unittest.TestCase, ui_class):
         # self.assertTrue(conv)
         # conv.click()
         self.assertTrue(self.check_element_on_page((By.ID, "flash_success")))
-        i = 0
-        while i < 20:
-            time.sleep(2)
-            task_len, ret = self.check_tasks(tasks)
-            if task_len == 1:
-                if ret[-1]['result'] == 'Finished' or ret[-1]['result'] == 'Failed':
-                    break
-            i += 1
+        task_len, ret = self.wait_tasks(tasks, 1)
+        #i = 0
+        #while i < 20:
+        #    time.sleep(2)
+        #    task_len, ret = self.check_tasks(tasks)
+        #    if task_len == 1:
+        #        if ret[-1]['result'] == 'Finished' or ret[-1]['result'] == 'Failed':
+        #            break
+        #    i += 1
         self.assertEqual(ret[-1]['result'], 'Finished')
         self.assertGreaterEqual(self.email_server.handler.message_size, 5995)
         self.setup_server(False, {'mail_password_e':'1234'})
@@ -463,14 +473,15 @@ class TestEbookConvertCalibreGDrive(unittest.TestCase, ui_class):
         # = '552 Requested mail action aborted: exceeded storage allocation'
         details['kindlebtn'].click()
         self.assertTrue(self.check_element_on_page((By.ID, "flash_success")))
-        i = 0
-        while i < 30:
-            time.sleep(2)
-            task_len, ret = self.check_tasks(tasks)
-            if task_len == 1:
-                if ret[-1]['result'] == 'Finished' or ret[-1]['result'] == 'Failed':
-                    break
-            i += 1
+        task_len, ret = self.wait_tasks(tasks, 1)
+        #i = 0
+        #while i < 30:
+        #    time.sleep(2)
+        #    task_len, ret = self.check_tasks(tasks)
+        #    if task_len == 1:
+        #        if ret[-1]['result'] == 'Finished' or ret[-1]['result'] == 'Failed':
+        #            break
+        #    i += 1
         self.assertEqual(ret[-1]['result'], 'Failed')
         self.email_server.handler.set_return_value(0)
         self.setup_server(False, {'mail_password_e':'1234'})

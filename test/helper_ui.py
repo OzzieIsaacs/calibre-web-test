@@ -1624,6 +1624,17 @@ class ui_class():
         self.check_element_on_page((By.ID, "DialogFinished")).click()
         time.sleep(3)
 
+    def wait_tasks(self, tasks, expected):
+        i = 0
+        while i < (10 * expected):
+            time.sleep(2)
+            task_len, ret = self.check_tasks(tasks)
+            if task_len == expected:
+                if ret[-1]['result'] == 'Finished' or ret[-1]['result'] == 'Failed':
+                    return task_len, ret
+            i += 1
+        self.assertEqual(expected, task_len)
+
     @classmethod
     def check_tasks(cls, ref=None):
         if cls.goto_page('tasks'):
@@ -1634,23 +1645,29 @@ class ui_class():
             tree = lxml.etree.parse(StringIO(html), parser)
             vals = tree.xpath("//table[@id='tasktable']/tbody/tr")
             val = list()
+            table_type = tree.xpath("//table[@id='tasktable']/thead/tr/th/div[1]")
+            admin = table_type[0].text.lower() == "user"
             for va in vals:
                 try:
                     go = va.getchildren()
-                    if len(go) == 7:
+                    if admin:
                         val.append({'user':' '.join(go[0].itertext()),
                                     'task': ''.join(go[1].itertext()),
                                     'result': ''.join(go[2].itertext()),
                                     'progress': ''.join(go[3].itertext()),
                                     'duration': ''.join(go[4].itertext()),
-                                    'start':''.join(go[5].itertext())})
+                                    'start':''.join(go[5].itertext()),
+                                    'message': ''.join(go[6].itertext())}
+                        )
                     else:
                         val.append({'user': None,
                                     'task': ''.join(go[0].itertext()),
                                     'result': ''.join(go[1].itertext()),
                                     'progress': ''.join(go[2].itertext()),
                                     'duration': ''.join(go[3].itertext()),
-                                    'start': ''.join(go[4].itertext())})
+                                    'start': ''.join(go[4].itertext()),
+                                    'message': ''.join(go[5].itertext())}
+                        )
                 except IndexError:
                     pass
             if isinstance(ref, list):
@@ -2100,9 +2117,10 @@ class ui_class():
                         'cust_columns': ret
                         }
             else:
-                text_inputs = ['book_title', 'bookAuthor', 'publisher', 'comment', 'custom_column_8',
-                               'custom_column_10', 'custom_column_1', 'custom_column_6', 'custom_column_4',
-                               'custom_column_5']
+                text_inputs = ['book_title', 'bookAuthor', 'publisher', 'comment',
+                               'custom_column_10', 'custom_column_1', 'custom_column_6',
+                               'custom_column_5', "custom_column_4_low", "custom_column_4_high",
+                               "custom_column_8_low", "custom_column_8_high"]
                 date_inputs = ["publishstart", "publishend", 'custom_column_2_start', "custom_column_2_end"]
                 selects = ['custom_column_9', 'custom_column_3', "read_status"]
                 multi_selects = ['include_tag', 'exclude_tag', 'include_serie',
