@@ -145,16 +145,16 @@ class TestEbookConvertCalibre(unittest.TestCase, ui_class):
         time.sleep(1)
         self.assertTrue(self.check_element_on_page((By.ID, "flash_success")))
         time.sleep(4)
-
-        i = 0
-        while i < 10:
-            time.sleep(2)
-            task_len, ret = self.check_tasks(tasks)
-            if task_len == 2:
-                if ret[-1]['result'] == 'Finished' or ret[-1]['result'] == 'Failed':
-                    break
-            i += 1
-        self.assertEqual(2, task_len)
+        task_len, ret = self.wait_tasks(tasks, 2)
+        #i = 0
+        #while i < 10:
+        #    time.sleep(2)
+        #    task_len, ret = self.check_tasks(tasks)
+        #    if task_len == 2:
+        #        if ret[-1]['result'] == 'Finished' or ret[-1]['result'] == 'Failed':
+        #            break
+        #    i += 1
+        # self.assertEqual(2, task_len)
         if len(ret) > 1:
             self.assertEqual(ret[-2]['result'], 'Failed')
         self.assertEqual(ret[-1]['result'], 'Failed')
@@ -214,28 +214,30 @@ class TestEbookConvertCalibre(unittest.TestCase, ui_class):
         time.sleep(1)
         self.assertTrue(self.check_element_on_page((By.ID, "flash_success")))
         time.sleep(4)
-        i = 0
-        while i < 20:
-            time.sleep(2)
-            task_len, ret = self.check_tasks(tasks)
-            if task_len == 1:
-                if ret[-1]['result'] == 'Finished' or ret[-1]['result'] == 'Failed':
-                    break
-            i += 1
-        self.assertEqual(1, task_len)
+        task_len, ret = self.wait_tasks(tasks, 1)
+        #i = 0
+        #while i < 20:
+        #    time.sleep(2)
+        #    task_len, ret = self.check_tasks(tasks)
+        #    if task_len == 1:
+        #        if ret[-1]['result'] == 'Finished' or ret[-1]['result'] == 'Failed':
+        #            break
+        #    i += 1
+        #self.assertEqual(1, task_len)
 
         tasks = self.check_tasks()
         details = self.get_book_details(1)
         self.assertEqual(len(details['kindle']), 1)
         details['kindlebtn'].click()
-        i = 0
-        while i < 10:
-            time.sleep(2)
-            task_len, ret = self.check_tasks(tasks)
-            if task_len == 2:
-                if ret[-1]['result'] == 'Finished' or ret[-1]['result'] == 'Failed':
-                    break
-            i += 1
+        task_len, ret = self.wait_tasks(tasks, 2)
+        #i = 0
+        #while i < 10:
+        #    time.sleep(2)
+        #    task_len, ret = self.check_tasks(tasks)
+        #    if task_len == 2:
+        #        if ret[-1]['result'] == 'Finished' or ret[-1]['result'] == 'Failed':
+        #            break
+        #    i += 1
         self.assertTrue("E-mail" in ret[-1]['task'])
         self.assertTrue("Convert" in ret[-2]['task'])
         self.assertEqual(ret[-2]['result'], 'Finished')
@@ -251,14 +253,15 @@ class TestEbookConvertCalibre(unittest.TestCase, ui_class):
         self.assertEqual(len(actions), 2)
         actions[1].click()
         self.assertTrue(self.check_element_on_page((By.ID, "flash_success")))
-        i = 0
-        while i < 10:
-            time.sleep(2)
-            task_len, ret = self.check_tasks(tasks)
-            if task_len == 2:
-                if ret[-1]['result'] == 'Finished' or ret[-1]['result'] == 'Failed':
-                    break
-            i += 1
+        task_len, ret = self.wait_tasks(tasks, 2)
+        #i = 0
+        #while i < 10:
+        #    time.sleep(2)
+        #    task_len, ret = self.check_tasks(tasks)
+        #    if task_len == 2:
+        #        if ret[-1]['result'] == 'Finished' or ret[-1]['result'] == 'Failed':
+        #            break
+        #    i += 1
         self.delete_book_format(7, "EPUB")
         self.assertEqual(ret[-2]['result'], 'Finished')
         self.assertEqual(ret[-1]['result'], 'Finished')
@@ -293,15 +296,16 @@ class TestEbookConvertCalibre(unittest.TestCase, ui_class):
         self.check_element_on_page((By.ID, "btn-book-convert")).click()
         time.sleep(1)
         self.assertTrue(self.check_element_on_page((By.ID, "flash_success")))
-        i = 0
-        while i < 10:
-            time.sleep(2)
-            task_len, ret = self.check_tasks(tasks)
-            if task_len == 1:
-                if ret[-1]['result'] == 'Finished' or ret[-1]['result'] == 'Failed':
-                    break
-            i += 1
-        self.assertEqual(1, task_len)
+        task_len, ret = self.wait_tasks(tasks, 1)
+        #i = 0
+        #while i < 10:
+        #    time.sleep(2)
+        #    task_len, ret = self.check_tasks(tasks)
+        #    if task_len == 1:
+        #        if ret[-1]['result'] == 'Finished' or ret[-1]['result'] == 'Failed':
+        #            break
+        #    i += 1
+        #self.assertEqual(1, task_len)
         self.assertEqual(ret[-1]['result'], 'Finished')
 
         # convert book1 to azw3 -> rename azw3 as before and start conversion
@@ -317,14 +321,15 @@ class TestEbookConvertCalibre(unittest.TestCase, ui_class):
         details = self.get_book_details(1)
         self.assertEqual(len(details['kindle']), 1)
         details['kindlebtn'].click()
-        i = 0
-        while i < 10:
-            time.sleep(2)
-            task_len, ret = self.check_tasks(tasks)
-            if task_len == 1:
-                if ret[-1]['result'] == 'Finished' or ret[-1]['result'] == 'Failed':
-                    break
-            i += 1
+        task_len, ret = self.wait_tasks(tasks, 1)
+        #i = 0
+        #while i < 10:
+        #    time.sleep(2)
+        #    task_len, ret = self.check_tasks(tasks)
+        #    if task_len == 1:
+        #        if ret[-1]['result'] == 'Finished' or ret[-1]['result'] == 'Failed':
+        #            break
+        #    i += 1
         self.assertEqual(ret[-1]['result'], 'Failed')
         self.setup_server(True, {'mail_password_e': '1234'})
         os.remove(orig_file)
@@ -474,14 +479,15 @@ class TestEbookConvertCalibre(unittest.TestCase, ui_class):
         details = self.get_book_details(10)
         details['kindlebtn'].click()
         self.assertTrue(self.check_element_on_page((By.ID, "flash_success")))
-        i = 0
-        while i < 10:
-            time.sleep(2)
-            task_len, ret = self.check_tasks(tasks)
-            if task_len == 1:
-                if ret[-1]['result'] == 'Finished' or ret[-1]['result'] == 'Failed':
-                    break
-            i += 1
+        task_len, ret = self.wait_tasks(tasks, 1)
+        #i = 0
+        #while i < 10:
+        #    time.sleep(2)
+        #    task_len, ret = self.check_tasks(tasks)
+        #    if task_len == 1:
+        #        if ret[-1]['result'] == 'Finished' or ret[-1]['result'] == 'Failed':
+        #            break
+        #    i += 1
         self.assertEqual(ret[-1]['result'], 'Finished')
         self.assertGreaterEqual(self.email_server.handler.message_size, 5995)
         self.setup_server(False, {'mail_password_e':'1234'})
@@ -497,14 +503,15 @@ class TestEbookConvertCalibre(unittest.TestCase, ui_class):
         # = '552 Requested mail action aborted: exceeded storage allocation'
         details['kindlebtn'].click()
         self.assertTrue(self.check_element_on_page((By.ID, "flash_success")))
-        i = 0
-        while i < 10:
-            time.sleep(2)
-            task_len, ret = self.check_tasks(tasks)
-            if task_len == 1:
-                if ret[-1]['result'] == 'Finished' or ret[-1]['result'] == 'Failed':
-                    break
-            i += 1
+        task_len, ret = self.wait_tasks(tasks, 1)
+        #i = 0
+        #while i < 10:
+        #    time.sleep(2)
+        #    task_len, ret = self.check_tasks(tasks)
+        #    if task_len == 1:
+        #        if ret[-1]['result'] == 'Finished' or ret[-1]['result'] == 'Failed':
+        #            break
+        #    i += 1
         self.assertEqual(ret[-1]['result'], 'Failed')
         self.email_server.handler.set_return_value(0)
         self.setup_server(False, {'mail_password_e':'1234'})
@@ -519,14 +526,15 @@ class TestEbookConvertCalibre(unittest.TestCase, ui_class):
         self.assertTrue(conv)
         conv.click()
         self.assertTrue(self.check_element_on_page((By.ID, "flash_success")))
-        i = 0
-        while i < 10:
-            time.sleep(2)
-            task_len, ret = self.check_tasks(tasks)
-            if task_len == 1:
-                if ret[-1]['result'] == 'Finished' or ret[-1]['result'] == 'Failed':
-                    break
-            i += 1
+        task_len, ret = self.wait_tasks(tasks, 1)
+        #i = 0
+        #while i < 10:
+        #    time.sleep(2)
+        #    task_len, ret = self.check_tasks(tasks)
+        #    if task_len == 1:
+        #        if ret[-1]['result'] == 'Finished' or ret[-1]['result'] == 'Failed':
+        #            break
+        #    i += 1
         self.assertEqual(ret[-1]['result'], 'Failed')
 
     # check behavior for failed server setup (SSL)
@@ -539,14 +547,15 @@ class TestEbookConvertCalibre(unittest.TestCase, ui_class):
         self.assertTrue(conv)
         conv.click()
         self.assertTrue(self.check_element_on_page((By.ID, "flash_success")))
-        i = 0
-        while i < 10:
-            time.sleep(2)
-            task_len, ret = self.check_tasks(tasks)
-            if task_len == 1:
-                if ret[-1]['result'] == 'Finished' or ret[-1]['result'] == 'Failed':
-                    break
-            i += 1
+        task_len, ret = self.wait_tasks(tasks, 1)
+        #i = 0
+        #while i < 10:
+        #    time.sleep(2)
+        #    task_len, ret = self.check_tasks(tasks)
+        #    if task_len == 1:
+        #        if ret[-1]['result'] == 'Finished' or ret[-1]['result'] == 'Failed':
+        #            break
+        #    i += 1
         self.assertEqual(ret[-1]['result'], 'Failed')
 
     def test_convert_xss(self):
@@ -562,15 +571,16 @@ class TestEbookConvertCalibre(unittest.TestCase, ui_class):
         time.sleep(1)
         self.assertTrue(self.check_element_on_page((By.ID, "flash_success")))
         time.sleep(2)
-        i = 0
+        # i = 0
         try:
-            while i < 10:
-                time.sleep(2)
-                task_len, ret = self.check_tasks(tasks)
-                if task_len == 1:
-                    if ret[-1]['result'] == 'Finished' or ret[-1]['result'] == 'Failed':
-                        break
-                i += 1
+            task_len, ret = self.wait_tasks(tasks, 1)
+            #while i < 10:
+            #    time.sleep(2)
+            #    task_len, ret = self.check_tasks(tasks)
+            #    if task_len == 1:
+            #        if ret[-1]['result'] == 'Finished' or ret[-1]['result'] == 'Failed':
+            #            break
+            #    i += 1
         except UnexpectedAlertPresentException:
             self.assertFalse(True, "XSS in ebook title after conversion in tasks view")
         self.assertEqual(ret[-1]['result'], 'Finished')
@@ -596,15 +606,16 @@ class TestEbookConvertCalibre(unittest.TestCase, ui_class):
         self.logout()
         self.login('admin', 'admin123')
         time.sleep(2)
-        i = 0
+        #i = 0
         try:
-            while i < 10:
-                time.sleep(2)
-                task_len, ret = self.check_tasks(tasks)
-                if task_len == 1:
-                    if ret[-1]['result'] == 'Finished' or ret[-1]['result'] == 'Failed':
-                        break
-                i += 1
+            task_len, ret = self.wait_tasks(tasks, 1)
+        #    while i < 10:
+        #        time.sleep(2)
+        #        task_len, ret = self.check_tasks(tasks)
+        #        if task_len == 1:
+        #            if ret[-1]['result'] == 'Finished' or ret[-1]['result'] == 'Failed':
+        #                break
+        #        i += 1
         except UnexpectedAlertPresentException:
             self.assertFalse(True, "XSS in tasks view after malicious user converted book")
         self.assertEqual(ret[-1]['result'], 'Finished')
@@ -625,14 +636,15 @@ class TestEbookConvertCalibre(unittest.TestCase, ui_class):
         self.check_element_on_page((By.ID, "btn-book-convert")).click()
         time.sleep(1)
         self.assertTrue(self.check_element_on_page((By.ID, "flash_success")))
-        i = 0
-        while i < 10:
-            time.sleep(2)
-            task_len, ret = self.check_tasks(tasks)
-            if task_len == 1:
-                if ret[-1]['result'] == 'Finished' or ret[-1]['result'] == 'Failed':
-                    break
-            i += 1
+        task_len, ret = self.wait_tasks(tasks, 1)
+        #i = 0
+        #while i < 10:
+        #    time.sleep(2)
+        #    task_len, ret = self.check_tasks(tasks)
+        #    if task_len == 1:
+        #        if ret[-1]['result'] == 'Finished' or ret[-1]['result'] == 'Failed':
+        #            break
+        #    i += 1
         self.assertEqual(ret[-1]['result'], 'Finished')
         vals = self.get_convert_book(3)
         from_book = set([x.text.strip() for x in vals['from_book']])
@@ -664,14 +676,15 @@ class TestEbookConvertCalibre(unittest.TestCase, ui_class):
         self.check_element_on_page((By.ID, "btn-book-convert")).click()
         time.sleep(1)
         self.assertTrue(self.check_element_on_page((By.ID, "flash_success")))
-        i = 0
-        while i < 10:
-            time.sleep(2)
-            task_len, ret = self.check_tasks(tasks)
-            if task_len == 1:
-                if ret[-1]['result'] == 'Finished' or ret[-1]['result'] == 'Failed':
-                    break
-            i += 1
+        task_len, ret = self.wait_tasks(tasks, 1)
+        #i = 0
+        #while i < 10:
+        #    time.sleep(2)
+        #    task_len, ret = self.check_tasks(tasks)
+        #    if task_len == 1:
+        #        if ret[-1]['result'] == 'Finished' or ret[-1]['result'] == 'Failed':
+        #            break
+        #    i += 1
         self.assertEqual(ret[-1]['result'], 'Failed')
         # check Debug entry from starting
         with open(os.path.join(CALIBRE_WEB_PATH + INDEX, 'calibre-web.log'), 'r') as logfile:
@@ -686,14 +699,15 @@ class TestEbookConvertCalibre(unittest.TestCase, ui_class):
         self.check_element_on_page((By.ID, "btn-book-convert")).click()
         time.sleep(1)
         self.assertTrue(self.check_element_on_page((By.ID, "flash_success")))
-        i = 0
-        while i < 10:
-            time.sleep(2)
-            task_len, ret1 = self.check_tasks(ret)
-            if task_len == 1:
-                if ret1[-1]['result'] == 'Finished' or ret1[-1]['result'] == 'Failed':
-                    break
-            i += 1
+        task_len, ret1 = self.wait_tasks(tasks, 1)
+        #i = 0
+        #while i < 10:
+        #    time.sleep(2)
+        #    task_len, ret1 = self.check_tasks(ret)
+        #    if task_len == 1:
+        #        if ret1[-1]['result'] == 'Finished' or ret1[-1]['result'] == 'Failed':
+        #            break
+        #    i += 1
         self.assertEqual(ret1[-1]['result'], 'Finished')
         # check Debug entry from starting
         with open(os.path.join(CALIBRE_WEB_PATH + INDEX, 'calibre-web.log'), 'r') as logfile:

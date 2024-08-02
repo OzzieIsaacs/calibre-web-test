@@ -180,14 +180,15 @@ class TestEbookConvertGDriveKepubify(unittest.TestCase, ui_class):
         self.create_user('solo', {'password': '123AbC*!', 'email': 'a@b.com', 'edit_role': 1})
         self.assertTrue(self.check_element_on_page((By.ID, "flash_success")))
         time.sleep(WAIT_GDRIVE*2 + 5)
-        i = 0
-        while i < 10:
-            time.sleep(2)
-            task_len, ret = self.check_tasks(tasks)
-            if task_len == 1:
-                if ret[-1]['result'] == 'Finished' or ret[-1]['result'] == 'Failed':
-                    break
-            i += 1
+        task_len, ret = self.wait_tasks(tasks, 1)
+        #i = 0
+        #while i < 10:
+        #    time.sleep(2)
+        #    task_len, ret = self.check_tasks(tasks)
+        #    if task_len == 1:
+        #        if ret[-1]['result'] == 'Finished' or ret[-1]['result'] == 'Failed':
+        #            break
+        #    i += 1
         self.assertEqual(ret[-1]['result'], 'Finished')
         memory = len(ret)
 
@@ -207,15 +208,16 @@ class TestEbookConvertGDriveKepubify(unittest.TestCase, ui_class):
         time.sleep(1)
         self.assertTrue(self.check_element_on_page((By.ID, "flash_success")))
         time.sleep(WAIT_GDRIVE*2)
-        i = 0
-        tasks = ret
-        while i < 10:
-            time.sleep(2)
-            task_len, ret = self.check_tasks(ret)
-            if task_len == 1:
-                if ret[-1]['result'] == 'Finished' or ret[-1]['result'] == 'Failed':
-                    break
-            i += 1
+        # tasks = ret
+        task_len, ret = self.wait_tasks(tasks, 1)
+        #i = 0
+        #while i < 10:
+        #    time.sleep(2)
+        #    task_len, ret = self.check_tasks(ret)
+        #    if task_len == 1:
+        #        if ret[-1]['result'] == 'Finished' or ret[-1]['result'] == 'Failed':
+        #            break
+        #    i += 1
         self.assertEqual(ret[-1]['result'], 'Finished')
 
         self.logout()
@@ -233,15 +235,16 @@ class TestEbookConvertGDriveKepubify(unittest.TestCase, ui_class):
         time.sleep(1)
         self.assertTrue(self.check_element_on_page((By.ID, "flash_success")))
         time.sleep(WAIT_GDRIVE*2)
-        i = 0
-        tasks = ret
-        while i < 10:
-            time.sleep(2)
-            task_len, ret = self.check_tasks(tasks)
-            if task_len == 1:
-                if ret[-1]['result'] == 'Finished' or ret[-1]['result'] == 'Failed':
-                    break
-            i += 1
+        #i = 0
+        task_len, ret = self.wait_tasks(tasks, 1)
+        #tasks = ret
+        #while i < 10:
+        #    time.sleep(2)
+        #    task_len, ret = self.check_tasks(tasks)
+        #    if task_len == 1:
+        #        if ret[-1]['result'] == 'Finished' or ret[-1]['result'] == 'Failed':
+        #            break
+        #    i += 1
         self.assertEqual(ret[-1]['result'], 'Finished')
         # self.assertEqual(len(ret), len(ret2), "Reconvert of book started")
         self.assertEqual(ret[-1]['result'], 'Finished')

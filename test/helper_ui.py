@@ -1624,6 +1624,18 @@ class ui_class():
         self.check_element_on_page((By.ID, "DialogFinished")).click()
         time.sleep(3)
 
+    def wait_tasks(self, tasks, expected):
+        i = 0
+        while i < (10 * expected):
+            time.sleep(2)
+            task_len, ret = self.check_tasks(tasks)
+            if task_len == expected:
+                if ret[-1]['result'] == 'Finished' or ret[-1]['result'] == 'Failed':
+                    break
+            i += 1
+        self.assertEqual(expected, task_len)
+        return task_len, ret
+
     @classmethod
     def check_tasks(cls, ref=None):
         if cls.goto_page('tasks'):
@@ -1637,20 +1649,24 @@ class ui_class():
             for va in vals:
                 try:
                     go = va.getchildren()
-                    if len(go) == 7:
+                    if len(go) == 8:
                         val.append({'user':' '.join(go[0].itertext()),
                                     'task': ''.join(go[1].itertext()),
                                     'result': ''.join(go[2].itertext()),
                                     'progress': ''.join(go[3].itertext()),
                                     'duration': ''.join(go[4].itertext()),
-                                    'start':''.join(go[5].itertext())})
+                                    'start':''.join(go[5].itertext()),
+                                    'message': ''.join(go[6].itertext())}
+                        )
                     else:
                         val.append({'user': None,
                                     'task': ''.join(go[0].itertext()),
                                     'result': ''.join(go[1].itertext()),
                                     'progress': ''.join(go[2].itertext()),
                                     'duration': ''.join(go[3].itertext()),
-                                    'start': ''.join(go[4].itertext())})
+                                    'start': ''.join(go[4].itertext()),
+                                    'message': ''.join(go[6].itertext())}
+                        )
                 except IndexError:
                     pass
             if isinstance(ref, list):
