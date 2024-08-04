@@ -236,7 +236,7 @@ class TestEbookConvertGDriveKepubify(unittest.TestCase, ui_class):
         self.assertTrue(self.check_element_on_page((By.ID, "flash_success")))
         time.sleep(WAIT_GDRIVE*2)
         #i = 0
-        task_len, ret = self.wait_tasks(tasks, 1)
+        task_len, tasks = self.wait_tasks(ret, 1)
         #tasks = ret
         #while i < 10:
         #    time.sleep(2)
@@ -245,6 +245,6 @@ class TestEbookConvertGDriveKepubify(unittest.TestCase, ui_class):
         #        if ret[-1]['result'] == 'Finished' or ret[-1]['result'] == 'Failed':
         #            break
         #    i += 1
-        self.assertEqual(ret[-1]['result'], 'Finished')
+        self.assertEqual(tasks[-1]['result'], 'Finished')
         # self.assertEqual(len(ret), len(ret2), "Reconvert of book started")
-        self.assertEqual(ret[-1]['result'], 'Finished')
+        self.assertEqual(tasks[-1]['result'], 'Finished')

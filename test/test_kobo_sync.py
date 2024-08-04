@@ -594,6 +594,7 @@ class TestKoboSync(unittest.TestCase, ui_class):
         # final sync
         time.sleep(2)
         self.sync_kobo()
+
     def test_kobo_about(self):
         self.assertTrue(self.goto_page('nav_about'))
 
@@ -674,6 +675,36 @@ class TestKoboSync(unittest.TestCase, ui_class):
         self.check_element_on_page((By.XPATH, "//*[@id='archived_cb']")).click()
         self.get_book_details(5)
         self.check_element_on_page((By.XPATH, "//*[@id='archived_cb']")).click()
+
+    def kobo_archive(self): # ToDo
+        data = self.inital_sync()
+        self.assertEqual(4, len(data))
+        # archive book on calibre-web side
+        self.get_book_details(10)
+        self.check_element_on_page((By.XPATH, "//*[@id='archived_cb']")).click()
+        # sync again
+        data1 = self.sync_kobo()
+        # check book archived on kobo
+        self.assertEqual(1, len(data1))
+        self.assertTrue('ChangedEntitlement' in data1[0])
+        self.assertEqual(data1[0]['ChangedEntitlement']['BookEntitlement']['IsRemoved'],
+                         True)
+
+        # unarchive on calibe-web side
+        self.get_book_details(10)
+        self.check_element_on_page((By.XPATH, "//*[@id='archived_cb']")).click()
+        # sync again
+        data2 = self.sync_kobo()
+        # check book unarchived on kobo side
+
+        # archive book on kobo side
+        # delete request
+        # http://192.168.188.33/kobo/81ce90e47622eaeff38fddc29443bb68/v1/library/da18a6c8-c1f2-4110-a4ad-344815961392
+        # sync again
+        # check book archived in calibre-web
+        # check book unarchived in calibre-web
+        # aktueller Endpoint
+        # api_endpoint=http://192.168.188.33:8083/kobo/81ce90e47622eaeff38fddc29443bb68
 
 
 
