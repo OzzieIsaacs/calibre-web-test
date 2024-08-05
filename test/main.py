@@ -4,17 +4,53 @@ from HTMLTestRunner import runner as HTMLTestRunner
 import os
 import re
 from subproc_wrapper import process_open
-from config_test import CALIBRE_WEB_PATH, VENV_PYTHON, TEST_OS, base_path
+from config_test import CALIBRE_WEB_PATH, VENV_PATH, VENV_PYTHON, TEST_OS
 import unittest
 import sys
 import venv
-import glob
-import shutil
 from CalibreResult import CalibreResult
 from helper_environment import environment
-from helper_func import kill_dead_cps, finishing_notifier, poweroff, result_move
+from helper_func import kill_dead_cps, finishing_notifier, poweroff
 from helper_certificate import generate_ssl_testing_files
 from subprocess import CalledProcessError
+from concurrencytest import ConcurrentTestSuite, iterate_tests, fork2_for_tests #  fork_for_tests, partition_tests
+import testtools
+
+class new_testresult(testtools.StreamResult):
+
+    def __init__(self):
+        super().__init__()
+
+    def status(self, test_id=None, test_status=None, test_tags=None,
+               runnable=True, file_name=None, file_bytes=None, eof=False,
+               mime_type=None, route_code=None, timestamp=None):
+        if test_status == "success":
+            print(test_id + " ...........ok")
+        if test_status == "fail":
+            print(test_id + " ...........fail")
+
+def partition_tests(suite):
+    """Partition suite into count lists of tests."""
+    # This just assigns tests in a round-robin fashion.  On one hand this
+    # splits up blocks of related tests that might run faster if they shared
+    # resources, but on the other it avoids assigning blocks of slow tests to
+    # just one partition.  So the slowest partition shouldn't be much slower
+    # than the fastest.
+    # return ((case) for case in suite)
+    partitions = list()
+    tests = iterate_tests(suite)
+    return tests
+    '''elements = 0
+    tests = list()
+    for s in suite._tests[0]:
+        if s._tests:
+            elements += 1
+            tests.append(s)
+            if elements == 2:
+                partitions.append(unittest.TestSuite(tests))
+                elements = 0
+                tests = list()
+    return partitions'''
 
 
 if __name__ == '__main__':
@@ -22,8 +58,8 @@ if __name__ == '__main__':
     sub_dependencies = ["Werkzeug", "Jinja2", "singledispatch"]
     result = False
     retry = 0
-
-    power = input('Power off after finishing tests? [y/N]').lower() == 'y'
+    power = 0
+    '''power = input('Power off after finishing tests? [y/N]').lower() == 'y'
     if power:
         print('!!!! PC will shutdown after tests finished !!!!')
 
@@ -58,50 +94,58 @@ if __name__ == '__main__':
         exit()
 
     # generate virtual environment
-    venv_path = os.path.join(CALIBRE_WEB_PATH, "venv")
     try:
-        venv.create(venv_path, clear=True, with_pip=True)
+        venv.create(VENV_PATH, clear=True, with_pip=True)
     except CalledProcessError:
         print("Error Creating virtual environment")
-        venv.create(venv_path, system_site_packages=True, with_pip=False)
+        venv.create(VENV_PATH, system_site_packages=True, with_pip=False)
     print("Creating virtual environment for testing")
 
-    for folder in glob.iglob(CALIBRE_WEB_PATH + "/cps/**/__pycache__/", recursive=True):
-        shutil.rmtree(folder)
 
     requirements_file = os.path.join(CALIBRE_WEB_PATH, 'requirements.txt')
-    python_executable = os.path.join(CALIBRE_WEB_PATH, "venv", VENV_PYTHON)
-    p = process_open([python_executable, "-m", "pip", "install", "-r", requirements_file], (0, 5))
+    p = process_open([VENV_PYTHON, "-m", "pip", "install", "-r", requirements_file], (0, 5))
     if os.name == 'nt':
         while p.poll() == None:
             p.stdout.readline()
     else:
         p.wait()
-    environment.init_environment(python_executable, sub_dependencies)
+    environment.init_environment(VENV_PYTHON, sub_dependencies)'''
 
-    all_tests = unittest.TestLoader().discover(base_path)
+    all_tests = unittest.TestLoader().discover('.')
     # configure HTMLTestRunner options
     outfile = os.path.join(CALIBRE_WEB_PATH, 'test')
     template = os.path.join(os.path.dirname(__file__), 'htmltemplate', 'report_template.html')
-    template2 = os.path.join(os.path.dirname(__file__), 'htmltemplate', 'report_template2.html')
     runner = HTMLTestRunner.HTMLTestRunner(output=outfile,
                                            report_name="Calibre-Web TestSummary_" + TEST_OS,
                                            report_title='Calibre-Web Tests',
                                            description='Systemtests for Calibre-web',
                                            combine_reports=True,
-                                           template=[template, template2],
+                                           template=template,
                                            stream=sys.stdout,
                                            resultclass=CalibreResult,
                                            open_in_browser=not power,
                                            verbosity=2)
     # run the suite using HTMLTestRunner
-    runner.run(all_tests)
+    # runner.run(all_tests)
+    # ConcurrentTestSuite
+    # concurrent_suite = testtools.ConcurrentStreamTestSuite(lambda: ((case, None) for case in all_tests))
+    results = new_testresult() # (testtools.StreamResult()) # unittest.TestResult()
+    results.startTestRun()
+    concurrent_suite = testtools.ConcurrentStreamTestSuite(fork2_for_tests(all_tests, 2))
+    concurrent_suite.run(results)
+    results.stopTestRun()
+    # suite = unittest.TestLoader().loadTestsFromTestCase(all_tests)
+    # concurrent_suite = testtools.ConcurrentTestSuite(all_tests, partition_tests)
+    #concurrent_suite = ConcurrentTestSuite(all_tests, fork_for_tests(2))
+    #concurrent_suite = testtools.ConcurrentStreamTestSuite(lambda: ((case, None) for case in all_tests))
+    #concurrent_suite.run(results)
+    #results.stopTestRun()
+    # runner.run(concurrent_suite)
     print("\nAll tests finished, please check test results")
     kill_dead_cps()
     # E-Mail tests finished
-    result_file = os.path.join(outfile, "Calibre-Web TestSummary_" + TEST_OS + ".html")
-    finishing_notifier(result_file)
-    result_file2 = os.path.join(outfile, "Calibre-Web TestSummary_" + TEST_OS + "_1.html")
-    result_move(result_file2)
-    poweroff(power)
+    #result_file = os.path.join(outfile, "Calibre-Web TestSummary_" + TEST_OS + ".html")
+    #finishing_notifier(result_file)
+
+    #poweroff(power)
     sys.exit(0)

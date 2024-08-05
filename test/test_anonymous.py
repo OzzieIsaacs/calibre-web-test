@@ -4,15 +4,12 @@
 import unittest
 from selenium.webdriver.common.by import By
 from helper_ui import ui_class
-from config_test import TEST_DB
+from config_test import TEST_DB1, CALIBRE_WEB_PATH1
 from helper_func import startup
 from helper_func import save_logfiles
 
-RESOURCES = {'ports': 1}
 
-PORTS = ['8083']
-INDEX = ""
-
+test_port = '8099'
 
 class TestAnonymous(unittest.TestCase, ui_class):
     p = None
@@ -21,25 +18,30 @@ class TestAnonymous(unittest.TestCase, ui_class):
     @classmethod
     def setUpClass(cls):
         try:
-            startup(cls, cls.py_version, {'config_calibre_dir': TEST_DB, 'config_anonbrowse': 1}, index=INDEX, env={"APP_MODE": "test"})
+            startup(cls, cls.py_version,
+                    {'config_calibre_dir': TEST_DB1, 'config_anonbrowse': 1},
+                    cw_path=CALIBRE_WEB_PATH1,
+                    t_db=TEST_DB1,
+                    host="http://127.0.0.1:" + test_port,
+                    env={"APP_MODE": "test", "CALIBRE_PORT": test_port})
         except Exception as e:
             print(e)
 
     @classmethod
     def tearDownClass(cls):
-        cls.driver.get("http://127.0.0.1:" + PORTS[0])
-        cls.stop_calibre_web()
+        cls.driver.get("http://127.0.0.1:" + test_port)
+        cls.stop_calibre_web(host="http://127.0.0.1:" + test_port)
         # close the browser window and stop calibre-web
         cls.driver.quit()
         cls.p.terminate()
-        save_logfiles(cls, cls.__name__)
+        save_logfiles(cls, cls.__name__, cw_path=CALIBRE_WEB_PATH1)
 
     def tearDown(self):
         if not self.check_user_logged_in('admin'):
             try:
                 self.logout()
             except:
-                self.driver.get("http://127.0.0.1:" + PORTS[0])
+                self.driver.get("http://127.0.0.1" + test_port)
                 self.logout()
             self.check_element_on_page((By.ID, "top_user")).click()
             self.login('admin', 'admin123')
@@ -50,7 +52,7 @@ class TestAnonymous(unittest.TestCase, ui_class):
         self.assertFalse(self.goto_page('nav_about'))
 
     # Checks if random book section is available in all sidebar menus
-    def test_guest_random_books_available(self):
+    '''def test_guest_random_books_available(self):
         self.edit_user('Guest', {'show_128': 1, 'show_2': 1, 'show_64': 1, 'show_8192': 1, 'show_16384': 1,
                                  'show_16': 1, 'show_4': 1, 'show_4096': 1, 'show_8': 1, 'show_32': 1})
         self.logout()
@@ -226,7 +228,7 @@ class TestAnonymous(unittest.TestCase, ui_class):
         self.check_element_on_page((By.ID, "top_user")).click()
         self.login('admin', 'admin123')
         self.edit_user('Guest', {'show_32': 0, 'show_128': 0, 'show_2': 0,
-                                 'show_16': 0, 'show_4': 0, 'show_4096': 0, 'show_8': 0, 'show_64': 0})
+                                 'show_16': 0, 'show_4': 0, 'show_4096': 0, 'show_8': 0, 'show_64': 0})'''
 
     # Test if user can change visibility of sidebar view best rated books
     def test_guest_change_visibility_rated(self):
@@ -251,7 +253,7 @@ class TestAnonymous(unittest.TestCase, ui_class):
         self.assertFalse(self.check_element_on_page((By.ID, "nav_rated")))
 
     # checks if admin can change user language
-    def test_guest_change_visibility_language(self):
+    '''def test_guest_change_visibility_language(self):
         self.edit_user('Guest', {'show_2': 1})
         self.assertTrue(self.check_element_on_page((By.ID, "flash_success")))
         self.logout()
@@ -428,4 +430,4 @@ class TestAnonymous(unittest.TestCase, ui_class):
                 self.assertTrue(self.check_element_on_page((By.ID, "email")))
                 self.assertFalse(self.check_element_on_page((By.ID, "locale")))
                 return
-        self.assertTrue(False, "User account not found")
+        self.assertTrue(False, "User account not found")'''

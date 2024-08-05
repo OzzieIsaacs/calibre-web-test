@@ -27,7 +27,7 @@ from email import encoders
 import zipfile
 from bs4 import BeautifulSoup
 import codecs
-from io import StringIO
+
 
 try:
     import pdfkit
@@ -54,12 +54,6 @@ try:
         server_config = False
 except ImportError:
     server_config = False
-
-try:
-    from config_email import SERVER_MOVE
-    move_config = True
-except ImportError:
-    move_config = False
 
 try:
     import paramiko
@@ -116,7 +110,7 @@ def get_Host_IP():
         return IP
 
 
-def debug_startup(inst, __, ___, login=True, host="http://127.0.0.1", port="8083", env=None):
+def debug_startup(inst, __, ___, login=True, host="http://127.0.0.1:8083", env=None):
 
     # create a new Firefox session
     inst.driver = webdriver.Firefox()
@@ -132,40 +126,37 @@ def debug_startup(inst, __, ___, login=True, host="http://127.0.0.1", port="8083
         inst.logout()
 
 
-def startup(inst, pyVersion, config, login=True, host="http://127.0.0.1", port="8083", index = "",
-            env=None, parameter=None, work_path=None, only_startup=False, only_metadata=False,
-            split=False, lib_path="", lib_dest=TEST_DB):
+def startup(inst, pyVersion, config, login=True, host="http://127.0.0.1:8083",cw_path=CALIBRE_WEB_PATH,t_db=TEST_DB,
+            env=None, parameter=None, work_path=None, only_startup=False, only_metadata=False):
     print("\n%s - %s: " % (inst.py_version, inst.__name__))
     try:
-        os.remove(os.path.join(CALIBRE_WEB_PATH + index, 'app.db'))
+        os.remove(os.path.join(cw_path, 'app.db'))
     except PermissionError:
         kill_dead_cps()
         time.sleep(5)
         try:
-            os.remove(os.path.join(CALIBRE_WEB_PATH + index, 'app.db'))
+            os.remove(os.path.join(cw_path, 'app.db'))
         except Exception as e:
             print(e)
     except Exception as ex:
         print(ex)
     try:
-        os.remove(os.path.join(CALIBRE_WEB_PATH + index, 'gdrive.db'))
+        os.remove(os.path.join(cw_path, 'gdrive.db'))
     except PermissionError:
         time.sleep(5)
         try:
-            os.remove(os.path.join(CALIBRE_WEB_PATH + index, 'gdrive.db'))
+            os.remove(os.path.join(cw_path, 'gdrive.db'))
         except Exception as e:
             print(e)
     except Exception as ex:
         print(ex)
     try:
-        os.chmod(lib_dest + index, 0o764)
+        os.chmod(t_db, 0o764)
     except Exception:
         pass
-    shutil.rmtree(lib_dest + index, ignore_errors=True)
-    if split:
-        shutil.rmtree(lib_path, ignore_errors=True)
+    shutil.rmtree(t_db, ignore_errors=True)
 
-    thumbail_cache_path = os.path.join(CALIBRE_WEB_PATH + index, 'cps', 'cache')
+    thumbail_cache_path = os.path.join(cw_path, 'cps', 'cache')
     try:
         os.chmod(thumbail_cache_path, 0o764)
     except Exception:
@@ -174,28 +165,16 @@ def startup(inst, pyVersion, config, login=True, host="http://127.0.0.1", port="
 
     if not only_metadata:
         try:
-            if not split:
-                shutil.copytree(os.path.join(base_path, 'Calibre_db'), lib_dest + index)
-            else:
-                if not lib_path:
-                    print('No location for split library path given')
-                target_location = os.path.join(base_path, 'Calibre_db', lib_path)
-                shutil.copytree(os.path.join(base_path, 'Calibre_db'), target_location)
-                os.makedirs(lib_dest + index)
-                shutil.move(os.path.join(target_location, "metadata.db"), os.path.join(lib_dest + index, "metadata.db"))
+            shutil.copytree(os.path.join(base_path, 'Calibre_db'), t_db)
         except FileExistsError:
             print('Test DB already present, might not be a clean version')
     else:
         try:
-            os.makedirs(lib_dest)
-            shutil.copy(os.path.join(base_path, 'Calibre_db', 'metadata.db'), os.path.join(lib_dest + index,
-                                                                                           'metadata.db'))
+            os.makedirs(t_db)
+            shutil.copy(os.path.join(base_path, 'Calibre_db', 'metadata.db'), os.path.join(t_db, 'metadata.db'))
         except FileExistsError:
             print('Metadata.db already present, might not be a clean version')
-    command = [pyVersion, os.path.join(CALIBRE_WEB_PATH + index, u'cps.py')]
-    if env:
-        my_env = os.environ.copy()
-        env = {**my_env, **env}
+    command = [pyVersion, os.path.join(cw_path, u'cps.py')]
     if parameter:
         command.extend(parameter)
     inst.p = process_open(command, [1], sout=None, env=env, cwd=work_path)
@@ -212,7 +191,7 @@ def startup(inst, pyVersion, config, login=True, host="http://127.0.0.1", port="
     inst.driver.maximize_window()
 
     # navigate to the application home page
-    inst.driver.get(host + ":" + port)
+    inst.driver.get(host)
     WebDriverWait(inst.driver, 5).until(EC.title_contains("Calibre-Web"))
     if not only_startup:
         # Wait for config screen to show up
@@ -282,19 +261,10 @@ def digest_login(url, expected_response):
     return True
 
 
-def add_hidden_dependency(names, test_classname, index=""):
-    for name in names:
-        python_exe = os.path.join(CALIBRE_WEB_PATH + index, 'venv', VENV_PYTHON)
-        with process_open([python_exe, "-m", "pip", "install", name], (0, 4)) as r:
-            while r.poll() is None:
-                r.stdout.readline().strip("\n")
-            environment.add_environment(test_classname, name)
-
-
-def add_dependency(name, testclass_name, index=""):
+def add_dependency(name, testclass_name, cw_path=CALIBRE_WEB_PATH):
     print("Adding dependencies")
     element_version = list()
-    with open(os.path.join(CALIBRE_WEB_PATH + index, 'optional-requirements.txt'), 'r') as f:
+    with open(os.path.join(cw_path, 'optional-requirements.txt'), 'r') as f:
         requirements = f.readlines()
     for element in name:
         if element.lower().startswith('local|'):
@@ -303,12 +273,6 @@ def add_dependency(name, testclass_name, index=""):
             # tmp = __import__('pkg', fromlist=['mod', 'mod2'])
             whl = importlib.__import__("config_test", fromlist=[element.split('|')[1]])
             element_version.append(whl.__dict__[element.split('|')[1]])
-        if element.lower().startswith('limit|'):
-            limit = True
-            element = element[6:]
-        else:
-            limit = False
-
         for line in requirements:
             if element.lower().startswith('git|') \
                     and not line.startswith('#') \
@@ -321,15 +285,11 @@ def add_dependency(name, testclass_name, index=""):
                     and not line.startswith('git') \
                     and not line.startswith('local') \
                     and line.upper().startswith(element.upper()):
-                if not limit:
-                    element_version.append(line.split('=', 1)[0].strip('>'))
-                else:
-                    element_version.append(line.strip())
+                element_version.append(line.split('=', 1)[0].strip('>'))
                 break
 
     for indx, element in enumerate(element_version):
-        python_exe = os.path.join(CALIBRE_WEB_PATH + index, 'venv', VENV_PYTHON)
-        with process_open([python_exe, "-m", "pip", "install", element], (0, 4)) as r:
+        with process_open([VENV_PYTHON, "-m", "pip", "install", element], (0, 4)) as r:
             while r.poll() == None:
                 r.stdout.readline().strip("\n")
             # if os.name == 'nt':
@@ -343,18 +303,15 @@ def add_dependency(name, testclass_name, index=""):
     environment.add_environment(testclass_name, element_version)
 
 
-def remove_dependency(names, index=""):
-    python_exe = os.path.join(CALIBRE_WEB_PATH + index, 'venv', VENV_PYTHON)
+def remove_dependency(names):
     for name in names:
         if name.startswith('git|'):
             name = name[4:]
         if name.startswith('local|'):
             name = name.split('|')[2]
-        if name.startswith('limit|'):
-            name = name.split('|')[1]
-        with process_open([python_exe, "-m", "pip", "uninstall", "-y", name], (0, 5)) as q:
+        with process_open([VENV_PYTHON, "-m", "pip", "uninstall", "-y", name], (0, 5)) as q:
             if os.name == 'nt':
-                while q.poll() is None:
+                while q.poll() == None:
                     q.stdout.readline()
             else:
                 q.wait()
@@ -404,7 +361,7 @@ def is_unrar_not_present():
     return unrar_path() is None
 
 
-def save_logfiles(inst, module_name, index=""):
+def save_logfiles(inst, module_name, cw_path=CALIBRE_WEB_PATH):
     result = ""
     if not os.path.isdir(os.path.join(base_path, 'outcome')):
         os.makedirs(os.path.join(base_path, 'outcome'))
@@ -414,7 +371,7 @@ def save_logfiles(inst, module_name, index=""):
         os.makedirs(outdir)
     for file in ['calibre-web.log', 'calibre-web.log', 'calibre-web.log.1', 'calibre-web.log.2',
                  'access.log', 'access.log.1', 'access.log.2']:
-        src = os.path.join(CALIBRE_WEB_PATH + index, file)
+        src = os.path.join(cw_path, file)
         dest = os.path.join(outdir, file)
         if os.path.exists(src):
             with open(src) as fc:
@@ -450,8 +407,8 @@ def finishing_notifier(result_file):
         options = {
             "enable-local-file-access": None
         }
-    try:
         pdfkit.from_file(result_file, 'out.pdf', options=options)
+    try:
         if email_config:
             msg = MIMEMultipart()
             message = MIMEText('Calibre-Web Tests finished')
@@ -468,11 +425,10 @@ def finishing_notifier(result_file):
                 s.login(E_MAIL_LOGIN, E_MAIL_PASSWORD)
             s.send_message(msg)
             s.quit()
-        if convert_config:
-            os.remove('out.pdf')
     except Exception as e:
         print(e)
-
+    if convert_config:
+        os.remove('out.pdf')
 
 
 def createSSHClient(server, port, user, password):
@@ -490,10 +446,6 @@ def result_upload(test_os):
                                                      'Calibre-Web TestSummary_' + test_os + '.html')).replace('\\', '/')
     ftp_client.put('./../../calibre-web/test/Calibre-Web TestSummary_' + test_os + '.html', file_destination)
     ftp_client.close()
-
-def result_move(file):
-    if move_config:
-        shutil.move(file, SERVER_MOVE)
 
 
 def poweroff(power):
@@ -621,93 +573,3 @@ def count_files(folder):
         for _ in files:
             total_files += 1
     return total_files
-
-
-def read_metadata_epub(content):
-    with zipfile.ZipFile(BytesIO(content)) as thezip:
-        contentopf = thezip.read("content.opf").decode('utf-8')
-    return read_opf_metadata(contentopf)
-
-
-def read_opf_metadata(file):
-    result = {}
-    if os.path.isfile(file):
-        with codecs.open(file, "r", "utf-8") as f:
-            soup = BeautifulSoup(f.read(), "xml")
-    elif isinstance(file, str):
-        soup = BeautifulSoup(file, "xml")
-    result['identifier'] = soup.findAll("identifier")
-    cover = soup.find("reference")
-    result['cover'] = cover.attrs if cover else ""
-    title = soup.find("dc:title")
-    result['title'] = title.contents[0] if title else ""
-    author = soup.findAll("dc:creator")
-    result['author'] = [a.contents[0] for a in author]
-    result['author_attr'] = [a.attrs for a in author]
-    contributor = soup.find("dc:contributor")
-    if contributor:
-        result['contributor'] = contributor.contents
-        result['contributor_attr'] = contributor.attrs
-    else:
-        result['contributor'] = ""
-        result['contributor_attr'] = ""
-    try:
-        format_string = "%Y-%m-%dT%H:%M:%S"
-        time_string = soup.find("dc:date").contents[0]
-        if "." in time_string:
-            format_string +=".%f"
-        result['pub_date'] = datetime.datetime.strptime(time_string, format_string)
-    except ValueError:
-        result['pub_date'] = datetime.datetime.strptime(time_string, format_string + "%z")
-    except AttributeError:
-        result['pub_date'] = ""
-    language = soup.findAll("dc:language")
-    result['language'] = [lang.contents[0] for lang in language] if language else []
-    publisher = soup.find("dc:publisher")
-    result['publisher'] = publisher.contents[0] if publisher else ""
-    tags = soup.findAll("dc:subject")
-    result['tags'] = [t.contents[0] for t in tags] if tags else []
-    comment = soup.find("dc:description")
-    result['description'] = comment.contents[0] if comment else ""
-    series_index = soup.find("meta", {"name": "calibre:series_index"})
-    result['series_index'] = series_index.attrs if series_index else ""
-    author_link_map = soup.find("meta", {"name": "calibre:author_link_map"})
-    result['author_link_map'] = author_link_map.attrs if author_link_map else ""
-    series = soup.find("meta", {"name": "calibre:series"})
-    result['series'] = series.attrs if series else ""
-    rating = soup.find("meta", {"name": "calibre:rating"})
-    result['rating'] = rating.attrs if rating else ""
-    try:
-        format_string = "%Y-%m-%dT%H:%M:%S"
-        time_string = soup.find("meta", {"name": "calibre:timestamp"}).attrs['content']
-        if "." in time_string:
-            format_string +=".%f"
-        result['timestamp'] = datetime.datetime.strptime(time_string, format_string)
-    except ValueError:
-        result['timestamp'] = datetime.datetime.strptime(time_string, format_string + "%z")
-    except AttributeError:
-        result['timestamp'] = ""
-    title_sort = soup.find("meta", {"name": "calibre:title_sort"})
-    result['title_sort'] = title_sort.attrs if title_sort else ""
-    custom_1 = soup.find("meta", {"name": "calibre:user_metadata:#cust1"})
-    result['custom_1'] = custom_1.attrs if custom_1 else ""
-    custom_2 = soup.find("meta", {"name": "calibre:user_metadata:#cust2"})
-    result['custom_2'] = custom_2.attrs if custom_2 else ""
-    custom_3 = soup.find("meta", {"name": "calibre:user_metadata:#cust3"})
-    result['custom_3'] = custom_3.attrs if custom_3 else ""
-    custom_4 = soup.find("meta", {"name": "calibre:user_metadata:#cust4"})
-    result['custom_4'] = custom_4.attrs if custom_4 else ""
-    custom_5 = soup.find("meta", {"name": "calibre:user_metadata:#cust5"})
-    result['custom_5'] = custom_5.attrs if custom_5 else ""
-    custom_6 = soup.find("meta", {"name": "calibre:user_metadata:#cust6"})
-    result['custom_6'] = custom_6.attrs if custom_6 else ""
-    custom_7 = soup.find("meta", {"name": "calibre:user_metadata:#cust7"})
-    result['custom_7'] = custom_7.attrs if custom_7 else ""
-    custom_8 = soup.find("meta", {"name": "calibre:user_metadata:#cust8"})
-    result['custom_8'] = custom_8.attrs if custom_8 else ""
-    custom_9 = soup.find("meta", {"name": "calibre:user_metadata:#cust9"})
-    result['custom_9'] = custom_9.attrs if custom_9 else ""
-    custom_10 = soup.find("meta", {"name": "calibre:user_metadata:#cust10"})
-    result['custom_10'] = custom_10.attrs if custom_10 else ""
-
-    return result

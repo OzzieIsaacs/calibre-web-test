@@ -10,13 +10,6 @@ from helper_func import startup
 from helper_func import save_logfiles
 from selenium.webdriver.support.ui import Select
 
-
-RESOURCES = {'ports': 1}
-
-PORTS = ['8083']
-INDEX = ""
-
-
 class TestUserTemplate(unittest.TestCase, ui_class):
     p = None
     driver = None
@@ -24,14 +17,14 @@ class TestUserTemplate(unittest.TestCase, ui_class):
     @classmethod
     def setUpClass(cls):
         try:
-            startup(cls, cls.py_version, {'config_calibre_dir': TEST_DB}, port=PORTS[0], index=INDEX, env = {"APP_MODE": "test"})
+            startup(cls, cls.py_version, {'config_calibre_dir': TEST_DB}, env = {"APP_MODE": "test"})
         except Exception:
             cls.driver.quit()
             cls.p.kill()
 
     @classmethod
     def tearDownClass(cls):
-        cls.driver.get("http://127.0.0.1:" + PORTS[0])
+        cls.driver.get("http://127.0.0.1:8083")
         cls.stop_calibre_web()
         # close the browser window and stop calibre-web
         cls.driver.quit()
@@ -116,7 +109,7 @@ class TestUserTemplate(unittest.TestCase, ui_class):
         # delete user
         self.edit_user('recent', {'delete': 1})
 
-    '''def test_hot_user_template(self):
+    def test_hot_user_template(self):
         self.fill_view_config({'show_16': 0})
         self.goto_page('create_user')
         self.create_user('hot', {'password': '123AbC*!','email': 'a2@b.com'})
@@ -172,9 +165,9 @@ class TestUserTemplate(unittest.TestCase, ui_class):
         self.logout()
         self.login('admin', 'admin123')
         # delete user
-        self.edit_user('best', {'delete': 1})'''
+        self.edit_user('best', {'delete': 1})
 
-    '''def test_language_user_template(self):
+    def test_language_user_template(self):
         self.fill_view_config({'show_2': 0})
         self.goto_page('create_user')
         self.create_user('lang', {'password': '123AbC*!', 'email': 'a6@b.com'})
@@ -751,4 +744,4 @@ class TestUserTemplate(unittest.TestCase, ui_class):
         self.edit_book(11, custom_content={"Custom Text 人物 *'()&": ''})
         self.edit_book(8, custom_content={"Custom Text 人物 *'()&": ''})
         self.edit_book(3, custom_content={"Custom Text 人物 *'()&": ''})
-        self.fill_view_config({'config_restricted_column': "None"})'''
+        self.fill_view_config({'config_restricted_column': "None"})

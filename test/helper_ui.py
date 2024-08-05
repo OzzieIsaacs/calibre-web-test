@@ -77,9 +77,6 @@ def cust_compare(item1, item2):
     if (item1['x'] < item2['x'] and item1['y'] <= item2['y']) or (item1['y'] < item2['y'] and item1['x'] >= item2['x']):
         return -1
     else:
-        # elif item1['x'] > item2['x']:
-        #    return 1
-        # else:
         return 0
 
 
@@ -469,7 +466,7 @@ class ui_class():
         time.sleep(3)
 
     @classmethod
-    def stop_calibre_web(cls, proc=None):
+    def stop_calibre_web(cls, proc=None, host="http://127.0.0.1:8083"):
         try:
             cls.goto_page('admin_setup')
         except:
