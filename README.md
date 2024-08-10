@@ -89,7 +89,7 @@ if ( element !== null ) {       // Newline in line 14417 and 14428 of viewer.js
     
     <button id="secondaryPrint" class="secondaryToolbarButton visibleMediumView" title="Print" tabindex="52" data-l10n-id="pdfjs-print-button">
       <span data-l10n-id="pdfjs-print-button-label">Print</span>
-    </button>
+    </button>[main.py](..%2F..%2FDusty%2Fscript%2Fmain.py)
     
     <button id="secondaryDownload" class="secondaryToolbarButton visibleMediumView" title="Save" tabindex="53" data-l10n-id="pdfjs-save-button">
       <span data-l10n-id="pdfjs-save-button-label">Save</span>

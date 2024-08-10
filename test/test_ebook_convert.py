@@ -317,7 +317,7 @@ class TestEbookConvertCalibre(unittest.TestCase, ui_class):
         with open(orig_file, 'wb') as fout:
             fout.write(os.urandom(124))
         self.setup_server(True, {'mail_password_e': '10234'})
-        t_len, tasks = self.check_tasks(ret)
+        t_len, tasks = self.wait_tasks(ret, 1)
         details = self.get_book_details(1)
         self.assertEqual(len(details['kindle']), 1)
         details['kindlebtn'].click()
@@ -475,6 +475,7 @@ class TestEbookConvertCalibre(unittest.TestCase, ui_class):
     # check filename
     def test_email_only(self):
         self.setup_server(True, {'mail_use_ssl': 'None', 'mail_password_e': '10234'})
+        time.sleep(3)
         tasks = self.check_tasks()
         details = self.get_book_details(10)
         details['kindlebtn'].click()
@@ -664,10 +665,10 @@ class TestEbookConvertCalibre(unittest.TestCase, ui_class):
         self.assertEqual(to_book, set(['-- select an option --', "TXT", "EPUB", "MOBI", "AZW3", "DOCX", "RTF", "FB2", "LIT", "LRF", "TXT", "HTMLZ", "ODT"]))
 
     def test_calibre_log(self):
-        tasks = self.check_tasks()
         self.fill_basic_config({'config_log_level': 'DEBUG'})
         time.sleep(3)
         self.assertTrue(self.check_element_on_page((By.ID, "flash_success")))
+        tasks = self.check_tasks()
         vals = self.get_convert_book(11)
         select = Select(vals['btn_from'])
         select.select_by_visible_text('PDF')
@@ -699,7 +700,7 @@ class TestEbookConvertCalibre(unittest.TestCase, ui_class):
         self.check_element_on_page((By.ID, "btn-book-convert")).click()
         time.sleep(1)
         self.assertTrue(self.check_element_on_page((By.ID, "flash_success")))
-        task_len, ret1 = self.wait_tasks(tasks, 1)
+        task_len, ret1 = self.wait_tasks(ret, 1)
         #i = 0
         #while i < 10:
         #    time.sleep(2)

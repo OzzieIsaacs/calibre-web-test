@@ -1471,46 +1471,46 @@ class ui_class():
             html = cls.driver.page_source
 
             tree = lxml.etree.parse(StringIO(html), parser)
-            reader = tree.findall("//*[@aria-labelledby='read-in-browser']/li/a")
+            reader = tree.findall(".//*[@aria-labelledby='read-in-browser']/li/a")
             ret['reader'] = [r.text for r in reader]
 
-            title = tree.find("//h2")
+            title = tree.find(".//h2")
             if title is not None:
                 ret['title'] = title.text
-            author = tree.findall("//*[@class='author']/a")
+            author = tree.findall(".//*[@class='author']/a")
             ret['author'] = [aut.text for aut in author]
 
-            ret['rating']= len(tree.findall("//*[@class='glyphicon glyphicon-star good']"))
+            ret['rating']= len(tree.findall(".//*[@class='glyphicon glyphicon-star good']"))
 
-            languages = tree.findall("//*[@class='languages']//span")
+            languages = tree.findall(".//*[@class='languages']//span")
             if languages:
                 only_lang = languages[0].text.split(': ')[1].lstrip()
                 ret['languages'] = only_lang.split(', ')
 
-            ids = tree.findall("//*[@class='identifiers']//a")
+            ids = tree.findall(".//*[@class='identifiers']//a")
             ret['identifier'] = [{id.text:id.attrib['href']} for id in ids]
 
             # find cover
-            ret['cover'] = tree.find("//*[@class='cover']//img").attrib['src']
+            ret['cover'] = tree.find(".//*[@class='cover']//img").attrib['src']
 
-            tags = tree.findall("//*[@class='tags']//a")
+            tags = tree.findall(".//*[@class='tags']//a")
             ret['tag'] = [tag.text for tag in tags]
 
-            publishers = tree.findall("//*[@class='publishers']//a")
+            publishers = tree.findall(".//*[@class='publishers']//a")
             ret['publisher'] = [pub.text for pub in publishers]
 
             # Pubdate
-            pubdate = tree.xpath("//p[starts-with(text(),'Published:')]")
+            pubdate = tree.xpath(".//p[starts-with(text(),'Published:')]")
             if len(pubdate):
                 ret['pubdate']= pubdate[0].text.lstrip('Published: ').strip()
 
-            comment = tree.find("//*[@class='comments']")
+            comment = tree.find(".//*[@class='comments']")
             ret['comment'] = ''
             if comment is not None:
                 if len(comment.getchildren()) == 1:
                     ret['comment'] = comment.getchildren()[0].tail.strip()
                 else:
-                    comm = tree.xpath("//*[@class='comments']/h3/following-sibling::*")
+                    comm = tree.xpath(".//*[@class='comments']/h3/following-sibling::*")
                     if comm[0].getchildren():
                         for ele in comm[0].getchildren():
                             if isinstance(ele.text,str):
@@ -1520,18 +1520,18 @@ class ui_class():
                             if isinstance(ele.text, str):
                                 ret['comment'] += ele.text.strip()
 
-            add_shelf = tree.findall("//*[@id='add-to-shelves']//a")
+            add_shelf = tree.findall(".//*[@id='add-to-shelves']//a")
             ret['add_shelf'] = [sh.text.strip().lstrip() for sh in add_shelf]
 
-            del_shelf = tree.findall("//*[@id='remove-from-shelves']//a")
+            del_shelf = tree.findall(".//*[@id='remove-from-shelves']//a")
             ret['del_shelf'] = [sh.text.strip().lstrip() for sh in del_shelf]
 
-            ret['edit_enable'] = tree.find("//*[@class='glyphicon glyphicon-edit']") is not None
+            ret['edit_enable'] = tree.find(".//*[@class='glyphicon glyphicon-edit']") is not None
 
-            ele = tree.xpath("//*[starts-with(@id,'sendbtn')]")
+            ele = tree.xpath(".//*[starts-with(@id,'sendbtn')]")
             # bk['ele'] = cls.check_element_on_page((By.XPATH, "//a[@href='" + bk['link'] + "']/img"))
             if len(ele):
-                all = tree.findall("//*[@aria-labelledby='send-to-ereader']/li/a")
+                all = tree.findall(".//*[@aria-labelledby='send-to-ereader']/li/a")
                 if all:
                     ret['kindlebtn'] = cls.driver.find_element(By.ID, "sendbtn2")
                     ret['kindle'] = all
@@ -1542,9 +1542,9 @@ class ui_class():
                 ret['kindle'] = None
                 ret['kindlebtn'] = None
 
-            download1 = tree.findall("//*[@aria-labelledby='btnGroupDrop1']//a")
+            download1 = tree.findall(".//*[@aria-labelledby='btnGroupDrop1']//a")
             if not download1:
-                download1 = tree.xpath("//*[starts-with(@id,'btnGroupDrop')]")
+                download1 = tree.xpath(".//*[starts-with(@id,'btnGroupDrop')]")
                 if download1:
                     ret['download'] = list()
                     for ele in download1:
@@ -1552,19 +1552,19 @@ class ui_class():
             else:
                 ret['download'] = [d.text for d in download1]
 
-            element = cls.check_element_on_page((By.XPATH, "//*[@id='have_read_cb']"))
+            element = cls.check_element_on_page((By.XPATH, ".//*[@id='have_read_cb']"))
             if element:
                 ret['read']= element.is_selected()
             else:
                 ret['read'] = None
-            archive = cls.check_element_on_page((By.XPATH, "//*[@id='archived_cb']"))
+            archive = cls.check_element_on_page((By.XPATH, ".//*[@id='archived_cb']"))
             if archive:
                 ret['archived'] = archive.is_selected()
             else:
                 ret['archived'] = None
 
 
-            series = tree.xpath("//*[contains(@href,'series')]/ancestor::p")
+            series = tree.xpath(".//*[contains(@href,'series')]/ancestor::p")
             if series:
                 ret['series_all'] = ""
                 ret['series_index'] = series[0].text[5:-3].strip()
@@ -1572,7 +1572,7 @@ class ui_class():
                     ret['series_all'] += ele.text
                     ret['series'] = ele.text
 
-            cust_columns = tree.xpath("//div[@class='real_custom_columns']")
+            cust_columns = tree.xpath(".//div[@class='real_custom_columns']")
             ret['cust_columns'] = list()
             if len(cust_columns) :      # we have custom columns
                 for col in cust_columns: # .getchildren()[0].getchildren()[1:]:
@@ -1600,7 +1600,7 @@ class ui_class():
     # works only if there is one format per book
     def download_book(self, id, user, password, format=""):
         self.get_book_details(id)
-        element = self.check_element_on_page((By.XPATH, "//*[starts-with(@id,'btnGroupDrop')]"))
+        element = self.check_element_on_page((By.XPATH, ".//*[starts-with(@id,'btnGroupDrop')]"))
         download_link = element.get_attribute("href")
         if not download_link:
             download_link = self.check_element_on_page(
@@ -1631,10 +1631,9 @@ class ui_class():
             task_len, ret = self.check_tasks(tasks)
             if task_len == expected:
                 if ret[-1]['result'] == 'Finished' or ret[-1]['result'] == 'Failed':
-                    break
+                    return task_len, ret
             i += 1
         self.assertEqual(expected, task_len)
-        return task_len, ret
 
     @classmethod
     def check_tasks(cls, ref=None):
@@ -1646,10 +1645,12 @@ class ui_class():
             tree = lxml.etree.parse(StringIO(html), parser)
             vals = tree.xpath("//table[@id='tasktable']/tbody/tr")
             val = list()
+            table_type = tree.xpath("//table[@id='tasktable']/thead/tr/th/div[1]")
+            admin = table_type[0].text.lower() == "user"
             for va in vals:
                 try:
                     go = va.getchildren()
-                    if len(go) == 8:
+                    if admin:
                         val.append({'user':' '.join(go[0].itertext()),
                                     'task': ''.join(go[1].itertext()),
                                     'result': ''.join(go[2].itertext()),
@@ -1665,7 +1666,7 @@ class ui_class():
                                     'progress': ''.join(go[2].itertext()),
                                     'duration': ''.join(go[3].itertext()),
                                     'start': ''.join(go[4].itertext()),
-                                    'message': ''.join(go[6].itertext())}
+                                    'message': ''.join(go[5].itertext())}
                         )
                 except IndexError:
                     pass
