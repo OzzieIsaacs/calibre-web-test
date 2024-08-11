@@ -24,7 +24,7 @@ PORTS = ['8083']
 INDEX = ""
 
 
-class TestUploadEPubs(TestCase, ui_class):
+class TestUploadAudio(TestCase, ui_class):
     p = None
     driver = None
     dependencys = ["mutagen"]

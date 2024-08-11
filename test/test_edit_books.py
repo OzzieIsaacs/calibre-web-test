@@ -631,7 +631,7 @@ class TestEditBooks(TestCase, ui_class):
         self.check_element_on_page((By.ID, "edit_book")).click()
         self.edit_book(custom_content={u'Custom Float 人物': u'-2.5'})
         vals = self.get_book_details(5)
-        self.assertEqual(u'-2.5', vals['cust_columns'][0]['value'])
+        self.assertEqual(u'-2.50', vals['cust_columns'][0]['value'])
         self.assertEqual(len(self.adv_search({u'custom_column_8_low': '-2.3'})), 0)
         self.assertEqual(len(self.adv_search({u'custom_column_8_low': '-2.5'})), 1)
         self.assertEqual(len(self.adv_search({'custom_column_8_low': '-2.7', 'custom_column_8_high': '-2.6' })), 0)
@@ -1224,19 +1224,3 @@ class TestEditBooks(TestCase, ui_class):
         list_element[0].click()
         number_books = self.get_books_displayed()
         self.assertEqual(1, len(number_books[1]))
-
-
-    # If more than one book has the same: author, tag or series it should be possible to change uppercase
-    # letters to lowercase and vice versa. Example:
-    # Book1 and Book2 are both part of the series "colLection". Changing the series to 'collection'
-    # Expected Behavior: Both books later on are part of the series 'collection'
-    @skip("Not Implemented")
-    def test_rename_uppercase_lowercase(self):
-        pass
-
-    # If authors are: "Claire North & Peter Snoogut" then authorsort should be: "North, Claire & Snoogut, Peter"
-    # The files should be saved in ../Claire North/...
-    # ------------ nachfolgendes kann man sich sparen ---------
-    # the IDs in books_authors links have to be arranged according to sort order of names e.g:
-    # before : Claire North (4) Peter Snoogut (100) -> "Peter Snoogut & Claire North"
-    # afterwards Claire North (100) Peter Snoogut (4)

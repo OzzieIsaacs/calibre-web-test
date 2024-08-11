@@ -990,7 +990,7 @@ class TestCalibreWebVisibilitys(unittest.TestCase, ui_class):
         self.assertEqual(details['cust_columns'][1]['value'], 'remove')
         self.assertEqual(details['cust_columns'][2]['value'], '1')
         self.assertEqual(details['cust_columns'][3]['value'], 'Test')
-        self.assertEqual(details['cust_columns'][4]['value'], '3.5')
+        self.assertEqual(details['cust_columns'][4]['value'], '3.50')
         self.assertEqual(details['cust_columns'][5]['value'], 'Alfa')
         self.assertEqual(details['cust_columns'][6]['value'], 'Tedo')
         search = self.adv_search('', get=True)
