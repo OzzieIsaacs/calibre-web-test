@@ -16,7 +16,7 @@ from diffimg import diff
 from io import BytesIO
 import base64
 import mutagen
-from mutagen import mp3, wave, aiff, ogg, flac, oggvorbis
+from mutagen import mp3, wave, aiff, flac, oggvorbis, asf, mp4, apev2
 from mutagen.flac import Picture
 import os
 
@@ -382,6 +382,292 @@ class TestUploadAudio(TestCase, ui_class):
         time.sleep(2)
         details = self.get_book_details()
         self.assertEqual('Dec 11, 2022', details['pubdate'])
+        self.assertEqual('1', details['series_index'])  # due to wrong format, reset to default
+        self.delete_book(details['id'])
+        os.remove(dest)
+
+    def test_upload_aac(self):
+        dest = os.path.join(base_path, "files", 'base.aac')
+        shutil.copyfile(os.path.join(base_path, "files", 'music.aac'), dest)
+        aac_file = apev2.APEv2File(dest)
+        aac_file.add_tags()
+        # aac_file = aac.AAC(dest)
+        aac_file['Title'] = mutagen.apev2.APETextValue("Aac Title") #  mutagen.apev2.APETextValue(encoding=1, text=['Wav Title'])
+        aac_file['Artist'] = mutagen.apev2.APETextValue("Aac Artist")
+        aac_file['Album'] = mutagen.apev2.APETextValue("Aac Album")
+        aac_file['Year'] = mutagen.apev2.APETextValue("2022-12-12")
+        aac_file['Track'] = mutagen.apev2.APETextValue("22")
+        aac_file['Comment'] = mutagen.apev2.APETextValue("aac Comments")
+        aac_file['Label'] = mutagen.apev2.APETextValue(" Ölsids sdksdsd ")
+        aac_file['Genre'] = mutagen.apev2.APETextValue("Gönr#Ä")
+
+        with open(os.path.join("files", 'cover.jpg'), "rb") as f:
+            ref_picture = f.read()
+        aac_file["Cover Art (Front)"] = mutagen.apev2.APEBinaryValue(b"Cover Art (Front)\00" + ref_picture)
+        aac_file.save()
+
+        self.fill_basic_config({'config_upload_formats': 'djv,mobi,cbr,ogg,cbt,rtf,mp4,mp3,epub,fb2,m4b,pdf,cb7,opus,azw3,odt,flac,txt,lit,doc,prc,wav,kepub,djvu,docx,m4a,cbz,html,azw,aac'})
+        self.assertTrue(self.check_element_on_page((By.ID, "flash_success")))
+        self.goto_page('nav_new')
+        upload = self.check_element_on_page((By.ID, 'btn-upload'))
+        upload.send_keys(dest)
+        time.sleep(3)
+        self.check_element_on_page((By.ID, 'edit_cancel')).click()
+        time.sleep(2)
+        details = self.get_book_details()
+        self.assertEqual('Aac Title', details['title'])
+        self.assertEqual('Aac Artist', details['author'][0])
+        self.assertEqual('Gönr#Ä', details['tag'][0])
+        self.assertEqual('Ölsids sdksdsd', details['publisher'][0])
+        self.assertEqual('aac Comments', details['comment'])
+        self.assertEqual('22', details['series_index'])
+        self.assertEqual('Aac Album', details['series'])
+        self.assertEqual('Dec 12, 2022', details['pubdate'])
+        cover_image = self.check_element_on_page((By.ID, "detailcover")).screenshot_as_png
+
+        # self.assertAlmostEqual(diff(BytesIO(ref_picture), BytesIO(cover_image), delete_diff_file=True), 0.007, delta=0.003)
+        self.delete_book(details['id'])
+        self.fill_basic_config({'config_upload_formats': 'mobi,pdf,m4b,html,cbr,doc,lit,azw,mp4,odt,wav,prc,kepub,docx,cbt,mp3,rtf,epub,cb7,ogg,azw3,flac,opus,txt,djvu,cbz,fb2,djv,m4a'})
+        self.assertTrue(self.check_element_on_page((By.ID, "flash_success")))
+
+        os.remove(dest)
+
+    def test_upload_asf(self):
+        dest = os.path.join(base_path, "files", 'base.asf')
+        shutil.copyfile(os.path.join(base_path, "files", 'music.asf'), dest)
+        asf_file = asf.ASF(dest)
+        asf_file['Title'] = "ASF Title"
+        asf_file['Artist'] = "ASF Artist"
+        asf_file['Album'] = "Asf Album"
+        asf_file['Year'] = "2022-12-12"
+        asf_file['Track'] = "19"
+        asf_file['Comments'] = "Asf Comments"
+        asf_file['Label'] = " Älsids sdksdsd "
+        asf_file['Genre'] = "Genr#Ä"
+
+        with open(os.path.join("files", 'cover.jpg'), "rb") as f:
+            ref_picture = f.read()
+
+        asf_file["WM/Picture"] = ref_picture
+        asf_file.save()
+
+        self.fill_basic_config({'config_upload_formats': 'mobi,pdf,m4b,html,cbr,doc,lit,azw,mp4,odt,wav,prc,kepub,docx,cbt,mp3,rtf,epub,cb7,ogg,azw3,flac,opus,txt,djvu,cbz,fb2,djv,m4a,asf'})
+        self.assertTrue(self.check_element_on_page((By.ID, "flash_success")))
+
+        self.goto_page('nav_new')
+        upload = self.check_element_on_page((By.ID, 'btn-upload'))
+        upload.send_keys(dest)
+        time.sleep(3)
+        self.check_element_on_page((By.ID, 'edit_cancel')).click()
+        time.sleep(2)
+        details = self.get_book_details()
+        self.assertEqual('ASF Title', details['title'])
+        self.assertEqual('ASF Artist', details['author'][0])
+        self.assertEqual('Genr#Ä', details['tag'][0])
+        self.assertEqual('Älsids sdksdsd', details['publisher'][0])
+        self.assertEqual('Asf Comments', details['comment'])
+        self.assertEqual('19', details['series_index'])
+        self.assertEqual('Asf Album', details['series'])
+        self.assertEqual('Dec 12, 2022', details['pubdate'])
+        cover_image = self.check_element_on_page((By.ID, "detailcover")).screenshot_as_png
+
+        # self.assertAlmostEqual(diff(BytesIO(ref_picture), BytesIO(cover_image), delete_diff_file=True), 0.007, delta=0.003)
+        self.delete_book(details['id'])
+        self.fill_basic_config({'config_upload_formats': 'mobi,pdf,m4b,html,cbr,doc,lit,azw,mp4,odt,wav,prc,kepub,docx,cbt,mp3,rtf,epub,cb7,ogg,azw3,flac,opus,txt,djvu,cbz,fb2,djv,m4a'})
+        self.assertTrue(self.check_element_on_page((By.ID, "flash_success")))
+        os.remove(dest)
+
+    def test_upload_mp4(self):
+        dest = os.path.join(base_path, "files", 'base.ogg')
+        shutil.copyfile(os.path.join(base_path, "files", 'music.ogg'), dest)
+        ogg_file = oggvorbis.OggVorbis(dest)
+        ogg_file['TITLE'] = "Ogg Title"
+        ogg_file['ARTIST'] = "Ogg Artist"
+        ogg_file['ALBUM'] = "Ogg Album"
+        ogg_file['DATE'] = "2022-312-12"
+        ogg_file['TRACKNUMBER'] = "9"
+        ogg_file['COMMENTS'] = "OGG Comments"
+        ogg_file['LABEL'] = " Älsids sdksdsd "
+        ogg_file['GENRE'] = "Genr#Ä"
+
+        with open(os.path.join("files", 'cover.png'), "rb") as f:
+            ref_picture = f.read()
+        picture = Picture()
+        picture.data = ref_picture
+        picture.type = 17
+        picture.desc = u"Desription"
+        picture.mime = u"image/png"
+        picture.width = 654
+        picture.height = 100
+        picture.depth = 24
+
+        encoded_data = base64.b64encode(picture.write())
+        vcomment_value = encoded_data.decode("ascii")
+
+        ogg_file["metadata_block_picture"] = [vcomment_value]
+        ogg_file.save()
+
+        self.goto_page('nav_new')
+        upload = self.check_element_on_page((By.ID, 'btn-upload'))
+        upload.send_keys(dest)
+        time.sleep(3)
+        self.check_element_on_page((By.ID, 'edit_cancel')).click()
+        time.sleep(2)
+        details = self.get_book_details()
+        self.assertEqual('Ogg Title', details['title'])
+        self.assertEqual('Ogg Artist', details['author'][0])
+        self.assertEqual('Genr#Ä', details['tag'][0])
+        self.assertEqual('Älsids sdksdsd', details['publisher'][0])
+        self.assertEqual('OGG Comments', details['comment'])
+        self.assertEqual('9', details['series_index'])
+        self.assertEqual('Ogg Album', details['series'])
+        cover_image = self.check_element_on_page((By.ID, "detailcover")).screenshot_as_png
+
+        self.assertAlmostEqual(diff(BytesIO(ref_picture), BytesIO(cover_image), delete_diff_file=True), 0.007, delta=0.003)
+        self.delete_book(details['id'])
+        ogg_file = oggvorbis.OggVorbis(dest)
+        ogg_file['DATE'] = '2022-12-12'
+        ogg_file['TRACKNUMBER'] = "Q"
+        ogg_file.save()
+        self.goto_page('nav_new')
+        upload = self.check_element_on_page((By.ID, 'btn-upload'))
+        upload.send_keys(dest)
+        time.sleep(3)
+        self.assertTrue(self.check_element_on_page((By.ID, "flash_warning")))
+        self.check_element_on_page((By.ID, 'edit_cancel')).click()
+        time.sleep(2)
+        details = self.get_book_details()
+        self.assertEqual('Dec 12, 2022', details['pubdate'])
+        self.assertEqual('1', details['series_index'])  # due to wrong format, reset to default
+        self.delete_book(details['id'])
+        os.remove(dest)
+
+    def test_upload_m4a(self):
+        dest = os.path.join(base_path, "files", 'base.ogg')
+        shutil.copyfile(os.path.join(base_path, "files", 'music.ogg'), dest)
+        ogg_file = oggvorbis.OggVorbis(dest)
+        ogg_file['TITLE'] = "Ogg Title"
+        ogg_file['ARTIST'] = "Ogg Artist"
+        ogg_file['ALBUM'] = "Ogg Album"
+        ogg_file['DATE'] = "2022-312-12"
+        ogg_file['TRACKNUMBER'] = "9"
+        ogg_file['COMMENTS'] = "OGG Comments"
+        ogg_file['LABEL'] = " Älsids sdksdsd "
+        ogg_file['GENRE'] = "Genr#Ä"
+
+        with open(os.path.join("files", 'cover.png'), "rb") as f:
+            ref_picture = f.read()
+        picture = Picture()
+        picture.data = ref_picture
+        picture.type = 17
+        picture.desc = u"Desription"
+        picture.mime = u"image/png"
+        picture.width = 654
+        picture.height = 100
+        picture.depth = 24
+
+        encoded_data = base64.b64encode(picture.write())
+        vcomment_value = encoded_data.decode("ascii")
+
+        ogg_file["metadata_block_picture"] = [vcomment_value]
+        ogg_file.save()
+
+        self.goto_page('nav_new')
+        upload = self.check_element_on_page((By.ID, 'btn-upload'))
+        upload.send_keys(dest)
+        time.sleep(3)
+        self.check_element_on_page((By.ID, 'edit_cancel')).click()
+        time.sleep(2)
+        details = self.get_book_details()
+        self.assertEqual('Ogg Title', details['title'])
+        self.assertEqual('Ogg Artist', details['author'][0])
+        self.assertEqual('Genr#Ä', details['tag'][0])
+        self.assertEqual('Älsids sdksdsd', details['publisher'][0])
+        self.assertEqual('OGG Comments', details['comment'])
+        self.assertEqual('9', details['series_index'])
+        self.assertEqual('Ogg Album', details['series'])
+        cover_image = self.check_element_on_page((By.ID, "detailcover")).screenshot_as_png
+
+        self.assertAlmostEqual(diff(BytesIO(ref_picture), BytesIO(cover_image), delete_diff_file=True), 0.007, delta=0.003)
+        self.delete_book(details['id'])
+        ogg_file = oggvorbis.OggVorbis(dest)
+        ogg_file['DATE'] = '2022-12-12'
+        ogg_file['TRACKNUMBER'] = "Q"
+        ogg_file.save()
+        self.goto_page('nav_new')
+        upload = self.check_element_on_page((By.ID, 'btn-upload'))
+        upload.send_keys(dest)
+        time.sleep(3)
+        self.assertTrue(self.check_element_on_page((By.ID, "flash_warning")))
+        self.check_element_on_page((By.ID, 'edit_cancel')).click()
+        time.sleep(2)
+        details = self.get_book_details()
+        self.assertEqual('Dec 12, 2022', details['pubdate'])
+        self.assertEqual('1', details['series_index'])  # due to wrong format, reset to default
+        self.delete_book(details['id'])
+        os.remove(dest)
+
+    def test_upload_opus(self):
+        dest = os.path.join(base_path, "files", 'base.ogg')
+        shutil.copyfile(os.path.join(base_path, "files", 'music.ogg'), dest)
+        ogg_file = oggvorbis.OggVorbis(dest)
+        ogg_file['TITLE'] = "Ogg Title"
+        ogg_file['ARTIST'] = "Ogg Artist"
+        ogg_file['ALBUM'] = "Ogg Album"
+        ogg_file['DATE'] = "2022-312-12"
+        ogg_file['TRACKNUMBER'] = "9"
+        ogg_file['COMMENTS'] = "OGG Comments"
+        ogg_file['LABEL'] = " Älsids sdksdsd "
+        ogg_file['GENRE'] = "Genr#Ä"
+
+        with open(os.path.join("files", 'cover.png'), "rb") as f:
+            ref_picture = f.read()
+        picture = Picture()
+        picture.data = ref_picture
+        picture.type = 17
+        picture.desc = u"Desription"
+        picture.mime = u"image/png"
+        picture.width = 654
+        picture.height = 100
+        picture.depth = 24
+
+        encoded_data = base64.b64encode(picture.write())
+        vcomment_value = encoded_data.decode("ascii")
+
+        ogg_file["metadata_block_picture"] = [vcomment_value]
+        ogg_file.save()
+
+        self.goto_page('nav_new')
+        upload = self.check_element_on_page((By.ID, 'btn-upload'))
+        upload.send_keys(dest)
+        time.sleep(3)
+        self.check_element_on_page((By.ID, 'edit_cancel')).click()
+        time.sleep(2)
+        details = self.get_book_details()
+        self.assertEqual('Ogg Title', details['title'])
+        self.assertEqual('Ogg Artist', details['author'][0])
+        self.assertEqual('Genr#Ä', details['tag'][0])
+        self.assertEqual('Älsids sdksdsd', details['publisher'][0])
+        self.assertEqual('OGG Comments', details['comment'])
+        self.assertEqual('9', details['series_index'])
+        self.assertEqual('Ogg Album', details['series'])
+        cover_image = self.check_element_on_page((By.ID, "detailcover")).screenshot_as_png
+
+        self.assertAlmostEqual(diff(BytesIO(ref_picture), BytesIO(cover_image), delete_diff_file=True), 0.007, delta=0.003)
+        self.delete_book(details['id'])
+        ogg_file = oggvorbis.OggVorbis(dest)
+        ogg_file['DATE'] = '2022-12-12'
+        ogg_file['TRACKNUMBER'] = "Q"
+        ogg_file.save()
+        self.goto_page('nav_new')
+        upload = self.check_element_on_page((By.ID, 'btn-upload'))
+        upload.send_keys(dest)
+        time.sleep(3)
+        self.assertTrue(self.check_element_on_page((By.ID, "flash_warning")))
+        self.check_element_on_page((By.ID, 'edit_cancel')).click()
+        time.sleep(2)
+        details = self.get_book_details()
+        self.assertEqual('Dec 12, 2022', details['pubdate'])
         self.assertEqual('1', details['series_index'])  # due to wrong format, reset to default
         self.delete_book(details['id'])
         os.remove(dest)
