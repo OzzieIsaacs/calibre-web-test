@@ -756,7 +756,7 @@ class TestEditBooksOnGdrive(unittest.TestCase, ui_class):
         self.check_element_on_page((By.ID, "edit_book")).click()
         self.edit_book(custom_content={u'Custom Float 人物': u'-2.5'})
         vals = self.get_book_details(5)
-        self.assertEqual(u'-2.5', vals['cust_columns'][0]['value'])
+        self.assertEqual(u'-2.50', vals['cust_columns'][0]['value'])
         self.assertEqual(len(self.adv_search({u'custom_column_8_low': '-2.3'})), 0)
         self.assertEqual(len(self.adv_search({u'custom_column_8_low': '-2.5'})), 1)
         self.assertEqual(len(self.adv_search({'custom_column_8_low': '-2.7', 'custom_column_8_high': '-2.6' })), 0)

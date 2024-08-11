@@ -442,6 +442,7 @@ class TestEbookConvertCalibreGDrive(unittest.TestCase, ui_class):
     # check filename
     def test_email_only(self):
         self.setup_server(True, {'mail_use_ssl': 'None', 'mail_password_e': '10234'})
+        time.sleep(5)
         tasks = self.check_tasks()
         details = self.get_book_details(10)
         details['kindlebtn'].click()
