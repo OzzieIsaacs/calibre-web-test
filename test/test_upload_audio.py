@@ -8,7 +8,7 @@ import time
 from selenium.webdriver.common.by import By
 from helper_ui import ui_class
 from config_test import TEST_DB, base_path
-from helper_func import save_logfiles, startup
+from helper_func import save_logfiles
 from helper_func import startup, add_dependency, remove_dependency
 from selenium.webdriver.support.ui import WebDriverWait
 from selenium.webdriver.support import expected_conditions as EC
@@ -46,7 +46,7 @@ class TestUploadAudio(TestCase, ui_class):
 
     @classmethod
     def tearDownClass(cls):
-        # remove_dependency(cls.dependencys)
+        remove_dependency(cls.dependencys)
         cls.driver.get("http://127.0.0.1:" + PORTS[0])
         cls.stop_calibre_web()
         # close the browser window and stop calibre-web
@@ -332,7 +332,7 @@ class TestUploadAudio(TestCase, ui_class):
         flac_file['ALBUM'] = "Flac Album"
         flac_file['DATE'] = "2022-312-12"
         flac_file['TRACKNUMBER'] = "11"
-        flac_file['COMMENTS'] = "Flac Comments"
+        flac_file['COMMENTS'] = "Flac Commento"
         flac_file['LABEL'] = " Älsids sdksdsd "
         flac_file['GENRE'] = "Genr#Ä"
 
