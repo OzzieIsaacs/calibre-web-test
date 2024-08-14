@@ -364,7 +364,7 @@ class TestUploadAudio(TestCase, ui_class):
         self.assertEqual('Älsids sdksdsd', details['publisher'][0])
         self.assertEqual('Flac Commento', details['comment'])
         self.assertEqual('11', details['series_index'])
-        self.assertEqual('Album', details['series'])
+        self.assertEqual('Flac Album', details['series'])
         cover_image = self.check_element_on_page((By.ID, "detailcover")).screenshot_as_png
 
         self.assertAlmostEqual(diff(BytesIO(ref_picture), BytesIO(cover_image), delete_diff_file=True), 0.007, delta=0.003)
