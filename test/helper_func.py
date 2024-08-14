@@ -5,6 +5,7 @@ import re
 import mimetypes
 from config_test import CALIBRE_WEB_PATH, TEST_DB, BOOT_TIME, VENV_PYTHON, base_path, TEST_OS
 from selenium.webdriver.support.ui import WebDriverWait
+from selenium.webdriver.firefox.options import Options
 from subproc_wrapper import process_open
 from selenium import webdriver
 from selenium.webdriver.common.by import By
@@ -119,7 +120,9 @@ def get_Host_IP():
 def debug_startup(inst, __, ___, login=True, host="http://127.0.0.1", port="8083", env=None):
 
     # create a new Firefox session
-    inst.driver = webdriver.Firefox()
+    options = Options()
+    options.headless = True
+    inst.driver = webdriver.Firefox(options=options)
     inst.driver.implicitly_wait(BOOT_TIME)
     inst.driver.maximize_window()
 

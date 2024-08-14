@@ -71,7 +71,8 @@ class TestShelf(unittest.TestCase, ui_class):
         r = requests.session()
         login_page = r.get('http://127.0.0.1:{}/login'.format(PORTS[0]))
         token = re.search('<input type="hidden" name="csrf_token" value="(.*)">', login_page.text)
-        payload = {'username': 'shelf', 'password': '123AbC*!', 'submit':"", 'next':"/", "remember_me":"on", "csrf_token": token.group(1)}
+        payload = {'username': 'shelf', 'password': '123AbC*!', 'submit':"", 'next':"/", "remember_me":"on",
+                   "csrf_token": token.group(1)}
         r.post('http://127.0.0.1:{}/login'.format(PORTS[0]), data=payload)
         shelf_page = r.get('http://127.0.0.1:{}/shelf/create'.format(PORTS[0]))
         token = re.search('<input type="hidden" name="csrf_token" value="(.*)">', shelf_page.text)
@@ -99,7 +100,8 @@ class TestShelf(unittest.TestCase, ui_class):
         # other user is not able to add books
         login_page = r.get('http://127.0.0.1:{}/login'.format(PORTS[0]))
         token = re.search('<input type="hidden" name="csrf_token" value="(.*)">', login_page.text)
-        payload = {'username': 'shelf', 'password': '123AbC*!', 'submit':"", 'next':"/", "remember_me":"on", "csrf_token": token.group(1)}
+        payload = {'username': 'shelf', 'password': '123AbC*!', 'submit':"", 'next':"/", "remember_me":"on",
+                   "csrf_token": token.group(1)}
         r.post('http://127.0.0.1:{}/login'.format(PORTS[0]), data=payload)
         shelf_page = r.get('http://127.0.0.1:{}/shelf/create'.format(PORTS[0]))
         token = re.search('<input type="hidden" name="csrf_token" value="(.*)">', shelf_page.text)
@@ -133,7 +135,8 @@ class TestShelf(unittest.TestCase, ui_class):
         r = requests.session()
         login_page = r.get('http://127.0.0.1:{}/login'.format(PORTS[0]))
         token = re.search('<input type="hidden" name="csrf_token" value="(.*)">', login_page.text)
-        payload = {'username': 'shelf', 'password': '123AbC*!', 'submit':"", 'next':"/", "remember_me":"on", "csrf_token": token.group(1)}
+        payload = {'username': 'shelf', 'password': '123AbC*!', 'submit':"", 'next':"/", "remember_me":"on",
+                   "csrf_token": token.group(1)}
         r.post('http://127.0.0.1:{}/login'.format(PORTS[0]), data=payload)
         shelf_page = r.get('http://127.0.0.1:{}/shelf/create'.format(PORTS[0]))
         token = re.search('<input type="hidden" name="csrf_token" value="(.*)">', shelf_page.text)

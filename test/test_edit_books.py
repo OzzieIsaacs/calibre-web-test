@@ -1212,7 +1212,7 @@ class TestEditBooks(TestCase, ui_class):
         resp = r.get(download_link)
         self.assertEqual(resp.headers['Content-Type'], 'application/epub+zip')
         self.assertEqual(resp.status_code, 200)
-        self.edit_user('admin', {'download_role':0})
+        self.edit_user('admin', {'download_role': 0})
         resp = r.get(download_link)
         self.assertEqual(resp.status_code, 403)
         book = self.get_book_details(5)
