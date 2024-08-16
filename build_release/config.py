@@ -10,8 +10,8 @@ if os.name == 'nt':
     LDAP_WHL = os.path.abspath(os.path.join(base_path,'..', 'test', 'files', 'python_ldap-3.4.4-cp311-cp311-win_amd64.whl'))
     # LEVENSHTEIN_WHL = os.path.abspath(os.path.join(base_path, '../..', 'test', 'files', 'python_Levenshtein-0.12.2-cp39-cp39-win_amd64.whl'))
 else:
-    FILEPATH = os.path.abspath("../../calibre-web/") + '/'
-    WIKIPATH = os.path.abspath("../../calibre-web-wiki/") + '/'
+    FILEPATH = os.path.abspath(os.path.join(__file__, "..", "..", "..", "calibre-web")) + '/'
+    WIKIPATH = os.path.abspath(os.path.join(__file__, "..", "..", "..", "calibre-web-wiki")) + '/'
     LDAP_WHL = None
     # LEVENSHTEIN_WHL = None
 

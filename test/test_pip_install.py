@@ -5,17 +5,22 @@ import unittest
 from selenium import webdriver
 from selenium.webdriver.common.by import By
 import os
+import sys
 import shutil
 from helper_ui import ui_class
 from helper_func import kill_dead_cps
 from config_test import CALIBRE_WEB_PATH, TEST_DB, base_path, BOOT_TIME
 from subproc_wrapper import process_open
 from helper_func import save_logfiles
-from build_release import make_release
 import venv
 import glob
 import time
 
+if __package__ is None:
+    sys.path.append(os.path.dirname(sys.path[0]))
+    __package__ = "builder"
+
+from build_release import make_release
 
 RESOURCES = {'ports': 1}
 

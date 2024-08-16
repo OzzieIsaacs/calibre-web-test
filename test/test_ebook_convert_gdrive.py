@@ -492,5 +492,5 @@ class TestEbookConvertCalibreGDrive(unittest.TestCase, ui_class):
         thumbnail_cache_path = os.path.join(CALIBRE_WEB_PATH + INDEX, 'cps', 'cache', 'thumbnails')
         self.goto_page("nav_hot")
         self.assertTrue(os.path.exists(thumbnail_cache_path))
-        self.assertEqual(count_files(thumbnail_cache_path), 20)
+        self.assertEqual(count_files(thumbnail_cache_path), 30)
 

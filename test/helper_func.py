@@ -5,6 +5,7 @@ import re
 import mimetypes
 from config_test import CALIBRE_WEB_PATH, TEST_DB, BOOT_TIME, VENV_PYTHON, base_path, TEST_OS
 from selenium.webdriver.support.ui import WebDriverWait
+from selenium.webdriver.firefox.options import Options
 from subproc_wrapper import process_open
 from selenium import webdriver
 from selenium.webdriver.common.by import By
@@ -200,9 +201,13 @@ def startup(inst, pyVersion, config, login=True, host="http://127.0.0.1", port="
         command.extend(parameter)
     inst.p = process_open(command, [1], sout=None, env=env, cwd=work_path)
     # create a new Firefox session
-    inst.driver = webdriver.Firefox()
+    options = Options()
+    if not os.environ.get('TESTRUN'):
+        options.add_argument("--headless")
+        # options.headless = True
+    inst.driver = webdriver.Firefox(options=options)
     # inst.driver = webdriver.Chrome()
-    time.sleep(BOOT_TIME)
+    time.sleep(3)
     if inst.p.poll():
         kill_old_cps()
         inst.p = process_open(command, [1], sout=None, env=env, cwd=work_path)
@@ -616,10 +621,17 @@ def create_2nd_database(new_path):
 
 
 def count_files(folder):
+    old_total_files = 0
     total_files = 0
-    for base, dirs, files in os.walk(folder):
-        for _ in files:
-            total_files += 1
+    for i in range(0, 10):
+        for base, dirs, files in os.walk(folder):
+            for _ in files:
+                total_files += 1
+        if total_files == old_total_files:
+            return total_files
+        old_total_files = total_files
+        total_files = 0
+        time.sleep(1)
     return total_files
 
 
