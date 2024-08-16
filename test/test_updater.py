@@ -406,7 +406,7 @@ class TestUpdater(unittest.TestCase, ui_class):
         self.assertTrue(os.path.isfile(os.path.join(CALIBRE_WEB_PATH + INDEX, "calibre-web.log")))
         self.assertTrue(os.path.isfile(os.path.join(CALIBRE_WEB_PATH + INDEX, "app.db")))
         self.assertTrue(os.path.isdir(thumbnail_cache_path))
-        self.assertEqual(20, count_files(thumbnail_cache_path))
+        self.assertEqual(30, count_files(thumbnail_cache_path))
         self.fill_thumbnail_config({'schedule_generate_book_covers': 0})
         # ToDo: Additional folders, additional files
 

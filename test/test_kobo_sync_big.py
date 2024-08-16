@@ -479,7 +479,7 @@ class TestKoboSyncBig(unittest.TestCase, ui_class):
         self.restart_calibre_web()
         time.sleep(120)
         self.assertTrue(os.path.exists(thumbnail_cache_path))
-        self.assertEqual(count_files(thumbnail_cache_path), (BOOK_COUNT+10)*2)
+        self.assertEqual(count_files(thumbnail_cache_path), (BOOK_COUNT+10)*3)
         # get cover cache enabled
         books = self.inital_sync()
         # read metadata of number 0 and number 5

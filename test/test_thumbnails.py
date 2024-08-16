@@ -25,6 +25,7 @@ RESOURCES = {'ports': 1}
 PORTS = ['8083']
 INDEX = ""
 
+NUM_THUMBNAILS = 3
 
 class TestThumbnails(unittest.TestCase, ui_class):
 
@@ -86,7 +87,7 @@ class TestThumbnails(unittest.TestCase, ui_class):
         # check cover folder is filled
         thumbnail_cache_path = os.path.join(CALIBRE_WEB_PATH + INDEX, 'cps', 'cache', 'thumbnails')
         self.assertTrue(os.path.exists(thumbnail_cache_path))
-        self.assertEqual(count_files(thumbnail_cache_path), 110*2)
+        self.assertEqual(count_files(thumbnail_cache_path), 110*NUM_THUMBNAILS)
         # change database
         new_path = TEST_DB + '_2'
         create_2nd_database(new_path)
@@ -105,7 +106,7 @@ class TestThumbnails(unittest.TestCase, ui_class):
         self.restart_calibre_web()
         # check cover folder is filled with new covers
         time.sleep(3) # give system time to create cache
-        self.assertEqual(count_files(thumbnail_cache_path), 20)
+        self.assertEqual(count_files(thumbnail_cache_path), 10 * NUM_THUMBNAILS)
         # deactivate cache
         self.fill_thumbnail_config({'schedule_generate_book_covers': 0})
         # change database
@@ -128,7 +129,7 @@ class TestThumbnails(unittest.TestCase, ui_class):
         self.assertLessEqual(len(res), 1)
         thumbnail_cache_path = os.path.join(CALIBRE_WEB_PATH + INDEX, 'cps', 'cache', 'thumbnails')
         self.assertTrue(os.path.exists(thumbnail_cache_path))
-        self.assertEqual(110*2, count_files(thumbnail_cache_path))
+        self.assertEqual(110*NUM_THUMBNAILS, count_files(thumbnail_cache_path))
         self.get_book_details(104)
         original_cover = self.check_element_on_page((By.ID, "detailcover")).screenshot_as_png
         new_cover = os.path.join(base_path, 'files', 'cover.jpg')
@@ -139,7 +140,7 @@ class TestThumbnails(unittest.TestCase, ui_class):
         updated_cover = self.check_element_on_page((By.ID, "detailcover")).screenshot_as_png
         self.assertGreaterEqual(diff(BytesIO(updated_cover), BytesIO(original_cover), delete_diff_file=True), 0.03)
         # number of covers unchanged
-        self.assertEqual(110*2, count_files(thumbnail_cache_path))
+        self.assertEqual(110 * NUM_THUMBNAILS, count_files(thumbnail_cache_path))
         # ToDo: do the same with cover from url
         self.fill_basic_config({'config_uploading': 0})
         time.sleep(3)
@@ -166,7 +167,7 @@ class TestThumbnails(unittest.TestCase, ui_class):
             os.remove(os.path.join(thumbnail_cache_path, book.uuid[:2], book.filename))
         self.get_book_details(5)
         cover = self.check_element_on_page((By.ID, "detailcover")).screenshot_as_png
-        self.assertEqual(book_thumbnail_reference - 2, count_files(thumbnail_cache_path))
+        self.assertEqual(book_thumbnail_reference - NUM_THUMBNAILS, count_files(thumbnail_cache_path))
         self.assertAlmostEqual(diff(BytesIO(cover), BytesIO(original_cover), delete_diff_file=True), 0.0, delta=0.0001)
         self.restart_calibre_web()
         # cover should get regenerated
@@ -189,7 +190,7 @@ class TestThumbnails(unittest.TestCase, ui_class):
         thumbnail_cache_path = os.path.join(CALIBRE_WEB_PATH + INDEX, 'cps', 'cache', 'thumbnails')
         book_thumbnail_reference = count_files(thumbnail_cache_path)
         # covers for new books are generated directly after upload
-        self.assertEqual(book_thumbnail_reference, 2)
+        self.assertEqual(book_thumbnail_reference, 3)
         self.check_element_on_page((By.ID, 'edit_cancel')).click()
         details = self.get_book_details()
         # ToDo: check cover is displayed properly
@@ -201,7 +202,7 @@ class TestThumbnails(unittest.TestCase, ui_class):
         time.sleep(2)
         self.delete_book(details['id'])
         time.sleep(2)
-        self.assertEqual(220, count_files(thumbnail_cache_path))
+        self.assertEqual(110 * NUM_THUMBNAILS, count_files(thumbnail_cache_path))
         self.fill_thumbnail_config({'schedule_generate_book_covers': 0})
         self.assertTrue(self.check_element_on_page((By.ID, "flash_success")))
 
@@ -250,7 +251,7 @@ class TestThumbnails(unittest.TestCase, ui_class):
         # ToDo: check cover is displayed properly
         res2 = self.check_tasks()
         self.assertEqual(len(res2), len(res) + 1)
-        self.assertEqual(book_thumbnail_reference+2, count_files(thumbnail_cache_path))
+        self.assertEqual(book_thumbnail_reference+3, count_files(thumbnail_cache_path))
         self.fill_thumbnail_config({'schedule_generate_book_covers': 0})
         self.assertTrue(self.check_element_on_page((By.ID, "flash_success")))
         self.delete_book(details['id'])
@@ -284,7 +285,7 @@ class TestThumbnails(unittest.TestCase, ui_class):
         # ToDO: Check cover
         # restart calibre-web to update cover cache
         self.restart_calibre_web()
-        self.assertEqual(book_thumbnail_reference + 2, count_files(thumbnail_cache_path))
+        self.assertEqual(book_thumbnail_reference + NUM_THUMBNAILS, count_files(thumbnail_cache_path))
 
         # delete book "sideways"
         remove_book(os.path.join(TEST_DB, "metadata.db"), books[1][0]['id'])
@@ -293,7 +294,7 @@ class TestThumbnails(unittest.TestCase, ui_class):
         self.assertNotEqual(int(books[1][0]['id']), int(del_books[1][0]['id']))
         old_list_cover = del_books[1][2]['ele'].screenshot_as_png
         # cache unchanged
-        self.assertEqual(book_thumbnail_reference + 2, count_files(thumbnail_cache_path))
+        self.assertEqual(book_thumbnail_reference + NUM_THUMBNAILS, count_files(thumbnail_cache_path))
         # restart calibre-web to update cover cache
         self.restart_calibre_web()
         # check cover is removed from cover cache

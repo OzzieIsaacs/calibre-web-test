@@ -7,7 +7,7 @@ import time
 import requests
 import re
 import lxml
-from StringIO import StringIO
+from io import StringIO
 
 import helper_email_convert
 from selenium.webdriver.common.by import By
@@ -177,7 +177,7 @@ class TestEbookConvertKepubify(unittest.TestCase, ui_class):
 
     def test_kobo_kepub_formats(self):
         # convert book to kepub -> 2 formats
-        vals = self.get_convert_book(5)
+        vals = self.get_convert_book(9)
         select = Select(vals['btn_from'])
         select.select_by_visible_text('EPUB')
         self.assertEqual(len(select.options), 2)
@@ -192,8 +192,9 @@ class TestEbookConvertKepubify(unittest.TestCase, ui_class):
         shelves = self.list_shelfs()
         self.assertEqual(1, len(shelves))
         # add book to shelf
-        self.get_book_details(5)
+        self.get_book_details(9)
         self.check_element_on_page((By.ID, "add-to-shelf")).click()
+        self.check_element_on_page((By.XPATH, "//ul[@id='add-to-shelves']/li/a[contains(.,'Ko Test')]")).click()
         # try to download book from shelf as kobo reader -> kepub.epub
 
         r = requests.session()
@@ -203,24 +204,24 @@ class TestEbookConvertKepubify(unittest.TestCase, ui_class):
         payload = {'username': 'admin', 'password': 'admin123', 'submit':"", 'next':"/", "remember_me":"on",
                    "csrf_token": token.group(1)}
         r.post('http://127.0.0.1:{}/login'.format(PORTS[0]), data=payload)
-        resp = r.get('http://127.0.0.1:{}/book/8'.format(PORTS[0]))
+        resp = r.get('http://127.0.0.1:{}/book/9'.format(PORTS[0]))
         # try to download book from details as kobo reader -> kepub.epub
         parser = lxml.etree.HTMLParser()
-        tree = lxml.etree.parse(StringIO(resp.txt), parser)
+        tree = lxml.etree.parse(StringIO(resp.text), parser)
         download_link = tree.findall("//*[@aria-labelledby='btnGroupDrop1']//a")
-        self.assertTrue(download_link[1].get_attribute("href").endswith('/5.kepub.epub'),
+        self.assertTrue(download_link[1].get("href").endswith('/9.kepub.epub'),
                         'Download Link has invalid format for kobo browser, has to end with filename')
         # delete epub
-        self.delete_book_format(5, "EPUB")
+        self.delete_book_format(9, "EPUB")
         # try to download book from details as kobo reader -> kepub.epub
-        resp = r.get('http://127.0.0.1:{}/book/8'.format(PORTS[0]))
-        tree = lxml.etree.parse(StringIO(resp.txt), parser)
+        resp = r.get('http://127.0.0.1:{}/book/9'.format(PORTS[0]))
+        tree = lxml.etree.parse(StringIO(resp.text), parser)
         download_link = tree.xpath("//*[starts-with(@id,'btnGroupDrop')]")
-        self.assertTrue(download_link.get_attribute("href").endswith('/5.kepub.epub'),
+        self.assertTrue(download_link[0].get("href").endswith('/9.kepub.epub'),
                         'Download Link has invalid format for kobo browser, has to end with filename')
         resp = r.get('http://127.0.0.1:{}/simpleshelf/{}'.format(PORTS[0], shelves[0]['id']))
-        tree = lxml.etree.parse(StringIO(resp.txt), parser)
-        download_link = tree.xpath("//*[@aria-labelledby='Download']//a")
-        self.assertTrue(download_link.get_attribute("href").endswith('/5.kepub.epub'),
+        tree = lxml.etree.parse(StringIO(resp.text), parser)
+        download_link = tree.xpath(".//*[starts-with(@id,'btnGroupDrop')]")
+        self.assertTrue(download_link[0].get("href").endswith('/9.kepub.epub'),
                         'Download Link has invalid format for kobo browser, has to end with filename')
         r.close()
