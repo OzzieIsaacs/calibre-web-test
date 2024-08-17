@@ -44,11 +44,11 @@ if __name__ == '__main__':
         p.wait()
         res = (p.stdout.readlines())
         try:
-            pip = re.match(("pip\s(.*)\sfrom\s(.*)\s\((.*)\).*"),res[0])
+            pip = re.match((r"pip\s(.*)\sfrom\s(.*)\s\((.*)\).*"),res[0])
         except IndexError as e:
             continue
         except TypeError as e:
-            pip = re.match(("pip\s(.*)\sfrom\s(.*)\s\((.*)\).*"), res[0].decode('utf-8'))
+            pip = re.match((r"pip\s(.*)\sfrom\s(.*)\s\((.*)\).*"), res[0].decode('utf-8'))
         if pip:
             print("Found Pip for {} in {}".format(pip[3],pip[2]))
             found = True

@@ -43,7 +43,7 @@ class Environment:
         p = process_open([initial, "-V"], [0])
         p.wait()
         lines = ''.join(p.stdout.readlines())
-        pVersion = re.findall('(\d+\.\d+\.\d+)', lines)[0]
+        pVersion = re.findall(r'(\d+\.\d+\.\d+)', lines)[0]
         self.result.append(('Python', pVersion, 'Basic'))
 
         p = process_open([initial, "-m", "pip", "freeze"], [0])

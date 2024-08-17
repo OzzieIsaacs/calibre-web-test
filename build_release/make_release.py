@@ -42,7 +42,7 @@ def change_config(target_file, config, value):
         return
     with codecs.open(target_file, 'r') as fp:
         file = fp.read()
-    replaced = re.sub("(" + config + "\s+=\s+)(.*)", r"\1" + value, file)
+    replaced = re.sub("(" + config + r"\s+=\s+)(.*)", r"\1" + value, file)
     f = codecs.open(target_file, "w")
     f.write(replaced)
     f.close()
