@@ -165,15 +165,16 @@ class TestEmbedMetadataGdrive(TestCase, ui_class):
         select.select_by_visible_text('EPUB')
         self.check_element_on_page((By.ID, "btn-book-convert")).click()
         self.assertTrue(self.check_element_on_page((By.ID, "flash_success")))
-        i = 0
-        while i < 20:
-            time.sleep(2)
-            task_len, ret = self.check_tasks(tasks)
-            if task_len == 1:
-                if ret[-1]['result'] == 'Finished' or ret[-1]['result'] == 'Failed':
-                    break
-            i += 1
-        self.assertEqual(1, task_len)
+        self.wait_tasks(tasks, 1)
+        #i = 0
+        #while i < 20:
+        #    time.sleep(2)
+        #    task_len, ret = self.check_tasks(tasks)
+        #    if task_len == 1:
+        #        if ret[-1]['result'] == 'Finished' or ret[-1]['result'] == 'Failed':
+        #            break
+        #    i += 1
+        #self.assertEqual(1, task_len)
         fs = connect_gdrive("test")
         epub_path = os.path.join("test", "Lulu de Marco", "book10 (12)", "book10 - Lulu de Marco.epub")
         epub_path.replace('\\', '/')
@@ -196,15 +197,16 @@ class TestEmbedMetadataGdrive(TestCase, ui_class):
         select.select_by_visible_text('KEPUB')
         self.check_element_on_page((By.ID, "btn-book-convert")).click()
         self.assertTrue(self.check_element_on_page((By.ID, "flash_success")))
-        i = 0
-        while i < 20:
-            time.sleep(2)
-            task_len, ret = self.check_tasks(tasks)
-            if task_len == 1:
-                if ret[-1]['result'] == 'Finished' or ret[-1]['result'] == 'Failed':
-                    break
-            i += 1
-        self.assertEqual(1, task_len)
+        self.wait_tasks(tasks, 1)
+        #i = 0
+        #while i < 20:
+        #    time.sleep(2)
+        #    task_len, ret = self.check_tasks(tasks)
+        #    if task_len == 1:
+        #        if ret[-1]['result'] == 'Finished' or ret[-1]['result'] == 'Failed':
+        #            break
+        #    i += 1
+        #self.assertEqual(1, task_len)
         fs = connect_gdrive("test")
         epub_path = os.path.join("test", "Sigurd Lindgren", "book6 (9)", "book6 - Sigurd Lindgren.kepub")
         with zipfile.ZipFile(fs.open(epub_path, "rb")) as thezip:
@@ -229,15 +231,16 @@ class TestEmbedMetadataGdrive(TestCase, ui_class):
         select.select_by_visible_text('KEPUB')
         self.check_element_on_page((By.ID, "btn-book-convert")).click()
         self.assertTrue(self.check_element_on_page((By.ID, "flash_success")))
-        i = 0
-        while i < 20:
-            time.sleep(2)
-            task_len, ret = self.check_tasks(tasks)
-            if task_len == 1:
-                if ret[-1]['result'] == 'Finished' or ret[-1]['result'] == 'Failed':
-                    break
-            i += 1
-        self.assertEqual(1, task_len)
+        self.wait_tasks(tasks, 1)
+        #i = 0
+        #while i < 20:
+        #    time.sleep(2)
+        #    task_len, ret = self.check_tasks(tasks)
+        #    if task_len == 1:
+        #        if ret[-1]['result'] == 'Finished' or ret[-1]['result'] == 'Failed':
+        #            break
+        #    i += 1
+        #self.assertEqual(1, task_len)
         code, epub_content = self.download_book(8, "admin", "admin123", format="KEPUB")
         self.assertEqual(200, code)
         epub_data = read_metadata_epub(epub_content)

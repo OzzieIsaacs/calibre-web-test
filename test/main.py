@@ -16,6 +16,10 @@ from helper_func import kill_dead_cps, finishing_notifier, poweroff, result_move
 from helper_certificate import generate_ssl_testing_files
 from subprocess import CalledProcessError
 
+if __package__ is None:
+    sys.path.append(os.path.dirname(sys.path[0]))
+    __package__ = "builder"
+
 
 if __name__ == '__main__':
     generate_ssl_testing_files()

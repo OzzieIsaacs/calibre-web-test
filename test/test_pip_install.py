@@ -16,10 +16,6 @@ import venv
 import glob
 import time
 
-if __package__ is None:
-    sys.path.append(os.path.dirname(sys.path[0]))
-    __package__ = "builder"
-
 from build_release import make_release
 
 RESOURCES = {'ports': 1}

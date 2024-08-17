@@ -82,14 +82,6 @@ class TestSTARTTLS(unittest.TestCase, ui_class):
         conv.click()
         self.assertTrue(self.check_element_on_page((By.ID, "flash_success")))
         task_len, ret = self.wait_tasks(tasks, 1)
-        #i = 0
-        #while i < 10:
-        #    time.sleep(2)
-        #    task_len, ret = self.check_tasks(tasks)
-        #    if task_len == 1:
-        #        if ret[-1]['result'] == 'Finished' or ret[-1]['result'] == 'Failed':
-        #            break
-        #    i += 1
         self.assertEqual(ret[-1]['result'], 'Finished')
 
 
@@ -104,14 +96,6 @@ class TestSTARTTLS(unittest.TestCase, ui_class):
         conv.click()
         self.assertTrue(self.check_element_on_page((By.ID, "flash_success")))
         task_len, ret = self.wait_tasks(tasks, 1)
-        #i = 0
-        #while i < 10:
-        #    time.sleep(2)
-        #    task_len, ret = self.check_tasks(tasks)
-        #    if task_len == 1:
-        #        if ret[-1]['result'] == 'Finished' or ret[-1]['result'] == 'Failed':
-        #            break
-        #    i += 1
         self.assertEqual(ret[-1]['result'], 'Failed')
 
 
