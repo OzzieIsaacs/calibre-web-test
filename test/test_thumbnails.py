@@ -9,7 +9,7 @@ from diffimg import diff
 from io import BytesIO
 
 from helper_ui import ui_class
-from config_test import TEST_DB, base_path, CALIBRE_WEB_PATH
+from config_test import TEST_DB, base_path, CALIBRE_WEB_PATH, NUM_THUMBNAILS
 from helper_func import startup, add_dependency, remove_dependency
 from helper_func import count_files, create_2nd_database
 from helper_settings_db import get_thumbnail_files
@@ -25,7 +25,7 @@ RESOURCES = {'ports': 1}
 PORTS = ['8083']
 INDEX = ""
 
-NUM_THUMBNAILS = 3
+
 
 class TestThumbnails(unittest.TestCase, ui_class):
 
@@ -129,7 +129,7 @@ class TestThumbnails(unittest.TestCase, ui_class):
         self.assertLessEqual(len(res), 1)
         thumbnail_cache_path = os.path.join(CALIBRE_WEB_PATH + INDEX, 'cps', 'cache', 'thumbnails')
         self.assertTrue(os.path.exists(thumbnail_cache_path))
-        self.assertEqual(110*NUM_THUMBNAILS, count_files(thumbnail_cache_path))
+        self.assertEqual(110 * NUM_THUMBNAILS, count_files(thumbnail_cache_path))
         self.get_book_details(104)
         original_cover = self.check_element_on_page((By.ID, "detailcover")).screenshot_as_png
         new_cover = os.path.join(base_path, 'files', 'cover.jpg')
@@ -251,7 +251,7 @@ class TestThumbnails(unittest.TestCase, ui_class):
         # ToDo: check cover is displayed properly
         res2 = self.check_tasks()
         self.assertEqual(len(res2), len(res) + 1)
-        self.assertEqual(book_thumbnail_reference+3, count_files(thumbnail_cache_path))
+        self.assertEqual(book_thumbnail_reference + NUM_THUMBNAILS, count_files(thumbnail_cache_path))
         self.fill_thumbnail_config({'schedule_generate_book_covers': 0})
         self.assertTrue(self.check_element_on_page((By.ID, "flash_success")))
         self.delete_book(details['id'])

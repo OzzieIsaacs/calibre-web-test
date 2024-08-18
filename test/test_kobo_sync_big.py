@@ -9,7 +9,7 @@ import requests
 import shutil
 
 from helper_ui import ui_class
-from config_test import TEST_DB, base_path, CALIBRE_WEB_PATH
+from config_test import TEST_DB, base_path, CALIBRE_WEB_PATH, NUM_THUMBNAILS
 from helper_func import startup, get_Host_IP, add_dependency, remove_dependency, count_files
 from helper_db import add_books
 from selenium.webdriver.common.by import By
@@ -479,7 +479,7 @@ class TestKoboSyncBig(unittest.TestCase, ui_class):
         self.restart_calibre_web()
         time.sleep(120)
         self.assertTrue(os.path.exists(thumbnail_cache_path))
-        self.assertEqual(count_files(thumbnail_cache_path), (BOOK_COUNT+10)*3)
+        self.assertEqual(count_files(thumbnail_cache_path), (BOOK_COUNT+10) * NUM_THUMBNAILS)
         # get cover cache enabled
         books = self.inital_sync()
         # read metadata of number 0 and number 5

@@ -7,7 +7,7 @@ import time
 import unittest
 
 from helper_ui import ui_class
-from config_test import TEST_DB, CALIBRE_WEB_PATH
+from config_test import TEST_DB, CALIBRE_WEB_PATH, NUM_THUMBNAILS
 from helper_func import startup
 from helper_func import count_files, create_2nd_database
 from helper_db import add_books
@@ -69,7 +69,7 @@ class TestThumbnailsEnv(unittest.TestCase, ui_class):
         thumbnail_cache_path = os.path.join(TEST_DB + '_3', 'thumbnails')
         time.sleep(20)
         self.assertTrue(os.path.exists(thumbnail_cache_path))
-        self.assertEqual(count_files(thumbnail_cache_path), 110*3)
+        self.assertEqual(count_files(thumbnail_cache_path), 110*NUM_THUMBNAILS)
         # change database
         new_path = TEST_DB + '_2'
         create_2nd_database(new_path)
@@ -82,7 +82,7 @@ class TestThumbnailsEnv(unittest.TestCase, ui_class):
         self.restart_calibre_web()
         # check cover folder is filled with new covers
         time.sleep(3) # give system time to create cache
-        self.assertEqual(count_files(thumbnail_cache_path), 20)
+        self.assertEqual(count_files(thumbnail_cache_path), 10*NUM_THUMBNAILS)
         # deactivate cache
         self.fill_thumbnail_config({'schedule_generate_book_covers': 0})
         # change database
