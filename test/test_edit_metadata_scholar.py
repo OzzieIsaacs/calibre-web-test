@@ -81,7 +81,7 @@ class TestLoadMetadataScholar(TestCase, ui_class):
         time.sleep(1)
         cover = self.check_element_on_page((By.ID, "detailcover")).screenshot_as_png
         self.assertLessEqual(diff(BytesIO(cover), BytesIO(original_cover), delete_diff_file=True), 0.001)
-        self.assertEqual(results[0]['title'], self.check_element_on_page((By.ID, "book_title")).get_attribute("value"))
+        self.assertEqual(results[0]['title'], self.check_element_on_page((By.ID, "title")).get_attribute("value"))
         self.assertEqual(results[0]['author'], self.check_element_on_page((By.ID, "bookAuthor")).get_attribute("value"))
         self.assertEqual(results[0]['publisher'], self.check_element_on_page((By.ID, "publisher")).get_attribute("value"))
         self.fill_basic_config({'config_uploading': 0})

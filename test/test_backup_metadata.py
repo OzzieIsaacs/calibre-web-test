@@ -169,13 +169,13 @@ class TestBackupMetadata(TestCase, ui_class):
         metadata = read_opf_metadata(meta_path)
         self.assertEqual(metadata['title'], "Buuko")
         # edit Title
-        self.edit_book(7, content={'book_title':'The bok Lo,执|1u'})
+        self.edit_book(7, content={'title':'The bok Lo,执|1u'})
         time.sleep(2)
         self.restart_calibre_web()
         # check title content of metadata.opf file
         metadata = read_opf_metadata(os.path.join(TEST_DB, "John Döe", "The bok Lo,执,1u (7)", "metadata.opf"))
         self.assertEqual(metadata['title'], 'The bok Lo,执|1u')
-        self.edit_book(7, content={'book_title': 'Buuko'})
+        self.edit_book(7, content={'title': 'Buuko'})
 
     def test_backup_change_book_author(self):
         meta_path = os.path.join(TEST_DB, "Frodo Beutlin", "Der Buchtitel (1)", "metadata.opf")

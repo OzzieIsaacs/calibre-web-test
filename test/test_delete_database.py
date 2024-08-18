@@ -67,7 +67,7 @@ class TestDeleteDatabase(TestCase, ui_class):
         books = self.get_books_displayed()
         self.assertEqual(0, len(books[0]))
         self.assertEqual(0, len(books[1]))
-        self.assertEqual(len(self.adv_search({'book_title': 'book10'})), 0)
+        self.assertEqual(len(self.adv_search({'title': 'book10'})), 0)
         self.assertEqual(len(self.search('book10')), 0)
         list_element = self.goto_page("nav_serie")
         self.assertEqual(0, len(list_element))

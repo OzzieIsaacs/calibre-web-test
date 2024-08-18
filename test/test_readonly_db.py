@@ -62,7 +62,7 @@ class TestReadOnlyDatabase(TestCase, ui_class):
         self.check_element_on_page((By.ID, "edit_book")).click()
         self.edit_book(content={'tags': 'Gênot',
                                 "bookAuthor": 'John Döe',
-                                'book_title': 'Buuko'})
+                                'title': 'Buuko'})
         rights = os.stat(TEST_DB).st_mode & 0o777
         os.chmod(TEST_DB, 0o400)
         self.get_book_details(9)
@@ -72,7 +72,7 @@ class TestReadOnlyDatabase(TestCase, ui_class):
         details = self.get_book_details(9)
         self.assertEqual('Gênot', details['tag'][0])
         self.check_element_on_page((By.ID, "edit_book")).click()
-        self.edit_book(content={u'book_title': 'Buuk'})
+        self.edit_book(content={u'title': 'Buuk'})
         self.assertTrue(self.check_element_on_page((By.ID, "flash_danger")))
         details = self.get_book_details(9)
         self.assertEqual('Buuko', details['title'])
