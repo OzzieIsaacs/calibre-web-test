@@ -67,7 +67,7 @@ class TestGoodreads(unittest.TestCase, ui_class):
         self.assertTrue(self.check_element_on_page((By.ID, 'flash_success')))
         self.get_book_details(5)
         self.check_element_on_page((By.ID, "edit_book")).click()
-        self.edit_book(content={'bookAuthor': u'Ken Follett'})
+        self.edit_book(content={'authors': u'Ken Follett'})
         list_element = self.goto_page('nav_author')
         self.assertIsNotNone(list_element)
         for el in list_element:
@@ -79,7 +79,7 @@ class TestGoodreads(unittest.TestCase, ui_class):
         self.assertEqual(1, len(self.get_books_displayed()[1]))
         self.get_book_details(5)
         self.check_element_on_page((By.ID, "edit_book")).click()
-        self.edit_book(content={'bookAuthor': u'John Döe'})
+        self.edit_book(content={'authors': u'John Döe'})
 
 
     def test_author_page(self):
@@ -87,7 +87,7 @@ class TestGoodreads(unittest.TestCase, ui_class):
         self.assertTrue(self.check_element_on_page((By.ID, 'flash_success')))
         self.get_book_details(7)
         self.check_element_on_page((By.ID, "edit_book")).click()
-        self.edit_book(content={'bookAuthor': u'Andreas Eschbach'})
+        self.edit_book(content={'authors': u'Andreas Eschbach'})
         list_element = self.goto_page('nav_author')
         self.assertIsNotNone(list_element)
         for el in list_element:
@@ -99,7 +99,7 @@ class TestGoodreads(unittest.TestCase, ui_class):
         self.assertEqual(1, len(self.get_books_displayed()[1]))
         self.get_book_details(7)
         self.check_element_on_page((By.ID, "edit_book")).click()
-        self.edit_book(content={'bookAuthor': u'John Döe'})
+        self.edit_book(content={'authors': u'John Döe'})
         list_element = self.goto_page('nav_author')
         self.assertIsNotNone(list_element)
         for el in list_element:

@@ -16,7 +16,7 @@ from helper_redis import Redis as redis_server
 
 RESOURCES = {'ports': 1}
 
-PORTS = ['8083']
+PORTS = ['8083',"1029"]
 INDEX = ""
 
 
@@ -154,7 +154,7 @@ class TestSecurity(unittest.TestCase, ui_class):
     def test_register_limit(self):
         self.edit_user('admin', {'email': 'a5@b.com', 'kindle_mail': 'a1@b.com'})
         self.assertTrue(self.check_element_on_page((By.ID, "flash_success")))
-        self.setup_server(False, {'mail_server': '127.0.0.1', 'mail_port': '1025',
+        self.setup_server(False, {'mail_server': '127.0.0.1', 'mail_port': PORTS[1],
                                  'mail_use_ssl': 'None', 'mail_login': 'name@host.com', 'mail_password_e': '10234',
                                  'mail_from': 'name@host.com'})
         self.assertTrue(self.check_element_on_page((By.ID, "flash_success")))

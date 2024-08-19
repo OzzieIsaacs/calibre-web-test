@@ -1773,13 +1773,13 @@ class ui_class():
                                   cls.driver.find_element(By.XPATH, "//input[@id='rating']"), content['rating'])
             content.pop('rating')
 
-        if 'description' in content:
-            cls.driver.switch_to.frame("description_ifr")
+        if 'comments' in content:
+            cls.driver.switch_to.frame("comments_ifr")
             ele = cls.check_element_on_page((By.ID, 'tinymce'))
             ele.clear()
-            ele.send_keys(content['description'])
+            ele.send_keys(content['comments'])
             cls.driver.switch_to.default_content()
-            content.pop('description')
+            content.pop('comments')
 
 
         for element, key in enumerate(content):
@@ -2117,7 +2117,7 @@ class ui_class():
                         'cust_columns': ret
                         }
             else:
-                text_inputs = ['title', 'bookAuthor', 'publisher', 'comment',
+                text_inputs = ['title', 'authors', 'publisher', 'comment',
                                'custom_column_10', 'custom_column_1', 'custom_column_6',
                                'custom_column_5', "custom_column_4_low", "custom_column_4_high",
                                "custom_column_8_low", "custom_column_8_high"]
@@ -2196,9 +2196,9 @@ class ui_class():
                 except Exception:
                     res['publisher'] = ""
                 '''try:
-                    description = entry.find_element(By.CLASS_NAME, "meta_description").text[13:]
+                    comments = entry.find_element(By.CLASS_NAME, "meta_description").text[13:]
                 except Exception:
-                    res['description'] = ""'''
+                    res['comments'] = ""'''
                 title = entry.find_element(By.CLASS_NAME, "meta_title")
                 res['title'] = title.text
                 res['title_link'] = title.get_attribute('href')

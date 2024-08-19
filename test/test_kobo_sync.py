@@ -72,8 +72,8 @@ class TestKoboSync(unittest.TestCase, ui_class):
         # change book 5 to have unicode char in title author, description
         self.get_book_details(5)
         self.check_element_on_page((By.ID, "edit_book")).click()
-        self.edit_book(content={'description':u'b物',
-                                'bookAuthor':u'John Döe执 & Mon Go',
+        self.edit_book(content={'comments':u'b物',
+                                'authors':u'John Döe执 & Mon Go',
                                 'title': u'testbook执',
                                 'publisher': u'Publish执',
                                 'series': u'O0ü 执',

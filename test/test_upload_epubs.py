@@ -227,7 +227,7 @@ class TestUploadEPubs(TestCase, ui_class):
         self.assertEqual('Nobody Perfect', details['author'][0])
         self.assertEqual('None1', details['comment'])
         self.delete_book(details['id'])
-        change_epub_meta(epub_file, meta={'title': "Comments", 'creator': "Nobody Perfect", "description": "\n\n"})
+        change_epub_meta(epub_file, meta={'title': "Comments", 'creator': "Nobody Perfect", "comments": "\n\n"})
         details = self.verify_upload(epub_file)
         self.assertEqual('', details['comment'])
         self.delete_book(details['id'])

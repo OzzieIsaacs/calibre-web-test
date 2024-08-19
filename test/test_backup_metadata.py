@@ -187,21 +187,21 @@ class TestBackupMetadata(TestCase, ui_class):
         self.assertEqual(["Frodo Beutlin","Norbert Halagal","Liu Yang","Hector Gonçalves"], metadata['author'])
         self.assertEqual("Beutlin, Frodo & Halagal, Norbert & Yang, Liu & Gonçalves, Hector", metadata['author_attr'][0]['opf:file-as'])
         # edit author
-        self.edit_book(1, content={'bookAuthor': 'Frodo Beutlin & Norbert Halagal & Hector Gonçalves'})
+        self.edit_book(1, content={'authors': 'Frodo Beutlin & Norbert Halagal & Hector Gonçalves'})
         time.sleep(2)
         self.restart_calibre_web()
         # check author content of metadata.opf file
         metadata = read_opf_metadata(meta_path)
         self.assertEqual(["Frodo Beutlin","Norbert Halagal", "Hector Gonçalves"], metadata['author'])
         self.assertEqual("Beutlin, Frodo & Halagal, Norbert & Gonçalves, Hector", metadata['author_attr'][0]['opf:file-as'])
-        self.edit_book(1, content={'bookAuthor': 'Hector Gonçalves'})
+        self.edit_book(1, content={'authors': 'Hector Gonçalves'})
         time.sleep(2)
         self.restart_calibre_web()
         time.sleep(3)
         metadata = read_opf_metadata(os.path.join(TEST_DB, "Hector Gonçalves", "Der Buchtitel (1)", "metadata.opf"))
         self.assertEqual(["Hector Gonçalves"], metadata['author'])
         self.assertEqual("Gonçalves, Hector", metadata['author_attr'][0]['opf:file-as'])
-        self.edit_book(1, content={'bookAuthor': 'Frodo Beutlin & Norbert Halagal & Liu Yang & Hector Gonçalves'})
+        self.edit_book(1, content={'authors': 'Frodo Beutlin & Norbert Halagal & Liu Yang & Hector Gonçalves'})
 
     def test_backup_change_book_publishing_date(self):
         meta_path = os.path.join(TEST_DB, "Hector Goncalves", "book9 (11)", "metadata.opf")
@@ -325,13 +325,13 @@ class TestBackupMetadata(TestCase, ui_class):
         metadata = read_opf_metadata(meta_path)
         self.assertEqual(metadata['description'], "")
         # edit description
-        self.edit_book(3, content={'description': "<strong>Test</strong>"})
+        self.edit_book(3, content={'comments': "<strong>Test</strong>"})
         time.sleep(2)
         self.restart_calibre_web()
         # check description content of metadata.opf file
         metadata = read_opf_metadata(meta_path)
         self.assertCountEqual(metadata['description'], "<p><strong>Test</strong></p>")
-        self.edit_book(3, content={'description': ""})
+        self.edit_book(3, content={'comments': ""})
         time.sleep(2)
         self.restart_calibre_web()
         metadata = read_opf_metadata(meta_path)
