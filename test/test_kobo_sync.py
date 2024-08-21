@@ -72,9 +72,9 @@ class TestKoboSync(unittest.TestCase, ui_class):
         # change book 5 to have unicode char in title author, description
         self.get_book_details(5)
         self.check_element_on_page((By.ID, "edit_book")).click()
-        self.edit_book(content={'description':u'b物',
-                                'bookAuthor':u'John Döe执 & Mon Go',
-                                'book_title': u'testbook执',
+        self.edit_book(content={'comments':u'b物',
+                                'authors':u'John Döe执 & Mon Go',
+                                'title': u'testbook执',
                                 'publisher': u'Publish执',
                                 'series': u'O0ü 执',
                                 'series_index': '1.5',
@@ -293,7 +293,7 @@ class TestKoboSync(unittest.TestCase, ui_class):
         self.inital_sync()
         self.get_book_details(5)
         self.check_element_on_page((By.ID, "edit_book")).click()
-        self.edit_book(content={'book_title': u'testbook1'})
+        self.edit_book(content={'title': u'testbook1'})
         time.sleep(2)
 
         # sync and get this book as changed entitlement instead of new one

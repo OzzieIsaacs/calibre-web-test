@@ -127,15 +127,6 @@ class TestEmbedMetadata(TestCase, ui_class):
         self.check_element_on_page((By.ID, "btn-book-convert")).click()
         self.assertTrue(self.check_element_on_page((By.ID, "flash_success")))
         __, ret = self.wait_tasks(tasks, 1)
-        #i = 0
-        #while i < 20:
-        #    time.sleep(2)
-        #    task_len, ret = self.check_tasks(tasks)
-        #    if task_len == 1:
-        #        if ret[-1]['result'] == 'Finished' or ret[-1]['result'] == 'Failed':
-        #            break
-        #    i += 1
-        #self.assertEqual(1, task_len)
         epub_path = os.path.join(TEST_DB, "Lulu de Marco", "book10 (12)", "book10 - Lulu de Marco.epub")
         with zipfile.ZipFile(epub_path) as thezip:
             contentopf = thezip.read("content.opf").decode('utf-8')
@@ -188,15 +179,6 @@ class TestEmbedMetadata(TestCase, ui_class):
         self.check_element_on_page((By.ID, "btn-book-convert")).click()
         self.assertTrue(self.check_element_on_page((By.ID, "flash_success")))
         self.wait_tasks(tasks, 1)
-        # i = 0
-        #while i < 20:
-        #    time.sleep(2)
-        #    task_len, ret = self.check_tasks(tasks)
-        #    if task_len == 1:
-        #        if ret[-1]['result'] == 'Finished' or ret[-1]['result'] == 'Failed':
-        #            break
-        #    i += 1
-        #self.assertEqual(1, task_len)
         epub_path = os.path.join(TEST_DB, "Leo Baskerville", "book8 (8)", "book8 - Leo Baskerville.kepub")
         self.assertTrue(os.path.isfile(epub_path))
         code, epub_content = self.download_book(8, "admin", "admin123", format="KEPUB")
@@ -248,14 +230,6 @@ class TestEmbedMetadata(TestCase, ui_class):
         details['kindlebtn'].click()
         self.assertTrue(self.check_element_on_page((By.ID, "flash_success")))
         task_len, ret = self.wait_tasks(tasks, 1)
-        #i = 0
-        #while i < 10:
-        #    time.sleep(2)
-        #    task_len, ret = self.check_tasks(tasks)
-        #    if task_len == 1:
-        #        if ret[-1]['result'] == 'Finished' or ret[-1]['result'] == 'Failed':
-        #            break
-        #    i += 1
         self.assertEqual(ret[-1]['result'], 'Finished')
         self.assertTrue(wait_Email_received(self.email_server.handler.check_email_received))
         attachment = self.email_server.handler.get_email_attachment()
@@ -268,16 +242,8 @@ class TestEmbedMetadata(TestCase, ui_class):
         details = self.get_book_details(10)
         details['kindlebtn'].click()
         self.assertTrue(self.check_element_on_page((By.ID, "flash_success")))
-        task_len, ret = self.wait_tasks(tasks, 1)
-        #i = 0
-        #while i < 10:
-        #    time.sleep(2)
-        #    task_len, ret = self.check_tasks(tasks)
-        #    if task_len == 1:
-        #        if ret[-1]['result'] == 'Finished' or ret[-1]['result'] == 'Failed':
-        #            break
-        #    i += 1
-        self.assertEqual(ret[-1]['result'], 'Finished')
+        task_len, tasks = self.wait_tasks(ret, 1)
+        self.assertEqual(tasks[-1]['result'], 'Finished')
         self.assertTrue(wait_Email_received(self.email_server.handler.check_email_received))
         attachment = self.email_server.handler.get_email_attachment()
         epub_data = read_metadata_epub(attachment)

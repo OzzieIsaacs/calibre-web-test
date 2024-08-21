@@ -15,7 +15,7 @@ from helper_func import save_logfiles
 
 RESOURCES = {'ports': 2}
 
-PORTS = ['8083', '1025']
+PORTS = ['8083', '1028']
 INDEX = ""
 
 
@@ -127,14 +127,14 @@ class TestSplitLibrary(TestCase, ui_class):
         self.assertTrue(self.check_element_on_page((By.ID, "flash_success")))
         details = self.get_book_details(4)
         self.check_element_on_page((By.ID, "edit_book")).click()
-        self.edit_book(content={'book_title': u'O0ü 执'})
+        self.edit_book(content={'title': u'O0ü 执'})
         values = self.get_book_details()
         self.assertEqual(u'O0ü 执', values['title'])
         self.assertTrue(os.path.isdir(os.path.join(SPLIT_LIB, values['author'][0], 'O0u Zhi (4)')))
         self.assertFalse(os.path.isdir(os.path.join(SPLIT_LIB, values['author'][0],
                                                     'Very long extra super turbo cool tit (4)')))
         # ToDo: embed metadata
-        self.edit_book(4, content={'book_title': details['title']})
+        self.edit_book(4, content={'title': details['title']})
 
     def test_upload_ebook(self):
         self.fill_basic_config({'config_uploading': 1})

@@ -18,7 +18,7 @@ from selenium.webdriver.support import expected_conditions as EC
 
 RESOURCES = {'ports': 1}
 
-PORTS = ['8083']
+PORTS = ['8083',"1030"]
 INDEX = ""
 
 
@@ -30,7 +30,7 @@ class TestRegister(unittest.TestCase, ui_class):
     @classmethod
     def setUpClass(cls):
         cls.email_server = AIOSMTPServer(
-            hostname='127.0.0.1',port=1025,
+            hostname='127.0.0.1',port=PORTS[1],
             only_ssl=False,
             timeout=10
         )
@@ -42,7 +42,7 @@ class TestRegister(unittest.TestCase, ui_class):
                     port=PORTS[0], index=INDEX, env={"APP_MODE": "test"})
             WebDriverWait(cls.driver, 5).until(EC.presence_of_element_located((By.ID, "flash_success")))
             cls.edit_user('admin', {'email': 'a5@b.com','kindle_mail': 'a1@b.com'})
-            cls.setup_server(False, {'mail_server':'127.0.0.1', 'mail_port':'1025',
+            cls.setup_server(False, {'mail_server':'127.0.0.1', 'mail_port':PORTS[1],
                                 'mail_use_ssl':'None','mail_login':'name@host.com','mail_password_e':'10234',
                                 'mail_from':'name@host.com'})
 

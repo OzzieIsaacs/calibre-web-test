@@ -193,7 +193,7 @@ class TestKoboSyncBig(unittest.TestCase, ui_class):
         TestKoboSyncBig.syncToken[self.kobo_address] = {'x-kobo-synctoken': r.headers['x-kobo-synctoken']}
         self.get_book_details(5)
         self.check_element_on_page((By.ID, "edit_book")).click()
-        self.edit_book(content={'book_title': u'testbook1'})
+        self.edit_book(content={'title': u'testbook1'})
         time.sleep(2)
 
         # sync and get this book as changed entitlement instead of new one
@@ -363,7 +363,7 @@ class TestKoboSyncBig(unittest.TestCase, ui_class):
         # change one book
         self.get_book_details(104, host)
         self.check_element_on_page((By.ID, "edit_book")).click()
-        self.edit_book(content={'book_title': u'Nonomatics'})
+        self.edit_book(content={'title': u'Nonomatics'})
         # sync both user -> both get the new book synced
         data1 = self.sync_kobo(user1_kobo)
         data2 = self.sync_kobo(user2_kobo)

@@ -478,7 +478,7 @@ class TestEbookConvertCalibre(unittest.TestCase, ui_class):
 
     def test_convert_xss(self):
         tasks = self.check_tasks()
-        self.edit_book(11, content={'book_title': u'<p>calibre Quick Start Guide</p><img src=x onerror=alert("hoho")>'})
+        self.edit_book(11, content={'title': u'<p>calibre Quick Start Guide</p><img src=x onerror=alert("hoho")>'})
         vals = self.get_convert_book(11)
 
         select = Select(vals['btn_from'])
@@ -495,7 +495,7 @@ class TestEbookConvertCalibre(unittest.TestCase, ui_class):
             self.assertFalse(True, "XSS in ebook title after conversion in tasks view")
         self.assertEqual(ret[-1]['result'], 'Finished')
         self.assertEqual(ret[-1]['task'], 'Convert: PDF -> LRF: <p>calibre Quick Start Guide</p><img src=x onerror=alert("hoho")>')
-        self.edit_book(11, content={'book_title': u'book9'})
+        self.edit_book(11, content={'title': u'book9'})
 
     def test_user_convert_xss(self):
         tasks = self.check_tasks()

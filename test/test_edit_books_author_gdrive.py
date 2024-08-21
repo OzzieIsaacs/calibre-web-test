@@ -113,7 +113,7 @@ class TestEditAuthorsGdrive(TestCase, ui_class):
         self.assertTrue(fs.isfile(os.path.join('test', 'Leo Baskerville/book8 (8)',
                                                     'book8 - Leo Baskerville.epub').replace('\\', '/')))
         # rename uppercase to lowercase only of author
-        self.edit_book(8, content={'bookAuthor': "Leo baskerville"})
+        self.edit_book(8, content={'authors': "Leo baskerville"})
         time.sleep(WAIT_GDRIVE)
         self.assertFalse(self.check_element_on_page((By.ID, "flash_danger")))
         self.assertTrue(self.check_element_on_page((By.ID, "flash_success")))
@@ -128,7 +128,7 @@ class TestEditAuthorsGdrive(TestCase, ui_class):
         ret_code, content = self.download_book(8, "admin", "admin123")
         self.assertEqual(200, ret_code)
         # rename book title and author in the same step
-        self.edit_book(8, content={'bookAuthor': "Leo Baskerville", 'book_title': 'book 9'})
+        self.edit_book(8, content={'authors': "Leo Baskerville", 'title': 'book 9'})
         time.sleep(WAIT_GDRIVE)
         self.assertTrue(self.check_element_on_page((By.ID, "flash_success")))
         self.assertFalse(self.check_element_on_page((By.ID, "flash_danger")))
@@ -145,7 +145,7 @@ class TestEditAuthorsGdrive(TestCase, ui_class):
         ret_code, content = self.download_book(8, "admin", "admin123")
         self.assertEqual(200, ret_code)
         # rename only book title
-        self.edit_book(8, content={'bookAuthor': "Leo Baskerville", 'book_title': 'book8'})
+        self.edit_book(8, content={'authors': "Leo Baskerville", 'title': 'book8'})
         time.sleep(WAIT_GDRIVE)
         self.assertFalse(self.check_element_on_page((By.ID, "flash_danger")))
         self.assertTrue(self.check_element_on_page((By.ID, "flash_success")))
@@ -170,7 +170,7 @@ class TestEditAuthorsGdrive(TestCase, ui_class):
         self.assertTrue(fs.isfile(os.path.join('test', 'Peter Parker/book7 (10)',
                                                     'book7 - Peter Parker.epub').replace('\\', '/')))
         # rename uppercase to lowercase only of author
-        self.edit_book(10, content={'bookAuthor': "Peter parker"})
+        self.edit_book(10, content={'authors': "Peter parker"})
         time.sleep(WAIT_GDRIVE)
         self.assertFalse(self.check_element_on_page((By.ID, "flash_danger")))
         details = self.get_book_details(-1)
@@ -192,7 +192,7 @@ class TestEditAuthorsGdrive(TestCase, ui_class):
         ret_code, content = self.download_book(4, "admin", "admin123")
         self.assertEqual(200, ret_code)
         # rename book title and author in the same step
-        self.edit_book(10, content={'bookAuthor': "Peter Parker", 'book_title': 'book 7'})
+        self.edit_book(10, content={'authors': "Peter Parker", 'title': 'book 7'})
         time.sleep(WAIT_GDRIVE)
         self.assertFalse(self.check_element_on_page((By.ID, "flash_danger")))
         details = self.get_book_details(-1)
@@ -215,7 +215,7 @@ class TestEditAuthorsGdrive(TestCase, ui_class):
         ret_code, content = self.download_book(4, "admin", "admin123")
         self.assertEqual(200, ret_code)
         # rename only book title
-        self.edit_book(10, content={'bookAuthor': "Peter Parker", 'book_title': 'book7'})
+        self.edit_book(10, content={'authors': "Peter Parker", 'title': 'book7'})
         self.assertFalse(self.check_element_on_page((By.ID, "flash_danger")))
         time.sleep(WAIT_GDRIVE)
         details = self.get_book_details(-1)
@@ -240,7 +240,7 @@ class TestEditAuthorsGdrive(TestCase, ui_class):
         self.assertTrue(fs.isfile(os.path.join('test', 'Norbert Halagal/book11 (13)',
                                                     'book11 - Norbert Halagal.pdf').replace('\\', '/')))
         # rename uppercase to lowercase only of author
-        self.edit_book(13, content={'bookAuthor': "Norbert halagal"})
+        self.edit_book(13, content={'authors': "Norbert halagal"})
         self.assertFalse(self.check_element_on_page((By.ID, "flash_danger")))
         time.sleep(WAIT_GDRIVE)
         details = self.get_book_details(-1)
@@ -260,7 +260,7 @@ class TestEditAuthorsGdrive(TestCase, ui_class):
         self.assertEqual(200, ret_code)
 
         # rename book title and author in the same step
-        self.edit_book(13, content={'bookAuthor': "Norbert Halagal", 'book_title': 'book 11'})
+        self.edit_book(13, content={'authors': "Norbert Halagal", 'title': 'book 11'})
         self.assertFalse(self.check_element_on_page((By.ID, "flash_danger")))
         time.sleep(WAIT_GDRIVE)
         details = self.get_book_details(-1)
@@ -279,7 +279,7 @@ class TestEditAuthorsGdrive(TestCase, ui_class):
         ret_code, content = self.download_book(1, "admin", "admin123")
         self.assertEqual(200, ret_code)
         # rename only book title
-        self.edit_book(13, content={'book_title': 'book11'})
+        self.edit_book(13, content={'title': 'book11'})
         self.assertFalse(self.check_element_on_page((By.ID, "flash_danger")))
         time.sleep(WAIT_GDRIVE)
         details = self.get_book_details(-1)
@@ -304,7 +304,7 @@ class TestEditAuthorsGdrive(TestCase, ui_class):
         self.assertTrue(fs.isfile(os.path.join('test', 'Frodo Beutlin/Der Buchtitel (1)',
                                                     'Der Buchtitel - Frodo Beutlin.txt').replace('\\', '/')))
         # rename uppercase to lowercase only of author
-        self.edit_book(1, content={'bookAuthor': "Frodo Beutlin & Norbert Halagal & Liu yang & Hector Gonçalves"})
+        self.edit_book(1, content={'authors': "Frodo Beutlin & Norbert Halagal & Liu yang & Hector Gonçalves"})
         self.assertFalse(self.check_element_on_page((By.ID, "flash_danger")))
         time.sleep(WAIT_GDRIVE)
         details = self.get_book_details(-1)
@@ -317,8 +317,8 @@ class TestEditAuthorsGdrive(TestCase, ui_class):
         self.assertEqual(200, ret_code)
 
         # rename book title and author in the same step
-        self.edit_book(1, content={'bookAuthor': "Frodo Beutlin & Norbert Halagal & Liu Yang & Hector Gonçalves",
-                                   'book_title': 'Derbook 1'})
+        self.edit_book(1, content={'authors': "Frodo Beutlin & Norbert Halagal & Liu Yang & Hector Gonçalves",
+                                   'title': 'Derbook 1'})
         self.assertFalse(self.check_element_on_page((By.ID, "flash_danger")))
         self.assertTrue(self.check_element_on_page((By.ID, "flash_success")))
         time.sleep(WAIT_GDRIVE)
@@ -332,7 +332,7 @@ class TestEditAuthorsGdrive(TestCase, ui_class):
         ret_code, content = self.download_book(1, "admin", "admin123")
         self.assertEqual(200, ret_code)
         # rename only book title
-        self.edit_book(1, content={'book_title': 'Der Buchtitel'})
+        self.edit_book(1, content={'title': 'Der Buchtitel'})
         self.assertFalse(self.check_element_on_page((By.ID, "flash_danger")))
         self.assertTrue(self.check_element_on_page((By.ID, "flash_success")))
         time.sleep(WAIT_GDRIVE)
@@ -358,7 +358,7 @@ class TestEditAuthorsGdrive(TestCase, ui_class):
         self.assertTrue(fs.isfile(os.path.join('test', 'Hector Goncalves/book9 (11)',
                                                     'cover.jpg').replace('\\', '/')))
         # Author folder is not found due to utf characters not represented in filename
-        self.edit_book(1, content={'bookAuthor': "Frodo Beutlin & Norbert Halagal & Liu Yang & hector Gonçalves"})
+        self.edit_book(1, content={'authors': "Frodo Beutlin & Norbert Halagal & Liu Yang & hector Gonçalves"})
         self.assertFalse(self.check_element_on_page((By.ID, "flash_danger")))
         time.sleep(WAIT_GDRIVE)
         details = self.get_book_details(-1)
@@ -376,20 +376,20 @@ class TestEditAuthorsGdrive(TestCase, ui_class):
         ret_code, content = self.download_book(11, "admin", "admin123")
         self.assertEqual(200, ret_code)
 
-        self.edit_book(11, content={'bookAuthor': "hector Gonçalves & Unbekannt"})
+        self.edit_book(11, content={'authors': "hector Gonçalves & Unbekannt"})
         time.sleep(WAIT_GDRIVE)
         self.assertFalse(self.check_element_on_page((By.ID, "flash_danger")))
         details = self.get_book_details(-1)
         self.assertEqual(['hector Gonçalves', 'Unbekannt'], details['author'])
 
-        self.edit_book(11, content={'bookAuthor': "Hector Gonçalve"})
+        self.edit_book(11, content={'authors': "Hector Gonçalve"})
         time.sleep(WAIT_GDRIVE)
         self.assertFalse(self.check_element_on_page((By.ID, "flash_danger")))
-        self.edit_book(11, content={'bookAuthor': "Hector Gonçalves & unbekannt"})
+        self.edit_book(11, content={'authors': "Hector Gonçalves & unbekannt"})
         time.sleep(WAIT_GDRIVE)
         self.assertFalse(self.check_element_on_page((By.ID, "flash_danger")))
         # rename uppercase to lowercase only of author
-        self.edit_book(1, content={'bookAuthor': "Frodo Beutlin & Norbert Halagal & Liu Yang & Hector gonçalves"})
+        self.edit_book(1, content={'authors': "Frodo Beutlin & Norbert Halagal & Liu Yang & Hector gonçalves"})
         time.sleep(WAIT_GDRIVE)
         self.assertFalse(self.check_element_on_page((By.ID, "flash_danger")))
         details = self.get_book_details(-1)
@@ -412,8 +412,8 @@ class TestEditAuthorsGdrive(TestCase, ui_class):
         self.assertEqual(200, ret_code)
 
         # rename book title and author in the same step
-        self.edit_book(1, content={'bookAuthor': "Frodo Beutlin & Norbert Halagal & Liu Yang & Hector Gonçalves",
-                                   'book_title': 'Derbook 1'})
+        self.edit_book(1, content={'authors': "Frodo Beutlin & Norbert Halagal & Liu Yang & Hector Gonçalves",
+                                   'title': 'Derbook 1'})
         self.assertFalse(self.check_element_on_page((By.ID, "flash_danger")))
         time.sleep(WAIT_GDRIVE)
         details = self.get_book_details(-1)
@@ -433,7 +433,7 @@ class TestEditAuthorsGdrive(TestCase, ui_class):
         self.assertEqual(200, ret_code)
 
         # rename only book title
-        self.edit_book(1, content={'book_title': 'Der Buchtitel'})
+        self.edit_book(1, content={'title': 'Der Buchtitel'})
         self.assertFalse(self.check_element_on_page((By.ID, "flash_danger")))
         time.sleep(WAIT_GDRIVE)
         details = self.get_book_details(-1)
@@ -463,7 +463,7 @@ class TestEditAuthorsGdrive(TestCase, ui_class):
         self.assertTrue(fs.isfile(os.path.join('test', 'Frodo Beutlin/Der Buchtitel (1)',
                                                     'Der Buchtitel - Frodo Beutlin.txt').replace('\\', '/')))
         # Add 2. author to book to have usecase
-        self.edit_book(3, content={'bookAuthor': "Asterix Lionherd & Liu Yang"})
+        self.edit_book(3, content={'authors': "Asterix Lionherd & Liu Yang"})
         self.assertFalse(self.check_element_on_page((By.ID, "flash_danger")))
         time.sleep(WAIT_GDRIVE)
         details = self.get_book_details(-1)
@@ -474,7 +474,7 @@ class TestEditAuthorsGdrive(TestCase, ui_class):
                                                     'cover.jpg').replace('\\', '/')))
 
         #rename co-author
-        self.edit_book(1, content={'bookAuthor': "Frodo Beutlin & Norbert Halagal & liu Yang & Hector Gonçalves"})
+        self.edit_book(1, content={'authors': "Frodo Beutlin & Norbert Halagal & liu Yang & Hector Gonçalves"})
         self.assertFalse(self.check_element_on_page((By.ID, "flash_danger")))
         time.sleep(WAIT_GDRIVE)
         details = self.get_book_details(-1)
@@ -496,8 +496,8 @@ class TestEditAuthorsGdrive(TestCase, ui_class):
         self.assertEqual(200, ret_code)
 
         # rename book title and author in the same step
-        self.edit_book(1, content={'bookAuthor': "Frodo Beutlin & Norbert Halagal & Liu Yang & Hector Gonçalves",
-                                   'book_title': 'Derbook 1'})
+        self.edit_book(1, content={'authors': "Frodo Beutlin & Norbert Halagal & Liu Yang & Hector Gonçalves",
+                                   'title': 'Derbook 1'})
         self.assertFalse(self.check_element_on_page((By.ID, "flash_danger")))
         time.sleep(WAIT_GDRIVE)
         details = self.get_book_details(-1)
@@ -515,14 +515,14 @@ class TestEditAuthorsGdrive(TestCase, ui_class):
         self.assertEqual(200, ret_code)
         ret_code, content = self.download_book(3, "admin", "admin123")
         self.assertEqual(200, ret_code)
-        self.edit_book(3, content={'bookAuthor': "Asterix Lionherd"})
+        self.edit_book(3, content={'authors': "Asterix Lionherd"})
         self.assertFalse(self.check_element_on_page((By.ID, "flash_danger")))
         time.sleep(WAIT_GDRIVE)
         details = self.get_book_details(-1)
         self.assertEqual(['Asterix Lionherd'], details['author'])
 
         # rename only book title
-        self.edit_book(1, content={'book_title': 'Der Buchtitel'})
+        self.edit_book(1, content={'title': 'Der Buchtitel'})
         self.assertFalse(self.check_element_on_page((By.ID, "flash_danger")))
         time.sleep(WAIT_GDRIVE)
         details = self.get_book_details(-1)
@@ -567,7 +567,7 @@ class TestEditAuthorsGdrive(TestCase, ui_class):
 
         self.delete_book(details['id'])
         time.sleep(WAIT_GDRIVE)
-        self.edit_book(3, content={'bookAuthor': "Asterix Lionherd"})
+        self.edit_book(3, content={'authors': "Asterix Lionherd"})
         time.sleep(WAIT_GDRIVE)
         self.assertFalse(self.check_element_on_page((By.ID, "flash_danger")))
         details = self.get_book_details(-1)
@@ -601,7 +601,7 @@ class TestEditAuthorsGdrive(TestCase, ui_class):
                                                     'Der Buchtitel - Frodo Beutlin.txt').replace('\\', '/')))
         self.assertFalse(fs.isfile(os.path.join('test', 'Frodo Beutlin/Der Buchtitel (1)',
                                                     'cover.jpg').replace('\\', '/')))
-        self.edit_book(1, content={'bookAuthor': "Frodo Beutlin & Norbert Halagal & Liu Yang & Hector Gonçalves"})
+        self.edit_book(1, content={'authors': "Frodo Beutlin & Norbert Halagal & Liu Yang & Hector Gonçalves"})
         time.sleep(WAIT_GDRIVE)
         self.assertFalse(self.check_element_on_page((By.ID, "flash_danger")))
         details = self.get_book_details(-1)

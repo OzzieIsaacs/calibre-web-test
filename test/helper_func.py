@@ -202,7 +202,7 @@ def startup(inst, pyVersion, config, login=True, host="http://127.0.0.1", port="
     inst.p = process_open(command, [1], sout=None, env=env, cwd=work_path)
     # create a new Firefox session
     options = Options()
-    if not os.environ.get('TESTRUN'):
+    if os.environ.get('TESTRUN'):
         options.add_argument("--headless")
         # options.headless = True
     inst.driver = webdriver.Firefox(options=options)

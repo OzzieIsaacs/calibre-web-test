@@ -659,7 +659,7 @@ class TestOPDSFeed(unittest.TestCase, ui_class):
         entries = self.get_opds_feed(r.text)
         self.assertEqual(len(entries['elements']), 0)
         self.login("admin", "admin123")
-        self.edit_book(11, content={'book_title':'+'})
+        self.edit_book(11, content={'title':'+'})
         time.sleep(1)
         # with plusencode the plus is encoded to %2B and the search should search for a plus
         r = requests.get(host + '/opds/search/' + quote_plus('+'), auth=('admin', 'admin123'))
@@ -682,7 +682,7 @@ class TestOPDSFeed(unittest.TestCase, ui_class):
         entries = self.get_opds_feed(r.text)
         self.assertEqual(len(entries['elements']), 0)
 
-        self.edit_book(11, content={'book_title':'book9'})
+        self.edit_book(11, content={'title':'book9'})
         self.edit_user('admin', {'default_language': 'English'})
         time.sleep(2)
         term = (searches['search'][0].attrib['template']).format(searchTerms='book')

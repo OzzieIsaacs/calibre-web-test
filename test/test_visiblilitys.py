@@ -486,8 +486,8 @@ class TestCalibreWebVisibilitys(unittest.TestCase, ui_class):
 
 
     def test_search_string(self):
-        self.assertEqual(7, len(self.adv_search({'book_title': ' book '})))
-        self.adv_search({'book_title': 'Hallo'}, get=False)
+        self.assertEqual(7, len(self.adv_search({'title': ' book '})))
+        self.adv_search({'title': 'Hallo'}, get=False)
         field = self.check_element_on_page((By.ID, "query"))
         self.assertEqual('', field.get_attribute('value'))
         self.search('Hallo')
@@ -590,8 +590,8 @@ class TestCalibreWebVisibilitys(unittest.TestCase, ui_class):
         elements = self.adv_search('', get=True)
         self.assertEqual(len(elements['include_tags']), 0)
         self.assertEqual(len(elements['exclude_tags']), 0)
-        self.assertEqual(len(self.adv_search({'book_title': 'book10'})), 0)
-        self.assertEqual(len(self.adv_search({'bookAuthor': 'Lulu de Marco'})), 0)
+        self.assertEqual(len(self.adv_search({'title': 'book10'})), 0)
+        self.assertEqual(len(self.adv_search({'authors': 'Lulu de Marco'})), 0)
         self.assertEqual(len(self.search('Lulu de Marco')), 0)
         self.assertEqual(len(self.search('book10')), 0)
         self.assertEqual(len(self.search('Gênot')), 0)
@@ -665,9 +665,9 @@ class TestCalibreWebVisibilitys(unittest.TestCase, ui_class):
         self.assertEqual(len(elements['exclude_language']), 2)
         self.assertEqual(len(elements['include_extension']), 3)
         self.assertEqual(len(elements['exclude_extension']), 3)
-        self.assertEqual(len(self.adv_search({'book_title': 'book10'})), 1)
-        self.assertEqual(len(self.adv_search({'book_title': 'Der Buchtitel'})), 0)
-        self.assertEqual(len(self.adv_search({'bookAuthor': 'Peter Parker'})), 1)
+        self.assertEqual(len(self.adv_search({'title': 'book10'})), 1)
+        self.assertEqual(len(self.adv_search({'title': 'Der Buchtitel'})), 0)
+        self.assertEqual(len(self.adv_search({'authors': 'Peter Parker'})), 1)
         self.assertEqual(len(self.search('Lulu de Marco')), 1)
         self.assertEqual(len(self.search('book10')), 1)
         self.assertEqual(len(self.search('Gênot')), 4)
@@ -724,9 +724,9 @@ class TestCalibreWebVisibilitys(unittest.TestCase, ui_class):
         self.assertEqual(len(elements['exclude_language']), 2)
         self.assertEqual(len(elements['include_extension']), 4)
         self.assertEqual(len(elements['exclude_extension']), 4)
-        self.assertEqual(len(self.adv_search({'book_title': 'Buchtitel'})), 0)
+        self.assertEqual(len(self.adv_search({'title': 'Buchtitel'})), 0)
         self.assertEqual(len(self.adv_search({"custom_column_10": 'test'})), 0)
-        self.assertEqual(len(self.adv_search({'bookAuthor': 'Peter Parker'})), 1)
+        self.assertEqual(len(self.adv_search({'authors': 'Peter Parker'})), 1)
         self.assertEqual(len(self.search('Lulu de Marco')), 1)
         self.assertEqual(len(self.search('Loko')), 0)
         self.assertEqual(len(self.search('Gênot')), 2)
@@ -774,9 +774,9 @@ class TestCalibreWebVisibilitys(unittest.TestCase, ui_class):
         self.assertEqual(len(elements['exclude_language']), 1)
         self.assertEqual(len(elements['include_extension']), 3)
         self.assertEqual(len(elements['exclude_extension']), 3)
-        self.assertEqual(len(self.adv_search({'book_title': 'Buchtitel'})), 1)
+        self.assertEqual(len(self.adv_search({'title': 'Buchtitel'})), 1)
         self.assertEqual(len(self.adv_search({"custom_column_10": 'Allow'})), 4)
-        self.assertEqual(len(self.adv_search({'bookAuthor': 'Peter Parker'})), 1)
+        self.assertEqual(len(self.adv_search({'authors': 'Peter Parker'})), 1)
         self.assertEqual(len(self.search('Lulu de Marco')), 0)
         self.assertEqual(len(self.search('Loko')), 1)
         self.assertEqual(len(self.search('Genot')), 2)
@@ -877,9 +877,9 @@ class TestCalibreWebVisibilitys(unittest.TestCase, ui_class):
         self.assertEqual(len(list_element[1]), 10)
         self.assertEqual(len(self.adv_search({"read_status": "Yes"})), 1)
         self.assertEqual(len(self.adv_search({"read_status": "No"})), 1)
-        self.assertEqual(len(self.adv_search({"book_title": "book", "read_status": "No"})), 1)
-        self.assertEqual(len(self.adv_search({"book_title": "book", "read_status": "Empty"})), 6)
-        self.assertEqual(len(self.adv_search({"book_title": "Buu", "read_status": "Yes"})), 1)
+        self.assertEqual(len(self.adv_search({"title": "book", "read_status": "No"})), 1)
+        self.assertEqual(len(self.adv_search({"title": "book", "read_status": "Empty"})), 6)
+        self.assertEqual(len(self.adv_search({"title": "Buu", "read_status": "Yes"})), 1)
         details = self.get_book_details(5)
         self.assertFalse(details['read'])
         self.assertEqual(len(details['cust_columns']), 0)
@@ -1082,7 +1082,7 @@ class TestCalibreWebVisibilitys(unittest.TestCase, ui_class):
         self.assertEqual('testbook', details['title'])
         # try to edit book
         self.check_element_on_page((By.ID, "edit_book")).click()
-        self.assertTrue(self.check_element_on_page((By.ID, "book_title")))
+        self.assertTrue(self.check_element_on_page((By.ID, "title")))
         # check right cover of book is visible
         r = requests.session()
         login_page = r.get('http://127.0.0.1:{}/login'.format(PORTS[0]))
@@ -1095,7 +1095,7 @@ class TestCalibreWebVisibilitys(unittest.TestCase, ui_class):
         # check archive book visible in search result
         self.assertEqual(len(self.search('testbook')), 1)
         # check archive book visible in advanced search result
-        self.assertEqual(len(self.adv_search({'book_title': 'testbook'})), 1)
+        self.assertEqual(len(self.adv_search({'title': 'testbook'})), 1)
         # set archive book section invisible
         self.goto_page('user_setup')
         self.change_user({'show_32768': 0})
@@ -1106,7 +1106,7 @@ class TestCalibreWebVisibilitys(unittest.TestCase, ui_class):
         # check archive book visible in search result
         self.assertEqual(len(self.search('testbook')), 1)
         # check archive book visible in advanced search result
-        self.assertEqual(len(self.adv_search({'book_title': 'testbook'})), 1)
+        self.assertEqual(len(self.adv_search({'title': 'testbook'})), 1)
         # revert changes
         self.goto_page('user_setup')
         self.change_user({'show_32768': 1})
