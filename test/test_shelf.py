@@ -187,7 +187,6 @@ class TestShelf(unittest.TestCase, ui_class):
         # No random books displayed, 3 books in shelf
         self.assertTrue(len(shelf_books) == 3)
 
-
     def test_create_public_shelf(self):
         self.create_user('invalid', {'edit_shelf_role': 0, 'password': '123AbC*!', 'email': 'bac@b.com'})
         self.assertTrue(self.check_element_on_page((By.ID, "flash_success")))
@@ -339,6 +338,31 @@ class TestShelf(unittest.TestCase, ui_class):
         self.assertEqual(shelf_books[1]['id'], '11')
         self.assertEqual(shelf_books[2]['id'], '13')
         r.close()
+
+    def test_shelf_order(self):
+        self.create_shelf('button_order', False)
+        self.assertTrue(self.check_element_on_page((By.ID, "flash_success")))
+        for i in [1, 8, 5, 10]:
+            self.get_book_details(i)
+            self.check_element_on_page((By.ID, "add-to-shelf")).click()
+            shelf_list = self.driver.find_elements(By.XPATH, "//ul[@id='add-to-shelves']/li")
+            self.assertEqual(1, len(shelf_list))
+            self.check_element_on_page((By.XPATH, "//ul[@id='add-to-shelves']/li/a[contains(.,'button_order')]")).click()
+        self.list_shelfs('button_order')['ele'].click()
+
+        order = {'new': (10, 8, 5, 1),
+                 'old': (1, 5, 8, 10),
+                 'asc': (10, 8, 1, 5),
+                 'desc': (5, 1, 8, 10),
+                 'auth_az': (8, 1, 5, 10),
+                 'auth_za': (10, 5, 1, 8),
+                 'pub_new': (5, 1, 8, 10),
+                 # 'pub_old': (10, 8, 1, 5),    # all book dates are equal, so result is a bit random
+                 'shelf_new': (10, 5, 8, 1),
+                 'shelf_old': (1, 8, 5, 10)
+                 }
+        self.verify_order("shelf", order=order)
+        self.delete_shelf("button_order")
 
     # change shelf from public to private type
     def test_public_private_shelf(self):
@@ -535,8 +559,8 @@ class TestShelf(unittest.TestCase, ui_class):
         self.get_book_details(12)
         self.check_element_on_page((By.ID, "add-to-shelf")).click()
         self.check_element_on_page((By.XPATH, "//ul[@id='add-to-shelves']/li/a[contains(.,'Search')]")).click()
-        self.assertEqual(len(self.adv_search({u'include_shelf': u'Search', 'title': 'book'})), 2)
-        self.assertEqual(len(self.adv_search({u'exclude_shelf': u'Search', 'title': 'book'})), 5)
+        self.assertEqual(len(self.adv_search({u'include_shelf': u'Search', 'book_title': 'book'})), 2)
+        self.assertEqual(len(self.adv_search({u'exclude_shelf': u'Search', 'book_title': 'book'})), 5)
         self.assertEqual(len(self.adv_search({u'include_shelf': u'Search', 'include_serie': 'Djüngel'})), 1)
         self.assertEqual(len(self.adv_search({u'include_shelf': u'Search', 'include_tag': 'Gênot'})), 2)
         books = self.get_shelf_books_displayed()
