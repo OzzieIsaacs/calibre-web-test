@@ -177,3 +177,7 @@ class TestSplitLibrary(TestCase, ui_class):
         self.fill_basic_config({'config_embed_metadata': 0})
         time.sleep(BOOT_TIME)
         self.assertTrue(self.check_element_on_page((By.ID, "flash_success")))
+
+    def test_wrong_config_lib(self):
+        self.fill_db_config({'config_calibre_split_dir': SPLIT_LIB + "::virtual"})
+        pass

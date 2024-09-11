@@ -15,6 +15,7 @@ from subproc_wrapper import process_open
 import configparser
 import argparse
 import platform
+import tomlkit
 
 sys.path.append(os.path.dirname(os.path.abspath(__file__)))
 
@@ -48,7 +49,7 @@ def change_config(target_file, config, value):
     f.close()
 
 
-def update_requirements():
+def update_requirements_cfg():
     # Update requirements in config.cfg file
     cfg = configparser.ConfigParser()
     cfg.read(os.path.join(FILEPATH, "setup.cfg"))
@@ -83,6 +84,60 @@ def update_requirements():
 
     with open(os.path.join(FILEPATH, "setup.cfg"), 'w') as configfile:
         cfg.write(configfile)
+
+
+def update_requirements():
+    # Update requirements in pyproject.toml file
+    # cfg = tomlkit.TOMLDocument(os.path.join(FILEPATH, "pyproject.toml"))
+    with open(os.path.join(FILEPATH, "pyproject.toml"), 'r') as fp:
+        cfg = tomlkit.load(fp)
+
+    print("* Updating pyproject.toml from requirements.txt")
+    with open(os.path.join(FILEPATH, "requirements.txt"), "r") as stream:
+        requirements = stream.readlines()
+    result = list()
+    for req in requirements:
+        result.append(req.strip())
+    triv = cfg['project']['dependencies'][-1].trivia
+    cfg['project']['dependencies'].clear()
+    for value in result:
+        cfg['project']['dependencies'].add_line(value)
+    cfg['project']['dependencies'].add_line(indent = "")
+
+    #t = tomlkit.item({"foo": {"dependencies": requirements}})
+    #t.indent(4)
+    #print(t.as_string())
+    # cfg['project']['dependencies'][-1].trivia = triv
+    # cfg['project']['dependencies'].append(tomlkit.ws(""))
+    # tomlkit.item
+    # cfg['project']['dependencies'].add(result[-1], multiline=True)
+
+    with open(os.path.join(FILEPATH, "optional-requirements.txt"), "r") as stream:
+        opt_requirements = stream.readlines()
+
+    print("* Updating pyproject.toml from optional-requirements.txt")
+    optional_reqs = dict()
+    option = ""
+    for line in opt_requirements:
+        if line.startswith("#"):
+            option = line[1:].split()[0].strip()
+            optional_reqs[option] = "\n"
+        else:
+            if line != "\n":
+                optional_reqs[option] += line
+
+    for key, value in optional_reqs.items():
+        try:
+            if cfg['project']["optional-dependencies"][key.lower()]:
+                cfg['project']["optional-dependencies"][key.lower()].clear()
+                for val in value.strip("\n").split("\n"):
+                    cfg['project']["optional-dependencies"][key.lower()].add_line(val)
+                cfg['project']["optional-dependencies"][key.lower()].add_line(indent="")
+            print("'{}' block updated".format(key))
+        except KeyError:
+            print("* Optional Requirement block '{}' not found in pyproject.toml".format(key.lower()))
+    with open(os.path.join(FILEPATH, "pyproject.toml"), 'w') as configfile:
+        tomlkit.dump(cfg, configfile)
 
 
 def parse_arguments(*args):
@@ -140,6 +195,11 @@ def generate_package():
     # Generate package
     print('* Generating package')
     error = False
+    p = process_open([sys.executable, "-m", "pip","install", "build"])
+    while p.poll() is None:
+        out = p.stdout.readline()
+        out != "" and print(out.strip("\n"))
+
     p = process_open([sys.executable, "-m", "build"])
     while p.poll() is None:
         out = p.stdout.readline()

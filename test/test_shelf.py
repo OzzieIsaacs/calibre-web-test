@@ -111,8 +111,6 @@ class TestShelf(unittest.TestCase, ui_class):
         r.get('http://127.0.0.1:{}/logout'.format(PORTS[0]))
         r.close()
 
-        #self.driver.get("http://127.0.0.1:{}/shelf/add/1/1".format(PORTS[0]))
-        #self.assertTrue(self.check_element_on_page((By.ID, "flash_danger")))
         self.create_shelf('Pü 执', False)
         self.assertTrue(len(self.list_shelfs()))
         self.logout()
@@ -186,6 +184,7 @@ class TestShelf(unittest.TestCase, ui_class):
         shelf_books = self.get_shelf_books_displayed()
         # No random books displayed, 3 books in shelf
         self.assertTrue(len(shelf_books) == 3)
+        self.delete_shelf('Gü 执 (Public)')
 
     def test_create_public_shelf(self):
         self.create_user('invalid', {'edit_shelf_role': 0, 'password': '123AbC*!', 'email': 'bac@b.com'})
@@ -193,7 +192,8 @@ class TestShelf(unittest.TestCase, ui_class):
         r = requests.session()
         login_page = r.get('http://127.0.0.1:{}/login'.format(PORTS[0]))
         token = re.search('<input type="hidden" name="csrf_token" value="(.*)">', login_page.text)
-        payload = {'username': 'invalid', 'password': '123AbC*!', 'submit':"", 'next':"/", "remember_me":"on", "csrf_token": token.group(1)}
+        payload = {'username': 'invalid', 'password': '123AbC*!', 'submit':"", 'next':"/",
+                   "remember_me":"on", "csrf_token": token.group(1)}
         r.post('http://127.0.0.1:{}/login'.format(PORTS[0]), data=payload)
         shelf_page = r.get('http://127.0.0.1:{}/shelf/create'.format(PORTS[0]))
         token = re.search('<input type="hidden" name="csrf_token" value="(.*)">', shelf_page.text)
@@ -257,14 +257,17 @@ class TestShelf(unittest.TestCase, ui_class):
         r = requests.session()
         login_page = r.get('http://127.0.0.1:{}/login'.format(PORTS[0]))
         token = re.search('<input type="hidden" name="csrf_token" value="(.*)">', login_page.text)
-        payload = {'username': 'shelf', 'password': '123AbC*!', 'submit':"", 'next':"/", "remember_me":"on", "csrf_token": token.group(1)}
+        payload = {'username': 'shelf', 'password': '123AbC*!', 'submit':"", 'next':"/",
+                   "remember_me":"on", "csrf_token": token.group(1)}
         book_page = r.post('http://127.0.0.1:{}/login'.format(PORTS[0]), data=payload)
 
         token = re.search('<input type="hidden" name="csrf_token" value="(.*)">', book_page.text)
-        resp = r.post('http://127.0.0.1:{}/shelf/edit/'.format(PORTS[0]) + shelf_lolo['id'], data={"title": "tuto", "csrf_token": token.group(1)})
+        resp = r.post('http://127.0.0.1:{}/shelf/edit/'.format(PORTS[0]) + shelf_lolo['id'],
+                      data={"title": "tuto", "csrf_token": token.group(1)})
         self.assertTrue("flash_danger" in resp.text)
         token = re.search('<input type="hidden" name="csrf_token" value="(.*)">', book_page.text)
-        resp = r.post('http://127.0.0.1:{}/shelf/edit/'.format(PORTS[0]) + shelf_lolo['id'], data={"is_public": "on", "csrf_token": token.group(1)})
+        resp = r.post('http://127.0.0.1:{}/shelf/edit/'.format(PORTS[0]) + shelf_lolo['id'],
+                      data={"is_public": "on", "csrf_token": token.group(1)})
         self.assertTrue("flash_danger" in resp.text)
 
         self.login('admin','admin123')
@@ -294,6 +297,7 @@ class TestShelf(unittest.TestCase, ui_class):
         # ToDo: Delete Book
         self.list_shelfs('Delete')['ele'].click()
         self.get_books_displayed()
+        self.delete_shelf('Delete')
 
     # Add muliple books to shelf and arrange the order
     def test_arrange_shelf(self):
@@ -338,6 +342,7 @@ class TestShelf(unittest.TestCase, ui_class):
         self.assertEqual(shelf_books[1]['id'], '11')
         self.assertEqual(shelf_books[2]['id'], '13')
         r.close()
+        self.delete_shelf("order (Public)")
 
     def test_shelf_order(self):
         self.create_shelf('button_order', False)
@@ -396,12 +401,14 @@ class TestShelf(unittest.TestCase, ui_class):
         self.logout()
         self.login('admin','admin123')
         self.assertTrue(self.list_shelfs('shelf_public'))
+        self.delete_shelf("shelf_public")
 
     # Add shelf with extra long name
     def test_shelf_long_name(self):
         self.create_shelf('Halllalalalal1l1ll2332434llsfllsdfglsdflglfdglfdlgldfsglsdlgrtfgsdfvxccbbsgtsvxv', False)
         self.assertTrue(self.check_element_on_page((By.ID, "flash_success")))
         self.assertTrue(self.list_shelfs('Halllalalalal1l1ll2332434llsfllsdfgls[..]'))
+        self.delete_shelf("Halllalalalal1l1ll2332434llsfllsdfgls[..]")
 
     def test_shelf_action_non_shelf_edit_role(self):
         # remove edit role from admin account
@@ -537,13 +544,13 @@ class TestShelf(unittest.TestCase, ui_class):
         self.driver.get('http://127.0.0.1:{}/shelf/{}'.format(PORTS[0], anon_shelf[0]['id']))
         self.assertEqual(self.driver.title, u'Calibre-Web | Login')
         self.login('admin', 'admin123')
-        self.delete_shelf(u'anon')
 
     # Change database
     @unittest.skip("Change Database Not Implemented")
     def test_shelf_database_change(self):
         self.create_shelf('order', False)
         self.assertTrue(self.check_element_on_page((By.ID, "flash_success")))
+        self.delete_shelf('order')
 
     def test_adv_search_shelf(self):
         self.create_shelf('Search', False)
@@ -559,8 +566,8 @@ class TestShelf(unittest.TestCase, ui_class):
         self.get_book_details(12)
         self.check_element_on_page((By.ID, "add-to-shelf")).click()
         self.check_element_on_page((By.XPATH, "//ul[@id='add-to-shelves']/li/a[contains(.,'Search')]")).click()
-        self.assertEqual(len(self.adv_search({u'include_shelf': u'Search', 'book_title': 'book'})), 2)
-        self.assertEqual(len(self.adv_search({u'exclude_shelf': u'Search', 'book_title': 'book'})), 5)
+        self.assertEqual(len(self.adv_search({u'include_shelf': u'Search', 'title': 'book'})), 2)
+        self.assertEqual(len(self.adv_search({u'exclude_shelf': u'Search', 'title': 'book'})), 5)
         self.assertEqual(len(self.adv_search({u'include_shelf': u'Search', 'include_serie': 'Djüngel'})), 1)
         self.assertEqual(len(self.adv_search({u'include_shelf': u'Search', 'include_tag': 'Gênot'})), 2)
         books = self.get_shelf_books_displayed()
@@ -569,6 +576,7 @@ class TestShelf(unittest.TestCase, ui_class):
         books = self.get_shelf_books_displayed()
         self.assertEqual(books[0]['id'], '11')
         self.check_element_on_page((By.ID, "new")).click()
+        self.delete_shelf("Search")
 
     def test_xss_shelf(self):
         self.create_shelf('<p>calibre Quick Start Guide</p><img src=x onerror=alert("ji")>', False)
@@ -586,6 +594,7 @@ class TestShelf(unittest.TestCase, ui_class):
                 (By.XPATH, "//div[@id='remove-from-shelves']/a[contains(.,'calibre Quick Start')]")).click()
         except UnexpectedAlertPresentException:
             self.assertFalse(True, "XSS in custom comments")
+        self.delete_shelf('<p>calibre Quick Start Guide</p><img src=x onerror=alert("ji")>')
 
 
     def test_create_public_shelf_no_permission(self):
@@ -593,7 +602,8 @@ class TestShelf(unittest.TestCase, ui_class):
         r = requests.session()
         login_page = r.get('http://127.0.0.1:{}/login'.format(PORTS[0]))
         token = re.search('<input type="hidden" name="csrf_token" value="(.*)">', login_page.text)
-        payload = {'username': 'test1', 'password': '123AbC*!', 'submit':"", 'next':"/", "remember_me":"on", "csrf_token": token.group(1)}
+        payload = {'username': 'test1', 'password': '123AbC*!', 'submit':"", 'next':"/",
+                   "remember_me":"on", "csrf_token": token.group(1)}
         r.post('http://127.0.0.1:{}/login'.format(PORTS[0]), data=payload)
         shelf_page = r.get('http://127.0.0.1:{}/shelf/create'.format(PORTS[0]))
         token = re.search('<input type="hidden" name="csrf_token" value="(.*)">', shelf_page.text)
@@ -610,7 +620,8 @@ class TestShelf(unittest.TestCase, ui_class):
         r = requests.session()
         login_page = r.get('http://127.0.0.1:{}/login'.format(PORTS[0]))
         token = re.search('<input type="hidden" name="csrf_token" value="(.*)">', login_page.text)
-        payload = {'username': 'tester', 'password': '123A4bC*!', 'submit':"", 'next':"/", "remember_me":"on", "csrf_token": token.group(1)}
+        payload = {'username': 'tester', 'password': '123A4bC*!', 'submit':"", 'next':"/",
+                   "remember_me":"on", "csrf_token": token.group(1)}
         r.post('http://127.0.0.1:{}/login'.format(PORTS[0]), data=payload)
         shelf_page = r.get('http://127.0.0.1:{}/shelf/create'.format(PORTS[0]))
         token = re.search('<input type="hidden" name="csrf_token" value="(.*)">', shelf_page.text)
@@ -632,6 +643,6 @@ class TestShelf(unittest.TestCase, ui_class):
         self.assertIn('flash_danger'.lower(), result.text)
         r.close()
         self.edit_user("tester", {"delete": 1})
-
+        self.delete_shelf("access")
 
 

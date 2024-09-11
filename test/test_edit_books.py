@@ -1207,7 +1207,8 @@ class TestEditBooks(TestCase, ui_class):
         r = requests.session()
         login_page = r.get('http://127.0.0.1:{}/login'.format(PORTS[0]))
         token = re.search('<input type="hidden" name="csrf_token" value="(.*)">', login_page.text)
-        payload = {'username': 'admin', 'password': 'admin123', 'submit':"", 'next':"/", "remember_me":"on", "csrf_token": token.group(1)}
+        payload = {'username': 'admin', 'password': 'admin123', 'submit':"", 'next':"/", "remember_me":"on",
+                   "csrf_token": token.group(1)}
         r.post('http://127.0.0.1:{}/login'.format(PORTS[0]), data=payload)
         resp = r.get(download_link)
         self.assertEqual(resp.headers['Content-Type'], 'application/epub+zip')
@@ -1224,3 +1225,36 @@ class TestEditBooks(TestCase, ui_class):
         list_element[0].click()
         number_books = self.get_books_displayed()
         self.assertEqual(1, len(number_books[1]))
+
+    """
+    Test the functionality of the book title author exchange operation
+    This test performs the following actions:
+    1. Retrieve and verify the initial book details.
+    2. Perform the first book exchange operation:
+        - Click on the "Edit Book" button.
+        - Click on the "Exchange" button.
+        - Submit the exchange.
+        - Verify that a success message is displayed.
+    3. Validate that the book details are updated correctly after the first exchange.
+    4. Perform the second book exchange operation:
+    5. Validate that the book details revert to the original state after the second exchange.
+    """
+    def test_xchange(self):
+        details = self.get_book_details(13)
+        self.assertEqual("book11", details['title'])
+        self.assertEqual(["Norbert Halagal"], details['author'])
+        self.check_element_on_page((By.ID, "edit_book")).click()
+        self.check_element_on_page((By.ID, "xchange")).click()
+        self.check_element_on_page((By.ID, "submit")).click()
+        self.assertTrue(self.check_element_on_page((By.ID, "flash_success")))
+        details = self.get_book_details()
+        self.assertEqual("Norbert Halagal", details['title'])
+        self.assertEqual(["book11"], details['author'])
+        self.check_element_on_page((By.ID, "edit_book")).click()
+        self.check_element_on_page((By.ID, "xchange")).click()
+        self.check_element_on_page((By.ID, "submit")).click()
+        self.assertTrue(self.check_element_on_page((By.ID, "flash_success")))
+        details = self.get_book_details()
+        self.assertEqual("book11", details['title'])
+        self.assertEqual(["Norbert Halagal"], details['author'])
+
