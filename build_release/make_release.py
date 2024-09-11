@@ -98,10 +98,16 @@ def update_requirements():
     result = list()
     for req in requirements:
         result.append(req.strip())
-    triv = cfg['project']['dependencies'].trivia
+    triv = cfg['project']['dependencies'][-1].trivia
     cfg['project']['dependencies'].clear()
     for value in result:
         cfg['project']['dependencies'].add_line(value)
+    cfg['project']['dependencies'].add_line(indent = "")
+
+    #t = tomlkit.item({"foo": {"dependencies": requirements}})
+    #t.indent(4)
+    #print(t.as_string())
+    # cfg['project']['dependencies'][-1].trivia = triv
     # cfg['project']['dependencies'].append(tomlkit.ws(""))
     # tomlkit.item
     # cfg['project']['dependencies'].add(result[-1], multiline=True)
@@ -126,7 +132,7 @@ def update_requirements():
                 cfg['project']["optional-dependencies"][key.lower()].clear()
                 for val in value.strip("\n").split("\n"):
                     cfg['project']["optional-dependencies"][key.lower()].add_line(val)
-                # cfg['project']['dependencies'].append(tomlkit.ws(""))
+                cfg['project']["optional-dependencies"][key.lower()].add_line(indent="")
             print("'{}' block updated".format(key))
         except KeyError:
             print("* Optional Requirement block '{}' not found in pyproject.toml".format(key.lower()))
