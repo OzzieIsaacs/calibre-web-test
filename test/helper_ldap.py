@@ -26,6 +26,8 @@ LDAP_AUTH_ANON = 0
 LDAP_AUTH_UNAUTH = 1
 LDAP_AUTH_SIMPLE = 2
 
+# Important: Every config has to end with empty line!!!
+
 config1 = b"""\
 dn: dc=com
 dc: com
@@ -306,6 +308,17 @@ gn: John1
 sn: Doe1
 userPassword: terces
 
+dn: cn=Doe\, Johnny,ou=people,dc=calibreweb,dc=com
+objectClass: person
+objectClass: organizationalPerson
+objectClass: inetOrgPerson
+mail: no_user@thata.org
+sAMAccountName: user99
+cn: Doe\, Johnny
+gn: Johnny
+sn: Doe
+userPassword: schnuffel
+
 #Generic groups
 dn: ou=groups,dc=calibreweb,dc=com
 objectclass:organizationalunit
@@ -316,6 +329,7 @@ dn: cn=cps,ou=groups,dc=calibreweb,dc=com
 objectclass: groupofnames
 cn: cps
 member: cn=John1 Doe1,ou=People,dc=calibreb,dc=com
+member: cn=Doe\, Johnny,ou=People,dc=calibreb,dc=com
 
 """
 

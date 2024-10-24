@@ -61,7 +61,7 @@ class TestLdapLogin(unittest.TestCase, ui_class):
         cls.p.terminate()
         cls.driver.quit()
         # close the browser window and stop calibre-web
-        # remove_dependency(cls.dep_line)
+        remove_dependency(cls.dep_line)
         save_logfiles(cls, cls.__name__)
         shutil.rmtree(os.path.join(CALIBRE_WEB_PATH + INDEX, 'files'), ignore_errors=True)
 
@@ -318,7 +318,7 @@ class TestLdapLogin(unittest.TestCase, ui_class):
         self.assertTrue(imprt)
         imprt.click()
         time.sleep(3)
-        self.assertTrue('1 User Successfully Imported' in self.check_element_on_page((By.ID, "DialogContent")).text)
+        self.assertTrue('2 Users Successfully Imported' in self.check_element_on_page((By.ID, "DialogContent")).text)
         self.check_element_on_page((By.ID, "DialogFinished")).click()
         time.sleep(2)
         # Check email adresses are correct imported
@@ -326,6 +326,9 @@ class TestLdapLogin(unittest.TestCase, ui_class):
         self.assertEqual(User1rights['kindle_mail'],'user12@gamma.org')
         self.assertEqual(User1rights['email'], 'user12@beta.com')
         self.edit_user('user12', {'delete': 1})
+        User2rights = self.get_user_settings('user12')
+        self.assertEqual(User2rights['email'], ' 	no_user@thata.org')
+        self.edit_user('user99', {'delete': 1})
         # stop ldap
         self.server.stopListen()
 
