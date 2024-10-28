@@ -128,11 +128,13 @@ def update_requirements():
 
     for key, value in optional_reqs.items():
         try:
-            if cfg['project']["optional-dependencies"][key.lower()]:
+            if cfg['project']["optional-dependencies"].get(key.lower()):
                 cfg['project']["optional-dependencies"][key.lower()].clear()
-                for val in value.strip("\n").split("\n"):
-                    cfg['project']["optional-dependencies"][key.lower()].add_line(val)
-                cfg['project']["optional-dependencies"][key.lower()].add_line(indent="")
+            else:
+                cfg['project']["optional-dependencies"].append(key.lower(),tomlkit.array())
+            for val in value.strip("\n").split("\n"):
+                cfg['project']["optional-dependencies"][key.lower()].add_line(val)
+            cfg['project']["optional-dependencies"][key.lower()].add_line(indent="")
             print("'{}' block updated".format(key))
         except KeyError:
             print("* Optional Requirement block '{}' not found in pyproject.toml".format(key.lower()))
