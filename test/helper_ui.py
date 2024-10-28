@@ -2117,7 +2117,7 @@ class ui_class():
                         'cust_columns': ret
                         }
             else:
-                text_inputs = ['title', 'authors', 'publisher', 'comment',
+                text_inputs = ['title', 'authors', 'publisher', 'comments',
                                'custom_column_10', 'custom_column_1', 'custom_column_6',
                                'custom_column_5', "custom_column_4_low", "custom_column_4_high",
                                "custom_column_8_low", "custom_column_8_high"]

@@ -326,8 +326,8 @@ class TestLdapLogin(unittest.TestCase, ui_class):
         self.assertEqual(User1rights['kindle_mail'],'user12@gamma.org')
         self.assertEqual(User1rights['email'], 'user12@beta.com')
         self.edit_user('user12', {'delete': 1})
-        User2rights = self.get_user_settings('user12')
-        self.assertEqual(User2rights['email'], ' 	no_user@thata.org')
+        User2rights = self.get_user_settings('user99')
+        self.assertEqual(User2rights['email'], 'no_user@thata.org')
         self.edit_user('user99', {'delete': 1})
         # stop ldap
         self.server.stopListen()

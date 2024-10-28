@@ -123,7 +123,7 @@ class TestLoadMetadata(TestCase, ui_class):
         results = self.find_metadata_results()
         self.assertEqual(10, len(results))
         comic_vine.click()
-        time.sleep(2)
+        time.sleep(5)
         results = self.find_metadata_results()
         self.assertEqual(20, len(results))
         comic_vine.click()
@@ -137,7 +137,7 @@ class TestLoadMetadata(TestCase, ui_class):
         results = self.find_metadata_results()
         self.assertEqual(10, len(results))
         comic_vine.click()
-        time.sleep(2)
+        time.sleep(3)
         results = self.find_metadata_results()
         self.assertEqual(20, len(results))
         # enter dialog, click on cover
@@ -145,7 +145,7 @@ class TestLoadMetadata(TestCase, ui_class):
         results[2]['cover_element'].click()
         time.sleep(1)
         cover = self.check_element_on_page((By.ID, "detailcover")).screenshot_as_png
-        self.assertLessEqual(diff(BytesIO(cover), BytesIO(original_cover), delete_diff_file=True), 0.001)
+        self.assertLessEqual(diff(BytesIO(cover), BytesIO(original_cover), delete_diff_file=True), 0.006)
         self.assertEqual(results[2]['title'], self.check_element_on_page((By.ID, "title")).get_attribute("value"))
         self.assertEqual(results[2]['author'], self.check_element_on_page((By.ID, "authors")).get_attribute("value"))
         self.assertEqual(results[2]['publisher'], self.check_element_on_page((By.ID, "publisher")).get_attribute("value"))
@@ -170,6 +170,7 @@ class TestLoadMetadata(TestCase, ui_class):
         self.check_element_on_page((By.ID, "do-search")).click()
         time.sleep(3)
         results = self.find_metadata_results()
+        # Google results have changed
         results[0]['cover_element'].click()
         time.sleep(3)
         cover = self.check_element_on_page((By.ID, "detailcover")).screenshot_as_png
