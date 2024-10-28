@@ -168,7 +168,7 @@ class TestOPDSFeed(unittest.TestCase, ui_class):
         self.logout()
         # try download from guest account, fails
         r = requests.get(host +  entries['elements'][0]['download'])
-        self.assertEqual(403, r.status_code)
+        self.assertEqual(401, r.status_code)
         # create cookies by logging in to admin account and try to download book again
         req_session = requests.session()
         login_page = req_session.get(host + '/login')
@@ -177,12 +177,12 @@ class TestOPDSFeed(unittest.TestCase, ui_class):
         req_session.post(host + '/login', data=payload)
         # user is logged in via cookies, admin is not allowed to download -> guest also not, guest is used
         r = req_session.get(host + entries['elements'][0]['download'])
-        self.assertEqual(403, r.status_code)
+        self.assertEqual(401, r.status_code)
         # logout admin account, cookies now invalid,
         # now login is done via not existing basic header, means no login, guest account also not allowed to download
         req_session.get(host + '/logout')
         r = req_session.get(host + entries['elements'][0]['download'])
-        self.assertEqual(403, r.status_code)
+        self.assertEqual(401, r.status_code)
         # Close session, delete cookies
         req_session.close()
         # reset everything back to default
@@ -203,8 +203,10 @@ class TestOPDSFeed(unittest.TestCase, ui_class):
         self.edit_user('Guest', {'show_128': 0, 'show_2': 0, 'show_64': 0, 'show_8192': 0,
                                  'show_16384': 0,
                                  'show_16': 0, 'show_4': 0, 'show_4096': 0, 'show_8': 0, 'show_32': 0})
+        self.assertTrue(self.check_element_on_page((By.ID, "flash_success")))
         self.fill_basic_config({'config_anonbrowse': 0})
         time.sleep(BOOT_TIME)
+        self.assertTrue(self.check_element_on_page((By.ID, "flash_success")))
         self.logout()
         # try download from guest account, fails
         r = requests.get(host + entries['elements'][0]['download'])
@@ -588,7 +590,7 @@ class TestOPDSFeed(unittest.TestCase, ui_class):
         self.create_user('opdsdown', {'email': 'a7@b.com', 'password': '123AbC*!', 'download_role': 0})
         self.logout()
         r = requests.get(host + entries['elements'][0]['download'], auth=('opdsdown', '123AbC*!'))
-        self.assertEqual(403, r.status_code)
+        self.assertEqual(401, r.status_code)
 
     def test_opds_calibre_companion(self):
         host = 'http://127.0.0.1:' + PORTS[0]

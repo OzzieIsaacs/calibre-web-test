@@ -318,7 +318,7 @@ class TestLdapLogin(unittest.TestCase, ui_class):
         self.assertTrue(imprt)
         imprt.click()
         time.sleep(3)
-        self.assertTrue('2 Users Successfully Imported' in self.check_element_on_page((By.ID, "DialogContent")).text)
+        self.assertTrue('2 User Successfully Imported' in self.check_element_on_page((By.ID, "DialogContent")).text)
         self.check_element_on_page((By.ID, "DialogFinished")).click()
         time.sleep(2)
         # Check email adresses are correct imported
@@ -988,7 +988,7 @@ class TestLdapLogin(unittest.TestCase, ui_class):
         self.logout()
         # try download from guest account, fails
         r = requests.get('http://127.0.0.1:{}'.format(PORTS[0]) + entries['elements'][0]['download'])
-        self.assertEqual(403, r.status_code)
+        self.assertEqual(401, r.status_code)
         # create cookies by logging in to admin account and try to download book again, this will not work as cookies don't lead to log in
         req_session = requests.session()
         login_page = req_session.get('http://127.0.0.1:{}/login'.format(PORTS[0]))
@@ -997,12 +997,12 @@ class TestLdapLogin(unittest.TestCase, ui_class):
         req_session.post('http://127.0.0.1:{}/login'.format(PORTS[0]), data=payload)
         # user is not logged in via cookies, admin is not allowed to download
         r = req_session.get('http://127.0.0.1:{}'.format(PORTS[0]) + entries['elements'][0]['download'])
-        self.assertEqual(403, r.status_code)
+        self.assertEqual(401, r.status_code)
         # logout admin account, still no cookies
         # now login is done via not existing basic header, means no login, guest account also not allowed to download
         req_session.get('http://127.0.0.1:{}/logout'.format(PORTS[0]))
         r = req_session.get('http://127.0.0.1:{}'.format(PORTS[0]) + entries['elements'][0]['download'])
-        self.assertEqual(403, r.status_code)
+        self.assertEqual(401, r.status_code)
         # Close session, delete cookies
         req_session.close()
         self.login("admin", "admin123")
