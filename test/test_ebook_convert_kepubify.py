@@ -174,6 +174,23 @@ class TestEbookConvertKepubify(unittest.TestCase, ui_class):
         ret = self.check_tasks()
         # self.assertEqual(len(ret), len(ret2), "Reconvert of book started")
         self.assertEqual(ret[-1]['result'], 'Finished')
+        self.delete_book_format(8, "KEPUB")
+        self.assertTrue(self.check_element_on_page((By.ID, "flash_success")))
+        self.edit_book(content={"title":"[F08]_Test"})
+        self.assertTrue(self.check_element_on_page((By.ID, "flash_success")))
+        # ry to reconvert with glob relevant characters
+        vals = self.get_convert_book(8)
+        select = Select(vals['btn_from'])
+        select.select_by_visible_text('EPUB')
+        select = Select(vals['btn_to'])
+        select.select_by_visible_text('KEPUB')
+        self.check_element_on_page((By.ID, "btn-book-convert")).click()
+        time.sleep(6)
+        self.assertTrue(self.check_element_on_page((By.ID, "flash_success")))
+        ret = self.check_tasks()
+        self.assertEqual(ret[-1]['result'], 'Finished')
+        self.edit_book(8, content={"title": "book8"})
+        self.delete_book_format(8, "KEPUB")
 
     def test_kobo_kepub_formats(self):
         # convert book to kepub -> 2 formats
@@ -213,6 +230,7 @@ class TestEbookConvertKepubify(unittest.TestCase, ui_class):
                         'Download Link has invalid format for kobo browser, has to end with filename')
         # delete epub
         self.delete_book_format(9, "EPUB")
+        self.assertTrue(self.check_element_on_page((By.ID, "flash_success")))
         # try to download book from details as kobo reader -> kepub.epub
         resp = r.get('http://127.0.0.1:{}/book/9'.format(PORTS[0]))
         tree = lxml.etree.parse(StringIO(resp.text), parser)
