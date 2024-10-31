@@ -293,8 +293,9 @@ class TestKoboSync(unittest.TestCase, ui_class):
         self.inital_sync()
         self.get_book_details(5)
         self.check_element_on_page((By.ID, "edit_book")).click()
-        self.edit_book(content={'title': u'testbook1'})
+        self.edit_book(content={'title': u'testbook1', 'series_index': 0, 'series':"test"})
         time.sleep(2)
+        self.assertTrue(self.check_element_on_page((By.ID, 'flash_success')))
 
         # sync and get this book as changed entitlement instead of new one
         data = self.sync_kobo()
@@ -302,7 +303,10 @@ class TestKoboSync(unittest.TestCase, ui_class):
         self.assertTrue('ChangedEntitlement' in data[0])
         self.assertEqual(data[0]['ChangedEntitlement']['BookMetadata']['Title'],
                          'testbook1')
-
+        self.assertEqual(data[0]['ChangedEntitlement']['BookMetadata']['Series']['Number'],
+                         0.0)
+        self.assertEqual(data[0]['ChangedEntitlement']['BookMetadata']['Series']['NumberFloat'],
+                         0.0)
         # sync and no book
         data = self.sync_kobo()
         self.assertEqual(0, len(data))
