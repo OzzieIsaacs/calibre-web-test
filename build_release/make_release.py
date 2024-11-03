@@ -346,10 +346,10 @@ def prepare_files_pyinstaller():
     os.mkdir('exe_temp')
     print('* Extracting package file to "exe_temp" directory')
     tar = tarfile.open(files[0], "r:gz")
-    tar.extractall('exe_temp')
+    tar.extractall('exe_temp', filter="fully_trusted")
     tar.close()
     os.chdir('exe_temp')
-    setup_file = glob.glob('**/setup.py', recursive=True)
+    setup_file = glob.glob('**/pyproject.toml', recursive=True)
     if len(setup_file) > 1:
         print('## More than one setup file found, aborting ##')
         sys.exit(1)

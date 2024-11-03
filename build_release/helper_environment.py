@@ -6,10 +6,26 @@ from config import VENV_PYTHON
 import re
 import os
 import sys
-import pkg_resources
-import importlib
+#import pkg_resources
+#import importlib
 import json
 
+try:
+    import importlib
+    from importlib.metadata import version
+    import_lib = True
+    ImportNotFound = BaseException
+except ImportError:
+    import_lib = False
+    version = None
+
+if not import_lib:
+    try:
+        import pkg_resources
+        from pkg_resources import DistributionNotFound as ImportNotFound
+        pkgresources = True
+    except ImportError as e:
+        pkgresources = False
 
 class Environment:
     def __init__(self):
@@ -20,7 +36,10 @@ class Environment:
         self.result.append(('Platform', '{0.system} {0.release} {0.version} {0.processor} {0.machine}'.format(uname)))
         self.result.append(('Python', sys.version))
 
-        dists = [str(d).split(" ") for d in pkg_resources.working_set]
+        if import_lib:
+            dists = importlib.metadata.packages_distributions()
+        else:
+            dists = [str(d).split(" ") for d in pkg_resources.working_set]
         with open(os.path.join(CALIBRE_WEB_PATH, 'requirements.txt'), 'r') as f:
             for line in f:
                 if not line.startswith('#') and not line == '\n' and not line.startswith('git'):
