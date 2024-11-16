@@ -293,7 +293,7 @@ def create_executable():
     print("* Starting build of executable via PyInstaller")
 
     sep = ";" if os.name == "nt" else ":"
-
+    iso639_path = ""
     py_inst_path = os.path.join(os.path.dirname(VENV_PYTHON), py_inst)
     if os.name == "nt":
         google_api_path = glob.glob(os.path.join(FILEPATH, "venv", "lib/site-packages/google_api_python*"))
