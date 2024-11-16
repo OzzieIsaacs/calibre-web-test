@@ -25,7 +25,7 @@ from .helper_environment import environment, add_dependency
 def find_version(file_paths):
     with codecs.open(file_paths, 'r') as fp:
         version_file = fp.read()
-    version_match = re.search(r"^STABLE_VERSION\s+=\s+{['\"]version['\"]:\s*['\"](.*)['\"]}",
+    version_match = re.search(r"^STABLE_VERSION\s+=\s+['\"](.*)['\"]",
                               version_file, re.M)
     if version_match:
         return version_match.group(1)
