@@ -5,8 +5,8 @@ import os
 base_path = os.path.dirname(os.path.abspath(__file__))
 
 if os.name == 'nt':
-    FILEPATH = "C:\\Entwicklung\\calibre-web\\"
-    WIKIPATH = "C:\\Entwicklung\\calibre-web-wiki\\"
+    FILEPATH = "C:\\Development\\calibre-web\\"
+    WIKIPATH = "C:\\Development\\calibre-web-wiki\\"
     LDAP_WHL = os.path.abspath(os.path.join(base_path,'..', 'test', 'files', 'python_ldap-3.4.4-cp312-cp312-win_amd64.whl'))
     # LEVENSHTEIN_WHL = os.path.abspath(os.path.join(base_path, '../..', 'test', 'files', 'python_Levenshtein-0.12.2-cp39-cp39-win_amd64.whl'))
 else:

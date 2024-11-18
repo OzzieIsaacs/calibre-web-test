@@ -243,7 +243,10 @@ def create_python_environment():
     # install requirements and optional requirements in venv of calibre-web
     print("* Creating virtual environment for executable")
     try:
-        venv.create(VENV_PATH, clear=True, with_pip=True)
+        if os.name == "nt":
+            venv.create(VENV_PATH, system_site_packages=True, with_pip=False)
+        else:
+            venv.create(VENV_PATH, clear=True, with_pip=True)
     except CalledProcessError:
         print("## Error Creating virtual environment ##")
         venv.create(VENV_PATH, system_site_packages=True, with_pip=False)
@@ -294,10 +297,13 @@ def create_executable():
 
     sep = ";" if os.name == "nt" else ":"
     iso639_path = ""
+    libmagic_data = ""
     py_inst_path = os.path.join(os.path.dirname(VENV_PYTHON), py_inst)
     if os.name == "nt":
         google_api_path = glob.glob(os.path.join(FILEPATH, "venv", "lib/site-packages/google_api_python*"))
         iso639_path = os.path.join(FILEPATH, "venv", "lib", "site-packages", "iso639")
+        libmagic_path = os.path.join(FILEPATH, "venv", "lib", "site-packages", "magic", "libmagic")
+        libmagic_data = "--add-data " + libmagic_path + sep + ". "
     else:
         google_api_path = glob.glob(os.path.join(FILEPATH, "venv", "lib/**/site-packages/google_api_python*"))
         if sys.version_info < (3, 12):
@@ -322,8 +328,9 @@ def create_executable():
                               "--add-data cps/translations" + sep + "cps/translations "
                               "--add-data requirements.txt" + sep + ". "
                               "--add-data optional-requirements.txt" + sep + ". "
-                              "--add-data .pip_installed" + sep + ". " + iso_data +
-                              "--add-data " + google_api_path[0] + sep + os.path.basename(google_api_path[0]) + " "
+                              "--add-data .pip_installed" + sep + ". " + iso_data + libmagic_data +
+                              "--add-data " + google_api_path[0] + sep + os.path.basename(google_api_path[0]) + " " +
+#                               "--hidden-import python-libmagic " + sep + 
                               "--hidden-import sqlalchemy.sql.default_comparator ")
     p = subprocess.Popen(command,
                          # "--debug all",
