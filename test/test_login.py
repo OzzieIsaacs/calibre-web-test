@@ -295,6 +295,7 @@ class TestLogin(unittest.TestCase, ui_class):
         self.assertTrue(self.check_element_on_page((By.ID, "flash_success")))
         self.logout()
         self.login('admin', 'admin123')
+        self.assertTrue(self.check_element_on_page((By.ID, "flash_success")))
         self.edit_user('admin2', {'delete': 1})
         self.assertTrue(self.check_element_on_page((By.ID, "flash_success")))
         self.edit_user('admin', {'admin_role': 0})
@@ -341,20 +342,23 @@ class TestLogin(unittest.TestCase, ui_class):
         self.create_user('number_user', {'password': 'accHUlP+#', 'email': 'a3@b.com'})
         self.assertTrue(self.check_element_on_page((By.ID, "flash_success")))
         self.edit_user("number_user", {'delete': 1})
-
+        self.assertTrue(self.check_element_on_page((By.ID, "flash_success")))
         self.fill_basic_config({ 'config_password_number': 1, 'config_password_lower': 0})
+        self.assertTrue(self.check_element_on_page((By.ID, "flash_success")))
         # no lowercase letter        
         self.create_user('lower_user', {'password': '123456P+', 'email': 'a3@b.com'})
         self.assertTrue(self.check_element_on_page((By.ID, "flash_success")))
         self.edit_user("lower_user", {'delete': 1})
         time.sleep(1)
-
+        self.assertTrue(self.check_element_on_page((By.ID, "flash_success")))
         self.fill_basic_config({'config_password_lower': 1, 'config_password_upper': 0})
+        self.assertTrue(self.check_element_on_page((By.ID, "flash_success")))
         # no uppercase; number, lowercase and special char needed
         self.create_user('upper_user', {'password': '123456l+', 'email': 'a3@b.com'})
         self.assertTrue(self.check_element_on_page((By.ID, "flash_success")))
         self.edit_user("upper_user", {'delete': 1})
         time.sleep(1)
+        self.assertTrue(self.check_element_on_page((By.ID, "flash_success")))
         # Umlaut lowercase
         self.create_user('special_user', {'password': '123456+Ö', 'email': 'a3@b.com'})
         self.assertTrue(self.check_element_on_page((By.ID, "flash_danger")))
@@ -376,12 +380,15 @@ class TestLogin(unittest.TestCase, ui_class):
         self.assertTrue(self.check_element_on_page((By.ID, "flash_success")))
         self.edit_user("special_user", {'delete': 1})
         time.sleep(1)
+        self.assertTrue(self.check_element_on_page((By.ID, "flash_success")))
         self.fill_basic_config({ 'config_password_upper': 1, 'config_password_special': 0})
+        self.assertTrue(self.check_element_on_page((By.ID, "flash_success")))
         # no specialchar
         self.create_user('special_user', {'password': '123456lP', 'email': 'a3@b.com'})
         self.assertTrue(self.check_element_on_page((By.ID, "flash_success")))
         self.edit_user("special_user", {'delete': 1})
         time.sleep(1)
+        self.assertTrue(self.check_element_on_page((By.ID, "flash_success")))
 
         self.create_user('upper_user', {'password': '123456l六', 'email': 'a3@b.com'})
         self.assertTrue(self.check_element_on_page((By.ID, "flash_danger")))
@@ -390,8 +397,10 @@ class TestLogin(unittest.TestCase, ui_class):
         self.assertTrue(self.check_element_on_page((By.ID, "flash_success")))
         self.edit_user("special_user", {'delete': 1})
         time.sleep(1)
+        self.assertTrue(self.check_element_on_page((By.ID, "flash_success")))
         self.fill_basic_config({'config_password_policy': 1, 'config_password_upper': 0, 'config_password_lower': 0,
                                 "config_password_character": 1})
+        self.assertTrue(self.check_element_on_page((By.ID, "flash_success")))
         self.create_user('character_user', {'password': '1234567六', 'email': 'a3@b.com'})
         self.assertTrue(self.check_element_on_page((By.ID, "flash_success")))
         self.edit_user("character_user", {'delete': 1})
@@ -403,18 +412,21 @@ class TestLogin(unittest.TestCase, ui_class):
         self.create_user('character_user', {'password': '1234567δ', 'email': 'a3@b.com'})
         self.assertTrue(self.check_element_on_page((By.ID, "flash_success")))
         self.edit_user("character_user", {'delete': 1})
-
+        self.assertTrue(self.check_element_on_page((By.ID, "flash_success")))
         self.fill_basic_config({'config_password_special': 1, 'config_password_min_length': 5})
+        self.assertTrue(self.check_element_on_page((By.ID, "flash_success")))
         # shorter length password
         self.create_user('short_user', {'password': '45lP+', 'email': 'a3@b.com'})
         self.assertTrue(self.check_element_on_page((By.ID, "flash_success")))
         self.edit_user("short_user", {'delete': 1})
         time.sleep(1)
+        self.assertTrue(self.check_element_on_page((By.ID, "flash_success")))
         self.create_user('short_user', {'password': '5lP+', 'email': 'a3@b.com'})
         self.assertTrue(self.check_element_on_page((By.ID, "flash_danger")))
 
         self.fill_basic_config({'config_password_min_length': 8, 'config_password_upper': 1,
                                 'config_password_lower': 1 })
+        self.assertTrue(self.check_element_on_page((By.ID, "flash_success")))
         self.logout()
 
 

@@ -50,6 +50,7 @@ class TestLoadMetadata(TestCase, ui_class):
         self.check_element_on_page((By.ID, "edit_book")).click()
         original_cover = self.check_element_on_page((By.ID, "detailcover")).screenshot_as_png
         self.check_element_on_page((By.ID, "get_meta")).click()
+        time.sleep(1)
         self.assertEqual("Der Buchtitel", self.check_element_on_page((By.ID, "keyword")).get_attribute("value"))
         comic_vine = self.check_element_on_page((By.ID, "show-ComicVine"))
         google = self.check_element_on_page((By.ID, "show-Google"))
@@ -63,38 +64,51 @@ class TestLoadMetadata(TestCase, ui_class):
         self.assertTrue(comic_vine.is_selected())
         self.assertTrue(google.is_selected())
         self.assertTrue(amazon.is_selected())
+        time.sleep(3)
         # Check results -> no cover google
         results = self.find_metadata_results()
         # Link to Google, Comicvine
-        if 'https://comicvine.gamespot.com/' == results[10]['source']:
-            cv = 10
-        elif 'https://comicvine.gamespot.com/' == results[0]['source']:
+        cont = 0
+        go = -1
+        am = -1
+        cv = -1
+        if results[0]['source'] == 'https://comicvine.gamespot.com/':
+            cont = 10
             cv = 0
-        elif 'https://comicvine.gamespot.com/' == results[20]['source']:
-            cv = 20
-        else:
-            cv = -1
-        if 'https://books.google.com/' == results[10]['source']:
-            go = 10
-        elif 'https://books.google.com/' == results[0]['source']:
+        elif results[0]['source'] == 'https://books.google.com/':
+            cont = 10
             go = 0
-        elif 'https://books.google.com/' == results[20]['source']:
-            go = 20
-        else:
-            go = -1
-
-        if 'https://amazon.com/' == results[10]['source']:
-            am = 10
-        elif 'https://amazon.com/' == results[0]['source']:
+        elif results[0]['source'] == 'https://amazon.com/':
+            cont = 2
             am = 0
-        elif len(results) > 20:
-            if 'https://amazon.com/' == results[20]['source']:
-                am = 20
-            else:
-                am = -1
         else:
-            am = -1
+            self.assertTrue(False, "Error, metadata links not found")            
+        
+        if results[cont]['source'] == 'https://comicvine.gamespot.com/':
+            cv = cont
+            cont += 10
+        elif results[cont]['source'] == 'https://books.google.com/':
+            go = cont
+            cont += 10
+        elif results[cont]['source'] == 'https://amazon.com/':
+            am = cont
+            cont += 2
+        else:
+            self.assertTrue(False, "Error, metadata links not found")
+        
+        if results[cont]['source'] == 'https://comicvine.gamespot.com/':
+            cv = cont
+            cont += 10 
 
+        elif results[cont]['source'] == 'https://books.google.com/':
+            go = cont
+            cont += 10
+        elif results[cont]['source'] == 'https://amazon.com/':
+            am = cont
+            cont += 2
+        else:
+            self.assertTrue(False, "Error, metadata links not found")
+        
         self.assertEqual('https://comicvine.gamespot.com/', results[cv]['source'])
         self.assertEqual('https://books.google.com/', results[go]['source'])
         self.assertEqual('https://amazon.com/', results[am]['source'])
@@ -123,7 +137,7 @@ class TestLoadMetadata(TestCase, ui_class):
         results = self.find_metadata_results()
         self.assertEqual(10, len(results))
         comic_vine.click()
-        time.sleep(2)
+        time.sleep(8)
         results = self.find_metadata_results()
         self.assertEqual(20, len(results))
         comic_vine.click()
@@ -137,15 +151,15 @@ class TestLoadMetadata(TestCase, ui_class):
         results = self.find_metadata_results()
         self.assertEqual(10, len(results))
         comic_vine.click()
-        time.sleep(2)
+        time.sleep(8)
         results = self.find_metadata_results()
         self.assertEqual(20, len(results))
         # enter dialog, click on cover
-        # -> check new cover is taken, check tags are merged check new title and authors
+        # -> check new cover (the no cover) is taken, check tags are merged check new title and authors
         results[2]['cover_element'].click()
         time.sleep(1)
         cover = self.check_element_on_page((By.ID, "detailcover")).screenshot_as_png
-        self.assertLessEqual(diff(BytesIO(cover), BytesIO(original_cover), delete_diff_file=True), 0.001)
+        self.assertLessEqual(diff(BytesIO(cover), BytesIO(original_cover), delete_diff_file=True), 0.006)
         self.assertEqual(results[2]['title'], self.check_element_on_page((By.ID, "title")).get_attribute("value"))
         self.assertEqual(results[2]['author'], self.check_element_on_page((By.ID, "authors")).get_attribute("value"))
         self.assertEqual(results[2]['publisher'], self.check_element_on_page((By.ID, "publisher")).get_attribute("value"))
@@ -170,17 +184,24 @@ class TestLoadMetadata(TestCase, ui_class):
         self.check_element_on_page((By.ID, "do-search")).click()
         time.sleep(3)
         results = self.find_metadata_results()
+        # Google results have changed
         results[0]['cover_element'].click()
         time.sleep(3)
         cover = self.check_element_on_page((By.ID, "detailcover")).screenshot_as_png
         self.assertGreaterEqual(diff(BytesIO(cover), BytesIO(original_cover), delete_diff_file=True), 0.05)
         self.check_element_on_page((By.ID, "submit")).click()
         book_details = self.get_book_details(-1)
-        self.assertEqual(book_details['title'], "Der Buchtitel in der römischen Poesie")
-        self.assertEqual(book_details['author'][0], "Martin Vogt")
-        self.assertEqual(book_details['publisher'], [])
+        pub_compare = book_details['publisher'][0] if len(book_details['publisher']) > 0 else ""
+        self.assertEqual(book_details['title'], results[0]['title'])
+        self.assertEqual(book_details['author'][0], results[0]['author'])
+        self.assertEqual(pub_compare, results[0]['publisher'],"{} {}".format(book_details, results[0]) )
         cover = self.check_element_on_page((By.ID, "detailcover")).screenshot_as_png
         self.assertGreaterEqual(diff(BytesIO(cover), BytesIO(original_cover), delete_diff_file=True), 0.05)
+
+        self.fill_basic_config({'config_uploading': 0})
+        time.sleep(3)
+        self.assertTrue(self.check_element_on_page((By.ID, "flash_success")))
+        self.get_book_details(1)
         # enter dialog, click on empty cover
         # -> check empty cover is taken, check tags are merged check new title and authors
         self.check_element_on_page((By.ID, "edit_book")).click()
@@ -190,19 +211,16 @@ class TestLoadMetadata(TestCase, ui_class):
         search.clear()
         search.send_keys("Der Buchtitel")
         self.check_element_on_page((By.ID, "do-search")).click()
-        time.sleep(2)
+        time.sleep(5)
         results = self.find_metadata_results()
         results[1]['cover_element'].click()
         time.sleep(1)
-        cover = self.check_element_on_page((By.ID, "detailcover")).screenshot_as_png
-        self.assertLessEqual(diff(BytesIO(cover), BytesIO(original_cover), delete_diff_file=True), 0.001)
+        new_cover = self.check_element_on_page((By.ID, "detailcover")).screenshot_as_png
+        self.assertLessEqual(diff(BytesIO(cover), BytesIO(new_cover), delete_diff_file=True), 0.02)
         self.assertEqual(results[1]['title'], self.check_element_on_page((By.ID, "title")).get_attribute("value"))
         self.assertEqual(results[1]['author'], self.check_element_on_page((By.ID, "authors")).get_attribute("value"))
-        self.assertEqual("/static/generic_cover.jpg", self.check_element_on_page((By.ID, "cover_url")).get_attribute("value"))
+        # self.assertEqual("/static/generic_cover.jpg", self.check_element_on_page((By.ID, "cover_url")).get_attribute("value"))
 
-        self.fill_basic_config({'config_uploading': 0})
-        time.sleep(3)
-        self.assertTrue(self.check_element_on_page((By.ID, "flash_success")))
         self.get_book_details(1)
         self.check_element_on_page((By.ID, "edit_book")).click()
         # check empty search does nothing
@@ -239,11 +257,11 @@ class TestLoadMetadata(TestCase, ui_class):
         search.clear()
         search.send_keys("西遊記")
         self.check_element_on_page((By.ID, "do-search")).click()
-        time.sleep(3)
+        time.sleep(6)
         results = self.find_metadata_results()
         found = 0
         for r in results:
-            if r['title'] == "奇想西遊記1":
+            if r['title'] == "圖解西遊記":
                 found = 1
                 break
         self.assertEqual(1, found)

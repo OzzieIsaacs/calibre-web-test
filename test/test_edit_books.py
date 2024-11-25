@@ -496,7 +496,7 @@ class TestEditBooks(TestCase, ui_class):
         self.edit_book(content={'comments':u'bogomirä 人物'})
         values = self.get_book_details()
         self.assertEqual(u'bogomirä 人物', values['comment'])
-        self.assertEqual(len(self.adv_search({'comment': u'mirä 人'})), 1)
+        self.assertEqual(len(self.adv_search({'comments': u'mirä 人'})), 1)
         self.get_book_details(12)
         self.check_element_on_page((By.ID, "edit_book")).click()
         self.edit_book(content={'comments':''})
