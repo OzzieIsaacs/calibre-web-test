@@ -182,6 +182,7 @@ class TestBackupMetadata(TestCase, ui_class):
         # generate all metadata.opf files
         self.queue_metadata_backup()
         self.restart_calibre_web()
+        time.sleep(2)
         # check author content of metadata.opf file
         metadata = read_opf_metadata(meta_path)
         self.assertEqual(["Frodo Beutlin","Norbert Halagal","Liu Yang","Hector Gonçalves"], metadata['author'])
@@ -190,6 +191,7 @@ class TestBackupMetadata(TestCase, ui_class):
         self.edit_book(1, content={'authors': 'Frodo Beutlin & Norbert Halagal & Hector Gonçalves'})
         time.sleep(2)
         self.restart_calibre_web()
+        time.sleep(2)
         # check author content of metadata.opf file
         metadata = read_opf_metadata(meta_path)
         self.assertEqual(["Frodo Beutlin","Norbert Halagal", "Hector Gonçalves"], metadata['author'])
@@ -197,7 +199,7 @@ class TestBackupMetadata(TestCase, ui_class):
         self.edit_book(1, content={'authors': 'Hector Gonçalves'})
         time.sleep(2)
         self.restart_calibre_web()
-        time.sleep(3)
+        time.sleep(2)
         metadata = read_opf_metadata(os.path.join(TEST_DB, "Hector Gonçalves", "Der Buchtitel (1)", "metadata.opf"))
         self.assertEqual(["Hector Gonçalves"], metadata['author'])
         self.assertEqual("Gonçalves, Hector", metadata['author_attr'][0]['opf:file-as'])

@@ -246,29 +246,6 @@ class TestCliGdrivedb(unittest.TestCase, ui_class):
         time.sleep(2)
         book_shelf = self.get_shelf_books_displayed()
         self.assertEqual(1, len(book_shelf))
-        # rename database file and restart
-        # ToDo: deleting local database results in delete of all shelfs, new database is accepted
-        '''os.rename(os.path.join(TEST_DB, "metadata.db"), os.path.join(TEST_DB, "_metadata.db"))
-        self.restart_calibre_web(p1)        
-        self.goto_page("user_setup")
-        database_dir = self.check_element_on_page((By.ID, "config_calibre_dir"))
-        self.assertTrue(database_dir)
-        self.assertEqual(TEST_DB, database_dir.get_attribute("value"))
-        self.check_element_on_page((By.ID, "config_back")).click()
-        time.sleep(2)
-        self.check_element_on_page((By.ID, "config_calibre_dir"))
-        self.check_element_on_page((By.ID, "db_submit")).click()
-        self.assertTrue(self.check_element_on_page((By.ID, 'flash_danger')))
-        database_dir = self.check_element_on_page((By.ID, "config_calibre_dir"))
-        self.assertTrue(database_dir)
-        self.assertEqual(TEST_DB, database_dir.get_attribute("value"))
-        os.rename(os.path.join(TEST_DB, "_metadata.db"), os.path.join(TEST_DB, "metadata.db"))
-        self.check_element_on_page((By.ID, "db_submit")).click()
-        self.assertTrue(self.check_element_on_page((By.ID, 'flash_success')))
-        # check shelf is still there
-        self.list_shelfs("database")['ele'].click()
-        book_shelf = self.get_shelf_books_displayed()
-        self.assertEqual(1, len(book_shelf))'''
         # copy database to different location, move location, check shelf is still there
         alt_location = os.path.abspath(os.path.join(TEST_DB, "..", "alternate"))
         os.makedirs(alt_location, exist_ok=True)
@@ -281,8 +258,11 @@ class TestCliGdrivedb(unittest.TestCase, ui_class):
         self.assertEqual(1, len(book_shelf))
         # Fails on Samba drive, because file is new created before return of command
         shutil.rmtree(alt_location, ignore_errors=True)
-        self.delete_shelf("database")
-        self.assertTrue(self.check_element_on_page((By.ID, 'flash_success')))
+        self.list_shelfs("database")['ele'].click()
+        element = self.check_element_on_page((By.XPATH, '//*[@title="Return to Database config"]'))
+        self.assertTrue(element)
+        element.click()
+        self.assertTrue(self.check_element_on_page((By.ID, 'config_calibre_dir')))
         self.stop_calibre_web(p1)
         try:
             self.driver.switch_to.alert.accept()

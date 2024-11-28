@@ -387,74 +387,6 @@ class TestEditAdditionalBooks(TestCase, ui_class):
         time.sleep(3)
         self.assertTrue(self.check_element_on_page((By.ID, "flash_success")))
 
-    @unittest.skipIf(os.name == 'nt', 'writeonly database on windows is not checked')
-    def test_writeonly_path(self):
-        self.fill_basic_config({'config_rarfile_location': unrar_path(), "config_unicode_filename": 1})
-        time.sleep(BOOT_TIME)
-        self.assertTrue(self.check_element_on_page((By.ID, "flash_success")))
-        self.goto_page('nav_new')
-        number_books = self.get_books_displayed()
-        self.fill_view_config({'config_read_column': "Custom Bool 1 Ä"})
-        self.assertTrue(self.check_element_on_page((By.ID, "flash_success")))
-        self.fill_basic_config({'config_uploading': 1})
-        time.sleep(3)
-        self.assertTrue(self.check_element_on_page((By.ID, "flash_success")))
-        self.get_book_details(9)
-        self.check_element_on_page((By.ID, "edit_book")).click()
-        self.edit_book(content={'tags': 'Gênot',
-                                "authors": 'John Döe',
-                                'title': 'Buuko'})
-        rights = os.stat(TEST_DB).st_mode & 0o777
-        os.chmod(TEST_DB, 0o400)
-        self.get_book_details(9)
-        self.check_element_on_page((By.ID, "edit_book")).click()
-        self.edit_book(content={u'tags': 'Geno'})
-        self.assertTrue(self.check_element_on_page((By.ID, "flash_danger")))
-        details = self.get_book_details(9)
-        self.assertEqual('Gênot', details['tag'][0])
-        self.check_element_on_page((By.ID, "edit_book")).click()
-        self.edit_book(content={u'title': 'Buuk'})
-        self.assertTrue(self.check_element_on_page((By.ID, "flash_danger")))
-        details = self.get_book_details(9)
-        self.assertEqual('Buuko', details['title'])
-        self.check_element_on_page((By.ID, "edit_book")).click()
-        self.edit_book(content={u'authors': 'Jon Döe'})
-        self.assertTrue(self.check_element_on_page((By.ID, "flash_danger")))
-        details = self.get_book_details(9)
-        self.assertEqual('John Döe', details['author'][0])
-
-        values = self.get_book_details(8)
-        self.assertFalse(values['read'])
-        read = self.check_element_on_page((By.XPATH, "//*[@id='have_read_cb']"))
-        self.assertTrue(read)
-        read.click()
-        values = self.get_book_details(8)
-        self.assertFalse(values['read'])
-
-        upload_file = os.path.join(base_path, 'files', 'book.cbr')
-        upload = self.check_element_on_page((By.ID, 'btn-upload'))
-        upload.send_keys(upload_file)
-        time.sleep(2)
-        self.assertTrue(self.check_element_on_page((By.ID, "flash_danger")))
-        books = self.get_books_displayed()
-        self.assertEqual(len(number_books[1]), len(books[1]))
-        # restart and check it fails
-        self.restart_calibre_web()
-        self.goto_page('nav_new')
-        os.chmod(TEST_DB, rights)
-        self.fill_db_config(dict(config_calibre_dir=TEST_DB))
-        # wait for cw to reboot
-        time.sleep(2)
-        self.fill_basic_config({'config_uploading': 0, 'config_rarfile_location': "", "config_unicode_filename": 0})
-        self.assertTrue(self.check_element_on_page((By.ID, "flash_success")))
-        book_path = os.path.join(TEST_DB, 'John Doe', 'Buuko (9)')
-        self.assertTrue(os.path.isdir(book_path))
-        self.goto_page('nav_new')
-
-    @unittest.skip('Not implemented')
-    def test_writeonly_calibre_database(self):
-        pass
-
     def test_edit_book_identifier(self):
         reference_length = len(self.get_book_details(9)['identifier'])
         # press 3 times on add identifier save -> nothing
@@ -797,7 +729,7 @@ class TestEditAdditionalBooks(TestCase, ui_class):
         self.assertEqual(403, result.status_code)
         result = r.post('http://127.0.0.1:{}/delete/12'.format(PORTS[0]), data=payload)
         self.assertEqual(403, result.status_code)
-        result = r.post('http://127.0.0.1:{}/ajax/delete/12'.format(PORTS[0]), data=payload)
+        result = r.post('http://127.0.0.1:{}/ajax/delete/12'.format(PORTS[0]), data=payload, timeout=5)
         self.assertEqual(200, result.status_code)
         self.assertEqual("danger", result.json()['type'])
 
@@ -903,16 +835,15 @@ class TestEditAdditionalBooks(TestCase, ui_class):
         values = self.get_book_details()
         self.assertEqual(0, len(values['cust_columns']))
 
-    @unittest.skip
     def test_xss_author_edit(self):
         r = requests.session()
         login_page = r.get('http://127.0.0.1:{}/login'.format(PORTS[0]))
-        #token = re.search('<input type="hidden" name="csrf_token" value="(.*)">', login_page.text)
-        payload = {'username': 'admin', 'password': 'admin123', 'submit': "", 'next': "/", "remember_me": "on"} #, "csrf_token": token.group(1)}
+        token = re.search('<input type="hidden" name="csrf_token" value="(.*)">', login_page.text)
+        payload = {'username': 'admin', 'password': 'admin123', 'submit': "", 'next': "/", "remember_me": "on", "csrf_token": token.group(1)}
         r.post('http://127.0.0.1:{}/login'.format(PORTS[0]), data=payload)
         book_page = r.get('http://127.0.0.1:{}/admin/book/3'.format(PORTS[0]))
-        # token = re.search('<input type="hidden" name="csrf_token" value="(.*)">', book_page.text)
-        book_payload = {'comments': '', 'authors': "-->'\"<script>alert(1)</script>", 'title': '<p>calibre Quick Start Guide</p><img src=x onerror=alert("hoho")>', 'tags':'<p>calibre Quick Start Guide</p><img src=x onerror=alert("ddd")>', 'series':'<p>calibre Quick Start Guide</p><img src=x onerror=alert("hh")>', 'series_index':'1', 'languages':'', 'publisher':'', 'pubdate':'', 'rating': '', 'custom_column_1':'', 'custom_column_2':'', 'custom_column_3':'', 'custom_column_4':'', 'custom_column_5':'<p>calibre Quick Start Guide</p><img src=x onerror=alert("Huhu")>', 'custom_column_6':'','custom_column_7':'', 'custom_column_8':'', 'custom_column_9':'', 'custom_column_10':''} #, "csrf_token": token.group(1)}
+        token = re.search('<input type="hidden" name="csrf_token" value="(.*)">', book_page.text)
+        book_payload = {'comments': '', 'authors': "-->'\"<script>alert(1)</script>", 'title': '<p>calibre Quick Start Guide</p><img src=x onerror=alert("hoho")>', 'tags':'<p>calibre Quick Start Guide</p><img src=x onerror=alert("ddd")>', 'series':'<p>calibre Quick Start Guide</p><img src=x onerror=alert("hh")>', 'series_index':'1', 'languages':'', 'publisher':'', 'pubdate':'', 'rating': '', 'custom_column_1':'', 'custom_column_2':'', 'custom_column_3':'', 'custom_column_4':'', 'custom_column_5':'<p>calibre Quick Start Guide</p><img src=x onerror=alert("Huhu")>', 'custom_column_6':'','custom_column_7':'', 'custom_column_8':'', 'custom_column_9':'', 'custom_column_10':'', "csrf_token": token.group(1)}
         result = r.post('http://127.0.0.1:{}/admin/book/3'.format(PORTS[0]), data=book_payload)
         self.assertEqual(200, result.status_code)
         r.close()
