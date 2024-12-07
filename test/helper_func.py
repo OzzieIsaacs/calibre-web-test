@@ -2,6 +2,7 @@
 # -*- coding: utf-8 -*-
 import shutil
 import re
+import glob
 import mimetypes
 from config_test import CALIBRE_WEB_PATH, TEST_DB, BOOT_TIME, VENV_PYTHON, base_path, TEST_OS
 from selenium.webdriver.support.ui import WebDriverWait
@@ -160,7 +161,11 @@ def startup(inst, pyVersion, config, login=True, host="http://127.0.0.1", port="
         print(ex)
     try:
         os.chmod(lib_dest + index, 0o764)
-    except Exception:
+        for element in glob.glob(lib_dest + index + "/**",recursive=True):
+            # set perms on sub-directories
+            os.chmod(element, 0o764)
+            os.chown(element, os.getuid(), os.getgid())
+    except Exception as e:
         pass
     shutil.rmtree(lib_dest + index, ignore_errors=True)
     if split:
@@ -176,7 +181,7 @@ def startup(inst, pyVersion, config, login=True, host="http://127.0.0.1", port="
     if not only_metadata:
         try:
             if not split:
-                shutil.copytree(os.path.join(base_path, 'Calibre_db'), lib_dest + index)
+                shutil.copytree(os.path.join(base_path, 'Calibre_db'), lib_dest + index, dirs_exist_ok=True)
             else:
                 if not lib_path:
                     print('No location for split library path given')

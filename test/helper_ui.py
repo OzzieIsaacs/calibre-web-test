@@ -477,16 +477,23 @@ class ui_class():
             if not cls.check_user_logged_in("admin", True):
                 cls.login('admin','admin123')
             cls.goto_page('admin_setup')
-        cls.driver.find_element(By.ID, 'admin_stop').click()
-        element = cls.check_element_on_page((By.ID, "shutdown"))
-        element.click()
+        try:
+            cls.driver.find_element(By.ID, 'admin_stop').click()
+            element = cls.check_element_on_page((By.ID, "shutdown"))
+            element.click()
+        except:
+            pass
         try:
             if cls.p:
                 time.sleep(3)
                 cls.p.poll()
-        except Exception as e:
+        except:
             pass
         if proc:
+            try:
+                proc.terminate()
+            except:
+                pass
             time.sleep(3)
             proc.poll()
             proc.stdout.close()
@@ -1608,12 +1615,12 @@ class ui_class():
                 "href")
         r = requests.session()
         if user.lower() != "guest":
-            login_page = r.get('http://127.0.0.1:8083/login')
+            login_page = r.get('http://127.0.0.1:8083/login', timeout=20)
             token = re.search('<input type="hidden" name="csrf_token" value="(.*)">', login_page.text)
             payload = {'username': user, 'password': password, 'submit': "", 'next': "/", "remember_me": "on",
                        "csrf_token": token.group(1)}
-            r.post('http://127.0.0.1:8083/login', data=payload)
-        resp = r.get(download_link)
+            r.post('http://127.0.0.1:8083/login', data=payload, timeout=20)
+        resp = r.get(download_link, timeout=20)
         r.close()
         return resp.status_code, resp.content
 

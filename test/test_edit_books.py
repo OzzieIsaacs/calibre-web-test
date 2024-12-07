@@ -1210,11 +1210,11 @@ class TestEditBooks(TestCase, ui_class):
         payload = {'username': 'admin', 'password': 'admin123', 'submit':"", 'next':"/", "remember_me":"on",
                    "csrf_token": token.group(1)}
         r.post('http://127.0.0.1:{}/login'.format(PORTS[0]), data=payload)
-        resp = r.get(download_link)
+        resp = r.get(download_link, timeout=5)
         self.assertEqual(resp.headers['Content-Type'], 'application/epub+zip')
         self.assertEqual(resp.status_code, 200)
         self.edit_user('admin', {'download_role': 0})
-        resp = r.get(download_link)
+        resp = r.get(download_link, timeout=5)
         self.assertEqual(resp.status_code, 403)
         book = self.get_book_details(5)
         self.assertNotIn('download', book)

@@ -66,7 +66,11 @@ class TestReadOnlyDatabase(TestCase, ui_class):
         rights = os.stat(TEST_DB).st_mode & 0o777
         os.chmod(TEST_DB, 0o400)
         self.get_book_details(9)
-        self.check_element_on_page((By.ID, "edit_book")).click()
+        element = self.check_element_on_page((By.XPATH, '//*[@title="Return to Database config"]'))
+        self.assertTrue(element)
+        element.click()
+        self.assertTrue(self.check_element_on_page((By.ID, 'config_calibre_dir')))
+        '''self.check_element_on_page((By.ID, "edit_book")).click()
         self.edit_book(content={u'tags': 'Geno'})
         self.assertTrue(self.check_element_on_page((By.ID, "flash_danger")))
         details = self.get_book_details(9)
@@ -100,7 +104,7 @@ class TestReadOnlyDatabase(TestCase, ui_class):
         self.assertEqual(len(number_books[1]), len(books[1]))
         # restart and check it fails
         self.restart_calibre_web()
-        self.goto_page('nav_new')
+        self.goto_page('nav_new')'''
         os.chmod(TEST_DB, rights)
         self.fill_db_config(dict(config_calibre_dir=TEST_DB))
         # wait for cw to reboot
