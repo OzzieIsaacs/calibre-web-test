@@ -43,6 +43,10 @@ class TestCli(unittest.TestCase, ui_class):
 
     @classmethod
     def tearDownClass(cls):
+        os.chmod(os.path.join(CALIBRE_WEB_PATH + INDEX, "exclude.txt"), 0o644)
+        os.chmod(os.path.join(CALIBRE_WEB_PATH, "cps", "templates", "tasks.html"), 0o644)
+        os.chmod(os.path.join(CALIBRE_WEB_PATH, "cps", "static"), 0o755)
+        os.chmod(os.path.join(CALIBRE_WEB_PATH, "cps", "static", "js", "main.js"), 0o644)
         # close the browser window
         os.chdir(base_path)
         kill_dead_cps()
@@ -60,7 +64,6 @@ class TestCli(unittest.TestCase, ui_class):
             os.remove(new_db)
         except Exception:
             pass
-            # print(e)
 
     def check_password_change(self, parameter, expectation):
         p = process_open([self.py_version, "-B", 'cps.py', "-s", parameter], [1])
@@ -580,6 +583,7 @@ class TestCli(unittest.TestCase, ui_class):
         confirm = self.check_element_on_page((By.ID, 'invalid_confirm'))
         self.assertTrue(confirm)
         confirm.click()
+        time.sleep(1)
         database_dir = self.check_element_on_page((By.ID, "config_calibre_dir"))
         self.assertTrue(database_dir)
         self.assertEqual(TEST_DB, database_dir.get_attribute("value"))

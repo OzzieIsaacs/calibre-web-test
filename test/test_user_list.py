@@ -716,14 +716,15 @@ class TestUserList(TestCase, ui_class):
         self.assertEqual(400, result.status_code)
 
         # delete invalid user
-        payload = {'userid': '22', "csrf_token": token.group(1)}
-        result = r.post('http://127.0.0.1:{}/ajax/deleteuser'.format(PORTS[0]), data=payload)
+        payload = {'userid': ['22']}
+        headers = {"X-CSRFToken": token.group(1)}
+        result = r.post('http://127.0.0.1:{}/ajax/deleteuser'.format(PORTS[0]), headers=headers, json=payload)
         self.assertEqual("danger", json.loads(result.text)['type'])
-        payload = {'name': 'kiki', "csrf_token": token.group(1)}
-        result = r.post('http://127.0.0.1:{}/ajax/deleteuser'.format(PORTS[0]), data=payload)
+        payload = {'name': 'kiki'}
+        result = r.post('http://127.0.0.1:{}/ajax/deleteuser'.format(PORTS[0]), headers=headers, json=payload)
         self.assertEqual("danger", json.loads(result.text)['type'])
-        payload = {'userid[]': ['22'], "csrf_token": token.group(1)}
-        result = r.post('http://127.0.0.1:{}/ajax/deleteuser'.format(PORTS[0]), data=payload)
+        payload = {'userid': '22'}
+        result = r.post('http://127.0.0.1:{}/ajax/deleteuser'.format(PORTS[0]), headers=headers, json=payload)
         self.assertEqual("danger", json.loads(result.text)['type'])
 
         # mass edit of name

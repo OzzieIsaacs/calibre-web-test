@@ -29,7 +29,6 @@ from email import encoders
 import zipfile
 from bs4 import BeautifulSoup
 import codecs
-from io import StringIO
 
 try:
     import pdfkit
@@ -83,6 +82,7 @@ except ImportError:
     BytesIO = None
     curl_available = False
 
+DEFAULT_EPUB = os.path.join(base_path, "files", "book.epub")
 
 def is_port_in_use(port):
     s = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
@@ -536,7 +536,7 @@ def updateZip(zipname_new, zipname_org, filename, data):
         zf.writestr(filename, data)
 
 
-def change_epub_meta(zipname_new=None, zipname_org='./files/book.epub', meta={}, item={}, guide={}, meta_change={}):
+def change_epub_meta(zipname_new=None, zipname_org=DEFAULT_EPUB, meta={}, item={}, guide={}, meta_change={}):
     with codecs.open(os.path.join(base_path, 'files', 'test.opf'), "r", "utf-8") as f:
         soup = BeautifulSoup(f.read(), "xml")
     for el in soup.findAll("meta"):
