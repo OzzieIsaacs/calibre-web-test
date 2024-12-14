@@ -43,16 +43,6 @@ class TestMassEditBooksList(TestCase, ui_class):
         cls.p.terminate()
         save_logfiles(cls, cls.__name__)
 
-    def check_search(self, bl, term, count, column, value):
-        bl['search'].clear()
-        bl['search'].send_keys(term)
-        bl['search'].send_keys(Keys.RETURN)
-        time.sleep(1)
-        bl = self.get_books_list(-1)
-        self.assertEqual(count, len(bl['table']))
-        self.assertEqual(value, bl['table'][0][column]['text'])
-        return bl
-
     def test_wrong_parameter_single(self):
         r = requests.session()
         login_page = r.get('http://127.0.0.1:{}/login'.format(PORTS[0]))
@@ -94,9 +84,6 @@ class TestMassEditBooksList(TestCase, ui_class):
         r.close()
 
     def test_wrong_parameter_multi(self):
-        pass
-
-    def test_booklist_xss(self):
         r = requests.session()
         login_page = r.get('http://127.0.0.1:{}/login'.format(PORTS[0]))
         token = re.search('<input type="hidden" name="csrf_token" value="(.*)">', login_page.text)
@@ -104,16 +91,82 @@ class TestMassEditBooksList(TestCase, ui_class):
         r.post('http://127.0.0.1:{}/login'.format(PORTS[0]), data=payload)
         table = r.get('http://127.0.0.1:{}/table?data=list&sort_param=stored'.format(PORTS[0]))
         token = re.search('<input type="hidden" name="csrf_token" value="(.*)">', table.text)
-        data = {"name": "comments", "value": "<a href=javascr\x1bipt:alert()>Hello</a>", "pk": ["10"], "checkA": "true", "checkT": "true"}
+        data = {"name": "lurgi", "value": "test", "pk": ["10", 7]}
         headers = {"X-CSRFToken": token.group(1)}
-        response = r.post('http://127.0.0.1:{}/ajax/editbooks/comments'.format(PORTS[0]), json=data, headers=headers, timeout=5)
+        response = r.post('http://127.0.0.1:{}/ajax/editbooks/lurgi'.format(PORTS[0]), json=data, headers=headers, timeout=5)
+        self.assertEqual(400, response.status_code)
+        self.assertTrue("Parameter" in response.text)
+        data = {"value": "test", "pk": ["22", 10]}
+        response = r.post('http://127.0.0.1:{}/ajax/editbooks/series'.format(PORTS[0]), json=data, headers=headers,
+                          timeout=5)
         self.assertEqual(200, response.status_code)
-        self.assertEqual("<a>Hello</a>", response.json()['newValue'])
-        data = {"name": "comments", "value": "", "pk": ["10"], "checkA": "true", "checkT": "true"}
-        response = r.post('http://127.0.0.1:{}/ajax/editbooks/comments'.format(PORTS[0]), json=data, headers=headers, timeout=5)
+        self.assertNotEqual(None, response.json().get('msg', None))
+        data = {"value": "fdt", "pk": [10, 11]}
+        response = r.post('http://127.0.0.1:{}/ajax/editbooks/languages'.format(PORTS[0]), json=data, headers=headers,
+                          timeout=5)
         self.assertEqual(200, response.status_code)
-        self.assertEqual("", response.json()['newValue'])
+        self.assertNotEqual(None, response.json().get('msg', None))
+        data = {"pk": [10, 11]}
+        response = r.post('http://127.0.0.1:{}/ajax/editbooks/languages'.format(PORTS[0]), json=data, headers=headers,
+                          timeout=5)
+        self.assertEqual(200, response.status_code)
+        self.assertNotEqual(None, response.json().get('msg', None))
+        data = {"value": "fdt", "pk": ["hurtz", 10]}
+        response = r.post('http://127.0.0.1:{}/ajax/editbooks/title'.format(PORTS[0]), json=data, headers=headers,
+                          timeout=5)
+        self.assertEqual(200, response.status_code)
+        self.assertNotEqual(None, response.json().get('msg', None))
         r.close()
 
+    def test_author_title_combi(self):
+        # goto book table
+        # select book 1 and 2
+        # open mass edit dialog
+        # check title_sort and author_sort are greyed out
+        # close dialog
+        # untick title_sort and author_sort are greyed out
+        # open mass edit dialog
+        # check title_sort and author_sort are editable
+        # edit author, author_sort, title, title_sort
+        # submit
+        # check table content
+        # tick title_sort and author_sort are greyed out
+        # revert changes
+        pass
+
+    # Title, autor not exist multi edit
+    def test_invalid_author_title(self):
+        # goto book table
+        # select book 3 and 4, 5
+        # move author-book 3
+        # move title-book 4
+        # open mass edit dialog
+        # edit author
+        # submit
+        # check response
+        # open mass edit dialog
+        # edit title
+        # submit
+        # check response
+        # revert changes
+        pass
+
+    # Title, autor write write protect  multi edit
+    def test_protected_author_title(self):
+        # goto book table
+        # select book 3 and 4, 5
+        # write protect author-book 3
+        # write protect title-book 4
+        # open mass edit dialog
+        # edit author
+        # submit
+        # check response
+        # open mass edit dialog
+        # edit title
+        # submit
+        # check response
+        # revert changes
+        pass
 
 
+Title, autor write protect single edit

@@ -7,7 +7,7 @@ import time
 
 from helper_ui import ui_class
 from config_test import TEST_DB
-from helper_func import startup, debug_startup
+from helper_func import startup
 from helper_func import save_logfiles
 from selenium.webdriver.common.keys import Keys
 from selenium.webdriver.common.by import By
@@ -51,6 +51,33 @@ class TestEditBooksList(TestCase, ui_class):
         self.assertEqual(count, len(bl['table']))
         self.assertEqual(value, bl['table'][0][column]['text'])
         return bl
+
+    def check_edit_cancel(self):
+        self.assertTrue(self.check_element_on_page((By.XPATH,
+                                                          "//button[contains(@class,'editable-submit')]")))
+        self.check_element_on_page((By.XPATH, "//button[contains(@class,'editable-cancel')]")).click()
+        bl = self.get_books_list(-1)
+        self.assertEqual("2", bl['table'][5]['Series Index']['text'])
+        return bl
+
+    @staticmethod
+    def click_elements(bl):
+        bl['column_elements'][0].click()
+        bl['column_elements'][1].click()
+        bl['column_elements'][2].click()
+        bl['column_elements'][3].click()
+        bl['column_elements'][4].click()
+        bl['column_elements'][5].click()
+        bl['column_elements'][6].click()
+
+    def check_selected(self, bl):
+        self.assertFalse(bl['column_elements'][0].is_selected())
+        self.assertFalse(bl['column_elements'][1].is_selected())
+        self.assertFalse(bl['column_elements'][2].is_selected())
+        self.assertFalse(bl['column_elements'][3].is_selected())
+        self.assertFalse(bl['column_elements'][4].is_selected())
+        self.assertFalse(bl['column_elements'][5].is_selected())
+        self.assertFalse(bl['column_elements'][6].is_selected())
 
     def test_search_books_list(self):
         bl = self.get_books_list(1)
@@ -257,30 +284,14 @@ class TestEditBooksList(TestCase, ui_class):
         self.assertEqual("2", bl['table'][5]['Series Index']['text'])
         self.edit_table_element(bl['table'][5]['Series Index']['element'], "+")
         time.sleep(1)
-        self.assertTrue(self.check_element_on_page((By.XPATH,
-                                                          "//button[contains(@class,'editable-submit')]")))
-        self.check_element_on_page((By.XPATH,"//button[contains(@class,'editable-cancel')]")).click()
-        bl = self.get_books_list(-1)
-        self.assertEqual("2", bl['table'][5]['Series Index']['text'])
+        bl = self.check_edit_cancel()
         self.edit_table_element(bl['table'][5]['Series Index']['element'], "-2")
-        self.assertTrue(self.check_element_on_page((By.XPATH,
-                                                          "//button[contains(@class,'editable-submit')]")))
-        self.check_element_on_page((By.XPATH,"//button[contains(@class,'editable-cancel')]")).click()
-        bl = self.get_books_list(-1)
-        self.assertEqual("2", bl['table'][5]['Series Index']['text'])
+        bl = self.check_edit_cancel()
         self.edit_table_element(bl['table'][5]['Series Index']['element'], "2.009")
-        self.assertTrue(self.check_element_on_page((By.XPATH,
-                                                          "//button[contains(@class,'editable-submit')]")))
-        self.check_element_on_page((By.XPATH,"//button[contains(@class,'editable-cancel')]")).click()
-        bl = self.get_books_list(-1)
-        self.assertEqual("2", bl['table'][5]['Series Index']['text'])
+        bl = self.check_edit_cancel()
         # ToDo check why "," is not working anymore
         self.edit_table_element(bl['table'][5]['Series Index']['element'], "2,01")
-        self.assertTrue(self.check_element_on_page((By.XPATH,
-                                                          "//button[contains(@class,'editable-submit')]")))
-        self.check_element_on_page((By.XPATH,"//button[contains(@class,'editable-cancel')]")).click()
-        bl = self.get_books_list(-1)
-        self.assertEqual("2", bl['table'][5]['Series Index']['text'])
+        bl = self.check_edit_cancel()
         self.edit_table_element(bl['table'][5]['Series Index']['element'], "1.99")
         bl = self.get_books_list(-1)
         self.assertEqual("1.99", bl['table'][5]['Series Index']['text'])
@@ -302,32 +313,14 @@ class TestEditBooksList(TestCase, ui_class):
         for indx, element in enumerate(bl['column_elements']):
             if element.is_selected():
                 self.assertTrue(bl['column_texts'][indx].text in bl['table'][0])
-        bl['column_elements'][0].click()
-        bl['column_elements'][1].click()
-        bl['column_elements'][2].click()
-        bl['column_elements'][3].click()
-        bl['column_elements'][4].click()
-        bl['column_elements'][5].click()
-        bl['column_elements'][6].click()
+        self.click_elements(bl)
         bl = self.get_books_list(2)
         self.assertTrue(bl['column'])
         bl['column'].click()
         self.assertEqual(20, len(bl['column_elements']))
         self.assertEqual(15, len(bl['table'][0]))
-        self.assertFalse(bl['column_elements'][0].is_selected())
-        self.assertFalse(bl['column_elements'][1].is_selected())
-        self.assertFalse(bl['column_elements'][2].is_selected())
-        self.assertFalse(bl['column_elements'][3].is_selected())
-        self.assertFalse(bl['column_elements'][4].is_selected())
-        self.assertFalse(bl['column_elements'][5].is_selected())
-        self.assertFalse(bl['column_elements'][6].is_selected())
-        bl['column_elements'][0].click()
-        bl['column_elements'][1].click()
-        bl['column_elements'][2].click()
-        bl['column_elements'][3].click()
-        bl['column_elements'][4].click()
-        bl['column_elements'][5].click()
-        bl['column_elements'][6].click()
+        self.check_selected(bl)
+        self.click_elements(bl)
         bl = self.get_books_list(1)
         self.assertEqual(22, len(bl['table'][0]))
 

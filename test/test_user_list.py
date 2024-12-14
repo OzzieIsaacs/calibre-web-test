@@ -2,7 +2,7 @@
 # -*- coding: utf-8 -*-
 
 
-from unittest import TestCase, skip
+from unittest import TestCase
 import time
 import re
 import requests
@@ -14,7 +14,7 @@ from selenium.webdriver.common.keys import Keys
 from selenium.webdriver.support.ui import Select
 from helper_ui import ui_class
 from config_test import TEST_DB, BOOT_TIME
-from helper_func import startup, debug_startup
+from helper_func import startup
 from helper_func import save_logfiles
 
 
