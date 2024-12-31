@@ -4,6 +4,8 @@
 
 from unittest import TestCase
 import time
+import os
+import shutil
 
 from helper_ui import ui_class
 from config_test import TEST_DB
@@ -119,43 +121,146 @@ class TestMassEditBooksList(TestCase, ui_class):
         r.close()
 
     def test_author_title_combi(self):
-        # goto book table
+        bl = self.get_books_list(1)
         # select book 1 and 2
+        bl['table'][0]['selector']['element'].click()
+        bl['table'][1]['selector']['element'].click()
         # open mass edit dialog
+        self.check_element_on_page((By.ID, "edit_selected_books")).click()
+        time.sleep(1)
         # check title_sort and author_sort are greyed out
+        self.assertFalse(self.check_element_on_page((By.ID, "title_sort_input")).is_enabled())
+        self.assertFalse(self.check_element_on_page((By.ID, "author_sort_input")).is_enabled())
         # close dialog
+        self.check_element_on_page((By.ID, "edit_selected_abort")).click()
+        time.sleep(1)
         # untick title_sort and author_sort are greyed out
+        self.check_element_on_page((By.ID, "autoupdate_titlesort")).click()
+        self.check_element_on_page((By.ID, "autoupdate_authorsort")).click()
         # open mass edit dialog
+        self.check_element_on_page((By.ID, "edit_selected_books")).click()
+        time.sleep(1)
         # check title_sort and author_sort are editable
+        self.assertTrue(self.check_element_on_page((By.ID, "title_sort_input")).is_enabled())
+        self.assertTrue(self.check_element_on_page((By.ID, "author_sort_input")).is_enabled())
         # edit author, author_sort, title, title_sort
+        self.check_element_on_page((By.ID, "title_input")).send_keys("Test")
+        self.check_element_on_page((By.ID, "title_sort_input")).send_keys("Sort Test")
+        self.check_element_on_page((By.ID, "authors_input")).send_keys("Kurt Saart & Schurt Kölv")
+        self.check_element_on_page((By.ID, "author_sort_input")).send_keys("Aäthor sorto")
         # submit
+        self.check_element_on_page((By.ID, "edit_selected_confirm")).click()
+        time.sleep(1)
+        self.assertTrue(self.check_element_on_page((By.ID, "flash_success")))
         # check table content
-        # tick title_sort and author_sort are greyed out
+        bl = self.get_books_list()
+        self.assertFalse(bl['table'][0]['selector']['element'].is_selected())
+        self.assertFalse(bl['table'][1]['selector']['element'].is_selected())
+        self.assertEqual(bl['table'][0]['Title']['text'], "Test")
+        self.assertEqual(bl['table'][1]['Title']['text'], "Test")
+        self.assertEqual(bl['table'][0]['Title Sort']['text'], "Sort Test")
+        self.assertEqual(bl['table'][1]['Title Sort']['text'], "Sort Test")
+        self.assertEqual(bl['table'][0]['Authors']['text'], "Kurt Saart & Schurt Kölv")
+        self.assertEqual(bl['table'][1]['Authors']['text'], "Kurt Saart & Schurt Kölv")
+        self.assertEqual(bl['table'][0]['Author Sort']['text'], "Aäthor sorto")
+        self.assertEqual(bl['table'][1]['Author Sort']['text'], "Aäthor sorto")
+        self.assertTrue(self.check_element_on_page((By.ID, "autoupdate_titlesort")).is_enabled())
+        self.assertTrue(self.check_element_on_page((By.ID, "autoupdate_authorsort")).is_enabled())
+        self.assertTrue(os.path.isfile(os.path.join(TEST_DB, 'Kurt Saart/Test (12)',
+                                                    'Test - Kurt Saart.pdf')))
+        self.assertTrue(os.path.isfile(os.path.join(TEST_DB, 'Kurt Saart/Test (13)',
+                                                    'Test - Kurt Saart.pdf')))
+
         # revert changes
-        pass
+        self.edit_table_element(bl['table'][0]['Title']['element'], "book11")
+        bl = self.get_books_list()
+        self.edit_table_element(bl['table'][1]['Title']['element'], "book10")
+        bl = self.get_books_list()
+        self.edit_table_element(bl['table'][0]['Authors']['element'], "Norbert Halagal")
+        bl = self.get_books_list()
+        self.edit_table_element(bl['table'][1]['Authors']['element'], "Lulu de Marco")
+        bl = self.get_books_list()
+        self.assertEqual(bl['table'][0]['Title']['text'], "book11")
+        self.assertEqual(bl['table'][1]['Title']['text'], "book10")
+        self.assertEqual(bl['table'][0]['Title Sort']['text'], "book11")
+        self.assertEqual(bl['table'][1]['Title Sort']['text'], "book10")
+        self.assertEqual(bl['table'][0]['Authors']['text'], "Norbert Halagal")
+        self.assertEqual(bl['table'][1]['Authors']['text'], "Lulu de Marco")
+        self.assertEqual(bl['table'][0]['Author Sort']['text'], "Halagal, Norbert")
+        self.assertEqual(bl['table'][1]['Author Sort']['text'], "Marco, Lulu de")
+        self.assertTrue(os.path.isfile(os.path.join(TEST_DB, 'Norbert Halagal/book11 (13)',
+                                                    'book11 - Norbert Halagal.pdf')))
+        self.assertTrue(os.path.isfile(os.path.join(TEST_DB, 'Lulu de Marco/book10 (12)',
+                                                    'book10 - Lulu de Marco.pdf')))
 
     # Title, autor not exist multi edit
     def test_invalid_author_title(self):
         # goto book table
+        bl = self.get_books_list(1)
         # select book 3 and 4, 5
+        bl['table'][2]['selector']['element'].click()
+        bl['table'][3]['selector']['element'].click()
+        bl['table'][4]['selector']['element'].click()
         # move author-book 3
-        # move title-book 4
+        author_book = os.path.join(TEST_DB, 'Peter Parker', 'book7 (10)', 'book7 - Peter Parker.epub')
+        new_author_book = os.path.join(TEST_DB, 'Peter Parker', 'book7 (10)', 'book7 - Nos Parker.epub')
+        shutil.move(author_book, new_author_book)
         # open mass edit dialog
+        self.check_element_on_page((By.ID, "edit_selected_books")).click()
+        time.sleep(1)
         # edit author
+        self.check_element_on_page((By.ID, "authors_input")).send_keys("Kurt Jilo")
         # submit
+        self.check_element_on_page((By.ID, "edit_selected_confirm")).click()
+        time.sleep(1)
         # check response
+        self.assertTrue(self.check_element_on_page((By.ID, "flash_danger")))
+        bl = self.get_books_list()
+        self.assertEqual(bl['table'][2]['Authors']['text'], "Kurt Jilo")
+        self.assertEqual(bl['table'][3]['Authors']['text'], "Kurt Jilo")
+        self.assertEqual(bl['table'][4]['Authors']['text'], "Kurt Jilo")
+        self.assertEqual(bl['table'][2]['Author Sort']['text'], "Jilo, Kurt")
+        self.assertEqual(bl['table'][3]['Author Sort']['text'], "Jilo, Kurt")
+        self.assertEqual(bl['table'][4]['Author Sort']['text'], "Jilo, Kurt")
+
+        # move title-book 4
+
         # open mass edit dialog
+        bl['table'][2]['selector']['element'].click()
+        bl['table'][3]['selector']['element'].click()
+        bl['table'][4]['selector']['element'].click()
+        self.check_element_on_page((By.ID, "edit_selected_books")).click()
+        time.sleep(1)
         # edit title
+        self.check_element_on_page((By.ID, "title_input")).send_keys("Test")
         # submit
+        self.check_element_on_page((By.ID, "edit_selected_confirm")).click()
+        time.sleep(1)
         # check response
         # revert changes
-        pass
+        self.assertEqual(bl['table'][2]['Title']['text'], "book11")
+        self.assertEqual(bl['table'][3]['Title']['text'], "book10")
+        self.assertEqual(bl['table'][4]['Title']['text'], "book10")
+
+        self.assertEqual(bl['table'][0]['Title Sort']['text'], "book11")
+        self.assertEqual(bl['table'][1]['Title Sort']['text'], "book10")
+        self.assertEqual(bl['table'][0]['Authors']['text'], "Norbert Halagal")
+        self.assertEqual(bl['table'][1]['Authors']['text'], "Lulu de Marco")
+        self.assertEqual(bl['table'][0]['Author Sort']['text'], "Halagal, Norbert")
+        self.assertEqual(bl['table'][1]['Author Sort']['text'], "Marco, Lulu de")
+        self.assertTrue(os.path.isfile(os.path.join(TEST_DB, 'Norbert Halagal/book11 (13)',
+                                                    'book11 - Norbert Halagal.pdf')))
+        self.assertTrue(os.path.isfile(os.path.join(TEST_DB, 'Lulu de Marco/book10 (12)',
+                                                    'book10 - Lulu de Marco.pdf')))
 
     # Title, autor write write protect  multi edit
     def test_protected_author_title(self):
         # goto book table
         # select book 3 and 4, 5
         # write protect author-book 3
+        txt_path = os.path.join(TEST_DB, "Frodo Beutlin", "Der Buchtitel (1)", "Der Buchtitel - Frodo Beutlin.txt")
+        rights = os.stat(txt_path).st_mode & 0o777
+        os.chmod(txt_path, 0o400)
         # write protect title-book 4
         # open mass edit dialog
         # edit author
@@ -167,6 +272,4 @@ class TestMassEditBooksList(TestCase, ui_class):
         # check response
         # revert changes
         pass
-
-
-Title, autor write protect single edit
+        #Title, autor write protect single edit
