@@ -95,7 +95,7 @@ class TestReader(unittest.TestCase, ui_class):
         read_button.click()
         buttons = self.driver.find_elements(By.XPATH, ".//*[@aria-labelledby='read-in-browser']/li/a")
         for but in buttons:
-            if but.accessible_name == "kepub":
+            if but.text == "kepub":
                 but.click()
                 break
         new_handle = [x for x in self.driver.window_handles if x not in current_handles]

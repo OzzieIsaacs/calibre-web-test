@@ -93,31 +93,31 @@ class TestMassEditBooksList(TestCase, ui_class):
         r.post('http://127.0.0.1:{}/login'.format(PORTS[0]), data=payload)
         table = r.get('http://127.0.0.1:{}/table?data=list&sort_param=stored'.format(PORTS[0]))
         token = re.search('<input type="hidden" name="csrf_token" value="(.*)">', table.text)
-        data = {"name": "lurgi", "value": "test", "pk": ["10", 7]}
+        data = {"name": "lurgi", "value": "test", "selections": ["10", 7]}
         headers = {"X-CSRFToken": token.group(1)}
-        response = r.post('http://127.0.0.1:{}/ajax/editbooks/lurgi'.format(PORTS[0]), json=data, headers=headers, timeout=5)
+        response = r.post('http://127.0.0.1:{}/ajax/editselectedbooks'.format(PORTS[0]), json=data, headers=headers, timeout=5)
         self.assertEqual(400, response.status_code)
         self.assertTrue("Parameter" in response.text)
-        data = {"value": "test", "pk": ["22", 10]}
-        response = r.post('http://127.0.0.1:{}/ajax/editbooks/series'.format(PORTS[0]), json=data, headers=headers,
+        data = {"series": "test", "selections": ["22", 10]}
+        response = r.post('http://127.0.0.1:{}/ajax/editselectedbooks'.format(PORTS[0]), json=data, headers=headers,
                           timeout=5)
         self.assertEqual(200, response.status_code)
-        self.assertNotEqual(None, response.json().get('msg', None))
-        data = {"value": "fdt", "pk": [10, 11]}
-        response = r.post('http://127.0.0.1:{}/ajax/editbooks/languages'.format(PORTS[0]), json=data, headers=headers,
+        self.assertNotEqual(None, response.json()[0].get('msg', None))
+        data = {"languages": "fdt", "selections": [10, 11]}
+        response = r.post('http://127.0.0.1:{}/ajax/editselectedbooks'.format(PORTS[0]), json=data, headers=headers,
                           timeout=5)
         self.assertEqual(200, response.status_code)
-        self.assertNotEqual(None, response.json().get('msg', None))
-        data = {"pk": [10, 11]}
-        response = r.post('http://127.0.0.1:{}/ajax/editbooks/languages'.format(PORTS[0]), json=data, headers=headers,
+        self.assertNotEqual(None, response.json()[0].get('msg', None))
+        data = {"selections": [10, 11]}
+        response = r.post('http://127.0.0.1:{}/ajax/editselectedbooks'.format(PORTS[0]), json=data, headers=headers,
+                          timeout=5)
+        self.assertEqual(400, response.status_code)
+        self.assertTrue("Parameter" in response.text)
+        data = {"title": "fdt", "selections": [10, "hurtz"]}
+        response = r.post('http://127.0.0.1:{}/ajax/editselectedbooks'.format(PORTS[0]), json=data, headers=headers,
                           timeout=5)
         self.assertEqual(200, response.status_code)
-        self.assertNotEqual(None, response.json().get('msg', None))
-        data = {"value": "fdt", "pk": ["hurtz", 10]}
-        response = r.post('http://127.0.0.1:{}/ajax/editbooks/title'.format(PORTS[0]), json=data, headers=headers,
-                          timeout=5)
-        self.assertEqual(200, response.status_code)
-        self.assertNotEqual(None, response.json().get('msg', None))
+        self.assertNotEqual(None, response.json()[0].get('msg', None))
         r.close()
 
     def test_author_title_combi(self):

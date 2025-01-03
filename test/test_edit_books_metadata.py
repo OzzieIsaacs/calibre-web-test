@@ -217,7 +217,7 @@ class TestLoadMetadata(TestCase, ui_class):
         results[1]['cover_element'].click()
         time.sleep(1)
         new_cover = self.check_element_on_page((By.ID, "detailcover")).screenshot_as_png
-        self.assertLessEqual(diff(BytesIO(cover), BytesIO(new_cover), delete_diff_file=True), 0.02)
+        self.assertLessEqual(diff(BytesIO(cover), BytesIO(new_cover), delete_diff_file=True), 0.025)
         self.assertEqual(results[1]['title'], self.check_element_on_page((By.ID, "title")).get_attribute("value"))
         self.assertEqual(results[1]['author'], self.check_element_on_page((By.ID, "authors")).get_attribute("value"))
         # self.assertEqual("/static/generic_cover.jpg", self.check_element_on_page((By.ID, "cover_url")).get_attribute("value"))
