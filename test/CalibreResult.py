@@ -29,6 +29,8 @@ LIABILITY, WHETHER IN CONTRACT, STRICT LIABILITY, OR TORT (INCLUDING
 NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE OF THIS
 SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 """
+import json
+from datetime import datetime, timedelta
 
 # URL: http://tungwaiyip.info/software/HTMLTestRunner.html
 
@@ -53,6 +55,21 @@ def to_unicode(s):
     except UnicodeDecodeError:
         # s is non ascii byte string
         return s.decode('unicode_escape')
+
+
+def json_serial(obj):
+    """JSON serializer for objects not serializable by default json code"""
+
+    if isinstance(obj, datetime):
+        return obj.isoformat()
+    if isinstance(obj, timedelta):
+        return {
+            '__type__': 'timedelta',
+            'days': obj.days,
+            'seconds': obj.seconds,
+            'microseconds': obj.microseconds,
+        }
+    raise TypeError("Type %s not serializable" % type(obj))
 
 
 class OutputRedirector(object):
@@ -484,6 +501,9 @@ class CalibreResult(TextTestResult):
             if not isinstance(testRunner.template,list):
                 testRunner.template = [testRunner.template]
             for index, temp in enumerate(testRunner.template):
+                with open(os.path.basename(temp) + ".json", "w") as f:
+                    json.dump([testRunner.report_title, testRunner.description, header_info, summaries, report,
+                               environment.get_Environment()], f, indent=4, default=json_serial)
                 html_file = render_html(
                     temp,
                     title=testRunner.report_title,
