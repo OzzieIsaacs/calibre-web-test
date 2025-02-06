@@ -16,7 +16,7 @@ rarfile>=4.0
 
 #Running Updater Test
 flask>=2.0.0
-mitmproxy==6.0.2
+mitmproxy==11.1.2
 # protobuf max version, otherwise mitmproxy isn't working
 protobuf<=3.20.0
 
