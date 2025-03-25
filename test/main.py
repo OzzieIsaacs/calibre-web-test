@@ -104,8 +104,12 @@ if __name__ == '__main__':
     kill_dead_cps()
     # E-Mail tests finished
     result_file = os.path.join(outfile, "Calibre-Web TestSummary_" + TEST_OS + ".html")
-    finishing_notifier(result_file)
-    result_file2 = os.path.join(outfile, "Calibre-Web TestSummary_" + TEST_OS + "_1.html")
-    result_move(result_file2)
+    result_file2 = os.path.join(outfile, "report_template.html.json")
+
+    if os.path.isfile(result_file):
+        finishing_notifier(result_file)
+
+    if os.path.isfile(result_file2):
+        result_move(result_file2)
     poweroff(power)
     sys.exit(0)
