@@ -297,7 +297,7 @@ class ui_class():
             ele.send_keys(process_elements[key])
 
         # finally submit settings
-        cls.driver.find_element(By.NAME, "submit").click()
+        cls.driver.find_element(By.ID, "db_submit").click()
 
     @classmethod
     def _fill_basic_config(cls,elements=None):
