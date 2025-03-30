@@ -87,16 +87,15 @@ if __name__ == '__main__':
     # configure HTMLTestRunner options
     outfile = os.path.join(CALIBRE_WEB_PATH, 'test')
     template = os.path.join(os.path.dirname(__file__), 'htmltemplate', 'report_template.html')
-    # template2 = os.path.join(os.path.dirname(__file__), 'htmltemplate', 'report_template2.html')
     runner = HTMLTestRunner.HTMLTestRunner(output=outfile,
                                            report_name="Calibre-Web TestSummary_" + TEST_OS,
                                            report_title='Calibre-Web Tests',
                                            description='Systemtests for Calibre-web',
                                            combine_reports=True,
-                                           template=[template], # , template2],
+                                           template=[template],
                                            stream=sys.stdout,
                                            resultclass=CalibreResult,
-                                           open_in_browser=not power,
+                                           open_in_browser= not power,
                                            verbosity=2)
     # run the suite using HTMLTestRunner
     runner.run(all_tests)
@@ -104,7 +103,7 @@ if __name__ == '__main__':
     kill_dead_cps()
     # E-Mail tests finished
     result_file = os.path.join(outfile, "Calibre-Web TestSummary_" + TEST_OS + ".html")
-    result_file2 = os.path.join(outfile, "report_template.html.json")
+    result_file2 = os.path.join(os.path.dirname(__file__), "report_template.json")
 
     if os.path.isfile(result_file):
         finishing_notifier(result_file)

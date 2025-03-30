@@ -501,7 +501,7 @@ class CalibreResult(TextTestResult):
             if not isinstance(testRunner.template,list):
                 testRunner.template = [testRunner.template]
             for index, temp in enumerate(testRunner.template):
-                with open(os.path.basename(temp) + ".json", "w") as f:
+                with open(os.path.splitext(os.path.basename(temp))[0] + ".json", "w") as f:
                     json.dump([testRunner.report_title, testRunner.description, header_info, summaries, report,
                                environment.get_Environment()], f, indent=4, default=json_serial)
                 html_file = render_html(
