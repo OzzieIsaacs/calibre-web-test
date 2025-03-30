@@ -224,6 +224,9 @@ class TestMassEditBooksList(TestCase, ui_class):
         self.assertEqual(bl['table'][4]['Author Sort']['text'], "Jilo, Kurt")
 
         # move title-book 4
+        title_book = os.path.join(TEST_DB, 'Kurt Jilo','book6 (9)')
+        new_title_book = os.path.join(TEST_DB, 'Kurt Jilo', 'book (91)')
+        shutil.move(title_book, new_title_book)
 
         # open mass edit dialog
         bl['table'][2]['selector']['element'].click()
@@ -237,21 +240,56 @@ class TestMassEditBooksList(TestCase, ui_class):
         self.check_element_on_page((By.ID, "edit_selected_confirm")).click()
         time.sleep(1)
         # check response
-        # revert changes
-        self.assertEqual(bl['table'][2]['Title']['text'], "book11")
-        self.assertEqual(bl['table'][3]['Title']['text'], "book10")
-        self.assertEqual(bl['table'][4]['Title']['text'], "book10")
+        self.assertTrue(self.check_element_on_page((By.ID, "flash_danger")))
+        bl = self.get_books_list()
+        self.assertEqual(bl['table'][2]['Title']['text'], "Test")
+        self.assertEqual(bl['table'][3]['Title']['text'], "Test")
+        self.assertEqual(bl['table'][4]['Title']['text'], "Test")
+        self.assertEqual(bl['table'][2]['Title Sort']['text'], "Test")
+        self.assertEqual(bl['table'][3]['Title Sort']['text'], "Test")
+        self.assertEqual(bl['table'][4]['Title Sort']['text'], "Test")
 
-        self.assertEqual(bl['table'][0]['Title Sort']['text'], "book11")
-        self.assertEqual(bl['table'][1]['Title Sort']['text'], "book10")
-        self.assertEqual(bl['table'][0]['Authors']['text'], "Norbert Halagal")
-        self.assertEqual(bl['table'][1]['Authors']['text'], "Lulu de Marco")
-        self.assertEqual(bl['table'][0]['Author Sort']['text'], "Halagal, Norbert")
-        self.assertEqual(bl['table'][1]['Author Sort']['text'], "Marco, Lulu de")
-        self.assertTrue(os.path.isfile(os.path.join(TEST_DB, 'Norbert Halagal/book11 (13)',
-                                                    'book11 - Norbert Halagal.pdf')))
-        self.assertTrue(os.path.isfile(os.path.join(TEST_DB, 'Lulu de Marco/book10 (12)',
-                                                    'book10 - Lulu de Marco.pdf')))
+        # revert changes
+        self.edit_table_element(bl['table'][2]['Title']['element'], "book9")
+        bl = self.get_books_list()
+        self.edit_table_element(bl['table'][3]['Title']['element'], "book7")
+        bl = self.get_books_list()
+        self.edit_table_element(bl['table'][4]['Title']['element'], "book6")
+        bl = self.get_books_list()
+
+        self.edit_table_element(bl['table'][2]['Authors']['element'], "Hector Gonçalves & Unbekannt")
+        bl = self.get_books_list()
+        self.edit_table_element(bl['table'][3]['Authors']['element'], "Peter Parker")
+        bl = self.get_books_list()
+        self.edit_table_element(bl['table'][4]['Authors']['element'], "Sigurd Lindgren")
+        bl = self.get_books_list()
+        shutil.move(new_author_book, author_book)
+        old_title = os.path.join(TEST_DB, 'Sigurd Lindgren', 'book6 (9)')
+        shutil.rmtree(old_title)
+        shutil.move(new_title_book, old_title)
+        shutil.rmtree(os.path.join(TEST_DB, 'Kurt Jilo'))
+        shutil.move(os.path.join(TEST_DB, 'Sigurd Lindgren', 'book6 (9)','book6 - Kurt Jilo.epub'),
+                    os.path.join(TEST_DB, 'Sigurd Lindgren', 'book6 (9)','book6 - Sigurd Lindgren.epub'))
+        self.assertEqual(bl['table'][2]['Title']['text'], "book9")
+        self.assertEqual(bl['table'][3]['Title']['text'], "book7")
+        self.assertEqual(bl['table'][4]['Title']['text'], "book6")
+
+        self.assertEqual(bl['table'][2]['Title Sort']['text'], "book9")
+        self.assertEqual(bl['table'][3]['Title Sort']['text'], "book7")
+        self.assertEqual(bl['table'][4]['Title Sort']['text'], "book6")
+
+        self.assertEqual(bl['table'][2]['Authors']['text'], "Hector Gonçalves & Unbekannt")
+        self.assertEqual(bl['table'][3]['Authors']['text'], "Peter Parker")
+        self.assertEqual(bl['table'][4]['Authors']['text'], "Sigurd Lindgren")
+        self.assertEqual(bl['table'][2]['Author Sort']['text'], "Gonçalves, Hector & Unbekannt")
+        self.assertEqual(bl['table'][3]['Author Sort']['text'], "Parker, Peter")
+        self.assertEqual(bl['table'][4]['Author Sort']['text'], "Lindgren, Sigurd")
+        self.assertTrue(os.path.isfile(os.path.join(TEST_DB, 'Hector Gonçalves','book9 (11)',
+                                                    'book9 - Hector Gonçalves.pdf')))
+        self.assertTrue(os.path.isfile(os.path.join(TEST_DB, 'Peter Parker','book7 (10)',
+                                                    'book7 - Peter Parker.epub')))
+        self.assertTrue(os.path.isfile(os.path.join(TEST_DB, 'Sigurd Lindgren','book6 (9)',
+                                                    'book6 - Sigurd Lindgren.epub')))
 
     # Title, autor write write protect  multi edit
     def test_protected_author_title(self):
