@@ -2,7 +2,7 @@
 # -*- coding: utf-8 -*-
 
 
-from unittest import TestCase
+from unittest import TestCase, skip
 import time
 import os
 import shutil
@@ -292,6 +292,7 @@ class TestMassEditBooksList(TestCase, ui_class):
                                                     'book6 - Sigurd Lindgren.epub')))
 
     # Title, autor write write protect  multi edit
+    # ToDo:
     def test_protected_author_title(self):
         # goto book table
         # select book 3 and 4, 5
@@ -311,3 +312,118 @@ class TestMassEditBooksList(TestCase, ui_class):
         # revert changes
         pass
         #Title, autor write protect single edit
+
+    def test_multi_series(self):
+        # goto book table
+        bl = self.get_books_list(1)
+        #
+
+    def test_multi_tags(self):
+        # goto book table
+        bl = self.get_books_list(1)
+
+    def test_multi_tags(self):
+        # goto book table
+        bl = self.get_books_list(1)
+
+    def test_multi_languages(self):
+        # goto book table
+        bl = self.get_books_list(1)
+
+    def test_multi_publishers(self):
+        # goto book table
+        bl = self.get_books_list(1)
+
+    def test_multi_comments(self):
+        # goto book table
+        bl = self.get_books_list(1)
+
+    def test_multi_archive(self):
+        # goto book table
+        bl = self.get_books_list(1)
+        # check false_archive_selected_books and true_archive_selected_books are not clickable
+        ele = self.check_element_on_page((By.ID, "false_archive_selected_books"))
+        self.assertFalse(ele.is_enabled())
+        ele = self.check_element_on_page((By.ID, "true_archive_selected_books"))
+        self.assertFalse(ele.is_enabled())
+        # mark book 5 as archived
+        if not bl['table'][5]['Archive Status']['element'].is_selected():
+            bl['table'][5]['Archive Status']['element'].click()
+            bl = self.get_books_list()
+        # mark book 6 as unarchived
+        if bl['table'][6]['Archive Status']['element'].is_selected():
+            bl['table'][6]['Archive Status']['element'].click()
+            bl = self.get_books_list()
+        self.assertTrue(bl['table'][5]['Archive Status']['element'].is_selected())
+        self.assertFalse(bl['table'][6]['Archive Status']['element'].is_selected())
+        # select book 5,6
+        bl['table'][5]['selector']['element'].click()
+        bl['table'][6]['selector']['element'].click()
+        # mark as archived -> check book 5,6 archived
+        ele = self.check_element_on_page((By.ID, "true_archive_selected_books"))
+        ele.click()
+        time.sleep(1)
+        self.check_element_on_page((By.ID, "btnConfirmYes-GeneralChangeModal")).click()
+        bl = self.get_books_list()
+        self.assertTrue(bl['table'][5]['Archive Status']['element'].is_selected())
+        self.assertTrue(bl['table'][6]['Archive Status']['element'].is_selected())
+        # mark as unread -> check book 5,6 unarchived
+        ele = self.check_element_on_page((By.ID, "false_archive_selected_books"))
+        ele.click()
+        time.sleep(1)
+        self.check_element_on_page((By.ID, "btnConfirmYes-GeneralChangeModal")).click()
+        self.assertFalse(bl['table'][5]['Archive Status']['element'].is_selected())
+        self.assertFalse(bl['table'][6]['Archive Status']['element'].is_selected())
+
+    def test_multi_read(self):
+        # goto book table
+        bl = self.get_books_list(1)
+        # check false_read_selected_books and true_read_selected_books are not clickable
+        ele = self.check_element_on_page((By.ID, "false_read_selected_books"))
+        self.assertFalse(ele.is_enabled())
+        ele = self.check_element_on_page((By.ID, "true_read_selected_books"))
+        self.assertFalse(ele.is_enabled())
+        # mark book 5 as read -> unread
+        if not bl['table'][5]['Read Status']['element'].is_selected():
+            bl['table'][5]['Read Status']['element'].click()
+            bl = self.get_books_list()
+        bl['table'][5]['Read Status']['element'].click()
+        bl = self.get_books_list()
+        # mark book 6 as read
+        if not bl['table'][6]['Read Status']['element'].is_selected():
+            bl['table'][6]['Read Status']['element'].click()
+            bl = self.get_books_list()
+        self.assertFalse(bl['table'][5]['Read Status']['element'].is_selected())
+        self.assertTrue(bl['table'][6]['Read Status']['element'].is_selected())
+        # select book 4,5,6
+        bl['table'][4]['selector']['element'].click()
+        bl['table'][5]['selector']['element'].click()
+        bl['table'][6]['selector']['element'].click()
+        # mark as read -> check all 3 read
+        ele = self.check_element_on_page((By.ID, "true_read_selected_books"))
+        ele.click()
+        time.sleep(1)
+        self.check_element_on_page((By.ID, "btnConfirmYes-GeneralChangeModal")).click()
+        bl = self.get_books_list()
+        self.assertTrue(bl['table'][4]['Read Status']['element'].is_selected())
+        self.assertTrue(bl['table'][5]['Read Status']['element'].is_selected())
+        self.assertTrue(bl['table'][6]['Read Status']['element'].is_selected())
+
+        # mark as unread -> check all 3 unread
+        ele = self.check_element_on_page((By.ID, "false_read_selected_books"))
+        ele.click()
+        time.sleep(1)
+        self.check_element_on_page((By.ID, "btnConfirmYes-GeneralChangeModal")).click()
+        bl = self.get_books_list()
+        self.assertFalse(bl['table'][4]['Read Status']['element'].is_selected())
+        self.assertFalse(bl['table'][5]['Read Status']['element'].is_selected())
+        self.assertFalse(bl['table'][6]['Read Status']['element'].is_selected())
+
+    def test_multi_delete(self):
+        # goto book table
+        bl = self.get_books_list(1)
+
+    @skip
+    def test_multi_custom_bool(self):
+        # goto book table
+        bl = self.get_books_list(1)
