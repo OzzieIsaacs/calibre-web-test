@@ -84,9 +84,9 @@ for file in sorted(glob.glob1("translations", "*.po")):
     for x in mergedTranslation.check():
         print(x)
     for element in mergedTranslation:
-        idstring=re.findall("\((.*?)\)%s",element.id)
+        idstring=re.findall(r"\((.*?)\)%s",element.id)
         if idstring and element.string:
-            transid = set(re.findall("\((.*?)\)%s", element.string))
+            transid = set(re.findall(r"\((.*?)\)%s", element.string))
             origid = set(idstring)
             if transid != origid:
                 print("Format string error {}: '{}'".format(langcode,element.id))
