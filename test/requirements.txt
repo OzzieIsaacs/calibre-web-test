@@ -19,6 +19,7 @@ flask>=2.0.0
 mitmproxy==6.0.2
 # protobuf max version, otherwise mitmproxy isn't working
 protobuf<=3.20.0
+blinker<1.5.0
 
 # For running tests on helper
 Babel>=2.6.0

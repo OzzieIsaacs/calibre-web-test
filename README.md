@@ -49,8 +49,8 @@ Calibre-web-test
 
 ## Start Testing
 
-Tests are running with python 3.6+ (better to use 3.7+ as with 3.6 testing the e-mail startssl/ssl functionality will be skipped) by starting ./test/main.py (tests run for approx. 5h+), tested on Linux Mint 21 \
-Calibre-web's app.db and logfiles will be overwritten. I'm currently using python 3.10. \
+Tests are running with python 3.8+ by starting ./test/main.py (tests run for approx. 5h+), tested on Linux Mint 22 \
+Calibre-web's app.db and logfiles will be overwritten. I'm currently using python 3.12. \
 The test result is written to the file "calibre-web/test/Calibre-Web TestSummary_xxx.html" (xxx for windows or Linux, MacOS is untested)
 
 Hints for using pyCharm: 

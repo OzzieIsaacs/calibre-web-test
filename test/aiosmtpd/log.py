@@ -18,20 +18,13 @@ class Log(object):
             self.logger.removeHandler(handler)
 
     def _add_handler(self):
-        try:
-            if sys.version_info > (3,8):
-                handler = RotatingFileHandler(
-                    './%s.log' % self.log_name,
-                    maxBytes=10485760,
-                    backupCount=3,
-                    encoding="utf-8"
-                )
-            else:
-                handler = RotatingFileHandler(
-                    './%s.log' % self.log_name,
-                    maxBytes=10485760,
-                    backupCount=3,
-                )
+        try:            
+            handler = RotatingFileHandler(
+                './%s.log' % self.log_name,
+                maxBytes=10485760,
+                backupCount=3,
+                encoding="utf-8"
+            )
             formatter = logging.Formatter("%(asctime)s - %(name)s - %(levelname)s - %(message)s")
             handler.setFormatter(formatter)
             self.logger.addHandler(handler)

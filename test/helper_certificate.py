@@ -120,4 +120,4 @@ def generate_ssl_testing_files():
 
 # For emailtesting:
 # after the files are generated copy ca.cert.pem to /usr/local/share/ca-certificates and rename the ending to crt (ca.cert.crt)
-# now run "sudo update-ca-cert" and the certificate is added to the certificate storage
+# now run "sudo update-ca-certificates" and the certificate is added to the certificate storage
