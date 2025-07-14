@@ -19,7 +19,6 @@ import mutagen
 from mutagen import mp3, wave, aiff, flac, oggvorbis, asf, mp4, apev2, oggopus, oggtheora
 from mutagen.flac import Picture
 
-
 RESOURCES = {'ports': 1}
 
 PORTS = ['8083']
@@ -36,6 +35,7 @@ class TestUploadAudio(TestCase, ui_class):
     @classmethod
     def setUpClass(cls):
         add_dependency(cls.dependencys, cls.__name__)
+
         try:
             startup(cls, cls.py_version, {'config_calibre_dir': TEST_DB, 'config_uploading': 1},
                     port=PORTS[0], index=INDEX,

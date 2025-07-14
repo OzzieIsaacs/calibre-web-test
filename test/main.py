@@ -34,7 +34,7 @@ if __name__ == '__main__':
     # check pip ist installed
     found = False
     python_exe = ""
-    pversion = ["python3.10", "python3", "c:\\python312\\python.exe", "c:\\python310\\python.exe"]
+    pversion = ["python3.12", "python3", "c:\\python312\\python.exe", "c:\\python310\\python.exe"]
     for python in pversion:
         try:
             p = process_open([python, "-m", "pip", "-V"])

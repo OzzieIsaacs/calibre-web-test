@@ -212,7 +212,7 @@ def startup(inst, pyVersion, config, login=True, host="http://127.0.0.1", port="
         # options.headless = True
     inst.driver = webdriver.Firefox(options=options)
     # inst.driver = webdriver.Chrome()
-    time.sleep(3)
+    time.sleep(BOOT_TIME)
     if inst.p.poll():
         kill_old_cps()
         inst.p = process_open(command, [1], sout=None, env=env, cwd=work_path)
@@ -240,7 +240,7 @@ def startup(inst, pyVersion, config, login=True, host="http://127.0.0.1", port="
             inst.fill_basic_config(config)
         time.sleep(BOOT_TIME)
         try:
-            WebDriverWait(inst.driver, 5).until(EC.presence_of_element_located((By.ID, "flash_success")))
+            WebDriverWait(inst.driver, 10).until(EC.presence_of_element_located((By.ID, "flash_success")))
         except Exception:
             pass
         # login

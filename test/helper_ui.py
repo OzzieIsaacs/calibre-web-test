@@ -459,7 +459,7 @@ class ui_class():
         cls.driver.find_element(By.ID, 'admin_restart').click()
         element = cls.check_element_on_page((By.ID, "restart"))
         element.click()
-        time.sleep(10)
+        time.sleep(11)
 
     def reconnect_database(self):
         self.goto_page('admin_setup')
@@ -1645,7 +1645,7 @@ class ui_class():
     @classmethod
     def check_tasks(cls, ref=None):
         if cls.goto_page('tasks'):
-            time.sleep(1)
+            time.sleep(2)
             parser = lxml.etree.HTMLParser()
             html = cls.driver.page_source
 

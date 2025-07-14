@@ -548,6 +548,7 @@ class TestEditAuthorsGdrive(TestCase, ui_class):
         epub_file = os.path.join(base_path, 'files', 'title.epub')
         change_epub_meta(epub_file, meta={'title': "Useless", 'creator': "asterix Lionherd"})
         self.goto_page('nav_new')
+        time.sleep(WAIT_GDRIVE)
         upload = self.check_element_on_page((By.ID, 'btn-upload'))
         upload.send_keys(epub_file)
         time.sleep(WAIT_GDRIVE)

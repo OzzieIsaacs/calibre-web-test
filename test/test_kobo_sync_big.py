@@ -85,7 +85,7 @@ class TestKoboSyncBig(unittest.TestCase, ui_class):
             "PlatformId": "00000000-0000-0000-0000-000000000375",
             "UserKey": "12345678-9012-abcd-efgh-a7b6c0d8e7f2"
         }
-        r = requests.post(kobo_address + '/v1/auth/device', json=payload, timeout=1000)
+        r = requests.post(kobo_address + '/v1/auth/device', json=payload, timeout=10)
         self.assertEqual(r.status_code, 200)
         # request init request to get metadata format
         TestKoboSyncBig.header[kobo_address] = {
@@ -122,6 +122,7 @@ class TestKoboSyncBig(unittest.TestCase, ui_class):
         params = {'Filter': 'All', 'DownloadUrlFilter': 'Generic,Android', 'PrioritizeRecentReads': 'true'}
         data = list()
         while True:
+            print(".")
             r = session.get(kobo_address + '/v1/library/sync',
                             params=params,
                             headers=TestKoboSyncBig.syncToken.get(kobo_address),
@@ -165,7 +166,7 @@ class TestKoboSyncBig(unittest.TestCase, ui_class):
         while True:
             r = changeSession.get(koboaddress + '/v1/library/sync', params=params,
                                   headers=TestKoboSyncBig.syncToken.get(koboaddress),
-                                  timeout=10000)
+                                  timeout=10)
             self.assertEqual(r.status_code, 200)
             data.append(r.json())
             TestKoboSyncBig.data[koboaddress] = data

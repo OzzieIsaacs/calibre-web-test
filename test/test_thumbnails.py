@@ -10,7 +10,7 @@ from io import BytesIO
 
 from helper_ui import ui_class
 from config_test import TEST_DB, base_path, CALIBRE_WEB_PATH, NUM_THUMBNAILS
-from helper_func import startup, add_dependency, remove_dependency
+from helper_func import startup
 from helper_func import count_files, create_2nd_database
 from helper_settings_db import get_thumbnail_files
 from helper_db import add_books, remove_book, change_book_cover

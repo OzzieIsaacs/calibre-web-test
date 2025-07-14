@@ -5,7 +5,13 @@ from config_test import CALIBRE_WEB_PATH
 import re
 import os
 import sys
-import pkg_resources
+try:
+    from importlib.metadata import distributions
+    importlib = True
+    ImportNotFound = BaseException
+except ImportError:
+    print("Importlib.metadata was found Environment check not possible")
+    importlib = False
 
 
 class Environment:
@@ -17,7 +23,10 @@ class Environment:
         self.result.append(('Platform', '{0.system} {0.release} {0.version} {0.processor} {0.machine}'.format(uname)))
         self.result.append(('Python', sys.version))
 
-        dists = [str(d).split(" ") for d in pkg_resources.working_set]
+        if importlib:
+            dists = [[dist.metadata['Name'], dist.version] for dist in distributions()]
+        else:
+            return
         with open(os.path.join(CALIBRE_WEB_PATH, 'requirements.txt'), 'r') as f:
             for line in f:
                 if not line.startswith('#') and not line == '\n' and not line.startswith('git'):

@@ -17,12 +17,12 @@ else:
     VENV_PYTHON = os.path.join(VENV_PATH, 'bin', 'python3')
     LDAP_WHL = None
     TEST_OS = 'Linux'
-    WAIT_GDRIVE = 15
+    WAIT_GDRIVE = 20
 
 TEST_DB = os.path.abspath(os.path.join(base_path, '..', '..', 'Dokumente', 'tüst db'))
 
 # Boottime in seconds
-BOOT_TIME = 7.5
+BOOT_TIME = 10
 
 # Python binary
 PY_BIN = VENV_PYTHON # before: u'/usr/bin/python3'
