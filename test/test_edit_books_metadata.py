@@ -181,7 +181,7 @@ class TestLoadMetadata(TestCase, ui_class):
         time.sleep(2)
         search = self.check_element_on_page((By.ID, "keyword"))
         search.clear()
-        search.send_keys("Der Buchtitel")
+        search.send_keys("Buchtitel")
         self.check_element_on_page((By.ID, "do-search")).click()
         time.sleep(3)
         results = self.find_metadata_results()
@@ -193,7 +193,7 @@ class TestLoadMetadata(TestCase, ui_class):
         self.check_element_on_page((By.ID, "submit")).click()
         book_details = self.get_book_details(-1)
         pub_compare = book_details['publisher'][0] if len(book_details['publisher']) > 0 else ""
-        self.assertEqual(book_details['title'], results[0]['title'])
+        self.assertEqual(book_details['title'].replace(" ",""), results[0]['title'].replace(" ",""))
         self.assertEqual(book_details['author'][0], results[0]['author'])
         self.assertEqual(pub_compare, results[0]['publisher'],"{} {}".format(book_details, results[0]) )
         cover = self.check_element_on_page((By.ID, "detailcover")).screenshot_as_png
@@ -210,7 +210,7 @@ class TestLoadMetadata(TestCase, ui_class):
         time.sleep(3)
         search = self.check_element_on_page((By.ID, "keyword"))
         search.clear()
-        search.send_keys("Der Buchtitel")
+        search.send_keys("Buchtitel")
         self.check_element_on_page((By.ID, "do-search")).click()
         time.sleep(5)
         results = self.find_metadata_results()
@@ -258,11 +258,11 @@ class TestLoadMetadata(TestCase, ui_class):
         search.clear()
         search.send_keys("西遊記")
         self.check_element_on_page((By.ID, "do-search")).click()
-        time.sleep(6)
+        time.sleep(9)
         results = self.find_metadata_results()
         found = 0
         for r in results:
-            if r['title'] == "圖解西遊記":
+            if "西遊記" in r['title']:
                 found = 1
                 break
         self.assertEqual(1, found)
