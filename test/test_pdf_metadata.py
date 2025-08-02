@@ -129,13 +129,13 @@ class TestUploadPDF(TestCase, ui_class):
     # check metadata recognition of pdf files
     def test_upload_invalid_pdf(self):
         self.goto_page('nav_new')
-        # invalid author and language and no title
+        # invalid language and no title
         self.check_uploaded_pdf({'author': "Mani Mücks",
                                  "lang": "en",
                                  "cover": os.path.join(base_path, 'files', 'cover.jpg')},
                                 {'title': "book1",
-                                 'author': ["Unknown"],
-                                 'languages': None,
+                                 'author': ["Mani Mücks"],
+                                 'languages': ["English"],
                                  'comment': ""
                                  }
                                 )

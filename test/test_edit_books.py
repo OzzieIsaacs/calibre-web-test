@@ -911,7 +911,7 @@ class TestEditBooks(TestCase, ui_class):
                    "csrf_token": token.group(1)}
         r.post('http://127.0.0.1:{}/login'.format(PORTS[0]), data=payload)
         resp = r.get('http://127.0.0.1:{}'.format(PORTS[0]) + details['cover'])
-        self.assertLess('23300', resp.headers['Content-Length'])
+        self.assertLess('20832', resp.headers['Content-Length'])
         self.fill_basic_config({'config_uploading': 0})
         r.close()
         self.delete_book(details['id'])
