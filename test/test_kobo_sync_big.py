@@ -50,6 +50,7 @@ class TestKoboSyncBig(unittest.TestCase, ui_class):
             WebDriverWait(cls.driver, 5).until(EC.presence_of_element_located((By.ID, "flash_success")))
             cls.goto_page('user_setup')
             cls.check_element_on_page((By.ID, "config_create_kobo_token")).click()
+            time.sleep(1)
             link = cls.check_element_on_page((By.CLASS_NAME, "well"))
             cls.kobo_address = host + ':' + PORTS[0] + '/kobo/' + re.findall(".*/kobo/(.*)", link.text)[0]
             cls.check_element_on_page((By.ID, "kobo_close")).click()

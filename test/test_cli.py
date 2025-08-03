@@ -318,7 +318,7 @@ class TestCli(unittest.TestCase, ui_class):
             self.driver.get("http://127.0.0.1:" + PORTS[0])
         except WebDriverException as e:
             error = e.msg
-        self.assertTrue(re.findall('Reached error page:\sabout:neterror\?e=connectionFailure', error))
+        self.assertTrue(re.findall(r'Reached error page:\sabout:neterror\?e=connectionFailure', error))
         try:
             self.driver.get("http://" + address + ":" + PORTS[0])
         except WebDriverException:
@@ -346,7 +346,7 @@ class TestCli(unittest.TestCase, ui_class):
             self.driver.get("http://127.0.0.1:" + PORTS[1])
         except WebDriverException as e:
             error = e.msg
-        self.assertFalse(re.findall('Reached error page:\sabout:neterror\?e=connectionFailure', error))
+        self.assertFalse(re.findall(r'Reached error page:\sabout:neterror\?e=connectionFailure', error))
         self.assertTrue(self.check_element_on_page((By.ID, "username")))
         p.terminate()
         time.sleep(3)
@@ -530,13 +530,13 @@ class TestCli(unittest.TestCase, ui_class):
 
         # check file with " and mixed path separators is not found
         with open(os.path.join(CALIBRE_WEB_PATH + INDEX, "exclude.txt"), "w") as f:
-            f.write(' "cps\static/favicon.ico" ')
+            f.write(r' "cps\static/favicon.ico" ')
         output = self.help_dry_run()
         self.assertFalse("favicon.ico" in output)
 
         # check file with 2 lines
         with open(os.path.join(CALIBRE_WEB_PATH + INDEX, "exclude.txt"), "w") as f:
-            f.write(' "\cps\static/favicon.ico"\ncps.py ')
+            f.write(r' "\cps\static/favicon.ico"\ncps.py ')
         output = self.help_dry_run()
         self.assertFalse("favicon.ico" in output)
         self.assertFalse("cps.py" in output)
@@ -580,6 +580,7 @@ class TestCli(unittest.TestCase, ui_class):
         time.sleep(2)
         self.check_element_on_page((By.ID, "config_calibre_dir"))
         self.check_element_on_page((By.ID, "db_submit")).click()
+        time.sleep(1)
         confirm = self.check_element_on_page((By.ID, 'invalid_confirm'))
         self.assertTrue(confirm)
         confirm.click()
@@ -628,8 +629,8 @@ class TestCli(unittest.TestCase, ui_class):
         p = process_open([self.py_version, "-B", os.path.join(CALIBRE_WEB_PATH + INDEX, u'cps.py'),
                           '-o'], [1])        
         time.sleep(1)
-        output = list()
-        output.append(p.stderr.readline())
+        # output = list()
+        output = p.stderr.readlines()
         lines = "".join(output)
         self.assertTrue("usage: cps.py" in lines, lines)
         p.terminate()

@@ -135,7 +135,7 @@ class TestUploadPDF(TestCase, ui_class):
                                  "cover": os.path.join(base_path, 'files', 'cover.jpg')},
                                 {'title': "book1",
                                  'author': ["Mani Mücks"],
-                                 'languages': ["English"],
+                                 'languages': None,
                                  'comment': ""
                                  }
                                 )

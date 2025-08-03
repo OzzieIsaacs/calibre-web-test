@@ -749,6 +749,7 @@ class TestCalibreWebVisibilitys(unittest.TestCase, ui_class):
         self.edit_book(9, custom_content={"Custom Text 人物 *'()&": 'allow'})
         restricts = self.list_restrictions(RESTRICT_COL_USER, username="admin")
         self.assertEqual(len(restricts), 0)
+        time.sleep(1)
         close = self.check_element_on_page((By.ID, "restrict_close"))
         self.assertTrue(close)
         close.click()

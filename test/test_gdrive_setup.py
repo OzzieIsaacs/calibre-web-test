@@ -100,9 +100,11 @@ class TestSetupGdrive(unittest.TestCase, ui_class):
         # invalid db and tick gdrive
         self.fill_db_config(dict(config_calibre_dir=TEST_DB[:-1], config_use_google_drive=1))
         confirm = self.check_element_on_page((By.ID, 'invalid_confirm'))
+        time.sleep(1)
         self.assertTrue(confirm)
         confirm.click()
         # Tick gdrive and valid db
+        time.sleep(1)
         self.fill_db_config(dict(config_calibre_dir=TEST_DB, config_use_google_drive=1))
         # error no json file
         self.assertTrue(self.check_element_on_page((By.ID, 'flash_danger')))

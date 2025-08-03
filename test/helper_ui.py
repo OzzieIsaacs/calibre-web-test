@@ -457,13 +457,15 @@ class ui_class():
     def restart_calibre_web(cls):
         cls.goto_page('admin_setup')
         cls.driver.find_element(By.ID, 'admin_restart').click()
+        time.sleep(1)
         element = cls.check_element_on_page((By.ID, "restart"))
         element.click()
-        time.sleep(11)
+        time.sleep(BOOT_TIME +3 )
 
     def reconnect_database(self):
         self.goto_page('admin_setup')
         self.driver.find_element(By.ID, 'restart_database').click()
+        time.sleep(1)
         element = self.check_element_on_page((By.ID, "DialogFinished"))
         element.click()
         time.sleep(3)
@@ -563,6 +565,7 @@ class ui_class():
         if not deleteButton:
             return False
         deleteButton.click()
+        time.sleep(1)
         if accept:
             submit = self.check_element_on_page((By.ID, "btnConfirmYes-GeneralDeleteModal"))
         else:
@@ -699,12 +702,14 @@ class ui_class():
         if not self.check_element_on_page((By.ID, table_id)):
             return False
         deleteButton = self.check_element_on_page((By.CSS_SELECTOR, "div[data-restriction-id='" + id + "']"))
+        time.sleep(1)
         if not deleteButton:
             return False
         deleteButton.click()
 
     def add_restrictions(self, new_value, allow=True):
         edit = self.check_element_on_page((By.ID, "add_element"))
+        time.sleep(1)
         if allow:
             add = self.check_element_on_page((By.ID, "submit_allow"))
         else:
@@ -1007,6 +1012,7 @@ class ui_class():
         if name:
             self.list_shelfs(name)['ele'].click()
         self.check_element_on_page((By.ID, "delete_shelf")).click()
+        time.sleep(1)
         self.check_element_on_page((By.ID, "btnConfirmYes-GeneralDeleteModal")).click()
         time.sleep(1)
         return
@@ -1874,6 +1880,7 @@ class ui_class():
         if not b:
             return False
         b.click()
+        time.sleep(1)
         c = self.check_element_on_page((By.ID, "delete_confirm"))
         if not c:
             return False
