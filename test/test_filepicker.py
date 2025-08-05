@@ -82,7 +82,7 @@ class TestFilePicker(TestCase, ui_class):
 
         self.fill_db_config(dict(config_calibre_dir=TEST_DB))
         self.goto_page('basic_config')
-        time.sleep(1)
+        time.sleep(1.5)
         accordions = self.driver.find_elements(by=By.CLASS_NAME, value='accordion-toggle')
         accordions[0].click()
 

@@ -536,7 +536,7 @@ class TestCli(unittest.TestCase, ui_class):
 
         # check file with 2 lines
         with open(os.path.join(CALIBRE_WEB_PATH + INDEX, "exclude.txt"), "w") as f:
-            f.write(r' "\cps\static/favicon.ico"\ncps.py ')
+            f.write(' "\\cps\\static/favicon.ico"\ncps.py ')
         output = self.help_dry_run()
         self.assertFalse("favicon.ico" in output)
         self.assertFalse("cps.py" in output)
