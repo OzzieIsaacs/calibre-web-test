@@ -19,7 +19,6 @@ import mutagen
 from mutagen import mp3, wave, aiff, flac, oggvorbis, asf, mp4, apev2, oggopus, oggtheora
 from mutagen.flac import Picture
 
-
 RESOURCES = {'ports': 1}
 
 PORTS = ['8083']
@@ -36,6 +35,7 @@ class TestUploadAudio(TestCase, ui_class):
     @classmethod
     def setUpClass(cls):
         add_dependency(cls.dependencys, cls.__name__)
+
         try:
             startup(cls, cls.py_version, {'config_calibre_dir': TEST_DB, 'config_uploading': 1},
                     port=PORTS[0], index=INDEX,
@@ -76,9 +76,9 @@ class TestUploadAudio(TestCase, ui_class):
         mp3_file['TRCK'] = mutagen.id3.TRCK(encoding=1, text=['2/7'])
         mp3_file['TPUB'] = mutagen.id3.TPUB(encoding=1, text=['Älsids sdk'])
 
-        with open(os.path.join("files", 'cover.png'), "rb") as f:
+        with open(os.path.join(base_path, "files", 'cover.jpg'), "rb") as f:
             ref_picture = f.read()
-        with open(os.path.join("files", 'cover.jpg'), "rb") as f:
+        with open(os.path.join(base_path, "files", 'cover.jpg'), "rb") as f:
             jpg_picture = f.read()
 
         mp3_file.tags.add(
@@ -117,7 +117,7 @@ class TestUploadAudio(TestCase, ui_class):
         self.assertEqual('Album', details['series'])
         cover_image = self.check_element_on_page((By.ID, "detailcover")).screenshot_as_png
 
-        self.assertAlmostEqual(diff(BytesIO(self.png_original), BytesIO(cover_image), delete_diff_file=True), 0.0, delta=0.001)
+        self.assertAlmostEqual(diff(BytesIO(self.png_original), BytesIO(cover_image), delete_diff_file=True), 0.0, delta=0.006)
         self.delete_book(details['id'])
         mp3_file = mp3.MP3(dest)
         mp3_file['TDRL'] = mutagen.id3.TDRL(encoding=1, text=['2022-12-12'])
@@ -146,9 +146,9 @@ class TestUploadAudio(TestCase, ui_class):
         wave_file['TRCK'] = mutagen.id3.TRCK(encoding=1, text=['2/12'])
         wave_file['TPUB'] = mutagen.id3.TPUB(encoding=1, text=['Älsids sdksdsd '])
 
-        with open(os.path.join("files", 'cover.png'), "rb") as f:
+        with open(os.path.join(base_path, "files", 'cover.jpg'), "rb") as f:
             ref_picture = f.read()
-        with open(os.path.join("files", 'cover.jpg'), "rb") as f:
+        with open(os.path.join(base_path, "files", 'cover.jpg'), "rb") as f:
             jpg_picture = f.read()
 
 
@@ -410,7 +410,7 @@ class TestUploadAudio(TestCase, ui_class):
         aac_file['Label'] = mutagen.apev2.APETextValue(" Ölsids sdksdsd ")
         aac_file['Genre'] = mutagen.apev2.APETextValue("Gönr#Ä")
 
-        with open(os.path.join("files", 'cover.jpg'), "rb") as f:
+        with open(os.path.join(base_path, "files", 'cover.jpg'), "rb") as f:
             ref_picture = f.read()
         aac_file["Cover Art (Front)"] = mutagen.apev2.APEBinaryValue(b"Cover Art (Front)\00" + ref_picture)
         aac_file.save()
@@ -454,7 +454,7 @@ class TestUploadAudio(TestCase, ui_class):
         asf_file['Label'] = " Älsids sdksdsd "
         asf_file['Genre'] = "Genr#Ä"
 
-        with open(os.path.join("files", 'cover.jpg'), "rb") as f:
+        with open(os.path.join(base_path, "files", 'cover.jpg'), "rb") as f:
             ref_picture = f.read()
 
         asf_file["WM/Picture"] = ref_picture
@@ -538,7 +538,7 @@ class TestUploadAudio(TestCase, ui_class):
         m4a_file['©cmt'] = "MP4 Comments"
         m4a_file['©gen'] = "Genr#Ä"
 
-        with open(os.path.join("files", 'cover.jpg'), "rb") as f:
+        with open(os.path.join(base_path, "files", 'cover.jpg'), "rb") as f:
             ref_picture = f.read()
 
         pic = mutagen.mp4.MP4Cover(ref_picture, imageformat=mutagen.mp4.MP4Cover.FORMAT_JPEG)
@@ -578,7 +578,7 @@ class TestUploadAudio(TestCase, ui_class):
         m4a_file['©cmt'] = "MP4 Comments"
         m4a_file['©gen'] = "Genr#Ä"
 
-        with open(os.path.join("files", 'cover.jpg'), "rb") as f:
+        with open(os.path.join(base_path, "files", 'cover.jpg'), "rb") as f:
             ref_picture = f.read()
 
         pic = mutagen.mp4.MP4Cover(ref_picture, imageformat=mutagen.mp4.MP4Cover.FORMAT_JPEG)

@@ -13,12 +13,14 @@ fpdf2>=2.3.1
 Pikepdf>=2.8.0
 beautifulsoup4>=4.0.1, <4.12.0
 rarfile>=4.0
+mutagen>=1.46.0
 
 #Running Updater Test
 flask>=2.0.0
 mitmproxy==6.0.2
 # protobuf max version, otherwise mitmproxy isn't working
 protobuf<=3.20.0
+blinker<1.5.0
 
 # For running tests on helper
 Babel>=2.6.0
@@ -29,13 +31,14 @@ iso-639>=0.4.5
 unidecode>=1.0.0
 Flask-Principal>=0.3.2
 regex>=2022.10.31
+chardet>=5.0.0
 
 # Gdrive integration
 fs.googledrivefs>=1.7.0
 
 # E-Mailing results and uploading results to server
 keyring>=21.0.0
-paramiko>=2.7.0
+paramiko>=3.4.0
 pdfkit>=0.6.0
 
 # redis limiter backend

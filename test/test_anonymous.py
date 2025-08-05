@@ -2,6 +2,7 @@
 # -*- coding: utf-8 -*-
 
 import unittest
+import time
 from selenium.webdriver.common.by import By
 from helper_ui import ui_class
 from config_test import TEST_DB
@@ -298,13 +299,16 @@ class TestAnonymous(unittest.TestCase, ui_class):
         books = self.get_list_books_displayed()
         self.assertEqual(books[1]['id'], '2')
         self.check_element_on_page((By.ID, "desc")).click()
+        time.sleep(1)
         books = self.get_list_books_displayed()
         self.assertEqual(books[0]['id'], '2')
         self.goto_page("nav_new")
         self.goto_page("nav_serie")
+        time.sleep(1)
         self.assertEqual(books[0]['id'], '2')
         self.check_element_on_page((By.ID, "asc")).click()
         books = self.get_list_books_displayed()
+        time.sleep(1)
         self.assertEqual(books[1]['id'], '2')
         self.check_element_on_page((By.ID, "top_user")).click()
         self.login('admin', 'admin123')

@@ -29,7 +29,7 @@ INDEX = ""
 class TestEditBooks(TestCase, ui_class):
     p = None
     driver = None
-    dependencys = ['py7zr']
+    dependencys = ['limit|py7zr']
 
     @classmethod
     def setUpClass(cls):

@@ -34,7 +34,6 @@ class TestSSL(unittest.TestCase, ui_class):
     @classmethod
     def setUpClass(cls):
         # start email server
-        # generate_ssl_testing_files()
         cls.email_server = AIOSMTPServer(
             hostname=socket.gethostname(), port=int(PORTS[1]),
             only_ssl=True,

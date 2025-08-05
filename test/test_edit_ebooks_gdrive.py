@@ -13,7 +13,7 @@ from helper_ui import ui_class
 from diffimg import diff
 from io import BytesIO
 
-from config_test import CALIBRE_WEB_PATH, TEST_DB, base_path, WAIT_GDRIVE
+from config_test import CALIBRE_WEB_PATH, TEST_DB, base_path, WAIT_GDRIVE, BOOT_TIME
 from helper_func import add_dependency, remove_dependency, startup
 from helper_func import save_logfiles
 from helper_gdrive import prepare_gdrive, connect_gdrive, check_path_gdrive
@@ -843,7 +843,7 @@ class TestEditBooksOnGdrive(unittest.TestCase, ui_class):
 
     def test_upload_book_lit(self):
         self.fill_basic_config({'config_uploading': 1})
-        time.sleep(3)
+        time.sleep(BOOT_TIME)
         self.assertTrue(self.check_element_on_page((By.ID, 'flash_success')))
         self.edit_user('admin', {'upload_role': 1})
         self.goto_page('nav_new')
@@ -851,7 +851,7 @@ class TestEditBooksOnGdrive(unittest.TestCase, ui_class):
         upload = self.check_element_on_page((By.ID, 'btn-upload'))
         upload.send_keys(upload_file)
         # ToDo: check file contents
-        time.sleep(WAIT_GDRIVE)
+        time.sleep(3*WAIT_GDRIVE)
         self.check_element_on_page((By.ID, 'edit_cancel')).click()
         details = self.get_book_details()
         self.assertEqual('book', details['title'])
@@ -867,10 +867,10 @@ class TestEditBooksOnGdrive(unittest.TestCase, ui_class):
         self.fill_basic_config({'config_uploading': 0})
         r.close()
 
-    @unittest.expectedFailure
+    # @unittest.expectedFailure
     def test_upload_book_epub(self):
         self.fill_basic_config({'config_uploading': 1})
-        time.sleep(3)
+        time.sleep(BOOT_TIME)
         self.assertTrue(self.check_element_on_page((By.ID, 'flash_success')))
         self.edit_user('admin', {'upload_role': 1})
         self.goto_page('nav_new')
@@ -878,7 +878,7 @@ class TestEditBooksOnGdrive(unittest.TestCase, ui_class):
         upload = self.check_element_on_page((By.ID, 'btn-upload'))
         upload.send_keys(upload_file)
 
-        time.sleep(WAIT_GDRIVE)
+        time.sleep(2*WAIT_GDRIVE)
         self.check_element_on_page((By.ID, 'edit_cancel')).click()
         time.sleep(WAIT_GDRIVE)
         details = self.get_book_details()

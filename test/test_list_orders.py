@@ -362,6 +362,7 @@ class TestCalibreWebListOrders(unittest.TestCase, ui_class):
 
     def test_order_series_all_links(self):
         self.goto_page('nav_serie')
+        time.sleep(1)
         list = self.check_element_on_page((By.ID, "list-button"))
         self.assertTrue(list)
         self.check_element_on_page((By.ID, "asc")).click()

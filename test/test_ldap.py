@@ -1067,6 +1067,7 @@ class TestLdapLogin(unittest.TestCase, ui_class):
         self.login('执一','eekretsay')
         self.goto_page('user_setup')
         self.check_element_on_page((By.ID, "config_create_kobo_token")).click()
+        time.sleep(1)
         link = self.check_element_on_page((By.CLASS_NAME, "well"))
         self.kobo_adress = host + '/kobo/' + re.findall(".*/kobo/(.*)", link.text)[0]
         self.check_element_on_page((By.ID, "kobo_close")).click()

@@ -7,7 +7,7 @@ import time
 
 from helper_ui import ui_class
 from config_test import TEST_DB
-from helper_func import startup, debug_startup
+from helper_func import startup
 from helper_func import save_logfiles
 from selenium.webdriver.common.keys import Keys
 from selenium.webdriver.common.by import By
@@ -51,6 +51,33 @@ class TestEditBooksList(TestCase, ui_class):
         self.assertEqual(count, len(bl['table']))
         self.assertEqual(value, bl['table'][0][column]['text'])
         return bl
+
+    def check_edit_cancel(self):
+        self.assertTrue(self.check_element_on_page((By.XPATH,
+                                                          "//button[contains(@class,'editable-submit')]")))
+        self.check_element_on_page((By.XPATH, "//button[contains(@class,'editable-cancel')]")).click()
+        bl = self.get_books_list(-1)
+        self.assertEqual("2", bl['table'][5]['Series Index']['text'])
+        return bl
+
+    @staticmethod
+    def click_elements(bl):
+        bl['column_elements'][0].click()
+        bl['column_elements'][1].click()
+        bl['column_elements'][2].click()
+        bl['column_elements'][3].click()
+        bl['column_elements'][4].click()
+        bl['column_elements'][5].click()
+        bl['column_elements'][6].click()
+
+    def check_selected(self, bl):
+        self.assertFalse(bl['column_elements'][0].is_selected())
+        self.assertFalse(bl['column_elements'][1].is_selected())
+        self.assertFalse(bl['column_elements'][2].is_selected())
+        self.assertFalse(bl['column_elements'][3].is_selected())
+        self.assertFalse(bl['column_elements'][4].is_selected())
+        self.assertFalse(bl['column_elements'][5].is_selected())
+        self.assertFalse(bl['column_elements'][6].is_selected())
 
     def test_search_books_list(self):
         bl = self.get_books_list(1)
@@ -257,30 +284,14 @@ class TestEditBooksList(TestCase, ui_class):
         self.assertEqual("2", bl['table'][5]['Series Index']['text'])
         self.edit_table_element(bl['table'][5]['Series Index']['element'], "+")
         time.sleep(1)
-        self.assertTrue(self.check_element_on_page((By.XPATH,
-                                                          "//button[contains(@class,'editable-submit')]")))
-        self.check_element_on_page((By.XPATH,"//button[contains(@class,'editable-cancel')]")).click()
-        bl = self.get_books_list(-1)
-        self.assertEqual("2", bl['table'][5]['Series Index']['text'])
+        bl = self.check_edit_cancel()
         self.edit_table_element(bl['table'][5]['Series Index']['element'], "-2")
-        self.assertTrue(self.check_element_on_page((By.XPATH,
-                                                          "//button[contains(@class,'editable-submit')]")))
-        self.check_element_on_page((By.XPATH,"//button[contains(@class,'editable-cancel')]")).click()
-        bl = self.get_books_list(-1)
-        self.assertEqual("2", bl['table'][5]['Series Index']['text'])
+        bl = self.check_edit_cancel()
         self.edit_table_element(bl['table'][5]['Series Index']['element'], "2.009")
-        self.assertTrue(self.check_element_on_page((By.XPATH,
-                                                          "//button[contains(@class,'editable-submit')]")))
-        self.check_element_on_page((By.XPATH,"//button[contains(@class,'editable-cancel')]")).click()
-        bl = self.get_books_list(-1)
-        self.assertEqual("2", bl['table'][5]['Series Index']['text'])
+        bl = self.check_edit_cancel()
         # ToDo check why "," is not working anymore
         self.edit_table_element(bl['table'][5]['Series Index']['element'], "2,01")
-        self.assertTrue(self.check_element_on_page((By.XPATH,
-                                                          "//button[contains(@class,'editable-submit')]")))
-        self.check_element_on_page((By.XPATH,"//button[contains(@class,'editable-cancel')]")).click()
-        bl = self.get_books_list(-1)
-        self.assertEqual("2", bl['table'][5]['Series Index']['text'])
+        bl = self.check_edit_cancel()
         self.edit_table_element(bl['table'][5]['Series Index']['element'], "1.99")
         bl = self.get_books_list(-1)
         self.assertEqual("1.99", bl['table'][5]['Series Index']['text'])
@@ -302,32 +313,14 @@ class TestEditBooksList(TestCase, ui_class):
         for indx, element in enumerate(bl['column_elements']):
             if element.is_selected():
                 self.assertTrue(bl['column_texts'][indx].text in bl['table'][0])
-        bl['column_elements'][0].click()
-        bl['column_elements'][1].click()
-        bl['column_elements'][2].click()
-        bl['column_elements'][3].click()
-        bl['column_elements'][4].click()
-        bl['column_elements'][5].click()
-        bl['column_elements'][6].click()
+        self.click_elements(bl)
         bl = self.get_books_list(2)
         self.assertTrue(bl['column'])
         bl['column'].click()
         self.assertEqual(20, len(bl['column_elements']))
         self.assertEqual(15, len(bl['table'][0]))
-        self.assertFalse(bl['column_elements'][0].is_selected())
-        self.assertFalse(bl['column_elements'][1].is_selected())
-        self.assertFalse(bl['column_elements'][2].is_selected())
-        self.assertFalse(bl['column_elements'][3].is_selected())
-        self.assertFalse(bl['column_elements'][4].is_selected())
-        self.assertFalse(bl['column_elements'][5].is_selected())
-        self.assertFalse(bl['column_elements'][6].is_selected())
-        bl['column_elements'][0].click()
-        bl['column_elements'][1].click()
-        bl['column_elements'][2].click()
-        bl['column_elements'][3].click()
-        bl['column_elements'][4].click()
-        bl['column_elements'][5].click()
-        bl['column_elements'][6].click()
+        self.check_selected(bl)
+        self.click_elements(bl)
         bl = self.get_books_list(1)
         self.assertEqual(22, len(bl['table'][0]))
 
@@ -377,29 +370,29 @@ class TestEditBooksList(TestCase, ui_class):
 
     def test_bookslist_edit_cust_category(self):
         bl = self.get_books_list(1)
-        self.assertEqual("+", bl['table'][4]['Custom categories\|, 人物']['text'])
-        self.edit_table_element(bl['table'][4]['Custom categories\|, 人物']['element'], "执 Huks")
+        self.assertEqual("+", bl['table'][4][r'Custom categories\|, 人物']['text'])
+        self.edit_table_element(bl['table'][4][r'Custom categories\|, 人物']['element'], "执 Huks")
         bl = self.get_books_list(-1)
-        self.assertEqual("执 Huks", bl['table'][4]['Custom categories\|, 人物']['text'])
+        self.assertEqual("执 Huks", bl['table'][4][r'Custom categories\|, 人物']['text'])
         values = self.get_book_details(9)
         self.assertEqual("执 Huks", values['cust_columns'][0]['value'])
         bl = self.get_books_list(1)
-        self.edit_table_element(bl['table'][4]['Custom categories\|, 人物']['element'], "+")
+        self.edit_table_element(bl['table'][4][r'Custom categories\|, 人物']['element'], "+")
         bl = self.get_books_list(-1)
-        self.assertEqual("+", bl['table'][4]['Custom categories\|, 人物']['text'])
+        self.assertEqual("+", bl['table'][4][r'Custom categories\|, 人物']['text'])
         values = self.get_book_details(9)
         self.assertEqual("+", values['cust_columns'][0]['value'])
         bl = self.get_books_list(1)
-        self.edit_table_element(bl['table'][4]['Custom categories\|, 人物']['element'], " Pandöm,Ti|s@d ")
+        self.edit_table_element(bl['table'][4][r'Custom categories\|, 人物']['element'], " Pandöm,Ti|s@d ")
         bl = self.get_books_list(-1)
-        self.assertEqual("Pandöm,Ti|s@d", bl['table'][4]['Custom categories\|, 人物']['text'])
+        self.assertEqual("Pandöm,Ti|s@d", bl['table'][4][r'Custom categories\|, 人物']['text'])
         values = self.get_book_details(9)
         self.assertEqual("Pandöm, Ti|s@d", values['cust_columns'][0]['value'])  # 2 categories created
         bl = self.get_books_list(1)
         # Restore default
-        self.edit_table_element(bl['table'][4]['Custom categories\|, 人物']['element'], "")
+        self.edit_table_element(bl['table'][4][r'Custom categories\|, 人物']['element'], "")
         bl = self.get_books_list(-1)
-        self.assertEqual("+", bl['table'][4]['Custom categories\|, 人物']['text'])
+        self.assertEqual("+", bl['table'][4][r'Custom categories\|, 人物']['text'])
         values = self.get_book_details(9)
         self.assertEqual(0, len(values["cust_columns"]))
 
@@ -413,7 +406,7 @@ class TestEditBooksList(TestCase, ui_class):
         self.assertEqual("Alfa", bl['table'][3]['Custom 人物 Enum']['text'])
         self.edit_table_select(bl['table'][3]['Custom 人物 Enum']['element'], "")
         bl = self.get_books_list(-1)
-        self.assertEqual("+", bl['table'][4]['Custom categories\|, 人物']['text'])
+        self.assertEqual("+", bl['table'][4][r'Custom categories\|, 人物']['text'])
         values = self.get_book_details(10)
         self.assertEqual(0, len(values["cust_columns"]))
 
@@ -498,12 +491,13 @@ class TestEditBooksList(TestCase, ui_class):
         r.post('http://127.0.0.1:{}/login'.format(PORTS[0]), data=payload)
         table = r.get('http://127.0.0.1:{}/table?data=list&sort_param=stored'.format(PORTS[0]))
         token = re.search('<input type="hidden" name="csrf_token" value="(.*)">', table.text)
-        data = {"name": "comments", "value": "<a href=javascr\x1bipt:alert()>Hello</a>", "pk": "10", "checkA": "true", "checkT": "true", "csrf_token": token.group(1)}
-        response = r.post('http://127.0.0.1:{}/ajax/editbooks/comments'.format(PORTS[0]), data=data)
+        data = {"name": "comments", "value": "<a href=javascr\x1bipt:alert()>Hello</a>", "pk": ["10"], "checkA": "true", "checkT": "true"}
+        headers = {"X-CSRFToken": token.group(1)}
+        response = r.post('http://127.0.0.1:{}/ajax/editbooks/comments'.format(PORTS[0]), json=data, headers=headers, timeout=5)
         self.assertEqual(200, response.status_code)
         self.assertEqual("<a>Hello</a>", response.json()['newValue'])
-        data = {"name": "comments", "value": "", "pk": "10", "checkA": "true", "checkT": "true", "csrf_token": token.group(1)}
-        response = r.post('http://127.0.0.1:{}/ajax/editbooks/comments'.format(PORTS[0]), data=data)
+        data = {"name": "comments", "value": "", "pk": ["10"], "checkA": "true", "checkT": "true"}
+        response = r.post('http://127.0.0.1:{}/ajax/editbooks/comments'.format(PORTS[0]), json=data, headers=headers, timeout=5)
         self.assertEqual(200, response.status_code)
         self.assertEqual("", response.json()['newValue'])
         r.close()

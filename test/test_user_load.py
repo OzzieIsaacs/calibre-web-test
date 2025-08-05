@@ -36,7 +36,7 @@ def user_change(user, result, index):
         me_page = r.get('http://127.0.0.1:{}/me'.format(PORTS[0]))
         token = re.search('<input type="hidden" name="csrf_token" value="(.*)">', me_page.text)
         user_load = {'name': user,
-                    'email': 'alfa' + re.findall("user(\d+)", user)[0] + '@email.com',
+                    'email': 'alfa' + re.findall(r"user(\d+)", user)[0] + '@email.com',
                     'password': "",
                     'locale': "en",
                     'default_language': "all",

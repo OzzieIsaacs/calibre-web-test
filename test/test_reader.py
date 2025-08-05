@@ -2,9 +2,11 @@
 # -*- coding: utf-8 -*-
 
 import unittest
+import helper_email_convert
 from helper_ui import ui_class
 from config_test import TEST_DB, base_path
-from helper_func import startup, debug_startup, add_dependency, remove_dependency
+from selenium.webdriver.support.ui import Select
+from helper_func import startup, add_dependency, remove_dependency
 from selenium.webdriver.common.by import By
 from helper_func import save_logfiles, createcbz
 import time
@@ -24,11 +26,11 @@ class TestReader(unittest.TestCase, ui_class):
 
     p = None
     driver = None
-    #dependencys = ['py7zr', "comicapi"]
+    dependencys = ["limit|py7zr", "comicapi"]
 
     @classmethod
     def setUpClass(cls):
-        #add_dependency(cls.dependencys, cls.__name__)
+        add_dependency(cls.dependencys, cls.__name__)
         try:
             startup(cls, cls.py_version, {'config_calibre_dir':TEST_DB}, port=PORTS[0], index=INDEX, env={"APP_MODE": "test"})
             cls.current_handle = cls.driver.current_window_handle
@@ -47,7 +49,7 @@ class TestReader(unittest.TestCase, ui_class):
 
     @classmethod
     def tearDownClass(cls):
-        #remove_dependency(cls.dependencys)
+        remove_dependency(cls.dependencys)
         cls.driver.switch_to.window(cls.current_handle)
         cls.driver.get("http://127.0.0.1:" + PORTS[0])
         cls.stop_calibre_web()
@@ -65,9 +67,6 @@ class TestReader(unittest.TestCase, ui_class):
         read_button = self.check_element_on_page((By.ID, "readbtn"))
         self.assertTrue("txt" in read_button.text)
         read_button.click()
-        #self.check_element_on_page((By.ID, "read-in-browser")).click()
-        #current_handles = self.driver.window_handles
-        #self.check_element_on_page((By.XPATH, "//ul[@aria-labelledby='read-in-browser']/li/a[contains(.,'txt')]")).click()
         new_handle = [x for x in self.driver.window_handles if x not in current_handles]
         if len(new_handle) != 1:
             self.assertFalse('Not exactly one new tab was opened')
@@ -77,6 +76,42 @@ class TestReader(unittest.TestCase, ui_class):
         self.assertTrue(content)
         self.assertTrue('hörte' in content.text, 'Encoding of textfile viewer is not respected properly')
 
+    @unittest.skipIf(helper_email_convert.is_kepubify_not_present(), "Skipping kepub reader test, kepubify not found")
+    def test_kepub_reader(self):
+        self.fill_basic_config({'config_kepubifypath': helper_email_convert.kepubify_path()})
+        self.assertTrue(self.check_element_on_page((By.ID, "flash_success")))
+        vals = self.get_convert_book(8)
+        select = Select(vals['btn_from'])
+        select.select_by_visible_text('EPUB')
+        select = Select(vals['btn_to'])
+        select.select_by_visible_text('KEPUB')
+        self.check_element_on_page((By.ID, "btn-book-convert")).click()
+        self.assertTrue(self.check_element_on_page((By.ID, "flash_success")))
+        time.sleep(2)
+        self.fill_basic_config({'config_kepubifypath': ""})
+        self.get_book_details(8)
+        current_handles = self.driver.window_handles
+        read_button = self.check_element_on_page((By.ID, "read-in-browser"))
+        read_button.click()
+        buttons = self.driver.find_elements(By.XPATH, ".//*[@aria-labelledby='read-in-browser']/li/a")
+        for but in buttons:
+            if but.text == "kepub":
+                but.click()
+                break
+        new_handle = [x for x in self.driver.window_handles if x not in current_handles]
+        if len(new_handle) != 1:
+            self.assertFalse('Not exactly one new tab was opened')
+        self.driver.switch_to.window(new_handle[0])
+        self.check_element_on_page((By.ID, "next")).click()
+        self.driver.switch_to.frame(self.check_element_on_page((By.XPATH,"//iframe[starts-with(@id, 'epubjs-view')]")))
+        content = self.driver.find_elements(By.CLASS_NAME, "calibre1")
+        self.assertTrue(content)
+        self.assertTrue('Überall dieselbe alte Leier.' in content[1].text)
+        self.driver.switch_to.default_content()
+        self.driver.close()
+        self.driver.switch_to.window(self.current_handle)
+        self.delete_book_format(12, "KEPUB")
+
     def test_epub_reader(self):
         self.get_book_details(8)
         self.assertFalse(self.check_element_on_page((By.ID, "read-in-browser")))
@@ -84,16 +119,12 @@ class TestReader(unittest.TestCase, ui_class):
         read_button = self.check_element_on_page((By.ID, "readbtn"))
         self.assertTrue("epub" in read_button.text)
         read_button.click()
-        #self.check_element_on_page((By.ID, "read-in-browser")).click()
-        #current_handles = self.driver.window_handles
-        #self.check_element_on_page((By.XPATH, "//ul[@aria-labelledby='read-in-browser']/li/a[contains(.,'epub')]")).click()
         new_handle = [x for x in self.driver.window_handles if x not in current_handles]
         if len(new_handle) != 1:
             self.assertFalse('Not exactly one new tab was opened')
         self.driver.switch_to.window(new_handle[0])
         self.driver.switch_to.frame(self.check_element_on_page((By.XPATH,"//iframe[starts-with(@id, 'epubjs-view')]")))
         content = self.driver.find_elements(By.CLASS_NAME, "calibre1")
-        # content = self.check_element_on_page((By.XPATH, "//@id=viewer/")) # "//div[@id='viewer']/div" [starts-with(@id, 'serie_')]"
         self.assertTrue(content)
         self.assertTrue('Überall dieselbe alte Leier.' in content[1].text)
         self.driver.switch_to.default_content()
@@ -114,9 +145,6 @@ class TestReader(unittest.TestCase, ui_class):
         read_button = self.check_element_on_page((By.ID, "readbtn"))
         self.assertTrue("pdf" in read_button.text)
         read_button.click()
-        #self.check_element_on_page((By.ID, "read-in-browser")).click()
-        #current_handles = self.driver.window_handles
-        #self.check_element_on_page((By.XPATH, "//ul[@aria-labelledby='read-in-browser']/li/a[contains(.,'pdf')]")).click()
         new_handle = [x for x in self.driver.window_handles if x not in current_handles]
         if len(new_handle) != 1:
             self.assertFalse('Not exactly one new tab was opened')
@@ -138,9 +166,6 @@ class TestReader(unittest.TestCase, ui_class):
         read_button = self.check_element_on_page((By.ID, "readbtn"))
         self.assertTrue("pdf" in read_button.text)
         read_button.click()
-        #self.check_element_on_page((By.ID, "read-in-browser")).click()
-        #current_handles = self.driver.window_handles
-        #self.check_element_on_page((By.XPATH, "//ul[@aria-labelledby='read-in-browser']/li/a[contains(.,'pdf')]")).click()
         new_handle = [x for x in self.driver.window_handles if x not in current_handles]
         if len(new_handle) != 1:
             self.assertFalse('Not exactly one new tab was opened')
@@ -160,8 +185,6 @@ class TestReader(unittest.TestCase, ui_class):
         read_button = self.check_element_on_page((By.ID, "readbtn"))
         self.assertTrue("pdf" in read_button.text)
         read_button.click()
-        #self.check_element_on_page((By.ID, "read-in-browser")).click()
-        #self.check_element_on_page((By.XPATH, "//ul[@aria-labelledby='read-in-browser']/li/a[contains(.,'pdf')]")).click()
         new_handle = [x for x in self.driver.window_handles if x not in current_handles]
         if len(new_handle) != 1:
             self.assertFalse('Not exactly one new tab was opened')
@@ -182,7 +205,6 @@ class TestReader(unittest.TestCase, ui_class):
         read_button = self.check_element_on_page((By.ID, "readbtn"))
         self.assertTrue("cbr" in read_button.text)
         read_button.click()
-        # self.check_element_on_page((By.XPATH, "//ul[@aria-labelledby='read-in-browser']/li/a[contains(.,'cbr')]")).click()
         new_handle = [x for x in self.driver.window_handles if x not in current_handles]
         if len(new_handle) != 1:
             self.assertFalse('Not exactly one new tab was opened')

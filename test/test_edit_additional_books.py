@@ -513,15 +513,15 @@ class TestEditAdditionalBooks(TestCase, ui_class):
         # add identifier with ,|:;_#+\?^ -> okay
         self.check_element_on_page((By.ID, "edit_book")).click()
         self.assertEqual('1234 ', self.get_identifier_value('O0ü '))
-        self.add_identifier(',|:;_#+\?^', '^!:;,|_#+\?')
+        self.add_identifier(r',|:;_#+\?^', r'^!:;,|_#+\?')
         self.check_element_on_page((By.ID, "submit")).click()
         result = self.get_book_details()
         self.assertEqual(reference_length + 3, len(result['identifier']))
-        self.assertEqual(',|:;_#+\?^', list(result['identifier'][-3].keys())[0])
+        self.assertEqual(r',|:;_#+\?^', list(result['identifier'][-3].keys())[0])
         self.check_element_on_page((By.ID, "edit_book")).click()
-        self.assertEqual('^!:;,|_#+\?', self.get_identifier_value(',|:;_#+\?^'))
+        self.assertEqual(r'^!:;,|_#+\?', self.get_identifier_value(r',|:;_#+\?^'))
         self.delete_identifier('O0ü 执')
-        self.delete_identifier(',|:;_#+\?^')
+        self.delete_identifier(r',|:;_#+\?^')
         self.delete_identifier('O0ü ')
         self.check_element_on_page((By.ID, "submit")).click()
 
@@ -764,33 +764,33 @@ class TestEditAdditionalBooks(TestCase, ui_class):
     def test_title_sort(self):
         # check trim of whitespaces work
         self.assertEqual(7, len(self.search(' book ')))
-        self.edit_book(3, content={'title': u'The Audiobok'})
-        self.edit_book(13, content={'title': u'A bok'})
+        self.edit_book(3, content={'title': 'The Audiobok'})
+        self.edit_book(13, content={'title': 'A bok'})
         self.search('bok')
         time.sleep(2)
         order = {'asc': (3, 13)}  # Audiobok, The is before bok, A
         self.verify_order("search", order=order)
 
-        self.edit_book(3, content={'title': u'A Audiobok'})
-        self.edit_book(13, content={'title': u'The bok'})
+        self.edit_book(3, content={'title': 'A Audiobok'})
+        self.edit_book(13, content={'title': 'The bok'})
         self.search('bok')
         time.sleep(2)
         order = {'asc': (3, 13)}  # Audiobok, A is before bok, The
         self.verify_order("search", order=order)
 
-        self.fill_view_config({'config_title_regex': '^(Beta)\s+'})
+        self.fill_view_config({'config_title_regex': r'^(Beta)\s+'})
         self.assertTrue(self.check_element_on_page((By.ID, "flash_success")))
-        self.edit_book(3, content={'title': u'Beta Audiobok'})
-        self.edit_book(13, content={'title': u'A bok'})
+        self.edit_book(3, content={'title': 'Beta Audiobok'})
+        self.edit_book(13, content={'title': 'A bok'})
         self.search('bok')
         time.sleep(2)
         order = {'asc': (13, 3)}  # A bok is before Audiobook, Beta
         self.verify_order("search", order=order)
 
-        self.edit_book(13, content={'title': u'book11'})
-        self.edit_book(3, content={'title': u'Comicdemo'})
+        self.edit_book(13, content={'title': 'book11'})
+        self.edit_book(3, content={'title': 'Comicdemo'})
         self.fill_view_config({'config_title_regex':
-                                   '^(A|The|An|Der|Die|Das|Den|Ein|Eine|Einen|Dem|Des|Einem|Eines)\s+'})
+                                   r'^(A|The|An|Der|Die|Das|Den|Ein|Eine|Einen|Dem|Des|Einem|Eines)\s+'})
 
     def test_xss_comment_edit(self):
         r = requests.session()

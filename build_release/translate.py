@@ -39,9 +39,6 @@ def msgpack_loads(dump):
 
 need_iso = msgpack_loads(open('iso639.calibre_msgpack', 'rb').read())
 
-#need_iso['name_map']['dutch sign language'] = 'dse'
-#need_iso['codes3t'].append('dse')
-#msg_writer(need_iso)
 workdir = os.getcwd()
 os.chdir(FILEPATH)
 
@@ -170,11 +167,6 @@ for code in langcode_list:
     if not os.path.isfile(os.path.join(FILEPATH, 'cps', 'static', 'js', 'libs', 'tinymce', 'langs',
                                   code +'.js')):
         print('                             !!!  Error TinyMCE locale missing for: ' + code)
-    #path = os.path.join(FILEPATH, 'cps', 'static', 'js', 'libs', 'bootstrap-table', 'locale',
-    #                    'bootstrap-table-' + code[:2] + '*.min.js')
-    #if not glob.glob(path):
-    #    print('                             !!!  Error Bootstrap-Table locale missing for: ' + code)
-
 
 # Generate .mo files
 #trans_path = "cps/translations"

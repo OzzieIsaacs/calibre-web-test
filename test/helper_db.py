@@ -1,6 +1,6 @@
 import ast
 import os
-from datetime import datetime
+from datetime import datetime, UTC
 import random
 import shutil
 import string
@@ -90,10 +90,10 @@ class Books(Base):
     title = Column(String(collation='NOCASE'), nullable=False, default='Unknown')
     sort = Column(String(collation='NOCASE'))
     author_sort = Column(String(collation='NOCASE'))
-    timestamp = Column(TIMESTAMP, default=datetime.utcnow)
+    timestamp = Column(TIMESTAMP, default=datetime.now(UTC))
     pubdate = Column(TIMESTAMP, default=DEFAULT_PUBDATE)
     series_index = Column(String, nullable=False, default="1.0")
-    last_modified = Column(TIMESTAMP, default=datetime.utcnow)
+    last_modified = Column(TIMESTAMP, default=datetime.now(UTC))
     path = Column(String, default="", nullable=False)
     has_cover = Column(Integer, default=0)
     uuid = Column(String)
@@ -190,9 +190,11 @@ def _generate_random_cover(output_path):
               "purple", "orange", "magenta", "black"]
     for i in range(0, 8):
         ele = [draw.ellipse, draw.line, draw.rectangle]
-        random.choice(ele)((random.randint(0, 800), (random.randint(0, 1280))) +
-                           (random.randint(0, 800), (random.randint(0, 1280))),
-                           width=5, fill=random.choice(colors))
+        x0 = random.randint(0, 799)
+        y0 = random.randint(0, 1279)
+        x1 = random.randint(x0, 800)
+        y1 = random.randint(y0, 1280)
+        random.choice(ele)((x0, y0) + (x1, y1), width=5, fill=random.choice(colors))
     image.save(output_path)
 
 
@@ -221,10 +223,10 @@ def add_books(location, number, cover=False, set_id=False, no_data=False):
         book.title = _randStr()
         book.sort = ""
         book.author_sort = _randStr()
-        book.timestamp = datetime.utcnow()
-        book.pubdate = datetime.utcnow()
+        book.timestamp = datetime.now(UTC)
+        book.pubdate = datetime.now(UTC)
         book.series_index = "1.0"
-        book.last_modified = datetime.utcnow()
+        book.last_modified = datetime.now(UTC)
         book.path = ""
         book.uuid = str(uuid4())
         book.has_cover = int(cover)
@@ -281,7 +283,7 @@ def change_book_cover(location, book_id, cover_path):
     database_root = location[:-len("metadata.db")]
     shutil.copy(cover_path, os.path.join(database_root, book.path, "cover.jpg"))
     book = session.query(Books).filter(Books.id == book_id).first()
-    book.last_modified = datetime.utcnow()
+    book.last_modified = datetime.now(UTC)
     session.commit()
     Base.metadata.create_all(engine)
     session.close()

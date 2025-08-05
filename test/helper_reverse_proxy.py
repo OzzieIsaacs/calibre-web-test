@@ -3,7 +3,7 @@ import requests
 import re
 import logging
 from multiprocessing import Process
-# import time
+
 
 SITE_NAME = None # 'http://192.168.188.57:8083'
 SERVER_PATH = None # "/cw"
@@ -20,7 +20,7 @@ def merge_two_dicts(x, y):
 
 def set_header():
     headers = {
-        'Host': SITE_NAME
+        'HOST': re.sub('^http(s)?://', '', SITE_NAME)
     }
     return headers
 
@@ -42,7 +42,7 @@ def index():
 def proxy(p):
     if not request.full_path.startswith(SERVER_PATH):
         return "", 502
-    path = request.full_path[len(SERVER_PATH):]
+    path = request.full_path[len(SERVER_PATH):] # .strip("?")
 
     req_header = parse_headers(request.headers)
     req_header['X-Script-Name'] = SERVER_PATH
@@ -83,7 +83,8 @@ class Reverse_Proxy():
         self.port=port
         self.server=None
     def start(self):
-        self.server = Process(target=app.run, kwargs={'debug': False, 'use_reloader': False,'port': self.port})
+        # app.run(debug=True, use_reloader=False, port=self.port)
+        self.server = Process(target=app.run, kwargs={'debug': True, 'use_reloader': False,'port': self.port})
         self.server.start()
 
     def stop(self):

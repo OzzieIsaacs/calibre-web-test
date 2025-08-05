@@ -186,6 +186,7 @@ class TestEbookConvertGDriveKepubify(unittest.TestCase, ui_class):
 
         self.logout()
         self.login('solo', '123AbC*!')
+        time.sleep(WAIT_GDRIVE*2 + 5)
         ret = self.check_tasks()
         self.assertEqual(0, len(ret))
 
@@ -205,6 +206,7 @@ class TestEbookConvertGDriveKepubify(unittest.TestCase, ui_class):
 
         self.logout()
         self.login('admin', 'admin123')
+        time.sleep(WAIT_GDRIVE*2)
         ret = self.check_tasks()
         self.assertEqual(memory + 1, len(ret))
 

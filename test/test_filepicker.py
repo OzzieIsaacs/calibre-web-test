@@ -51,6 +51,7 @@ class TestFilePicker(TestCase, ui_class):
         os.mkdir(subfolder)
         # open filepicker without path, navigate higher until end is reached
         filepicker.click()
+        time.sleep(1)
         element = self.check_element_on_page((By.ID, "element_selected"))
         self.assertTrue(element)
         self.assertEqual(CALIBRE_WEB_PATH + INDEX, element.text)
@@ -81,7 +82,9 @@ class TestFilePicker(TestCase, ui_class):
 
         self.fill_db_config(dict(config_calibre_dir=TEST_DB))
         self.goto_page('basic_config')
+        time.sleep(1)
         accordions = self.driver.find_elements(by=By.CLASS_NAME, value='accordion-toggle')
+        time.sleep(1)
         accordions[0].click()
 
         input1 = self.check_element_on_page((By.ID, 'config_certfile'))
