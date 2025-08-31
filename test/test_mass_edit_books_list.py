@@ -294,20 +294,73 @@ class TestMassEditBooksList(TestCase, ui_class):
     # Title, autor write write protect  multi edit
     def test_protected_author_title(self):
         # goto book table
+        bl = self.get_books_list(1)
         # select book 3 and 4, 5
+        bl['table'][3]['selector']['element'].click()
+        bl['table'][4]['selector']['element'].click()
+        bl['table'][5]['selector']['element'].click()
         # write protect author-book 3
-        txt_path = os.path.join(TEST_DB, "Frodo Beutlin", "Der Buchtitel (1)", "Der Buchtitel - Frodo Beutlin.txt")
-        rights = os.stat(txt_path).st_mode & 0o777
-        os.chmod(txt_path, 0o400)
-        # write protect title-book 4
+        author_path = os.path.join(TEST_DB, "Leo Baskerville")
+        rights_author = os.stat(author_path).st_mode & 0o777
+        os.chmod(author_path, 0o400)
         # open mass edit dialog
+        self.check_element_on_page((By.ID, "edit_selected_books")).click()
+        time.sleep(1)
         # edit author
+        self.check_element_on_page((By.ID, "authors_input")).send_keys("Kurt Jilo")
         # submit
+        self.check_element_on_page((By.ID, "edit_selected_confirm")).click()
+        time.sleep(1)
         # check response
+        self.assertTrue(self.check_element_on_page((By.ID, "flash_danger")))
+        bl = self.get_books_list()
+        self.assertEqual(bl['table'][3]['Authors']['text'], "Kurt Jilo")
+        self.assertEqual(bl['table'][4]['Authors']['text'], "Kurt Jilo")
+        self.assertEqual(bl['table'][5]['Authors']['text'], "Leo Baskerville")
+        self.assertEqual(bl['table'][3]['Author Sort']['text'], "Jilo, Kurt")
+        self.assertEqual(bl['table'][4]['Author Sort']['text'], "Jilo, Kurt")
+        self.assertEqual(bl['table'][5]['Author Sort']['text'], "Baskerville, Leo")
+
+        bl['table'][3]['selector']['element'].click()
+        bl['table'][4]['selector']['element'].click()
+        bl['table'][5]['selector']['element'].click()
+
         # open mass edit dialog
+        self.check_element_on_page((By.ID, "edit_selected_books")).click()
+        time.sleep(1)
         # edit title
+        self.check_element_on_page((By.ID, "title_input")).send_keys("Test")
         # submit
+        self.check_element_on_page((By.ID, "edit_selected_confirm")).click()
+        time.sleep(1)
         # check response
+        self.assertTrue(self.check_element_on_page((By.ID, "flash_danger")))
+        bl = self.get_books_list()
+        self.assertEqual(bl['table'][3]['Title']['text'], "Test")
+        self.assertEqual(bl['table'][4]['Title']['text'], "Test")
+        self.assertEqual(bl['table'][5]['Title']['text'], "book8")
+
+        self.assertEqual(bl['table'][3]['Title Sort']['text'], "Test")
+        self.assertEqual(bl['table'][4]['Title Sort']['text'], "Test")
+        self.assertEqual(bl['table'][5]['Title Sort']['text'], "book8")
+
         # revert changes
-        pass
-        #Title, autor write protect single edit
+        os.chmod(author_path, rights_author)
+
+        self.edit_table_element(bl['table'][3]['Title']['element'], "book7")
+        bl = self.get_books_list()
+        self.edit_table_element(bl['table'][4]['Title']['element'], "book6")
+        bl = self.get_books_list()
+
+        self.edit_table_element(bl['table'][3]['Authors']['element'], "Peter Parker")
+        bl = self.get_books_list()
+        self.edit_table_element(bl['table'][4]['Authors']['element'], "Sigurd Lindgren")
+        bl = self.get_books_list()
+        self.assertEqual(bl['table'][3]['Authors']['text'], "Peter Parker")
+        self.assertEqual(bl['table'][4]['Authors']['text'], "Sigurd Lindgren")
+        self.assertEqual(bl['table'][3]['Author Sort']['text'], "Parker, Peter")
+        self.assertEqual(bl['table'][4]['Author Sort']['text'], "Lindgren, Sigurd")
+        self.assertEqual(bl['table'][3]['Title']['text'], "book7")
+        self.assertEqual(bl['table'][4]['Title']['text'], "book6")
+        self.assertEqual(bl['table'][3]['Title Sort']['text'], "book7")
+        self.assertEqual(bl['table'][4]['Title Sort']['text'], "book6")
