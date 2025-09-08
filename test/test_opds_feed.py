@@ -292,6 +292,9 @@ class TestOPDSFeed(unittest.TestCase, ui_class):
         self.assertEqual(entries['elements'][5]['title'], 'book9')
         self.assertEqual(len(entries['elements'][5]['author']), 2)
         self.assertEqual(entries['elements'][5]['author'][1], "Unbekannt")
+        self.assertEqual(entries['elements'][0]['content']['TAGS'], "Gênot")
+        self.assertEqual(entries['elements'][2]['content']['SERIES'], "Loko []")
+        self.assertEqual(entries['elements'][3]['content']['RATING'], "★★★★★")
 
 
     def test_opds_series(self):
