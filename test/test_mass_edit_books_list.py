@@ -364,3 +364,257 @@ class TestMassEditBooksList(TestCase, ui_class):
         self.assertEqual(bl['table'][4]['Title']['text'], "book6")
         self.assertEqual(bl['table'][3]['Title Sort']['text'], "book7")
         self.assertEqual(bl['table'][4]['Title Sort']['text'], "book6")
+
+    def test_mass_edit_publisher(self):
+        bl = self.get_books_list(1)
+        # select book 1 and 2
+        bl['table'][0]['selector']['element'].click()
+        bl['table'][7]['selector']['element'].click()
+        # open mass edit dialog
+        self.check_element_on_page((By.ID, "edit_selected_books")).click()
+        time.sleep(1)
+        # edit author
+        self.check_element_on_page((By.ID, "publishers_input")).send_keys("Tuto")
+        # submit
+        self.check_element_on_page((By.ID, "edit_selected_confirm")).click()
+        time.sleep(1)
+        # check response
+        self.assertTrue(self.check_element_on_page((By.ID, "flash_success")))
+        bl = self.get_books_list()
+        self.assertEqual(bl['table'][0]['Publishers']['text'], "Tuto")
+        self.assertEqual(bl['table'][1]['Publishers']['text'], "+")
+        self.assertEqual(bl['table'][6]['Publishers']['text'], "+")
+        self.assertEqual(bl['table'][7]['Publishers']['text'], "Tuto")
+        # revert changes
+        self.edit_table_element(bl['table'][0]['Publishers']['element'], "")
+        bl = self.get_books_list()
+        self.edit_table_element(bl['table'][7]['Publishers']['element'], "Randomhäus")
+        bl = self.get_books_list()
+
+        self.assertEqual(bl['table'][0]['Publishers']['text'], "+")
+        self.assertEqual(bl['table'][7]['Publishers']['text'], "Randomhäus")
+
+    def test_mass_edit_categories(self):
+        bl = self.get_books_list(1)
+        # select book 0 and 1
+        bl['table'][0]['selector']['element'].click()
+        bl['table'][1]['selector']['element'].click()
+        # open mass edit dialog
+        self.check_element_on_page((By.ID, "edit_selected_books")).click()
+        time.sleep(1)
+        # edit series
+        self.check_element_on_page((By.ID, "categories_input")).send_keys("Tuto")
+        # submit
+        self.check_element_on_page((By.ID, "edit_selected_confirm")).click()
+        time.sleep(1)
+        # check response
+        self.assertTrue(self.check_element_on_page((By.ID, "flash_success")))
+        bl = self.get_books_list()
+        self.assertEqual(bl['table'][0]['Categories']['text'], "Tuto")
+        self.assertEqual(bl['table'][1]['Categories']['text'], "Tuto")
+        self.assertEqual(bl['table'][4]['Categories']['text'], "+")
+        # change upper Lower Case
+        bl['table'][0]['selector']['element'].click()
+        # open mass edit dialog
+        self.check_element_on_page((By.ID, "edit_selected_books")).click()
+        time.sleep(1)
+        # edit series
+        self.check_element_on_page((By.ID, "categories_input")).send_keys("tuto")
+        # submit
+        self.check_element_on_page((By.ID, "edit_selected_confirm")).click()
+        time.sleep(1)
+        self.assertTrue(self.check_element_on_page((By.ID, "flash_success")))
+        bl = self.get_books_list()
+        self.assertEqual(bl['table'][0]['Categories']['text'], "tuto")
+        self.assertEqual(bl['table'][1]['Categories']['text'], "tuto")
+        # revert changes
+        self.edit_table_element(bl['table'][1]['Categories']['element'], "Gênot")
+        bl = self.get_books_list()
+        self.edit_table_element(bl['table'][0]['Categories']['element'], "")
+        bl = self.get_books_list()
+
+        self.assertEqual(bl['table'][1]['Categories']['text'], "Gênot")
+        self.assertEqual(bl['table'][0]['Categories']['text'], "+")
+
+
+    def test_mass_edit_series(self):
+        bl = self.get_books_list(1)
+        # select book 5 and 6
+        bl['table'][4]['selector']['element'].click()
+        bl['table'][5]['selector']['element'].click()
+        # open mass edit dialog
+        self.check_element_on_page((By.ID, "edit_selected_books")).click()
+        time.sleep(1)
+        # edit series
+        self.check_element_on_page((By.ID, "series_input")).send_keys("Tuto")
+        # submit
+        self.check_element_on_page((By.ID, "edit_selected_confirm")).click()
+        time.sleep(1)
+        # check response
+        self.assertTrue(self.check_element_on_page((By.ID, "flash_success")))
+        bl = self.get_books_list()
+        self.assertEqual(bl['table'][4]['Series']['text'], "Tuto")
+        self.assertEqual(bl['table'][5]['Series']['text'], "Tuto")
+        self.assertEqual(bl['table'][3]['Series']['text'], "+")
+        # change upper Lower Case
+        bl['table'][4]['selector']['element'].click()
+        # open mass edit dialog
+        self.check_element_on_page((By.ID, "edit_selected_books")).click()
+        time.sleep(1)
+        # edit series
+        self.check_element_on_page((By.ID, "series_input")).send_keys("tuto")
+        # submit
+        self.check_element_on_page((By.ID, "edit_selected_confirm")).click()
+        time.sleep(1)
+        self.assertTrue(self.check_element_on_page((By.ID, "flash_success")))
+        bl = self.get_books_list()
+        self.assertEqual(bl['table'][4]['Series']['text'], "tuto")
+        self.assertEqual(bl['table'][5]['Series']['text'], "tuto")
+        # revert changes
+        self.edit_table_element(bl['table'][4]['Series']['element'], "Loko")
+        bl = self.get_books_list()
+        self.edit_table_element(bl['table'][5]['Series']['element'], "")
+        bl = self.get_books_list()
+
+        self.assertEqual(bl['table'][4]['Series']['text'], "Loko")
+        self.assertEqual(bl['table'][5]['Series']['text'], "+")
+
+    def test_mass_edit_languages(self):
+        bl = self.get_books_list(1)
+        # select book 5 and 6
+        bl['table'][1]['selector']['element'].click()
+        bl['table'][2]['selector']['element'].click()
+        # open mass edit dialog
+        self.check_element_on_page((By.ID, "edit_selected_books")).click()
+        time.sleep(1)
+        # edit series
+        self.check_element_on_page((By.ID, "languages_input")).send_keys("Italian")
+        # submit
+        self.check_element_on_page((By.ID, "edit_selected_confirm")).click()
+        time.sleep(1)
+        # check response
+        self.assertTrue(self.check_element_on_page((By.ID, "flash_success")))
+        bl = self.get_books_list()
+        self.assertEqual(bl['table'][1]['Languages']['text'], "Italian")
+        self.assertEqual(bl['table'][2]['Languages']['text'], "Italian")
+        self.assertEqual(bl['table'][0]['Languages']['text'], "Norwegian Bokmål")
+        # Edit invalid Language
+        bl['table'][4]['selector']['element'].click()
+        # open mass edit dialog
+        self.check_element_on_page((By.ID, "edit_selected_books")).click()
+        time.sleep(1)
+        # edit series
+        self.check_element_on_page((By.ID, "languages_input")).send_keys("tuto")
+        # submit
+        self.check_element_on_page((By.ID, "edit_selected_confirm")).click()
+        time.sleep(1)
+        self.assertTrue(self.check_element_on_page((By.ID, "flash_danger")))
+        bl = self.get_books_list()
+        self.assertEqual(bl['table'][1]['Languages']['text'], "Italian")
+        self.assertEqual(bl['table'][2]['Languages']['text'], "Italian")
+        # revert changes
+        self.edit_table_element(bl['table'][1]['Languages']['element'], "Norwegian Bokmål")
+        bl = self.get_books_list()
+        self.edit_table_element(bl['table'][2]['Languages']['element'], "")
+        bl = self.get_books_list()
+
+        self.assertEqual(bl['table'][1]['Languages']['text'], "Norwegian Bokmål")
+        self.assertEqual(bl['table'][2]['Languages']['text'], "+")
+
+    def test_mass_edit_read(self):
+        self.get_book_details(13)
+        # tick archive book in book details
+        self.check_element_on_page((By.XPATH, "//*[@id='have_read_cb']")).click()
+        details = self.get_book_details(13)
+        # self.assertIsNotNone(details['archived'])
+        self.assertTrue(details['read'])
+
+        self.get_book_details(12)
+        # tick archive book in book details
+        self.check_element_on_page((By.XPATH, "//*[@id='have_read_cb']")).click()
+        self.get_book_details(12)
+        self.check_element_on_page((By.XPATH, "//*[@id='have_read_cb']")).click()
+        details = self.get_book_details(12)
+        # self.assertIsNotNone(details['archived'])
+        self.assertFalse(details['read'])
+
+        bl = self.get_books_list(1)
+        # select book 5 and 6
+        bl['table'][0]['selector']['element'].click()
+        bl['table'][2]['selector']['element'].click()
+        # edit read status
+        self.check_element_on_page((By.ID, "false_read_selected_books")).click()
+        time.sleep(1)
+        # check response
+        self.check_element_on_page((By.ID, "btnConfirmYes-GeneralChangeModal")).click()
+        time.sleep(1)
+        bl = self.get_books_list()
+        self.assertTrue(bl['table'][0]['Read Status']['element'].is_selected())
+        self.assertTrue(bl['table'][2]['Read Status']['element'].is_selected())
+        self.assertFalse(bl['table'][1]['Read Status']['element'].is_selected())
+
+        # unread books
+        bl['table'][1]['selector']['element'].click()
+        bl['table'][2]['selector']['element'].click()
+        # edit read status
+        self.check_element_on_page((By.ID, "true_read_selected_books")).click()
+        time.sleep(1)
+        # check response
+        self.check_element_on_page((By.ID, "btnConfirmYes-GeneralChangeModal")).click()
+        time.sleep(1)
+        bl = self.get_books_list()
+        self.assertTrue(bl['table'][0]['Read Status']['element'].is_selected())
+        self.assertFalse(bl['table'][2]['Read Status']['element'].is_selected())
+        self.assertFalse(bl['table'][1]['Read Status']['element'].is_selected())
+
+        # revert changes
+        bl['table'][0]['Read Status']['element'].click()
+        bl = self.get_books_list()
+        self.assertFalse(bl['table'][0]['Read Status']['element'].is_selected())
+        self.assertFalse(bl['table'][2]['Read Status']['element'].is_selected())
+        self.assertFalse(bl['table'][1]['Read Status']['element'].is_selected())
+
+    def test_mass_edit_archive(self):
+        self.get_book_details(13)
+        # tick archive book in book details
+        self.check_element_on_page((By.XPATH, "//*[@id='archived_cb']")).click()
+        details = self.get_book_details(13)
+        # self.assertIsNotNone(details['archived'])
+        self.assertTrue(details['archived'])
+
+        bl = self.get_books_list(1)
+        # select book 5 and 6
+        bl['table'][0]['selector']['element'].click()
+        bl['table'][2]['selector']['element'].click()
+        # edit read status
+        self.check_element_on_page((By.ID, "false_archive_selected_books")).click()
+        time.sleep(1)
+        # check response
+        self.check_element_on_page((By.ID, "btnConfirmYes-GeneralChangeModal")).click()
+        time.sleep(1)
+        bl = self.get_books_list()
+        self.assertTrue(bl['table'][0]['Archive Status']['element'].is_selected())
+        self.assertTrue(bl['table'][2]['Archive Status']['element'].is_selected())
+        self.assertFalse(bl['table'][1]['Archive Status']['element'].is_selected())
+
+        # unread books
+        bl['table'][1]['selector']['element'].click()
+        bl['table'][2]['selector']['element'].click()
+        # edit read status
+        self.check_element_on_page((By.ID, "true_archive_selected_books")).click()
+        time.sleep(1)
+        # check response
+        self.check_element_on_page((By.ID, "btnConfirmYes-GeneralChangeModal")).click()
+        time.sleep(1)
+        bl = self.get_books_list()
+        self.assertTrue(bl['table'][0]['Archive Status']['element'].is_selected())
+        self.assertFalse(bl['table'][2]['Archive Status']['element'].is_selected())
+        self.assertFalse(bl['table'][1]['Archive Status']['element'].is_selected())
+
+        # revert changes
+        bl['table'][0]['Archive Status']['element'].click()
+        bl = self.get_books_list()
+        self.assertFalse(bl['table'][0]['Archive Status']['element'].is_selected())
+        self.assertFalse(bl['table'][2]['Archive Status']['element'].is_selected())
+        self.assertFalse(bl['table'][1]['Archive Status']['element'].is_selected())
+
