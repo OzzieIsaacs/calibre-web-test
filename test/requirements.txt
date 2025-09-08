@@ -24,7 +24,6 @@ blinker<1.5.0
 
 # For running tests on helper
 Babel>=2.6.0
-Flask-Login>=0.6.3
 Flask-Babel>=1.0.0
 sqlalchemy>=1.4.29
 iso-639>=0.4.5

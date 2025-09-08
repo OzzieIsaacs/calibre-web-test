@@ -491,12 +491,13 @@ class TestEditBooksList(TestCase, ui_class):
         r.post('http://127.0.0.1:{}/login'.format(PORTS[0]), data=payload)
         table = r.get('http://127.0.0.1:{}/table?data=list&sort_param=stored'.format(PORTS[0]))
         token = re.search('<input type="hidden" name="csrf_token" value="(.*)">', table.text)
-        data = {"name": "comments", "value": "<a href=javascr\x1bipt:alert()>Hello</a>", "pk": "10", "checkA": "true", "checkT": "true", "csrf_token": token.group(1)}
-        response = r.post('http://127.0.0.1:{}/ajax/editbooks/comments'.format(PORTS[0]), data=data)
+        data = {"name": "comments", "value": "<a href=javascr\x1bipt:alert()>Hello</a>", "pk": ["10"], "checkA": "true", "checkT": "true"}
+        headers = {"X-CSRFToken": token.group(1)}
+        response = r.post('http://127.0.0.1:{}/ajax/editbooks/comments'.format(PORTS[0]), json=data, headers=headers, timeout=5)
         self.assertEqual(200, response.status_code)
         self.assertEqual("<a>Hello</a>", response.json()['newValue'])
-        data = {"name": "comments", "value": "", "pk": "10", "checkA": "true", "checkT": "true", "csrf_token": token.group(1)}
-        response = r.post('http://127.0.0.1:{}/ajax/editbooks/comments'.format(PORTS[0]), data=data)
+        data = {"name": "comments", "value": "", "pk": ["10"], "checkA": "true", "checkT": "true"}
+        response = r.post('http://127.0.0.1:{}/ajax/editbooks/comments'.format(PORTS[0]), json=data, headers=headers, timeout=5)
         self.assertEqual(200, response.status_code)
         self.assertEqual("", response.json()['newValue'])
         r.close()

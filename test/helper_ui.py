@@ -1909,7 +1909,16 @@ class ui_class():
                 return False
         else:
             time.sleep(1)
-        header = self.driver.find_elements(By.XPATH, "//thead/tr/th/div[starts-with(@class, 'th-inner')]")
+        header_edit = list()
+        header = self.driver.find_elements(By.XPATH, "//table[@id='books-table']/thead/tr/th")
+        for cnt, head in enumerate(header):
+            header_edit.insert(cnt, dict())
+            header_edit[cnt]['sort'] = head.find_element(By.XPATH, "./div[starts-with(@class, 'th-inner')]")
+            if header_edit[cnt]['sort'].text == "":
+                header_edit[cnt]['text'] = "selector"
+            else:
+                header_edit[cnt]['text'] = header_edit[cnt]['sort'].text.split('\n')[-1]
+
         rows = self.driver.find_elements(By.XPATH, "//tbody/tr")
         table = list()
         ret = dict()
@@ -1917,20 +1926,17 @@ class ui_class():
             ele = dict()
             row_elements = element.find_elements(By.XPATH, "./td")
             for cnt, el in enumerate(row_elements):
-                click_element = el.find_elements(By.XPATH, "./a | ./label/input | ./div")
+                click_element = el.find_elements(By.XPATH, "./a | ./input | ./div")
                 if click_element and len(click_element):
                     click_element = click_element[0]
                 else:
                     click_element = el
-                if header[cnt].text == "":
-                    index = "selector"
-                else:
-                    index = header[cnt].text
+                index = header_edit[cnt]['text']
                 if click_element.text == "" and click_element.tag_name == "a":
                     element_text = "+" if "glyphicon-plus" in click_element.find_elements(By.XPATH, "./span")[0].get_attribute('class') else ""
                 else:
                     element_text = el.text
-                ele[index] = {'element': click_element, 'sort': header[cnt], 'text': element_text}
+                ele[index] = {'element': click_element, 'sort': header_edit[cnt]['sort'], 'text': element_text}
             table.append(ele)
 
         ret['pagination'] = dict()
@@ -1945,7 +1951,7 @@ class ui_class():
         ret['column_elements'] = self.driver.find_elements(By.XPATH, "//*[@role='menuitem']/label/input")
         ret['column_texts'] = self.driver.find_elements(By.XPATH, "//*[@role='menuitem']/label/span")
         ret['search'] = self.check_element_on_page((By.CLASS_NAME, "search-input"))
-        ret['remove-btn'] = self.check_element_on_page((By.ID, "delete_selection"))
+        ret['remove-btn'] = self.check_element_on_page((By.ID, "book_delete_selection"))
         ret['merge-btn'] = self.check_element_on_page((By.ID, "merge_books"))
         ret['title_sort'] = self.check_element_on_page((By.ID, "autoupdate_titlesort"))
         ret['author_sort'] = self.check_element_on_page((By.ID, "autoupdate_authorsort"))

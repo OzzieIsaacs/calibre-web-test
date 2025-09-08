@@ -729,9 +729,25 @@ class TestEditAdditionalBooks(TestCase, ui_class):
         self.assertEqual(403, result.status_code)
         result = r.post('http://127.0.0.1:{}/delete/12'.format(PORTS[0]), data=payload)
         self.assertEqual(403, result.status_code)
-        result = r.post('http://127.0.0.1:{}/ajax/delete/12'.format(PORTS[0]), data=payload, timeout=5)
+        data = {'bookid': '12'}
+        headers = {"X-CSRFToken": token.group(1)}
+        result = r.post('http://127.0.0.1:{}/ajax/deletebook'.format(PORTS[0]), json=data, headers=headers, timeout=5)
         self.assertEqual(200, result.status_code)
         self.assertEqual("danger", result.json()['type'])
+
+        data = {'bookid': ['12']}
+        result = r.post('http://127.0.0.1:{}/ajax/deletebook'.format(PORTS[0]), json=data, headers=headers, timeout=5)
+        self.assertEqual(200, result.status_code)
+        self.assertEqual("danger", result.json()['type'])
+
+        data = {'schulli': ['12']}
+        result = r.post('http://127.0.0.1:{}/ajax/deletebook'.format(PORTS[0]), json=data, headers=headers, timeout=5)
+        self.assertEqual(200, result.status_code)
+        self.assertEqual("danger", result.json()['type'])
+
+        data = {'schulli': ['12']}
+        result = r.post('http://127.0.0.1:{}/ajax/deletebook'.format(PORTS[0]), data=data, headers=headers, timeout=5)
+        self.assertEqual(415, result.status_code)
 
         self.login('admin', 'admin123')
         self.edit_user('user2', {'edit_role': 1, 'delete_role': 0})
