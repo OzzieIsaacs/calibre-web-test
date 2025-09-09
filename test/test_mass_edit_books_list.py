@@ -217,10 +217,10 @@ class TestMassEditBooksList(TestCase, ui_class):
         self.assertTrue(self.check_element_on_page((By.ID, "flash_danger")))
         bl = self.get_books_list()
         self.assertEqual(bl['table'][2]['Authors']['text'], "Kurt Jilo")
-        self.assertEqual(bl['table'][3]['Authors']['text'], "Kurt Jilo")
+        self.assertEqual(bl['table'][3]['Authors']['text'], "Peter Parker")
         self.assertEqual(bl['table'][4]['Authors']['text'], "Kurt Jilo")
         self.assertEqual(bl['table'][2]['Author Sort']['text'], "Jilo, Kurt")
-        self.assertEqual(bl['table'][3]['Author Sort']['text'], "Jilo, Kurt")
+        self.assertEqual(bl['table'][3]['Author Sort']['text'], "Parker, Peter")
         self.assertEqual(bl['table'][4]['Author Sort']['text'], "Jilo, Kurt")
 
         # move title-book 4
@@ -243,11 +243,11 @@ class TestMassEditBooksList(TestCase, ui_class):
         self.assertTrue(self.check_element_on_page((By.ID, "flash_danger")))
         bl = self.get_books_list()
         self.assertEqual(bl['table'][2]['Title']['text'], "Test")
-        self.assertEqual(bl['table'][3]['Title']['text'], "Test")
-        self.assertEqual(bl['table'][4]['Title']['text'], "Test")
+        self.assertEqual(bl['table'][3]['Title']['text'], "book7")
+        self.assertEqual(bl['table'][4]['Title']['text'], "book6")
         self.assertEqual(bl['table'][2]['Title Sort']['text'], "Test")
-        self.assertEqual(bl['table'][3]['Title Sort']['text'], "Test")
-        self.assertEqual(bl['table'][4]['Title Sort']['text'], "Test")
+        self.assertEqual(bl['table'][3]['Title Sort']['text'], "book7")
+        self.assertEqual(bl['table'][4]['Title Sort']['text'], "book6")
 
         # revert changes
         self.edit_table_element(bl['table'][2]['Title']['element'], "book9")
@@ -263,13 +263,17 @@ class TestMassEditBooksList(TestCase, ui_class):
         bl = self.get_books_list()
         self.edit_table_element(bl['table'][4]['Authors']['element'], "Sigurd Lindgren")
         bl = self.get_books_list()
-        shutil.move(new_author_book, author_book)
-        old_title = os.path.join(TEST_DB, 'Sigurd Lindgren', 'book6 (9)')
-        shutil.rmtree(old_title)
-        shutil.move(new_title_book, old_title)
-        shutil.rmtree(os.path.join(TEST_DB, 'Kurt Jilo'))
-        shutil.move(os.path.join(TEST_DB, 'Sigurd Lindgren', 'book6 (9)','book6 - Kurt Jilo.epub'),
-                    os.path.join(TEST_DB, 'Sigurd Lindgren', 'book6 (9)','book6 - Sigurd Lindgren.epub'))
+        shutil.move(os.path.join(TEST_DB, 'Kurt Jilo', 'book7 (10)', 'book7 - Nos Parker.epub'),
+                    os.path.join(TEST_DB, 'Kurt Jilo', 'book7 (10)', 'book7 - Peter Parker.epub'))
+        # shutil.move(os.path.join(TEST_DB, 'Kurt Jilo', 'book7 (10)'), author_book)
+        #old_title = os.path.join(TEST_DB, 'Kurt Jilo', 'book6 (9)')
+        #shutil.rmtree(old_title)
+        shutil.move(os.path.join(TEST_DB, 'Kurt Jilo', 'book7 (10)'), os.path.join(TEST_DB, 'Peter Parker', 'book7 (10)'))
+        # shutil.rmtree(os.path.join(TEST_DB, 'Kurt Jilo'))
+        shutil.move(os.path.join(TEST_DB, 'Kurt Jilo', 'book (91)'),
+                    os.path.join(TEST_DB, 'Kurt Jilo', 'book6 (9)'))
+        self.edit_table_element(bl['table'][4]['Authors']['element'], "Sigurd Lindgren")
+        bl = self.get_books_list()
         self.assertEqual(bl['table'][2]['Title']['text'], "book9")
         self.assertEqual(bl['table'][3]['Title']['text'], "book7")
         self.assertEqual(bl['table'][4]['Title']['text'], "book6")
@@ -277,6 +281,7 @@ class TestMassEditBooksList(TestCase, ui_class):
         self.assertEqual(bl['table'][2]['Title Sort']['text'], "book9")
         self.assertEqual(bl['table'][3]['Title Sort']['text'], "book7")
         self.assertEqual(bl['table'][4]['Title Sort']['text'], "book6")
+
 
         self.assertEqual(bl['table'][2]['Authors']['text'], "Hector Gonçalves & Unbekannt")
         self.assertEqual(bl['table'][3]['Authors']['text'], "Peter Parker")
