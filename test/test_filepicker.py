@@ -82,8 +82,9 @@ class TestFilePicker(TestCase, ui_class):
 
         self.fill_db_config(dict(config_calibre_dir=TEST_DB))
         self.goto_page('basic_config')
-        time.sleep(1.5)
+        time.sleep(2)
         accordions = self.driver.find_elements(by=By.CLASS_NAME, value='accordion-toggle')
+        time.sleep(1)
         accordions[0].click()
 
         input1 = self.check_element_on_page((By.ID, 'config_certfile'))

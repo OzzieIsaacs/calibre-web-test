@@ -1209,6 +1209,22 @@ class ui_class():
                         tag_list.append(tag.attrib['term'])
                     el['tags'] = tag_list
                     el['tag_len'] = len(el['tags'])
+                ele = element.find('content')
+                if ele is not None:
+                    vals = '\n'.join([n.strip() for n in ele.itertext()]).strip().split("\n")
+                    results = dict()
+                    for v in vals:
+                        key_pair = v.split(":")
+                        # Not 100% perfect, the comment isn't correctly parsed if a : is in it (maybe parse for capital letters)
+                        if len(key_pair) > 1:
+                            results[key_pair[0].strip()] = key_pair[1].strip()
+                            continue
+                        if len(key_pair[0]) > 2:
+                            if "COMMENT" in results:
+                                results["COMMENT"] +=key_pair[0]
+                            else:
+                                results["COMMENT"] = key_pair[0]
+                    el['content'] = results
                 ret['elements'].append(el)
                 key += 1
         except:

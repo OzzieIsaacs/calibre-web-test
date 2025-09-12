@@ -51,9 +51,9 @@ p.wait()
 # adding --ignore-obsolete will delete all obsolete translations
 pot_path = os.path.join(FILEPATH,"messages.pot")
 translation_path = os.path.join(FILEPATH,'cps', 'translations')
-if sys.version_info < (3, 0):
-    translation_path = translation_path.encode(sys.getfilesystemencoding())
-p = subprocess.Popen("pybabel update --no-wrap -i "+ pot_path + " -d " + translation_path,
+#if sys.version_info < (3, 0):
+#    translation_path = translation_path.encode(sys.getfilesystemencoding())
+p = subprocess.Popen("pybabel update --no-wrap -N -i "+ pot_path + " -d " + translation_path,
                      shell=True, stdout=subprocess.PIPE, stdin=subprocess.PIPE)
 p.wait()
 

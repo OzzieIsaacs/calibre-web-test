@@ -502,5 +502,60 @@ class TestEditBooksList(TestCase, ui_class):
         self.assertEqual("", response.json()['newValue'])
         r.close()
 
+    def test_booklist_archive_read(self):
+        self.get_book_details(13)
+        # tick archive book in book details
+        self.check_element_on_page((By.XPATH, "//*[@id='archived_cb']")).click()
+        details = self.get_book_details(13)
+        # self.assertIsNotNone(details['archived'])
+        self.assertTrue(details['archived'])
+
+        # check book is archived
+        bl = self.get_books_list(1)
+        self.assertTrue(bl['table'][0]['Archive Status']['element'].is_selected())
+        # unarchive book
+        bl['table'][0]['Archive Status']['element'].click()
+        bl = self.get_books_list(1)
+        self.assertFalse(bl['table'][0]['Archive Status']['element'].is_selected())
+
+        # archive book
+        bl['table'][0]['Archive Status']['element'].click()
+        bl = self.get_books_list(1)
+        self.assertTrue(bl['table'][0]['Archive Status']['element'].is_selected())
+
+        # mark book as read
+        bl['table'][0]['Read Status']['element'].click()
+        bl = self.get_books_list(1)
+        self.assertTrue(bl['table'][0]['Read Status']['element'].is_selected())
+        self.assertTrue(bl['table'][0]['Archive Status']['element'].is_selected())
+
+        # mark book as unread
+        bl['table'][0]['Read Status']['element'].click()
+        bl = self.get_books_list(1)
+        self.assertFalse(bl['table'][0]['Read Status']['element'].is_selected())
+
+        # link read column to custom column
+        self.fill_view_config({'config_read_column': "Custom Bool 1 Ä"})
+        bl = self.get_books_list(1)
+        self.assertFalse(bl['table'][0]['Read Status']['element'].is_selected())
+        self.assertTrue(bl['table'][0]['Archive Status']['element'].is_selected())
+
+        # Mark book as read
+        bl['table'][0]['Read Status']['element'].click()
+        bl = self.get_books_list(1)
+        self.assertTrue(bl['table'][0]['Read Status']['element'].is_selected())
+        self.assertTrue(bl['table'][0]['Archive Status']['element'].is_selected())
+
+        # revert changes
+        bl['table'][0]['Read Status']['element'].click()
+        bl = self.get_books_list(1)
+        bl['table'][0]['Archive Status']['element'].click()
+        bl = self.get_books_list(1)
+        self.assertFalse(bl['table'][0]['Read Status']['element'].is_selected())
+        self.assertFalse(bl['table'][0]['Archive Status']['element'].is_selected())
+        self.fill_view_config({'config_read_column': ""})
+        bl = self.get_books_list(1)
+        self.assertFalse(bl['table'][0]['Read Status']['element'].is_selected())
+        self.assertFalse(bl['table'][0]['Archive Status']['element'].is_selected())
 
 
