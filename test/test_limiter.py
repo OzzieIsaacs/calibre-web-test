@@ -2,6 +2,7 @@
 # -*- coding: utf-8 -*-
 
 import os
+import re
 from selenium.webdriver.common.by import By
 from config_test import TEST_DB, BOOT_TIME, CALIBRE_WEB_PATH
 from helper_func import startup
@@ -13,6 +14,7 @@ import requests
 from selenium.webdriver.support.ui import WebDriverWait
 from selenium.webdriver.support import expected_conditions as EC
 from helper_redis import Redis as redis_server
+
 
 RESOURCES = {'ports': 1}
 
@@ -305,4 +307,16 @@ class TestSecurity(unittest.TestCase, ui_class):
         self.assertTrue(self.check_element_on_page((By.ID, "flash_success")))
         self.edit_user('test_all', {'delete': 1})
         self.fill_basic_config({"config_password_min_length": 8})
+
+    def test_x_forwarded_host(self):
+        r = requests.session()
+        login_page = r.get('http://127.0.0.1:{}/login'.format(PORTS[0]))
+        token = re.search('<input type="hidden" name="csrf_token" value="(.*)">', login_page.text)
+        payload = {'username': 'admin', 'password': 'admin123', 'submit': "", 'next': "/", "remember_me": "on", "csrf_token": token.group(1)}
+        r.post('http://127.0.0.1:{}/login'.format(PORTS[0]), data=payload)
+
+        header = {"X-Forwarded-Host": "google.de", "Host": "localhost:8083"}
+        attak = r.head('http://127.0.0.1:{}/foo/bar'.format(PORTS[0], headers=header, timeout=5))
+        print(attak.headers.get('location'))
+        r.get('http://127.0.0.1:{}/foo/bar'.format(PORTS[0]), headers=header, timeout=5)
 
