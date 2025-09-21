@@ -704,13 +704,14 @@ class TestLogin(unittest.TestCase, ui_class):
         page = r.post("http://127.0.0.1:" + PORTS[0] + "/login", data=payload)
         self.assertTrue("<title>Calibre-Web | Books</title>" in page.text)
         r.close()
+        # Path change is no longer allowed, so we end up in root
         r = requests.session()
         login_page = r.get("http://127.0.0.1:" + PORTS[0] + "/login")
         token = re.search('<input type="hidden" name="csrf_token" value="(.*)">', login_page.text)
         payload = {'username': 'admin', 'password': 'admin123', 'submit': "",
                    'next': "../stats", "csrf_token": token.group(1)}
         page = r.post("http://127.0.0.1:" + PORTS[0] + "/login", data=payload)
-        self.assertTrue("<title>Calibre-Web | Statistics</title>" in page.text)
+        self.assertTrue("<title>Calibre-Web | Books</title>" in page.text)
         r.close()
         r = requests.session()
         login_page = r.get("http://127.0.0.1:" + PORTS[0] + "/login")
