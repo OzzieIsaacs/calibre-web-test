@@ -19,6 +19,54 @@ RESOURCES = {'ports': 2}
 PORTS = ['8083', '8080']
 INDEX = ""
 
+from flask import Flask, request, Response
+import requests
+
+# app = Flask(__name__)
+
+'''host = 'http://' + get_Host_IP()
+host_port = host + ':' + PORTS[0]
+# The server you want to proxy to
+TARGET_URL = host_port    # change this to your backend URL
+
+
+@app.route("/cw", defaults={"path": ""}, methods=["GET", "POST", "PUT", "DELETE", "PATCH"])
+@app.route("/cw/<path:path>", methods=["GET", "POST", "PUT", "DELETE", "PATCH"])
+def reverse_proxy(path):
+    # Build the target URL (strip "/cw")
+    url = f"{TARGET_URL}/{path}"
+
+    # Forward the incoming request to the target server
+    resp = requests.request(
+        method=request.method,
+        url=url,
+        headers={key: value for key, value in request.headers if key.lower() != "host"},
+        data=request.get_data(),
+        cookies=request.cookies,
+        allow_redirects=True,
+        params=request.args
+    )
+
+    # Remove hop-by-hop headers
+    excluded_headers = ["content-encoding", "content-length", "transfer-encoding", "connection"]
+    headers = [
+        (name, value) for (name, value) in resp.raw.headers.items()
+        if name.lower() not in excluded_headers
+    ]
+
+    return Response(resp.content, resp.status_code, headers)'''
+
+
+#if __name__ == "__main__":
+#    app.run(port=8080, debug=True, use_reloader=False)
+#    time.sleep(1)
+
+'''host = 'http://' + get_Host_IP()
+host_port = host + ':' + PORTS[0]
+test_proxy = Reverse_Proxy(sitename=host_port)
+test_proxy.start()
+
+time.sleep(10)'''
 
 class TestReverseProxy(TestCase, ui_class):
     p = None

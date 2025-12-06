@@ -2,8 +2,9 @@ from flask import Flask, request, Response, redirect
 import requests
 import re
 import logging
-from multiprocessing import Process
-
+from werkzeug.serving import make_server
+# from multiprocessing import Process
+import threading
 
 SITE_NAME = None # 'http://192.168.188.57:8083'
 SERVER_PATH = None # "/cw"
@@ -74,7 +75,34 @@ def proxy(p):
         response = Response(resp.content, resp.status_code, headers)
     return response
 
-class Reverse_Proxy():
+#@app.route("/sd", methods=["POST"])
+#def shutdown():
+#    shutdown_func = request.environ.get("werkzeug.server.shutdown")
+#    if shutdown_func is None:
+#        return "Not running with Werkzeug!", 500#
+
+#    shutdown_func()
+#    return "Server shutting down..."
+
+class ServerThread(threading.Thread):
+
+    def __init__(self, app):
+        threading.Thread.__init__(self)
+        self.server = make_server("0.0.0.0", 8080, app)
+        self.ctx = app.app_context()
+        self.ctx.push()
+        self.daemon = True
+
+    def run(self):
+        print("Starting Flask server...")
+        self.server.serve_forever()
+
+    def shutdown(self):
+        print("Stopping Flask server...")
+        self.server.shutdown()
+
+
+'''class Reverse_Proxy():
     def __init__(self, port=8080, path="/cw", scheme="http", sitename="http://10.10.10.10:8083"):
         global SERVER_PATH, SCHEME, SITE_NAME
         SERVER_PATH = path
@@ -82,11 +110,35 @@ class Reverse_Proxy():
         SITE_NAME = sitename
         self.port=port
         self.server=None
+
     def start(self):
-        # app.run(debug=True, use_reloader=False, port=self.port)
-        self.server = Process(target=app.run, kwargs={'debug': True, 'use_reloader': False,'port': self.port})
+        self.server = threading.Thread(target=app.run, kwargs={'debug': False, 'use_reloader': False,'port': self.port}, daemon=True)
         self.server.start()
 
     def stop(self):
-        self.server.terminate()
-        self.server.join()
+        try:
+            requests.post("http://127.0.0.1:{}/sd".format(self.port))
+        except Exception:
+            pass  # server already closed
+        # self.server.terminate()
+        self.server.join()'''
+
+class Reverse_Proxy(threading.Thread):
+    def __init__(self, port=8080, path="/cw", scheme="http", sitename="http://10.10.10.10:8083"):
+        threading.Thread.__init__(self)
+        global SERVER_PATH, SCHEME, SITE_NAME
+        SERVER_PATH = path
+        SCHEME = scheme
+        SITE_NAME = sitename
+        self.port=port
+        self.server = make_server("127.0.0.1",  self.port, app)
+        self.ctx = app.app_context()
+        self.ctx.push()
+        self.daemon = True
+
+    def run(self):
+        print("Starting Flask server...")
+        self.server.serve_forever()
+
+    def stop(self):
+        self.server.shutdown()

@@ -82,7 +82,7 @@ for file in sorted(glob.glob1("translations", "*.po")):
             count += 1
     allMsg = len(mergedTranslation._messages)
     for x in mergedTranslation.check():
-        print(x)
+        print("{}: {}".format(langcode, x))
     for element in mergedTranslation:
         idstring=re.findall(r"\((.*?)\)%s",element.id)
         if idstring and element.string:

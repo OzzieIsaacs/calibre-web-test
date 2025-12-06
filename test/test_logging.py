@@ -91,6 +91,7 @@ class TestLogging(unittest.TestCase, ui_class):
 
         # Change setting back to Info
         # Info entry by adding shelf
+        self.driver.get("http://127.0.0.1:{}".format(PORTS[0]))
         self.fill_basic_config({'config_log_level': 'INFO'})
         time.sleep(BOOT_TIME)
         self.driver.get("http://127.0.0.1:{}/shelf/add/7/7".format(PORTS[0]))
@@ -98,6 +99,7 @@ class TestLogging(unittest.TestCase, ui_class):
         with open(os.path.join(CALIBRE_WEB_PATH, 'calibre-web.log'), 'r') as logfile:
             data = logfile.read()
         self.assertIsNotNone(re.findall('INFO in web: Invalid shelf specified', data))
+        self.driver.get("http://127.0.0.1:{}".format(PORTS[0]))
 
     def test_logfile_change(self):
         # check if path is accepted
