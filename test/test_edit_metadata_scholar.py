@@ -56,7 +56,7 @@ class TestLoadMetadataScholar(TestCase, ui_class):
         time.sleep(3)
         self.assertEqual("Der Buchtitel", self.check_element_on_page((By.ID, "keyword")).get_attribute("value"))
         google_scholar = self.check_element_on_page((By.ID, "show-Google Scholar"))
-        google = self.check_element_on_page((By.ID, "show-Google"))
+        google = self.check_element_on_page((By.ID, "show-Google Books"))
         comic_vine = self.check_element_on_page((By.ID, "show-ComicVine"))
         amazon = self.check_element_on_page((By.ID, "show-Amazon"))
         time.sleep(3)
