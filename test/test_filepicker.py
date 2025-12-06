@@ -79,7 +79,7 @@ class TestFilePicker(TestCase, ui_class):
 
     def test_two_filepickers(self):
         CALIBRE_WEB_PATH_PARENT = (CALIBRE_WEB_PATH + INDEX)[:(CALIBRE_WEB_PATH + INDEX).rfind(os.sep)]
-
+        time.sleep(1)
         self.fill_db_config(dict(config_calibre_dir=TEST_DB))
         self.goto_page('basic_config')
         time.sleep(2)

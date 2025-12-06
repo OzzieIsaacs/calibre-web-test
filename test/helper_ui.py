@@ -1942,7 +1942,7 @@ class ui_class():
             ele = dict()
             row_elements = element.find_elements(By.XPATH, "./td")
             for cnt, el in enumerate(row_elements):
-                click_element = el.find_elements(By.XPATH, "./a | ./input | ./div")
+                click_element = el.find_elements(By.XPATH, "./a | ./label/input | ./div | ./input")
                 if click_element and len(click_element):
                     click_element = click_element[0]
                 else:
