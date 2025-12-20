@@ -36,7 +36,7 @@ class TestThumbnailsEnv(unittest.TestCase, ui_class):
 
             shutil.rmtree(TEST_DB + '_3', ignore_errors=True)
             startup(cls, cls.py_version, {'config_calibre_dir': TEST_DB}, port=PORTS[0], index=INDEX,
-                    env={"APP_MODE": "test", "CACHE_DIR": TEST_DB + '_3' })
+                    env={"APP_MODE": "test", "CACHE_DIRECTORY": TEST_DB + '_3' })
             time.sleep(3)
             WebDriverWait(cls.driver, 5).until(EC.presence_of_element_located((By.ID, "flash_success")))
             # generate new id for database to make calibre-web aware of database change

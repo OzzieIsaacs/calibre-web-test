@@ -159,13 +159,13 @@ class ui_class():
         for shelf in all_shelfs:
             sh = dict()
             sh['id'] = shelf.get_attribute('href')[shelf.get_attribute('href').rfind('/')+1:]
-            sh['name'] = shelf.text
-            if shelf.text.endswith('(Public)'):
+            sh['name'] = " ".join(shelf.text.split(" ")[:-1])
+            if sh['name'].endswith('(Public)'):
                 sh['public'] = True
             else:
                 sh['public'] = False
             sh['ele'] = shelf
-            if search_name == shelf.text:
+            if search_name == sh['name']:
                 if ret_ele:
                     ret_ele = [sh, ret_ele]
                 else:
@@ -1375,6 +1375,10 @@ class ui_class():
             bk['link'] = ele[link].get_attribute('href')
             bk['link'] = bk['link'][bk['link'].find(sep):]
             bk['id'] = bk['link'].split('/')[-1] or "1"
+            try:
+                int(bk['id'])
+            except ValueError:
+                bk['id'] = "1"
             if grid:
                 bk['ele'] = cls.check_element_on_page((By.XPATH,"//a[@href='"+bk['link']+"']//img"))
                 bk['count'] = None
