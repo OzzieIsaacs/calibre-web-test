@@ -2,7 +2,7 @@
 # -*- coding: utf-8 -*-
 
 
-from unittest import TestCase
+from unittest import TestCase, skip
 import time
 import os
 import shutil
@@ -297,6 +297,7 @@ class TestMassEditBooksList(TestCase, ui_class):
                                                     'book6 - Sigurd Lindgren.epub')))
 
     # Title, autor write write protect  multi edit
+    # ToDo:
     def test_protected_author_title(self):
         # goto book table
         bl = self.get_books_list(1)
