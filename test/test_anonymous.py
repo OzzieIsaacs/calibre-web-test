@@ -307,6 +307,7 @@ class TestAnonymous(unittest.TestCase, ui_class):
         time.sleep(1)
         self.assertEqual(books[0]['id'], '2')
         self.check_element_on_page((By.ID, "asc")).click()
+        self.goto_page("nav_serie")
         books = self.get_list_books_displayed()
         time.sleep(1)
         self.assertEqual(books[1]['id'], '2')
