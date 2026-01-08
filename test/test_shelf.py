@@ -570,12 +570,25 @@ class TestShelf(unittest.TestCase, ui_class):
         self.assertEqual(len(self.adv_search({u'exclude_shelf': u'Search', 'title': 'book'})), 5)
         self.assertEqual(len(self.adv_search({u'include_shelf': u'Search', 'include_serie': 'Djüngel'})), 1)
         self.assertEqual(len(self.adv_search({u'include_shelf': u'Search', 'include_tag': 'Gênot'})), 2)
+
         books = self.get_shelf_books_displayed()
         self.assertEqual(books[0]['id'], '12')
         self.check_element_on_page((By.ID, "old")).click()
         books = self.get_shelf_books_displayed()
         self.assertEqual(books[0]['id'], '11')
         self.check_element_on_page((By.ID, "new")).click()
+
+        self.create_shelf('Exclude', False)
+        self.assertTrue(self.check_element_on_page((By.ID, "flash_success")))
+        self.get_book_details(8)
+        self.check_element_on_page((By.ID, "add-to-shelf")).click()
+        self.check_element_on_page((By.XPATH, "//ul[@id='add-to-shelves']/li/a[contains(.,'Exclude')]")).click()
+        self.get_book_details(11)
+        self.check_element_on_page((By.ID, "add-to-shelf")).click()
+        self.check_element_on_page((By.XPATH, "//ul[@id='add-to-shelves']/li/a[contains(.,'Exclude')]")).click()
+        self.assertEqual(len(self.adv_search({u'include_shelf': u'Search', 'exclude_shelf': 'Exclude'})), 2)
+        self.assertEqual(len(self.adv_search({'exclude_shelf': 'Exclude'})), 9)
+        self.delete_shelf("Exclude")
         self.delete_shelf("Search")
 
     def test_xss_shelf(self):
