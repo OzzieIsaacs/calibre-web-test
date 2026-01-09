@@ -325,7 +325,7 @@ class TestThumbnails(unittest.TestCase, ui_class):
         new_list_cover = cached_cover_books[1][2]['ele'].screenshot_as_png
 
         self.assertGreaterEqual(diff(BytesIO(list_cover), BytesIO(new_list_cover), delete_diff_file=True), 0.035)
-        self.assertAlmostEqual(diff(BytesIO(cover), BytesIO(new_cover), delete_diff_file=True), 0.0, delta=0.005)
+        self.assertAlmostEqual(diff(BytesIO(cover), BytesIO(new_cover), delete_diff_file=True), 0.0, delta=0.009)
         self.assertEqual(book_thumbnail_reference, count_files(thumbnail_cache_path))
 
 

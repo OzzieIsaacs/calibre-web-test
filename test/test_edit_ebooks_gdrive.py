@@ -827,7 +827,7 @@ class TestEditBooksOnGdrive(unittest.TestCase, ui_class):
         self.get_book_details(5)
         time.sleep(5)
         png = self.check_element_on_page((By.ID, "detailcover")).screenshot_as_png
-        self.assertGreater(diff(BytesIO(bmp), BytesIO(png), delete_diff_file=True), 0.005)
+        self.assertGreater(diff(BytesIO(bmp), BytesIO(png), delete_diff_file=True), 0.009)
 
         self.check_element_on_page((By.ID, "edit_book")).click()
         pngcover = os.path.join(base_path, 'files', 'cover.webp')
@@ -836,7 +836,7 @@ class TestEditBooksOnGdrive(unittest.TestCase, ui_class):
         self.get_book_details(5)
         time.sleep(5)
         webp = self.check_element_on_page((By.ID, "detailcover")).screenshot_as_png
-        self.assertGreater(diff(BytesIO(webp), BytesIO(png), delete_diff_file=True), 0.005)
+        self.assertGreater(diff(BytesIO(webp), BytesIO(png), delete_diff_file=True), 0.009)
 
         self.fill_basic_config({'config_uploading': 0})
         time.sleep(2)
