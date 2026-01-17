@@ -587,7 +587,7 @@ class TestEditAuthorsGdrive(TestCase, ui_class):
         self.check_element_on_page((By.ID, 'edit_cancel')).click()
         time.sleep(WAIT_GDRIVE)
         self.assertFalse(self.check_element_on_page((By.ID, "flash_danger")))
-        time.sleep(5)
+        time.sleep(WAIT_GDRIVE)
         details = self.get_book_details(-1)
         self.assertEqual('Useless', details['title'])
         self.assertEqual(['liu yang'], details['author'])

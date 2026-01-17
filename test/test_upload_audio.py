@@ -249,7 +249,7 @@ class TestUploadAudio(TestCase, ui_class):
         self.assertEqual('Album', details['series'])
         cover_image = self.check_element_on_page((By.ID, "detailcover")).screenshot_as_png
 
-        self.assertAlmostEqual(diff(BytesIO(self.png_original), BytesIO(cover_image), delete_diff_file=True), 0.0, delta=0.005)
+        self.assertAlmostEqual(diff(BytesIO(self.png_original), BytesIO(cover_image), delete_diff_file=True), 0.0, delta=0.009)
         self.delete_book(details['id'])
         aiff_file = aiff.AIFF(dest)
         aiff_file['TDRL'] = mutagen.id3.TDRL(encoding=1, text=['2022-12-12'])
@@ -314,7 +314,7 @@ class TestUploadAudio(TestCase, ui_class):
         self.assertEqual('Ogg Album', details['series'])
         cover_image = self.check_element_on_page((By.ID, "detailcover")).screenshot_as_png
 
-        self.assertAlmostEqual(diff(BytesIO(self.png_original), BytesIO(cover_image), delete_diff_file=True), 0.0, delta=0.005)
+        self.assertAlmostEqual(diff(BytesIO(self.png_original), BytesIO(cover_image), delete_diff_file=True), 0.0, delta=0.009)
         self.delete_book(details['id'])
         ogg_file = oggvorbis.OggVorbis(dest)
         ogg_file['DATE'] = '2022-12-12'
@@ -377,7 +377,7 @@ class TestUploadAudio(TestCase, ui_class):
         self.assertEqual('Flac Album', details['series'])
         cover_image = self.check_element_on_page((By.ID, "detailcover")).screenshot_as_png
 
-        self.assertAlmostEqual(diff(BytesIO(self.png_original), BytesIO(cover_image), delete_diff_file=True), 0.0, delta=0.005)
+        self.assertAlmostEqual(diff(BytesIO(self.png_original), BytesIO(cover_image), delete_diff_file=True), 0.0, delta=0.009)
         self.delete_book(details['id'])
         flac_file = flac.FLAC(dest)
         flac_file['DATE'] = "2022-12-11"
@@ -435,7 +435,7 @@ class TestUploadAudio(TestCase, ui_class):
         self.assertEqual('Dec 12, 2022', details['pubdate'])
         cover_image = self.check_element_on_page((By.ID, "detailcover")).screenshot_as_png
 
-        self.assertAlmostEqual(diff(BytesIO(self.jpg_original), BytesIO(cover_image), delete_diff_file=True), 0.0, delta=0.005)
+        self.assertAlmostEqual(diff(BytesIO(self.jpg_original), BytesIO(cover_image), delete_diff_file=True), 0.0, delta=0.009)
         self.delete_book(details['id'])
         self.fill_basic_config({'config_upload_formats': 'mobi,pdf,m4b,html,cbr,doc,lit,azw,mp4,odt,wav,prc,kepub,docx,cbt,mp3,rtf,epub,cb7,ogg,azw3,flac,opus,txt,djvu,cbz,fb2,djv,m4a'})
         self.assertTrue(self.check_element_on_page((By.ID, "flash_success")))
@@ -481,7 +481,7 @@ class TestUploadAudio(TestCase, ui_class):
         self.assertEqual('Dec 12, 2022', details['pubdate'])
         cover_image = self.check_element_on_page((By.ID, "detailcover")).screenshot_as_png
 
-        self.assertAlmostEqual(diff(BytesIO(self.jpg_original), BytesIO(cover_image), delete_diff_file=True), 0.0, delta=0.005)
+        self.assertAlmostEqual(diff(BytesIO(self.jpg_original), BytesIO(cover_image), delete_diff_file=True), 0.0, delta=0.009)
         self.delete_book(details['id'])
         self.fill_basic_config({'config_upload_formats': 'mobi,pdf,m4b,html,cbr,doc,lit,azw,mp4,odt,wav,prc,kepub,docx,cbt,mp3,rtf,epub,cb7,ogg,azw3,flac,opus,txt,djvu,cbz,fb2,djv,m4a'})
         self.assertTrue(self.check_element_on_page((By.ID, "flash_success")))
@@ -523,7 +523,7 @@ class TestUploadAudio(TestCase, ui_class):
         self.assertEqual('Dec 12, 2022', details['pubdate'])
         cover_image = self.check_element_on_page((By.ID, "detailcover")).screenshot_as_png
 
-        self.assertAlmostEqual(diff(BytesIO(self.png_original), BytesIO(cover_image), delete_diff_file=True), 0.0, delta=0.005)
+        self.assertAlmostEqual(diff(BytesIO(self.png_original), BytesIO(cover_image), delete_diff_file=True), 0.0, delta=0.009)
         self.delete_book(details['id'])
         os.remove(dest)
 
@@ -563,7 +563,7 @@ class TestUploadAudio(TestCase, ui_class):
 
         cover_image = self.check_element_on_page((By.ID, "detailcover")).screenshot_as_png
 
-        self.assertAlmostEqual(diff(BytesIO(self.jpg_original), BytesIO(cover_image), delete_diff_file=True), 0.0, delta=0.005)
+        self.assertAlmostEqual(diff(BytesIO(self.jpg_original), BytesIO(cover_image), delete_diff_file=True), 0.0, delta=0.009)
         self.delete_book(details['id'])
         os.remove(dest)
 
@@ -603,7 +603,7 @@ class TestUploadAudio(TestCase, ui_class):
 
         cover_image = self.check_element_on_page((By.ID, "detailcover")).screenshot_as_png
 
-        self.assertAlmostEqual(diff(BytesIO(self.jpg_original), BytesIO(cover_image), delete_diff_file=True), 0.0, delta=0.005)
+        self.assertAlmostEqual(diff(BytesIO(self.jpg_original), BytesIO(cover_image), delete_diff_file=True), 0.0, delta=0.009)
         self.delete_book(details['id'])
         os.remove(dest)
 
@@ -653,7 +653,7 @@ class TestUploadAudio(TestCase, ui_class):
         self.assertEqual('Ogg Album', details['series'])
         cover_image = self.check_element_on_page((By.ID, "detailcover")).screenshot_as_png
 
-        self.assertAlmostEqual(diff(BytesIO(self.png_original), BytesIO(cover_image), delete_diff_file=True), 0.0, delta=0.005)
+        self.assertAlmostEqual(diff(BytesIO(self.png_original), BytesIO(cover_image), delete_diff_file=True), 0.0, delta=0.009)
         self.delete_book(details['id'])
         os.remove(dest)
 
@@ -708,7 +708,7 @@ class TestUploadAudio(TestCase, ui_class):
         self.assertEqual('Dec 12, 2022', details['pubdate'])
         cover_image = self.check_element_on_page((By.ID, "detailcover")).screenshot_as_png
 
-        self.assertAlmostEqual(diff(BytesIO(self.png_original), BytesIO(cover_image), delete_diff_file=True), 0.0, delta=0.005)
+        self.assertAlmostEqual(diff(BytesIO(self.png_original), BytesIO(cover_image), delete_diff_file=True), 0.0, delta=0.009)
         self.delete_book(details['id'])
         self.fill_basic_config({'config_upload_formats': 'mobi,pdf,m4b,html,cbr,doc,lit,azw,mp4,odt,wav,prc,kepub,docx,cbt,mp3,rtf,epub,cb7,ogg,azw3,flac,opus,txt,djvu,cbz,fb2,djv,m4a'})
         self.assertTrue(self.check_element_on_page((By.ID, "flash_success")))

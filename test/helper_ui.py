@@ -1375,10 +1375,11 @@ class ui_class():
             bk['link'] = ele[link].get_attribute('href')
             bk['link'] = bk['link'][bk['link'].find(sep):]
             bk['id'] = bk['link'].split('/')[-1] or "1"
-            try:
-                int(bk['id'])
-            except ValueError:
-                bk['id'] = "1"
+            if sep not in ["/language", "/formats"]:
+                try:
+                    int(bk['id'])
+                except ValueError:
+                    bk['id'] = "1"
             if grid:
                 bk['ele'] = cls.check_element_on_page((By.XPATH,"//a[@href='"+bk['link']+"']//img"))
                 bk['count'] = None

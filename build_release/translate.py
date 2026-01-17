@@ -41,9 +41,9 @@ need_iso = msgpack_loads(open('iso639.calibre_msgpack', 'rb').read())
 
 workdir = os.getcwd()
 os.chdir(FILEPATH)
-
+executable = os.path.join(os.path.dirname(sys.executable), "pybabel")
 # Extract all messages from the source code and create a template file
-p = subprocess.Popen("pybabel extract -k _extract --no-wrap -F babel.cfg -o messages.pot cps"
+p = subprocess.Popen(executable + " extract -k _extract --no-wrap -F babel.cfg -o messages.pot cps"
                      ,shell=True,stdout=subprocess.PIPE, stdin=subprocess.PIPE)
 p.wait()
 
@@ -51,9 +51,8 @@ p.wait()
 # adding --ignore-obsolete will delete all obsolete translations
 pot_path = os.path.join(FILEPATH,"messages.pot")
 translation_path = os.path.join(FILEPATH,'cps', 'translations')
-#if sys.version_info < (3, 0):
-#    translation_path = translation_path.encode(sys.getfilesystemencoding())
-p = subprocess.Popen("pybabel update --no-wrap -N -i "+ pot_path + " -d " + translation_path,
+
+p = subprocess.Popen(executable + " update --no-wrap -N -i "+ pot_path + " -d " + translation_path,
                      shell=True, stdout=subprocess.PIPE, stdin=subprocess.PIPE)
 p.wait()
 
@@ -167,13 +166,3 @@ for code in langcode_list:
     if not os.path.isfile(os.path.join(FILEPATH, 'cps', 'static', 'js', 'libs', 'tinymce', 'langs',
                                   code +'.js')):
         print('                             !!!  Error TinyMCE locale missing for: ' + code)
-
-# Generate .mo files
-#trans_path = "cps/translations"
-#if sys.version_info < (3, 0):
-#    trans_path = trans_path.encode(sys.getfilesystemencoding())
-#p = subprocess.Popen("pybabel compile -d " + FILEPATH + trans_path,
-#                     shell=True, stdout=subprocess.PIPE, stdin=subprocess.PIPE)
-#p.wait()
-
-
