@@ -1,10 +1,14 @@
 # #!/usr/bin/env python
 # # -*- coding: utf-8 -*-
-__package__ = "build_release"
+
 import os
+import sys
+
+sys.path.append(os.path.dirname(os.path.abspath(__file__)))
+
 import glob
 import shutil
-import sys
+
 import subprocess
 import codecs
 import re
@@ -17,12 +21,13 @@ import configparser
 import argparse
 import tomlkit
 
-sys.path.append(os.path.dirname(os.path.abspath(__file__)))
+# __package__ = "build_release"
+
 
 from config import FILEPATH, VENV_PATH, VENV_PYTHON
 
 if platform.machine() in ("i386", "AMD64", "x86_64"):
-    from .helper_environment import environment, add_dependency
+    from helper_environment import environment, add_dependency
 else:
     from helper_environment import environment, add_dependency
 
@@ -206,18 +211,18 @@ def generate_package():
         out = p.stdout.readline()
         out != "" and print(out.strip("\n"))
 
-    p = process_open([sys.executable, "-m", "build"])
-    while p.poll() is None:
-        out = p.stdout.readline()
-        out != "" and print(out.strip("\n"))
+    # p = process_open([sys.executable, "-m", "build"])
+    #while p.poll() is None:
+    #    out = p.stdout.readline()
+    #    out != "" and print(out.strip("\n"))
 
-    err = p.stderr.readlines()
-    print("".join(err), file=sys.stderr)
+    #err = p.stderr.readlines()
+    #print("".join(err), file=sys.stderr)
 
     # check successful
-    if p.returncode != 0:
-        print('## Error: package generation returned an error, aborting ##')
-        error = True
+    #if p.returncode != 0:
+    #    print('## Error: package generation returned an error, aborting ##')
+    #    error = True
 
     # Change home-config setting back
     print('* Change "homeconfig" settings back to false')
