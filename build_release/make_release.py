@@ -211,18 +211,14 @@ def generate_package():
         out = p.stdout.readline()
         out != "" and print(out.strip("\n"))
 
-    # p = process_open([sys.executable, "-m", "build"])
-    #while p.poll() is None:
-    #    out = p.stdout.readline()
-    #    out != "" and print(out.strip("\n"))
-
-    #err = p.stderr.readlines()
-    #print("".join(err), file=sys.stderr)
+    p = process_open([sys.executable, "-m", "build"],sout=sys.stdout, serr=sys.stderr)
+    p.communicate()[0]
+    p.wait()
 
     # check successful
-    #if p.returncode != 0:
-    #    print('## Error: package generation returned an error, aborting ##')
-    #    error = True
+    if p.returncode != 0:
+        print('## Error: package generation returned an error, aborting ##')
+        error = True
 
     # Change home-config setting back
     print('* Change "homeconfig" settings back to false')
