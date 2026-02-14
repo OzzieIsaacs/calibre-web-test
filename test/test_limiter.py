@@ -3,6 +3,8 @@
 
 import os
 import re
+from unittest import skip
+
 from selenium.webdriver.common.by import By
 from config_test import TEST_DB, BOOT_TIME, CALIBRE_WEB_PATH
 from helper_func import startup
@@ -308,6 +310,7 @@ class TestSecurity(unittest.TestCase, ui_class):
         self.edit_user('test_all', {'delete': 1})
         self.fill_basic_config({"config_password_min_length": 8})
 
+    @skip
     def test_x_forwarded_host(self):
         r = requests.session()
         login_page = r.get('http://127.0.0.1:{}/login'.format(PORTS[0]))

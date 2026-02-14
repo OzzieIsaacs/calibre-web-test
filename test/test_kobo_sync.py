@@ -90,7 +90,7 @@ class TestKoboSync(unittest.TestCase, ui_class):
             "PlatformId": "00000000-0000-0000-0000-000000000375",
             "UserKey": "12345678-9012-abcd-efgh-a7b6c0d8e7f2"
         }
-        r = requests.post(self.kobo_adress+'/v1/auth/device', json=payload)
+        r = requests.post(self.kobo_adress+'/v1/auth/device', json=payload, timeout=10)
         self.assertEqual(r.status_code, 200)
         # request init request to get metadata format
         TestKoboSync.header = {
@@ -386,7 +386,7 @@ class TestKoboSync(unittest.TestCase, ui_class):
         r = newSession.put(self.kobo_adress+'/v1/library/tags/'+tagId, json={'Nam':'test'})
         self.assertEqual(400, r.status_code)
 
-        # Change name of shelf and check afterwards
+        # Change name of shelf and check afterward
         r = newSession.put(self.kobo_adress+'/v1/library/tags/'+tagId, json={'Name':'test'})
         self.assertEqual(200, r.status_code)
         self.goto_page('nav_new')
