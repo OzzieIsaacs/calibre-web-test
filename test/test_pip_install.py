@@ -5,7 +5,6 @@ import unittest
 from selenium import webdriver
 from selenium.webdriver.common.by import By
 import os
-import sys
 import shutil
 from helper_ui import ui_class
 from helper_func import kill_dead_cps
