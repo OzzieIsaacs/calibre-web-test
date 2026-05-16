@@ -15,7 +15,7 @@ from selenium.webdriver.common.by import By
 
 
 RESOURCES = {'fix_ports': 5555}
-
+INDEX = ""
 
 @unittest.skipIf(os.name=="nt", "Sockets are not available on Windows")
 class TestSystemdActivation(unittest.TestCase, ui_class):
@@ -29,7 +29,8 @@ class TestSystemdActivation(unittest.TestCase, ui_class):
         # startup function is not called, therefore direct print
         print("\n%s - %s: " % (cls.py_version, cls.__name__))
         shutil.rmtree(TEST_DB, ignore_errors=True)
-        shutil.copytree('./Calibre_db', TEST_DB)
+
+        shutil.copytree(os.path.join(os.path.dirname(os.path.abspath(__file__)), 'Calibre_db'), TEST_DB)
 
     def setUp(self):
         os.chdir(base_path)

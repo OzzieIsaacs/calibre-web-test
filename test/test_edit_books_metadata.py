@@ -72,17 +72,20 @@ class TestLoadMetadata(TestCase, ui_class):
         go = -1
         am = -1
         cv = -1
-        if results[0]['source'] == 'https://comicvine.gamespot.com/':
-            cont = 10
-            cv = 0
-        elif results[0]['source'] == 'https://books.google.com/':
-            cont = 10
-            go = 0
-        elif results[0]['source'] == 'https://amazon.com/':
-            cont = 2
-            am = 0
+        if len(results):
+            if results[0]['source'] == 'https://comicvine.gamespot.com/':
+                cont = 10
+                cv = 0
+            elif results[0]['source'] == 'https://books.google.com/':
+                cont = 10
+                go = 0
+            elif results[0]['source'] == 'https://amazon.com/':
+                cont = 2
+                am = 0
+            else:
+                self.assertTrue(False, "Error, metadata links not found")
         else:
-            self.assertTrue(False, "Error, metadata links not found")            
+            self.assertTrue(False, "Error, No results for metadata query ")
         
         if results[cont]['source'] == 'https://comicvine.gamespot.com/':
             cv = cont

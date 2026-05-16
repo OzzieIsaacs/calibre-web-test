@@ -37,7 +37,9 @@ class TestPipInstall(unittest.TestCase, ui_class):
         args = make_release.parse_arguments(['-p'])
         make_release.main(args)
         result = glob.glob(os.path.join(CALIBRE_WEB_PATH + INDEX, "dist", "*.whl"))
-        assert result
+        if not result:
+            os.chdir(os.path.dirname(os.path.abspath(__file__)))
+            raise FileNotFoundError("Whl file not found for pip, aborting pip install test")
         # generate new venv python
         cls.package_path = CALIBRE_WEB_PATH + INDEX + "_pack"
         venv.create(cls.package_path, clear=True, with_pip=True)

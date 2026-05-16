@@ -218,7 +218,7 @@ class TestUploadAudio(TestCase, ui_class):
         aiff_file['TRCK'] = mutagen.id3.TRCK(encoding=1, text=['2/12'])
         aiff_file['TPUB'] = mutagen.id3.TPUB(encoding=1, text=['Älsids sdksdsd '])
 
-        with open(os.path.join("files", 'cover.png'), "rb") as f:
+        with open(os.path.join(base_path, "files", 'cover.png'), "rb") as f:
             ref_picture = f.read()
 
         aiff_file.tags.add(
@@ -281,7 +281,7 @@ class TestUploadAudio(TestCase, ui_class):
         ogg_file['LABEL'] = " Älsids sdksdsd "
         ogg_file['GENRE'] = "Genr#Ä"
 
-        with open(os.path.join("files", 'cover.png'), "rb") as f:
+        with open(os.path.join(base_path, "files", 'cover.png'), "rb") as f:
             ref_picture = f.read()
         picture = Picture()
         picture.data = ref_picture
@@ -346,7 +346,7 @@ class TestUploadAudio(TestCase, ui_class):
         flac_file['LABEL'] = " Älsids sdksdsd "
         flac_file['GENRE'] = "Genr#Ä"
 
-        with open(os.path.join("files", 'cover.png'), "rb") as f:
+        with open(os.path.join(base_path, "files", 'cover.png'), "rb") as f:
             ref_picture = f.read()
         picture = Picture()
         picture.data = ref_picture
@@ -499,7 +499,7 @@ class TestUploadAudio(TestCase, ui_class):
         mp4_file['©cmt'] = "MP4 Comments"
         mp4_file['©gen'] = "Genr#Ä"
 
-        with open(os.path.join("files", 'cover.png'), "rb") as f:
+        with open(os.path.join(base_path, "files", 'cover.png'), "rb") as f:
             ref_picture = f.read()
 
         pic = mutagen.mp4.MP4Cover(ref_picture, imageformat=mutagen.mp4.MP4Cover.FORMAT_PNG)
@@ -620,7 +620,7 @@ class TestUploadAudio(TestCase, ui_class):
         opus_file['LABEL'] = " Älsids sdksdsd "
         opus_file['GENRE'] = "Genr#Ä"
 
-        with open(os.path.join("files", 'cover.png'), "rb") as f:
+        with open(os.path.join(base_path, "files", 'cover.png'), "rb") as f:
             ref_picture = f.read()
         picture = Picture()
         picture.data = ref_picture
@@ -670,7 +670,7 @@ class TestUploadAudio(TestCase, ui_class):
         theora_file['LABEL'] = " Älsids sdksdsd "
         theora_file['GENRE'] = "Genr#Ä"
 
-        with open(os.path.join("files", 'cover.png'), "rb") as f:
+        with open(os.path.join(base_path, "files", 'cover.png'), "rb") as f:
             ref_picture = f.read()
 
         picture = Picture()

@@ -231,6 +231,7 @@ class CalibreResult(TextTestResult):
         self.stdout0 = None
         self.stderr0 = None
         self.verbosity = verbosity
+        self._current_class = None
 
         # result is a list of result in 5 tuple
         # (
@@ -290,6 +291,17 @@ class CalibreResult(TextTestResult):
         if self.callback and callable(self.callback):
             self.callback()
             self.callback = None
+
+
+        test_class = test.__class__
+
+        # Detect class switch
+        if self._current_class is None:
+            self._current_class = test_class
+        elif self._current_class != test_class:
+            # ToDo: hier könnte der Ausgang pro Testclasse geschrieben werden
+            # self._get_info_by_testcase()
+            self._current_class = test_class
         # Usually one of addSuccess, addError or addFailure
         # would have been called.
         # But there are some path in unittest that would bypass this.
