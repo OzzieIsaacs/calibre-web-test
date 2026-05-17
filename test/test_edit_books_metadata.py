@@ -85,20 +85,23 @@ class TestLoadMetadata(TestCase, ui_class):
             else:
                 self.assertTrue(False, "Error, metadata links not found")
         else:
-            self.assertTrue(False, "Error, No results for metadata query ")
-        
-        if results[cont]['source'] == 'https://comicvine.gamespot.com/':
-            cv = cont
-            cont += 10
-        elif results[cont]['source'] == 'https://books.google.com/':
-            go = cont
-            cont += 10
-        elif results[cont]['source'] == 'https://amazon.com/':
-            am = cont
-            cont += 2
+            self.assertTrue(False, "Error, No results for metadata query")
+
+        if len(results) >= cont:
+            if results[cont]['source'] == 'https://comicvine.gamespot.com/':
+                cv = cont
+                cont += 10
+            elif results[cont]['source'] == 'https://books.google.com/':
+                go = cont
+                cont += 10
+            elif results[cont]['source'] == 'https://amazon.com/':
+                am = cont
+                cont += 2
+            else:
+                self.assertTrue(False, "Error, metadata links not found")
         else:
-            self.assertTrue(False, "Error, metadata links not found")
-        if len(results) > 20:
+            self.assertTrue(False, "Error, not enough results for metadata query")
+        if len(results) > cont:
             if results[cont]['source'] == 'https://comicvine.gamespot.com/':
                 cv = cont
                 cont += 10
