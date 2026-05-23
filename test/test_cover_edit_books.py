@@ -18,7 +18,7 @@ from io import BytesIO
 
 RESOURCES = {'ports':2}
 
-PORTS = ['8083', '8080']
+PORTS = ['8083', '8090']
 INDEX = ""
 
 

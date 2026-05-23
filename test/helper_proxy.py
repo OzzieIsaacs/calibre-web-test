@@ -1,4 +1,5 @@
-from mitmproxy import proxy, options
+from mitmproxy import proxy
+from mitmproxy.options import Options
 from mitmproxy.tools.dump import DumpMaster
 from mitmproxy import http
 
@@ -12,7 +13,7 @@ import hashlib
 import uuid
 from datetime import datetime, timedelta
 import os
-
+import traceback
 
 class ResponseType:
     def __init__(self):
@@ -287,7 +288,7 @@ class Github_Proxy:
                 val.pop_type()
                 flow.kill()
 
-    def responseheaders(flow):
+    def responseheaders(self, flow):
         def modify(chunks):
             time.sleep(0)
             # continue to stream original response
@@ -295,20 +296,34 @@ class Github_Proxy:
         flow.response.stream = modify
 
 
-class Proxy(threading.Thread):
-    def __init__(self):
-        threading.Thread.__init__(self)
-        opts = options.Options(listen_host='127.0.0.1', listen_port=8080)
-        opts.add_option("body_size_limit", int, 0, "")
+class Proxy():
 
-        pconf = proxy.config.ProxyConfig(opts)
+    def __init__(self, port=8080):
+        self.port = port
+        self._thread = None
+        self._master = None
+        self.releases_handler = None
 
-        self.m = DumpMaster(None, with_termlog=False, with_dumper=False)
-        self.m.server = proxy.server.ProxyServer(pconf)
-        if self.m.server.channel.loop.is_closed():
-            self.m.server.channel.loop = asyncio.new_event_loop()
-        self.m.addons.add(Github_Proxy())
-        self.m.addons.add(wsgiapp.WSGIApp(app, "gitty.local", 443))
+        # def __init__(self):
+        #threading.Thread.__init__(self)
+        # opts = options.Options(listen_host='127.0.0.1', listen_port=8080)
+        # opts.add_option("body_size_limit", int, 0, "")
+        # pconf = proxy.config.ProxyConfig(opts)
+
+        #self.m = DumpMaster(None, with_termlog=False, with_dumper=False)
+        #self.m.server = proxy.server.ProxyServer(pconf)
+        #if self.m.server.channel.loop.is_closed():
+        #    self.m.server.channel.loop = asyncio.new_event_loop()
+        #self.m.addons.add(Github_Proxy())
+        #self.m.addons.add(wsgiapp.WSGIApp(app, "gitty.local", 443))
+
+    # ----------------------------------------------------------
+    # PUBLIC
+    # ----------------------------------------------------------
+
+    def start(self):
+        self._thread = threading.Thread(target=self._thread_main,daemon=True,)
+        self._thread.start()
 
     def run(self):
         try:
@@ -319,6 +334,44 @@ class Proxy(threading.Thread):
 
     def stop_proxy(self):
         try:
-            self.m.shutdown()
+            if self._master:
+                self._master.shutdown()
+
+            if self._thread:
+                self._thread.join(timeout=5)
         except Exception as e:
             print(e)
+
+    #def stop_proxy(self):
+    #    try:
+    #        self.m.shutdown()
+    #    except Exception as e:
+    #        print(e)
+
+
+    # ----------------------------------------------------------
+    # THREAD
+    # ----------------------------------------------------------
+
+    def _thread_main(self):
+        # asyncio.run erzeugt automatisch einen aktiv laufenden Eventloop
+        try:
+            asyncio.run(self._async_main())
+        except Exception:
+            traceback.print_exc()
+
+    # ----------------------------------------------------------
+    # ASYNC MAIN
+    # ----------------------------------------------------------
+
+    async def _async_main(self):
+
+        options = Options(listen_host="127.0.0.1", listen_port=self.port)
+        options.add_option("body_size_limit", int, 0, "")
+        self._master = DumpMaster(options, with_termlog=True, with_dumper=False)
+        self._master.addons.add(Github_Proxy())
+        self._master.addons.add(wsgiapp.WSGIApp(app, "gitty.local", 443))
+        # self._master.addons.add(self._Addon(self))
+        await self._master.run()
+
+

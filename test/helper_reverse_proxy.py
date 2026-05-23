@@ -75,16 +75,8 @@ def proxy(p):
         response = Response(resp.content, resp.status_code, headers)
     return response
 
-#@app.route("/sd", methods=["POST"])
-#def shutdown():
-#    shutdown_func = request.environ.get("werkzeug.server.shutdown")
-#    if shutdown_func is None:
-#        return "Not running with Werkzeug!", 500#
 
-#    shutdown_func()
-#    return "Server shutting down..."
-
-class ServerThread(threading.Thread):
+'''class ServerThread(threading.Thread):
 
     def __init__(self, app):
         threading.Thread.__init__(self)
@@ -99,29 +91,8 @@ class ServerThread(threading.Thread):
 
     def shutdown(self):
         print("Stopping Flask server...")
-        self.server.shutdown()
+        self.server.shutdown()'''
 
-
-'''class Reverse_Proxy():
-    def __init__(self, port=8080, path="/cw", scheme="http", sitename="http://10.10.10.10:8083"):
-        global SERVER_PATH, SCHEME, SITE_NAME
-        SERVER_PATH = path
-        SCHEME = scheme
-        SITE_NAME = sitename
-        self.port=port
-        self.server=None
-
-    def start(self):
-        self.server = threading.Thread(target=app.run, kwargs={'debug': False, 'use_reloader': False,'port': self.port}, daemon=True)
-        self.server.start()
-
-    def stop(self):
-        try:
-            requests.post("http://127.0.0.1:{}/sd".format(self.port))
-        except Exception:
-            pass  # server already closed
-        # self.server.terminate()
-        self.server.join()'''
 
 class Reverse_Proxy(threading.Thread):
     def __init__(self, port=8080, path="/cw", scheme="http", sitename="http://10.10.10.10:8083"):

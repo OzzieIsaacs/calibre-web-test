@@ -18,7 +18,7 @@ from helper_func import save_logfiles
 
 RESOURCES = {'ports': 2}
 
-PORTS = ['8083', '8080']
+PORTS = ['8083', '8070']
 INDEX = ""
 
 

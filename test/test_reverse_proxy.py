@@ -78,7 +78,7 @@ class TestReverseProxy(TestCase, ui_class):
         try:
             host = 'http://' + get_Host_IP()
             host_port = host + ':' + PORTS[0]
-            cls.proxy = Reverse_Proxy(sitename=host_port)
+            cls.proxy = Reverse_Proxy(sitename=host_port, port=PORTS[1])
             cls.proxy.start()
             startup(cls, cls.py_version, {'config_calibre_dir':TEST_DB}, host=host, 
                     port=PORTS[0], index=INDEX, parameter=["-i", get_Host_IP()], env={"APP_MODE": "test"})

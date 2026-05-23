@@ -27,10 +27,10 @@ if __name__ == '__main__':
     result = False
     retry = 0
 
-    power = input('Power off after finishing tests? [y/N]').lower() == 'y'
-    if power:
-        print('!!!! PC will shutdown after tests finished !!!!')
-
+    #power = input('Power off after finishing tests? [y/N]').lower() == 'y'
+    #if power:
+    #    print('!!!! PC will shutdown after tests finished !!!!')
+    power = True
     # check pip ist installed
     found = False
     python_exe = ""
