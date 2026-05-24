@@ -1,8 +1,8 @@
 #!/usr/bin/env python
 # -*- coding: utf-8 -*-
 
-
-from unittest import TestCase, skip
+from unittest import skip
+from base_test import ParallelTestCase
 import os
 import re
 import time
@@ -14,42 +14,37 @@ from io import BytesIO
 from selenium.webdriver.common.by import By
 from selenium.webdriver.common.keys import Keys
 from selenium.common.exceptions import UnexpectedAlertPresentException
-from helper_ui import ui_class
-from config_test import TEST_DB, base_path, BOOT_TIME
-from helper_func import startup, debug_startup, createcbz
-from helper_func import save_logfiles, add_dependency, remove_dependency
+from config_test import base_path, BOOT_TIME
+from helper_func import startup, createcbz
 
 
-RESOURCES = {'ports': 1}
-
-PORTS = ['8083']
-INDEX = ""
-
-
-class TestEditBooks(TestCase, ui_class):
+class TestEditBooks(ParallelTestCase):
     p = None
     driver = None
     dependencys = ['limit|py7zr']
 
     @classmethod
     def setUpClass(cls):
-        add_dependency(cls.dependencys, cls.__name__)
+        super().setUpClass()
         try:
-            startup(cls, cls.py_version, {'config_calibre_dir': TEST_DB}, port=PORTS[0], index=INDEX, env={"APP_MODE": "test"})
+            startup(cls, cls.py_version, {'config_calibre_dir': cls.temp_dir},
+                    port=cls.worker_port,
+                    app_dir=cls.app_dir,
+                    env={"APP_MODE": "test", "CALIBRE_PORT": cls.worker_port},
+                    lib_dest=cls.temp_dir)
             time.sleep(3)
-        except Exception:
+        except Exception as e:
             cls.driver.quit()
             cls.p.kill()
 
     @classmethod
     def tearDownClass(cls):
-        remove_dependency(cls.dependencys)
-        cls.driver.get("http://127.0.0.1:" + PORTS[0])
+        cls.driver.get("http://127.0.0.1:" + cls.worker_port)
         cls.stop_calibre_web()
         # close the browser window and stop calibre-web
         cls.driver.quit()
         cls.p.terminate()
-        save_logfiles(cls, cls.__name__)
+        super().tearDownClass()
 
     # goto Book 1
     # Change Title with unicode chars
@@ -82,38 +77,38 @@ class TestEditBooks(TestCase, ui_class):
         self.edit_book(content={'title': u'O0ü 执'})
         values = self.get_book_details()
         self.assertEqual(u'O0ü 执', values['title'])
-        self.assertTrue(os.path.isdir(os.path.join(TEST_DB, values['author'][0], 'O0u Zhi (4)')))
-        self.assertFalse(os.path.isdir(os.path.join(TEST_DB, values['author'][0],
+        self.assertTrue(os.path.isdir(os.path.join(self.temp_dir, values['author'][0], 'O0u Zhi (4)')))
+        self.assertFalse(os.path.isdir(os.path.join(self.temp_dir, values['author'][0],
                                                     'Very long extra super turbo cool tit (4)')))
         self.check_element_on_page((By.ID, "edit_book")).click()
-        with open(os.path.join(TEST_DB, values['author'][0], 'O0u Zhi (4)', 'test.dum'), 'wb') as fout:
+        with open(os.path.join(self.temp_dir, values['author'][0], 'O0u Zhi (4)', 'test.dum'), 'wb') as fout:
             fout.write(os.urandom(124))
         self.edit_book(content={'title': u' O0ü 执'}, detail_v=True)
         title = self.check_element_on_page((By.ID, "title"))
         # calibre strips spaces in beginning
         self.assertEqual(u'O0ü 执', title.get_attribute('value'))
-        self.assertTrue(os.path.isdir(os.path.join(TEST_DB, values['author'][0], 'O0u Zhi (4)')))
+        self.assertTrue(os.path.isdir(os.path.join(self.temp_dir, values['author'][0], 'O0u Zhi (4)')))
         self.edit_book(content={'title': u'O0ü name'}, detail_v=True)
         title = self.check_element_on_page((By.ID, "title"))
         # calibre strips spaces in the end
         self.assertEqual(u'O0ü name', title.get_attribute('value'))
-        self.assertTrue(os.path.isdir(os.path.join(TEST_DB, values['author'][0], 'O0u name (4)')))
-        self.assertFalse(os.path.isdir(os.path.join(TEST_DB, values['author'][0], 'O0u Zhi (4)')))
+        self.assertTrue(os.path.isdir(os.path.join(self.temp_dir, values['author'][0], 'O0u name (4)')))
+        self.assertFalse(os.path.isdir(os.path.join(self.temp_dir, values['author'][0], 'O0u Zhi (4)')))
         self.edit_book(content={'title': ''})
         values = self.get_book_details()
-        os.path.join(TEST_DB, values['author'][0], 'Unknown')
+        os.path.join(self.temp_dir, values['author'][0], 'Unknown')
         self.assertEqual('Unknown', values['title'])
-        self.assertTrue(os.path.isdir(os.path.join(TEST_DB, values['author'][0], 'Unknown (4)')))
+        self.assertTrue(os.path.isdir(os.path.join(self.temp_dir, values['author'][0], 'Unknown (4)')))
         self.check_element_on_page((By.ID, "edit_book")).click()
         self.edit_book(content={'title': 'The camicdemo'})
         values = self.get_book_details()
-        os.path.join(TEST_DB, values['author'][0], 'The camicdemo')
+        os.path.join(self.temp_dir, values['author'][0], 'The camicdemo')
         self.assertEqual('The camicdemo', values['title'])
         self.goto_page('nav_new')
         books = self.get_books_displayed()
         self.assertEqual('The camicdemo', books[1][8]['title'])
-        file_path = os.path.join(TEST_DB, values['author'][0], 'The camicdemo (4)')
-        not_file_path = os.path.join(TEST_DB, values['author'][0], 'camicdemo')
+        file_path = os.path.join(self.temp_dir, values['author'][0], 'The camicdemo (4)')
+        not_file_path = os.path.join(self.temp_dir, values['author'][0], 'camicdemo')
         os.renames(file_path, not_file_path)
         self.get_book_details(4)
         self.check_element_on_page((By.ID, "edit_book")).click()
@@ -124,15 +119,15 @@ class TestEditBooks(TestCase, ui_class):
         self.assertEqual('The camicdemo', details['title'])
         os.renames(not_file_path, file_path)
         # missing cover file is not detected, and cover file is moved
-        cover_file = os.path.join(TEST_DB, values['author'][0], 'The camicdemo (4)', 'cover.jpg')
-        not_cover_file = os.path.join(TEST_DB, values['author'][0], 'The camicdemo (4)', 'no_cover.jpg')
+        cover_file = os.path.join(self.temp_dir, values['author'][0], 'The camicdemo (4)', 'cover.jpg')
+        not_cover_file = os.path.join(self.temp_dir, values['author'][0], 'The camicdemo (4)', 'no_cover.jpg')
         os.renames(cover_file, not_cover_file)
         self.check_element_on_page((By.ID, "edit_book")).click()
         self.edit_book(content={'title': u'No Cover'}, detail_v=True)
         title = self.check_element_on_page((By.ID, "title"))
         self.assertEqual('No Cover', title.get_attribute('value'))
-        cover_file = os.path.join(TEST_DB, values['author'][0], 'No Cover (4)', 'cover.jpg')
-        not_cover_file = os.path.join(TEST_DB, values['author'][0], 'No Cover (4)', 'no_cover.jpg')
+        cover_file = os.path.join(self.temp_dir, values['author'][0], 'No Cover (4)', 'cover.jpg')
+        not_cover_file = os.path.join(self.temp_dir, values['author'][0], 'No Cover (4)', 'no_cover.jpg')
         os.renames(not_cover_file, cover_file)
         self.edit_book(content={'title': u'Pipo|;.:'}, detail_v=True)
         title = self.check_element_on_page((By.ID, "title"))
@@ -184,31 +179,31 @@ class TestEditBooks(TestCase, ui_class):
     # Test Capital letters and lowercase characters
     def test_edit_author(self):
         self.fill_basic_config({"config_unicode_filename":1})
-        self.assertTrue(self.check_element_on_page((By.ID, "flash_success")))
+        self.assertTrue(self.check_element_on_page((By.ID, "flash_success"), timeout=BOOT_TIME))
         self.get_book_details(8)
         self.check_element_on_page((By.ID, "edit_book")).click()
         self.edit_book(content={'authors':u'O0ü 执'})
         values = self.get_book_details()
         self.assertEqual(u'O0ü 执', values['author'][0])
-        self.assertTrue(os.path.isdir(os.path.join(TEST_DB, 'O0u Zhi', 'book8 (8)')))
-        self.assertFalse(os.path.isdir(os.path.join(TEST_DB, 'Leo Baskerville',
+        self.assertTrue(os.path.isdir(os.path.join(self.temp_dir, 'O0u Zhi', 'book8 (8)')))
+        self.assertFalse(os.path.isdir(os.path.join(self.temp_dir, 'Leo Baskerville',
                                                     'book8 (8)')))
         self.check_element_on_page((By.ID, "edit_book")).click()
         self.edit_book(content={'authors':u' O0ü name '}, detail_v=True)
         author = self.check_element_on_page((By.ID, "authors"))
         # calibre strips spaces in the end
         self.assertEqual(u'O0ü name', author.get_attribute('value'))
-        self.assertTrue(os.path.isdir(os.path.join(TEST_DB, 'O0u name', 'book8 (8)')))
+        self.assertTrue(os.path.isdir(os.path.join(self.temp_dir, 'O0u name', 'book8 (8)')))
         self.edit_book(content={'authors':''})
         values = self.get_book_details()
-        os.path.join(TEST_DB, 'Unknown', 'book8 (8)')
+        os.path.join(self.temp_dir, 'Unknown', 'book8 (8)')
         self.assertEqual('Unknown', values['author'][0])
-        self.assertTrue(os.path.isdir(os.path.join(TEST_DB, values['author'][0], 'book8 (8)')))
+        self.assertTrue(os.path.isdir(os.path.join(self.temp_dir, values['author'][0], 'book8 (8)')))
         self.check_element_on_page((By.ID, "edit_book")).click()
         # Check authorsort
         self.edit_book(content={'authors':'Marco, Lulu de'})
         values = self.get_book_details()
-        os.path.join(TEST_DB, values['author'][0], 'book8 (8)')
+        os.path.join(self.temp_dir, values['author'][0], 'book8 (8)')
         self.assertEqual(values['author'][0], 'Marco, Lulu de')
         list_element = self.goto_page('nav_author')
         # ToDo check names of List elements
@@ -220,22 +215,22 @@ class TestEditBooks(TestCase, ui_class):
         self.edit_book(content={'authors': 'Sigurd Lindgren'}, detail_v=True)
         author = self.check_element_on_page((By.ID, "authors")).get_attribute('value')
         self.assertEqual(u'Sigurd Lindgren', author)
-        self.assertTrue(os.path.isdir(os.path.join(TEST_DB, author, 'book8 (8)')))
+        self.assertTrue(os.path.isdir(os.path.join(self.temp_dir, author, 'book8 (8)')))
         self.edit_book(content={'authors': 'Sigurd Lindgren&Leo Baskerville'}, detail_v=True)
-        self.assertTrue(os.path.isdir(os.path.join(TEST_DB, 'Sigurd Lindgren', 'book8 (8)')))
-        self.assertFalse(os.path.isdir(os.path.join(TEST_DB, 'Leo Baskerville', 'book8 (8)')))
+        self.assertTrue(os.path.isdir(os.path.join(self.temp_dir, 'Sigurd Lindgren', 'book8 (8)')))
+        self.assertFalse(os.path.isdir(os.path.join(self.temp_dir, 'Leo Baskerville', 'book8 (8)')))
         author = self.check_element_on_page((By.ID, "authors"))
         self.assertEqual(u'Sigurd Lindgren & Leo Baskerville', author.get_attribute('value'))
         self.edit_book(content={'authors': ' Leo Baskerville & Sigurd Lindgren '}, detail_v=True)
-        self.assertFalse(os.path.isdir(os.path.join(TEST_DB, 'Sigurd Lindgren', 'book8 (8)')))
-        self.assertTrue(os.path.isdir(os.path.join(TEST_DB, 'Leo Baskerville', 'book8 (8)')))
+        self.assertFalse(os.path.isdir(os.path.join(self.temp_dir, 'Sigurd Lindgren', 'book8 (8)')))
+        self.assertTrue(os.path.isdir(os.path.join(self.temp_dir, 'Leo Baskerville', 'book8 (8)')))
         self.edit_book(content={'authors': 'Pipo| Pipe'}, detail_v=True)
         author = self.check_element_on_page((By.ID, "authors"))
         self.assertEqual(u'Pipo, Pipe', author.get_attribute('value'))
         self.goto_page('nav_author')
 
-        file_path = os.path.join(TEST_DB, 'Pipo, Pipe', 'book8 (8)')
-        not_file_path = os.path.join(TEST_DB, 'Pipo, Pipe', 'nofolder')
+        file_path = os.path.join(self.temp_dir, 'Pipo, Pipe', 'book8 (8)')
+        not_file_path = os.path.join(self.temp_dir, 'Pipo, Pipe', 'nofolder')
         os.renames(file_path, not_file_path)
         self.get_book_details(8)
         self.check_element_on_page((By.ID, "edit_book")).click()
@@ -706,18 +701,18 @@ class TestEditBooks(TestCase, ui_class):
     def test_typeahead_functions(self):
         req = requests.session()
         payload = {'username': 'admin', 'password': 'admin123', 'submit':"", 'next':"/", "remember_me":"on"}
-        req.post('http://127.0.0.1:{}/login'.format(PORTS[0]), data=payload)
-        resp = req.get('http://127.0.0.1:{}/get_languages_json'.format(PORTS[0]))
+        req.post('http://127.0.0.1:{}/login'.format(self.worker_port), data=payload)
+        resp = req.get('http://127.0.0.1:{}/get_languages_json'.format(self.worker_port))
         self.assertEqual(200, resp.status_code)
-        resp = req.get('http://127.0.0.1:{}/get_matching_tags'.format(PORTS[0]))
+        resp = req.get('http://127.0.0.1:{}/get_matching_tags'.format(self.worker_port))
         self.assertEqual(200, resp.status_code)
-        resp = req.get('http://127.0.0.1:{}/get_series_json'.format(PORTS[0]))
+        resp = req.get('http://127.0.0.1:{}/get_series_json'.format(self.worker_port))
         self.assertEqual(200, resp.status_code)
-        resp = req.get('http://127.0.0.1:{}/get_tags_json'.format(PORTS[0]))
+        resp = req.get('http://127.0.0.1:{}/get_tags_json'.format(self.worker_port))
         self.assertEqual(200, resp.status_code)
-        resp = req.get('http://127.0.0.1:{}/get_publishers_json'.format(PORTS[0]))
+        resp = req.get('http://127.0.0.1:{}/get_publishers_json'.format(self.worker_port))
         self.assertEqual(200, resp.status_code)
-        resp = req.get('http://127.0.0.1:{}/get_authors_json'.format(PORTS[0]))
+        resp = req.get('http://127.0.0.1:{}/get_authors_json'.format(self.worker_port))
         self.assertEqual(200, resp.status_code)
         req.close()
 
@@ -847,8 +842,7 @@ class TestEditBooks(TestCase, ui_class):
 
     def test_upload_cover_hdd(self):
         self.fill_basic_config({'config_uploading': 1})
-        time.sleep(BOOT_TIME)
-        self.assertTrue(self.check_element_on_page((By.ID, "flash_success")))
+        self.assertTrue(self.check_element_on_page((By.ID, "flash_success"), timeout=BOOT_TIME))
         self.edit_user('admin', {'upload_role': 1})
         self.get_book_details(5)
         original = self.check_element_on_page((By.ID, "detailcover")).screenshot_as_png
@@ -891,8 +885,7 @@ class TestEditBooks(TestCase, ui_class):
     # check metadata recognition
     def test_upload_book_pdf(self):
         self.fill_basic_config({'config_uploading':1})
-        time.sleep(BOOT_TIME)
-        self.assertTrue(self.check_element_on_page((By.ID, "flash_success")))
+        self.assertTrue(self.check_element_on_page((By.ID, "flash_success"), timeout=BOOT_TIME))
         self.edit_user('admin', {'upload_role': 1})
         self.goto_page('nav_new')
         upload_file = os.path.join(base_path, 'files', 'book.pdf')
@@ -905,12 +898,12 @@ class TestEditBooks(TestCase, ui_class):
         self.assertEqual('book', details['title'])
         self.assertEqual('Unknown', details['author'][0])
         r = requests.session()
-        login_page = r.get('http://127.0.0.1:{}/login'.format(PORTS[0]))
+        login_page = r.get('http://127.0.0.1:{}/login'.format(self.worker_port))
         token = re.search('<input type="hidden" name="csrf_token" value="(.*)">', login_page.text)
         payload = {'username': 'admin', 'password': 'admin123', 'submit':"", 'next':"/", "remember_me":"on",
                    "csrf_token": token.group(1)}
-        r.post('http://127.0.0.1:{}/login'.format(PORTS[0]), data=payload)
-        resp = r.get('http://127.0.0.1:{}'.format(PORTS[0]) + details['cover'])
+        r.post('http://127.0.0.1:{}/login'.format(self.worker_port), data=payload)
+        resp = r.get('http://127.0.0.1:{}'.format(self.worker_port) + details['cover'])
         self.assertLess('20832', resp.headers['Content-Length'])
         self.fill_basic_config({'config_uploading': 0})
         r.close()
@@ -919,8 +912,7 @@ class TestEditBooks(TestCase, ui_class):
     # check metadata recognition
     def test_upload_book_fb2(self):
         self.fill_basic_config({'config_uploading':1})
-        time.sleep(BOOT_TIME)
-        self.assertTrue(self.check_element_on_page((By.ID, "flash_success")))
+        self.assertTrue(self.check_element_on_page((By.ID, "flash_success"), timeout=BOOT_TIME))
         self.edit_user('admin', {'upload_role': 1})
         self.goto_page('nav_new')
         upload_file = os.path.join(base_path, 'files', 'book.fb2')
@@ -934,11 +926,11 @@ class TestEditBooks(TestCase, ui_class):
         self.assertEqual('book55 - Lul执 de Marco', details['title'])
         self.assertEqual('Oli Köli', details['author'][0])
         r = requests.session()
-        login_page = r.get('http://127.0.0.1:{}/login'.format(PORTS[0]))
+        login_page = r.get('http://127.0.0.1:{}/login'.format(self.worker_port))
         token = re.search('<input type="hidden" name="csrf_token" value="(.*)">', login_page.text)
         payload = {'username': 'admin', 'password': 'admin123', 'submit':"", 'next':"/", "remember_me":"on", "csrf_token": token.group(1)}
-        r.post('http://127.0.0.1:{}/login'.format(PORTS[0]), data=payload)
-        resp = r.get('http://127.0.0.1:{}'.format(PORTS[0]) + details['cover'])
+        r.post('http://127.0.0.1:{}/login'.format(self.worker_port), data=payload)
+        resp = r.get('http://127.0.0.1:{}'.format(self.worker_port) + details['cover'])
         self.assertEqual('19501', resp.headers['Content-Length'])
         self.fill_basic_config({'config_uploading': 0})
         r.close()
@@ -946,8 +938,7 @@ class TestEditBooks(TestCase, ui_class):
 
     def test_upload_book_lit(self):
         self.fill_basic_config({'config_uploading':1})
-        time.sleep(BOOT_TIME)
-        self.assertTrue(self.check_element_on_page((By.ID, "flash_success")))
+        self.assertTrue(self.check_element_on_page((By.ID, "flash_success"), timeout=BOOT_TIME))
         self.edit_user('admin', {'upload_role': 1})
         self.goto_page('nav_new')
         upload_file = os.path.join(base_path, 'files', 'book.lit')
@@ -961,11 +952,11 @@ class TestEditBooks(TestCase, ui_class):
         self.assertEqual('book', details['title'])
         self.assertEqual('Unknown', details['author'][0])
         r = requests.session()
-        login_page = r.get('http://127.0.0.1:{}/login'.format(PORTS[0]))
+        login_page = r.get('http://127.0.0.1:{}/login'.format(self.worker_port))
         token = re.search('<input type="hidden" name="csrf_token" value="(.*)">', login_page.text)
         payload = {'username': 'admin', 'password': 'admin123', 'submit':"", 'next':"/", "remember_me":"on", "csrf_token": token.group(1)}
-        r.post('http://127.0.0.1:{}/login'.format(PORTS[0]), data=payload)
-        resp = r.get('http://127.0.0.1:{}'.format(PORTS[0]) + details['cover'])
+        r.post('http://127.0.0.1:{}/login'.format(self.worker_port), data=payload)
+        resp = r.get('http://127.0.0.1:{}'.format(self.worker_port) + details['cover'])
         self.assertEqual('19501', resp.headers['Content-Length'])
         self.fill_basic_config({'config_uploading': 0})
         r.close()
@@ -973,8 +964,7 @@ class TestEditBooks(TestCase, ui_class):
 
     def test_upload_book_mobi(self):
         self.fill_basic_config({'config_uploading':1})
-        time.sleep(BOOT_TIME)
-        self.assertTrue(self.check_element_on_page((By.ID, "flash_success")))
+        self.assertTrue(self.check_element_on_page((By.ID, "flash_success"), timeout=BOOT_TIME))
         self.edit_user('admin', {'upload_role': 1})
         self.goto_page('nav_new')
         upload_file = os.path.join(base_path, 'files', 'book.mobi')
@@ -987,11 +977,11 @@ class TestEditBooks(TestCase, ui_class):
         self.assertEqual('book', details['title'])
         self.assertEqual('Unknown', details['author'][0])
         r = requests.session()
-        login_page = r.get('http://127.0.0.1:{}/login'.format(PORTS[0]))
+        login_page = r.get('http://127.0.0.1:{}/login'.format(self.worker_port))
         token = re.search('<input type="hidden" name="csrf_token" value="(.*)">', login_page.text)
         payload = {'username': 'admin', 'password': 'admin123', 'submit':"", 'next':"/", "remember_me":"on", "csrf_token": token.group(1)}
-        r.post('http://127.0.0.1:{}/login'.format(PORTS[0]), data=payload)
-        resp = r.get('http://127.0.0.1:{}'.format(PORTS[0]) + details['cover'])
+        r.post('http://127.0.0.1:{}/login'.format(self.worker_port), data=payload)
+        resp = r.get('http://127.0.0.1:{}'.format(self.worker_port) + details['cover'])
         self.assertEqual('19501', resp.headers['Content-Length'])
         self.fill_basic_config({'config_uploading': 0})
         r.close()
@@ -1000,8 +990,7 @@ class TestEditBooks(TestCase, ui_class):
 
     def test_upload_book_epub(self):
         self.fill_basic_config({'config_uploading':1})
-        time.sleep(BOOT_TIME)
-        self.assertTrue(self.check_element_on_page((By.ID, "flash_success")))
+        self.assertTrue(self.check_element_on_page((By.ID, "flash_success"), timeout=BOOT_TIME))
         self.edit_user('admin', {'upload_role': 1})
         self.goto_page('nav_new')
         upload_file = os.path.join(base_path, 'files', 'book.epub')
@@ -1018,7 +1007,7 @@ class TestEditBooks(TestCase, ui_class):
         upload = self.check_element_on_page((By.ID, 'btn-upload'))
         upload.send_keys(new_file)
         time.sleep(3)
-        self.assertFalse(self.check_element_on_page((By.ID, 'flash_danger')))
+        self.assertFalse(self.check_element_on_page((By.ID, 'flash_danger'), (By.ID, 'flash_warning')))
         self.assertTrue(self.check_element_on_page((By.ID, 'flash_warning')))
         self.check_element_on_page((By.ID, 'edit_cancel')).click()
         time.sleep(2)
@@ -1028,11 +1017,11 @@ class TestEditBooks(TestCase, ui_class):
         os.unlink(new_file)
 
         r = requests.session()
-        login_page = r.get('http://127.0.0.1:{}/login'.format(PORTS[0]))
+        login_page = r.get('http://127.0.0.1:{}/login'.format(self.worker_port))
         token = re.search('<input type="hidden" name="csrf_token" value="(.*)">', login_page.text)
         payload = {'username': 'admin', 'password': 'admin123', 'submit':"", 'next':"/", "remember_me":"on", "csrf_token": token.group(1)}
-        r.post('http://127.0.0.1:{}/login'.format(PORTS[0]), data=payload)
-        resp = r.get('http://127.0.0.1:{}'.format(PORTS[0]) + details['cover'])
+        r.post('http://127.0.0.1:{}/login'.format(self.worker_port), data=payload)
+        resp = r.get('http://127.0.0.1:{}'.format(self.worker_port) + details['cover'])
         self.assertEqual('8936', resp.headers['Content-Length'])
         self.fill_basic_config({'config_uploading': 0})
         r.close()
@@ -1040,8 +1029,7 @@ class TestEditBooks(TestCase, ui_class):
 
     def test_upload_book_cbz(self):
         self.fill_basic_config({'config_uploading':1})
-        time.sleep(BOOT_TIME)
-        self.assertTrue(self.check_element_on_page((By.ID, "flash_success")))
+        self.assertTrue(self.check_element_on_page((By.ID, "flash_success"), timeout=BOOT_TIME))
         self.edit_user('admin', {'upload_role': 1})
         self.goto_page('nav_new')
         upload_file = os.path.join(base_path, 'files', 'book.cbz')
@@ -1055,11 +1043,11 @@ class TestEditBooks(TestCase, ui_class):
         self.assertEqual('book', details['title'])
         self.assertEqual('Unknown', details['author'][0])
         r = requests.session()
-        login_page = r.get('http://127.0.0.1:{}/login'.format(PORTS[0]))
+        login_page = r.get('http://127.0.0.1:{}/login'.format(self.worker_port))
         token = re.search('<input type="hidden" name="csrf_token" value="(.*)">', login_page.text)
         payload = {'username': 'admin', 'password': 'admin123', 'submit':"", 'next':"/", "remember_me":"on", "csrf_token": token.group(1)}
-        r.post('http://127.0.0.1:{}/login'.format(PORTS[0]), data=payload)
-        resp = r.get('http://127.0.0.1:{}'.format(PORTS[0]) + details['cover'])
+        r.post('http://127.0.0.1:{}/login'.format(self.worker_port), data=payload)
+        resp = r.get('http://127.0.0.1:{}'.format(self.worker_port) + details['cover'])
         self.assertEqual('8936', resp.headers['Content-Length'])
         self.fill_basic_config({'config_uploading': 0})
         r.close()
@@ -1067,8 +1055,7 @@ class TestEditBooks(TestCase, ui_class):
 
     def test_upload_book_cbt(self):
         self.fill_basic_config({'config_uploading':1})
-        time.sleep(BOOT_TIME)
-        self.assertTrue(self.check_element_on_page((By.ID, "flash_success")))
+        self.assertTrue(self.check_element_on_page((By.ID, "flash_success"), timeout=BOOT_TIME))
         self.edit_user('admin', {'upload_role': 1})
         self.goto_page('nav_new')
         upload_file = os.path.join(base_path, 'files', 'book.cbt')
@@ -1082,11 +1069,11 @@ class TestEditBooks(TestCase, ui_class):
         self.assertEqual('book', details['title'])
         self.assertEqual('Unknown', details['author'][0])
         r = requests.session()
-        login_page = r.get('http://127.0.0.1:{}/login'.format(PORTS[0]))
+        login_page = r.get('http://127.0.0.1:{}/login'.format(self.worker_port))
         token = re.search('<input type="hidden" name="csrf_token" value="(.*)">', login_page.text)
         payload = {'username': 'admin', 'password': 'admin123', 'submit':"", 'next':"/", "remember_me":"on", "csrf_token": token.group(1)}
-        r.post('http://127.0.0.1:{}/login'.format(PORTS[0]), data=payload)
-        resp = r.get('http://127.0.0.1:{}'.format(PORTS[0]) + details['cover'])
+        r.post('http://127.0.0.1:{}/login'.format(self.worker_port), data=payload)
+        resp = r.get('http://127.0.0.1:{}'.format(self.worker_port) + details['cover'])
         self.assertEqual('8936', resp.headers['Content-Length'])
         self.fill_basic_config({'config_uploading': 0})
         r.close()
@@ -1096,8 +1083,7 @@ class TestEditBooks(TestCase, ui_class):
         self.get_book_details(1)
         original_cover = self.check_element_on_page((By.ID, "detailcover")).screenshot_as_png
         self.fill_basic_config({'config_uploading': 1})
-        time.sleep(3)
-        self.assertTrue(self.check_element_on_page((By.ID, "flash_success")))
+        self.assertTrue(self.check_element_on_page((By.ID, "flash_success"), timeout=BOOT_TIME))
         upload_file = os.path.join(base_path, 'files', 'book1.cbz')
         # upload webp book
         zipdata = [os.path.join(base_path, 'files', 'cover.webp')]
@@ -1132,7 +1118,7 @@ class TestEditBooks(TestCase, ui_class):
         self.goto_page('nav_new')
         upload = self.check_element_on_page((By.ID, 'btn-upload'))
         upload.send_keys(upload_file)
-        time.sleep(2)
+        time.sleep(3)
         cover = self.check_element_on_page((By.ID, "detailcover")).screenshot_as_png
         self.assertGreaterEqual(diff(BytesIO(cover), BytesIO(original_cover), delete_diff_file=True), 0.049)
         self.delete_book(-1)
@@ -1145,8 +1131,7 @@ class TestEditBooks(TestCase, ui_class):
 
     def test_upload_book_cbr(self):
         self.fill_basic_config({'config_uploading':1})
-        time.sleep(BOOT_TIME)
-        self.assertTrue(self.check_element_on_page((By.ID, "flash_success")))
+        self.assertTrue(self.check_element_on_page((By.ID, "flash_success"), timeout=BOOT_TIME))
         self.edit_user('admin', {'upload_role': 1})
         self.goto_page('nav_new')
         upload_file = os.path.join(base_path, 'files', 'book.cbr')
@@ -1159,11 +1144,11 @@ class TestEditBooks(TestCase, ui_class):
         self.assertEqual('book', details['title'])
         self.assertEqual('Unknown', details['author'][0])
         r = requests.session()
-        login_page = r.get('http://127.0.0.1:{}/login'.format(PORTS[0]))
+        login_page = r.get('http://127.0.0.1:{}/login'.format(self.worker_port))
         token = re.search('<input type="hidden" name="csrf_token" value="(.*)">', login_page.text)
         payload = {'username': 'admin', 'password': 'admin123', 'submit':"", 'next':"/", "remember_me":"on", "csrf_token": token.group(1)}
-        r.post('http://127.0.0.1:{}/login'.format(PORTS[0]), data=payload)
-        resp = r.get('http://127.0.0.1:{}'.format(PORTS[0]) + details['cover'])
+        r.post('http://127.0.0.1:{}/login'.format(self.worker_port), data=payload)
+        resp = r.get('http://127.0.0.1:{}'.format(self.worker_port) + details['cover'])
         self.assertEqual('19501', resp.headers['Content-Length'])
         self.fill_basic_config({'config_uploading': 0})
         r.close()
@@ -1171,8 +1156,7 @@ class TestEditBooks(TestCase, ui_class):
 
     def test_upload_book_cb7(self):
         self.fill_basic_config({'config_uploading':1})
-        time.sleep(BOOT_TIME)
-        self.assertTrue(self.check_element_on_page((By.ID, "flash_success")))
+        self.assertTrue(self.check_element_on_page((By.ID, "flash_success"), timeout=BOOT_TIME))
         self.edit_user('admin', {'upload_role': 1})
         self.goto_page('nav_new')
         upload_file = os.path.join(base_path, 'files', 'book.cb7')
@@ -1185,11 +1169,11 @@ class TestEditBooks(TestCase, ui_class):
         self.assertEqual('book', details['title'])
         self.assertEqual('Unknown', details['author'][0])
         r = requests.session()
-        login_page = r.get('http://127.0.0.1:{}/login'.format(PORTS[0]))
+        login_page = r.get('http://127.0.0.1:{}/login'.format(self.worker_port))
         token = re.search('<input type="hidden" name="csrf_token" value="(.*)">', login_page.text)
         payload = {'username': 'admin', 'password': 'admin123', 'submit':"", 'next':"/", "remember_me":"on", "csrf_token": token.group(1)}
-        r.post('http://127.0.0.1:{}/login'.format(PORTS[0]), data=payload)
-        resp = r.get('http://127.0.0.1:{}'.format(PORTS[0]) + details['cover'])
+        r.post('http://127.0.0.1:{}/login'.format(self.worker_port), data=payload)
+        resp = r.get('http://127.0.0.1:{}'.format(self.worker_port) + details['cover'])
         self.assertEqual('8936', resp.headers['Content-Length'])
         self.fill_basic_config({'config_uploading': 0})
         r.close()
@@ -1205,11 +1189,11 @@ class TestEditBooks(TestCase, ui_class):
         self.assertTrue(download_link.endswith('/5.epub'),
                         'Download Link has invalid format for kobo browser, has to end with filename')
         r = requests.session()
-        login_page = r.get('http://127.0.0.1:{}/login'.format(PORTS[0]))
+        login_page = r.get('http://127.0.0.1:{}/login'.format(self.worker_port))
         token = re.search('<input type="hidden" name="csrf_token" value="(.*)">', login_page.text)
         payload = {'username': 'admin', 'password': 'admin123', 'submit':"", 'next':"/", "remember_me":"on",
                    "csrf_token": token.group(1)}
-        r.post('http://127.0.0.1:{}/login'.format(PORTS[0]), data=payload)
+        r.post('http://127.0.0.1:{}/login'.format(self.worker_port), data=payload)
         resp = r.get(download_link, timeout=5)
         self.assertEqual(resp.headers['Content-Type'], 'application/epub+zip')
         self.assertEqual(resp.status_code, 200)

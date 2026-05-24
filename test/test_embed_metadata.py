@@ -1,6 +1,6 @@
-#!/usr/bin/env python
 # -*- coding: utf-8 -*-
-from unittest import TestCase
+
+from base_test import ParallelTestCase
 import time
 import os
 import shutil
@@ -9,9 +9,7 @@ import zipfile
 from helper_email_convert import AIOSMTPServer
 from selenium.webdriver.common.by import By
 from selenium.webdriver.support.ui import Select
-from helper_ui import ui_class
-from config_test import TEST_DB
-from helper_func import startup, save_logfiles, read_metadata_epub, read_opf_metadata, wait_Email_received
+from helper_func import startup, read_metadata_epub, read_opf_metadata, wait_Email_received
 from helper_email_convert import calibre_path, kepubify_path
 
 RESOURCES = {'ports': 2}
@@ -19,16 +17,19 @@ RESOURCES = {'ports': 2}
 PORTS = ['8083', '1025']
 INDEX = ""
 
-class TestEmbedMetadata(TestCase, ui_class):
+class TestEmbedMetadata(ParallelTestCase):
     p = None
     driver = None
 
     @classmethod
     def setUpClass(cls):
+        super().setUpClass()
         try:
-            startup(cls, cls.py_version, {'config_calibre_dir': TEST_DB},
-                    port=PORTS[0],
-                    index=INDEX, env={"APP_MODE": "test"})
+            startup(cls, cls.py_version, {'config_calibre_dir': cls.temp_dir},
+                    port=cls.worker_port,
+                    app_dir=cls.app_dir,
+                    env={"APP_MODE": "test", "CALIBRE_PORT": cls.worker_port},
+                    lib_dest=cls.temp_dir)
             time.sleep(3)
         except Exception:
             cls.driver.quit()
@@ -36,12 +37,12 @@ class TestEmbedMetadata(TestCase, ui_class):
 
     @classmethod
     def tearDownClass(cls):
-        cls.driver.get("http://127.0.0.1:" + PORTS[0])
+        cls.driver.get("http://127.0.0.1:" + cls.worker_port)
         cls.stop_calibre_web()
         # close the browser window and stop calibre-web
         cls.driver.quit()
         cls.p.terminate()
-        save_logfiles(cls, cls.__name__)
+        super().tearDownClass()
 
     def test_download_check_metadata(self):
         # no calibre download
@@ -92,15 +93,15 @@ class TestEmbedMetadata(TestCase, ui_class):
         self.assertEqual(40028, len(pdf_content))
 
     def test_download_permissions_missing_file(self):
-        txt_path = os.path.join(TEST_DB, "Frodo Beutlin", "Der Buchtitel (1)", "Der Buchtitel - Frodo Beutlin.txt")
+        txt_path = os.path.join(self.temp_dir, "Frodo Beutlin", "Der Buchtitel (1)", "Der Buchtitel - Frodo Beutlin.txt")
         rights = os.stat(txt_path).st_mode & 0o777
         os.chmod(txt_path, 0o400)
         code, txt_content = self.download_book(1, "admin", "admin123")
         self.assertEqual(200, code)
         self.assertEqual(15608, len(txt_content))
         os.chmod(txt_path, rights)
-        epub_path = os.path.join(TEST_DB, "Peter Parker", "book7 (10)", "book7 - Peter Parker.epub")
-        epub_target = os.path.join(TEST_DB, "Peter Parker", "book7 (10)", "backup.xxx")
+        epub_path = os.path.join(self.temp_dir, "Peter Parker", "book7 (10)", "book7 - Peter Parker.epub")
+        epub_target = os.path.join(self.temp_dir, "Peter Parker", "book7 (10)", "backup.xxx")
         rights = os.stat(epub_path).st_mode & 0o777
         os.chmod(epub_path, 0o400)
         code, epub_content = self.download_book(10, "admin", "admin123")
@@ -127,7 +128,7 @@ class TestEmbedMetadata(TestCase, ui_class):
         self.check_element_on_page((By.ID, "btn-book-convert")).click()
         self.assertTrue(self.check_element_on_page((By.ID, "flash_success")))
         __, ret = self.wait_tasks(tasks, 1)
-        epub_path = os.path.join(TEST_DB, "Lulu de Marco", "book10 (12)", "book10 - Lulu de Marco.epub")
+        epub_path = os.path.join(self.temp_dir, "Lulu de Marco", "book10 (12)", "book10 - Lulu de Marco.epub")
         with zipfile.ZipFile(epub_path) as thezip:
             contentopf = thezip.read("content.opf").decode('utf-8')
         epub_data = read_opf_metadata(contentopf)
@@ -156,7 +157,7 @@ class TestEmbedMetadata(TestCase, ui_class):
         #            break
         #    i += 1
         #self.assertEqual(1, task_len)
-        epub_path = os.path.join(TEST_DB, "Sigurd Lindgren", "book6 (9)", "book6 - Sigurd Lindgren.kepub")
+        epub_path = os.path.join(self.temp_dir, "Sigurd Lindgren", "book6 (9)", "book6 - Sigurd Lindgren.kepub")
         with zipfile.ZipFile(epub_path) as thezip:
             contentopf = thezip.read("content.opf").decode('utf-8')
         epub_data = read_opf_metadata(contentopf)
@@ -179,7 +180,7 @@ class TestEmbedMetadata(TestCase, ui_class):
         self.check_element_on_page((By.ID, "btn-book-convert")).click()
         self.assertTrue(self.check_element_on_page((By.ID, "flash_success")))
         self.wait_tasks(tasks, 1)
-        epub_path = os.path.join(TEST_DB, "Leo Baskerville", "book8 (8)", "book8 - Leo Baskerville.kepub")
+        epub_path = os.path.join(self.temp_dir, "Leo Baskerville", "book8 (8)", "book8 - Leo Baskerville.kepub")
         self.assertTrue(os.path.isfile(epub_path))
         code, epub_content = self.download_book(8, "admin", "admin123", format="KEPUB")
         self.assertEqual(200, code)

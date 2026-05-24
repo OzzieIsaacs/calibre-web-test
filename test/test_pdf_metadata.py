@@ -1,36 +1,31 @@
-#!/usr/bin/env python
 # -*- coding: utf-8 -*-
 
-
-from unittest import TestCase
+from base_test import ParallelTestCase
 import os
 import time
 import pikepdf
 from fpdf import FPDF
 
-from selenium.webdriver.common.by import By
-from helper_ui import ui_class
-from config_test import TEST_DB, base_path
-from helper_func import startup
-from helper_func import save_logfiles
 from selenium.webdriver.support.ui import WebDriverWait
 from selenium.webdriver.support import expected_conditions as EC
+from selenium.webdriver.common.by import By
+from config_test import base_path
+from helper_func import startup
 
 
-RESOURCES = {'ports': 1}
-
-PORTS = ['8083']
-INDEX = ""
-
-
-class TestUploadPDF(TestCase, ui_class):
+class TestUploadPDF(ParallelTestCase):
     p = None
     driver = None
 
     @classmethod
     def setUpClass(cls):
+        super().setUpClass()
         try:
-            startup(cls, cls.py_version, {'config_calibre_dir': TEST_DB, 'config_uploading': 1}, port=PORTS[0], index=INDEX, env={"APP_MODE": "test"})
+            startup(cls, cls.py_version, {'config_calibre_dir': cls.temp_dir, 'config_uploading': 1},
+                    port=cls.worker_port,
+                    app_dir=cls.app_dir,
+                    env={"APP_MODE": "test", "CALIBRE_PORT": cls.worker_port},
+                    lib_dest=cls.temp_dir)
             time.sleep(3)
             WebDriverWait(cls.driver, 5).until(EC.presence_of_element_located((By.ID, "flash_success")))
         except Exception:
@@ -43,12 +38,12 @@ class TestUploadPDF(TestCase, ui_class):
             os.remove(os.path.join(base_path, 'files', 'book1.pdf'))
         except FileNotFoundError:
             pass
-        cls.driver.get("http://127.0.0.1:" + PORTS[0])
+        cls.driver.get("http://127.0.0.1:" + cls.worker_port)
         cls.stop_calibre_web()
         # close the browser window and stop calibre-web
         cls.driver.quit()
         cls.p.terminate()
-        save_logfiles(cls, cls.__name__)
+        super().tearDownClass()
 
     def check_uploaded_pdf(self, book_properties, check_properties):
         self.goto_page('nav_new')

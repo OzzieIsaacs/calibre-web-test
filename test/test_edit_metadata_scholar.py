@@ -1,35 +1,28 @@
-#!/usr/bin/env python
 # -*- coding: utf-8 -*-
 
-
-from unittest import TestCase
+from base_test import ParallelTestCase
 import time
 from diffimg import diff
 from io import BytesIO
 
 from selenium.webdriver.common.by import By
-from helper_ui import ui_class
-from config_test import TEST_DB
 from helper_func import startup, add_dependency, remove_dependency
-from helper_func import save_logfiles
 
 
-RESOURCES = {'ports': 1}
-
-PORTS = ['8083']
-INDEX = ""
-
-
-class TestLoadMetadataScholar(TestCase, ui_class):
+class TestLoadMetadataScholar(ParallelTestCase):
     p = None
     driver = None
     dependency = ["scholarly", "beautifulsoup4"]
 
     @classmethod
     def setUpClass(cls):
-        add_dependency(cls.dependency, cls.__name__)
+        super().setUpClass()
         try:
-            startup(cls, cls.py_version, {'config_calibre_dir': TEST_DB}, port=PORTS[0], index=INDEX, env={"APP_MODE": "test"})
+            startup(cls, cls.py_version, {'config_calibre_dir': cls.temp_dir},
+                    port=cls.worker_port,
+                    app_dir=cls.app_dir,
+                    env={"APP_MODE": "test", "CALIBRE_PORT": cls.worker_port},
+                    )
             time.sleep(3)
         except Exception:
             cls.driver.quit()
@@ -37,13 +30,12 @@ class TestLoadMetadataScholar(TestCase, ui_class):
 
     @classmethod
     def tearDownClass(cls):
-        cls.driver.get("http://127.0.0.1:" + PORTS[0])
+        cls.driver.get("http://127.0.0.1:" + cls.worker_port)
         cls.stop_calibre_web()
         # close the browser window and stop calibre-web
         cls.driver.quit()
         cls.p.terminate()
-        save_logfiles(cls, cls.__name__)
-        remove_dependency(cls.dependency)
+        super().tearDownClass()
 
     def test_load_metadata(self):
         self.fill_basic_config({'config_uploading': 1})

@@ -1,35 +1,27 @@
-#!/usr/bin/env python
 # -*- coding: utf-8 -*-
 
-
-from unittest import TestCase
+from base_test import ParallelTestCase
 import os
 import time
 from unittest import skip
 from selenium.webdriver.common.by import By
-
-from helper_ui import ui_class
-from config_test import TEST_DB, CALIBRE_WEB_PATH
 from helper_func import startup
-from helper_func import save_logfiles
 
 
-RESOURCES = {'ports': 1}
-
-PORTS = ['8083']
-INDEX = ""
-
-
-class TestFilePicker(TestCase, ui_class):
+class TestFilePicker(ParallelTestCase):
     p = None
     driver = None
 
     @classmethod
     def setUpClass(cls):
+        super().setUpClass()
         try:
-            startup(cls, cls.py_version, {'config_calibre_dir': TEST_DB}, work_path=CALIBRE_WEB_PATH + INDEX,
-                    port=PORTS[0], index=INDEX,
-                    only_startup=True, only_metadata=True, env={"APP_MODE": "test"})
+            startup(cls, cls.py_version, {'config_calibre_dir': cls.temp_dir}, work_path=cls.app_dir,
+                    port=cls.worker_port,
+                    app_dir=cls.app_dir,
+                    env={"APP_MODE": "test", "CALIBRE_PORT": cls.worker_port},
+                    lib_dest=cls.temp_dir,
+                    only_startup=True, only_metadata=True)
             cls.login("admin", "admin123")
         except Exception:
             cls.driver.quit()
@@ -41,21 +33,21 @@ class TestFilePicker(TestCase, ui_class):
         # close the browser window and stop calibre-web
         cls.driver.quit()
         cls.p.terminate()
-        save_logfiles(cls, cls.__name__)
+        super().tearDownClass()
 
     def test_filepicker_limited_file(self):
         filepicker = self.check_element_on_page((By.ID, "calibre_modal_path"))
         self.assertTrue(filepicker)
         # create subfolder with strange characters unicode unmlaut, %,,#~...
-        subfolder = os.path.join(TEST_DB, "lÖ#~%d '")
+        subfolder = os.path.join(self.temp_dir, "lÖ#~%d '")
         os.mkdir(subfolder)
         # open filepicker without path, navigate higher until end is reached
         filepicker.click()
         time.sleep(1)
         element = self.check_element_on_page((By.ID, "element_selected"))
         self.assertTrue(element)
-        self.assertEqual(CALIBRE_WEB_PATH + INDEX, element.text)
-        folder_depth = (CALIBRE_WEB_PATH + INDEX).count(os.sep)
+        self.assertEqual(self.app_dir, element.text)
+        folder_depth = (self.app_dir).count(os.sep)
         for i in range(0, folder_depth):
             path_entries = self.driver.find_elements(By.XPATH, "//tr[@class='tr-clickable']/td[2]")
             self.assertEqual(path_entries[0].text, "..")
@@ -78,10 +70,10 @@ class TestFilePicker(TestCase, ui_class):
         # put invalid path to field, open filepicker -> check back to original path, abort -> invalid path still present
 
     def test_two_filepickers(self):
-        CALIBRE_WEB_PATH_PARENT = (CALIBRE_WEB_PATH + INDEX)[:(CALIBRE_WEB_PATH + INDEX).rfind(os.sep)]
-        time.sleep(1)
-        self.fill_db_config(dict(config_calibre_dir=TEST_DB))
+        CALIBRE_WEB_PATH_PARENT = (self.app_dir)[:(self.app_dir).rfind(os.sep)]
+        self.fill_db_config(dict(config_calibre_dir=self.temp_dir))
         time.sleep(2)
+        self.assertTrue(self.check_element_on_page((By.ID, 'flash_success')))
         self.goto_page('basic_config')
         time.sleep(2)
         accordions = self.driver.find_elements(by=By.CLASS_NAME, value='accordion-toggle')
@@ -106,7 +98,7 @@ class TestFilePicker(TestCase, ui_class):
         self.check_element_on_page((By.ID, 'file_confirm')).click()
 
         time.sleep(3)
-        self.assertEqual(input1.get_attribute('value'), CALIBRE_WEB_PATH + INDEX)
+        self.assertEqual(input1.get_attribute('value'), self.app_dir)
         self.assertEqual(input2.get_attribute('value'), CALIBRE_WEB_PATH_PARENT)
 
     @skip("Not implemented")

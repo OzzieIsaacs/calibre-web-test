@@ -1,75 +1,47 @@
-#!/usr/bin/env python
 # -*- coding: utf-8 -*-
 
 import unittest
+from base_test import ParallelTestCase
 import io
 import os
 import re
-from selenium.webdriver.common.by import By
 import time
 import requests
 import shutil
-from helper_ui import ui_class
 from diffimg import diff
 from io import BytesIO
 
-from config_test import CALIBRE_WEB_PATH, TEST_DB, base_path, WAIT_GDRIVE, BOOT_TIME
-from helper_func import add_dependency, remove_dependency, startup
-from helper_func import save_logfiles
+from selenium.webdriver.common.by import By
+from config_test import base_path, WAIT_GDRIVE, BOOT_TIME
+from helper_func import startup
+
 from helper_gdrive import prepare_gdrive, connect_gdrive, check_path_gdrive
-
-
-RESOURCES = {'ports': 1, "gdrive": True}
-
-PORTS = ['8083']
-INDEX = ""
 
 
 # test editing books on gdrive
 @unittest.skipIf(not os.path.exists(os.path.join(base_path, "files", "client_secrets.json")) or
                  not os.path.exists(os.path.join(base_path, "files", "gdrive_credentials")),
                  "client_secrets.json and/or gdrive_credentials file is missing")
-class TestEditBooksOnGdrive(unittest.TestCase, ui_class):
+class TestEditBooksOnGdrive(ParallelTestCase):
+    resource_lock = "gdrive"
     p = None
     driver = None
     dependency = ["oauth2client", "PyDrive2", "PyYAML", "google-api-python-client", "httplib2"]
 
     @classmethod
     def setUpClass(cls):
-        add_dependency(cls.dependency, cls.__name__)
+        super().setUpClass()
 
-        prepare_gdrive()
         try:
-            src = os.path.join(base_path, "files", "client_secrets.json")
-            dst = os.path.join(CALIBRE_WEB_PATH + INDEX, "client_secrets.json")
-            os.chmod(src, 0o764)
-            if os.path.exists(dst):
-                os.unlink(dst)
-            shutil.copy(src, dst)
-
-            # delete settings_yaml file
-            set_yaml = os.path.join(CALIBRE_WEB_PATH + INDEX, "settings.yaml")
-            if os.path.exists(set_yaml):
-                os.unlink(set_yaml)
-
-            # delete gdrive file
-            gdrive_db = os.path.join(CALIBRE_WEB_PATH + INDEX, "gdrive.db")
-            if os.path.exists(gdrive_db):
-                os.unlink(gdrive_db)
-
-            # delete gdrive authenticated file
-            src = os.path.join(base_path, 'files', "gdrive_credentials")
-            dst = os.path.join(CALIBRE_WEB_PATH + INDEX, "gdrive_credentials")
-            os.chmod(src, 0o764)
-            if os.path.exists(dst):
-                os.unlink(dst)
-            shutil.copy(src, dst)
 
             startup(cls,
                     cls.py_version,
-                    {'config_calibre_dir': TEST_DB},
-                    port=PORTS[0], index=INDEX,
-                    only_metadata=True, env={"APP_MODE": "test"})
+                    {'config_calibre_dir': cls.temp_dir},
+                    port=cls.worker_port,
+                    app_dir=cls.app_dir,
+                    env={"APP_MODE": "test", "CALIBRE_PORT": cls.worker_port},
+                    lib_dest=cls.temp_dir,
+                    only_metadata=True)
             cls.fill_db_config({'config_use_google_drive': 1})
             time.sleep(4)
             cls.fill_db_config({'config_google_drive_folder': 'test'})
@@ -88,19 +60,16 @@ class TestEditBooksOnGdrive(unittest.TestCase, ui_class):
     @classmethod
     def tearDownClass(cls):
         try:
-            cls.driver.get("http://127.0.0.1:" + PORTS[0])
+            cls.driver.get("http://127.0.0.1:" + cls.worker_port)
             cls.stop_calibre_web()
             # close the browser window and stop calibre-web
             cls.driver.quit()
             cls.p.terminate()
         except Exception as e:
             print(e)
-        save_logfiles(cls, cls.__name__)
 
-        remove_dependency(cls.dependency)
-
-        src1 = os.path.join(CALIBRE_WEB_PATH + INDEX, "client_secrets.json")
-        src = os.path.join(CALIBRE_WEB_PATH + INDEX, "gdrive_credentials")
+        src1 = os.path.join(cls.app_dir, "client_secrets.json")
+        src = os.path.join(cls.app_dir, "gdrive_credentials")
         if os.path.exists(src):
             os.chmod(src, 0o764)
             try:
@@ -113,6 +82,7 @@ class TestEditBooksOnGdrive(unittest.TestCase, ui_class):
                 os.unlink(src1)
             except PermissionError:
                 print('client_secrets.json delete failed')
+        super().tearDownClass()
 
     def wait_page_has_loaded(self):
         time.sleep(5)
@@ -166,7 +136,7 @@ class TestEditBooksOnGdrive(unittest.TestCase, ui_class):
         new_book_path = os.path.join('test', values['author'][0], 'O0u name (4)').replace('\\', '/')
         gdrive_path = check_path_gdrive(fs, new_book_path)
         self.assertTrue(gdrive_path)
-        # self.assertFalse(os.path.isdir(os.path.join(TEST_DB, values['author'][0], 'O0u Zhi (4)')))
+        # self.assertFalse(os.path.isdir(os.path.join(self.temp_dir, values['author'][0], 'O0u Zhi (4)')))
         old_book_path = os.path.join('test', values['author'][0], 'O0u Zhi (4)').replace('\\', '/')
         gdrive_path = check_path_gdrive(fs, old_book_path)
         self.assertFalse(gdrive_path)
@@ -176,9 +146,9 @@ class TestEditBooksOnGdrive(unittest.TestCase, ui_class):
         self.wait_page_has_loaded()
         time.sleep(5)
         values = self.get_book_details()
-        # os.path.join(TEST_DB, values['author'][0], 'Unknown')
+        # os.path.join(self.temp_dir, values['author'][0], 'Unknown')
         self.assertEqual('Unknown', values['title'])
-        # self.assertTrue(os.path.isdir(os.path.join(TEST_DB, values['author'][0], 'Unknown (4)')))
+        # self.assertTrue(os.path.isdir(os.path.join(self.temp_dir, values['author'][0], 'Unknown (4)')))
         new_book_path = os.path.join('test', values['author'][0], 'Unknown (4)').replace('\\', '/')
         gdrive_path = check_path_gdrive(fs, new_book_path)
         self.assertTrue(gdrive_path)
@@ -322,7 +292,7 @@ class TestEditBooksOnGdrive(unittest.TestCase, ui_class):
         author = self.check_element_on_page((By.ID, "authors"))
         # calibre strips spaces in the end
         self.assertEqual(u'O0ü name', author.get_attribute('value'))
-        # self.assertTrue(os.path.isdir(os.path.join(TEST_DB, 'O0u name', 'book8 (8)')))
+        # self.assertTrue(os.path.isdir(os.path.join(self.temp_dir, 'O0u name', 'book8 (8)')))
         new_book_path = os.path.join('test', 'O0u name', 'book8 (8)').replace('\\', '/')
         gdrive_path = check_path_gdrive(fs, new_book_path)
         self.assertTrue(gdrive_path)
@@ -330,9 +300,9 @@ class TestEditBooksOnGdrive(unittest.TestCase, ui_class):
         self.edit_book(content={'authors': ''})
         self.wait_page_has_loaded()
         values = self.get_book_details()
-        # os.path.join(TEST_DB, 'Unknown', 'book8 (8)')
+        # os.path.join(self.temp_dir, 'Unknown', 'book8 (8)')
         self.assertEqual('Unknown', values['author'][0])
-        # self.assertTrue(os.path.isdir(os.path.join(TEST_DB, values['author'][0], 'book8 (8)')))
+        # self.assertTrue(os.path.isdir(os.path.join(self.temp_dir, values['author'][0], 'book8 (8)')))
         new_book_path = os.path.join('test', values['author'][0], 'book8 (8)').replace('\\', '/')
         gdrive_path = check_path_gdrive(fs, new_book_path)
         self.assertTrue(gdrive_path)
@@ -342,7 +312,7 @@ class TestEditBooksOnGdrive(unittest.TestCase, ui_class):
         self.edit_book(content={'authors': 'Marco, Lulu de'})
         self.wait_page_has_loaded()
         values = self.get_book_details()
-        # os.path.join(TEST_DB, values['author'][0], 'book8 (8)')
+        # os.path.join(self.temp_dir, values['author'][0], 'book8 (8)')
         self.assertEqual(values['author'][0], 'Marco, Lulu de')
         list_element = self.goto_page('nav_author')
         # ToDo check names of List elements
@@ -358,7 +328,7 @@ class TestEditBooksOnGdrive(unittest.TestCase, ui_class):
         gdrive_path = check_path_gdrive(fs, new_book_path)
         self.assertTrue(gdrive_path)
 
-        # self.assertTrue(os.path.isdir(os.path.join(TEST_DB, author, 'book8 (8)')))
+        # self.assertTrue(os.path.isdir(os.path.join(self.temp_dir, author, 'book8 (8)')))
         self.edit_book(content={'authors': 'Sigurd Lindgren&Leo Baskerville'}, detail_v=True)
         self.wait_page_has_loaded()
         self.check_element_on_page((By.ID, 'flash_success'))
@@ -383,7 +353,7 @@ class TestEditBooksOnGdrive(unittest.TestCase, ui_class):
         old_book_path = os.path.join('test', 'Sigurd Lindgren', 'book8 (8)').replace('\\', '/')
         gdrive_path = check_path_gdrive(fs, old_book_path)
         self.assertFalse(gdrive_path)
-        self.driver.get("http://127.0.0.1:{}/admin/book/8".format(PORTS[0]))
+        self.driver.get("http://127.0.0.1:{}/admin/book/8".format(self.worker_port))
         time.sleep(5)
         self.wait_page_has_loaded()
         time.sleep(4)
@@ -857,12 +827,12 @@ class TestEditBooksOnGdrive(unittest.TestCase, ui_class):
         self.assertEqual('book', details['title'])
         self.assertEqual('Unknown', details['author'][0])
         r = requests.session()
-        login_page = r.get('http://127.0.0.1:{}/login'.format(PORTS[0]))
+        login_page = r.get('http://127.0.0.1:{}/login'.format(self.worker_port))
         token = re.search('<input type="hidden" name="csrf_token" value="(.*)">', login_page.text)
         payload = {'username': 'admin', 'password': 'admin123', 'submit': "", 'next': "/", "remember_me": "on",
                    "csrf_token": token.group(1)}
-        r.post('http://127.0.0.1:{}/login'.format(PORTS[0]), data=payload)
-        resp = r.get('http://127.0.0.1:{}'.format(PORTS[0]) + details['cover'])
+        r.post('http://127.0.0.1:{}/login'.format(self.worker_port), data=payload)
+        resp = r.get('http://127.0.0.1:{}'.format(self.worker_port) + details['cover'])
         self.assertEqual('19501', resp.headers['Content-Length'])
         self.fill_basic_config({'config_uploading': 0})
         r.close()
@@ -885,12 +855,12 @@ class TestEditBooksOnGdrive(unittest.TestCase, ui_class):
         self.assertEqual('book9', details['title'])
         self.assertEqual('Noname 23', details['author'][0])
         r = requests.session()
-        login_page = r.get('http://127.0.0.1:{}/login'.format(PORTS[0]))
+        login_page = r.get('http://127.0.0.1:{}/login'.format(self.worker_port))
         token = re.search('<input type="hidden" name="csrf_token" value="(.*)">', login_page.text)
         payload = {'username': 'admin', 'password': 'admin123', 'submit': "",
                    'next': "/", "remember_me": "on", "csrf_token": token.group(1)}
-        r.post('http://127.0.0.1:{}/login'.format(PORTS[0]), data=payload)
-        resp = r.get('http://127.0.0.1:{}'.format(PORTS[0]) + details['cover'])
+        r.post('http://127.0.0.1:{}/login'.format(self.worker_port), data=payload)
+        resp = r.get('http://127.0.0.1:{}'.format(self.worker_port) + details['cover'])
         self.assertEqual('8936', resp.headers['Content-Length'])
         self.fill_basic_config({'config_uploading': 0})
         self.assertTrue(self.check_element_on_page((By.ID, 'flash_success')))
@@ -907,11 +877,11 @@ class TestEditBooksOnGdrive(unittest.TestCase, ui_class):
         self.assertTrue(download_link.endswith('/5.epub'),
                         'Download Link has invalid format for kobo browser, has to end with filename')
         r = requests.session()
-        login_page = r.get('http://127.0.0.1:{}/login'.format(PORTS[0]))
+        login_page = r.get('http://127.0.0.1:{}/login'.format(self.worker_port))
         token = re.search('<input type="hidden" name="csrf_token" value="(.*)">', login_page.text)
         payload = {'username': 'admin', 'password': 'admin123', 'submit': "",
                    'next': "/", "remember_me": "on", "csrf_token": token.group(1)}
-        r.post('http://127.0.0.1:{}/login'.format(PORTS[0]), data=payload)
+        r.post('http://127.0.0.1:{}/login'.format(self.worker_port), data=payload)
         resp = r.get(download_link, timeout=5)
         self.assertEqual(resp.headers['Content-Type'], 'application/epub+zip')
         self.assertEqual(resp.status_code, 200)

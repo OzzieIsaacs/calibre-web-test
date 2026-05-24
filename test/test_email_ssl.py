@@ -1,21 +1,19 @@
-#!/usr/bin/env python
 # -*- coding: utf-8 -*-
 
+import unittest
+from base_test import ParallelTestCase
 import os
 import re
 import sys
 import time
-import unittest
 import socket
 
 from selenium.webdriver.common.by import By
 from helper_email_convert import AIOSMTPServer
 import helper_email_convert
-from helper_ui import ui_class
-from config_test import CALIBRE_WEB_PATH, TEST_DB, BOOT_TIME, base_path
-# from parameterized import parameterized_class
-from helper_func import startup, save_logfiles, wait_Email_received
-# from helper_certificate import generate_ssl_testing_files
+from config_test import base_path
+from helper_func import startup, wait_Email_received
+
 
 
 RESOURCES = {'ports': 2}
@@ -25,7 +23,7 @@ INDEX = ""
 
 
 @unittest.skipIf(helper_email_convert.is_calibre_not_present(),"Skipping convert, calibre not found")
-class TestSSL(unittest.TestCase, ui_class):
+class TestSSL(ParallelTestCase):
     p = None
     driver = None
     email_server = None
@@ -33,6 +31,7 @@ class TestSSL(unittest.TestCase, ui_class):
 
     @classmethod
     def setUpClass(cls):
+        super().setUpClass()
         # start email server
         cls.email_server = AIOSMTPServer(
             hostname=socket.gethostname(), port=int(PORTS[1]),
@@ -42,10 +41,13 @@ class TestSSL(unittest.TestCase, ui_class):
             timeout=10
         )
         cls.email_server.start()
-        startup(cls, cls.py_version, {'config_calibre_dir':TEST_DB,
+        startup(cls, cls.py_version, {'config_calibre_dir':cls.temp_dir,
                                       'config_binariesdir':helper_email_convert.calibre_path(),
-                                      'config_log_level':cls.LOG_LEVEL}, 
-                port=PORTS[0], index=INDEX, env={"APP_MODE": "test"})
+                                      'config_log_level':cls.LOG_LEVEL},
+                port=cls.worker_port,
+                app_dir=cls.app_dir,
+                env={"APP_MODE": "test", "CALIBRE_PORT": cls.worker_port},
+                lib_dest=cls.temp_dir)
 
         cls.edit_user('admin', {'email': 'a5@b.com','kindle_mail': 'a1@b.com'})
         cls.setup_server(False, {'mail_server':socket.gethostname(), 'mail_port': PORTS[1],
@@ -55,14 +57,14 @@ class TestSSL(unittest.TestCase, ui_class):
 
     @classmethod
     def tearDownClass(cls):
-        cls.driver.get("http://127.0.0.1:" + PORTS[0])
+        cls.driver.get("http://127.0.0.1:" + cls.worker_port)
         cls.stop_calibre_web()
         # close the browser window and stop calibre-web
         cls.driver.quit()
         cls.p.terminate()
         cls.email_server.stop()
         time.sleep(2)
-        save_logfiles(cls, cls.__name__)
+        super().tearDownClass()
 
     # start sending e-mail
     # check email received
@@ -111,7 +113,7 @@ class TestSSL(unittest.TestCase, ui_class):
     def test_SSL_logging_email(self):
         self.setup_server(True, {'mail_use_ssl': 'SSL/TLS'})
         time.sleep(5)
-        with open(os.path.join(CALIBRE_WEB_PATH + INDEX,'calibre-web.log'),'r') as logfile:
+        with open(os.path.join(self.app_dir,'calibre-web.log'),'r') as logfile:
             data = logfile.read()
         self.assertTrue(len(re.findall('Subject: Calibre-Web Test Email', data)), "Email logging not working")
 

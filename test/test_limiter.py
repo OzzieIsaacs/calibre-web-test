@@ -1,17 +1,15 @@
-#!/usr/bin/env python
 # -*- coding: utf-8 -*-
 
+from base_test import ParallelTestCase
+from unittest import skip
+import time
 import os
 import re
-from unittest import skip
 
 from selenium.webdriver.common.by import By
-from config_test import TEST_DB, BOOT_TIME, CALIBRE_WEB_PATH
+from config_test import BOOT_TIME
 from helper_func import startup
-import unittest
-import time
-from helper_ui import ui_class
-from helper_func import save_logfiles, add_hidden_dependency, remove_dependency
+from helper_func import add_hidden_dependency
 import requests
 from selenium.webdriver.support.ui import WebDriverWait
 from selenium.webdriver.support import expected_conditions as EC
@@ -24,17 +22,21 @@ PORTS = ['8083',"1029"]
 INDEX = ""
 
 
-class TestSecurity(unittest.TestCase, ui_class):
+class TestSecurity(ParallelTestCase):
     p = None
     driver = None
     hidden_dependencys = ["redis"]
 
     @classmethod
     def setUpClass(cls):
+        super().setUpClass()
         add_hidden_dependency(cls.hidden_dependencys, cls.__name__)
         try:
-            startup(cls, cls.py_version, {'config_calibre_dir':TEST_DB}, port=PORTS[0],
-                    index=INDEX, env={"APP_MODE": "test"})
+            startup(cls, cls.py_version, {'config_calibre_dir':cls.temp_dir},
+                    port=cls.worker_port,
+                    app_dir=cls.app_dir,
+                    env={"APP_MODE": "test", "CALIBRE_PORT": cls.worker_port},
+                    lib_dest=cls.temp_dir)
             WebDriverWait(cls.driver, 5).until(EC.presence_of_element_located((By.ID, "flash_success")))
         except Exception as e:
             print(e)
@@ -43,31 +45,30 @@ class TestSecurity(unittest.TestCase, ui_class):
 
     @classmethod
     def tearDownClass(cls):
-        remove_dependency(cls.hidden_dependencys)
-        cls.driver.get("http://127.0.0.1:" + PORTS[0])
+        cls.driver.get("http://127.0.0.1:" + cls.worker_port)
         cls.stop_calibre_web()
         # close the browser window and stop calibre-web
         cls.driver.quit()
         cls.p.terminate()
-        save_logfiles(cls, cls.__name__)
+        super().tearDownClass()
 
     def test_opds_limit(self):
         # request several times the same endpoint within one minute,
         for i in range (1, 4):
-            r = requests.get('http://127.0.0.1:{}/opds'.format(PORTS[0]), auth=('admin', '122'))
+            r = requests.get('http://127.0.0.1:{}/opds'.format(self.worker_port), auth=('admin', '122'))
             self.assertEqual(401, r.status_code)
         # after x tries get 429 ?
-        r = requests.get('http://127.0.0.1:{}/opds'.format(PORTS[0]), auth=('admin', '122'))
+        r = requests.get('http://127.0.0.1:{}/opds'.format(self.worker_port), auth=('admin', '122'))
         self.assertEqual(429, r.status_code)
         # try to login with right credentials -> not working
-        r = requests.get('http://127.0.0.1:{}/opds'.format(PORTS[0]), auth=('admin', 'admin123'))
+        r = requests.get('http://127.0.0.1:{}/opds'.format(self.worker_port), auth=('admin', 'admin123'))
         self.assertEqual(429, r.status_code)
         # wait one minute try to login with wrong credentials
         time.sleep(61)
-        r = requests.get('http://127.0.0.1:{}/opds'.format(PORTS[0]), auth=('admin', '122'))
+        r = requests.get('http://127.0.0.1:{}/opds'.format(self.worker_port), auth=('admin', '122'))
         self.assertEqual(401, r.status_code)
         # login with right credentials
-        r = requests.get('http://127.0.0.1:{}/opds'.format(PORTS[0]), auth=('admin', 'admin123'))
+        r = requests.get('http://127.0.0.1:{}/opds'.format(self.worker_port), auth=('admin', 'admin123'))
         self.assertEqual(200, r.status_code)
         # switch of limit, logout
         self.fill_basic_config({"config_ratelimiter":0})
@@ -76,10 +77,10 @@ class TestSecurity(unittest.TestCase, ui_class):
         self.logout()
         # try to login with wrong credentials several times, every time 401,
         for i in range (1, 5):
-            r = requests.get('http://127.0.0.1:{}/opds'.format(PORTS[0]), auth=('admin', '122'))
+            r = requests.get('http://127.0.0.1:{}/opds'.format(self.worker_port), auth=('admin', '122'))
             self.assertEqual(401, r.status_code)
         # try to login with right credentials working instantaneously
-        r = requests.get('http://127.0.0.1:{}/opds'.format(PORTS[0]), auth=('admin', 'admin123'))
+        r = requests.get('http://127.0.0.1:{}/opds'.format(self.worker_port), auth=('admin', 'admin123'))
         self.assertEqual(200, r.status_code)
         # switch on limit, logout
         self.login('admin', 'admin123')
@@ -90,7 +91,7 @@ class TestSecurity(unittest.TestCase, ui_class):
     def test_redis_backend(self):
         self.restart_calibre_web()
         time.sleep(3)
-        with open(os.path.join(CALIBRE_WEB_PATH + INDEX, 'calibre-web.log'), 'r') as logfile:
+        with open(os.path.join(self.app_dir, 'calibre-web.log'), 'r') as logfile:
             data = logfile.readlines()
         self.assertTrue(any('Using the in-memory storage for tracking rate limits' in line for line in data[-15:]))
         server = redis_server()
@@ -99,7 +100,7 @@ class TestSecurity(unittest.TestCase, ui_class):
         time.sleep(BOOT_TIME)
         self.assertTrue(self.check_element_on_page((By.ID, "flash_success")))
         self.goto_page("nav_new")
-        with open(os.path.join(CALIBRE_WEB_PATH + INDEX, 'calibre-web.log'), 'r') as logfile:
+        with open(os.path.join(self.app_dir, 'calibre-web.log'), 'r') as logfile:
             data = logfile.readlines()
         self.assertFalse(any('Using the in-memory storage for tracking rate limits' in line for line in data[-15:]))
         self.fill_basic_config({"config_limiter_uri": ""})
@@ -313,13 +314,13 @@ class TestSecurity(unittest.TestCase, ui_class):
     @skip
     def test_x_forwarded_host(self):
         r = requests.session()
-        login_page = r.get('http://127.0.0.1:{}/login'.format(PORTS[0]))
+        login_page = r.get('http://127.0.0.1:{}/login'.format(self.worker_port))
         token = re.search('<input type="hidden" name="csrf_token" value="(.*)">', login_page.text)
         payload = {'username': 'admin', 'password': 'admin123', 'submit': "", 'next': "/", "remember_me": "on", "csrf_token": token.group(1)}
-        r.post('http://127.0.0.1:{}/login'.format(PORTS[0]), data=payload)
+        r.post('http://127.0.0.1:{}/login'.format(self.worker_port), data=payload)
 
         header = {"X-Forwarded-Host": "google.de", "Host": "localhost:8083"}
-        attak = r.head('http://127.0.0.1:{}/foo/bar'.format(PORTS[0], headers=header, timeout=5))
+        attak = r.head('http://127.0.0.1:{}/foo/bar'.format(self.worker_port, headers=header, timeout=5))
         print(attak.headers.get('location'))
-        r.get('http://127.0.0.1:{}/foo/bar'.format(PORTS[0]), headers=header, timeout=5)
+        r.get('http://127.0.0.1:{}/foo/bar'.format(self.worker_port), headers=header, timeout=5)
 

@@ -1,3 +1,4 @@
+import os
 import threading
 from OpenSSL import SSL
 try:
@@ -530,7 +531,9 @@ class TestLDAPServer(threading.Thread):
         cert = None
         tree = Tree(config)
         if encrypt is not None:
-            cert = ssl.DefaultOpenSSLContextFactory('./files/server.key', './files/server.crt')
+            key_file = os.path.join(os.path.dirname(os.path.abspath(__file__)), 'files/server.key')
+            crt_file = os.path.join(os.path.dirname(os.path.abspath(__file__)), 'files/server.crt')
+            cert = ssl.DefaultOpenSSLContextFactory(key_file, crt_file)
         if encrypt == 'TLS':
             tls = True
         factory = LDAPServerFactory(tree.db, tls, auth)
@@ -548,7 +551,8 @@ class TestLDAPServer(threading.Thread):
 
                 # Since we have self-signed certs we have to explicitly
                 # tell the server to trust them.
-                ctx.load_verify_locations('./files/ca.cert.pem')
+                pem_file = os.path.join(os.path.dirname(os.path.abspath(__file__)), 'files/ca.cert.pem')
+                ctx.load_verify_locations(pem_file)
 
             self.serv = reactor.listenSSL(port, factory, cert)
         else:

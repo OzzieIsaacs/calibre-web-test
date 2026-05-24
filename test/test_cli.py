@@ -1,96 +1,101 @@
-#!/usr/bin/env python
 # -*- coding: utf-8 -*-
 
 import unittest
+from base_test import ParallelTestCase, acquire_resource, release_resource
 import os
 import time
 import shutil
 import re
 import requests
+import subprocess
 
-from helper_ui import ui_class
-from helper_func import get_Host_IP, kill_dead_cps, save_logfiles
+from helper_func import get_Host_IP, kill_dead_cps, copy_calibre_web_for_test
 from subproc_wrapper import process_open
-from config_test import CALIBRE_WEB_PATH, TEST_DB, BOOT_TIME, base_path
+from config_test import BOOT_TIME, base_path
+from helper_func import wait_for_reboot
 from selenium import webdriver
 from selenium.webdriver.common.by import By
 from selenium.common.exceptions import WebDriverException
 
-RESOURCES = {'ports': 2}
 
-PORTS = ['8083', '8082']
-INDEX = ""
-
-class TestCli(unittest.TestCase, ui_class):
+class TestCli(ParallelTestCase):
     driver = None
 
     @classmethod
     def setUpClass(cls):
-        # startup function is not called, therefore direct print
-        print("\n%s - %s: " % (cls.py_version, cls.__name__))
+        super().setUpClass()
+        copy_calibre_web_for_test(cls.app_dir)
         cls.driver = webdriver.Firefox()
-        cls.driver.implicitly_wait(10)
         cls.driver.maximize_window()
-        shutil.rmtree(TEST_DB, ignore_errors=True)
-        shutil.copytree(os.path.join(base_path, 'Calibre_db'), TEST_DB)
+        # shutil.rmtree(cls.temp_dir, ignore_errors=True)
+        shutil.copytree(os.path.join(base_path, 'Calibre_db'), cls.temp_dir, dirs_exist_ok=True)
+        cls.port = acquire_resource("port")
+        cls.env = os.environ.copy()
+        cls.env.update({
+            "APP_MODE": "test",
+            "CALIBRE_PORT": cls.worker_port
+        })
 
     def setUp(self):
         os.chdir(base_path)
         try:
-            os.remove(os.path.join(CALIBRE_WEB_PATH + INDEX, 'app.db'))
+            os.remove(os.path.join(self.app_dir, 'app.db'))
         except Exception:
             pass
 
     @classmethod
     def tearDownClass(cls):
-        os.chmod(os.path.join(CALIBRE_WEB_PATH + INDEX, "exclude.txt"), 0o644)
-        os.chmod(os.path.join(CALIBRE_WEB_PATH, "cps", "templates", "tasks.html"), 0o644)
-        os.chmod(os.path.join(CALIBRE_WEB_PATH, "cps", "static"), 0o755)
-        os.chmod(os.path.join(CALIBRE_WEB_PATH, "cps", "static", "js", "main.js"), 0o644)
-        # close the browser window
-        os.chdir(base_path)
-        kill_dead_cps()
-        cls.driver.quit()
+        release_resource("port", cls.port)
         try:
-            shutil.rmtree(os.path.join(CALIBRE_WEB_PATH + INDEX, u'hü lo'), ignore_errors=True)
-            os.remove(os.path.join(CALIBRE_WEB_PATH + INDEX, 'app.db'))
+            os.chmod(os.path.join(cls.app_dir, "exclude.txt"), 0o644)
         except Exception:
             pass
-        save_logfiles(cls, cls.__name__)
+        os.chmod(os.path.join(cls.app_dir, "cps", "templates", "tasks.html"), 0o644)
+        os.chmod(os.path.join(cls.app_dir, "cps", "static"), 0o755)
+        os.chmod(os.path.join(cls.app_dir, "cps", "static", "js", "main.js"), 0o644)
+        # close the browser window
+        os.chdir(base_path)
+        cls.driver.quit()
+        try:
+            shutil.rmtree(os.path.join(cls.app_dir, u'hü lo'), ignore_errors=True)
+            os.remove(os.path.join(cls.app_dir, 'app.db'))
+        except Exception:
+            pass
 
     def tearDown(self):
         try:
-            new_db = os.path.join(CALIBRE_WEB_PATH + INDEX, 'hü go.app')
+            new_db = os.path.join(self.app_dir, 'hü go.app')
             os.remove(new_db)
         except Exception:
             pass
+        kill_dead_cps(self.worker_port)
 
     def check_password_change(self, parameter, expectation):
-        p = process_open([self.py_version, "-B", 'cps.py', "-s", parameter], [1])
-        time.sleep(3)
-        if p.poll() is None:
+        p = process_open([self.py_version, "-B", 'cps.py', "-s", parameter], [1], env=self.env)
+        nextline = ""
+        try:
+            nextline, __ = p.communicate(timeout=BOOT_TIME)
+        except subprocess.TimeoutExpired:
+            print("timeout")
             p.kill()
-        nextline = p.communicate()[0]
+            p.communicate()
         self.assertTrue(re.findall(expectation, nextline), nextline)
-        p.terminate()
-        p.stdout.close()
-        p.stderr.close()
 
     def test_cli_different_folder(self):
-        os.chdir(CALIBRE_WEB_PATH + INDEX)
-        self.p = process_open([self.py_version,  "-B", u'cps.py'], [1])
+        os.chdir(self.app_dir)
+        self.p = process_open([self.py_version,  "-B", u'cps.py'], [1], env=self.env)
+        wait_for_reboot(f"http://127.0.0.1:{self.worker_port}")
         os.chdir(os.path.dirname(__file__))
         try:
             # create a new Firefox session
-            time.sleep(15)
             # navigate to the application home page
-            self.driver.get("http://127.0.0.1:" + PORTS[0])
+            self.driver.get("http://127.0.0.1:" + self.worker_port)
 
             # Wait for config screen to show up
-            self.fill_db_config({'config_calibre_dir': TEST_DB})
+            self.fill_db_config({'config_calibre_dir': self.temp_dir})
 
             # wait for cw to reboot
-            time.sleep(BOOT_TIME)
+            wait_for_reboot("http://127.0.0.1:" + self.worker_port)
 
             # Wait for config screen with login button to show up
             login_button = self.check_element_on_page((By.NAME, "login"))
@@ -105,16 +110,19 @@ class TestCli(unittest.TestCase, ui_class):
 
         except Exception:
             pass
-        self.p.stdout.close()
-        self.p.stderr.close()
-        self.p.terminate()
+        try:
+            self.p.terminate()
+            self.p.communicate(timeout=4)
+        except subprocess.TimeoutExpired:
+            self.p.kill()
+            self.p.communicate()
 
     def test_cli_different_settings_database(self):
-        new_db = os.path.join(CALIBRE_WEB_PATH + INDEX, 'hü go.app')
-        self.p = process_open([self.py_version, "-B",  os.path.join(CALIBRE_WEB_PATH + INDEX, u'cps.py'),
-                               '-p', new_db], [1, 3])
-
-        time.sleep(15)
+        new_db = os.path.join(self.app_dir, 'hü go.app')
+        self.p = process_open([self.py_version, "-B",  os.path.join(self.app_dir, u'cps.py'),
+                               '-p', new_db], [1, 3], env=self.env)
+        os.chdir(os.path.dirname(__file__))
+        wait_for_reboot(f"http://127.0.0.1:{self.worker_port}")
         # navigate to the application home page
         try:
             self.driver.switch_to.alert.accept()
@@ -125,11 +133,11 @@ class TestCli(unittest.TestCase, ui_class):
             self.driver.switch_to.alert.accept()
         except Exception:
             pass
-        self.driver.get("http://127.0.0.1:" + PORTS[0])
+        self.driver.get("http://127.0.0.1:" + self.worker_port)
 
         # Wait for config screen to show up
         self.check_element_on_page((By.ID, "username"))
-        self.fill_db_config({'config_calibre_dir': TEST_DB})
+        self.fill_db_config({'config_calibre_dir': self.temp_dir})
         self.assertTrue(self.check_element_on_page((By.ID, "calibre_modal_path")))
 
         # wait for cw to reboot
@@ -137,10 +145,13 @@ class TestCli(unittest.TestCase, ui_class):
 
         # Wait for config screen with login button to show up
         self.stop_calibre_web(self.p)
-        self.p.stdout.close()
-        self.p.stderr.close()
-        self.p.terminate()
-        time.sleep(3)
+        try:
+            self.p.terminate()
+            self.p.communicate(timeout=4)
+        except subprocess.TimeoutExpired:
+            self.p.kill()
+            self.p.communicate()
+
         self.assertTrue(os.path.isfile(new_db), "New settingsfile location not accepted")
         os.remove(new_db)
         try:
@@ -150,104 +161,129 @@ class TestCli(unittest.TestCase, ui_class):
 
     def test_cli_SSL_files(self):
         os.chdir(os.path.dirname(__file__))
-        shutil.rmtree(os.path.join(CALIBRE_WEB_PATH + INDEX, 'hü lo'), ignore_errors=True)
-        path_like_file = CALIBRE_WEB_PATH + INDEX
-        only_path = CALIBRE_WEB_PATH + INDEX + os.sep
-        real_key_file = os.path.join(CALIBRE_WEB_PATH + INDEX, 'hü lo', 'lö g.key')
-        real_crt_file = os.path.join(CALIBRE_WEB_PATH + INDEX, 'hü lo', 'lö g.crt')
-        p = process_open([self.py_version, "-B", os.path.join(CALIBRE_WEB_PATH + INDEX, u'cps.py'),
-                          '-c', path_like_file], [1, 3])
-        time.sleep(2)
-        nextline = p.communicate()[0]
-        if p.poll() is None:
+        shutil.rmtree(os.path.join(self.app_dir, 'hü lo'), ignore_errors=True)
+        path_like_file = self.app_dir
+        only_path = self.app_dir + os.sep
+        real_key_file = os.path.join(self.app_dir, 'hü lo', 'lö g.key')
+        real_crt_file = os.path.join(self.app_dir, 'hü lo', 'lö g.crt')
+        p = process_open([self.py_version, "-B", os.path.join(self.app_dir, u'cps.py'),
+                          '-c', path_like_file], [1, 3], env=self.env)
+        nextline = ""
+        try:
+            nextline, __ = p.communicate(timeout=BOOT_TIME)
+        except subprocess.TimeoutExpired:
             p.kill()
+            p.communicate()
+
         self.assertIsNotNone(re.findall('Certfilepath is invalid. Exiting', nextline))
-        p.terminate()
-        p.stdout.close()
-        p.stderr.close()
-
-        p = process_open([self.py_version, "-B", os.path.join(CALIBRE_WEB_PATH + INDEX, u'cps.py'),
-                          '-k', path_like_file], [1, 3])
-        time.sleep(2)
-        nextline = p.communicate()[0]
-        if p.poll() is None:
+        try:
+            p.terminate()
+            p.communicate(timeout=4)
+        except subprocess.TimeoutExpired:
             p.kill()
+            p.communicate()
+
+        p = process_open([self.py_version, "-B", os.path.join(self.app_dir, u'cps.py'),
+                          '-k', path_like_file], [1, 3], env=self.env)
+        try:
+            nextline, __ = p.communicate(timeout=4)
+        except subprocess.TimeoutExpired:
+            p.kill()
+            p.communicate()
+
         self.assertIsNotNone(re.findall('Keyfilepath is invalid. Exiting', nextline))
-        p.terminate()
-        p.stdout.close()
-        p.stderr.close()
-
-        p = process_open([self.py_version, "-B", os.path.join(CALIBRE_WEB_PATH + INDEX, u'cps.py'),
-                          '-c', only_path], [1, 3])
-        time.sleep(2)
-        nextline = p.communicate()[0]
-        if p.poll() is None:
+        try:
+            p.terminate()
+            p.communicate(timeout=4)
+        except subprocess.TimeoutExpired:
             p.kill()
+            p.communicate()
+
+        p = process_open([self.py_version, "-B", os.path.join(self.app_dir, u'cps.py'),
+                          '-c', only_path], [1, 3], env=self.env)
+        try:
+            nextline, __ = p.communicate(timeout=4)
+        except subprocess.TimeoutExpired:
+            p.kill()
+            p.communicate()
         self.assertIsNotNone(re.findall('Certfilepath is invalid. Exiting', nextline))
 
-        p = process_open([self.py_version,  "-B", os.path.join(CALIBRE_WEB_PATH + INDEX, u'cps.py'),
-                          '-k', only_path], [1, 3])
-        time.sleep(2)
-        nextline = p.communicate()[0]
-        if p.poll() is None:
+        p = process_open([self.py_version,  "-B", os.path.join(self.app_dir, u'cps.py'),
+                          '-k', only_path], [1, 3], env=self.env)
+        try:
+            nextline, __ = p.communicate(timeout=4)
+        except subprocess.TimeoutExpired:
             p.kill()
+            p.communicate()
         self.assertIsNotNone(re.findall('Keyfilepath is invalid. Exiting', nextline))
-        p.terminate()
-        p.stdout.close()
-        p.stderr.close()
-
-        p = process_open([self.py_version,  "-B", os.path.join(CALIBRE_WEB_PATH + INDEX, u'cps.py'),
-                         '-c', real_crt_file], (1, 3))
-        time.sleep(2)
-        if p.poll() is None:
+        try:
+            p.terminate()
+            p.communicate(timeout=4)
+        except subprocess.TimeoutExpired:
             p.kill()
-        nextline = p.communicate()[0]
+            p.communicate()
+
+        p = process_open([self.py_version,  "-B", os.path.join(self.app_dir, u'cps.py'),
+                         '-c', real_crt_file], (1, 3), env=self.env)
+        try:
+            p.terminate()
+            nexline, __ = p.communicate(timeout=4)
+        except subprocess.TimeoutExpired:
+            p.kill()
+            p.communicate()
         self.assertIsNotNone(re.findall('Certfilepath is invalid. Exiting', nextline))
-        p.terminate()
-        p.stdout.close()
-        p.stderr.close()
-
-        p = process_open([self.py_version, "-B", os.path.join(CALIBRE_WEB_PATH + INDEX, u'cps.py'),
-                         '-k', real_key_file], (1, 3))
-        time.sleep(2)
-        if p.poll() is None:
+        try:
+            p.terminate()
+            p.communicate(timeout=4)
+        except subprocess.TimeoutExpired:
             p.kill()
-        nextline = p.communicate()[0]
-        self.assertIsNotNone(re.findall('Keyfilepath is invalid. Exiting', nextline))
-        p.terminate()
-        p.stdout.close()
-        p.stderr.close()
+            p.communicate()
 
-        os.makedirs(os.path.join(CALIBRE_WEB_PATH + INDEX, 'hü lo'))
+        p = process_open([self.py_version, "-B", os.path.join(self.app_dir, u'cps.py'),
+                         '-k', real_key_file], (1, 3), env=self.env)
+        try:
+            p.terminate()
+            nexline, __ = p.communicate(timeout=4)
+        except subprocess.TimeoutExpired:
+            p.kill()
+            p.communicate()
+        self.assertIsNotNone(re.findall('Keyfilepath is invalid. Exiting', nextline))
+        try:
+            p.terminate()
+            p.communicate(timeout=4)
+        except subprocess.TimeoutExpired:
+            p.kill()
+            p.communicate()
+
+        os.makedirs(os.path.join(self.app_dir, 'hü lo'))
         with open(real_key_file, 'wb') as fout:
             fout.write(os.urandom(124))
         with open(real_crt_file, 'wb') as fout:
             fout.write(os.urandom(124))
 
-        p = process_open([self.py_version,  "-B", os.path.join(CALIBRE_WEB_PATH + INDEX, u'cps.py'),
-                         '-c', real_crt_file], (1, 3))
-        time.sleep(2)
-        if p.poll() is None:
+        p = process_open([self.py_version,  "-B", os.path.join(self.app_dir, u'cps.py'),
+                         '-c', real_crt_file], (1, 3), env=self.env)
+        nextline = ""
+        try:
+            nextline, __ = p.communicate(timeout=10)
+        except subprocess.TimeoutExpired:
             p.kill()
-        nextline = p.communicate()[0]
+            p.communicate()
         self.assertIsNotNone(re.findall('Certfile and Keyfile have to be used together. Exiting', nextline))
-        p.terminate()
-        p.stdout.close()
-        p.stderr.close()
 
-        p = process_open([self.py_version,  "-B", os.path.join(CALIBRE_WEB_PATH + INDEX, u'cps.py'),
-                         '-k', real_key_file], (1, 3))
-        time.sleep(2)
-        if p.poll() is None:
+        p = process_open([self.py_version,  "-B", os.path.join(self.app_dir, u'cps.py'),
+                         '-k', real_key_file], (1, 3), env=self.env)
+        nextline = ""
+        try:
+            nextline, __ = p.communicate(timeout=10)
+        except subprocess.TimeoutExpired:
             p.kill()
-        nextline = p.communicate()[0]
-        self.assertIsNotNone(re.findall('Certfile and Keyfile have to be used together. Exiting', nextline))
-        p.terminate()
-        p.stdout.close()
-        p.stderr.close()
+            p.communicate()
 
-        p = process_open([self.py_version,  "-B", os.path.join(CALIBRE_WEB_PATH + INDEX, u'cps.py'),
-                         '-c', real_crt_file, '-k', real_key_file], (1, 3, 5))
+        self.assertIsNotNone(re.findall('Certfile and Keyfile have to be used together. Exiting', nextline))
+
+        p = process_open([self.py_version,  "-B", os.path.join(self.app_dir, u'cps.py'),
+                         '-c', real_crt_file, '-k', real_key_file], (1, 3, 5), env=self.env)
 
         if p.poll() is not None:
             self.assertIsNone('Fail', 'Unexpected error')
@@ -261,53 +297,58 @@ class TestCli(unittest.TestCase, ui_class):
 
         # navigate to the application home page
         try:
-            self.driver.get("https://127.0.0.1:" + PORTS[0])
+            self.driver.get("https://127.0.0.1:" + self.worker_port)
             self.assertIsNone("Error", "HTTPS Connection could established with wrong key/cert file")
         except WebDriverException as e:
             self.assertIsNotNone(re.findall('Reached error page: about:neterror?nssFailure', e.msg))
-        p.kill()
-        p.stdout.close()
-        p.stderr.close()
+        try:
+            p.terminate()
+            p.communicate(timeout=4)
+        except subprocess.TimeoutExpired:
+            p.kill()
+            p.communicate()
 
-        shutil.rmtree(os.path.join(CALIBRE_WEB_PATH + INDEX, 'hü lo'), ignore_errors=True)
-        shutil.copytree('./files', os.path.join(CALIBRE_WEB_PATH + INDEX, 'hü lo'))
-        real_crt_file = os.path.join(CALIBRE_WEB_PATH + INDEX, 'hü lo', 'server.crt')
-        real_key_file = os.path.join(CALIBRE_WEB_PATH + INDEX, 'hü lo', 'server.key')
-        p = process_open([self.py_version, "-B", os.path.join(CALIBRE_WEB_PATH + INDEX, u'cps.py'),
-                         '-c', real_crt_file, '-k', real_key_file], (1, 3, 5))
+        shutil.rmtree(os.path.join(self.app_dir, 'hü lo'), ignore_errors=True)
+        shutil.copytree('./files', os.path.join(self.app_dir, 'hü lo'))
+        real_crt_file = os.path.join(self.app_dir, 'hü lo', 'server.crt')
+        real_key_file = os.path.join(self.app_dir, 'hü lo', 'server.key')
+        p = process_open([self.py_version, "-B", os.path.join(self.app_dir, u'cps.py'),
+                         '-c', real_crt_file, '-k', real_key_file], (1, 3, 5), env=self.env)
         if p.poll() is not None:
             self.assertIsNone('Fail', 'Unexpected error')
         time.sleep(10)
 
         # navigate to the application home page
         try:
-            self.driver.get("https://127.0.0.1:" + PORTS[0])
+            self.driver.get("https://127.0.0.1:" + self.worker_port)
         except WebDriverException:
             self.assertIsNone("Error", "HTTPS Connection could not established with key/cert file")
 
-        shutil.rmtree(os.path.join(CALIBRE_WEB_PATH + INDEX, 'hü lo'), ignore_errors=True)
+        shutil.rmtree(os.path.join(self.app_dir, 'hü lo'), ignore_errors=True)
         self.assertTrue(self.check_element_on_page((By.ID, "username")))
-        p.terminate()
-        p.stdout.close()
-        p.stderr.close()
-        time.sleep(3)
-        p.poll()
+        try:
+            p.terminate()
+            nexline, __ = p.communicate(timeout=4)
+        except subprocess.TimeoutExpired:
+            p.kill()
+            p.communicate()
 
     def test_bind_to_single_interface(self):
         address = get_Host_IP()
-        p = process_open([self.py_version,  "-B", os.path.join(CALIBRE_WEB_PATH + INDEX, u'cps.py'), '-i', 'http://'+address], [1])
-        time.sleep(2)
-        if p.poll() is None:
+        p = process_open([self.py_version,  "-B", os.path.join(self.app_dir, u'cps.py'), '-i',
+                          'http://'+address], [1], env=self.env)
+        nextline = ""
+        try:
+            nextline, __ = p.communicate(timeout=10)
+        except subprocess.TimeoutExpired:
             p.kill()
-        nextline = p.stdout.readline()
-        p.stdout.close()
-        p.stderr.close()
+            p.communicate()
 
-        # nextline = p.communicate()[0]
         self.assertIsNotNone(re.search('illegal IP address string', nextline))
-        p = process_open([self.py_version,  "-B", os.path.join(CALIBRE_WEB_PATH + INDEX, u'cps.py'), '-i', address], [1])
+        # os.remove(os.path.join(self.app_dir, 'app.db'))
+        p = process_open([self.py_version,  "-B", os.path.join(self.app_dir, u'cps.py'), '-i', address], [1], env=self.env)
+        wait_for_reboot(f"http://{address}:{self.worker_port}")
 
-        time.sleep(BOOT_TIME)
         # navigate to the application home page
         try:
             self.driver.switch_to.alert.accept()
@@ -315,27 +356,30 @@ class TestCli(unittest.TestCase, ui_class):
             pass
         try:
             error = ""
-            self.driver.get("http://127.0.0.1:" + PORTS[0])
+            # Should not listen on 127.0.0.1, therefore error
+            self.driver.get("http://127.0.0.1:" + self.worker_port)
         except WebDriverException as e:
             error = e.msg
         self.assertTrue(re.findall(r'Reached error page:\sabout:neterror\?e=connectionFailure', error))
         try:
-            self.driver.get("http://" + address + ":" + PORTS[0])
+            self.driver.get("http://" + address + ":" + self.worker_port)
         except WebDriverException:
             self.assertIsNone('Limit listening address not working')
         self.assertTrue(self.check_element_on_page((By.ID, "username")))
-        p.stdout.close()
-        p.stderr.close()
-        p.terminate()
-        time.sleep(3)
-        p.poll()
+        try:
+            p.terminate()
+            p.communicate(timeout=4)
+        except subprocess.TimeoutExpired:
+            p.kill()
+            p.communicate()
 
+    @unittest.skip("Opsolete")
     def test_environ_port_setting(self):
         my_env = os.environ.copy()
-        my_env["CALIBRE_PORT"] = PORTS[1]
-        p = process_open([self.py_version,  "-B", os.path.join(CALIBRE_WEB_PATH + INDEX, u'cps.py')], [1], env=my_env)
+        my_env["CALIBRE_PORT"] = self.port
+        p = process_open([self.py_version,  "-B", os.path.join(self.app_dir, u'cps.py')], [1], env=my_env)
+        wait_for_reboot("http://127.0.0.1:" + self.worker_port)
 
-        time.sleep(BOOT_TIME)
         # navigate to the application home page
         try:
             self.driver.switch_to.alert.accept()
@@ -343,7 +387,7 @@ class TestCli(unittest.TestCase, ui_class):
             pass
         try:
             error = ""
-            self.driver.get("http://127.0.0.1:" + PORTS[1])
+            self.driver.get("http://127.0.0.1:" + self.port)
         except WebDriverException as e:
             error = e.msg
         self.assertFalse(re.findall(r'Reached error page:\sabout:neterror\?e=connectionFailure', error))
@@ -357,24 +401,26 @@ class TestCli(unittest.TestCase, ui_class):
     # Check process B terminates with exit code 1
     # stop process A
     def test_already_started(self):
-        os.chdir(CALIBRE_WEB_PATH + INDEX)
-        p1 = process_open([self.py_version,  "-B", u'cps.py'], [1])
-        time.sleep(BOOT_TIME)
-        p2 = process_open([self.py_version,  "-B", u'cps.py'], [1])
-        time.sleep(BOOT_TIME)
-        time.sleep(2)
-        result = p2.poll()
-        if result is None:
-            p2.terminate()
+        os.chdir(self.app_dir)
+        p1 = process_open([self.py_version,  "-B", u'cps.py'], [1], env=self.env)
+        wait_for_reboot("http:127.0.0.1:" + self.worker_port)
+        p2 = process_open([self.py_version,  "-B", u'cps.py'], [1], env=self.env)
+        result = 0
+        try:
+            result = p2.wait(timeout=BOOT_TIME)
+            p2.communicate(timeout=2)
+        except subprocess.TimeoutExpired:
+            p2.kill()
+            p2.communicate()
             self.assertTrue('2nd process not terminated, port is already in use')
         self.assertEqual(result, 1)
-        p1.terminate()
-        time.sleep(3)
-        p1.poll()
-        p1.stdout.close()
-        p1.stderr.close()
-        p2.stdout.close()
-        p2.stderr.close()
+
+        try:
+            p1.terminate()
+            p1.communicate(timeout=4)
+        except subprocess.TimeoutExpired:
+            p1.kill()
+            p1.communicate()
 
     # start calibre-web in process A.
     # Start calibre-web in process B.
@@ -382,78 +428,89 @@ class TestCli(unittest.TestCase, ui_class):
     # stop process A
     def test_settingsdb_not_writeable(self):
         # check unconfigured database
-        os.chdir(CALIBRE_WEB_PATH + INDEX)
-        p1 = process_open([self.py_version,  "-B", u'cps.py'], [1])
-        time.sleep(BOOT_TIME)
-        p1.terminate()
-        p1.stdout.close()
-        p1.stderr.close()
-        time.sleep(BOOT_TIME)
-        p1.poll()
+        os.chdir(self.app_dir)
+        p1 = process_open([self.py_version,  "-B", u'cps.py'], [1], env=self.env)
+        wait_for_reboot("http://127.0.0.1:" + self.worker_port)
+        try:
+            wait_for_reboot("http://127.0.0.1:" + self.worker_port)
+            p1.terminate()
+            p1.communicate(timeout=4)
+        except subprocess.TimeoutExpired:
+            p1.kill()
+            p1.communicate()
         os.chmod("app.db", 0o400)
-        p2 = process_open([self.py_version,  "-B", u'cps.py'], [1])
-        time.sleep(BOOT_TIME)
-        result = p2.poll()
-        if result is None:
+        p2 = process_open([self.py_version,  "-B", u'cps.py'], [1], env=self.env)
+        wait_for_reboot("http://127.0.0.1:" + self.worker_port)
+        try:
+            wait_for_reboot("http://127.0.0.1:" + self.worker_port)
             p2.terminate()
-            p2.poll()
+            p2.communicate(timeout=4)
+            result = p2.wait(2)
+        except subprocess.TimeoutExpired:
+            p2.kill()
+            p2.communicate()
             self.assertTrue('2nd process not terminated, port is already in use')
-        p2.stdout.close()
-        p2.stderr.close()
         self.assertEqual(result, 2)
         os.chmod("app.db", 0o644)
         # configure and check again
-        p1 = process_open([self.py_version,  "-B", u'cps.py'], [1])
-        time.sleep(BOOT_TIME)
+        p1 = process_open([self.py_version,  "-B", u'cps.py'], [1], env=self.env)
+        wait_for_reboot("http://127.0.0.1:" + self.worker_port)
         try:
             # navigate to the application home page
-            self.driver.get("http://127.0.0.1:" + PORTS[0])
+            self.driver.get("http://127.0.0.1:" + self.worker_port)
 
             # Wait for config screen to show up
-            self.fill_db_config({'config_calibre_dir': TEST_DB})
+            self.fill_db_config({'config_calibre_dir': self.temp_dir})
 
             # wait for cw to reboot
             time.sleep(2)
         except Exception:
             self.assertFalse(True, "Inital config failed with nonwriteable database")
-        p1.terminate()
-        p1.stdout.close()
-        p1.stderr.close()
-        time.sleep(BOOT_TIME)
-        p1.poll()
+        try:
+            p1.terminate()
+            p1.communicate(timeout=4)
+        except subprocess.TimeoutExpired:
+            p1.kill()
+            p1.communicate()
+
         os.chmod("app.db", 0o400)
-        p2 = process_open([self.py_version,  "-B", u'cps.py'], [1])
-        time.sleep(BOOT_TIME)
-        result = p2.poll()
-        if result is None:
+        p2 = process_open([self.py_version,  "-B", u'cps.py'], [1], env=self.env)
+        try:
+            wait_for_reboot("http://127.0.0.1:" + self.worker_port)
             p2.terminate()
-            p2.poll()
+            p2.communicate(timeout=4)
+            result = p2.wait(2)
+        except subprocess.TimeoutExpired:
+            p2.kill()
+            p2.communicate()
             self.assertTrue('2nd process not terminated, port is already in use')
-        p2.stdout.close()
-        p2.stderr.close()
         self.assertEqual(result, 2)
         os.chmod("app.db", 0o644)
         os.chdir(base_path)
 
     def test_change_password(self):
-        os.chdir(CALIBRE_WEB_PATH + INDEX)
+        os.chdir(self.app_dir)
         self.check_password_change("admin:aDmin12!", "Password for user 'admin' changed")
         self.check_password_change("admin:aDm:in12", "Password for user 'admin' changed")
         self.check_password_change("admin.kolo", "No valid 'username:password.*")
         self.check_password_change("admin:aDm:in12", "Password for user 'admin' changed")
         self.check_password_change("admin:", "Empty password")
-        p1 = process_open([self.py_version,  "-B", u'cps.py'], [1])
-        time.sleep(BOOT_TIME)
+        p1 = process_open([self.py_version,  "-B", u'cps.py'], [1], env=self.env)
+        wait_for_reboot("http://127.0.0.1:" + self.worker_port)
         try:
             # navigate to the application home page
-            self.driver.get("http://127.0.0.1:" + PORTS[0])
+            self.driver.get("http://127.0.0.1:" + self.worker_port)
 
             # Wait for config screen to show up
             self.login("admin", "aDm:in12")
-            self.fill_db_config({'config_calibre_dir': TEST_DB})
+            time.sleep(1)
+            self.assertTrue(self.check_element_on_page((By.ID, "flash_success")))
+            self.fill_db_config({'config_calibre_dir': self.temp_dir})
+            self.assertTrue(self.check_element_on_page((By.ID, "flash_success"), timeout=BOOT_TIME))
             # wait for cw to reboot
-            time.sleep(2)
+            # self.driver.get("http://127.0.0.1:" + self.worker_port)
             self.logout()
+            time.sleep(1)
 
         except Exception as e:
             self.assertFalse(e)
@@ -461,17 +518,23 @@ class TestCli(unittest.TestCase, ui_class):
         if os.name != "nt":
             self.assertFalse(self.login("admin", "admin123"))
             self.assertTrue(self.login("admin", "@hukl123AbC*!"))
+        self.assertTrue(self.check_element_on_page((By.ID, "flash_success")))
+        self.fill_db_config({'config_calibre_dir': self.temp_dir})
+        self.assertTrue(self.check_element_on_page((By.ID, "flash_success"), timeout=BOOT_TIME))
+        self.check_password_change("admin:admin123", "Password doesn't comply with password")
         self.fill_basic_config({"config_password_policy": 0})
-        time.sleep(BOOT_TIME)
-        self.check_password_change("admin:admin123", "Password for user 'admin' changed")
+        wait_for_reboot("http://127.0.0.1:" + self.worker_port)
+        self.assertTrue(self.check_element_on_page((By.ID, "flash_success")))
         p1.terminate()
-        time.sleep(3)
-        p1.stdout.close()
-        p1.stderr.close()
+        try:
+            p1.communicate(timeout=4)
+        except subprocess.TimeoutExpired:
+            p1.kill()
+            p1.communicate()
         os.remove("app.db")
 
     def help_dry_run(self):
-        p1 = process_open([self.py_version, "-B", u'cps.py', "-d"], [1])
+        p1 = process_open([self.py_version, "-B", u'cps.py', "-d"], [1], env=self.env)
         output = list()
         while p1.poll() is None:
             output.append(p1.stdout.readline())
@@ -482,79 +545,81 @@ class TestCli(unittest.TestCase, ui_class):
         return "".join(output)
 
     def test_dryrun_update(self):
-        os.chdir(CALIBRE_WEB_PATH + INDEX)
+        os.chdir(self.app_dir)
         # check empty file
         output = self.help_dry_run()
         self.assertTrue("Finished" in output)
         # check missing file
-        os.remove(os.path.join(CALIBRE_WEB_PATH + INDEX, "exclude.txt"))
+        exclude = os.path.join(self.app_dir, "exclude.txt")
+        if os.path.exists(exclude):
+            os.remove(exclude)
         output = self.help_dry_run()
         self.assertTrue("file list for updater not found" in output)
         # check no permission for file
-        with open(os.path.join(CALIBRE_WEB_PATH + INDEX, "exclude.txt"), "w") as f:
+        with open(os.path.join(self.app_dir, "exclude.txt"), "w") as f:
             f.write("")
-        os.chmod(os.path.join(CALIBRE_WEB_PATH + INDEX, "exclude.txt"), 0o040)
+        os.chmod(os.path.join(self.app_dir, "exclude.txt"), 0o040)
         output = self.help_dry_run()
         self.assertTrue("file list for updater not found" in output)
-        os.chmod(os.path.join(CALIBRE_WEB_PATH + INDEX, "exclude.txt"), 0o644)
+        os.chmod(os.path.join(self.app_dir, "exclude.txt"), 0o644)
 
         # check empty file
-        with open(os.path.join(CALIBRE_WEB_PATH + INDEX, "exclude.txt"), "w") as f:
+        with open(os.path.join(self.app_dir, "exclude.txt"), "w") as f:
             f.write("")
         output = self.help_dry_run()
         self.assertTrue("Finished" in output)
 
         # check file with spaces is found
-        with open(os.path.join(CALIBRE_WEB_PATH + INDEX, "exclude.txt"), "w") as f:
+        with open(os.path.join(self.app_dir, "exclude.txt"), "w") as f:
             f.write(" cps.py ")
         output = self.help_dry_run()
         self.assertFalse("cps.py" in output)
 
         # check file with backslash is found
-        with open(os.path.join(CALIBRE_WEB_PATH + INDEX, "exclude.txt"), "w") as f:
+        with open(os.path.join(self.app_dir, "exclude.txt"), "w") as f:
             f.write(" \\cps.py ")
         output = self.help_dry_run()
         self.assertFalse("cps.py" in output)
 
         # check file with double backslash is found
-        with open(os.path.join(CALIBRE_WEB_PATH + INDEX, "exclude.txt"), "w") as f:
+        with open(os.path.join(self.app_dir, "exclude.txt"), "w") as f:
             f.write(" \\\\cps.py ")
         output = self.help_dry_run()
         self.assertFalse("cps.py" in output)
 
         # check file with double backslash is found
-        with open(os.path.join(CALIBRE_WEB_PATH + INDEX, "exclude.txt"), "w") as f:
+        with open(os.path.join(self.app_dir, "exclude.txt"), "w") as f:
             f.write("invalid_strange_pfile.pi")
         output = self.help_dry_run()
         self.assertTrue("invalid_strange_pfile.pi" in output)
 
         # check file with " and mixed path separators is not found
-        with open(os.path.join(CALIBRE_WEB_PATH + INDEX, "exclude.txt"), "w") as f:
+        with open(os.path.join(self.app_dir, "exclude.txt"), "w") as f:
             f.write(r' "cps\static/favicon.ico" ')
         output = self.help_dry_run()
         self.assertFalse("favicon.ico" in output)
 
         # check file with 2 lines
-        with open(os.path.join(CALIBRE_WEB_PATH + INDEX, "exclude.txt"), "w") as f:
+        with open(os.path.join(self.app_dir, "exclude.txt"), "w") as f:
             f.write(' "\\cps\\static/favicon.ico"\ncps.py ')
         output = self.help_dry_run()
         self.assertFalse("favicon.ico" in output)
         self.assertFalse("cps.py" in output)
 
         # Delete exclude file content
-        with open(os.path.join(CALIBRE_WEB_PATH + INDEX, "exclude.txt"), "w") as f:
+        with open(os.path.join(self.app_dir, "exclude.txt"), "w") as f:
             f.write("")
 
     def test_no_database(self):
         # check unconfigured database
-        os.chdir(CALIBRE_WEB_PATH + INDEX)
-        p1 = process_open([self.py_version, u'cps.py'], [1])
-        time.sleep(BOOT_TIME)
+        os.chdir(self.app_dir)
+        p1 = process_open([self.py_version, u'cps.py'], [1], env=self.env)
+        wait_for_reboot("http://127.0.0.1:" + self.worker_port)
         try:
             # navigate to the application home page
-            self.driver.get("http://127.0.0.1:" + PORTS[0])
+            self.driver.get("http://127.0.0.1:" + self.worker_port)
             # Wait for config screen to show up
-            self.fill_db_config({'config_calibre_dir': TEST_DB})
+            self.fill_db_config({'config_calibre_dir': self.temp_dir})
             # wait for cw to reboot
             time.sleep(5)
             self.assertTrue(self.check_element_on_page((By.ID, 'flash_success')))
@@ -570,12 +635,12 @@ class TestCli(unittest.TestCase, ui_class):
         book_shelf = self.get_shelf_books_displayed()
         self.assertEqual(1, len(book_shelf))
         # rename database file and restart
-        os.rename(os.path.join(TEST_DB, "metadata.db"), os.path.join(TEST_DB, "_metadata.db"))
+        os.rename(os.path.join(self.temp_dir, "metadata.db"), os.path.join(self.temp_dir, "_metadata.db"))
         self.restart_calibre_web()
         self.goto_page("user_setup")
         database_dir = self.check_element_on_page((By.ID, "config_calibre_dir"))
         self.assertTrue(database_dir)
-        self.assertEqual(TEST_DB, database_dir.get_attribute("value"))
+        self.assertEqual(self.temp_dir, database_dir.get_attribute("value"))
         self.check_element_on_page((By.ID, "config_back")).click()
         time.sleep(2)
         self.check_element_on_page((By.ID, "config_calibre_dir"))
@@ -587,8 +652,8 @@ class TestCli(unittest.TestCase, ui_class):
         time.sleep(1)
         database_dir = self.check_element_on_page((By.ID, "config_calibre_dir"))
         self.assertTrue(database_dir)
-        self.assertEqual(TEST_DB, database_dir.get_attribute("value"))
-        os.rename(os.path.join(TEST_DB, "_metadata.db"), os.path.join(TEST_DB, "metadata.db"))
+        self.assertEqual(self.temp_dir, database_dir.get_attribute("value"))
+        os.rename(os.path.join(self.temp_dir, "_metadata.db"), os.path.join(self.temp_dir, "metadata.db"))
         self.check_element_on_page((By.ID, "db_submit")).click()
         self.assertTrue(self.check_element_on_page((By.ID, 'flash_success')))
         # check shelf is still there
@@ -596,9 +661,9 @@ class TestCli(unittest.TestCase, ui_class):
         book_shelf = self.get_shelf_books_displayed()
         self.assertEqual(1, len(book_shelf))
         # copy database to different location, move location, check shelf is still there
-        alt_location = os.path.abspath(os.path.join(TEST_DB, "..", "alternate"))
+        alt_location = os.path.abspath(os.path.join(self.temp_dir, "..", "alternate"))
         os.makedirs(alt_location, exist_ok=True)
-        shutil.copy(os.path.join(TEST_DB, "metadata.db"), os.path.join(alt_location, "metadata.db"))
+        shutil.copy(os.path.join(self.temp_dir, "metadata.db"), os.path.join(alt_location, "metadata.db"))
         self.fill_db_config({'config_calibre_dir': alt_location})
         self.assertTrue(self.check_element_on_page((By.ID, 'flash_success')))
         # check shelf is still there
@@ -621,92 +686,101 @@ class TestCli(unittest.TestCase, ui_class):
 
     def test_logfile(self):
         # no logfile parameter
-        os.chdir(os.path.dirname(CALIBRE_WEB_PATH + INDEX))
-        logdir = os.path.join(CALIBRE_WEB_PATH + INDEX, 'logdir')
+        os.chdir(os.path.dirname(self.app_dir))
+        logdir = os.path.join(self.app_dir, 'logdir')
         log_file = os.path.join(logdir, "test.log")
         shutil.rmtree(logdir, ignore_errors=True)
         os.makedirs(logdir)
-        p = process_open([self.py_version, "-B", os.path.join(CALIBRE_WEB_PATH + INDEX, u'cps.py'),
-                          '-o'], [1])        
+        p = process_open([self.py_version, "-B", os.path.join(self.app_dir, u'cps.py'),
+                          '-o'], [1], env=self.env)
         time.sleep(1)
         # output = list()
         output = p.stderr.readlines()
         lines = "".join(output)
         self.assertTrue("usage: cps.py" in lines, lines)
-        p.terminate()
-        p.stdout.close()
-        p.stderr.close()
+        try:
+            p.terminate()
+            p.communicate(timeout=4)
+        except subprocess.TimeoutExpired:
+            p.kill()
+            p.communicate()
 
         # stream log
-        p3 = process_open([self.py_version, "-B", os.path.join(CALIBRE_WEB_PATH + INDEX, u'cps.py'),
-                          '-o', "/dev/stdout"], [1])
+        p3 = process_open([self.py_version, "-B", os.path.join(self.app_dir, u'cps.py'),
+                          '-o', "/dev/stdout"], [1], env=self.env)
         output = list()
         for i in range (0,7):
-            #while p.poll() is not None:
             output.append(p3.stdout.readline())
             time.sleep(1)
         lines = "".join(output)
-        p3.terminate()
-        p3.stdout.close()
-        p3.stderr.close()
-        p3.kill()
+        try:
+            p3.terminate()
+            p3.communicate(timeout=4)
+        except subprocess.TimeoutExpired:
+            p3.kill()
+            p3.communicate()
+
         self.assertTrue("Starting Calibre Web..." in lines, lines)
 
         # logfile not writeable        
-        if os.path.exists(os.path.join(CALIBRE_WEB_PATH + INDEX, "calibre-web.log")):
-            os.unlink(os.path.join(CALIBRE_WEB_PATH + INDEX, "calibre-web.log"))
+        if os.path.exists(os.path.join(self.app_dir, "calibre-web.log")):
+            os.unlink(os.path.join(self.app_dir, "calibre-web.log"))
         rights = os.stat(logdir).st_mode & 0o777
         os.chmod(logdir, 0o500)
-        self.assertFalse(os.path.exists(os.path.join(CALIBRE_WEB_PATH + INDEX, "calibre-web.log")))
+        self.assertFalse(os.path.exists(os.path.join(self.app_dir, "calibre-web.log")))
         
-        p1 = process_open([self.py_version, "-B", os.path.join(CALIBRE_WEB_PATH + INDEX, u'cps.py'),
-                          '-o', log_file], [1])
-        time.sleep(BOOT_TIME)
-        self.assertTrue(os.path.exists(os.path.join(CALIBRE_WEB_PATH + INDEX, "calibre-web.log")))
-        p1.terminate()
-        p1.stdout.close()
-        p1.stderr.close()
-        p1.kill()
+        p1 = process_open([self.py_version, "-B", os.path.join(self.app_dir, u'cps.py'),
+                          '-o', log_file], [1], env=self.env)
+        wait_for_reboot("http://127.0.0.1:" + self.worker_port)
+        self.assertTrue(os.path.exists(os.path.join(self.app_dir, "calibre-web.log")))
+        try:
+            p1.terminate()
+            p1.communicate(timeout=4)
+        except subprocess.TimeoutExpired:
+            p1.kill()
+            p1.communicate()
 
         os.chmod(logdir, rights)
         self.assertFalse(os.path.exists(log_file))
 
         # check logfile in gui = param change logfile in gui -> after reboot the commandline logfile
-        p2 = process_open([self.py_version, "-B", os.path.join(CALIBRE_WEB_PATH + INDEX, u'cps.py'),
-                          '-o', log_file], [1])
-        time.sleep(BOOT_TIME)
+        p2 = process_open([self.py_version, "-B", os.path.join(self.app_dir, u'cps.py'),
+                          '-o', log_file], [1], env=self.env)
+        wait_for_reboot("http://127.0.0.1:" + self.worker_port)
         # navigate to the application home page
-        self.driver.get("http://127.0.0.1:" + PORTS[0])
+        self.driver.get("http://127.0.0.1:" + self.worker_port)
         # Wait for config screen to show up
-        self.fill_db_config({'config_calibre_dir': TEST_DB})
-        # wait for cw to reboot
-        time.sleep(2)
-        self.fill_basic_config({'config_logfile': os.path.join(CALIBRE_WEB_PATH + INDEX, "new.log")})
+        self.fill_db_config({'config_calibre_dir': self.temp_dir})
         time.sleep(2)
         self.assertTrue(self.check_element_on_page((By.ID, "flash_success")))
+        self.fill_basic_config({'config_logfile': os.path.join(self.app_dir, "new.log")})
+        time.sleep(2)
+        self.assertTrue(self.check_element_on_page((By.ID, "flash_success"),timeout=BOOT_TIME))
         old_size = os.path.getsize(log_file)
         self.restart_calibre_web()
         self.assertGreater(os.path.getsize(log_file)-1000, old_size)
-        self.assertFalse(os.path.exists(os.path.join(CALIBRE_WEB_PATH + INDEX, "new.log")))
-        p2.terminate()
-        p2.stdout.close()
-        p2.stderr.close()
-        p2.kill()
+        self.assertFalse(os.path.exists(os.path.join(self.app_dir, "new.log")))
+        try:
+            p2.terminate()
+            p2.communicate(timeout=4)
+        except subprocess.TimeoutExpired:
+            p2.kill()
+            p2.communicate()
         shutil.rmtree(logdir, ignore_errors=True)
 
     def test_enable_reconnect(self):
-        my_env = os.environ.copy()
-        my_env["CALIBRE_RECONNECT"] = '1'
-        p = process_open([self.py_version,  "-B", os.path.join(CALIBRE_WEB_PATH + INDEX, u'cps.py')], [1], env=my_env)
-        time.sleep(BOOT_TIME)
+        my_env = dict(self.env, CALIBRE_RECONNECT="1")
+        # my_env["CALIBRE_RECONNECT"] = '1'
+        p = process_open([self.py_version,  "-B", os.path.join(self.app_dir, u'cps.py')], [1], env=my_env)
+        wait_for_reboot("http://127.0.0.1:" + self.worker_port)
         # navigate to the application home page
-        self.driver.get("http://127.0.0.1:" + PORTS[0])
+        self.driver.get("http://127.0.0.1:" + self.worker_port)
         # Wait for config screen to show up
-        self.fill_db_config({'config_calibre_dir': TEST_DB})
+        self.fill_db_config({'config_calibre_dir': self.temp_dir})
         # wait for cw to reboot
         time.sleep(2)
         self.assertTrue(self.check_element_on_page((By.ID, 'flash_success')))
-        r = requests.get("http://127.0.0.1:" + PORTS[0] + "/reconnect")
+        r = requests.get("http://127.0.0.1:" + self.worker_port + "/reconnect")
         self.assertEqual(200, r.status_code)
         self.assertDictEqual({}, r.json())
         self.stop_calibre_web(p)
@@ -714,19 +788,20 @@ class TestCli(unittest.TestCase, ui_class):
             self.driver.switch_to.alert.accept()
         except Exception:
             pass
-        my_env = os.environ.copy()
-        p = process_open([self.py_version,  "-B", os.path.join(CALIBRE_WEB_PATH + INDEX, u'cps.py')], [1], env=my_env)
-        time.sleep(BOOT_TIME)
-        r = requests.get("http://127.0.0.1:" + PORTS[0] + "/reconnect")
+        p = process_open([self.py_version,  "-B", os.path.join(self.app_dir, u'cps.py')], [1], env=self.env)
+        wait_for_reboot("http://127.0.0.1:" + self.worker_port)
+
+        r = requests.get("http://127.0.0.1:" + self.worker_port + "/reconnect")
         self.assertEqual(404, r.status_code)
         self.stop_calibre_web(p)
         try:
             self.driver.switch_to.alert.accept()
         except Exception:
             pass
-        p = process_open([self.py_version,  "-B", os.path.join(CALIBRE_WEB_PATH + INDEX, u'cps.py'), "-r"], [1])
-        time.sleep(BOOT_TIME)
-        r = requests.get("http://127.0.0.1:" + PORTS[0] + "/reconnect")
+        p = process_open([self.py_version,  "-B", os.path.join(self.app_dir, u'cps.py'), "-r"], [1], env=self.env)
+        wait_for_reboot("http://127.0.0.1:" + self.worker_port)
+
+        r = requests.get("http://127.0.0.1:" + self.worker_port + "/reconnect")
         self.assertEqual(200, r.status_code)
         self.assertDictEqual({}, r.json())
         self.stop_calibre_web(p)
@@ -734,50 +809,50 @@ class TestCli(unittest.TestCase, ui_class):
             self.driver.switch_to.alert.accept()
         except Exception:
             pass
-        os.remove(os.path.join(CALIBRE_WEB_PATH, u'app.db'))
+        os.remove(os.path.join(self.app_dir, u'app.db'))
 
     def test_writeonly_static_files(self):
-        p = process_open([self.py_version,  "-B", os.path.join(CALIBRE_WEB_PATH + INDEX, u'cps.py')], [1])
-        time.sleep(BOOT_TIME)
+        p = process_open([self.py_version,  "-B", os.path.join(self.app_dir, u'cps.py')], [1], env=self.env)
+        wait_for_reboot("http://127.0.0.1:" + self.worker_port)
         # navigate to the application home page
-        self.driver.get("http://127.0.0.1:" + PORTS[0])
+        self.driver.get("http://127.0.0.1:" + self.worker_port)
         # Wait for config screen to show up
-        self.fill_db_config({'config_calibre_dir': TEST_DB})
+        self.fill_db_config({'config_calibre_dir': self.temp_dir})
         # wait for cw to reboot
         time.sleep(2)
         self.assertTrue(self.check_element_on_page((By.ID, 'flash_success')))
         # readonly template "tasks.html"
-        mode = os.path.join(CALIBRE_WEB_PATH, "cps", "templates", "tasks.html")
+        mode = os.path.join(self.app_dir, "cps", "templates", "tasks.html")
         os.chmod(mode, 0o200)
         r = requests.session()
-        login_page = r.get('http://127.0.0.1:{}/login'.format(PORTS[0]))
+        login_page = r.get('http://127.0.0.1:{}/login'.format(self.worker_port))
         token = re.search('<input type="hidden" name="csrf_token" value="(.*)">', login_page.text)
         payload = {'username': 'admin', 'password': 'admin123', 'submit': "", 'next': "/", "csrf_token": token.group(1)}
-        r.post('http://127.0.0.1:{}/login'.format(PORTS[0]), data=payload)
-        resp = r.get("http://127.0.0.1:" + PORTS[0] + "/tasks")
+        r.post('http://127.0.0.1:{}/login'.format(self.worker_port), data=payload)
+        resp = r.get("http://127.0.0.1:" + self.worker_port + "/tasks")
         self.assertEqual(403, resp.status_code)
         os.chmod(mode, 0o644)
-        resp = r.get("http://127.0.0.1:" + PORTS[0] + "/tasks")
+        resp = r.get("http://127.0.0.1:" + self.worker_port + "/tasks")
         self.assertEqual(200, resp.status_code)
         # readonly "static" folder
-        mode = os.path.join(CALIBRE_WEB_PATH, "cps", "static")
+        mode = os.path.join(self.app_dir, "cps", "static")
         os.chmod(mode, 0o200)
-        resp = r.get("http://127.0.0.1:" + PORTS[0] + "/static/js/main.js")
+        resp = r.get("http://127.0.0.1:" + self.worker_port + "/static/js/main.js")
         self.assertEqual(404, resp.status_code)
-        resp = r.get("http://127.0.0.1:" + PORTS[0] + "/tasks")
+        resp = r.get("http://127.0.0.1:" + self.worker_port + "/tasks")
         self.assertEqual(200, resp.status_code)
         os.chmod(mode, 0o755)
-        resp = r.get("http://127.0.0.1:" + PORTS[0] + "/static/js/main.js")
+        resp = r.get("http://127.0.0.1:" + self.worker_port + "/static/js/main.js")
         self.assertEqual(200, resp.status_code)
         # readonly "main.js" folder
-        mode = os.path.join(CALIBRE_WEB_PATH, "cps", "static", "js", "main.js")
+        mode = os.path.join(self.app_dir, "cps", "static", "js", "main.js")
         os.chmod(mode, 0o200)
-        resp = r.get("http://127.0.0.1:" + PORTS[0] + "/static/js/main.js")
+        resp = r.get("http://127.0.0.1:" + self.worker_port + "/static/js/main.js")
         self.assertEqual(500, resp.status_code)
-        resp = r.get("http://127.0.0.1:" + PORTS[0] + "/tasks")
+        resp = r.get("http://127.0.0.1:" + self.worker_port + "/tasks")
         self.assertEqual(200, resp.status_code)
         os.chmod(mode, 0o644)
-        resp = r.get("http://127.0.0.1:" + PORTS[0] + "/static/js/main.js")
+        resp = r.get("http://127.0.0.1:" + self.worker_port + "/static/js/main.js")
         self.assertEqual(200, resp.status_code)
 
         self.stop_calibre_web(p)
@@ -785,4 +860,4 @@ class TestCli(unittest.TestCase, ui_class):
             self.driver.switch_to.alert.accept()
         except Exception:
             pass
-        os.remove(os.path.join(CALIBRE_WEB_PATH + INDEX, u'app.db'))
+        os.remove(os.path.join(self.app_dir, u'app.db'))

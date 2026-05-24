@@ -1,54 +1,48 @@
-#!/usr/bin/env python
 # -*- coding: utf-8 -*-
 
+from base_test import ParallelTestCase
 import os
 import re
 import time
-import unittest
 import requests
 
-from helper_ui import ui_class
-from config_test import TEST_DB, base_path, BOOT_TIME
-from helper_func import startup, get_Host_IP, add_dependency, remove_dependency
 from selenium.webdriver.common.by import By
-from helper_func import save_logfiles
 from selenium.webdriver.support.ui import WebDriverWait
 from selenium.webdriver.support import expected_conditions as EC
+from config_test import base_path, BOOT_TIME
+from helper_func import startup, get_Host_IP
 
 
-RESOURCES = {'ports': 1}
-
-PORTS = ['8083']
-INDEX = ""
-
-
-class TestKoboSync(unittest.TestCase, ui_class):
+class TestKoboSync(ParallelTestCase):
 
     p = None
     driver = None
     kobo_adress = None
     syncToken = None
     header = None
-    json_line = ["jsonschema"]
+    dependency = ["jsonschema"]
 
     @classmethod
     def setUpClass(cls):
-        add_dependency(cls.json_line, cls.__name__)
-
+        super().setUpClass()
         try:
-            host = 'http://' + get_Host_IP() #  + ':' + PORTS[0]
-            startup(cls, cls.py_version, {'config_calibre_dir':TEST_DB, 'config_log_level': 'DEBUG', 'config_kobo_sync':1,
+            host = 'http://' + get_Host_IP() #  + ':' + cls.worker_port
+            startup(cls, cls.py_version, {'config_calibre_dir':cls.temp_dir, 'config_log_level': 'DEBUG', 'config_kobo_sync':1,
                                           'config_kepubifypath': "",
-                                          'config_kobo_proxy':0}, host=host, index=INDEX, port=PORTS[0], env={"APP_MODE": "test"})
+                                          'config_kobo_proxy':0}, host=host,
+                    port=cls.worker_port,
+                    app_dir=cls.app_dir,
+                    env={"APP_MODE": "test", "CALIBRE_PORT": cls.worker_port},
+                    lib_dest=cls.temp_dir)
             time.sleep(3)
             WebDriverWait(cls.driver, 5).until(EC.presence_of_element_located((By.ID, "flash_success")))
             cls.goto_page('user_setup')
             cls.check_element_on_page((By.ID, "config_create_kobo_token")).click()
             time.sleep(1)
             link = cls.check_element_on_page((By.CLASS_NAME, "well"))
-            cls.kobo_adress = host + ':' + PORTS[0] + '/kobo/' + re.findall(".*/kobo/(.*)", link.text)[0]
+            cls.kobo_adress = host + ':' + cls.worker_port + '/kobo/' + re.findall(".*/kobo/(.*)", link.text)[0]
             cls.check_element_on_page((By.ID, "kobo_close")).click()
-            cls.driver.get("http://127.0.0.1:" + PORTS[0])
+            cls.driver.get("http://127.0.0.1:" + cls.worker_port)
             cls.login('admin', 'admin123')
             time.sleep(2)
         except Exception as e:
@@ -59,13 +53,12 @@ class TestKoboSync(unittest.TestCase, ui_class):
 
     @classmethod
     def tearDownClass(cls):
-        cls.driver.get("http://127.0.0.1:" + PORTS[0])
+        cls.driver.get("http://127.0.0.1:" + cls.worker_port)
         cls.stop_calibre_web()
         cls.driver.quit()
         cls.p.terminate()
         # close the browser window and stop calibre-web
-        remove_dependency(cls.json_line)
-        save_logfiles(cls, cls.__name__)
+        super().tearDownClass()
 
     def inital_sync(self, sync=True):
         if TestKoboSync.syncToken:
@@ -714,7 +707,7 @@ class TestKoboSync(unittest.TestCase, ui_class):
 
 
     def test_kobo_limit(self):
-        host = 'http://{}:{}'.format(get_Host_IP(), PORTS[0])
+        host = 'http://{}:{}'.format(get_Host_IP(), self.worker_port)
         payload = {
             "AffiliateName": "Kobo",
             "AppVersion": "4.19.14123",

@@ -1,36 +1,34 @@
 # -*- coding: utf-8 -*-
 
+import unittest
+from base_test import ParallelTestCase
 import os
 import time
-import unittest
 import shutil
 import requests
 
-from helper_ui import ui_class
-from config_test import TEST_DB, BOOT_TIME, CALIBRE_WEB_PATH, NUM_THUMBNAILS
+from config_test import  BOOT_TIME, NUM_THUMBNAILS
 from helper_func import startup
 from helper_func import count_files
 from helper_proxy import Proxy, val
 from selenium.webdriver.common.by import By
 from zipfile import ZipFile, ZipInfo
-from helper_func import save_logfiles
-
 
 RESOURCES = {'ports': 2}
 
 PORTS = ['8083', '8070']
 INDEX = ""
 
-
-class TestUpdater(unittest.TestCase, ui_class):
+class TestUpdater(ParallelTestCase):
     p = None
     driver = None
     proxy = None
 
     @classmethod
     def setUpClass(cls):
+        super().setUpClass()
         if cls.copy_cw():
-            thumbnail_cache_path = os.path.join(CALIBRE_WEB_PATH + INDEX, 'cps', 'cache', 'thumbnails')
+            thumbnail_cache_path = os.path.join(cls.app_dir, 'cps', 'cache', 'thumbnails')
             shutil.rmtree(thumbnail_cache_path, ignore_errors=True)
             cls.proxy = Proxy()
             cls.proxy.start()
@@ -40,7 +38,11 @@ class TestUpdater(unittest.TestCase, ui_class):
             my_env["https_proxy"] = 'http://localhost:'  + PORTS[1]
             my_env["REQUESTS_CA_BUNDLE"] = pem_file
             my_env["APP_MODE"] = "test"
-            startup(cls, cls.py_version, {'config_calibre_dir': TEST_DB}, port=PORTS[0], index=INDEX, env=my_env)
+            startup(cls, cls.py_version, {'config_calibre_dir': cls.temp_dir},
+                    port=cls.worker_port,
+                    app_dir=cls.app_dir,
+                    env={"APP_MODE": "test", "CALIBRE_PORT": cls.worker_port},
+                    lib_dest=cls.temp_dir)
         else:
             cls.assertTrue(False, "Target Directory present")
 
@@ -50,7 +52,7 @@ class TestUpdater(unittest.TestCase, ui_class):
         try:
             cls.stop_calibre_web()
         except:
-            cls.driver.get("http://127.0.0.1:" + PORTS[0])
+            cls.driver.get("http://127.0.0.1:" + cls.worker_port)
             time.sleep(2)
             try:
                 cls.stop_calibre_web()
@@ -59,23 +61,20 @@ class TestUpdater(unittest.TestCase, ui_class):
         cls.driver.quit()
         cls.proxy.stop_proxy()
         cls.p.terminate()
-        try:
-            save_logfiles(cls, cls.__name__)
-        except:
-            pass
         # Move original image back in place
-        cls.return_cw()
-        thumbnail_cache_path = os.path.join(CALIBRE_WEB_PATH + INDEX, 'cps', 'cache', 'thumbnails')
+        super().tearDownClass()
+        #cls.return_cw()
+        thumbnail_cache_path = os.path.join(cls.app_dir, 'cps', 'cache', 'thumbnails')
         shutil.rmtree(thumbnail_cache_path, ignore_errors=True)
 
     def tearDown(self):
-        os.chmod(os.path.join(CALIBRE_WEB_PATH + INDEX, "cps"), 0o764)
-        os.chmod(os.path.join(CALIBRE_WEB_PATH + INDEX, "cps", "web.py"), 0o766)
+        os.chmod(os.path.join(self.app_dir, "cps"), 0o764)
+        os.chmod(os.path.join(self.app_dir, "cps", "web.py"), 0o766)
         if not self.check_user_logged_in('admin'):
             try:
                 self.logout()
             except:
-                self.driver.get("http://127.0.0.1:" + PORTS[0])
+                self.driver.get("http://127.0.0.1:" + self.worker_port)
                 time.sleep(3)
                 self.logout()
             self.login('admin', 'admin123')
@@ -90,10 +89,10 @@ class TestUpdater(unittest.TestCase, ui_class):
 
     @classmethod
     def copy_cw(cls):
-        if os.path.isdir(CALIBRE_WEB_PATH + INDEX + '_2'):
-            shutil.rmtree(CALIBRE_WEB_PATH + INDEX + '_2', ignore_errors=True)
-        if not os.path.isdir(CALIBRE_WEB_PATH + INDEX + '_2'):
-            shutil.copytree(CALIBRE_WEB_PATH + INDEX, CALIBRE_WEB_PATH + INDEX + '_2')
+        if os.path.isdir(cls.app_dir + '_2'):
+            shutil.rmtree(cls.app_dir + '_2', ignore_errors=True)
+        if not os.path.isdir(cls.app_dir + '_2'):
+            shutil.copytree(cls.app_dir, cls.app_dir + '_2')
             with ZipFile('cps_copy.zip', 'w') as zipObj:
                 zipfolder = ZipInfo(os.path.join('calibre-web-0.6.6' + "/"))
                 zipObj.writestr(zipfolder, "")
@@ -101,13 +100,13 @@ class TestUpdater(unittest.TestCase, ui_class):
                 # zipObj.write(os.path.join(CALIBRE_WEB_PATH + '_2', 'cps.py'), arcname='README.md')
                 # Iterate over all the files in directory, add everything except .pyc files from cps folder as
                 # relative paths
-                for folderName, subfolders, filenames in os.walk(os.path.join(CALIBRE_WEB_PATH + INDEX + '_2', 'cps')):
+                for folderName, subfolders, filenames in os.walk(os.path.join(cls.app_dir + '_2', 'cps')):
                     for filename in filenames:
                         if os.path.splitext(filename)[1] != '.pyc':
                             filePath = os.path.join(folderName, filename)
                             zipObj.write(filePath, os.path.join('calibre-web-0.6.6',
-                                                                os.path.relpath(filePath, CALIBRE_WEB_PATH + INDEX + '_2')))
-                zipObj.write(os.path.join(CALIBRE_WEB_PATH + INDEX + '_2', 'cps.py'), arcname='calibre-web-0.6.6/cps.py')
+                                                                os.path.relpath(filePath, cls.app_dir + '_2')))
+                zipObj.write(os.path.join(cls.app_dir + '_2', 'cps.py'), arcname='calibre-web-0.6.6/cps.py')
                 return True
         else:
             print('target directory already existing')
@@ -115,20 +114,20 @@ class TestUpdater(unittest.TestCase, ui_class):
 
     @classmethod
     def return_cw(cls):
-        if os.path.isdir(CALIBRE_WEB_PATH + INDEX + '_2'):
+        if os.path.isdir(cls.app_dir + '_2'):
             if os.name != 'nt':
-                shutil.rmtree(CALIBRE_WEB_PATH + INDEX, ignore_errors=True)
-                shutil.move(CALIBRE_WEB_PATH + INDEX + '_2', CALIBRE_WEB_PATH)
+                shutil.rmtree(cls.app_dir, ignore_errors=True)
+                shutil.move(cls.app_dir + '_2', cls.app_dir)
             else:
                 # On windows the Test folder is locked, as the testoutput is going to be written to it
                 # special treatment
                 try:
-                    shutil.rmtree(CALIBRE_WEB_PATH + INDEX, ignore_errors=True)
-                    shutil.copytree(CALIBRE_WEB_PATH + INDEX + '_2', CALIBRE_WEB_PATH,  dirs_exist_ok=True)
+                    shutil.rmtree(cls.app_dir, ignore_errors=True)
+                    shutil.copytree(cls.app_dir + '_2', cls.app_dir,  dirs_exist_ok=True)
                 except Exception as e:
                     print(e)
                 try:
-                    shutil.rmtree(CALIBRE_WEB_PATH + INDEX + '_2', ignore_errors=True)
+                    shutil.rmtree(cls.app_dir + '_2', ignore_errors=True)
                 except Exception as e:
                     print(e)
         try:
@@ -370,7 +369,7 @@ class TestUpdater(unittest.TestCase, ui_class):
         self.assertTrue(self.check_element_on_page((By.ID, "flash_success")))
         self.restart_calibre_web()
         time.sleep(3)
-        thumbnail_cache_path = os.path.join(CALIBRE_WEB_PATH + INDEX, 'cps', 'cache', 'thumbnails')
+        thumbnail_cache_path = os.path.join(self.app_dir, 'cps', 'cache', 'thumbnails')
         self.assertTrue(os.path.isdir(thumbnail_cache_path))
         self.assertEqual(10 * NUM_THUMBNAILS, count_files(thumbnail_cache_path))
         self.goto_page('admin_setup')
@@ -399,12 +398,12 @@ class TestUpdater(unittest.TestCase, ui_class):
         if button:
             button.click()
         else:
-            self.driver.get("http://127.0.0.1:" + PORTS[0])
+            self.driver.get("http://127.0.0.1:" + self.worker_port)
         time.sleep(3)
         # Check all relevant files are kept, venv folder
-        self.assertTrue(os.path.isdir(os.path.join(CALIBRE_WEB_PATH + INDEX, "venv")))
-        self.assertTrue(os.path.isfile(os.path.join(CALIBRE_WEB_PATH + INDEX, "calibre-web.log")))
-        self.assertTrue(os.path.isfile(os.path.join(CALIBRE_WEB_PATH + INDEX, "app.db")))
+        self.assertTrue(os.path.isdir(os.path.join(self.app_dir, "venv")))
+        self.assertTrue(os.path.isfile(os.path.join(self.app_dir, "calibre-web.log")))
+        self.assertTrue(os.path.isfile(os.path.join(self.app_dir, "app.db")))
         self.assertTrue(os.path.isdir(thumbnail_cache_path))
         self.assertEqual(10 * NUM_THUMBNAILS, count_files(thumbnail_cache_path))
         self.fill_thumbnail_config({'schedule_generate_book_covers': 0})
@@ -422,7 +421,7 @@ class TestUpdater(unittest.TestCase, ui_class):
         version2 = [version[0], version[1], version[2] + 1]
         version1 = [version[0], version[1], version[2]]
         val.set_Version([version3, version2, version1])
-        os.chmod(os.path.join(CALIBRE_WEB_PATH + INDEX, "cps"), 0o400)
+        os.chmod(os.path.join(self.app_dir, "cps"), 0o400)
         val.set_type([None])
         time.sleep(0.5)
         updater = self.check_element_on_page((By.ID, "check_for_update"))
@@ -435,9 +434,9 @@ class TestUpdater(unittest.TestCase, ui_class):
         self.assertTrue('Update failed' in self.check_element_on_page((By.ID, "DialogContent")).text)
         self.check_element_on_page((By.ID, "DialogFinished")).click()
         time.sleep(3)
-        os.chmod(os.path.join(CALIBRE_WEB_PATH + INDEX, "cps"), 0o764)
+        os.chmod(os.path.join(self.app_dir, "cps"), 0o764)
         # Only change permission of single file
-        os.chmod(os.path.join(CALIBRE_WEB_PATH + INDEX, "cps", "web.py"), 0o400)
+        os.chmod(os.path.join(self.app_dir, "cps", "web.py"), 0o400)
         updater = self.check_element_on_page((By.ID, "check_for_update"))
         updater.click()
         time.sleep(2)
@@ -449,13 +448,13 @@ class TestUpdater(unittest.TestCase, ui_class):
         self.assertTrue('Update failed' in self.check_element_on_page((By.ID, "DialogContent")).text)
         self.check_element_on_page((By.ID, "DialogFinished")).click()
         time.sleep(3)
-        os.chmod(os.path.join(CALIBRE_WEB_PATH + INDEX, "cps", "web.py"), 0o766)
+        os.chmod(os.path.join(self.app_dir, "cps", "web.py"), 0o766)
 
     def test_reconnect_database(self):
-        self.driver.get("http://127.0.0.1:" + PORTS[0])
+        self.driver.get("http://127.0.0.1:" + self.worker_port)
         self.reconnect_database()
         self.assertTrue(self.check_element_on_page((By.ID, "check_for_update")))
         # deactivated by default
-        resp = requests.get('http://127.0.0.1:{}/reconnect'.format(PORTS[0]))
+        resp = requests.get('http://127.0.0.1:{}/reconnect'.format(self.worker_port))
         self.assertEqual(404, resp.status_code)
         # self.assertDictEqual({}, resp.json())

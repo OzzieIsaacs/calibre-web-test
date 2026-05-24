@@ -1,72 +1,44 @@
-#!/usr/bin/env python
 # -*- coding: utf-8 -*-
 
-import unittest
+from base_test import ParallelTestCase
 import os
-from selenium.webdriver.common.by import By
-from selenium import webdriver
 import time
 import shutil
-from helper_ui import ui_class
+import unittest
 
-from config_test import CALIBRE_WEB_PATH, TEST_DB, base_path, BOOT_TIME, WAIT_GDRIVE
-from helper_func import add_dependency, remove_dependency
-from helper_func import save_logfiles
-from helper_gdrive import prepare_gdrive
+from selenium.webdriver.common.by import By
+from selenium import webdriver
+
+from config_test import base_path, BOOT_TIME, WAIT_GDRIVE
+from helper_func import copy_calibre_web_for_test, wait_for_reboot
 from subproc_wrapper import process_open
-
-RESOURCES = {'ports': 1, "gdrive": True}
-
-PORTS = ['8083']
-INDEX = ""
+import subprocess
 
 # test gdrive database
 @unittest.skipIf(not os.path.exists(os.path.join(base_path, "files", "client_secrets.json")) or
                  not os.path.exists(os.path.join(base_path, "files", "gdrive_credentials")),
                  "client_secrets.json and/or gdrive_credentials file is missing")
-class TestCliGdrivedb(unittest.TestCase, ui_class):
+class TestCliGdrivedb(ParallelTestCase):
+    resource_lock = "gdrive"
     p = None
     driver = None
     dependency = ["oauth2client", "PyDrive2", "PyYAML", "google-api-python-client", "httplib2"]
 
     @classmethod
     def setUpClass(cls):
-        add_dependency(cls.dependency, cls.__name__)
-
-        prepare_gdrive()
+        super().setUpClass()
+        copy_calibre_web_for_test(cls.app_dir)
+        shutil.copy(os.path.join(base_path, 'Calibre_db', 'metadata.db'), os.path.join(cls.temp_dir,
+                                                                                       'metadata.db'))
         try:
-            shutil.rmtree(os.path.join(CALIBRE_WEB_PATH + INDEX, 'hü lo'), ignore_errors=True)
+            shutil.rmtree(os.path.join(cls.app_dir, 'hü lo'), ignore_errors=True)
             try:
-                os.remove(os.path.join(CALIBRE_WEB_PATH + INDEX, 'app.db'))
+                os.remove(os.path.join(cls.app_dir, 'app.db'))
             except Exception:
                 pass
-            src = os.path.join(base_path, "files", "client_secrets.json")
-            dst = os.path.join(CALIBRE_WEB_PATH + INDEX, "client_secrets.json")
-            os.chmod(src, 0o764)
-            if os.path.exists(dst):
-                os.unlink(dst)
-            shutil.copy(src, dst)
-
-            # delete settings_yaml file
-            set_yaml = os.path.join(CALIBRE_WEB_PATH + INDEX, "settings.yaml")
-            if os.path.exists(set_yaml):
-                os.unlink(set_yaml)
-
-            # delete gdrive file
-            gdrive_db = os.path.join(CALIBRE_WEB_PATH + INDEX, "gdrive.db")
-            if os.path.exists(gdrive_db):
-                os.unlink(gdrive_db)
-
-            # delete gdrive authenticated file
-            src = os.path.join(base_path, 'files', "gdrive_credentials")
-            dst = os.path.join(CALIBRE_WEB_PATH + INDEX, "gdrive_credentials")
-            os.chmod(src, 0o764)
-            if os.path.exists(dst):
-                os.unlink(dst)
-            shutil.copy(src, dst)
 
             cls.driver = webdriver.Firefox()
-            cls.driver.implicitly_wait(10)
+            # cls.driver.implicitly_wait(10)
             cls.driver.maximize_window()
 
         except Exception as e:
@@ -80,20 +52,18 @@ class TestCliGdrivedb(unittest.TestCase, ui_class):
     def tearDownClass(cls):
         os.chdir(base_path)
         try:
-            cls.driver.get("http://127.0.0.1:" + PORTS[0])
+            cls.driver.get("http://127.0.0.1:" + cls.worker_port)
             cls.stop_calibre_web()
             # close the browser window and stop calibre-web
+            cls.driver.quit()
             cls.p.terminate()
         except Exception as e:
-            print(e)
-        try:
-            cls.driver.quit()
-        except Exception:
             pass
-        remove_dependency(cls.dependency)
+        finally:
+            super().tearDownClass()
 
-        src1 = os.path.join(CALIBRE_WEB_PATH + INDEX, "client_secrets.json")
-        src = os.path.join(CALIBRE_WEB_PATH + INDEX, "gdrive_credentials")
+        src1 = os.path.join(cls.app_dir, "client_secrets.json")
+        src = os.path.join(cls.app_dir, "gdrive_credentials")
         if os.path.exists(src):
             os.chmod(src, 0o764)
             try:
@@ -107,12 +77,11 @@ class TestCliGdrivedb(unittest.TestCase, ui_class):
             except PermissionError:
                 print('client_secrets.json delete failed')
 
-        save_logfiles(cls, cls.__name__)
-
     def tearDown(self):
-        shutil.rmtree(os.path.join(CALIBRE_WEB_PATH + INDEX, 'hü lo'), ignore_errors=True)
+        super().tearDown()
+        shutil.rmtree(os.path.join(self.app_dir, 'hü lo'), ignore_errors=True)
         try:
-            os.remove(os.path.join(CALIBRE_WEB_PATH + INDEX, 'app.db'))
+            os.remove(os.path.join(self.app_dir, 'app.db'))
         except Exception as e:
             print(e)
         os.chdir(base_path)
@@ -126,20 +95,25 @@ class TestCliGdrivedb(unittest.TestCase, ui_class):
                 break
         time.sleep(5)
 
-    def start_cw(self, cw_path, gdrive_path=None):
+    def start_cw(self, cw_path, gdrive_path=None, env=None):
+        if env:
+            my_env = os.environ.copy()
+            env = {**my_env, **env}
+
         parameter = [self.py_version, cw_path]
         quotes = [1]
         if gdrive_path:
             parameter.extend(['-g', gdrive_path])
             quotes.extend([3])
-        self.p = process_open(parameter, quotes)
+
+        self.p = process_open(parameter, quotes, env=env)
         # create a new Firefox session
-        time.sleep(BOOT_TIME)
+        wait_for_reboot("http://127.0.0.1:" + self.worker_port)
         # navigate to the application home page
-        self.driver.get("http://127.0.0.1:" + PORTS[0])
+        self.driver.get("http://127.0.0.1:" + self.worker_port)
 
         # Wait for config screen to show up
-        self.fill_db_config({'config_calibre_dir': TEST_DB})
+        self.fill_db_config({'config_calibre_dir': self.temp_dir})
 
         # wait for cw to be ready
         time.sleep(2)
@@ -147,48 +121,64 @@ class TestCliGdrivedb(unittest.TestCase, ui_class):
         self.assertTrue(self.check_element_on_page((By.NAME, "query")))
 
     def test_gdrive_db_nonwrite(self):
-        self.start_cw(os.path.join(CALIBRE_WEB_PATH + INDEX, u'cps.py'))
+        self.start_cw(os.path.join(self.app_dir, u'cps.py'), env={"APP_MODE": "test", "CALIBRE_PORT": self.worker_port})
         self.fill_db_config({'config_use_google_drive': 1})
-        time.sleep(BOOT_TIME)
+        wait_for_reboot("http://127.0.0.1:" + self.worker_port)
         self.fill_db_config({'config_google_drive_folder': 'test'})
-        time.sleep(BOOT_TIME)
-        self.driver.get("http://127.0.0.1:" + PORTS[0])
+        wait_for_reboot("http://127.0.0.1:" + self.worker_port)
+        self.driver.get("http://127.0.0.1:" + self.worker_port)
         self.stop_calibre_web()
         time.sleep(5)  # shutdowntime
-        self.p.terminate()
+        try:
+            self.p.terminate()
+            self.p.communicate(timeout=5)
+        except subprocess.TimeoutExpired:
+            self.p.kill()
+            self.p.communicate()
         try:
             self.driver.switch_to.alert.accept()
         except Exception:
             pass
-        gdrive_db = os.path.join(CALIBRE_WEB_PATH + INDEX, "gdrive.db")
+        gdrive_db = os.path.join(self.app_dir, "gdrive.db")
         self.assertTrue(os.path.exists(gdrive_db))
         os.chmod(gdrive_db, 0o400)
-        self.p = process_open([self.py_version, os.path.join(CALIBRE_WEB_PATH + INDEX, u'cps.py')], [1])
+        self.p = process_open([self.py_version, os.path.join(self.app_dir, u'cps.py')], [1])
         # create a new Firefox session
-        time.sleep(BOOT_TIME)
+        wait_for_reboot("http://127.0.0.1:" + self.worker_port)
+        time.sleep(5)
         # navigate to the application home page
-        self.driver.get("http://127.0.0.1:" + PORTS[0])
+        self.driver.get("http://127.0.0.1:" + self.worker_port)
         os.chmod(gdrive_db, 0o654)
         self.stop_calibre_web()
-        self.p.terminate()
+        try:
+            self.p.terminate()
+            self.p.communicate(timeout=5)
+        except subprocess.TimeoutExpired:
+            self.p.kill()
+            self.p.communicate()
         try:
             self.driver.switch_to.alert.accept()
         except Exception:
             pass
 
     def test_cli_gdrive_location(self):
-        gdrive_dir = os.path.join(CALIBRE_WEB_PATH + INDEX, 'hü lo')
+        gdrive_dir = os.path.join(self.app_dir, 'hü lo')
         os.makedirs(gdrive_dir)
-        self.start_cw(os.path.join(CALIBRE_WEB_PATH + INDEX, u'cps.py'), os.path.join(gdrive_dir, u'gü dr.app'))
+        self.start_cw(os.path.join(self.app_dir, u'cps.py'), os.path.join(gdrive_dir, u'gü dr.app'), env={"APP_MODE": "test", "CALIBRE_PORT": self.worker_port})
         self.fill_db_config({'config_use_google_drive': 1})
-        time.sleep(BOOT_TIME)
+        wait_for_reboot("http://127.0.0.1:" + self.worker_port)
         self.fill_db_config({'config_google_drive_folder': 'test'})
-        time.sleep(BOOT_TIME)
-        self.driver.get("http://127.0.0.1:" + PORTS[0])
+        wait_for_reboot("http://127.0.0.1:" + self.worker_port)
+        self.driver.get("http://127.0.0.1:" + self.worker_port)
         time.sleep(WAIT_GDRIVE)
         self.stop_calibre_web()
         time.sleep(5)  # shutdowntime
-        self.p.terminate()
+        try:
+            self.p.terminate()
+            self.p.communicate(timeout=5)
+        except subprocess.TimeoutExpired:
+            self.p.kill()
+            self.p.communicate()
         try:
             self.driver.switch_to.alert.accept()
         except Exception:
@@ -196,19 +186,24 @@ class TestCliGdrivedb(unittest.TestCase, ui_class):
         self.assertTrue(os.path.isfile(os.path.join(gdrive_dir, u'gü dr.app')))
 
     def test_cli_gdrive_folder(self):
-        gdrive_dir = os.path.join(CALIBRE_WEB_PATH + INDEX, 'hü lo')
+        gdrive_dir = os.path.join(self.app_dir, 'hü lo')
         os.makedirs(gdrive_dir)
-        self.start_cw(os.path.join(CALIBRE_WEB_PATH + INDEX, u'cps.py'), gdrive_dir)
+        self.start_cw(os.path.join(self.app_dir, u'cps.py'), gdrive_dir, env={"APP_MODE": "test", "CALIBRE_PORT": self.worker_port})
         self.fill_db_config({'config_use_google_drive': 1})
-        time.sleep(BOOT_TIME)
+        wait_for_reboot("http://127.0.0.1:" + self.worker_port)
         self.fill_db_config({'config_google_drive_folder': 'test'})
-        time.sleep(BOOT_TIME)
+        wait_for_reboot("http://127.0.0.1:" + self.worker_port)
         self.assertTrue(self.check_element_on_page((By.ID, "flash_success")))
-        self.driver.get("http://127.0.0.1:" + PORTS[0])
+        self.driver.get("http://127.0.0.1:" + self.worker_port)
         time.sleep(WAIT_GDRIVE)
         self.stop_calibre_web()
         time.sleep(5)  # shutdowntime
-        self.p.terminate()
+        try:
+            self.p.terminate()
+            self.p.communicate(timeout=5)
+        except subprocess.TimeoutExpired:
+            self.p.kill()
+            self.p.communicate()
         try:
             self.driver.switch_to.alert.accept()
         except Exception:
@@ -217,14 +212,14 @@ class TestCliGdrivedb(unittest.TestCase, ui_class):
 
     def test_no_database(self):
         # check unconfigured database
-        os.chdir(CALIBRE_WEB_PATH + INDEX)
+        os.chdir(self.app_dir)
         p1 = process_open([self.py_version, u'cps.py'], [1])
-        time.sleep(BOOT_TIME)
+        wait_for_reboot("http://127.0.0.1:" + self.worker_port)
         try:
             # navigate to the application home page
-            self.driver.get("http://127.0.0.1:" + PORTS[0])
+            self.driver.get("http://127.0.0.1:" + self.worker_port)
             # Wait for config screen to show up
-            self.fill_db_config({'config_calibre_dir': TEST_DB})
+            self.fill_db_config({'config_calibre_dir': self.temp_dir})
             # wait for cw to reboot
             time.sleep(2)
             self.assertTrue(self.check_element_on_page((By.ID, 'flash_success')))
@@ -247,9 +242,9 @@ class TestCliGdrivedb(unittest.TestCase, ui_class):
         book_shelf = self.get_shelf_books_displayed()
         self.assertEqual(1, len(book_shelf))
         # copy database to different location, move location, check shelf is still there
-        alt_location = os.path.abspath(os.path.join(TEST_DB, "..", "alternate"))
+        alt_location = os.path.abspath(os.path.join(self.temp_dir, "..", "alternate"))
         os.makedirs(alt_location, exist_ok=True)
-        shutil.copy(os.path.join(TEST_DB, "metadata.db"), os.path.join(alt_location, "metadata.db"))
+        shutil.copy(os.path.join(self.temp_dir, "metadata.db"), os.path.join(alt_location, "metadata.db"))
         self.fill_db_config({'config_calibre_dir': alt_location})
         self.assertTrue(self.check_element_on_page((By.ID, 'flash_success')))
         # check shelf is still there
@@ -265,8 +260,15 @@ class TestCliGdrivedb(unittest.TestCase, ui_class):
         self.assertTrue(self.check_element_on_page((By.ID, 'config_calibre_dir')))
         self.stop_calibre_web(p1)
         try:
+            p1.terminate()
+            p1.communicate(timeout=5)
+        except subprocess.TimeoutExpired:
+            p1.kill()
+            p1.communicate()
+
+        try:
             self.driver.switch_to.alert.accept()
         except Exception:
             pass
-        os.unlink(os.path.join(CALIBRE_WEB_PATH + INDEX, "gdrive.db"))
+        os.unlink(os.path.join(self.app_dir, "gdrive.db"))
         shutil.rmtree(alt_location, ignore_errors=True)

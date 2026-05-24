@@ -1,16 +1,13 @@
 
-from unittest import TestCase
+from base_test import ParallelTestCase
 import time
 import os
 
 from selenium.webdriver.support.ui import Select
 from selenium.webdriver.common.by import By
-
-from helper_ui import ui_class
 from helper_email_convert import AIOSMTPServer
-from config_test import TEST_DB, SPLIT_LIB, BOOT_TIME, base_path, CALIBRE_WEB_PATH
+from config_test import SPLIT_LIB, BOOT_TIME, base_path
 from helper_func import startup, count_files, read_metadata_epub
-from helper_func import save_logfiles
 
 
 RESOURCES = {'ports': 2}
@@ -19,7 +16,7 @@ PORTS = ['8083', '1028']
 INDEX = ""
 
 
-class TestSplitLibrary(TestCase, ui_class):
+class TestSplitLibrary(ParallelTestCase):
     p = None
     driver = None
 
@@ -28,10 +25,10 @@ class TestSplitLibrary(TestCase, ui_class):
         try:
             startup(cls,
                     cls.py_version,
-                    {'config_calibre_dir': TEST_DB},
-                    port=PORTS[0],
-                    index=INDEX,
-                    env={"APP_MODE": "test"},
+                    {'config_calibre_dir': cls.temp_dir},
+                    port=cls.worker_port,
+                    app_dir=cls.app_dir,
+                    env={"APP_MODE": "test", "CALIBRE_PORT": cls.worker_port},
                     split=True,
                     lib_path=SPLIT_LIB
                     )
@@ -44,19 +41,19 @@ class TestSplitLibrary(TestCase, ui_class):
 
     @classmethod
     def tearDownClass(cls):
-        cls.driver.get("http://127.0.0.1:" + PORTS[0])
+        cls.driver.get("http://127.0.0.1:" + cls.worker_port)
         cls.stop_calibre_web()
         # close the browser window and stop calibre-web
         cls.driver.quit()
         cls.p.terminate()
-        save_logfiles(cls, cls.__name__)
+        super().tearDownClass()
 
     # check thumbnail generation working
     def test_thumbnails(self):
         self.fill_thumbnail_config({'schedule_generate_book_covers': 1})
         self.assertTrue(self.check_element_on_page((By.ID, "flash_success")))
         self.restart_calibre_web()
-        thumbnail_cache_path = os.path.join(CALIBRE_WEB_PATH + INDEX, 'cps', 'cache', 'thumbnails')
+        thumbnail_cache_path = os.path.join(self.app_dir, 'cps', 'cache', 'thumbnails')
         book_thumbnail_reference = count_files(thumbnail_cache_path)
         self.assertTrue(book_thumbnail_reference > 10)
 

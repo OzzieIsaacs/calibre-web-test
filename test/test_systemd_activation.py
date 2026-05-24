@@ -1,41 +1,41 @@
-#!/usr/bin/env python
 # -*- coding: utf-8 -*-
 
 import unittest
+from base_test import ParallelTestCase
 import os
 import time
 import shutil
 import re
 
-from helper_ui import ui_class
-from helper_func import kill_dead_cps, save_logfiles
-from config_test import CALIBRE_WEB_PATH, TEST_DB, BOOT_TIME, base_path
 from selenium import webdriver
 from selenium.webdriver.common.by import By
+from helper_func import kill_dead_cps
+from config_test import BOOT_TIME, base_path
 
 
 RESOURCES = {'fix_ports': 5555}
 INDEX = ""
 
 @unittest.skipIf(os.name=="nt", "Sockets are not available on Windows")
-class TestSystemdActivation(unittest.TestCase, ui_class):
+class TestSystemdActivation(ParallelTestCase):
     driver = None
 
     @classmethod
     def setUpClass(cls):
+        super().setUpClass()
         cls.driver = webdriver.Firefox()
         cls.driver.implicitly_wait(10)
         cls.driver.maximize_window()
         # startup function is not called, therefore direct print
-        print("\n%s - %s: " % (cls.py_version, cls.__name__))
-        shutil.rmtree(TEST_DB, ignore_errors=True)
+        # print("\n%s - %s: " % (cls.py_version, cls.__name__))
+        shutil.rmtree(cls.temp_dir, ignore_errors=True)
 
-        shutil.copytree(os.path.join(os.path.dirname(os.path.abspath(__file__)), 'Calibre_db'), TEST_DB)
+        shutil.copytree(os.path.join(os.path.dirname(os.path.abspath(__file__)), 'Calibre_db'), cls.temp_dir)
 
     def setUp(self):
         os.chdir(base_path)
         try:
-            os.remove(os.path.join(CALIBRE_WEB_PATH + INDEX, 'app.db'))
+            os.remove(os.path.join(self.app_dir, 'app.db'))
         except Exception:
             pass
 
@@ -43,13 +43,12 @@ class TestSystemdActivation(unittest.TestCase, ui_class):
     def tearDownClass(cls):
         # close the browser window
         os.chdir(base_path)
-        kill_dead_cps()
+        kill_dead_cps(cls.worker_port)
         try:
-            os.remove(os.path.join(CALIBRE_WEB_PATH + INDEX, 'app.db'))
+            os.remove(os.path.join(cls.app_dir, 'app.db'))
         except Exception:
             print("Can't delete app.db")
-            pass
-        save_logfiles(cls, cls.__name__)
+        super().tearDownClass()
 
 
     # to make this work a running systemd with the following unit files is needed:
@@ -80,8 +79,8 @@ class TestSystemdActivation(unittest.TestCase, ui_class):
     # The network-online.service waits for the network to be up
     def test_systemd_activation(self):
 
-        if os.path.exists(os.path.join(CALIBRE_WEB_PATH, "calibre-web.log")):
-            os.unlink(os.path.join(CALIBRE_WEB_PATH, "calibre-web.log"))
+        if os.path.exists(os.path.join(self.app_dir, "calibre-web.log")):
+            os.unlink(os.path.join(self.app_dir, "calibre-web.log"))
 
         try:
             # create a new Firefox session
@@ -97,13 +96,13 @@ class TestSystemdActivation(unittest.TestCase, ui_class):
             # Wait for config screen with login button to show up
             self.assertTrue(self.check_element_on_page((By.NAME, "username")))
             time.sleep(2)
-            with open(os.path.join(CALIBRE_WEB_PATH, 'calibre-web.log'), 'r') as logfile:
+            with open(os.path.join(self.app_dir, 'calibre-web.log'), 'r') as logfile:
                 data = logfile.read()
             self.assertIsNotNone(re.findall('server on systemd-socket:[::]:5555', data),
                                  "Systemd startup not in logfile")
         except Exception:
             pass
-        self.fill_db_config({'config_calibre_dir': TEST_DB})
+        self.fill_db_config({'config_calibre_dir': self.temp_dir})
         time.sleep(BOOT_TIME)
 
         self.assertTrue(self.check_element_on_page((By.NAME, "query")))

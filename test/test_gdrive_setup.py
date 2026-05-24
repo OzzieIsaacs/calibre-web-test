@@ -1,62 +1,37 @@
 #!/usr/bin/env python
 # -*- coding: utf-8 -*-
 
+
 import unittest
+from base_test import ParallelTestCase
 import os
 import json
-from selenium.webdriver.common.by import By
 import time
 import shutil
-from helper_ui import ui_class
 
-from config_test import CALIBRE_WEB_PATH, TEST_DB, BOOT_TIME, base_path
-from helper_func import add_dependency, remove_dependency, startup
-from helper_func import save_logfiles
-# test editing books on gdrive
-
-
-RESOURCES = {'ports': 1, "gdrive": True}
-
-PORTS = ['8083']
-INDEX = ""
+from selenium.webdriver.common.by import By
+from config_test import base_path
+from helper_func import startup
 
 
 @unittest.skipIf(not os.path.exists(os.path.join(base_path, "files", "client_secrets.json")) or
                  not os.path.exists(os.path.join(base_path, "files", "gdrive_credentials")),
                  "client_secrets.json and/or gdrive_credentials file is missing")
-class TestSetupGdrive(unittest.TestCase, ui_class):
+class TestSetupGdrive(ParallelTestCase):
     p=None
     driver = None
     dependency = ["oauth2client", "PyDrive2", "PyYAML", "google-api-python-client", "httplib2"]
 
     @classmethod
     def setUpClass(cls):
-        add_dependency(cls.dependency, cls.__name__)
-
-
+        super().setUpClass()
         try:
-            # remove client_secrets.file
-            dst = os.path.join(CALIBRE_WEB_PATH + INDEX, "client_secrets.json")
-            if os.path.exists(dst):
-                os.unlink(dst)
-
-            # delete settings_yaml file
-            set_yaml = os.path.join(CALIBRE_WEB_PATH + INDEX, "settings.yaml")
-            if os.path.exists(set_yaml):
-                os.unlink(set_yaml)
-
-            # delete gdrive file
-            gdrive_db = os.path.join(CALIBRE_WEB_PATH + INDEX, "gdrive.db")
-            if os.path.exists(gdrive_db):
-                os.unlink(gdrive_db)
-
-            # delete gdrive authenticated file
-            gdauth = os.path.join(CALIBRE_WEB_PATH + INDEX, "gdrive_credentials")
-            if os.path.exists(gdauth):
-                os.unlink(gdauth)
-
-            startup(cls, cls.py_version, {}, port=PORTS[0], index=INDEX, 
-                    only_startup=True, env={"APP_MODE": "test"})
+            startup(cls, cls.py_version, {},
+                    port=cls.worker_port,
+                    app_dir=cls.app_dir,
+                    env={"APP_MODE": "test", "CALIBRE_PORT": cls.worker_port},
+                    lib_dest=cls.temp_dir,
+                    only_startup=True)
         except Exception as e:
             try:
                 print(e)
@@ -68,7 +43,7 @@ class TestSetupGdrive(unittest.TestCase, ui_class):
     @classmethod
     def tearDownClass(cls):
         try:
-            cls.driver.get("http://127.0.0.1:" + PORTS[0])
+            cls.driver.get("http://127.0.0.1:" + cls.worker_port)
             cls.stop_calibre_web()
             # close the browser window and stop calibre-web
             cls.driver.quit()
@@ -76,10 +51,8 @@ class TestSetupGdrive(unittest.TestCase, ui_class):
         except Exception as e:
             print(e)
 
-        remove_dependency(cls.dependency)
-
-        src1 = os.path.join(CALIBRE_WEB_PATH + INDEX, "client_secrets.json")
-        src = os.path.join(CALIBRE_WEB_PATH + INDEX, "client_secret.json")
+        src1 = os.path.join(cls.app_dir, "client_secrets.json")
+        src = os.path.join(cls.app_dir, "client_secret.json")
         if os.path.exists(src1):
             os.chmod(src1, 0o764)
             try:
@@ -93,26 +66,26 @@ class TestSetupGdrive(unittest.TestCase, ui_class):
                 os.unlink(src)
             except PermissionError:
                 print('File delete failed')
-        save_logfiles(cls, cls.__name__)
+        super().tearDownClass()
 
 
     def test_config_gdrive(self):
         # invalid db and tick gdrive
-        self.fill_db_config(dict(config_calibre_dir=TEST_DB[:-1], config_use_google_drive=1))
+        self.fill_db_config(dict(config_calibre_dir=self.temp_dir[:-1], config_use_google_drive=1))
         confirm = self.check_element_on_page((By.ID, 'invalid_confirm'))
         time.sleep(1)
         self.assertTrue(confirm)
         confirm.click()
         # Tick gdrive and valid db
         time.sleep(1)
-        self.fill_db_config(dict(config_calibre_dir=TEST_DB, config_use_google_drive=1))
+        self.fill_db_config(dict(config_calibre_dir=self.temp_dir, config_use_google_drive=1))
         # error no json file
         self.assertTrue(self.check_element_on_page((By.ID, 'flash_danger')))
         use_gdrive = self.check_element_on_page((By.ID, "config_use_google_drive"))
         self.assertTrue(use_gdrive)
         self.assertFalse(use_gdrive.is_selected())
 
-        dst = os.path.join(CALIBRE_WEB_PATH + INDEX, "client_secrets.json")
+        dst = os.path.join(self.app_dir, "client_secrets.json")
         src = os.path.join(base_path, "files", "client_secrets.json")
         shutil.copy(src, dst)
         os.chmod(dst, 0o040)

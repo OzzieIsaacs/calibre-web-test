@@ -1,14 +1,4 @@
 # -*- coding: utf-8 -*-
-
-import selenium.webdriver as webdriver
-from selenium.webdriver.common.by import By
-from selenium.webdriver.common.keys import Keys
-from selenium.webdriver.support.ui import WebDriverWait, Select
-from selenium.webdriver.support import expected_conditions as EC
-from selenium.common.exceptions import TimeoutException
-from selenium.common.exceptions import NoSuchElementException
-from config_test import BOOT_TIME, VENV_PYTHON, CALIBRE_WEB_PATH
-
 import copy
 import os
 try:
@@ -19,11 +9,18 @@ import time
 import re
 import lxml.etree
 from functools import cmp_to_key
+from io import StringIO
 
-try:
-    from StringIO import StringIO
-except ImportError:
-    from io import StringIO
+import selenium.webdriver as webdriver
+from selenium.webdriver.common.by import By
+from selenium.webdriver.common.keys import Keys
+from selenium.webdriver.support.ui import WebDriverWait, Select
+from selenium.webdriver.support import expected_conditions as EC
+from selenium.common.exceptions import TimeoutException
+from selenium.common.exceptions import NoSuchElementException
+from config_test import BOOT_TIME, VENV_PYTHON, CALIBRE_WEB_PATH
+from helper_func import wait_for_reboot
+
 
 RESTRICT_TAG_ME         = 0
 RESTRICT_COL_ME         = 1
@@ -84,7 +81,6 @@ def cust_compare(item1, item2):
 
 
 class ui_class():
-    py_version = os.path.join(CALIBRE_WEB_PATH, "venv", VENV_PYTHON)    # ToDO
 
     @classmethod
     def login(cls, user, passwd):
@@ -454,13 +450,13 @@ class ui_class():
         cls.driver.find_element(By.NAME, "submit").click()
 
     @classmethod
-    def restart_calibre_web(cls):
+    def restart_calibre_web(cls, host="127.0.0.1:"):
         cls.goto_page('admin_setup')
         cls.driver.find_element(By.ID, 'admin_restart').click()
         time.sleep(1)
         element = cls.check_element_on_page((By.ID, "restart"))
         element.click()
-        time.sleep(BOOT_TIME +3 )
+        wait_for_reboot(host + cls.worker_port)
 
     def reconnect_database(self):
         self.goto_page('admin_setup')
@@ -471,11 +467,13 @@ class ui_class():
         time.sleep(3)
 
     @classmethod
-    def stop_calibre_web(cls, proc=None):
+    def stop_calibre_web(cls, proc=None, port= None):
+        if port is None:
+            port = cls.worker_port
         try:
             cls.goto_page('admin_setup')
         except:
-            cls.driver.get("http://127.0.0.1:8083")
+            cls.driver.get("http://127.0.0.1:" + port)
             if not cls.check_user_logged_in("admin", True):
                 cls.login('admin','admin123')
             cls.goto_page('admin_setup')
@@ -751,8 +749,11 @@ class ui_class():
         cls.driver.find_element(By.NAME, clicker).click()
 
     @classmethod
-    def check_element_on_page(cls, element, timeout=BOOT_TIME):
+    def check_element_on_page(cls, element, no_element=None, timeout=5):
         try:
+            if no_element:
+                WebDriverWait(cls.driver, timeout).until(EC.presence_of_element_located(no_element))
+                timeout = 0
             el = WebDriverWait(cls.driver, timeout).until(EC.presence_of_element_located(element))
             return el
         except TimeoutException:
@@ -805,14 +806,14 @@ class ui_class():
     def get_user_settings(self, name):
         if self.navigate_to_user(name):
             user_settings=dict()
-            element = self.check_element_on_page((By.ID, "name"))
+            element = self.check_element_on_page((By.ID, "name"), (By.CLASS_NAME, "discover"))
             if element:
                 user_settings['name'] = element.get_attribute('value')
             else:
                 user_settings['name'] = None
             user_settings['email'] = self.check_element_on_page((By.ID, "email")).get_attribute('value')
             user_settings['kindle_mail'] = self.check_element_on_page((By.ID, "kindle_mail")).get_attribute('value')
-            element = self.check_element_on_page((By.ID, "locale"))
+            element = self.check_element_on_page((By.ID, "locale"), (By.CLASS_NAME, "discover"))
             if element:
                 user_settings['locale'] = element.get_attribute('value')
             else:
@@ -826,7 +827,7 @@ class ui_class():
             user_settings['show_32'] = int(self.check_element_on_page((By.ID, "show_32")).is_selected())
             user_settings['show_64'] = int(self.check_element_on_page((By.ID, "show_64")).is_selected())
             user_settings['show_128'] = int(self.check_element_on_page((By.ID, "show_128")).is_selected())
-            element = self.check_element_on_page((By.ID, "show_256"))
+            element = self.check_element_on_page((By.ID, "show_256"), (By.CLASS_NAME, "discover"))
             if element:
                 user_settings['show_256'] = element.is_selected()
             else:
@@ -837,55 +838,55 @@ class ui_class():
             user_settings['show_4096'] = int(self.check_element_on_page((By.ID, "show_4096")).is_selected())
             user_settings['show_8192'] = int(self.check_element_on_page((By.ID, "show_8192")).is_selected())
             user_settings['show_16384'] = int(self.check_element_on_page((By.ID, "show_16384")).is_selected())
-            element = self.check_element_on_page((By.ID, "show_32768"))
+            element = self.check_element_on_page((By.ID, "show_32768"), (By.CLASS_NAME, "discover"))
             if element:
                 user_settings['show_32768'] = element.is_selected()
             else:
                 user_settings['show_32768'] = None
-            element = self.check_element_on_page((By.ID, "show_65536"))
+            element = self.check_element_on_page((By.ID, "show_65536"), (By.CLASS_NAME, "discover"))
             if element:
                 user_settings['show_65536'] = element.is_selected()
             else:
                 user_settings['show_65536'] = None
-            element = self.check_element_on_page((By.ID, "show_131072"))
+            element = self.check_element_on_page((By.ID, "show_131072"), (By.CLASS_NAME, "discover"))
             if element:
                 user_settings['show_131072'] = element.is_selected()
             else:
                 user_settings['show_131072'] = None
             user_settings['Show_detail_random'] = int(self.check_element_on_page((By.ID, "Show_detail_random")).is_selected())
-            element = self.check_element_on_page((By.ID, "admin_role"))
+            element = self.check_element_on_page((By.ID, "admin_role"), (By.CLASS_NAME, "discover"))
             if element:
                 user_settings['admin_role'] = element.is_selected()
             else:
                 user_settings['admin_role'] = None
 
             user_settings['download_role'] = int(self.check_element_on_page((By.ID, "download_role")).is_selected())
-            element = self.check_element_on_page((By.ID, "upload_role"))
+            element = self.check_element_on_page((By.ID, "upload_role"), (By.CLASS_NAME, "discover"))
             if element:
                 user_settings['upload_role'] = element.is_selected()
             else:
                 user_settings['upload_role'] = None
-            element = self.check_element_on_page((By.ID, "edit_role"))
+            element = self.check_element_on_page((By.ID, "edit_role"), (By.CLASS_NAME, "discover"))
             if element:
                 user_settings['edit_role'] = element.is_selected()
             else:
                 user_settings['edit_role'] = None
-            element = self.check_element_on_page((By.ID, "delete_role"))
+            element = self.check_element_on_page((By.ID, "delete_role"), (By.CLASS_NAME, "discover"))
             if element:
                 user_settings['delete_role'] = element.is_selected()
             else:
                 user_settings['delete_role'] = None
-            element = self.check_element_on_page((By.ID, "kobo_only_shelves_sync"))
+            element = self.check_element_on_page((By.ID, "kobo_only_shelves_sync"), (By.CLASS_NAME, "discover"))
             if element:
                 user_settings['kobo_only_shelves_sync'] = element.is_selected()
             else:
                 user_settings['kobo_only_shelves_sync'] = None
-            element = self.check_element_on_page((By.ID, "passwd_role"))
+            element = self.check_element_on_page((By.ID, "passwd_role"), (By.CLASS_NAME, "discover"))
             if element:
                 user_settings['passwd_role'] = element.is_selected()
             else:
                 user_settings['passwd_role'] = None
-            element = self.check_element_on_page((By.ID, "edit_shelf_role"))
+            element = self.check_element_on_page((By.ID, "edit_shelf_role"), (By.CLASS_NAME, "discover"))
             if element:
                 user_settings['edit_shelf_role'] = element.is_selected()
             else:
@@ -1271,7 +1272,7 @@ class ui_class():
             book_r['title']= meta[0].getchildren()[0].text
             authors = meta[1].getchildren()
             book_r['author'] = [a.text for a in authors if a.text != '&' and a.attrib.get('class') != 'author-name author-hidden']
-            book_r['author_ele'] = [cls.check_element_on_page((By.XPATH, "//div[contains(@class, 'load-more')]//a[@href='" + a.attrib['href'] + "']")) for a in authors if a.attrib.get('href')]
+            book_r['author_ele'] = [cls.check_element_on_page((By.XPATH, "//div[contains(@class, 'load-more')]//a[@href='" + a.attrib['href'] + "']"), (By.CLASS_NAME, "load-more")) for a in authors if a.attrib.get('href')]
 
             if len(meta) >= 3:
                 for met in meta[2:]:
@@ -1334,7 +1335,7 @@ class ui_class():
     @classmethod
     def get_list_books_displayed(cls, rating=False):
         # expects grid view
-        grid = cls.check_element_on_page((By.ID, "list-button"))
+        grid = cls.check_element_on_page((By.ID, "list-button"), (By.CLASS_NAME, "filterheader"))
         if grid:
             index = 5
             link = 1
@@ -1492,7 +1493,9 @@ class ui_class():
         return books
 
     @classmethod
-    def get_book_details(cls,id=-1, root_url="http://127.0.0.1:8083"):
+    def get_book_details(cls,id=-1, root_url=None):
+        if root_url is None:
+            root_url = "http://127.0.0.1:" + cls.worker_port
         ret = dict()
         if id > 0:
             cls.driver.get(root_url + "/book/" + str(id))
@@ -1642,11 +1645,11 @@ class ui_class():
                 "href")
         r = requests.session()
         if user.lower() != "guest":
-            login_page = r.get('http://127.0.0.1:8083/login', timeout=20)
+            login_page = r.get(f'http://127.0.0.1:{self.worker_port}/login', timeout=20)
             token = re.search('<input type="hidden" name="csrf_token" value="(.*)">', login_page.text)
             payload = {'username': user, 'password': password, 'submit': "", 'next': "/", "remember_me": "on",
                        "csrf_token": token.group(1)}
-            r.post('http://127.0.0.1:8083/login', data=payload, timeout=20)
+            r.post(f'http://127.0.0.1:{self.worker_port}/login', data=payload, timeout=20)
         resp = r.get(download_link, timeout=20)
         r.close()
         return resp.status_code, resp.content
@@ -1759,9 +1762,11 @@ class ui_class():
             webdriver.ActionChains(cls.driver).send_keys(Keys.ESCAPE).perform()
 
     @classmethod
-    def edit_book(cls, id=-1, content=dict(), custom_content=dict(), detail_v=False, root_url='http://127.0.0.1:8083'):
-        if id>0:
-            cls.driver.get(root_url + "/admin/book/"+str(id))
+    def edit_book(cls, id=-1, content=dict(), custom_content=dict(), detail_v=False, root_url=None):
+        if root_url is None:
+            root_url = f'http://127.0.0.1:{cls.worker_port}'
+        if id > 0:
+            cls.driver.get(root_url + "/admin/book/" + str(id))
             time.sleep(2)
         cls.check_element_on_page((By.ID,"book_edit_frm"))
 
@@ -1885,7 +1890,9 @@ class ui_class():
         delete_button.click()
         return True
 
-    def delete_book(self, id, root_url="http://127.0.0.1:8083"):
+    def delete_book(self, id, root_url=None):
+        if root_url is None:
+            root_url = f"http://127.0.0.1:{self.worker_port}"
         if id != -1:
             self.get_book_details(id, root_url)
             self.check_element_on_page((By.ID, "edit_book")).click()
@@ -2095,7 +2102,9 @@ class ui_class():
 
 
     @classmethod
-    def get_convert_book(cls, id=-1, root_url='http://127.0.0.1:8083'):
+    def get_convert_book(cls, id=-1, root_url=None):
+        if root_url is None:
+            root_url = f'http://127.0.0.1:{cls.worker}'
         if id>0:
             cls.driver.get(root_url + "/admin/book/"+str(id))
         cls.check_element_on_page((By.ID,"book_edit_frm"))

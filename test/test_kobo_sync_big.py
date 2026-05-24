@@ -1,32 +1,24 @@
-#!/usr/bin/env python
 # -*- coding: utf-8 -*-
 
+from base_test import ParallelTestCase
 import os
 import re
 import time
-import unittest
 import requests
 import shutil
 
-from helper_ui import ui_class
-from config_test import TEST_DB, base_path, CALIBRE_WEB_PATH, NUM_THUMBNAILS
-from helper_func import startup, get_Host_IP, add_dependency, remove_dependency, count_files
+from config_test import base_path,  NUM_THUMBNAILS
+from helper_func import startup, get_Host_IP, count_files
 from helper_db import add_books
 from selenium.webdriver.common.by import By
-from helper_func import save_logfiles
+
 from selenium.webdriver.support.ui import WebDriverWait
 from selenium.webdriver.support import expected_conditions as EC
 
 BOOK_COUNT = 1520
 
 
-RESOURCES = {'ports': 1}
-
-PORTS = ['8083']
-INDEX = ""
-
-
-class TestKoboSyncBig(unittest.TestCase, ui_class):
+class TestKoboSyncBig(ParallelTestCase):
 
     p = None
     driver = None
@@ -34,27 +26,30 @@ class TestKoboSyncBig(unittest.TestCase, ui_class):
     syncToken = dict()
     header = dict()
     data = dict()
-    json_line = ["jsonschema"]
+    dependency = ["jsonschema"]
 
     @classmethod
     def setUpClass(cls):
-        add_dependency(cls.json_line, cls.__name__)
-
+        super().setUpClass()
         try:
-            host = 'http://' + get_Host_IP() #  + ':' + PORTS[0]
-            startup(cls, cls.py_version, {'config_calibre_dir': TEST_DB, 'config_kobo_sync': 1,
+            host = 'http://' + get_Host_IP() #  + ':' + cls.worker_port
+            startup(cls, cls.py_version, {'config_calibre_dir': cls.temp_dir, 'config_kobo_sync': 1,
                                           'config_kepubifypath': "",
-                                          'config_kobo_proxy': 0}, port=PORTS[0], index=INDEX, host=host, env={"APP_MODE": "test"})
-            add_books(os.path.join(TEST_DB, "metadata.db"), BOOK_COUNT, cover=True, set_id=True)    # 1520
+                                          'config_kobo_proxy': 0},
+                    port=cls.worker_port,
+                    app_dir=cls.app_dir,
+                    env={"APP_MODE": "test", "CALIBRE_PORT": cls.worker_port},
+                    lib_dest=cls.temp_dir)
+            add_books(os.path.join(cls.temp_dir, "metadata.db"), BOOK_COUNT, cover=True, set_id=True)    # 1520
             time.sleep(3)
             WebDriverWait(cls.driver, 5).until(EC.presence_of_element_located((By.ID, "flash_success")))
             cls.goto_page('user_setup')
             cls.check_element_on_page((By.ID, "config_create_kobo_token")).click()
             time.sleep(1)
             link = cls.check_element_on_page((By.CLASS_NAME, "well"))
-            cls.kobo_address = host + ':' + PORTS[0] + '/kobo/' + re.findall(".*/kobo/(.*)", link.text)[0]
+            cls.kobo_address = host + ':' + cls.worker_port + '/kobo/' + re.findall(".*/kobo/(.*)", link.text)[0]
             cls.check_element_on_page((By.ID, "kobo_close")).click()
-            cls.driver.get("http://127.0.0.1:" + PORTS[0])
+            cls.driver.get("http://127.0.0.1:" + cls.worker_port)
             cls.login('admin', 'admin123')
             time.sleep(2)
         except Exception as e:
@@ -65,13 +60,12 @@ class TestKoboSyncBig(unittest.TestCase, ui_class):
 
     @classmethod
     def tearDownClass(cls):
-        cls.driver.get("http://127.0.0.1:" + PORTS[0])
+        cls.driver.get("http://127.0.0.1:" + cls.worker_port)
         cls.stop_calibre_web()
         cls.driver.quit()
         cls.p.terminate()
         # close the browser window and stop calibre-web
-        remove_dependency(cls.json_line)
-        save_logfiles(cls, cls.__name__)
+        super().tearDownClass()
 
     def inital_sync(self, user_id=None):
         kobo_address = user_id or self.kobo_address
@@ -341,7 +335,7 @@ class TestKoboSyncBig(unittest.TestCase, ui_class):
         # create 2 users
         self.create_user('user1', {'password': '123AbC*!', 'email': 'ada@b.com', "edit_role": 1, "download_role": 1})
         self.create_user('user2', {'password': '321AbC*!', 'email': 'aba@b.com', "edit_role": 1, "download_role": 1})
-        host = 'http://' + get_Host_IP() + ":" + PORTS[0]
+        host = 'http://' + get_Host_IP() + ":" + self.worker_port
         self.driver.get(host)   # still logged in
         # create links for both users
         self.navigate_to_user("user1")
@@ -470,10 +464,10 @@ class TestKoboSyncBig(unittest.TestCase, ui_class):
         self.login("admin", "admin123")
         self.edit_user("user1", {"delete": 1})
         self.edit_user("user2", {"delete": 1})
-        self.driver.get('http://127.0.0.1:' + PORTS[0])  # still logged in
+        self.driver.get('http://127.0.0.1:' + self.worker_port)  # still logged in
 
     def test_download_cover(self):
-        thumbnail_cache_path = os.path.join(CALIBRE_WEB_PATH + INDEX, 'cps', 'cache', 'thumbnails')
+        thumbnail_cache_path = os.path.join(self.app_dir, 'cps', 'cache', 'thumbnails')
         shutil.rmtree(thumbnail_cache_path, ignore_errors=True)
         # enable cover cache
         self.fill_thumbnail_config({'schedule_generate_book_covers': 1})

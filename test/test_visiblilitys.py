@@ -1,46 +1,47 @@
 # -*- coding: utf-8 -*-
 
-import unittest
-from selenium.webdriver.common.by import By
+from base_test import ParallelTestCase
 
-from helper_func import save_logfiles
 import time
 import re
 import requests
-from helper_ui import ui_class
+from selenium.webdriver.common.by import By
+
+from config_files.config_test import BOOT_TIME
 from helper_ui import RESTRICT_TAG_ME, RESTRICT_COL_USER
-from config_test import TEST_DB
-# from parameterized import parameterized_class
-from helper_func import startup, debug_startup
+from helper_func import startup
 
 
-RESOURCES = {'ports': 1}
-
-PORTS = ['8083']
-INDEX = ""
-
-
-class TestCalibreWebVisibilitys(unittest.TestCase, ui_class):
+class TestCalibreWebVisibilitys(ParallelTestCase):
 
     p = None
     driver = None
 
     @classmethod
     def setUpClass(cls):
+        super().setUpClass()
         try:
-            startup(cls, cls.py_version, {'config_calibre_dir': TEST_DB}, index=INDEX, env = {"APP_MODE": "test"})
+            # db_path = os.path.join(cls.temp_dir, "metadata.db")
+            startup(
+                cls, cls.py_version,
+                {'config_calibre_dir': cls.temp_dir},
+                app_dir=cls.app_dir,
+                port=cls.worker_port,
+                env = {"APP_MODE": "test", "CALIBRE_PORT": cls.worker_port},
+                lib_dest=cls.temp_dir
+            )
         except Exception:
             cls.driver.quit()
             cls.p.kill()
 
     @classmethod
     def tearDownClass(cls):
-        cls.driver.get("http://127.0.0.1:" + PORTS[0])
+        cls.driver.get("http://127.0.0.1:" + cls.worker_port)
         cls.stop_calibre_web()
         # close the browser window and stop calibre-web
         cls.driver.quit()
         cls.p.terminate()
-        save_logfiles(cls, cls.__name__)
+        super().tearDownClass()
 
     def test_checked_logged_in(self):
         # get the search textbox
@@ -74,7 +75,7 @@ class TestCalibreWebVisibilitys(unittest.TestCase, ui_class):
         list_element = self.goto_page('nav_author')
         self.assertIsNotNone(list_element)
         list_element[0].click()
-        self.driver.implicitly_wait(5)
+        # self.driver.implicitly_wait(5)
         self.assertFalse(self.check_element_on_page((By.ID, "books_rand")))
 
         # check random books shown in language section
@@ -390,13 +391,9 @@ class TestCalibreWebVisibilitys(unittest.TestCase, ui_class):
     # testcase always failed for unknown reason, therefore sleep calls ToDo: Why failed??
     def test_admin_change_visibility_authors(self):
         # maybe button not visible, and therefore click isn't working?
-        time.sleep(5)
         self.goto_page('user_setup')
-        time.sleep(5)
         self.change_user({'show_64': 0, 'email': 'a@f.de'})
-        time.sleep(5)
         self.change_user({'show_64': 0, 'email': 'a@f.de'})
-        time.sleep(5)
         self.assertTrue(self.check_element_on_page((By.ID, "flash_success")))
         self.assertFalse(self.check_element_on_page((By.ID, "nav_author")))
         self.change_user({'show_64': 1})
@@ -431,13 +428,11 @@ class TestCalibreWebVisibilitys(unittest.TestCase, ui_class):
         self.assertTrue(self.login("admin", "123AbC*!"))
         # remove password restrictions
         self.fill_basic_config({'config_password_policy':0})
-        time.sleep(5)
-        self.assertTrue(self.check_element_on_page((By.ID, "flash_success")))
+        self.assertTrue(self.check_element_on_page((By.ID, "flash_success"), timeout=BOOT_TIME))
         self.assertTrue(self.change_current_user_password("admin123"))
         # reenable  password restrictions
         self.fill_basic_config({'config_password_policy':1})
-        time.sleep(5)
-        self.assertTrue(self.check_element_on_page((By.ID, "flash_success")))
+        self.assertTrue(self.check_element_on_page((By.ID, "flash_success"), timeout=BOOT_TIME))
 
 
     # checks if admin can enter edit email-server settings
@@ -521,13 +516,13 @@ class TestCalibreWebVisibilitys(unittest.TestCase, ui_class):
 
     def test_search_functions(self):
         r = requests.session()
-        login_page = r.get('http://127.0.0.1:{}/login'.format(PORTS[0]))
+        login_page = r.get('http://127.0.0.1:{}/login'.format(self.worker_port))
         token = re.search('<input type="hidden" name="csrf_token" value="(.*)">', login_page.text)
         payload = {'username': 'admin', 'password': 'admin123', 'submit': "", 'next': "/", "remember_me": "on", "csrf_token": token.group(1)}
-        r.post('http://127.0.0.1:{}/login'.format(PORTS[0]), data=payload)
-        resp = r.get('http://127.0.0.1:{}/search'.format(PORTS[0]))
+        r.post('http://127.0.0.1:{}/login'.format(self.worker_port), data=payload)
+        resp = r.get('http://127.0.0.1:{}/search'.format(self.worker_port))
         self.assertEqual(200, resp.status_code)
-        resp = r.get('http://127.0.0.1:{}/advsearch'.format(PORTS[0]))
+        resp = r.get('http://127.0.0.1:{}/advsearch'.format(self.worker_port))
         self.assertEqual(200, resp.status_code)
         r.close()
 
@@ -906,20 +901,20 @@ class TestCalibreWebVisibilitys(unittest.TestCase, ui_class):
 
     def test_request_link_column_to_read_status(self):
         r = requests.session()
-        login_page = r.get('http://127.0.0.1:{}/login'.format(PORTS[0]))
+        login_page = r.get('http://127.0.0.1:{}/login'.format(self.worker_port))
         token = re.search('<input type="hidden" name="csrf_token" value="(.*)">', login_page.text)
         payload = {'username': 'admin', 'password': 'admin123', 'submit':"",
                    'next':"/", "remember_me":"on", "csrf_token": token.group(1)}
-        result = r.post('http://127.0.0.1:{}/login'.format(PORTS[0]), data=payload)
+        result = r.post('http://127.0.0.1:{}/login'.format(self.worker_port), data=payload)
         self.assertEqual(200, result.status_code)
-        config_page = r.get('http://127.0.0.1:{}/admin/viewconfig'.format(PORTS[0]))
+        config_page = r.get('http://127.0.0.1:{}/admin/viewconfig'.format(self.worker_port))
         token = re.search('<input type="hidden" name="csrf_token" value="(.*)">', config_page.text)
         payload = {"config_read_column": "-1", "csrf_token": token.group(1)}
-        result = r.post('http://127.0.0.1:{}/admin/viewconfig'.format(PORTS[0]), data=payload)
+        result = r.post('http://127.0.0.1:{}/admin/viewconfig'.format(self.worker_port), data=payload)
         self.assertTrue("flash_danger" in result.text)
         token = re.search('<input type="hidden" name="csrf_token" value="(.*)">', result.text)
         payload = {"config_read_column": "2", "csrf_token": token.group(1)}
-        result = r.post('http://127.0.0.1:{}/admin/viewconfig'.format(PORTS[0]), data=payload)
+        result = r.post('http://127.0.0.1:{}/admin/viewconfig'.format(self.worker_port), data=payload)
         self.assertTrue("flash_danger" in result.text)
         r.close()
 
@@ -1086,11 +1081,11 @@ class TestCalibreWebVisibilitys(unittest.TestCase, ui_class):
         self.assertTrue(self.check_element_on_page((By.ID, "title")))
         # check right cover of book is visible
         r = requests.session()
-        login_page = r.get('http://127.0.0.1:{}/login'.format(PORTS[0]))
+        login_page = r.get('http://127.0.0.1:{}/login'.format(self.worker_port))
         token = re.search('<input type="hidden" name="csrf_token" value="(.*)">', login_page.text)
         payload = {'username': 'admin', 'password': 'admin123', 'submit': "", 'next': "/", "remember_me": "on", "csrf_token": token.group(1)}
-        r.post('http://127.0.0.1:{}/login'.format(PORTS[0]), data=payload)
-        resp = r.get('http://127.0.0.1:{}/cover/{}'.format(PORTS[0], list_element[1][0]['id']))
+        r.post('http://127.0.0.1:{}/login'.format(self.worker_port), data=payload)
+        resp = r.get('http://127.0.0.1:{}/cover/{}'.format(self.worker_port, list_element[1][0]['id']))
         self.assertEqual('16790', resp.headers['Content-Length'])
         r.close()
         # check archive book visible in search result

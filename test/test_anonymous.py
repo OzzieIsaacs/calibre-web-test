@@ -1,46 +1,46 @@
-#!/usr/bin/env python
 # -*- coding: utf-8 -*-
 
-import unittest
+from base_test import ParallelTestCase
 import time
+import os
 from selenium.webdriver.common.by import By
-from helper_ui import ui_class
-from config_test import TEST_DB
 from helper_func import startup
-from helper_func import save_logfiles
-
-RESOURCES = {'ports': 1}
-
-PORTS = ['8083']
-INDEX = ""
 
 
-class TestAnonymous(unittest.TestCase, ui_class):
+class TestAnonymous(ParallelTestCase):
     p = None
     driver = None
 
     @classmethod
     def setUpClass(cls):
+        super().setUpClass()
         try:
-            startup(cls, cls.py_version, {'config_calibre_dir': TEST_DB, 'config_anonbrowse': 1}, index=INDEX, env={"APP_MODE": "test"})
+            startup(
+                cls, cls.py_version,
+                {'config_calibre_dir': cls.temp_dir, 'config_anonbrowse': 1},
+                port=cls.worker_port,
+                app_dir=cls.app_dir,
+                env={"APP_MODE": "test", "CALIBRE_PORT": cls.worker_port},
+                lib_dest=cls.temp_dir
+            )
         except Exception as e:
             print(e)
 
     @classmethod
     def tearDownClass(cls):
-        cls.driver.get("http://127.0.0.1:" + PORTS[0])
+        cls.driver.get("http://127.0.0.1:" + cls.worker_port)
         cls.stop_calibre_web()
         # close the browser window and stop calibre-web
         cls.driver.quit()
         cls.p.terminate()
-        save_logfiles(cls, cls.__name__)
+        super().tearDownClass()
 
     def tearDown(self):
         if not self.check_user_logged_in('admin'):
             try:
                 self.logout()
             except:
-                self.driver.get("http://127.0.0.1:" + PORTS[0])
+                self.driver.get("http://127.0.0.1:" + self.worker_port)
                 self.logout()
             self.check_element_on_page((By.ID, "top_user")).click()
             self.login('admin', 'admin123')
@@ -48,7 +48,7 @@ class TestAnonymous(unittest.TestCase, ui_class):
 
     def test_guest_about(self):
         self.logout()
-        self.assertFalse(self.goto_page('nav_about'))
+        self.assertFalse(self.goto_page('nav_about'), (By.CLASS_NAME, "navigation"))
 
     # Checks if random book section is available in all sidebar menus
     def test_guest_random_books_available(self):
@@ -61,7 +61,7 @@ class TestAnonymous(unittest.TestCase, ui_class):
 
         # check random books not shown in random section
         self.assertTrue(self.goto_page('nav_rand'))
-        self.assertFalse(self.check_element_on_page((By.ID, "books_rand")))
+        self.assertFalse(self.check_element_on_page((By.ID, "books_rand"), (By.CLASS_NAME, "navigation")))
 
         # check random books shown in category section
         list_element = self.goto_page('nav_cat')
@@ -82,38 +82,38 @@ class TestAnonymous(unittest.TestCase, ui_class):
         list_element = self.goto_page('nav_author')
         self.assertIsNotNone(list_element)
         list_element[0].click()
-        self.driver.implicitly_wait(5)
-        self.assertFalse(self.check_element_on_page((By.ID, "books_rand")))
+
+        self.assertFalse(self.check_element_on_page((By.ID, "books_rand"), (By.CLASS_NAME, "navigation")))
 
         # check random books shown in language section
         list_element = self.goto_page('nav_lang')
         self.assertIsNotNone(list_element)
         list_element[0].click()
-        self.assertTrue(self.check_element_on_page((By.ID, "books_rand")))
+        self.assertTrue(self.check_element_on_page((By.ID, "books_rand"), (By.CLASS_NAME, "navigation")))
 
         # check random books shown in hot section
         list_element = self.goto_page('nav_author')
         self.assertIsNotNone(list_element)
         self.goto_page('nav_hot')
-        self.assertTrue(self.check_element_on_page((By.ID, "books_rand")))
+        self.assertTrue(self.check_element_on_page((By.ID, "books_rand"), (By.CLASS_NAME, "navigation")))
 
         # check random books shown in publisher section
         list_element = self.goto_page('nav_publisher')
         self.assertIsNotNone(list_element)
         list_element[0].click()
-        self.assertTrue(self.check_element_on_page((By.ID, "books_rand")))
+        self.assertTrue(self.check_element_on_page((By.ID, "books_rand"), (By.CLASS_NAME, "navigation")))
 
         # check random books shown in rating section
         list_element = self.goto_page('nav_rate')
         self.assertIsNotNone(list_element)
         list_element[1].find_element(By.XPATH, '..').click()
-        self.assertTrue(self.check_element_on_page((By.ID, "books_rand")))
+        self.assertTrue(self.check_element_on_page((By.ID, "books_rand"), (By.CLASS_NAME, "navigation")))
 
         # check random books shown in format section
         list_element = self.goto_page('nav_format')
         self.assertIsNotNone(list_element)
         list_element[0].click()
-        self.assertTrue(self.check_element_on_page((By.ID, "books_rand")))
+        self.assertTrue(self.check_element_on_page((By.ID, "books_rand"), (By.CLASS_NAME, "navigation")))
 
         # Check random menu is in sidebar
         self.assertTrue(self.check_element_on_page((By.ID, "nav_rand")))
@@ -122,14 +122,14 @@ class TestAnonymous(unittest.TestCase, ui_class):
         self.edit_user('Guest', {'show_32': 0, 'show_128': 0, 'show_2': 0, 'show_8192': 0, 'show_16384': 0,
                                  'show_16': 0, 'show_4': 0, 'show_4096': 0, 'show_8': 0, 'show_64': 0})
         self.logout()
-        self.assertFalse(self.check_element_on_page((By.ID, "nav_read")))
-        self.assertFalse(self.check_element_on_page((By.ID, "nav_download")))
-        self.assertFalse(self.check_element_on_page((By.ID, "nav_list")))
-        self.assertFalse(self.check_element_on_page((By.ID, "nav_unread")))
-        self.assertFalse(self.check_element_on_page((By.ID, "nav_archived")))
-        self.assertFalse(self.check_element_on_page((By.ID, "nav_rate")))
-        self.assertFalse(self.check_element_on_page((By.ID, "nav_format")))
-        self.assertFalse(self.check_element_on_page((By.ID, "nav_publisher")))
+        self.assertFalse(self.check_element_on_page((By.ID, "nav_read"), (By.CLASS_NAME, "navigation")))
+        self.assertFalse(self.check_element_on_page((By.ID, "nav_download"), (By.CLASS_NAME, "navigation")))
+        self.assertFalse(self.check_element_on_page((By.ID, "nav_list"), (By.CLASS_NAME, "navigation")))
+        self.assertFalse(self.check_element_on_page((By.ID, "nav_unread"), (By.CLASS_NAME, "navigation")))
+        self.assertFalse(self.check_element_on_page((By.ID, "nav_archived"), (By.CLASS_NAME, "navigation")))
+        self.assertFalse(self.check_element_on_page((By.ID, "nav_rate"), (By.CLASS_NAME, "navigation")))
+        self.assertFalse(self.check_element_on_page((By.ID, "nav_format"), (By.CLASS_NAME, "navigation")))
+        self.assertFalse(self.check_element_on_page((By.ID, "nav_publisher"), (By.CLASS_NAME, "navigation")))
         self.assertTrue(self.check_element_on_page((By.ID, "nav_new")))
         # login as admin again
         self.login('admin', 'admin123')
@@ -140,49 +140,49 @@ class TestAnonymous(unittest.TestCase, ui_class):
                                  'show_16': 1, 'show_4': 1, 'show_4096': 1, 'show_8': 1, 'show_64': 1})
         self.assertTrue(self.check_element_on_page((By.ID, "flash_success")))
         self.logout()
-        self.assertFalse(self.check_element_on_page((By.ID, "nav_rand")))
+        self.assertFalse(self.check_element_on_page((By.ID, "nav_rand"), (By.CLASS_NAME, "navigation")))
         self.goto_page("nav_new")
         books = self.get_books_displayed()
         self.assertEqual(books[1][0]['id'],'13')
         self.assertEqual(books[1][3]['id'], '10')
         self.assertEqual(books[1][7]['id'], '5')
-        self.assertFalse(self.check_element_on_page((By.ID, "nav_rand")))
+        self.assertFalse(self.check_element_on_page((By.ID, "nav_rand"), (By.CLASS_NAME, "navigation")))
         # check random books not shown in category section
         list_element = self.goto_page("nav_cat")
         list_element[0].click()
-        self.assertTrue(self.check_element_on_page((By.ID, "books")))
-        self.assertFalse(self.check_element_on_page((By.ID, "nav_rand")))
+        self.assertTrue(self.check_element_on_page((By.ID, "books"), (By.CLASS_NAME, "navigation")))
+        self.assertFalse(self.check_element_on_page((By.ID, "nav_rand"), (By.CLASS_NAME, "navigation")))
         # check random books shown in series section
         self.goto_page("nav_serie")
         list_element = self.get_list_books_displayed()
         self.assertIsNotNone(list_element)
         list_element[0]['ele'].click()
 
-        self.assertTrue(self.check_element_on_page((By.ID, "books")))
-        self.assertFalse(self.check_element_on_page((By.ID, "nav_rand")))
+        self.assertTrue(self.check_element_on_page((By.ID, "books"), (By.CLASS_NAME, "navigation")))
+        self.assertFalse(self.check_element_on_page((By.ID, "nav_rand"), (By.CLASS_NAME, "navigation")))
         # check random books not shown in author section
         list_element = self.goto_page("nav_author")
         list_element[0].click()
-        self.assertTrue(self.check_element_on_page((By.ID, "books")))
-        self.assertFalse(self.check_element_on_page((By.ID, "nav_rand")))
+        self.assertTrue(self.check_element_on_page((By.ID, "books"), (By.CLASS_NAME, "navigation")))
+        self.assertFalse(self.check_element_on_page((By.ID, "nav_rand"), (By.CLASS_NAME, "navigation")))
         # check random books not shown in publisher section
         list_element = self.goto_page("nav_publisher")
         list_element[0].click()
         self.assertTrue(self.check_element_on_page((By.ID, "books")))
-        self.assertFalse(self.check_element_on_page((By.ID, "nav_rand")))
+        self.assertFalse(self.check_element_on_page((By.ID, "nav_rand"), (By.CLASS_NAME, "navigation")))
         # check random books not shown in language section
         list_element = self.goto_page("nav_lang")
         list_element[0].click()
         self.assertTrue(self.check_element_on_page((By.ID, "books")))
-        self.assertFalse(self.check_element_on_page((By.ID, "nav_rand")))
+        self.assertFalse(self.check_element_on_page((By.ID, "nav_rand"), (By.CLASS_NAME, "navigation")))
         # check random books not shown in hot section
         self.goto_page("nav_hot")
         self.assertTrue(self.check_element_on_page((By.ID, "books_rand")))
-        self.assertFalse(self.check_element_on_page((By.ID, "nav_rand")))
+        self.assertFalse(self.check_element_on_page((By.ID, "nav_rand"), (By.CLASS_NAME, "navigation")))
         # check random books not shown in best rated section
         self.goto_page("nav_rated")
         self.assertTrue(self.check_element_on_page((By.ID, "books_rand")))
-        self.assertFalse(self.check_element_on_page((By.ID, "nav_rand")))
+        self.assertFalse(self.check_element_on_page((By.ID, "nav_rand"), (By.CLASS_NAME, "navigation")))
         # Go to admin section and re enable show random view
         self.check_element_on_page((By.ID, "top_user")).click()
         self.login('admin', 'admin123')
@@ -249,7 +249,7 @@ class TestAnonymous(unittest.TestCase, ui_class):
         self.edit_user('Guest', {'show_128': 0})
         self.assertTrue(self.check_element_on_page((By.ID, "flash_success")))
         self.logout()
-        self.assertFalse(self.check_element_on_page((By.ID, "nav_rated")))
+        self.assertFalse(self.check_element_on_page((By.ID, "nav_rated"), (By.CLASS_NAME, "navigation")))
 
     # checks if admin can change user language
     def test_guest_change_visibility_language(self):
@@ -274,7 +274,7 @@ class TestAnonymous(unittest.TestCase, ui_class):
         self.edit_user('Guest', {'show_2': 0})
         self.assertTrue(self.check_element_on_page((By.ID, "flash_success")))
         self.logout()
-        self.assertFalse(self.check_element_on_page((By.ID, "nav_lang")))
+        self.assertFalse(self.check_element_on_page((By.ID, "nav_lang"), (By.CLASS_NAME, "navigation")))
 
     # checks if admin can change hot books
     def test_guest_change_visibility_hot(self):
@@ -287,7 +287,7 @@ class TestAnonymous(unittest.TestCase, ui_class):
         self.edit_user('Guest', {'show_16': 0})
         self.assertTrue(self.check_element_on_page((By.ID, "flash_success")))
         self.logout()
-        self.assertFalse(self.check_element_on_page((By.ID, "nav_hot")))
+        self.assertFalse(self.check_element_on_page((By.ID, "nav_hot"), (By.CLASS_NAME, "navigation")))
 
     # checks if admin can change series
     def test_guest_change_visibility_series(self):
@@ -316,7 +316,7 @@ class TestAnonymous(unittest.TestCase, ui_class):
         self.edit_user('Guest', {'show_4': 0})
         self.assertTrue(self.check_element_on_page((By.ID, "flash_success")))
         self.logout()
-        self.assertFalse(self.check_element_on_page((By.ID, "nav_serie")))
+        self.assertFalse(self.check_element_on_page((By.ID, "nav_serie"), (By.CLASS_NAME, "navigation")))
 
     # checks if admin can change publisher
     def test_guest_change_visibility_publisher(self):
@@ -336,7 +336,7 @@ class TestAnonymous(unittest.TestCase, ui_class):
         self.edit_user('Guest', {'show_4096': 0})
         self.assertTrue(self.check_element_on_page((By.ID, "flash_success")))
         self.logout()
-        self.assertFalse(self.check_element_on_page((By.ID, "nav_publisher")))
+        self.assertFalse(self.check_element_on_page((By.ID, "nav_publisher"), (By.CLASS_NAME, "navigation")))
 
     # checks if admin can change format
     def test_guest_change_visibility_format(self):
@@ -361,7 +361,7 @@ class TestAnonymous(unittest.TestCase, ui_class):
         self.edit_user('Guest', {'show_16384': 0})
         self.assertTrue(self.check_element_on_page((By.ID, "flash_success")))
         self.logout()
-        self.assertFalse(self.check_element_on_page((By.ID, "nav_format")))
+        self.assertFalse(self.check_element_on_page((By.ID, "nav_format"), (By.CLASS_NAME, "navigation")))
 
     # checks if admin can change ratings
     def test_guest_change_visibility_rating(self):
@@ -388,7 +388,7 @@ class TestAnonymous(unittest.TestCase, ui_class):
         self.edit_user('Guest', {'show_8192': 0})
         self.assertTrue(self.check_element_on_page((By.ID, "flash_success")))
         self.logout()
-        self.assertFalse(self.check_element_on_page((By.ID, "nav_rate")))
+        self.assertFalse(self.check_element_on_page((By.ID, "nav_rate"), (By.CLASS_NAME, "navigation")))
 
     # checks if admin can't change read and archive visibility, name, locale can't be changed and isn't visible
     def test_guest_restricted_settings_visibility(self):
@@ -422,7 +422,7 @@ class TestAnonymous(unittest.TestCase, ui_class):
         self.assertTrue(self.check_element_on_page((By.ID, "flash_success")))
         # Category not visible
         self.logout()
-        self.assertFalse(self.check_element_on_page((By.ID, "nav_cat")))
+        self.assertFalse(self.check_element_on_page((By.ID, "nav_cat"), (By.CLASS_NAME, "navigation")))
 
     def test_check_locale_guest(self):
         self.goto_page('admin_setup')
@@ -431,6 +431,6 @@ class TestAnonymous(unittest.TestCase, ui_class):
             if ele.text == 'Guest':
                 ele.click()
                 self.assertTrue(self.check_element_on_page((By.ID, "email")))
-                self.assertFalse(self.check_element_on_page((By.ID, "locale")))
+                self.assertFalse(self.check_element_on_page((By.ID, "locale"), (By.CLASS_NAME, "navigation")))
                 return
         self.assertTrue(False, "User account not found")

@@ -1,17 +1,9 @@
-#!/usr/bin/env python
 # -*- coding: utf-8 -*-
+
+from base_test import ParallelTestCase
 import shutil
-from unittest import TestCase
 import os
 import time
-
-from selenium.webdriver.common.by import By
-from helper_ui import ui_class
-from config_test import TEST_DB, base_path
-from helper_func import save_logfiles
-from helper_func import startup, add_dependency, remove_dependency
-from selenium.webdriver.support.ui import WebDriverWait
-from selenium.webdriver.support import expected_conditions as EC
 from diffimg import diff
 from io import BytesIO
 import base64
@@ -19,13 +11,14 @@ import mutagen
 from mutagen import mp3, wave, aiff, flac, oggvorbis, asf, mp4, apev2, oggopus, oggtheora
 from mutagen.flac import Picture
 
-RESOURCES = {'ports': 1}
+from selenium.webdriver.common.by import By
+from selenium.webdriver.support.ui import WebDriverWait
+from selenium.webdriver.support import expected_conditions as EC
+from config_test import base_path
+from helper_func import startup
 
-PORTS = ['8083']
-INDEX = ""
 
-
-class TestUploadAudio(TestCase, ui_class):
+class TestUploadAudio(ParallelTestCase):
     p = None
     driver = None
     dependencys = ["mutagen"]
@@ -34,12 +27,13 @@ class TestUploadAudio(TestCase, ui_class):
 
     @classmethod
     def setUpClass(cls):
-        add_dependency(cls.dependencys, cls.__name__)
-
+        super().setUpClass()
         try:
-            startup(cls, cls.py_version, {'config_calibre_dir': TEST_DB, 'config_uploading': 1},
-                    port=PORTS[0], index=INDEX,
-                    env={"APP_MODE": "test"})
+            startup(cls, cls.py_version, {'config_calibre_dir': cls.temp_dir, 'config_uploading': 1},
+                    port=cls.worker_port,
+                    app_dir=cls.app_dir,
+                    env={"APP_MODE": "test", "CALIBRE_PORT": cls.worker_port},
+                    lib_dest=cls.temp_dir)
             time.sleep(3)
             WebDriverWait(cls.driver, 5).until(EC.presence_of_element_located((By.ID, "flash_success")))
             png_cover_path = os.path.join(base_path, 'files', 'cover.png')
@@ -56,13 +50,12 @@ class TestUploadAudio(TestCase, ui_class):
 
     @classmethod
     def tearDownClass(cls):
-        remove_dependency(cls.dependencys)
-        cls.driver.get("http://127.0.0.1:" + PORTS[0])
+        cls.driver.get("http://127.0.0.1:" + cls.worker_port)
         cls.stop_calibre_web()
         # close the browser window and stop calibre-web
         cls.driver.quit()
         cls.p.terminate()
-        save_logfiles(cls, cls.__name__)
+        super().tearDownClass()
 
     def test_upload_mp3(self):
         dest = os.path.join(base_path, "files", 'base.mp3')

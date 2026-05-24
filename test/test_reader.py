@@ -1,14 +1,7 @@
-#!/usr/bin/env python
 # -*- coding: utf-8 -*-
 
 import unittest
-import helper_email_convert
-from helper_ui import ui_class
-from config_test import TEST_DB, base_path
-from selenium.webdriver.support.ui import Select
-from helper_func import startup, add_dependency, remove_dependency
-from selenium.webdriver.common.by import By
-from helper_func import save_logfiles, createcbz
+from base_test import ParallelTestCase
 import time
 import os
 from diffimg import diff
@@ -16,13 +9,15 @@ from io import BytesIO
 import rarfile
 from PIL import Image
 
+from selenium.webdriver.support.ui import Select
+import helper_email_convert
+from config_test import base_path
+from helper_func import startup
+from selenium.webdriver.common.by import By
+from helper_func import createcbz
 
-RESOURCES = {'ports': 1}
 
-PORTS = ['8083']
-INDEX =""
-
-class TestReader(unittest.TestCase, ui_class):
+class TestReader(ParallelTestCase):
 
     p = None
     driver = None
@@ -30,9 +25,13 @@ class TestReader(unittest.TestCase, ui_class):
 
     @classmethod
     def setUpClass(cls):
-        add_dependency(cls.dependencys, cls.__name__)
+        super().setUpClass()
         try:
-            startup(cls, cls.py_version, {'config_calibre_dir':TEST_DB}, port=PORTS[0], index=INDEX, env={"APP_MODE": "test"})
+            startup(cls, cls.py_version, {'config_calibre_dir':cls.temp_dir},
+                    port=cls.worker_port,
+                    app_dir=cls.app_dir,
+                    env={"APP_MODE": "test", "CALIBRE_PORT": cls.worker_port},
+                    lib_dest=cls.temp_dir)
             cls.current_handle = cls.driver.current_window_handle
 
         except Exception:
@@ -49,16 +48,13 @@ class TestReader(unittest.TestCase, ui_class):
 
     @classmethod
     def tearDownClass(cls):
-        remove_dependency(cls.dependencys)
         cls.driver.switch_to.window(cls.current_handle)
-        cls.driver.get("http://127.0.0.1:" + PORTS[0])
+        cls.driver.get("http://127.0.0.1:" + cls.worker_port)
         cls.stop_calibre_web()
         cls.driver.quit()
         cls.p.terminate()
         # close the browser window and stop calibre-web
-        # remove_dependency(cls.dependency)
-        save_logfiles(cls, cls.__name__)
-
+        super().tearDownClass()
 
     def test_txt_reader(self):
         self.get_book_details(1)
@@ -210,7 +206,7 @@ class TestReader(unittest.TestCase, ui_class):
             self.assertFalse('Not exactly one new tab was opened')
         self.driver.switch_to.window(new_handle[0])
         self.assertTrue(self.check_element_on_page((By.ID, "mainContent")))
-        with rarfile.RarFile(os.path.join(TEST_DB,"Asterix Lionherd", "comicdemo (3)",
+        with rarfile.RarFile(os.path.join(self.temp_dir,"Asterix Lionherd", "comicdemo (3)",
                                           "comicdemo - Asterix Lionherd.cbr")) as rf:
             pic1 = rf.read("comic0.jpg")
             pic2 = rf.read("comic1.jpg")

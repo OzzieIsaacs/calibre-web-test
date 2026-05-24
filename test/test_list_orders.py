@@ -1,16 +1,12 @@
 # -*- coding: utf-8 -*-
 
-import unittest
+from base_test import ParallelTestCase
 import time
 import os
-from selenium.webdriver.common.by import By
 
-from helper_func import save_logfiles
-from helper_ui import ui_class
-from config_test import TEST_DB
+from selenium.webdriver.common.by import By
 from helper_db import add_books
-# from parameterized import parameterized_class
-from helper_func import startup, debug_startup
+from helper_func import startup
 
 
 RESOURCES = {'ports': 1}
@@ -20,27 +16,32 @@ INDEX = ""
 
 
 # other tests regardign order of elements is in test_visibilities
-class TestCalibreWebListOrders(unittest.TestCase, ui_class):
+class TestCalibreWebListOrders(ParallelTestCase):
 
     p = None
     driver = None
 
     @classmethod
     def setUpClass(cls):
+        super().setUpClass()
         try:
-            startup(cls, cls.py_version, {'config_calibre_dir': TEST_DB}, port=PORTS[0], index=INDEX, env={"APP_MODE": "test"})
+            startup(cls, cls.py_version, {'config_calibre_dir': cls.temp_dir},
+                    port=cls.worker_port,
+                    app_dir=cls.app_dir,
+                    env={"APP_MODE": "test", "CALIBRE_PORT": cls.worker_port},
+                    lib_dest=cls.temp_dir)
         except Exception:
             cls.driver.quit()
             cls.p.kill()
 
     @classmethod
     def tearDownClass(cls):
-        cls.driver.get("http://127.0.0.1:" + PORTS[0])
+        cls.driver.get("http://127.0.0.1:" + cls.worker_port)
         cls.stop_calibre_web()
         # close the browser window and stop calibre-web
         cls.driver.quit()
         cls.p.terminate()
-        save_logfiles(cls, cls.__name__)
+        super().tearDownClass()
 
     def test_series_sort(self):
         self.goto_page('nav_serie')
@@ -515,7 +516,7 @@ class TestCalibreWebListOrders(unittest.TestCase, ui_class):
         self.check_element_on_page((By.ID, "grid-button")).click()
 
     def test_formats_click_none(self):
-        add_books(os.path.join(TEST_DB, "metadata.db"), 1, cover=True, set_id=False, no_data=True)  # 1520
+        add_books(os.path.join(self.temp_dir, "metadata.db"), 1, cover=True, set_id=False, no_data=True)  # 1520
         self.goto_page('nav_format')
         list_elements = self.get_list_books_displayed()
         for element in list_elements:

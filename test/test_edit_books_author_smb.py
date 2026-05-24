@@ -1,34 +1,28 @@
-#!/usr/bin/env python
 # -*- coding: utf-8 -*-
 
-
-from unittest import TestCase
+from base_test import ParallelTestCase
 import time
 import os
 
-from helper_ui import ui_class
 from helper_db import change_tag
 from config_test import SMB_LIB, base_path, BOOT_TIME
 from helper_func import startup, change_epub_meta
-from helper_func import save_logfiles
 from selenium.webdriver.common.by import By
 
 
-RESOURCES = {'ports': 1}
-
-PORTS = ['8083']
-INDEX = ""
-
-
-class TestEditAuthorsSmb(TestCase, ui_class):
+class TestEditAuthorsSmb(ParallelTestCase):
     p = None
     driver = None
 
     @classmethod
     def setUpClass(cls):
+        super().setUpClass()
         try:
-            startup(cls, cls.py_version, {'config_calibre_dir': SMB_LIB}, port=PORTS[0], index=INDEX,
-                    env={"APP_MODE": "test"}, lib_dest=SMB_LIB)
+            startup(cls, cls.py_version, {'config_calibre_dir': SMB_LIB},
+                    port=cls.worker_port,
+                    app_dir=cls.app_dir,
+                    env={"APP_MODE": "test", "CALIBRE_PORT": cls.worker_port},
+                    lib_dest=SMB_LIB)
             time.sleep(3)
         except Exception as e:
             cls.driver.quit()
@@ -36,12 +30,12 @@ class TestEditAuthorsSmb(TestCase, ui_class):
 
     @classmethod
     def tearDownClass(cls):
-        cls.driver.get("http://127.0.0.1:" + PORTS[0])
+        cls.driver.get("http://127.0.0.1:" + cls.worker_port)
         cls.stop_calibre_web()
         # close the browser window and stop calibre-web
         cls.driver.quit()
         cls.p.terminate()
-        save_logfiles(cls, cls.__name__)
+        super().tearDownClass()
 
     # One book of the author present
     def test_change_capital_one_author_one_book(self):
@@ -58,7 +52,7 @@ class TestEditAuthorsSmb(TestCase, ui_class):
                                                     'book8 - Leo baskerville.epub')))
         self.assertTrue(os.path.isfile(os.path.join(SMB_LIB, 'Leo baskerville/book8 (8)',
                                                     'cover.jpg')))
-        # 'Leo baskerville' in os.listdir(TEST_DB)
+        # 'Leo baskerville' in os.listdir(self.temp_dir)
         self.assertFalse('Leo Baskerville' in os.listdir(SMB_LIB))
         ret_code, content = self.download_book(8, "admin", "admin123")
         self.assertEqual(200, ret_code)

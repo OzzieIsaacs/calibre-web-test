@@ -1,6 +1,6 @@
-#!/usr/bin/env python
 # -*- coding: utf-8 -*-
-from unittest import TestCase
+
+from base_test import ParallelTestCase
 import time
 import os
 import shutil
@@ -8,59 +8,31 @@ import zipfile
 
 from selenium.webdriver.common.by import By
 from selenium.webdriver.support.ui import Select
-from helper_ui import ui_class
-from config_test import CALIBRE_WEB_PATH, TEST_DB, base_path, WAIT_GDRIVE
-from helper_func import startup, save_logfiles, read_metadata_epub, read_opf_metadata
+from config_test import base_path
+from helper_func import startup, read_metadata_epub, read_opf_metadata
 from helper_func import add_dependency, remove_dependency
 from helper_gdrive import prepare_gdrive, connect_gdrive
 from helper_email_convert import calibre_path, kepubify_path
 
-RESOURCES = {'ports': 1, "gdrive": True}
 
-PORTS = ['8083']
-INDEX = ""
-
-class TestEmbedMetadataGdrive(TestCase, ui_class):
+class TestEmbedMetadataGdrive(ParallelTestCase):
+    resource_lock = "gdrive"
     p = None
     driver = None
     dependency = ["oauth2client", "PyDrive2", "PyYAML", "google-api-python-client", "httplib2"]
 
     @classmethod
     def setUpClass(cls):
-        add_dependency(cls.dependency, cls.__name__)
-        thumbnail_cache_path = os.path.join(CALIBRE_WEB_PATH + INDEX, 'cps', 'cache', 'thumbnails')
+        super().setUpClass()
+        thumbnail_cache_path = os.path.join(cls.app_dir, 'cps', 'cache', 'thumbnails')
         shutil.rmtree(thumbnail_cache_path, ignore_errors=True)
 
-        prepare_gdrive()
         try:
-            src = os.path.join(base_path, "files", "client_secrets.json")
-            dst = os.path.join(CALIBRE_WEB_PATH + INDEX, "client_secrets.json")
-            os.chmod(src, 0o764)
-            if os.path.exists(dst):
-                os.unlink(dst)
-            shutil.copy(src, dst)
-
-            # delete settings_yaml file
-            set_yaml = os.path.join(CALIBRE_WEB_PATH + INDEX, "settings.yaml")
-            if os.path.exists(set_yaml):
-                os.unlink(set_yaml)
-
-            # delete gdrive file
-            gdrive_db = os.path.join(CALIBRE_WEB_PATH + INDEX, "gdrive.db")
-            if os.path.exists(gdrive_db):
-                os.unlink(gdrive_db)
-
-            # delete gdrive authenticated file
-            src = os.path.join(base_path, 'files', "gdrive_credentials")
-            dst = os.path.join(CALIBRE_WEB_PATH + INDEX, "gdrive_credentials")
-            os.chmod(src, 0o764)
-            if os.path.exists(dst):
-                os.unlink(dst)
-            shutil.copy(src, dst)
-
-            startup(cls, cls.py_version, {'config_calibre_dir': TEST_DB},
-                    port=PORTS[0],
-                    index=INDEX, only_metadata=True, env={"APP_MODE": "test"})
+            startup(cls, cls.py_version, {'config_calibre_dir': cls.temp_dir},
+                    port=cls.worker_port,
+                    app_dir=cls.app_dir,
+                    env={"APP_MODE": "test", "CALIBRE_PORT": cls.worker_port},
+                    lib_dest=cls.temp_dir)
             cls.fill_db_config({'config_use_google_drive': 1})
             time.sleep(2)
             cls.fill_db_config({'config_google_drive_folder': 'test'})
@@ -78,11 +50,10 @@ class TestEmbedMetadataGdrive(TestCase, ui_class):
 
     @classmethod
     def tearDownClass(cls):
-        save_logfiles(cls, cls.__name__)
-        thumbnail_cache_path = os.path.join(CALIBRE_WEB_PATH + INDEX, 'cps', 'cache', 'thumbnails')
+        thumbnail_cache_path = os.path.join(cls.app_dir, 'cps', 'cache', 'thumbnails')
         shutil.rmtree(thumbnail_cache_path, ignore_errors=True)
         try:
-            cls.driver.get("http://127.0.0.1:" + PORTS[0])
+            cls.driver.get("http://127.0.0.1:" + cls.worker_port)
             cls.stop_calibre_web()
             # close the browser window and stop calibre-web
             cls.driver.quit()
@@ -90,10 +61,8 @@ class TestEmbedMetadataGdrive(TestCase, ui_class):
         except Exception as e:
             print(e)
 
-        remove_dependency(cls.dependency)
-
-        src1 = os.path.join(CALIBRE_WEB_PATH + INDEX, "client_secrets.json")
-        src = os.path.join(CALIBRE_WEB_PATH + INDEX, "gdrive_credentials")
+        src1 = os.path.join(cls.app_dir, "client_secrets.json")
+        src = os.path.join(cls.app_dir, "gdrive_credentials")
         if os.path.exists(src):
             os.chmod(src, 0o764)
             try:
@@ -106,6 +75,7 @@ class TestEmbedMetadataGdrive(TestCase, ui_class):
                 os.unlink(src1)
             except PermissionError:
                 print('client_secrets.json delete failed')
+        super().tearDownClass()
 
 
     def test_download_check_metadata(self):

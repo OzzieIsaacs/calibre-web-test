@@ -1,47 +1,48 @@
-#!/usr/bin/env python
 # -*- coding: utf-8 -*-
+
 import os
 from datetime import date
-from unittest import TestCase
+from base_test import ParallelTestCase
 import time
 import glob
 import json
 
 from selenium.webdriver.common.by import By
-from helper_ui import ui_class
-from config_test import TEST_DB, base_path, BOOT_TIME
+from config_test import base_path, BOOT_TIME
 from helper_func import startup
-from helper_func import save_logfiles, read_opf_metadata
-
-RESOURCES = {'ports': 1}
-
-PORTS = ['8083']
-INDEX = ""
+from helper_func import read_opf_metadata
 
 
-class TestBackupMetadata(TestCase, ui_class):
+class TestBackupMetadata(ParallelTestCase):
     p = None
     driver = None
 
     @classmethod
     def setUpClass(cls):
+        super().setUpClass()
         try:
-            startup(cls, cls.py_version, {'config_calibre_dir': TEST_DB}, port=PORTS[0], index=INDEX, env={"APP_MODE": "test"})
+            startup(
+                cls, cls.py_version,
+                {'config_calibre_dir': cls.temp_dir},
+                port= cls.worker_port,
+                app_dir=cls.app_dir,
+                env={"APP_MODE": "test", "CALIBRE_PORT": cls.worker_port},
+                lib_dest=cls.temp_dir
+            )
             time.sleep(3)
             cls.fill_thumbnail_config({'schedule_metadata_backup': 1})
-            # cls.restart_calibre_web()
         except Exception:
             cls.driver.quit()
             cls.p.kill()
 
     @classmethod
     def tearDownClass(cls):
-        cls.driver.get("http://127.0.0.1:" + PORTS[0])
+        cls.driver.get("http://127.0.0.1:" + cls.worker_port)
         cls.stop_calibre_web()
         # close the browser window and stop calibre-web
         cls.driver.quit()
         cls.p.terminate()
-        save_logfiles(cls, cls.__name__)
+        super().tearDownClass()
 
     def test_backup_all(self):
         # press backup all
@@ -53,14 +54,14 @@ class TestBackupMetadata(TestCase, ui_class):
         res = self.check_tasks()
         self.assertEqual(1, len(res))
         # check alle opf files present
-        all_files = glob.glob(TEST_DB + '/**/*.opf', recursive=True)
+        all_files = glob.glob(self.temp_dir + '/**/*.opf', recursive=True)
         self.assertEqual(11, len(all_files))
         # alle opf daten löschen
         for f in all_files:
             os.unlink(f)
         # Gesamt Ordner Schreibrechte entziehen -> geht nicht, da nach Neustart Datenbank nicht gelesen werden kann
-        rights = os.stat(TEST_DB).st_mode & 0o777
-        os.chmod(TEST_DB, 0o500)
+        rights = os.stat(self.temp_dir).st_mode & 0o777
+        os.chmod(self.temp_dir, 0o500)
         # backup all drücken
         self.queue_metadata_backup()
         # müsste Fehlermeldung geben
@@ -68,9 +69,9 @@ class TestBackupMetadata(TestCase, ui_class):
         self.assertEqual(1, count)
         self.assertEqual(tasks[-1]['result'], "Failed")
         # Gesamt Ordner Schreibrechte geben
-        os.chmod(TEST_DB, rights)
+        os.chmod(self.temp_dir, rights)
         # einem Author ordner Schreibrechte entziehen
-        author_path = os.path.join(TEST_DB, "Asterix Lionherd")
+        author_path = os.path.join(self.temp_dir, "Asterix Lionherd")
         rights = os.stat(author_path).st_mode & 0o777
         os.chmod(author_path, 0o400)
         # backup all drücken
@@ -85,7 +86,7 @@ class TestBackupMetadata(TestCase, ui_class):
         # Author Ordner Schreibrechte geben
         os.chmod(author_path, rights)
         # einem Buch Ordner Schreibrechte entziehen
-        book_path = os.path.join(TEST_DB, "Asterix Lionherd", "comicdemo (3)")
+        book_path = os.path.join(self.temp_dir, "Asterix Lionherd", "comicdemo (3)")
         rights = os.stat(author_path).st_mode & 0o777
         os.chmod(book_path, 0o400)
         # backup all drücken
@@ -101,7 +102,7 @@ class TestBackupMetadata(TestCase, ui_class):
         os.chmod(book_path, rights)
 
     def test_backup_change_book_series_index(self):
-        meta_path = os.path.join(TEST_DB, "Frodo Beutlin", "Der Buchtitel (1)", "metadata.opf")
+        meta_path = os.path.join(self.temp_dir, "Frodo Beutlin", "Der Buchtitel (1)", "metadata.opf")
         # generate all metadata.opf files
         self.queue_metadata_backup()
         self.restart_calibre_web()
@@ -144,7 +145,7 @@ class TestBackupMetadata(TestCase, ui_class):
         self.edit_book(1, content={'series': ''})
 
     def test_backup_change_book_publisher(self):
-        meta_path = os.path.join(TEST_DB, "Frodo Beutlin", "Der Buchtitel (1)", "metadata.opf")
+        meta_path = os.path.join(self.temp_dir, "Frodo Beutlin", "Der Buchtitel (1)", "metadata.opf")
         # generate all metadata.opf files
         self.queue_metadata_backup()
         self.restart_calibre_web()
@@ -161,7 +162,7 @@ class TestBackupMetadata(TestCase, ui_class):
         self.edit_book(1, content={'publisher': ''})
 
     def test_backup_change_book_title(self):
-        meta_path = os.path.join(TEST_DB, "John Doe", "Buuko (7)", "metadata.opf")
+        meta_path = os.path.join(self.temp_dir, "John Doe", "Buuko (7)", "metadata.opf")
         # generate all metadata.opf files
         self.queue_metadata_backup()
         self.restart_calibre_web()
@@ -173,12 +174,12 @@ class TestBackupMetadata(TestCase, ui_class):
         time.sleep(2)
         self.restart_calibre_web()
         # check title content of metadata.opf file
-        metadata = read_opf_metadata(os.path.join(TEST_DB, "John Döe", "The bok Lo,执,1u (7)", "metadata.opf"))
+        metadata = read_opf_metadata(os.path.join(self.temp_dir, "John Döe", "The bok Lo,执,1u (7)", "metadata.opf"))
         self.assertEqual(metadata['title'], 'The bok Lo,执|1u')
         self.edit_book(7, content={'title': 'Buuko'})
 
     def test_backup_change_book_author(self):
-        meta_path = os.path.join(TEST_DB, "Frodo Beutlin", "Der Buchtitel (1)", "metadata.opf")
+        meta_path = os.path.join(self.temp_dir, "Frodo Beutlin", "Der Buchtitel (1)", "metadata.opf")
         # generate all metadata.opf files
         self.queue_metadata_backup()
         self.restart_calibre_web()
@@ -191,7 +192,7 @@ class TestBackupMetadata(TestCase, ui_class):
         self.edit_book(1, content={'authors': 'Frodo Beutlin & Norbert Halagal & Hector Gonçalves'})
         time.sleep(2)
         self.restart_calibre_web()
-        time.sleep(2)
+        time.sleep(4)
         # check author content of metadata.opf file
         metadata = read_opf_metadata(meta_path)
         self.assertEqual(["Frodo Beutlin","Norbert Halagal", "Hector Gonçalves"], metadata['author'])
@@ -200,13 +201,13 @@ class TestBackupMetadata(TestCase, ui_class):
         time.sleep(2)
         self.restart_calibre_web()
         time.sleep(2)
-        metadata = read_opf_metadata(os.path.join(TEST_DB, "Hector Gonçalves", "Der Buchtitel (1)", "metadata.opf"))
+        metadata = read_opf_metadata(os.path.join(self.temp_dir, "Hector Gonçalves", "Der Buchtitel (1)", "metadata.opf"))
         self.assertEqual(["Hector Gonçalves"], metadata['author'])
         self.assertEqual("Gonçalves, Hector", metadata['author_attr'][0]['opf:file-as'])
         self.edit_book(1, content={'authors': 'Frodo Beutlin & Norbert Halagal & Liu Yang & Hector Gonçalves'})
 
     def test_backup_change_book_publishing_date(self):
-        meta_path = os.path.join(TEST_DB, "Hector Goncalves", "book9 (11)", "metadata.opf")
+        meta_path = os.path.join(self.temp_dir, "Hector Goncalves", "book9 (11)", "metadata.opf")
         # generate all metadata.opf files
         self.queue_metadata_backup()
         self.restart_calibre_web()
@@ -223,7 +224,7 @@ class TestBackupMetadata(TestCase, ui_class):
         self.edit_book(11, content={'pubdate': ''})
 
     def test_backup_change_book_tags(self):
-        meta_path = os.path.join(TEST_DB, "Peter Parker", "Very long extra super turbo cool tit (4)", "metadata.opf")
+        meta_path = os.path.join(self.temp_dir, "Peter Parker", "Very long extra super turbo cool tit (4)", "metadata.opf")
         # generate all metadata.opf files
         self.queue_metadata_backup()
         self.restart_calibre_web()
@@ -246,7 +247,7 @@ class TestBackupMetadata(TestCase, ui_class):
         self.edit_book(4, content={'tags': ''})
 
     def test_backup_change_book_identifier(self):
-        meta_path = os.path.join(TEST_DB, "Peter Parker", "Very long extra super turbo cool tit (4)", "metadata.opf")
+        meta_path = os.path.join(self.temp_dir, "Peter Parker", "Very long extra super turbo cool tit (4)", "metadata.opf")
         # generate all metadata.opf files
         self.queue_metadata_backup()
         self.restart_calibre_web()
@@ -275,7 +276,7 @@ class TestBackupMetadata(TestCase, ui_class):
         self.assertEqual(len(metadata['identifier']), 2)
 
     def test_backup_change_book_language(self):
-        meta_path = os.path.join(TEST_DB, "Asterix Lionherd", "comicdemo (3)", "metadata.opf")
+        meta_path = os.path.join(self.temp_dir, "Asterix Lionherd", "comicdemo (3)", "metadata.opf")
         # generate all metadata.opf files
         self.queue_metadata_backup()
         self.restart_calibre_web()
@@ -298,7 +299,7 @@ class TestBackupMetadata(TestCase, ui_class):
         self.edit_book(3, content={'languages': ''})
 
     def test_backup_change_book_rating(self):
-        meta_path = os.path.join(TEST_DB, "Asterix Lionherd", "comicdemo (3)", "metadata.opf")
+        meta_path = os.path.join(self.temp_dir, "Asterix Lionherd", "comicdemo (3)", "metadata.opf")
         # generate all metadata.opf files
         self.queue_metadata_backup()
         self.restart_calibre_web()
@@ -319,7 +320,7 @@ class TestBackupMetadata(TestCase, ui_class):
         self.assertEqual(metadata['rating'], "")
 
     def test_backup_change_book_description(self):
-        meta_path = os.path.join(TEST_DB, "Asterix Lionherd", "comicdemo (3)", "metadata.opf")
+        meta_path = os.path.join(self.temp_dir, "Asterix Lionherd", "comicdemo (3)", "metadata.opf")
         # generate all metadata.opf files
         self.queue_metadata_backup()
         self.restart_calibre_web()
@@ -341,7 +342,7 @@ class TestBackupMetadata(TestCase, ui_class):
         self.assertEqual(metadata['description'], "")
 
     def test_backup_change_custom_bool(self):
-        meta_path = os.path.join(TEST_DB, "Asterix Lionherd", "comicdemo (3)", "metadata.opf")
+        meta_path = os.path.join(self.temp_dir, "Asterix Lionherd", "comicdemo (3)", "metadata.opf")
         # generate all metadata.opf files
         self.queue_metadata_backup()
         self.restart_calibre_web()
@@ -378,7 +379,7 @@ class TestBackupMetadata(TestCase, ui_class):
         self.assertEqual(custom["#extra#"], None)
 
     def test_backup_change_custom_float(self):
-        meta_path = os.path.join(TEST_DB, "Asterix Lionherd", "comicdemo (3)", "metadata.opf")
+        meta_path = os.path.join(self.temp_dir, "Asterix Lionherd", "comicdemo (3)", "metadata.opf")
         # generate all metadata.opf files
         self.queue_metadata_backup()
         self.restart_calibre_web()
@@ -414,7 +415,7 @@ class TestBackupMetadata(TestCase, ui_class):
         self.assertEqual(custom["#extra#"], None)
 
     def test_backup_change_custom_int(self):
-        meta_path = os.path.join(TEST_DB, "Asterix Lionherd", "comicdemo (3)", "metadata.opf")
+        meta_path = os.path.join(self.temp_dir, "Asterix Lionherd", "comicdemo (3)", "metadata.opf")
         # generate all metadata.opf files
         self.queue_metadata_backup()
         self.restart_calibre_web()
@@ -450,7 +451,7 @@ class TestBackupMetadata(TestCase, ui_class):
         self.assertEqual(custom["#extra#"], None)
 
     def test_backup_change_custom_rating(self):
-        meta_path = os.path.join(TEST_DB, "Asterix Lionherd", "comicdemo (3)", "metadata.opf")
+        meta_path = os.path.join(self.temp_dir, "Asterix Lionherd", "comicdemo (3)", "metadata.opf")
         # generate all metadata.opf files
         self.queue_metadata_backup()
         self.restart_calibre_web()
@@ -479,7 +480,7 @@ class TestBackupMetadata(TestCase, ui_class):
         self.assertEqual(custom["#extra#"], None)
 
     def test_backup_change_custom_text(self):
-        meta_path = os.path.join(TEST_DB, "Asterix Lionherd", "comicdemo (3)", "metadata.opf")
+        meta_path = os.path.join(self.temp_dir, "Asterix Lionherd", "comicdemo (3)", "metadata.opf")
         # generate all metadata.opf files
         self.queue_metadata_backup()
         self.restart_calibre_web()
@@ -509,7 +510,7 @@ class TestBackupMetadata(TestCase, ui_class):
         self.assertEqual(custom["#extra#"], None)
 
     def test_backup_change_custom_date(self):
-        meta_path = os.path.join(TEST_DB, "Asterix Lionherd", "comicdemo (3)", "metadata.opf")
+        meta_path = os.path.join(self.temp_dir, "Asterix Lionherd", "comicdemo (3)", "metadata.opf")
         # generate all metadata.opf files
         self.queue_metadata_backup()
         self.restart_calibre_web()
@@ -539,7 +540,7 @@ class TestBackupMetadata(TestCase, ui_class):
         self.assertEqual(custom["#extra#"], None)
 
     def test_backup_change_custom_Comment(self):
-        meta_path = os.path.join(TEST_DB, "Asterix Lionherd", "comicdemo (3)", "metadata.opf")
+        meta_path = os.path.join(self.temp_dir, "Asterix Lionherd", "comicdemo (3)", "metadata.opf")
         # generate all metadata.opf files
         self.queue_metadata_backup()
         time.sleep(2)
@@ -569,7 +570,7 @@ class TestBackupMetadata(TestCase, ui_class):
         self.assertEqual(custom["#extra#"], None)
 
     def test_backup_change_custom_categories(self):
-        meta_path = os.path.join(TEST_DB, "Asterix Lionherd", "comicdemo (3)", "metadata.opf")
+        meta_path = os.path.join(self.temp_dir, "Asterix Lionherd", "comicdemo (3)", "metadata.opf")
         # generate all metadata.opf files
         self.queue_metadata_backup()
         self.restart_calibre_web()
@@ -605,7 +606,7 @@ class TestBackupMetadata(TestCase, ui_class):
         self.assertEqual(custom["is_multiple2"], {"cache_to_list": "|", "ui_to_list": ",", "list_to_ui": ", "})
 
     def test_backup_change_custom_Enum(self):
-        meta_path = os.path.join(TEST_DB, "Asterix Lionherd", "comicdemo (3)", "metadata.opf")
+        meta_path = os.path.join(self.temp_dir, "Asterix Lionherd", "comicdemo (3)", "metadata.opf")
         # generate all metadata.opf files
         self.queue_metadata_backup()
         self.restart_calibre_web()
@@ -654,7 +655,7 @@ class TestBackupMetadata(TestCase, ui_class):
         time.sleep(2)
         details = self.get_book_details()
         self.restart_calibre_web()
-        meta_path = os.path.join(TEST_DB, details['author'][0], details['title']+ " (15)", "metadata.opf")
+        meta_path = os.path.join(self.temp_dir, details['author'][0], details['title']+ " (15)", "metadata.opf")
         metadata = read_opf_metadata(meta_path)
         self.assertEqual(metadata['title'], details['title'])
         self.delete_book(details['id'])

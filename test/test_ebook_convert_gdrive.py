@@ -2,35 +2,28 @@
 # -*- coding: utf-8 -*-
 
 import unittest
+from base_test import ParallelTestCase, acquire_resource, release_resource
 import os
 import time
 import shutil
 import io
 
-from helper_email_convert import AIOSMTPServer
-import helper_email_convert
 from selenium.webdriver.common.by import By
-from selenium.webdriver.support.ui import Select
-from helper_ui import ui_class
-from config_test import CALIBRE_WEB_PATH, TEST_DB, base_path, WAIT_GDRIVE, NUM_THUMBNAILS
-from helper_func import startup, count_files
-from helper_func import save_logfiles, add_dependency, remove_dependency
-from helper_gdrive import prepare_gdrive, connect_gdrive
-from selenium.webdriver.support.ui import WebDriverWait
+from selenium.webdriver.support.ui import Select, WebDriverWait
 from selenium.webdriver.support import expected_conditions as EC
 
-
-RESOURCES = {'ports': 2, "gdrive": True}
-
-PORTS = ['8083', "1025"]
-INDEX = ""
-
+from helper_email_convert import AIOSMTPServer, is_calibre_not_present, calibre_path
+from config_test import base_path, WAIT_GDRIVE, NUM_THUMBNAILS
+from helper_func import startup, count_files
+from helper_gdrive import prepare_gdrive, connect_gdrive
+import datetime
 
 @unittest.skipIf(not os.path.exists(os.path.join(base_path, "files", "client_secrets.json")) or
                  not os.path.exists(os.path.join(base_path, "files", "gdrive_credentials")),
                  "client_secrets.json and/or gdrive_credentials file is missing")
-@unittest.skipIf(helper_email_convert.is_calibre_not_present(), "Skipping convert, calibre not found")
-class TestEbookConvertCalibreGDrive(unittest.TestCase, ui_class):
+@unittest.skipIf(is_calibre_not_present(), "Skipping convert, calibre not found")
+class TestEbookConvertCalibreGDrive(ParallelTestCase):
+    resource_lock = "gdrive"
     p=None
     driver = None
     dependency = ["oauth2client", "PyDrive2", "PyYAML", "google-api-python-client", "httplib2"]
@@ -38,59 +31,36 @@ class TestEbookConvertCalibreGDrive(unittest.TestCase, ui_class):
 
     @classmethod
     def setUpClass(cls):
-        add_dependency(cls.dependency, cls.__name__)
-        thumbnail_cache_path = os.path.join(CALIBRE_WEB_PATH + INDEX, 'cps', 'cache', 'thumbnails')
+        super().setUpClass()
+        thumbnail_cache_path = os.path.join(cls.app_dir, 'cps', 'cache', 'thumbnails')
         shutil.rmtree(thumbnail_cache_path, ignore_errors=True)
-
-        prepare_gdrive()
         try:
-            src = os.path.join(base_path, "files", "client_secrets.json")
-            dst = os.path.join(CALIBRE_WEB_PATH + INDEX, "client_secrets.json")
-            os.chmod(src, 0o764)
-            if os.path.exists(dst):
-                os.unlink(dst)
-            shutil.copy(src, dst)
-
-            # delete settings_yaml file
-            set_yaml = os.path.join(CALIBRE_WEB_PATH + INDEX, "settings.yaml")
-            if os.path.exists(set_yaml):
-                os.unlink(set_yaml)
-
-            # delete gdrive file
-            gdrive_db = os.path.join(CALIBRE_WEB_PATH + INDEX, "gdrive.db")
-            if os.path.exists(gdrive_db):
-                os.unlink(gdrive_db)
-
-            # delete gdrive authenticated file
-            src = os.path.join(base_path, 'files', "gdrive_credentials")
-            dst = os.path.join(CALIBRE_WEB_PATH + INDEX, "gdrive_credentials")
-            os.chmod(src, 0o764)
-            if os.path.exists(dst):
-                os.unlink(dst)
-            shutil.copy(src, dst)
-
+            cls.port = acquire_resource("port")
             # start email server
             cls.email_server = AIOSMTPServer(
                 hostname='127.0.0.1',
-                port=int(PORTS[1]),
+                port=int(cls.port),
                 only_ssl=False,
                 timeout=10
             )
 
             cls.email_server.start()
 
-            startup(cls, cls.py_version, {'config_calibre_dir': TEST_DB,
+            startup(cls, cls.py_version, {'config_calibre_dir': cls.temp_dir,
                                           'config_log_level': 'DEBUG',
                                           'config_kepubifypath': '',
-                                          'config_binariesdir': helper_email_convert.calibre_path()},
-                    port=PORTS[0], index=INDEX,
-                    only_metadata=True, env={"APP_MODE": "test"})
+                                          'config_binariesdir': calibre_path()},
+                    port=cls.worker_port,
+                    app_dir=cls.app_dir,
+                    env={"APP_MODE": "test", "CALIBRE_PORT": cls.worker_port},
+                    lib_dest=cls.temp_dir,
+                    only_metadata=True)
             cls.fill_db_config({'config_use_google_drive': 1})
             time.sleep(2)
             cls.fill_db_config({'config_google_drive_folder': 'test'})
             time.sleep(2)
             cls.edit_user('admin', {'email': 'a5@b.com', 'kindle_mail': 'a1@b.com'})
-            cls.setup_server(True, {'mail_server': '127.0.0.1', 'mail_port': PORTS[1],
+            cls.setup_server(True, {'mail_server': '127.0.0.1', 'mail_port': cls.port,
                                     'mail_use_ssl': 'None', 'mail_login': 'name@host.com', 'mail_password_e': '1234',
                                     'mail_from': 'name@host.com'})
             time.sleep(2)
@@ -107,24 +77,22 @@ class TestEbookConvertCalibreGDrive(unittest.TestCase, ui_class):
 
     @classmethod
     def tearDownClass(cls):
-        save_logfiles(cls, cls.__name__)
         cls.email_server.stop()
-        thumbnail_cache_path = os.path.join(CALIBRE_WEB_PATH + INDEX, 'cps', 'cache', 'thumbnails')
+        release_resource("port", cls.port)
+        thumbnail_cache_path = os.path.join(cls.app_dir, 'cps', 'cache', 'thumbnails')
         shutil.rmtree(thumbnail_cache_path, ignore_errors=True)
         try:
-            cls.driver.get("http://127.0.0.1:" + PORTS[0])
+            cls.driver.get("http://127.0.0.1:" + cls.worker_port)
             cls.stop_calibre_web()
             # close the browser window and stop calibre-web
             cls.driver.quit()
             cls.p.terminate()
         except Exception as e:
             print(e)
+        super().tearDownClass()
         time.sleep(2)
-
-        remove_dependency(cls.dependency)
-
-        src1 = os.path.join(CALIBRE_WEB_PATH + INDEX, "client_secrets.json")
-        src = os.path.join(CALIBRE_WEB_PATH + INDEX, "gdrive_credentials")
+        src1 = os.path.join(cls.app_dir, "client_secrets.json")
+        src = os.path.join(cls.app_dir, "gdrive_credentials")
         if os.path.exists(src):
             os.chmod(src, 0o764)
             try:
@@ -137,6 +105,7 @@ class TestEbookConvertCalibreGDrive(unittest.TestCase, ui_class):
                 os.unlink(src1)
             except PermissionError:
                 print('client_secrets.json delete failed')
+        super().tearDownClass()
 
     def tearDown(self):
         if not self.check_user_logged_in('admin'):
@@ -410,7 +379,7 @@ class TestEbookConvertCalibreGDrive(unittest.TestCase, ui_class):
 
     # @unittest.expectedFailure
     def test_thumbnail_cache(self):
-        thumbnail_cache_path = os.path.join(CALIBRE_WEB_PATH + INDEX, 'cps', 'cache', 'thumbnails')
+        thumbnail_cache_path = os.path.join(self.app_dir, 'cps', 'cache', 'thumbnails')
         self.goto_page("nav_hot")
         self.assertTrue(os.path.exists(thumbnail_cache_path))
         self.assertEqual(count_files(thumbnail_cache_path), 10 * NUM_THUMBNAILS)

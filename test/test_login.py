@@ -1,52 +1,49 @@
-#!/usr/bin/env python
 # -*- coding: utf-8 -*-
 
 import unittest
-from unittest import skip
-from selenium.webdriver.common.by import By
-from selenium.common.exceptions import WebDriverException
+from base_test import ParallelTestCase
 import re
-from helper_ui import ui_class
-from config_test import TEST_DB, CALIBRE_WEB_PATH, BOOT_TIME
-from helper_func import startup, check_response_language_header, curl_available, digest_login
 import requests
 import os
 import time
-from helper_func import save_logfiles
 import socket
 
+from selenium.webdriver.common.by import By
+from selenium.common.exceptions import WebDriverException
+from config_test import BOOT_TIME
+from helper_func import startup, check_response_language_header, curl_available, digest_login
 
-RESOURCES = {'ports': 1}
 
-PORTS = ['8083']
-INDEX = ""
-
-
-class TestLogin(unittest.TestCase, ui_class):
+class TestLogin(ParallelTestCase):
     p = None
     driver = None
 
     @classmethod
     def setUpClass(cls):
+        super().setUpClass()
         try:
-            startup(cls, cls.py_version, {'config_calibre_dir': TEST_DB}, login=False, index=INDEX, env={"APP_MODE": "test"})
+            startup(cls, cls.py_version, {'config_calibre_dir': cls.temp_dir}, login=False,
+                    port=cls.worker_port,
+                    app_dir=cls.app_dir,
+                    env={"APP_MODE": "test", "CALIBRE_PORT": cls.worker_port},
+                    lib_dest=cls.temp_dir)
         except Exception:
             cls.driver.quit()
             cls.p.kill()
 
     @classmethod
     def tearDownClass(cls):
-        cls.driver.get("http://127.0.0.1:" + PORTS[0] + "/login")
+        cls.driver.get("http://127.0.0.1:" + cls.worker_port + "/login")
         cls.login('admin', 'admin123')
         cls.stop_calibre_web()
         # close the browser window and stop calibre-web
         cls.driver.quit()
         cls.p.terminate()
         try:
-            os.unlink(os.path.join(CALIBRE_WEB_PATH + INDEX, 'cps', 'static', 'robots.txt'))
+            os.unlink(os.path.join(cls.app_dir, 'cps', 'static', 'robots.txt'))
         except:
             pass
-        save_logfiles(cls, cls.__name__)
+        super().tearDownClass()
 
     def tearDown(self):
         if self.check_user_logged_in('', True):
@@ -72,7 +69,7 @@ class TestLogin(unittest.TestCase, ui_class):
 
     # try to access all pages without login
     def test_login_protected(self):
-        host = "http://127.0.0.1:" + PORTS[0]
+        host = "http://127.0.0.1:" + self.worker_port
         self.assertEqual(self.fail_access_page(host + "/config"), 2)
         self.assertEqual(self.fail_access_page(host + "/books"), 2)
         self.assertEqual(self.fail_access_page(host + "/admin/user"), 2)
@@ -196,7 +193,7 @@ class TestLogin(unittest.TestCase, ui_class):
     # try to login
     # logout
     def test_login_empty_password(self):
-        self.driver.get("http://127.0.0.1:" + PORTS[0] + "/login")
+        self.driver.get("http://127.0.0.1:" + self.worker_port + "/login")
         self.login('admin', 'admin123')
         self.create_user('epass', {'email': 'a5@b.com'})
         self.assertTrue(self.check_element_on_page((By.ID, 'flash_danger')))
@@ -219,7 +216,7 @@ class TestLogin(unittest.TestCase, ui_class):
     # try login with username lowercase letters and password with capital letters
     # logout
     def test_login_capital_letters_user_unicode_password(self):
-        self.driver.get("http://127.0.0.1:" + PORTS[0] + "/login")
+        self.driver.get("http://127.0.0.1:" + self.worker_port + "/login")
         self.login('admin', 'admin123')
         self.create_user('KaPiTaL', {'password': u'Kß ü执123AbC*!', 'email': 'a@b.com'})
         self.logout()
@@ -236,7 +233,7 @@ class TestLogin(unittest.TestCase, ui_class):
     # logout
     # try login with username and password without space at beginning
     def test_login_unicode_user_space_end_password(self):
-        self.driver.get("http://127.0.0.1:" + PORTS[0] + "/login")
+        self.driver.get("http://127.0.0.1:" + self.worker_port + "/login")
         self.login('admin', 'admin123')
         self.create_user(u'Kß ü执', {'password': ' space123AbC*!', 'email': 'a1@b.com'})
         self.logout()
@@ -252,7 +249,7 @@ class TestLogin(unittest.TestCase, ui_class):
     # try login with username without space and correct password without space at end
     # try login with username with space and password without space at end
     def test_login_user_with_space_password_end_space(self):
-        self.driver.get("http://127.0.0.1:" + PORTS[0] + "/login")
+        self.driver.get("http://127.0.0.1:" + self.worker_port + "/login")
         self.login('admin', 'admin123')
         self.create_user('Klaus peter', {'password': '123AbC*!space ', 'email': 'a2@b.com'})
         self.logout()
@@ -274,7 +271,7 @@ class TestLogin(unittest.TestCase, ui_class):
     # logout
     # ToDo: for real check restart has to be performed
     def test_login_delete_admin(self):
-        self.driver.get("http://127.0.0.1:" + PORTS[0] + "/login")
+        self.driver.get("http://127.0.0.1:" + self.worker_port + "/login")
         self.login('admin', 'admin123')
         self.assertTrue(self.check_element_on_page((By.ID, "flash_success")))
         self.fill_basic_config({'config_password_policy': 0})
@@ -308,7 +305,7 @@ class TestLogin(unittest.TestCase, ui_class):
         self.logout()
 
     def test_password_policy(self):
-        self.driver.get("http://127.0.0.1:" + PORTS[0] + "/login")
+        self.driver.get("http://127.0.0.1:" + self.worker_port + "/login")
         self.login('admin', 'admin123')
         self.assertTrue(self.check_element_on_page((By.ID, "flash_success")))
         # number of chars to less
@@ -433,7 +430,7 @@ class TestLogin(unittest.TestCase, ui_class):
     @unittest.skipIf(not curl_available, "Skipping language detection, pycurl not available")
     def test_login_locale_select(self):
         # this one should work and throw not an error 500
-        url = "http://127.0.0.1:" + PORTS[0] + "/login"
+        url = "http://127.0.0.1:" + self.worker_port + "/login"
         self.assertTrue(check_response_language_header(url,
                                                        ['Accept-Language: de-de;q=0.9,en;q=0.7,*;q=0.8'],
                                                        200,
@@ -462,23 +459,23 @@ class TestLogin(unittest.TestCase, ui_class):
     # Check that digest Authentication header doesn't crash the application
     @unittest.skipIf(not curl_available, "Skipping auth_login, pycurl not available")
     def test_digest_login(self):
-        url =  "http://127.0.0.1:" + PORTS[0] + "/login"
+        url =  "http://127.0.0.1:" + self.worker_port + "/login"
         self.assertTrue(digest_login(url, 200))
 
     # Check proxy login
     def test_proxy_login(self):
-        self.driver.get("http://127.0.0.1:" + PORTS[0] + "/login")
+        self.driver.get("http://127.0.0.1:" + self.worker_port + "/login")
         self.login('admin', 'admin123')
         self.fill_basic_config({'config_allow_reverse_proxy_header_login': 1 })
         time.sleep(3)
         self.assertTrue(self.check_element_on_page((By.ID, "flash_success")))
         # login not possible with empty header or with "X-LOGIN" header
         r = requests.session()
-        resp = r.get("http://127.0.0.1:" + PORTS[0] + "/")
+        resp = r.get("http://127.0.0.1:" + self.worker_port + "/")
         self.assertEqual(resp.status_code, 200)
         self.assertTrue("Calibre-Web | Login" in resp.text)
         r.headers['X-LOGIN'] = "X-Logo"
-        resp = r.get("http://127.0.0.1:" + PORTS[0] + "/")
+        resp = r.get("http://127.0.0.1:" + self.worker_port + "/")
         self.assertEqual(resp.status_code, 200)
         self.assertTrue("Calibre-Web | Login" in resp.text)
         r.close()
@@ -488,18 +485,18 @@ class TestLogin(unittest.TestCase, ui_class):
         self.logout()
         r = requests.session()
         r.headers['X-LOGIN'] = ""
-        resp = r.get("http://127.0.0.1:" + PORTS[0] + "/")
+        resp = r.get("http://127.0.0.1:" + self.worker_port + "/")
         self.assertEqual(resp.status_code, 200)
         self.assertTrue("Calibre-Web | Login" in resp.text)
         # login with X-LOGIN wrong user -> no login
         r.headers['X-LOGIN'] = "admini"
-        resp = r.get("http://127.0.0.1:" + PORTS[0] + "/")
+        resp = r.get("http://127.0.0.1:" + self.worker_port + "/")
         self.assertEqual(resp.status_code, 200)
         self.assertTrue("Calibre-Web | Login" in resp.text)
 
         # login with X-LoGiN -> login
         r.headers['X-LoGiN'] = "admin"
-        resp = r.get("http://127.0.0.1:" + PORTS[0] + "/")
+        resp = r.get("http://127.0.0.1:" + self.worker_port + "/")
         self.assertEqual(resp.status_code, 200)
         self.assertFalse("Calibre-Web | Login" in resp.text)
         r.close()
@@ -507,7 +504,7 @@ class TestLogin(unittest.TestCase, ui_class):
         # login with X-LoGiN -> login
         r = requests.session()
         r.headers['X-LoGiN'] = "admin"
-        resp = r.get("http://127.0.0.1:" + PORTS[0] + "/")
+        resp = r.get("http://127.0.0.1:" + self.worker_port + "/")
         self.assertEqual(resp.status_code, 200)
         self.assertFalse("Calibre-Web | Login" in resp.text)
         r.close()
@@ -515,7 +512,7 @@ class TestLogin(unittest.TestCase, ui_class):
         # login with X-LOGIN -> login
         r = requests.session()
         r.headers['X-LOGIN'] = "admin"
-        resp = r.get("http://127.0.0.1:" + PORTS[0] + "/")
+        resp = r.get("http://127.0.0.1:" + self.worker_port + "/")
         self.assertEqual(resp.status_code, 200)
         self.assertFalse("Calibre-Web | Login" in resp.text)
         r.close()
@@ -524,7 +521,7 @@ class TestLogin(unittest.TestCase, ui_class):
         self.assertTrue(self.check_element_on_page((By.ID, "flash_success")))
         self.logout()
         r = requests.session()
-        resp = r.get("http://127.0.0.1:" + PORTS[0] + "/")
+        resp = r.get("http://127.0.0.1:" + self.worker_port + "/")
         self.assertEqual(resp.status_code, 200)
         self.assertTrue("Guest" in resp.text)
         r.close()
@@ -542,20 +539,20 @@ class TestLogin(unittest.TestCase, ui_class):
         self.logout()
 
     def test_proxy_login_opds(self):
-        self.driver.get("http://127.0.0.1:" + PORTS[0] + "/login")
+        self.driver.get("http://127.0.0.1:" + self.worker_port + "/login")
         self.login('admin', 'admin123')
         self.fill_basic_config({'config_allow_reverse_proxy_header_login': 1 })
         time.sleep(3)
         self.assertTrue(self.check_element_on_page((By.ID, "flash_success")))
         # login not possible to access opds with empty header
         r = requests.session()
-        resp = r.get("http://127.0.0.1:" + PORTS[0] + "/opds")
+        resp = r.get("http://127.0.0.1:" + self.worker_port + "/opds")
         self.assertEqual(resp.status_code, 401)
         self.fill_basic_config({'config_reverse_proxy_login_header_name': "X-LOGIN" })
         self.assertTrue(self.check_element_on_page((By.ID, "flash_success")))
         self.logout()
         r.headers['X-LoGiN'] = "admin"
-        resp = r.get("http://127.0.0.1:" + PORTS[0] + "/opds")
+        resp = r.get("http://127.0.0.1:" + self.worker_port + "/opds")
         self.assertEqual(resp.status_code, 200)
         r.close()
         self.assertTrue(self.login('admin', 'admin123'))
@@ -565,7 +562,7 @@ class TestLogin(unittest.TestCase, ui_class):
         self.logout()
 
     def test_proxy_login_multi_user(self):
-        self.driver.get("http://127.0.0.1:" + PORTS[0] + "/login")
+        self.driver.get("http://127.0.0.1:" + self.worker_port + "/login")
         self.login('admin', 'admin123')
         self.create_user('new_user1', {'password': '123AbC*!', 'email': 'a123@b.com'})
         self.assertTrue(self.check_element_on_page((By.ID, "flash_success")))
@@ -577,12 +574,12 @@ class TestLogin(unittest.TestCase, ui_class):
         # login not possible with empty header or with "X-LOGIN" header
         r = requests.session()
         r.headers['X-LOGIN'] = "admin"
-        resp = r.get("http://127.0.0.1:" + PORTS[0] + "/me")
+        resp = r.get("http://127.0.0.1:" + self.worker_port + "/me")
         self.assertEqual(resp.status_code, 200)
         self.assertFalse("Calibre-Web | Login" in resp.text)
         self.assertTrue('class="hidden-sm">admin</span></a>' in resp.text)
         r.headers['X-LOGIN'] = "new_user1"
-        resp = r.get("http://127.0.0.1:" + PORTS[0] + "/me")
+        resp = r.get("http://127.0.0.1:" + self.worker_port + "/me")
         self.assertEqual(resp.status_code, 200)
         self.assertTrue('class="hidden-sm">new_user1</span></a>' in resp.text)
         r.close()
@@ -595,7 +592,7 @@ class TestLogin(unittest.TestCase, ui_class):
         self.logout()
 
     def test_login_rename_user(self):
-        self.driver.get("http://127.0.0.1:" + PORTS[0] + "/login")
+        self.driver.get("http://127.0.0.1:" + self.worker_port + "/login")
         self.login('admin', 'admin123')
         self.create_user('new_user', {'password': '123AbC*!', 'email': 'a12@b.com'})
         self.assertTrue(self.check_element_on_page((By.ID, "flash_success")))
@@ -618,107 +615,107 @@ class TestLogin(unittest.TestCase, ui_class):
     def test_login_remember_me(self):
         # simulate login, close browser, restart browser, session shall be renewed, user stays logged in
         r = requests.session()
-        login_page = r.get("http://127.0.0.1:" + PORTS[0] + "/login")
+        login_page = r.get("http://127.0.0.1:" + self.worker_port + "/login")
         token = re.search('<input type="hidden" name="csrf_token" value="(.*)">', login_page.text)
         payload = {'username': 'admin', 'password': 'admin123', 'submit':"", 'next':"/", "remember_me":"on", "csrf_token": token.group(1)}
-        r.post("http://127.0.0.1:" + PORTS[0] + "/login", data=payload)
+        r.post("http://127.0.0.1:" + self.worker_port + "/login", data=payload)
         remember = r.cookies['remember_token']
         r.close()
         r = requests.session()
-        site = r.get("http://127.0.0.1:" + PORTS[0], cookies={'remember_token': remember})
+        site = r.get("http://127.0.0.1:" + self.worker_port, cookies={'remember_token': remember})
         self.assertTrue(re.search("Calibre-Web | Books", site.text))
-        cover = r.get("http://127.0.0.1:" + PORTS[0] + "/cover/8", cookies={'remember_token': remember})
+        cover = r.get("http://127.0.0.1:" + self.worker_port + "/cover/8", cookies={'remember_token': remember})
         self.assertEqual('21896', cover.headers['Content-Length'])
-        r.get("http://127.0.0.1:" + PORTS[0] + "/logout")
+        r.get("http://127.0.0.1:" + self.worker_port + "/logout")
         r.close()
 
         # simulate login without remember me, close browser, restart browser, no remember me token, user logged out and
         # redirected to login page
         r = requests.session()
-        login_page = r.get("http://127.0.0.1:" + PORTS[0] + "/login")
+        login_page = r.get("http://127.0.0.1:" + self.worker_port + "/login")
         token = re.search('<input type="hidden" name="csrf_token" value="(.*)">', login_page.text)
         payload = {'username': 'admin', 'password': 'admin123', 'submit': "", 'next': "/", "csrf_token": token.group(1)}
-        r.post("http://127.0.0.1:" + PORTS[0] + "/login", data=payload)
+        r.post("http://127.0.0.1:" + self.worker_port + "/login", data=payload)
         self.assertFalse(r.cookies.get('remember_token'))
         r.close()
         r = requests.session()
-        site = r.get("http://127.0.0.1:" + PORTS[0])
+        site = r.get("http://127.0.0.1:" + self.worker_port)
         self.assertTrue(re.search("Calibre-Web | Login", site.content.decode('utf-8')))
         r.close()
 
     # try to access robots.txt file
     def test_robots(self):
-        self.assertEqual(self.fail_access_page("http://127.0.0.1:" + PORTS[0] + "/robots.txt"), 2)
-        with open(os.path.join(CALIBRE_WEB_PATH + INDEX, 'cps', 'static', 'robots.txt'), 'wb') as robotsfile:
+        self.assertEqual(self.fail_access_page("http://127.0.0.1:" + self.worker_port + "/robots.txt"), 2)
+        with open(os.path.join(self.app_dir, 'cps', 'static', 'robots.txt'), 'wb') as robotsfile:
             robotsfile.write('This is a robÄtsfile'.encode('utf-8'))
-        r = requests.get("http://127.0.0.1:" + PORTS[0] + "/robots.txt")
+        r = requests.get("http://127.0.0.1:" + self.worker_port + "/robots.txt")
         self.assertEqual(200, r.status_code)
         self.assertEqual('This is a robÄtsfile', r.text)
         time.sleep(2)
-        os.unlink(os.path.join(CALIBRE_WEB_PATH + INDEX,'cps', 'static','robots.txt'))
+        os.unlink(os.path.join(self.app_dir,'cps', 'static','robots.txt'))
 
     def test_next(self):
-        self.driver.get("http://127.0.0.1:" + PORTS[0] + "/me")
+        self.driver.get("http://127.0.0.1:" + self.worker_port + "/me")
         self.login('admin', 'admin123')
         self.assertTrue(self.check_element_on_page((By.ID, "flash_success")))
         self.assertTrue(self.check_element_on_page((By.ID, "kindle_mail")))
         self.logout()
         # no next parameter
         r = requests.session()
-        login_page = r.get("http://127.0.0.1:" + PORTS[0] + "/login")
+        login_page = r.get("http://127.0.0.1:" + self.worker_port + "/login")
         token = re.search('<input type="hidden" name="csrf_token" value="(.*)">', login_page.text)
         payload = {'username': 'admin', 'password': 'admin123', 'submit': "", "csrf_token": token.group(1)}
-        page = r.post("http://127.0.0.1:" + PORTS[0] + "/login", data=payload)
+        page = r.post("http://127.0.0.1:" + self.worker_port + "/login", data=payload)
         self.assertEqual(200, page.status_code)
         self.assertTrue("<title>Calibre-Web | Books</title>" in page.text)
         r.close()
         r = requests.session()
-        login_page = r.get("http://127.0.0.1:" + PORTS[0] + "/login")
+        login_page = r.get("http://127.0.0.1:" + self.worker_port + "/login")
         token = re.search('<input type="hidden" name="csrf_token" value="(.*)">', login_page.text)
         payload = {'username': 'admin', 'password': 'admin123', 'submit': "",
                    'next': "http:///example.com", "csrf_token": token.group(1)}
-        page = r.post("http://127.0.0.1:" + PORTS[0] + "/login", data=payload)
+        page = r.post("http://127.0.0.1:" + self.worker_port + "/login", data=payload)
         self.assertTrue("<title>Calibre-Web | Books</title>" in page.text)
         r.close()
         r = requests.session()
-        login_page = r.get("http://127.0.0.1:" + PORTS[0] + "/login")
+        login_page = r.get("http://127.0.0.1:" + self.worker_port + "/login")
         token = re.search('<input type="hidden" name="csrf_token" value="(.*)">', login_page.text)
         payload = {'username': 'admin', 'password': 'admin123', 'submit': "",
                    'next': "https:///example.com", "csrf_token": token.group(1)}
-        page = r.post("http://127.0.0.1:" + PORTS[0] + "/login", data=payload)
+        page = r.post("http://127.0.0.1:" + self.worker_port + "/login", data=payload)
         self.assertTrue("<title>Calibre-Web | Books</title>" in page.text)
         r.close()
         r = requests.session()
-        login_page = r.get("http://127.0.0.1:" + PORTS[0] + "/login")
+        login_page = r.get("http://127.0.0.1:" + self.worker_port + "/login")
         token = re.search('<input type="hidden" name="csrf_token" value="(.*)">', login_page.text)
         payload = {'username': 'admin', 'password': 'admin123', 'submit': "",
                    'next': "https:///example.com/test", "csrf_token": token.group(1)}
-        page = r.post("http://127.0.0.1:" + PORTS[0] + "/login", data=payload)
+        page = r.post("http://127.0.0.1:" + self.worker_port + "/login", data=payload)
         self.assertTrue("<title>Calibre-Web | Books</title>" in page.text)
         r.close()
         r = requests.session()
-        login_page = r.get("http://127.0.0.1:" + PORTS[0] + "/login")
+        login_page = r.get("http://127.0.0.1:" + self.worker_port + "/login")
         token = re.search('<input type="hidden" name="csrf_token" value="(.*)">', login_page.text)
         payload = {'username': 'admin', 'password': 'admin123', 'submit': "",
                    'next': "/admin/1", "csrf_token": token.group(1)}
-        page = r.post("http://127.0.0.1:" + PORTS[0] + "/login", data=payload)
+        page = r.post("http://127.0.0.1:" + self.worker_port + "/login", data=payload)
         self.assertTrue("<title>Calibre-Web | Books</title>" in page.text)
         r.close()
         # Path change is no longer allowed, so we end up in root
         r = requests.session()
-        login_page = r.get("http://127.0.0.1:" + PORTS[0] + "/login")
+        login_page = r.get("http://127.0.0.1:" + self.worker_port + "/login")
         token = re.search('<input type="hidden" name="csrf_token" value="(.*)">', login_page.text)
         payload = {'username': 'admin', 'password': 'admin123', 'submit': "",
                    'next': "../stats", "csrf_token": token.group(1)}
-        page = r.post("http://127.0.0.1:" + PORTS[0] + "/login", data=payload)
+        page = r.post("http://127.0.0.1:" + self.worker_port + "/login", data=payload)
         self.assertTrue("<title>Calibre-Web | Books</title>" in page.text)
         r.close()
         r = requests.session()
-        login_page = r.get("http://127.0.0.1:" + PORTS[0] + "/login")
+        login_page = r.get("http://127.0.0.1:" + self.worker_port + "/login")
         token = re.search('<input type="hidden" name="csrf_token" value="(.*)">', login_page.text)
         payload = {'username': 'admin', 'password': 'admin123', 'submit': "",
                    'next': "ftp://" + socket.gethostname() + "/admin/view", "csrf_token": token.group(1)}
-        page = r.post("http://127.0.0.1:" + PORTS[0] + "/login", data=payload)
+        page = r.post("http://127.0.0.1:" + self.worker_port + "/login", data=payload)
         self.assertTrue("<title>Calibre-Web | Books</title>" in page.text)
         r.close()
 
@@ -733,9 +730,9 @@ class TestLogin(unittest.TestCase, ui_class):
         remote.click()
         verify_element = self.check_element_on_page((By.ID, "verify_url"))
         self.assertTrue(verify_element)
-        verifiy_url = "/" + verify_element.text.lstrip('http://127.0.0.1:{}'.format(PORTS[0]))
+        verifiy_url = "/" + verify_element.text.lstrip('http://127.0.0.1:{}'.format(self.worker_port))
         r = requests.session()
-        login_page = r.get("http://127.0.0.1:" + PORTS[0] + "/login")
+        login_page = r.get("http://127.0.0.1:" + self.worker_port + "/login")
         token = re.search('<input type="hidden" name="csrf_token" value="(.*)">', login_page.text)
         payload = {'username': 'admin',
                    'password': 'admin123',
@@ -744,14 +741,14 @@ class TestLogin(unittest.TestCase, ui_class):
                    "remember_me": "on",
                    "csrf_token": token.group(1)
                    }
-        resp = r.post("http://127.0.0.1:" + PORTS[0] + "/login", data=payload)
+        resp = r.post("http://127.0.0.1:" + self.worker_port + "/login", data=payload)
         self.assertEqual(resp.status_code, 200)
         r.close()
         time.sleep(5)
         self.assertTrue(self.check_element_on_page((By.ID, "flash_success")))
         # reuse token without problem
         r = requests.session()
-        login_page = r.get("http://127.0.0.1:" + PORTS[0] + "/login")
+        login_page = r.get("http://127.0.0.1:" + self.worker_port + "/login")
         token = re.search('<input type="hidden" name="csrf_token" value="(.*)">', login_page.text)
         payload = {'username': 'admin',
                    'password': 'admin123',
@@ -760,14 +757,14 @@ class TestLogin(unittest.TestCase, ui_class):
                    "remember_me": "on",
                    "csrf_token": token.group(1)
                    }
-        resp = r.post("http://127.0.0.1:" + PORTS[0] + "/login", data=payload)
+        resp = r.post("http://127.0.0.1:" + self.worker_port + "/login", data=payload)
         self.assertEqual(resp.status_code, 200)
         r.close()
         self.fill_basic_config({"config_remote_login": 0})
         time.sleep(BOOT_TIME)
         self.logout()
         r = requests.session()
-        login_page = r.get("http://127.0.0.1:" + PORTS[0] + "/login")
+        login_page = r.get("http://127.0.0.1:" + self.worker_port + "/login")
         token = re.search('<input type="hidden" name="csrf_token" value="(.*)">', login_page.text)
         payload = {'username': 'admin',
                    'password': 'admin123',
@@ -776,39 +773,39 @@ class TestLogin(unittest.TestCase, ui_class):
                    "remember_me": "on",
                    "csrf_token": token.group(1)
                    }
-        resp = r.post("http://127.0.0.1:" + PORTS[0] + "/login", data=payload)
+        resp = r.post("http://127.0.0.1:" + self.worker_port + "/login", data=payload)
         # Remote token not fond so redirect after login puts us to 403 page
         self.assertEqual(resp.status_code, 403)
         r.close()
 
     def test_login_cookie_steal(self):
         r = requests.session()
-        login_page = r.get("http://127.0.0.1:" + PORTS[0] + "/login")
+        login_page = r.get("http://127.0.0.1:" + self.worker_port + "/login")
         token = re.search('<input type="hidden" name="csrf_token" value="(.*)">', login_page.text)
         payload = {'username': 'admin', 'password': 'admin123', 'submit':"", 'next':"/", "remember_me": "on", "csrf_token": token.group(1)}
-        resp = r.post("http://127.0.0.1:" + PORTS[0] + "/login", data=payload)
+        resp = r.post("http://127.0.0.1:" + self.worker_port + "/login", data=payload)
         self.assertEqual(resp.status_code, 200)
         cookies = r.cookies.get_dict()
-        r.get("http://127.0.0.1:" + PORTS[0] + "/logout")
+        r.get("http://127.0.0.1:" + self.worker_port + "/logout")
         r.close()
         cookie_stealer = requests.session()
-        resp = cookie_stealer.get("http://127.0.0.1:" + PORTS[0], cookies=cookies)
+        resp = cookie_stealer.get("http://127.0.0.1:" + self.worker_port, cookies=cookies)
         self.assertEqual(resp.status_code, 200)
         self.assertNotIn("logout", resp.text)
         cookie_stealer.close()
 
     def test_login_log_hack(self):
         r = requests.session()
-        login_page = r.get("http://127.0.0.1:" + PORTS[0] + "/login")
+        login_page = r.get("http://127.0.0.1:" + self.worker_port + "/login")
         token = re.search('<input type="hidden" name="csrf_token" value="(.*)">', login_page.text)
         user = "test\nHackdata"
         payload = {'username': user, 'password': 'admin123', 'submit': "", 'next': "/", "remember_me": "on",
                    "csrf_token": token.group(1)}
-        resp = r.post("http://127.0.0.1:" + PORTS[0] + "/login", data=payload)
+        resp = r.post("http://127.0.0.1:" + self.worker_port + "/login", data=payload)
         self.assertEqual(resp.status_code, 200)
         time.sleep(5)
-        with open(os.path.join(CALIBRE_WEB_PATH + INDEX,'calibre-web.log'),'r') as logfile:
+        with open(os.path.join(self.app_dir,'calibre-web.log'),'r') as logfile:
             data = logfile.read()
         self.assertTrue(len(re.findall('Login failed for user "testhackdata"', data)), "Linefeed in username gives wrong loglines")
-        r.get("http://127.0.0.1:" + PORTS[0] + "/logout")
+        r.get("http://127.0.0.1:" + self.worker_port + "/logout")
         r.close()

@@ -1,46 +1,41 @@
 # -*- coding: utf-8 -*-
 
-import unittest
+from base_test import ParallelTestCase
 import os
 
 from selenium.webdriver.common.by import By
-from helper_func import save_logfiles
 from helper_db import change_book_path
-from helper_ui import ui_class
-from config_test import TEST_DB
-from helper_func import startup, debug_startup
+from helper_func import startup
 
 
-RESOURCES = {'ports': 1}
-
-PORTS = ['8083']
-INDEX = ""
-
-
-class TestBookDatabase(unittest.TestCase, ui_class):
+class TestBookDatabase(ParallelTestCase):
     p = None
     driver = None
 
     @classmethod
     def setUpClass(cls):
+        super().setUpClass()
         try:
-            startup(cls, cls.py_version, {'config_calibre_dir': TEST_DB}, port=PORTS[0], index=INDEX, env={"APP_MODE": "test"})
-
+            startup(cls, cls.py_version, {'config_calibre_dir': cls.temp_dir},
+                    port=cls.worker_port,
+                    app_dir=cls.app_dir,
+                    env={"APP_MODE": "test", "CALIBRE_PORT": cls.worker_port},
+                    lib_dest=cls.temp_dir)
         except Exception:
             cls.driver.quit()
             cls.p.kill()
 
     @classmethod
     def tearDownClass(cls):        
-        cls.driver.get("http://127.0.0.1:" + PORTS[0])
+        cls.driver.get("http://127.0.0.1:" + cls.worker_port)
         cls.stop_calibre_web()
         # close the browser window and stop calibre-web
         cls.driver.quit()
         cls.p.terminate()
-        save_logfiles(cls, cls.__name__)
+        super().tearDownClass()
 
     def test_invalid_book_path(self):
-        change_book_path(os.path.join(TEST_DB, "metadata.db"), 10)
+        change_book_path(os.path.join(self.temp_dir, "metadata.db"), 10)
         self.restart_calibre_web()
         self.delete_book(10)
         self.assertTrue(self.check_element_on_page((By.ID, "flash_warning")))

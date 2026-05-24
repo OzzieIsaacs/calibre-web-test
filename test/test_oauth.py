@@ -1,13 +1,13 @@
 #!/usr/bin/env python
 # -*- coding: utf-8 -*-
 
-import unittest
+from base_test import ParallelTestCase
 import time
-from helper_ui import ui_class
-from config_test import TEST_DB, BOOT_TIME
-from helper_func import startup, debug_startup, add_dependency, remove_dependency
+
 from selenium.webdriver.common.by import By
-from helper_func import save_logfiles
+from config_test import BOOT_TIME
+from helper_func import startup
+
 
 
 RESOURCES = {'ports': 1, "oauth":True}
@@ -16,7 +16,7 @@ PORTS = ['8083']
 INDEX = ""
 
 
-class TestOAuthLogin(unittest.TestCase, ui_class):
+class TestOAuthLogin(ParallelTestCase):
 
     p = None
     driver = None
@@ -25,10 +25,13 @@ class TestOAuthLogin(unittest.TestCase, ui_class):
 
     @classmethod
     def setUpClass(cls):
-        add_dependency(cls.dep_line, cls.__name__)
-
+        super().setUpClass()
         try:
-            startup(cls, cls.py_version, {'config_calibre_dir':TEST_DB}, port=PORTS[0], index=INDEX, env={"APP_MODE": "test"})
+            startup(cls, cls.py_version, {'config_calibre_dir':cls.temp_dir},
+                    port=cls.worker_port,
+                    app_dir=cls.app_dir,
+                    env={"APP_MODE": "test", "CALIBRE_PORT": cls.worker_port},
+                    lib_dest=cls.temp_dir)
         except Exception as e:
             print('setup failed')
             cls.driver.quit()
@@ -36,13 +39,12 @@ class TestOAuthLogin(unittest.TestCase, ui_class):
 
     @classmethod
     def tearDownClass(cls):
-        cls.driver.get("http://127.0.0.1:" + PORTS[0])
+        cls.driver.get("http://127.0.0.1:" + cls.worker_port)
         cls.stop_calibre_web()
         cls.p.terminate()
         cls.driver.quit()
         # close the browser window and stop calibre-web
-        remove_dependency(cls.dep_line)
-        save_logfiles(cls, cls.__name__)
+        super().tearDownClass()
 
 
     def test_visible_oauth(self):

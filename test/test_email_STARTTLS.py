@@ -2,6 +2,7 @@
 # -*- coding: utf-8 -*-
 
 import unittest
+from base_test import ParallelTestCase
 import time
 import re
 import requests
@@ -10,27 +11,20 @@ import socket
 from helper_email_convert import AIOSMTPServer
 import helper_email_convert
 from selenium.webdriver.common.by import By
-from helper_ui import ui_class
-from config_test import CALIBRE_WEB_PATH, TEST_DB, BOOT_TIME
-# from parameterized import parameterized_class
 from helper_func import startup, wait_Email_received
-from helper_func import save_logfiles
-
-
-RESOURCES = {'ports': 2}
 
 PORTS = ['8083', '1026']
-INDEX = ""
 
 
 @unittest.skipIf(helper_email_convert.is_calibre_not_present(),"Skipping convert, calibre not found")
-class TestSTARTTLS(unittest.TestCase, ui_class):
+class TestSTARTTLS(ParallelTestCase):
     p = None
     driver = None
     email_server = None
 
     @classmethod
     def setUpClass(cls):
+        super().setUpClass()
         # start email server
         cls.email_server = AIOSMTPServer(
             hostname=socket.gethostname(),
@@ -43,10 +37,12 @@ class TestSTARTTLS(unittest.TestCase, ui_class):
         )
         cls.email_server.start()
         try:
-            startup(cls, cls.py_version, {'config_calibre_dir': TEST_DB,
+            startup(cls, cls.py_version, {'config_calibre_dir': cls.temp_dir,
                                           'config_binariesdir': helper_email_convert.calibre_path()},
-                    port=PORTS[0], index=INDEX, env={"APP_MODE": "test"})
-
+                    port=cls.worker_port,
+                    app_dir=cls.app_dir,
+                    env={"APP_MODE": "test", "CALIBRE_PORT": cls.worker_port},
+                    lib_dest=cls.temp_dir)
             cls.edit_user('admin', {'email': 'a5@b.com','kindle_mail': 'a1@b.com'})
             cls.setup_server(True, {'mail_server': socket.gethostname(), 'mail_port': PORTS[1],
                                     'mail_use_ssl': 'SSL/TLS', 'mail_login': 'name@host.com', 'mail_password_e':'10234',
@@ -57,14 +53,14 @@ class TestSTARTTLS(unittest.TestCase, ui_class):
 
     @classmethod
     def tearDownClass(cls):
-        cls.driver.get("http://127.0.0.1:" + PORTS[0])
+        cls.driver.get("http://127.0.0.1:" + cls.worker_port)
         cls.stop_calibre_web()
         # close the browser window and stop calibre-web
         cls.driver.quit()
         cls.p.terminate()
         cls.email_server.stop()
         time.sleep(2)
-        save_logfiles(cls, cls.__name__)
+        super().tearDownClass()
 
     # start sending e-mail
     # check email received
@@ -119,21 +115,21 @@ class TestSTARTTLS(unittest.TestCase, ui_class):
         # check button disappears
         self.edit_user('paswd_resend', element={})
         self.assertFalse(self.check_element_on_page((By.ID, "resend_password")))
-        self.driver.get('http://127.0.0.1:{}/admin/user/99'.format(PORTS[0]))
+        self.driver.get('http://127.0.0.1:{}/admin/user/99'.format(self.worker_port))
         self.assertTrue(self.check_element_on_page((By.ID, "flash_danger")))
         r = requests.session()
-        login_page = r.get('http://127.0.0.1:{}/login'.format(PORTS[0]))
+        login_page = r.get('http://127.0.0.1:{}/login'.format(self.worker_port))
         token = re.search('<input type="hidden" name="csrf_token" value="(.*)">', login_page.text)
         payload = {'username': "admin", 'password': "admin123", 'submit': "", 'next': "/", "csrf_token": token.group(1)}
-        r.post('http://127.0.0.1:{}/login'.format(PORTS[0]), data=payload)
-        link = r.get('http://127.0.0.1:{}/admin/view'.format(PORTS[0]))
+        r.post('http://127.0.0.1:{}/login'.format(self.worker_port), data=payload)
+        link = r.get('http://127.0.0.1:{}/admin/view'.format(self.worker_port))
         token = re.search('<input type="hidden" name="csrf_token" value="(.*)">', link.text)
         payload = {"csrf_token": token.group(1)}
-        request = r.post('http://127.0.0.1:{}'.format(PORTS[0]) + password_link, data=payload)
+        request = r.post('http://127.0.0.1:{}'.format(self.worker_port) + password_link, data=payload)
         # self.driver.get(password_link)
         self.assertTrue("flash_danger" in request.text)
         #self.assertTrue(self.check_element_on_page((By.ID, "flash_danger")))
-        request = r.post('http://127.0.0.1:{}'.format(PORTS[0]) + password_link[:password_link.rfind("/")] + '/99', data=payload)
+        request = r.post('http://127.0.0.1:{}'.format(self.worker_port) + password_link[:password_link.rfind("/")] + '/99', data=payload)
         # self.driver.get()
         self.assertTrue("flash_danger" in request.text)
         r.close()

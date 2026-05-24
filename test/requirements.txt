@@ -6,7 +6,7 @@ ldaptor>=16.0
 psutil>=3.0.0
 public>=0.0.0
 pycurl>=7.19.0
-pyOpenSSL>=16.0.0,<27.0.0
+pyOpenSSL>=26.0.0,<26.2.0
 Pillow >=7.1.0
 diffimg >=0.2.0
 fpdf2>=2.3.1
@@ -14,6 +14,7 @@ Pikepdf>=2.8.0
 beautifulsoup4>=4.0.1, <4.15.0
 rarfile>=4.0
 mutagen>=1.46.0
+jinja2>=3.1.0
 
 # Building whl
 setuptools>=77.0.0
