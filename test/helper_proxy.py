@@ -229,7 +229,7 @@ def cover(type) -> str:
         else:
             # version='{}.{}.{}'.format(*val.get_Version()[0])
             result = None
-            cover_path = os.path.join(os.getcwd(), 'files')
+            cover_path = os.path.join(os.getcwd(), "test", "files")
             if type == 'test.jpg':
                 result = send_from_directory(cover_path, 'cover.jpg',
                                              as_attachment=True,
@@ -304,23 +304,9 @@ class Proxy():
         self._master = None
         self.releases_handler = None
 
-        # def __init__(self):
-        #threading.Thread.__init__(self)
-        # opts = options.Options(listen_host='127.0.0.1', listen_port=8080)
-        # opts.add_option("body_size_limit", int, 0, "")
-        # pconf = proxy.config.ProxyConfig(opts)
-
-        #self.m = DumpMaster(None, with_termlog=False, with_dumper=False)
-        #self.m.server = proxy.server.ProxyServer(pconf)
-        #if self.m.server.channel.loop.is_closed():
-        #    self.m.server.channel.loop = asyncio.new_event_loop()
-        #self.m.addons.add(Github_Proxy())
-        #self.m.addons.add(wsgiapp.WSGIApp(app, "gitty.local", 443))
-
     # ----------------------------------------------------------
     # PUBLIC
     # ----------------------------------------------------------
-
     def start(self):
         self._thread = threading.Thread(target=self._thread_main,daemon=True,)
         self._thread.start()
@@ -342,17 +328,9 @@ class Proxy():
         except Exception as e:
             print(e)
 
-    #def stop_proxy(self):
-    #    try:
-    #        self.m.shutdown()
-    #    except Exception as e:
-    #        print(e)
-
-
     # ----------------------------------------------------------
     # THREAD
     # ----------------------------------------------------------
-
     def _thread_main(self):
         # asyncio.run erzeugt automatisch einen aktiv laufenden Eventloop
         try:
@@ -363,7 +341,6 @@ class Proxy():
     # ----------------------------------------------------------
     # ASYNC MAIN
     # ----------------------------------------------------------
-
     async def _async_main(self):
 
         options = Options(listen_host="127.0.0.1", listen_port=self.port)
@@ -373,5 +350,3 @@ class Proxy():
         self._master.addons.add(wsgiapp.WSGIApp(app, "gitty.local", 443))
         # self._master.addons.add(self._Addon(self))
         await self._master.run()
-
-

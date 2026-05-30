@@ -24,20 +24,20 @@ class TestCoverEditBooks(ParallelTestCase):
         super().setUpClass()
         try:
             cls.port = acquire_resource("port")
-            cls.proxy = Proxy()
+            cls.proxy = Proxy(cls.port)
             cls.proxy.start()
             pem_file = os.path.join(os.path.expanduser('~'), '.mitmproxy', 'mitmproxy-ca-cert.pem')
             my_env = os.environ.copy()
-            my_env["http_proxy"] = 'http://localhost:' + cls.port
-            my_env["https_proxy"] = 'http://localhost:' + cls.port
+            my_env["http_proxy"] = f'http://localhost:{cls.port}'
+            my_env["https_proxy"] = f'http://localhost:{cls.port}'
             my_env["REQUESTS_CA_BUNDLE"] = pem_file
             my_env["APP_MODE"] = "test"
-            # my_env["LANG"] = 'de_DE.UTF-8'
+            my_env["CALIBRE_PORT"] = cls.worker_port
             startup(cls, cls.py_version,
                     {'config_calibre_dir': cls.temp_dir, 'config_uploading': 1},
                     port=cls.worker_port,
                     app_dir=cls.app_dir,
-                    env={"APP_MODE": "test", "CALIBRE_PORT": cls.worker_port},
+                    env=my_env,
                     lib_dest=cls.temp_dir,
                     parameter=["-l"])
             time.sleep(3)
