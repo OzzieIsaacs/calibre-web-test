@@ -523,7 +523,7 @@ class TestLogin(ParallelTestCase):
         r.close()
         r = requests.session()
         r.headers['X-LoGiN'] = "admin"
-        resp = r.get("http://127.0.0.1:8083/")
+        resp = r.get(f"http://127.0.0.1:{self.worker_port}/")
         self.assertEqual(resp.status_code, 200)
         self.assertTrue('class="hidden-sm">Admin</span>' in resp.text)
         r.close()
