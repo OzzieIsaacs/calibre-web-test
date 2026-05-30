@@ -48,8 +48,6 @@ def user_change(user, worker_port, result, index):
 
 
 class TestUserLoad(ParallelTestCase):
-    p = None
-    driver = None
 
     @classmethod
     def setUpClass(cls):
@@ -65,22 +63,6 @@ class TestUserLoad(ParallelTestCase):
         except Exception:
             cls.driver.quit()
             cls.p.kill()
-
-    @classmethod
-    def tearDownClass(cls):
-        try:
-            cls.stop_calibre_web()
-        except:
-            cls.driver.get("http://127.0.0.1:" + cls.worker_port)
-            time.sleep()
-            try:
-                cls.stop_calibre_web()
-            except:
-                pass
-        # close the browser window and stop calibre-web
-        cls.driver.quit()
-        cls.p.terminate()
-        super().tearDownClass()
 
     # goto books list, check content of table
     # delete one book

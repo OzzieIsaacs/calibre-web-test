@@ -1,6 +1,8 @@
 # -*- coding: utf-8 -*-
+from twisted.mail import relay
+from virtualenv.seed.wheels import acquire
 
-from base_test import ParallelTestCase
+from base_test import ParallelTestCase, acquire_resource, release_resource
 from unittest import skip
 import time
 import os
@@ -8,28 +10,22 @@ import re
 
 from selenium.webdriver.common.by import By
 from config_test import BOOT_TIME
-from helper_func import startup
-from helper_func import add_hidden_dependency
+from helper_func import add_hidden_dependency, wait_for_reboot, startup
 import requests
 from selenium.webdriver.support.ui import WebDriverWait
 from selenium.webdriver.support import expected_conditions as EC
 from helper_redis import Redis as redis_server
 
 
-RESOURCES = {'ports': 1}
-
-PORTS = ['8083',"1029"]
-INDEX = ""
-
-
 class TestSecurity(ParallelTestCase):
-    p = None
-    driver = None
+
+
     hidden_dependencys = ["redis"]
 
     @classmethod
     def setUpClass(cls):
         super().setUpClass()
+        cls.port = acquire_resource("port")
         add_hidden_dependency(cls.hidden_dependencys, cls.__name__)
         try:
             startup(cls, cls.py_version, {'config_calibre_dir':cls.temp_dir},
@@ -45,11 +41,7 @@ class TestSecurity(ParallelTestCase):
 
     @classmethod
     def tearDownClass(cls):
-        cls.driver.get("http://127.0.0.1:" + cls.worker_port)
-        cls.stop_calibre_web()
-        # close the browser window and stop calibre-web
-        cls.driver.quit()
-        cls.p.terminate()
+        release_resource("port", cls.port)
         super().tearDownClass()
 
     def test_opds_limit(self):
@@ -72,7 +64,7 @@ class TestSecurity(ParallelTestCase):
         self.assertEqual(200, r.status_code)
         # switch of limit, logout
         self.fill_basic_config({"config_ratelimiter":0})
-        time.sleep(BOOT_TIME)
+        wait_for_reboot(f"http://127.0.0.1:{self.worker_port}")
         self.assertTrue(self.check_element_on_page((By.ID, "flash_success")))
         self.logout()
         # try to login with wrong credentials several times, every time 401,
@@ -85,7 +77,7 @@ class TestSecurity(ParallelTestCase):
         # switch on limit, logout
         self.login('admin', 'admin123')
         self.fill_basic_config({"config_ratelimiter": 1})
-        time.sleep(BOOT_TIME)
+        wait_for_reboot(f"http://127.0.0.1:{self.worker_port}")
         self.assertTrue(self.check_element_on_page((By.ID, "flash_success")))
 
     def test_redis_backend(self):
@@ -97,14 +89,14 @@ class TestSecurity(ParallelTestCase):
         server = redis_server()
         server.start()
         self.fill_basic_config({"config_limiter_uri": "redis://localhost:6379"})
-        time.sleep(BOOT_TIME)
+        wait_for_reboot(f"http://127.0.0.1:{self.worker_port}")
         self.assertTrue(self.check_element_on_page((By.ID, "flash_success")))
         self.goto_page("nav_new")
         with open(os.path.join(self.app_dir, 'calibre-web.log'), 'r') as logfile:
             data = logfile.readlines()
         self.assertFalse(any('Using the in-memory storage for tracking rate limits' in line for line in data[-15:]))
         self.fill_basic_config({"config_limiter_uri": ""})
-        time.sleep(BOOT_TIME)
+        wait_for_reboot(f"http://127.0.0.1:{self.worker_port}")
         self.assertTrue(self.check_element_on_page((By.ID, "flash_success")))
         server.stop()
 
@@ -137,7 +129,7 @@ class TestSecurity(ParallelTestCase):
         self.assertTrue(self.check_element_on_page((By.ID, "flash_success")))
         # switch of limit, logout
         self.fill_basic_config({"config_ratelimiter":0})
-        time.sleep(BOOT_TIME)
+        wait_for_reboot(f"http://127.0.0.1:{self.worker_port}")
         self.assertTrue(self.check_element_on_page((By.ID, "flash_success")))
         self.logout()
         # try to login with wrong credentials several times, every time wrong login name
@@ -153,18 +145,18 @@ class TestSecurity(ParallelTestCase):
         self.assertTrue(self.check_element_on_page((By.ID, "flash_success")))
         # switch on limit
         self.fill_basic_config({"config_ratelimiter":1})
-        time.sleep(BOOT_TIME)
+        wait_for_reboot(f"http://127.0.0.1:{self.worker_port}")
         self.assertTrue(self.check_element_on_page((By.ID, "flash_success")))
 
     def test_register_limit(self):
         self.edit_user('admin', {'email': 'a5@b.com', 'kindle_mail': 'a1@b.com'})
         self.assertTrue(self.check_element_on_page((By.ID, "flash_success")))
-        self.setup_server(False, {'mail_server': '127.0.0.1', 'mail_port': PORTS[1],
+        self.setup_server(False, {'mail_server': '127.0.0.1', 'mail_port': self.port,
                                  'mail_use_ssl': 'None', 'mail_login': 'name@host.com', 'mail_password_e': '10234',
                                  'mail_from': 'name@host.com'})
         self.assertTrue(self.check_element_on_page((By.ID, "flash_success")))
         self.fill_basic_config({'config_public_reg': 1})
-        time.sleep(BOOT_TIME)
+        wait_for_reboot(f"http://127.0.0.1:{self.worker_port}")
         self.assertTrue(self.check_element_on_page((By.ID, "flash_success")))
         self.logout()
         # request several times the same endpoint within one minute,
@@ -182,7 +174,7 @@ class TestSecurity(ParallelTestCase):
         # switch of limit, logout
         self.login("admin", "admin123")
         self.fill_basic_config({"config_ratelimiter":0})
-        time.sleep(BOOT_TIME)
+        wait_for_reboot(f"http://127.0.0.1:{self.worker_port}")
         self.assertTrue(self.check_element_on_page((By.ID, "flash_success")))
         self.logout()
         # try to register several times -> working all the time
@@ -191,13 +183,13 @@ class TestSecurity(ParallelTestCase):
         # switch on limit, logout
         self.login("admin", "admin123")
         self.fill_basic_config({"config_ratelimiter":1, 'config_public_reg':0})
-        time.sleep(BOOT_TIME)
+        wait_for_reboot(f"http://127.0.0.1:{self.worker_port}")
         self.assertTrue(self.check_element_on_page((By.ID, "flash_success")))
 
     def test_password_strength(self):
         # switch off, try empty password, not working
         self.fill_basic_config({"config_password_policy":0})
-        time.sleep(BOOT_TIME)
+        wait_for_reboot(f"http://127.0.0.1:{self.worker_port}")
         self.assertTrue(self.check_element_on_page((By.ID, "flash_success")))
         self.create_user('test_pol_off',
                          {'email': 'muki1al@b.com', 'kindle_mail': 'muki1al@b.com'})

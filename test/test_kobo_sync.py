@@ -9,14 +9,12 @@ import requests
 from selenium.webdriver.common.by import By
 from selenium.webdriver.support.ui import WebDriverWait
 from selenium.webdriver.support import expected_conditions as EC
-from config_test import base_path, BOOT_TIME
-from helper_func import startup, get_Host_IP
+from config_test import base_path
+from helper_func import startup, get_Host_IP, wait_for_reboot
 
 
 class TestKoboSync(ParallelTestCase):
 
-    p = None
-    driver = None
     kobo_adress = None
     syncToken = None
     header = None
@@ -50,15 +48,6 @@ class TestKoboSync(ParallelTestCase):
             cls.driver.quit()
             cls.p.terminate()
             cls.p.poll()
-
-    @classmethod
-    def tearDownClass(cls):
-        cls.driver.get("http://127.0.0.1:" + cls.worker_port)
-        cls.stop_calibre_web()
-        cls.driver.quit()
-        cls.p.terminate()
-        # close the browser window and stop calibre-web
-        super().tearDownClass()
 
     def inital_sync(self, sync=True):
         if TestKoboSync.syncToken:
@@ -707,7 +696,7 @@ class TestKoboSync(ParallelTestCase):
 
 
     def test_kobo_limit(self):
-        host = 'http://{}:{}'.format(get_Host_IP(), self.worker_port)
+        host = f"http://{get_Host_IP()}:{self.worker_port}"
         payload = {
             "AffiliateName": "Kobo",
             "AppVersion": "4.19.14123",
@@ -736,7 +725,7 @@ class TestKoboSync(ParallelTestCase):
         self.assertEqual(200, r.status_code)
         # switch of limit, logout
         self.fill_basic_config({"config_ratelimiter": 0})
-        time.sleep(BOOT_TIME)
+        wait_for_reboot(host)
         self.assertTrue(self.check_element_on_page((By.ID, "flash_success")))
         self.logout()
         # request several times the same endpoint with different hashes within one minute, from same ip address -> working all the time
@@ -748,5 +737,5 @@ class TestKoboSync(ParallelTestCase):
         # switch on limit again
         self.login("admin", "admin123")
         self.fill_basic_config({"config_ratelimiter":1, 'config_public_reg':0})
-        time.sleep(BOOT_TIME)
+        wait_for_reboot(host)
         self.assertTrue(self.check_element_on_page((By.ID, "flash_success")))

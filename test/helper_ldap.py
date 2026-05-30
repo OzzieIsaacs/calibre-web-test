@@ -273,7 +273,7 @@ member: uid=user13,ou=People,dc=calibreweb,dc=com
 
 """
 
-config5 = b"""\
+config5 = rb"""\
 dn: dc=com
 dc: com
 objectClass: dcObject

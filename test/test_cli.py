@@ -19,7 +19,7 @@ from selenium.common.exceptions import WebDriverException
 
 
 class TestCli(ParallelTestCase):
-    driver = None
+
 
     @classmethod
     def setUpClass(cls):
@@ -45,6 +45,7 @@ class TestCli(ParallelTestCase):
 
     @classmethod
     def tearDownClass(cls):
+        super().tearDownClass(no=True)
         release_resource("port", cls.port)
         try:
             os.chmod(os.path.join(cls.app_dir, "exclude.txt"), 0o644)
@@ -63,6 +64,7 @@ class TestCli(ParallelTestCase):
             pass
 
     def tearDown(self):
+        super().tearDown()
         try:
             new_db = os.path.join(self.app_dir, 'hü go.app')
             os.remove(new_db)

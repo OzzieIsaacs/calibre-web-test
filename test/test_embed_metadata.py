@@ -1,6 +1,6 @@
 # -*- coding: utf-8 -*-
 
-from base_test import ParallelTestCase
+from base_test import ParallelTestCase, acquire_resource, release_resource
 import time
 import os
 import shutil
@@ -11,19 +11,16 @@ from selenium.webdriver.common.by import By
 from selenium.webdriver.support.ui import Select
 from helper_func import startup, read_metadata_epub, read_opf_metadata, wait_Email_received
 from helper_email_convert import calibre_path, kepubify_path
-
-RESOURCES = {'ports': 2}
-
-PORTS = ['8083', '1025']
-INDEX = ""
+import datetime
 
 class TestEmbedMetadata(ParallelTestCase):
-    p = None
-    driver = None
+
+
 
     @classmethod
     def setUpClass(cls):
         super().setUpClass()
+        cls.port = acquire_resource("port")
         try:
             startup(cls, cls.py_version, {'config_calibre_dir': cls.temp_dir},
                     port=cls.worker_port,
@@ -37,12 +34,14 @@ class TestEmbedMetadata(ParallelTestCase):
 
     @classmethod
     def tearDownClass(cls):
-        cls.driver.get("http://127.0.0.1:" + cls.worker_port)
+        release_resource("port", cls.port)
+        super().tearDownClass()
+
+        '''cls.driver.get("http://127.0.0.1:" + cls.worker_port)
         cls.stop_calibre_web()
         # close the browser window and stop calibre-web
         cls.driver.quit()
-        cls.p.terminate()
-        super().tearDownClass()
+        cls.p.terminate()'''
 
     def test_download_check_metadata(self):
         # no calibre download
@@ -212,16 +211,18 @@ class TestEmbedMetadata(ParallelTestCase):
 
     def test_email_epub_embed_metadata(self):
         self.edit_user('admin', {'email': 'a5@b.com', 'kindle_mail': 'a1@b.com'})
-        self.setup_server(False, {'mail_server': '127.0.0.1', 'mail_port': PORTS[1],
+        self.setup_server(False, {'mail_server': '127.0.0.1', 'mail_port': self.port,
                         'mail_use_ssl': 'None', 'mail_login': 'name@host.com', 'mail_password_e': '10234',
                         'mail_from': 'name@host.com'})
         self.fill_basic_config({'config_embed_metadata': 0})
         time.sleep(5)
         self.assertTrue(self.check_element_on_page((By.ID, "flash_success")))
         tasks = self.check_tasks()
+        now = datetime.datetime.now().strftime("%H:%M:%S")
+        print(f"[Worker {self.worker_id}] {now} - {self.__class__.__name__} starting E-Mail Server")
         self.email_server = AIOSMTPServer(
             hostname='127.0.0.1',
-            port=int(PORTS[1]),
+            port=int(self.port),
             only_ssl=False,
             timeout=10
         )

@@ -10,16 +10,18 @@ from selenium.webdriver.support import expected_conditions as EC
 from selenium.webdriver.common.by import By
 from helper_func import startup, wait_Email_received
 from helper_email_convert import AIOSMTPServer
-
+import datetime
 
 class TestRegister(ParallelTestCase):
-    p = None
-    driver = None
+
+
 
     @classmethod
     def setUpClass(cls):
         super().setUpClass()
         cls.port = acquire_resource("port")
+        now = datetime.datetime.now().strftime("%H:%M:%S")
+        print(f"[Worker {cls.worker_id}] {now} - {cls.__name__} starting E-Mail Server")
         cls.email_server = AIOSMTPServer(
             hostname='127.0.0.1',port=cls.port,
             only_ssl=False,
@@ -47,17 +49,14 @@ class TestRegister(ParallelTestCase):
 
     @classmethod
     def tearDownClass(cls):
-        cls.driver.get("http://127.0.0.1:" + cls.worker_port)
-        cls.login('admin', 'admin123')
-        cls.stop_calibre_web()
-        # close the browser window and stop calibre-web
-        cls.driver.quit()
-        cls.p.terminate()
         cls.email_server.stop()
         release_resource("port", cls.port)
+        cls.driver.get("http://127.0.0.1:" + cls.worker_port)
+        cls.login('admin', 'admin123')
         super().tearDownClass()
 
     def tearDown(self):
+        super().tearDown()
         self.email_server.handler.reset_email_received()
         if self.check_user_logged_in('admin'):
             self.logout()

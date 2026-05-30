@@ -1,27 +1,22 @@
 # -*- coding: utf-8 -*-
 
 import unittest
-from base_test import ParallelTestCase
+from base_test import ParallelTestCase, acquire_resource, release_resource
 import os
 import time
 import shutil
 import requests
 
-from config_test import  BOOT_TIME, NUM_THUMBNAILS
+from config_test import  NUM_THUMBNAILS
 from helper_func import startup
-from helper_func import count_files
+from helper_func import count_files, wait_for_reboot
 from helper_proxy import Proxy, val
 from selenium.webdriver.common.by import By
 from zipfile import ZipFile, ZipInfo
 
-RESOURCES = {'ports': 2}
-
-PORTS = ['8083', '8070']
-INDEX = ""
 
 class TestUpdater(ParallelTestCase):
-    p = None
-    driver = None
+
     proxy = None
 
     @classmethod
@@ -32,10 +27,11 @@ class TestUpdater(ParallelTestCase):
             shutil.rmtree(thumbnail_cache_path, ignore_errors=True)
             cls.proxy = Proxy()
             cls.proxy.start()
+            cls.port = acquire_resource("port")
             pem_file = os.path.join(os.path.expanduser('~'), '.mitmproxy', 'mitmproxy-ca-cert.pem')
             my_env = os.environ.copy()
-            my_env["http_proxy"] = 'http://localhost:' + PORTS[1]
-            my_env["https_proxy"] = 'http://localhost:'  + PORTS[1]
+            my_env["http_proxy"] = 'http://localhost:' + cls.port
+            my_env["https_proxy"] = 'http://localhost:'  + cls.port
             my_env["REQUESTS_CA_BUNDLE"] = pem_file
             my_env["APP_MODE"] = "test"
             startup(cls, cls.py_version, {'config_calibre_dir': cls.temp_dir},
@@ -48,26 +44,16 @@ class TestUpdater(ParallelTestCase):
 
     @classmethod
     def tearDownClass(cls):
-        # close the browser window and stop calibre-web
-        try:
-            cls.stop_calibre_web()
-        except:
-            cls.driver.get("http://127.0.0.1:" + cls.worker_port)
-            time.sleep(2)
-            try:
-                cls.stop_calibre_web()
-            except:
-                pass
-        cls.driver.quit()
+        thumbnail_cache_path = os.path.join(cls.app_dir, 'cps', 'cache', 'thumbnails')
+        shutil.rmtree(thumbnail_cache_path, ignore_errors=True)
         cls.proxy.stop_proxy()
+        release_resource("port", cls.port)
         cls.p.terminate()
         # Move original image back in place
         super().tearDownClass()
-        #cls.return_cw()
-        thumbnail_cache_path = os.path.join(cls.app_dir, 'cps', 'cache', 'thumbnails')
-        shutil.rmtree(thumbnail_cache_path, ignore_errors=True)
 
     def tearDown(self):
+        super().tearDown()
         os.chmod(os.path.join(self.app_dir, "cps"), 0o764)
         os.chmod(os.path.join(self.app_dir, "cps", "web.py"), 0o766)
         if not self.check_user_logged_in('admin'):
@@ -137,7 +123,8 @@ class TestUpdater(ParallelTestCase):
 
     def test_check_update_stable_errors(self):
         self.fill_basic_config({'config_updatechannel': 'Stable'})
-        time.sleep(BOOT_TIME)
+        wait_for_reboot(f"http://127.0.0.1:" + self.port)
+        self.assertTrue(self.check_element_on_page((By.ID, "flash_success")))
         self.goto_page('admin_setup')
         update_table = self.check_element_on_page((By.ID, "current_version")).find_elements(By.TAG_NAME, 'td')
         # self.assertEqual(update_table[0].text,'')  # ToDo Check current version correct
@@ -165,7 +152,8 @@ class TestUpdater(ParallelTestCase):
 
     def test_check_update_stable_versions(self):
         self.fill_basic_config({'config_updatechannel': 'Stable'})
-        time.sleep(BOOT_TIME)
+        wait_for_reboot(f"http://127.0.0.1:" + self.port)
+        self.assertTrue(self.check_element_on_page((By.ID, "flash_success")))
         self.goto_page('admin_setup')
         update_table = self.check_element_on_page((By.ID, "current_version")).find_elements(By.TAG_NAME, 'td')
         # ToDo Check current version correct
@@ -225,7 +213,9 @@ class TestUpdater(ParallelTestCase):
 
     def test_check_update_nightly_errors(self):
         self.fill_basic_config({'config_updatechannel': 'Nightly'})
-        time.sleep(BOOT_TIME)
+        wait_for_reboot(f"http://127.0.0.1:" + self.port)
+        self.assertTrue(self.check_element_on_page((By.ID, "flash_success")))
+
         self.goto_page('admin_setup')
         update_table = self.check_element_on_page((By.ID, "current_version")).find_elements(By.TAG_NAME, 'td')
         # self.assertEqual(update_table[0],'')  # ToDo Check current version correct
@@ -253,7 +243,9 @@ class TestUpdater(ParallelTestCase):
 
     def test_check_update_nightly_request_errors(self):
         self.fill_basic_config({'config_updatechannel': 'Nightly'})
-        time.sleep(BOOT_TIME)
+        wait_for_reboot(f"http://127.0.0.1:" + self.port)
+        self.assertTrue(self.check_element_on_page((By.ID, "flash_success")))
+
         self.goto_page('admin_setup')
         update_table = self.check_element_on_page((By.ID, "current_version")).find_elements(By.TAG_NAME, 'td')
         # self.assertEqual(update_table[0],'')  # ToDo Check current version correct
@@ -286,7 +278,9 @@ class TestUpdater(ParallelTestCase):
     @unittest.skip('Takes too long')
     def test_perform_update_timeout(self):
         self.fill_basic_config({'config_updatechannel': 'Stable'})
-        time.sleep(BOOT_TIME)
+        wait_for_reboot(f"http://127.0.0.1:" + self.port)
+        self.assertTrue(self.check_element_on_page((By.ID, "flash_success")))
+
         self.goto_page('admin_setup')
         update_table = self.check_element_on_page((By.ID, "current_version")).find_elements(By.TAG_NAME, 'td')
         version = [int(x) for x in (update_table[0].text.rstrip(' Beta')).split('.')]
@@ -307,7 +301,9 @@ class TestUpdater(ParallelTestCase):
 
     def test_perform_update_stable_errors(self):
         self.fill_basic_config({'config_updatechannel': 'Stable'})
-        time.sleep(BOOT_TIME)
+        wait_for_reboot(f"http://127.0.0.1:" + self.port)
+        self.assertTrue(self.check_element_on_page((By.ID, "flash_success")))
+
         self.goto_page('admin_setup')
         update_table = self.check_element_on_page((By.ID, "current_version")).find_elements(By.TAG_NAME, 'td')
         version = [int(x) for x in (update_table[0].text.rstrip(' Beta')).split('.')]
@@ -364,7 +360,9 @@ class TestUpdater(ParallelTestCase):
 
     def test_perform_update(self):
         self.fill_basic_config({'config_updatechannel': 'Stable'})
-        time.sleep(BOOT_TIME)
+        wait_for_reboot(f"http://127.0.0.1:" + self.port)
+        self.assertTrue(self.check_element_on_page((By.ID, "flash_success")))
+
         self.fill_thumbnail_config({'schedule_generate_book_covers': 1})
         self.assertTrue(self.check_element_on_page((By.ID, "flash_success")))
         self.restart_calibre_web()
@@ -413,7 +411,9 @@ class TestUpdater(ParallelTestCase):
     @unittest.skipIf(os.name=="nt", "Test isn't running on Windows")
     def test_update_write_protect(self):
         self.fill_basic_config({'config_updatechannel': 'Stable'})
-        time.sleep(BOOT_TIME)
+        wait_for_reboot(f"http://127.0.0.1:" + self.port)
+        self.assertTrue(self.check_element_on_page((By.ID, "flash_success")))
+
         self.goto_page('admin_setup')
         update_table = self.check_element_on_page((By.ID, "current_version")).find_elements(By.TAG_NAME, 'td')
         version = [int(x) for x in (update_table[0].text.rstrip(' Beta')).split('.')]

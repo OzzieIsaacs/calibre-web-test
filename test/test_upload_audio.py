@@ -19,9 +19,8 @@ from helper_func import startup
 
 
 class TestUploadAudio(ParallelTestCase):
-    p = None
-    driver = None
-    dependencys = ["mutagen"]
+
+    dependency = ["mutagen"]
     png_original = None
     jpg_original = None
 
@@ -47,15 +46,6 @@ class TestUploadAudio(ParallelTestCase):
         except Exception as e:
             cls.driver.quit()
             cls.p.kill()
-
-    @classmethod
-    def tearDownClass(cls):
-        cls.driver.get("http://127.0.0.1:" + cls.worker_port)
-        cls.stop_calibre_web()
-        # close the browser window and stop calibre-web
-        cls.driver.quit()
-        cls.p.terminate()
-        super().tearDownClass()
 
     def test_upload_mp3(self):
         dest = os.path.join(base_path, "files", 'base.mp3')

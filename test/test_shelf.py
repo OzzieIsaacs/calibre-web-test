@@ -8,13 +8,12 @@ import requests
 
 from selenium.webdriver.common.by import By
 from selenium.common.exceptions import UnexpectedAlertPresentException
-from config_test import BOOT_TIME
-from helper_func import startup
+from helper_func import startup, wait_for_reboot
 
 
 class TestShelf(ParallelTestCase):
-    p = None
-    driver = None
+
+
 
     @classmethod
     def setUpClass(cls):
@@ -33,16 +32,8 @@ class TestShelf(ParallelTestCase):
             cls.driver.quit()
             cls.p.terminate()
 
-    @classmethod
-    def tearDownClass(cls):
-        cls.driver.get("http://127.0.0.1:" + cls.worker_port)
-        cls.stop_calibre_web()
-        # close the browser window and stop calibre-web
-        cls.driver.quit()
-        cls.p.terminate()
-        super().tearDownClass()
-
     def tearDown(self):
+        super().tearDown()
         if not self.check_user_logged_in('admin'):
             self.logout()
             self.login('admin','admin123')
@@ -488,7 +479,8 @@ class TestShelf(ParallelTestCase):
     def test_shelf_anonymous(self):
         # Enable Anonymous browsing and create shelf
         self.fill_basic_config({'config_anonbrowse': 1})
-        time.sleep(BOOT_TIME)
+        wait_for_reboot(f"http://127.0.0.1:{self.worker_port}")
+        self.assertTrue(self.check_element_on_page((By.ID, "flash_success")))
         self.create_shelf('anon', True)
 
         # Add Book to shelf

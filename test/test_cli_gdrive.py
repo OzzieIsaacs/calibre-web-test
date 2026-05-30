@@ -20,8 +20,8 @@ import subprocess
                  "client_secrets.json and/or gdrive_credentials file is missing")
 class TestCliGdrivedb(ParallelTestCase):
     resource_lock = "gdrive"
-    p = None
-    driver = None
+
+
     dependency = ["oauth2client", "PyDrive2", "PyYAML", "google-api-python-client", "httplib2"]
 
     @classmethod
@@ -48,7 +48,7 @@ class TestCliGdrivedb(ParallelTestCase):
             except Exception:
                 pass
 
-    @classmethod
+    '''@classmethod
     def tearDownClass(cls):
         os.chdir(base_path)
         try:
@@ -60,22 +60,7 @@ class TestCliGdrivedb(ParallelTestCase):
         except Exception as e:
             pass
         finally:
-            super().tearDownClass()
-
-        src1 = os.path.join(cls.app_dir, "client_secrets.json")
-        src = os.path.join(cls.app_dir, "gdrive_credentials")
-        if os.path.exists(src):
-            os.chmod(src, 0o764)
-            try:
-                os.unlink(src)
-            except PermissionError:
-                print('gdrive_credentials delete failed')
-        if os.path.exists(src1):
-            os.chmod(src1, 0o764)
-            try:
-                os.unlink(src1)
-            except PermissionError:
-                print('client_secrets.json delete failed')
+            super().tearDownClass()'''
 
     def tearDown(self):
         super().tearDown()
@@ -213,7 +198,7 @@ class TestCliGdrivedb(ParallelTestCase):
     def test_no_database(self):
         # check unconfigured database
         os.chdir(self.app_dir)
-        p1 = process_open([self.py_version, u'cps.py'], [1])
+        p1 = process_open([self.py_version, u'cps.py'], [1], env={"APP_MODE": "test", "CALIBRE_PORT": self.worker_port})
         wait_for_reboot("http://127.0.0.1:" + self.worker_port)
         try:
             # navigate to the application home page

@@ -2,26 +2,15 @@
 # -*- coding: utf-8 -*-
 
 from base_test import ParallelTestCase
-import time
 
 from selenium.webdriver.common.by import By
-from config_test import BOOT_TIME
-from helper_func import startup
-
-
-
-RESOURCES = {'ports': 1, "oauth":True}
-
-PORTS = ['8083']
-INDEX = ""
+from helper_func import startup, wait_for_reboot
 
 
 class TestOAuthLogin(ParallelTestCase):
 
-    p = None
-    driver = None
     kobo_adress = None
-    dep_line = ["flask-dance", "sqlalchemy-utils"]
+    dependency = ["flask-dance", "sqlalchemy-utils"]
 
     @classmethod
     def setUpClass(cls):
@@ -37,24 +26,14 @@ class TestOAuthLogin(ParallelTestCase):
             cls.driver.quit()
             cls.p.terminate()
 
-    @classmethod
-    def tearDownClass(cls):
-        cls.driver.get("http://127.0.0.1:" + cls.worker_port)
-        cls.stop_calibre_web()
-        cls.p.terminate()
-        cls.driver.quit()
-        # close the browser window and stop calibre-web
-        super().tearDownClass()
-
-
     def test_visible_oauth(self):
         # set to default
         self.fill_basic_config({'config_login_type':'Use OAuth'})
-        time.sleep(BOOT_TIME)
+        wait_for_reboot(f"http://127.0.0.1:{self.worker_port}")
         self.assertTrue(self.check_element_on_page((By.ID, "flash_success")))
         # enable github oauth
         self.fill_basic_config({'config_1_oauth_client_id': '1234','config_1_oauth_client_secret':'5678' })
-        time.sleep(BOOT_TIME)
+        wait_for_reboot(f"http://127.0.0.1:{self.worker_port}")
         self.assertTrue(self.check_element_on_page((By.ID, "flash_success")))
         # check link button visible
         self.goto_page('user_setup')
@@ -71,7 +50,7 @@ class TestOAuthLogin(ParallelTestCase):
         self.login('admin','admin123')
         # enable additionally google oauth
         self.fill_basic_config({'config_2_oauth_client_id': '1234', 'config_2_oauth_client_secret': '5678'})
-        time.sleep(BOOT_TIME)
+        wait_for_reboot(f"http://127.0.0.1:{self.worker_port}")
         self.assertTrue(self.check_element_on_page((By.ID, "flash_success")))
         # Check link button visible
         self.goto_page('user_setup')
@@ -84,14 +63,14 @@ class TestOAuthLogin(ParallelTestCase):
         # login
         self.login('admin', 'admin123')
         self.fill_basic_config({'config_1_oauth_client_id': '','config_1_oauth_client_secret':'' })
-        time.sleep(BOOT_TIME)
+        wait_for_reboot(f"http://127.0.0.1:{self.worker_port}")
         self.assertTrue(self.check_element_on_page((By.ID, "flash_success")))
         # Check google link button invisible
         self.goto_page('user_setup')
         self.assertTrue(self.check_element_on_page((By.ID, "config_2_oauth")))
         # deactivate both oauths again
         self.fill_basic_config({'config_2_oauth_client_id': '','config_2_oauth_client_secret':'' })
-        time.sleep(BOOT_TIME)
+        wait_for_reboot(f"http://127.0.0.1:{self.worker_port}")
         self.assertTrue(self.check_element_on_page((By.ID, "flash_success")))
         # open settings
         self.driver.find_elements(By.CLASS_NAME, "accordion-toggle")[3].click()

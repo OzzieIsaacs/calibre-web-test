@@ -16,9 +16,6 @@ from helper_db import add_books
 
 class TestThumbnailsEnv(ParallelTestCase):
 
-    p = None
-    driver = None
-
     @classmethod
     def setUpClass(cls):
         super().setUpClass()
@@ -44,11 +41,6 @@ class TestThumbnailsEnv(ParallelTestCase):
 
     @classmethod
     def tearDownClass(cls):
-        cls.driver.get("http://127.0.0.1:" + cls.worker_port)
-        cls.stop_calibre_web()
-        cls.driver.quit()
-        cls.p.terminate()
-        # close the browser window and stop calibre-web
         shutil.rmtree(cls.temp_dir + '_2', ignore_errors=True)
         shutil.rmtree(cls.temp_dir + '_3', ignore_errors=True)
         thumbnail_cache_path = os.path.join(cls.app_dir, 'cps', 'cache', 'thumbnails')

@@ -19,7 +19,7 @@ from helper_func import startup
                  "client_secrets.json and/or gdrive_credentials file is missing")
 class TestSetupGdrive(ParallelTestCase):
     p=None
-    driver = None
+
     dependency = ["oauth2client", "PyDrive2", "PyYAML", "google-api-python-client", "httplib2"]
 
     @classmethod
@@ -40,7 +40,7 @@ class TestSetupGdrive(ParallelTestCase):
             except Exception:
                 pass
 
-    @classmethod
+    '''@classmethod
     def tearDownClass(cls):
         try:
             cls.driver.get("http://127.0.0.1:" + cls.worker_port)
@@ -50,24 +50,8 @@ class TestSetupGdrive(ParallelTestCase):
             cls.p.terminate()
         except Exception as e:
             print(e)
-
-        src1 = os.path.join(cls.app_dir, "client_secrets.json")
-        src = os.path.join(cls.app_dir, "client_secret.json")
-        if os.path.exists(src1):
-            os.chmod(src1, 0o764)
-            try:
-                os.unlink(src1)
-            except PermissionError:
-                print('File delete failed')
-
-        if os.path.exists(src):
-            os.chmod(src, 0o764)
-            try:
-                os.unlink(src)
-            except PermissionError:
-                print('File delete failed')
-        super().tearDownClass()
-
+        finally:
+            super().tearDownClass()'''
 
     def test_config_gdrive(self):
         # invalid db and tick gdrive

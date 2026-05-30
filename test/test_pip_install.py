@@ -9,19 +9,20 @@ import shutil
 
 from selenium import webdriver
 from selenium.webdriver.common.by import By
-from helper_func import kill_dead_cps
+from helper_func import kill_dead_cps, wait_for_reboot
 from config_test import base_path, BOOT_TIME
 from subproc_wrapper import process_open
 from build_release import make_release
 
 
 class TestPipInstall(ParallelTestCase):
+
     package_path = None
+
     @classmethod
     def setUpClass(cls):
         super().setUpClass()
         # startup function is not called, therefore direct print
-        # print("\n%s - %s: " % (cls.py_version, cls.__name__))
         cls.driver = webdriver.Firefox()
         cls.driver.implicitly_wait(10)
         cls.driver.maximize_window()
@@ -60,14 +61,14 @@ class TestPipInstall(ParallelTestCase):
             os.remove(os.path.join(cls.app_dir, 'app.db'))
         except Exception:
             pass
-        super().tearDownClass()
+        super().tearDownClass(no=True)
 
     def test_module_start(self):
         package_python = os.path.join(self.package_path, "bin", "python3")
         app_db = os.path.join(self.package_path, "app.db")
         p = process_open([package_python, "-m", "calibreweb", "-p", app_db])
         # create a new Firefox session
-        time.sleep(BOOT_TIME)
+        wait_for_reboot(f"http://127.0.0.1:{self.worker_port}")
         # navigate to the application home page
         self.driver.get("http://127.0.0.1:" + self.worker_port)
         self.login("admin", "admin123")
@@ -86,7 +87,7 @@ class TestPipInstall(ParallelTestCase):
         app_db = os.path.join(self.package_path, "app.db")
         p = process_open([package_command, "-p", app_db])
         # create a new Firefox session
-        time.sleep(BOOT_TIME)
+        wait_for_reboot(f"http://127.0.0.1:{self.worker_port}")
         # navigate to the application home page
         self.driver.get("http://127.0.0.1:" + self.worker_port)
         self.login("admin", "admin123")
@@ -103,7 +104,7 @@ class TestPipInstall(ParallelTestCase):
         package_command = os.path.join(self.package_path, "bin", "cps")
         p = process_open([package_command, "-p",self.package_path])
         # create a new Firefox session
-        time.sleep(BOOT_TIME)
+        wait_for_reboot(f"http://127.0.0.1:{self.worker_port}")
         # navigate to the application home page
         self.driver.get("http://127.0.0.1:" + self.worker_port)
         self.login("admin", "admin123")

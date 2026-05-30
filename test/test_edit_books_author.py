@@ -7,20 +7,14 @@ import time
 import os
 
 from helper_db import change_tag
-from config_test import base_path, BOOT_TIME
-from helper_func import startup, change_epub_meta
+from config_test import base_path
+from helper_func import startup, change_epub_meta, wait_for_reboot
 from selenium.webdriver.common.by import By
 
 
-RESOURCES = {'ports': 1}
-
-PORTS = ['8083']
-INDEX = ""
-
-
 class TestEditAuthors(ParallelTestCase):
-    p = None
-    driver = None
+
+
 
     @classmethod
     def setUpClass(cls):
@@ -36,14 +30,14 @@ class TestEditAuthors(ParallelTestCase):
             cls.driver.quit()
             cls.p.kill()
 
-    @classmethod
+    '''@classmethod
     def tearDownClass(cls):
         cls.driver.get("http://127.0.0.1:" + cls.worker_port)
         cls.stop_calibre_web()
         # close the browser window and stop calibre-web
         cls.driver.quit()
         cls.p.terminate()
-        super().tearDownClass()
+        super().tearDownClass()'''
 
     # One book of the author present
     def test_change_capital_one_author_one_book(self):
@@ -488,7 +482,7 @@ class TestEditAuthors(ParallelTestCase):
 
     def test_rename_author_emphasis_mark_onupload(self):
         self.fill_basic_config({'config_uploading': 1})
-        time.sleep(BOOT_TIME)
+        wait_for_reboot(f"http://127.0.0.1:{self.worker_port}")
         self.assertTrue(self.check_element_on_page((By.ID, "flash_success")))
         # Upload book with one author in database
         epub_file = os.path.join(base_path, 'files', 'author.epub')
@@ -523,7 +517,7 @@ class TestEditAuthors(ParallelTestCase):
 
     def test_rename_tag_emphasis_mark_onupload(self):
         self.fill_basic_config({'config_uploading': 1})
-        time.sleep(BOOT_TIME)
+        wait_for_reboot(f"http://127.0.0.1:{self.worker_port}")
         self.assertTrue(self.check_element_on_page((By.ID, "flash_success")))
         # Upload book with one author in database
         epub_file = os.path.join(base_path, 'files', 'tag.epub')

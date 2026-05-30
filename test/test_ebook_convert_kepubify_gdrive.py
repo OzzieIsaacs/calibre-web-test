@@ -20,8 +20,8 @@ import datetime
 @unittest.skipIf(helper_email_convert.is_kepubify_not_present(), "Skipping convert, kepubify not found")
 class TestEbookConvertGDriveKepubify(ParallelTestCase):
     resource_lock = "gdrive"
-    p = None
-    driver = None
+
+
     dependency = ["oauth2client", "PyDrive2", "PyYAML", "google-api-python-client", "httplib2"]
     email_server = None
 
@@ -45,7 +45,7 @@ class TestEbookConvertGDriveKepubify(ParallelTestCase):
             cls.driver.quit()
             cls.p.kill()
 
-    @classmethod
+    '''@classmethod
     def tearDownClass(cls):
         try:
             # close the browser window and stop calibre-web
@@ -55,26 +55,11 @@ class TestEbookConvertGDriveKepubify(ParallelTestCase):
             cls.p.terminate()
         except Exception as e:
             print(e)
-        time.sleep(2)
-
-        src1 = os.path.join(cls.app_dir, "client_secrets.json")
-        src = os.path.join(cls.app_dir, "gdrive_credentials")
-        if os.path.exists(src):
-            os.chmod(src, 0o764)
-            try:
-                os.unlink(src)
-            except PermissionError:
-                print('gdrive_credentials delete failed')
-        if os.path.exists(src1):
-            os.chmod(src1, 0o764)
-            try:
-                os.unlink(src1)
-            except PermissionError:
-                print('client_secrets.json delete failed')
-
-        super().tearDownClass()
+        finally:
+            super().tearDownClass()'''
 
     def tearDown(self):
+        super().tearDown()
         if not self.check_user_logged_in('admin'):
             self.logout()
             self.login('admin', 'admin123')

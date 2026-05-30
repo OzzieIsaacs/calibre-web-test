@@ -1,6 +1,5 @@
 # -*- coding: utf-8 -*-
 import copy
-import os
 try:
     import requests
 except ImportError:
@@ -8,6 +7,7 @@ except ImportError:
 import time
 import re
 import lxml.etree
+import datetime
 from functools import cmp_to_key
 from io import StringIO
 
@@ -18,7 +18,6 @@ from selenium.webdriver.support.ui import WebDriverWait, Select
 from selenium.webdriver.support import expected_conditions as EC
 from selenium.common.exceptions import TimeoutException
 from selenium.common.exceptions import NoSuchElementException
-from config_test import BOOT_TIME, VENV_PYTHON, CALIBRE_WEB_PATH
 from helper_func import wait_for_reboot
 
 
@@ -259,7 +258,8 @@ class ui_class():
         try:
             WebDriverWait(cls.driver, 5).until(EC.presence_of_element_located((By.ID, "config_calibre_dir")))
         except Exception:
-            print("no config_calibre_dir visible")
+            now = datetime.datetime.now().strftime("%H:%M:%S")
+            print(f"[Worker {cls.worker_id}] {now} - {cls.__name__} no config_calibre_dir visible")
         process_checkboxes = dict()
         process_elements = dict()
         process_options =dict()
@@ -384,6 +384,8 @@ class ui_class():
     @classmethod
     def fill_basic_config(cls, elements=None):
         if not cls.goto_page('basic_config'):
+            now = datetime.datetime.now().strftime("%H:%M:%S")
+            print(f"[Worker {cls.worker_id}] {now} - {cls.__name__} basic_config page not reached")
             print("page not reached")
         cls._fill_basic_config(elements)
 
@@ -2104,23 +2106,23 @@ class ui_class():
     @classmethod
     def get_convert_book(cls, id=-1, root_url=None):
         if root_url is None:
-            root_url = f'http://127.0.0.1:{cls.worker}'
-        if id>0:
-            cls.driver.get(root_url + "/admin/book/"+str(id))
+            root_url = f'http://127.0.0.1:{cls.worker_port}'
+        if id > 0:
+            cls.driver.get(root_url + "/admin/book/" + str(id))
         cls.check_element_on_page((By.ID,"book_edit_frm"))
         parser = lxml.etree.HTMLParser()
         html = cls.driver.page_source
 
         tree = lxml.etree.parse(StringIO(html), parser)
         ret = dict()
-        ret['from_book'] = tree.findall("//select[@id='book_format_from']/option")
-        ret['to_book'] = tree.findall("//select[@id='book_format_to']/option")
+        ret['from_book'] = tree.findall(".//select[@id='book_format_from']/option")
+        ret['to_book'] = tree.findall(".//select[@id='book_format_to']/option")
         if not ret['from_book'] and not ret['to_book']:
             ret['btn_from'] = False
             ret['btn_to'] = False
         else:
-            ret['btn_from'] = cls.check_element_on_page((By.XPATH, "//select[@id='book_format_from']"))
-            ret['btn_to'] = cls.check_element_on_page((By.XPATH, "//select[@id='book_format_to']"))
+            ret['btn_from'] = cls.check_element_on_page((By.XPATH, ".//select[@id='book_format_from']"))
+            ret['btn_to'] = cls.check_element_on_page((By.XPATH, ".//select[@id='book_format_to']"))
         return ret
 
     def search(self, term):

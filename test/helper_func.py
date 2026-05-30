@@ -206,7 +206,7 @@ def startup(inst, pyVersion, config, login=True, host="http://127.0.0.1", port="
     WebDriverWait(inst.driver, BOOT_TIME).until(EC.title_contains("Calibre-Web"))
 
     if inst.p.poll():
-        kill_old_cps()
+        kill_dead_cps(port=port, worker=inst.worker_id, testclass=inst.__name__)
         inst.p = process_open(command, [1], sout=None, env=env, cwd=work_path)
         print('Calibre-Web restarted...')
 
@@ -368,10 +368,10 @@ def remove_dependency(py_version, names):
                     q.communicate()
 
 
-def kill_old_cps(port=8083):
+'''def kill_old_cps(port=8083):
     for proc in process_iter():
         try:
-            for conns in proc.connections(kind='inet'):
+            for conns in proc.net_connections(kind='inet'):
                 if conns.laddr.port == port:
                     proc.send_signal(SIGKILL)  # or SIGKILL
                     print('Killed old Calibre-Web instance')
@@ -379,7 +379,7 @@ def kill_old_cps(port=8083):
         except (PermissionError, psutil.AccessDenied):
             pass
     # Give Calibre-Web time to die
-    time.sleep(3)
+    time.sleep(3)'''
 
 
 def kill_dead_cps(port, worker=-1, testclass=""):

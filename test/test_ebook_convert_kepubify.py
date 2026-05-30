@@ -15,12 +15,11 @@ from selenium.webdriver.support.ui import Select, WebDriverWait
 from selenium.webdriver.support import expected_conditions as EC
 from helper_email_convert import kepubify_path, is_kepubify_not_present
 from helper_func import startup
-
+import datetime
 
 @unittest.skipIf(is_kepubify_not_present(), "Skipping convert, kepubify not found")
 class TestEbookConvertKepubify(ParallelTestCase):
-    p = None
-    driver = None
+
     email_server = None
 
     @classmethod
@@ -39,11 +38,12 @@ class TestEbookConvertKepubify(ParallelTestCase):
             time.sleep(2)
             WebDriverWait(cls.driver, 5).until(EC.presence_of_element_located((By.ID, "flash_success")))
         except Exception as e:
-            print("Dead on Init - check Calibre-Web is starting")
+            now = datetime.datetime.now().strftime("%H:%M:%S")
+            print(f"[Worker {cls.worker_id}] {now} - {cls.__name__} Dead on Init - check Calibre-Web is starting")
             cls.driver.quit()
             cls.p.kill()
 
-    @classmethod
+    '''@classmethod
     def tearDownClass(cls):
         try:
             # close the browser window and stop calibre-web
@@ -54,9 +54,10 @@ class TestEbookConvertKepubify(ParallelTestCase):
         except Exception as e:
             print(e)
         time.sleep(2)
-        super().tearDownClass()
+        super().tearDownClass()'''
 
     def tearDown(self):
+        super().tearDown()
         if not self.check_user_logged_in('admin'):
             self.logout()
             self.login('admin', 'admin123')
@@ -220,7 +221,7 @@ class TestEbookConvertKepubify(ParallelTestCase):
         # try to download book from details as kobo reader -> kepub.epub
         parser = lxml.etree.HTMLParser()
         tree = lxml.etree.parse(StringIO(resp.text), parser)
-        download_link = tree.findall("//*[@aria-labelledby='btnGroupDrop1']//a")
+        download_link = tree.findall(".//*[@aria-labelledby='btnGroupDrop1']//a")
         self.assertTrue(download_link[1].get("href").endswith('/9.kepub.epub'),
                         'Download Link has invalid format for kobo browser, has to end with filename')
         # delete epub

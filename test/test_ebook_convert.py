@@ -2,6 +2,9 @@
 # -*- coding: utf-8 -*-
 
 import unittest
+
+from pip._internal.utils import datetime
+
 from base_test import ParallelTestCase, acquire_resource, release_resource
 import os
 import time
@@ -12,12 +15,10 @@ from selenium.webdriver.common.by import By
 from selenium.webdriver.support.ui import Select
 from selenium.common.exceptions import UnexpectedAlertPresentException
 from helper_func import startup
-
+import datetime
 
 @unittest.skipIf(is_calibre_not_present(), "Skipping convert, calibre not found")
 class TestEbookConvertCalibre(ParallelTestCase):
-    p = None
-    driver = None
     email_server = None
 
     @classmethod
@@ -25,6 +26,8 @@ class TestEbookConvertCalibre(ParallelTestCase):
         super().setUpClass()
         # start email server
         cls.port = acquire_resource("port")
+        now = datetime.datetime.now().strftime("%H:%M:%S")
+        print(f"[Worker {cls.worker_id}] {now} - {cls.__name__} starting E-Mail Server")
         cls.email_server = AIOSMTPServer(
             hostname='127.0.0.1',
             port=int(cls.port),
@@ -57,8 +60,10 @@ class TestEbookConvertCalibre(ParallelTestCase):
     @classmethod
     def tearDownClass(cls):
         shutil.rmtree(os.path.join(cls.app_dir, 'exe dir'), ignore_errors=True)
-        cls.driver.get("http://127.0.0.1:" + cls.worker_port)
         cls.email_server.stop()
+        release_resource("port", cls.port)
+        super().tearDownClass()
+        '''cls.driver.get("http://127.0.0.1:" + cls.worker_port)        
         try:
             cls.stop_calibre_web()
             # close the browser window and stop calibre-web
@@ -66,11 +71,10 @@ class TestEbookConvertCalibre(ParallelTestCase):
             pass
         cls.driver.quit()
         cls.p.terminate()
-        time.sleep(2)
-        release_resource("port", cls.port)
-        super().tearDownClass()
+        time.sleep(2)'''
 
     def tearDown(self):
+        super().tearDown()
         if not self.check_user_logged_in('admin'):
             self.logout()
             self.login('admin', 'admin123')

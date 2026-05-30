@@ -1,12 +1,13 @@
 # -*- coding: utf-8 -*-
 
 import unittest
-from base_test import ParallelTestCase
+from base_test import ParallelTestCase, acquire_resource, release_resource
 import os
 import re
 import sys
 import time
 import socket
+import datetime
 
 from selenium.webdriver.common.by import By
 from helper_email_convert import AIOSMTPServer
@@ -15,17 +16,10 @@ from config_test import base_path
 from helper_func import startup, wait_Email_received
 
 
-
-RESOURCES = {'ports': 2}
-
-PORTS = ['8083', '1027']
-INDEX = ""
-
-
 @unittest.skipIf(helper_email_convert.is_calibre_not_present(),"Skipping convert, calibre not found")
 class TestSSL(ParallelTestCase):
-    p = None
-    driver = None
+
+
     email_server = None
     LOG_LEVEL = 'DEBUG'
 
@@ -33,8 +27,11 @@ class TestSSL(ParallelTestCase):
     def setUpClass(cls):
         super().setUpClass()
         # start email server
+        cls.port = acquire_resource("port")
+        now = datetime.datetime.now().strftime("%H:%M:%S")
+        print(f"[Worker {cls.worker_id}] {now} - {cls.__name__} starting E-Mail Server")
         cls.email_server = AIOSMTPServer(
-            hostname=socket.gethostname(), port=int(PORTS[1]),
+            hostname=socket.gethostname(), port=int(cls.port),
             only_ssl=True,
             certfile='files/server.crt',
             keyfile='files/server.key',
@@ -50,21 +47,23 @@ class TestSSL(ParallelTestCase):
                 lib_dest=cls.temp_dir)
 
         cls.edit_user('admin', {'email': 'a5@b.com','kindle_mail': 'a1@b.com'})
-        cls.setup_server(False, {'mail_server':socket.gethostname(), 'mail_port': PORTS[1],
+        cls.setup_server(False, {'mail_server':socket.gethostname(), 'mail_port': cls.port,
                             'mail_use_ssl':'SSL/TLS','mail_login':'name@host.com','mail_password_e':'10234',
                             'mail_from':'name@host.com'})
 
 
     @classmethod
     def tearDownClass(cls):
-        cls.driver.get("http://127.0.0.1:" + cls.worker_port)
+        cls.email_server.stop()
+        release_resource("port", cls.port)
+        super().tearDownClass()
+
+        '''cls.driver.get("http://127.0.0.1:" + cls.worker_port)
         cls.stop_calibre_web()
         # close the browser window and stop calibre-web
         cls.driver.quit()
         cls.p.terminate()
-        cls.email_server.stop()
-        time.sleep(2)
-        super().tearDownClass()
+        time.sleep(2)'''
 
     # start sending e-mail
     # check email received

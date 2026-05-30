@@ -131,6 +131,8 @@ class ParallelTestCase(unittest.TestCase, ui_class):
     _counter = 0
     _start = None
     _end = None
+    driver = None
+    p = None
 
     def __init__(self, tests):
         main_module = sys.modules["__main__"]
@@ -263,68 +265,81 @@ class ParallelTestCase(unittest.TestCase, ui_class):
                     pass
 
     @classmethod
-    def tearDownClass(cls):
-        now = datetime.now().strftime("%H:%M:%S")
-        print(f"[Worker {cls.worker_id}] {now} - {cls.__name__} saving logbooks:")
-        save_logfiles(cls, cls.__name__)
+    def tearDownClass(cls, no=False):
+        if not no:
+            try:
+                # close the browser window and stop calibre-web
+                cls.driver.get("http://127.0.0.1:" + cls.worker_port)
+                cls.stop_calibre_web()
+                cls.driver.quit()
+                cls.p.terminate()
+            except Exception as e:
+                print(e)
 
-        print(f"[Worker {cls.worker_id}] {now} - {cls.__name__} RESOURCE released port:{cls.worker_port}")
-        release_resource("port", cls.worker_port)
-
-        # release class level lock
-        if hasattr(cls, "resource_lock"):
+        try:
             now = datetime.now().strftime("%H:%M:%S")
-            print(f"[Worker {cls.worker_id}] {now} - {cls.__name__} LOCK RELEASED {cls.resource_lock}")
-            release_resource("gdrive", cls.gdrive_file)
+            print(f"[Worker {cls.worker_id}] {now} - {cls.__name__} saving logbooks")
+            save_logfiles(cls, cls.__name__)
 
-        if hasattr(cls, "dependency"):
+            print(f"[Worker {cls.worker_id}] {now} - {cls.__name__} RESOURCE released port:{cls.worker_port}")
+            release_resource("port", cls.worker_port)
+
+            # release class level lock
+            if hasattr(cls, "resource_lock"):
+                now = datetime.now().strftime("%H:%M:%S")
+                print(f"[Worker {cls.worker_id}] {now} - {cls.__name__} LOCK RELEASED {cls.resource_lock}")
+                release_resource("gdrive", cls.gdrive_file)
+
+            if hasattr(cls, "dependency"):
+                now = datetime.now().strftime("%H:%M:%S")
+                print(f"[Worker {cls.worker_id}] {now} - {cls.__name__} remove dependecies")
+                remove_dependency(cls.py_version, cls.dependency)
+
+            if hasattr(cls, "temp_dir"):
+                shutil.rmtree(cls.temp_dir, ignore_errors=True)
+
+            if hasattr(cls, "app_dir"):
+                shutil.rmtree(cls.app_dir, ignore_errors=True)
             now = datetime.now().strftime("%H:%M:%S")
-            print(f"[Worker {cls.worker_id}] {now} - {cls.__name__} remove dependecies")
-            remove_dependency(cls.py_version, cls.dependency)
+            print(f"[Worker {cls.worker_id}] {now} - {cls.__name__} RESOURCE released venv:{cls.py_resource}")
+            release_resource("venv", cls.py_resource)
 
-        if hasattr(cls, "temp_dir"):
-            shutil.rmtree(cls.temp_dir, ignore_errors=True)
+            cls._end = time.time()
+            total = len(cls._results)
 
-        if hasattr(cls, "app_dir"):
-            shutil.rmtree(cls.app_dir, ignore_errors=True)
-        now = datetime.now().strftime("%H:%M:%S")
-        print(f"[Worker {cls.worker_id}] {now} - {cls.__name__} RESOURCE released venv:{cls.py_resource}")
-        release_resource("venv", cls.py_resource)
+            fail = sum(1 for x in cls._results if x["result"] == "FAIL")
+            error = sum(1 for x in cls._results if x["result"] == "ERROR")
+            skip = sum(1 for x in cls._results if x["result"] == "SKIP")
+            success = sum(1 for x in cls._results if x["result"] == "SUCCESS")
 
-        cls._end = time.time()
-        total = len(cls._results)
-
-        fail = sum(1 for x in cls._results if x["result"] == "FAIL")
-        error = sum(1 for x in cls._results if x["result"] == "ERROR")
-        skip = sum(1 for x in cls._results if x["result"] == "SKIP")
-        success = sum(1 for x in cls._results if x["result"] == "SUCCESS")
-
-        data = {
-            f"{cls.__module__}.{cls.__name__}": {
-                "start_time": datetime.fromtimestamp(cls._start).strftime("%H:%M:%S"),
-                "end_time": datetime.fromtimestamp(cls._end).strftime("%H:%M:%S"),
-                "duration": f"{(cls._end - cls._start):.2f}",
-                "tests": cls._results,
-                "stats": {
-                    "total": total,
-                    "pass": success,
-                    "fail": fail,
-                    "error": error,
-                    "skip": skip,
+            data = {
+                f"{cls.__module__}.{cls.__name__}": {
+                    "start_time": datetime.fromtimestamp(cls._start).strftime("%H:%M:%S"),
+                    "end_time": datetime.fromtimestamp(cls._end).strftime("%H:%M:%S"),
+                    "duration": f"{(cls._end - cls._start):.2f}",
+                    "tests": cls._results,
+                    "stats": {
+                        "total": total,
+                        "pass": success,
+                        "fail": fail,
+                        "error": error,
+                        "skip": skip,
+                    }
                 }
             }
-        }
-        now = datetime.now().strftime("%H:%M:%S")
-        print(
-            f"[Worker {cls.worker_id}] {now} - {cls.__name__} FINISHED "
-            f"Tests: {total} (Pass:{success} Fail:{fail} Error:{error} Skip:{skip})"
-        )
-        name_class = f"{cls.__module__}.{cls.__name__}"
-        now = datetime.now().strftime("%H:%M:%S")
-        print(f"[Worker {cls.worker_id}] {now} - {cls.__name__} Testresult: Start: {data[name_class]['start_time']} Duration {data[name_class]['duration']}s")
-        target_path = os.path.abspath(os.path.join(os.path.dirname(__file__),".."))
-        filename = os.path.join(target_path, REPORT_DIR, f"{cls.__name__}.json")
+            now = datetime.now().strftime("%H:%M:%S")
+            print(
+                f"[Worker {cls.worker_id}] {now} - {cls.__name__} FINISHED "
+                f"Tests: {total} (Pass:{success} Fail:{fail} Error:{error} Skip:{skip})"
+            )
+            name_class = f"{cls.__module__}.{cls.__name__}"
+            now = datetime.now().strftime("%H:%M:%S")
+            print(f"[Worker {cls.worker_id}] {now} - {cls.__name__} Testresult: Start: {data[name_class]['start_time']} Duration {data[name_class]['duration']}s")
+            target_path = os.path.abspath(os.path.join(os.path.dirname(__file__),".."))
+            filename = os.path.join(target_path, REPORT_DIR, f"{cls.__name__}.json")
 
-        with open(filename, "w", encoding="utf-8") as f:
-            json.dump(data, f, indent=4)
-        super().tearDownClass()
+            with open(filename, "w", encoding="utf-8") as f:
+                json.dump(data, f, indent=4)
+            super().tearDownClass()
+        except Exception as e:
+            print(e)

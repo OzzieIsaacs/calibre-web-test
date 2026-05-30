@@ -10,19 +10,20 @@ import re
 from selenium import webdriver
 from selenium.webdriver.common.by import By
 from selenium.common.exceptions import WebDriverException
-from helper_func import kill_dead_cps
+from helper_func import kill_dead_cps, wait_for_reboot
 from subproc_wrapper import process_open
-from config_test import BOOT_TIME, base_path
+from config_test import base_path
 from helper_port_forward import SocketForwardServer
 
 
 @unittest.skipIf(os.name=="nt", "Sockets are not available on Windows")
 class TestSocket(ParallelTestCase):
-    driver = None
+
 
     @classmethod
     def setUpClass(cls):
         super().setUpClass()
+        shutil.copytree(os.path.join(base_path, 'Calibre_db'), cls.app_dir, dirs_exist_ok=True)
         cls.port = acquire_resource("port")
         cls.driver = webdriver.Firefox()
         cls.driver.implicitly_wait(10)
@@ -44,13 +45,13 @@ class TestSocket(ParallelTestCase):
         # close the browser window
         os.chdir(base_path)
         kill_dead_cps(cls.worker_port)
-        cls.driver.quit()
         try:
             os.remove(os.path.join(cls.app_dir, 'app.db'))
         except Exception:
             pass
+        cls.driver.quit()
         release_resource("port", cls.port)
-        super().tearDownClass()
+        super().tearDownClass(no=True)
 
     def test_socket_communication(self):
         my_env = os.environ.copy()
@@ -59,7 +60,7 @@ class TestSocket(ParallelTestCase):
         self.p = process_open([self.py_version, os.path.join(self.app_dir, u'cps.py')],
                               env=my_env,
                               quotes=[0, 1])
-        time.sleep(BOOT_TIME)
+        wait_for_reboot(f"http://127.0.0.1:" + self.port)
         try:
             # navigate to the application home page
             server = SocketForwardServer('localhost', int(self.port), socket_file)

@@ -10,13 +10,12 @@ import socket
 
 from selenium.webdriver.common.by import By
 from selenium.common.exceptions import WebDriverException
-from config_test import BOOT_TIME
-from helper_func import startup, check_response_language_header, curl_available, digest_login
+from helper_func import startup, check_response_language_header, curl_available, digest_login, wait_for_reboot
 
 
 class TestLogin(ParallelTestCase):
-    p = None
-    driver = None
+
+
 
     @classmethod
     def setUpClass(cls):
@@ -35,10 +34,6 @@ class TestLogin(ParallelTestCase):
     def tearDownClass(cls):
         cls.driver.get("http://127.0.0.1:" + cls.worker_port + "/login")
         cls.login('admin', 'admin123')
-        cls.stop_calibre_web()
-        # close the browser window and stop calibre-web
-        cls.driver.quit()
-        cls.p.terminate()
         try:
             os.unlink(os.path.join(cls.app_dir, 'cps', 'static', 'robots.txt'))
         except:
@@ -46,6 +41,7 @@ class TestLogin(ParallelTestCase):
         super().tearDownClass()
 
     def tearDown(self):
+        super().tearDown()
         if self.check_user_logged_in('', True):
             self.logout()
 
@@ -723,7 +719,8 @@ class TestLogin(ParallelTestCase):
         self.login('admin', 'admin123')
         self.assertTrue(self.check_element_on_page((By.ID, "flash_success")))
         self.fill_basic_config({"config_remote_login":1})
-        time.sleep(BOOT_TIME)
+        wait_for_reboot(f"http://127.0.0.1:{self.worker_port}")
+        self.assertTrue(self.check_element_on_page((By.ID, "flash_success")))
         self.logout()
         remote = self.check_element_on_page((By.ID, "remote_login"))
         self.assertTrue(remote)
@@ -761,7 +758,8 @@ class TestLogin(ParallelTestCase):
         self.assertEqual(resp.status_code, 200)
         r.close()
         self.fill_basic_config({"config_remote_login": 0})
-        time.sleep(BOOT_TIME)
+        wait_for_reboot(f"http://127.0.0.1:{self.worker_port}")
+        self.assertTrue(self.check_element_on_page((By.ID, "flash_success")))
         self.logout()
         r = requests.session()
         login_page = r.get("http://127.0.0.1:" + self.worker_port + "/login")

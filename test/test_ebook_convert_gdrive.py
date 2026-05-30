@@ -15,7 +15,7 @@ from selenium.webdriver.support import expected_conditions as EC
 from helper_email_convert import AIOSMTPServer, is_calibre_not_present, calibre_path
 from config_test import base_path, WAIT_GDRIVE, NUM_THUMBNAILS
 from helper_func import startup, count_files
-from helper_gdrive import prepare_gdrive, connect_gdrive
+from helper_gdrive import connect_gdrive
 import datetime
 
 @unittest.skipIf(not os.path.exists(os.path.join(base_path, "files", "client_secrets.json")) or
@@ -25,7 +25,7 @@ import datetime
 class TestEbookConvertCalibreGDrive(ParallelTestCase):
     resource_lock = "gdrive"
     p=None
-    driver = None
+
     dependency = ["oauth2client", "PyDrive2", "PyYAML", "google-api-python-client", "httplib2"]
     email_server = None
 
@@ -37,6 +37,8 @@ class TestEbookConvertCalibreGDrive(ParallelTestCase):
         try:
             cls.port = acquire_resource("port")
             # start email server
+            now = datetime.datetime.now().strftime("%H:%M:%S")
+            print(f"[Worker {cls.worker_id}] {now} - {cls.__name__} starting E-Mail Server")
             cls.email_server = AIOSMTPServer(
                 hostname='127.0.0.1',
                 port=int(cls.port),
@@ -81,33 +83,18 @@ class TestEbookConvertCalibreGDrive(ParallelTestCase):
         release_resource("port", cls.port)
         thumbnail_cache_path = os.path.join(cls.app_dir, 'cps', 'cache', 'thumbnails')
         shutil.rmtree(thumbnail_cache_path, ignore_errors=True)
-        try:
+        '''try:
             cls.driver.get("http://127.0.0.1:" + cls.worker_port)
             cls.stop_calibre_web()
             # close the browser window and stop calibre-web
             cls.driver.quit()
             cls.p.terminate()
         except Exception as e:
-            print(e)
-        super().tearDownClass()
-        time.sleep(2)
-        src1 = os.path.join(cls.app_dir, "client_secrets.json")
-        src = os.path.join(cls.app_dir, "gdrive_credentials")
-        if os.path.exists(src):
-            os.chmod(src, 0o764)
-            try:
-                os.unlink(src)
-            except PermissionError:
-                print('gdrive_credentials delete failed')
-        if os.path.exists(src1):
-            os.chmod(src1, 0o764)
-            try:
-                os.unlink(src1)
-            except PermissionError:
-                print('client_secrets.json delete failed')
+            print(e)'''
         super().tearDownClass()
 
     def tearDown(self):
+        super().tearDown()
         if not self.check_user_logged_in('admin'):
             self.logout()
             self.login('admin', 'admin123')

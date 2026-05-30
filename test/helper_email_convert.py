@@ -144,7 +144,6 @@ def get_server_context(certfile='files/server.crt', keyfile='files/server.key'):
 
 def AIOSMTPServer(hostname='', port=1025, startSSL=False, only_ssl=False,
                   authenticate=True, certfile=None, keyfile=None, timeout=300):
-    print("Starting E-Mail Server")
     # SSL
     ssl_context = None
     if only_ssl or startSSL:

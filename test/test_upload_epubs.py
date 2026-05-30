@@ -14,8 +14,6 @@ from helper_func import startup, change_epub_meta, updateZip
 
 
 class TestUploadEPubs(ParallelTestCase):
-    p = None
-    driver = None
 
     @classmethod
     def setUpClass(cls):
@@ -31,15 +29,6 @@ class TestUploadEPubs(ParallelTestCase):
         except Exception:
             cls.driver.quit()
             cls.p.kill()
-
-    @classmethod
-    def tearDownClass(cls):
-        cls.driver.get("http://127.0.0.1:" + cls.worker_port)
-        cls.stop_calibre_web()
-        # close the browser window and stop calibre-web
-        cls.driver.quit()
-        cls.p.terminate()
-        super().tearDownClass()
 
     def test_upload_epub_duplicate(self):
         epub_file = os.path.join(base_path, 'files', 'title.epub')

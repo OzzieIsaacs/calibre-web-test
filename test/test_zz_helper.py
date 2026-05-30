@@ -31,9 +31,10 @@ class TestCalibreHelper(ParallelTestCase):
         from cps import cli_param
         cli_param.gd_path = "gdrive.db"
         from cps import helper, updater
-        # from cps import helper
-        # startup function is not called, therfore direct print
-        # print("\n%s - %s: " % ("", cls.__name__))
+
+    @classmethod
+    def tearDownClass(cls):
+        super().tearDownClass(no=True)
 
     def test_check_high23(self):
         helper.config.config_unicode_filename = True

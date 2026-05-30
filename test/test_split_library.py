@@ -1,24 +1,17 @@
 
-from base_test import ParallelTestCase
+from base_test import ParallelTestCase, release_resource, acquire_resource
 import time
 import os
+import datetime
 
 from selenium.webdriver.support.ui import Select
 from selenium.webdriver.common.by import By
 from helper_email_convert import AIOSMTPServer
-from config_test import SPLIT_LIB, BOOT_TIME, base_path
-from helper_func import startup, count_files, read_metadata_epub
-
-
-RESOURCES = {'ports': 2}
-
-PORTS = ['8083', '1028']
-INDEX = ""
+from config_test import SPLIT_LIB, base_path
+from helper_func import startup, count_files, read_metadata_epub, wait_for_reboot
 
 
 class TestSplitLibrary(ParallelTestCase):
-    p = None
-    driver = None
 
     @classmethod
     def setUpClass(cls):
@@ -34,6 +27,7 @@ class TestSplitLibrary(ParallelTestCase):
                     )
             time.sleep(3)
             cls.fill_db_config({'config_calibre_split': 1, 'config_calibre_split_dir': SPLIT_LIB})
+            cls.port = acquire_resource("port")
             time.sleep(3)
         except Exception:
             cls.driver.quit()
@@ -41,11 +35,7 @@ class TestSplitLibrary(ParallelTestCase):
 
     @classmethod
     def tearDownClass(cls):
-        cls.driver.get("http://127.0.0.1:" + cls.worker_port)
-        cls.stop_calibre_web()
-        # close the browser window and stop calibre-web
-        cls.driver.quit()
-        cls.p.terminate()
+        release_resource("port", cls.port)
         super().tearDownClass()
 
     # check thumbnail generation working
@@ -84,15 +74,17 @@ class TestSplitLibrary(ParallelTestCase):
     # check ebook can be emailed
     def test_email_ebook(self):
         self.edit_user('admin', {'email': 'a5@b.com', 'kindle_mail': 'a1@b.com'})
-        self.setup_server(False, {'mail_server': '127.0.0.1', 'mail_port': PORTS[1],
+        self.setup_server(False, {'mail_server': '127.0.0.1', 'mail_port': self.port,
                         'mail_use_ssl': 'None', 'mail_login': 'name@host.com', 'mail_password_e': '10234',
                         'mail_from': 'name@host.com'})
         time.sleep(5)
         self.assertTrue(self.check_element_on_page((By.ID, "flash_success")))
         tasks = self.check_tasks()
+        now = datetime.datetime.now().strftime("%H:%M:%S")
+        print(f"[Worker {self.worker_id}] {now} - {self.__class__.__name__} starting E-Mail Server")
         self.email_server = AIOSMTPServer(
             hostname='127.0.0.1',
-            port=int(PORTS[1]),
+            port=int(self.port),
             only_ssl=False,
             timeout=10
         )
@@ -135,7 +127,8 @@ class TestSplitLibrary(ParallelTestCase):
 
     def test_upload_ebook(self):
         self.fill_basic_config({'config_uploading': 1})
-        time.sleep(BOOT_TIME)
+        wait_for_reboot(f"http://127.0.0.1:{self.worker_port}")
+        self.assertTrue(self.check_element_on_page((By.ID, "flash_success")))
         self.assertTrue(self.check_element_on_page((By.ID, "flash_success")))
         self.edit_user('admin', {'upload_role': 1})
         self.goto_page('nav_new')
@@ -158,7 +151,7 @@ class TestSplitLibrary(ParallelTestCase):
 
     def test_download_book(self):
         self.fill_basic_config({'config_embed_metadata': 0})
-        time.sleep(BOOT_TIME)
+        wait_for_reboot(f"http://127.0.0.1:{self.worker_port}")
         self.assertTrue(self.check_element_on_page((By.ID, "flash_success")))
         code, epub_content = self.download_book(8, "admin", "admin123", format="EPUB")
         self.assertEqual(200, code)
@@ -172,7 +165,7 @@ class TestSplitLibrary(ParallelTestCase):
         epub_metadata = read_metadata_epub(epub_content)
         self.assertEqual("Leo Baskerville", epub_metadata['author'][0])
         self.fill_basic_config({'config_embed_metadata': 0})
-        time.sleep(BOOT_TIME)
+        wait_for_reboot(f"http://127.0.0.1:{self.worker_port}")
         self.assertTrue(self.check_element_on_page((By.ID, "flash_success")))
 
     def test_wrong_config_lib(self):

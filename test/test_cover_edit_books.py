@@ -15,8 +15,8 @@ from io import BytesIO
 
 
 class TestCoverEditBooks(ParallelTestCase):
-    p = None
-    driver = None
+
+
     proxy = None
 
     @classmethod
@@ -47,12 +47,12 @@ class TestCoverEditBooks(ParallelTestCase):
 
     @classmethod
     def tearDownClass(cls):
-        cls.driver.get("http://127.0.0.1:" + cls.worker_port)
+        '''cls.driver.get("http://127.0.0.1:" + cls.worker_port)
         cls.stop_calibre_web()
         cls.driver.quit()
         cls.proxy.stop_proxy()
+        cls.p.terminate()'''
         release_resource("port", cls.port)
-        cls.p.terminate()
         super().tearDownClass()
 
     def check_invalid_cover(self, invalid_cover):

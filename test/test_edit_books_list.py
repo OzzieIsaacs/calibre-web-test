@@ -12,8 +12,6 @@ from helper_func import startup
 
 
 class TestEditBooksList(ParallelTestCase):
-    p = None
-    driver = None
 
     @classmethod
     def setUpClass(cls):
@@ -30,14 +28,14 @@ class TestEditBooksList(ParallelTestCase):
             cls.driver.quit()
             cls.p.kill()
 
-    @classmethod
+    '''@classmethod
     def tearDownClass(cls):
         cls.driver.get("http://127.0.0.1:" + cls.worker_port)
         cls.stop_calibre_web()
         # close the browser window and stop calibre-web
         cls.driver.quit()
         cls.p.terminate()
-        super().tearDownClass()
+        super().tearDownClass()'''
 
     def check_search(self, bl, term, count, column, value):
         bl['search'].clear()

@@ -17,8 +17,8 @@ from helper_email_convert import calibre_path, kepubify_path
 
 class TestEmbedMetadataGdrive(ParallelTestCase):
     resource_lock = "gdrive"
-    p = None
-    driver = None
+
+
     dependency = ["oauth2client", "PyDrive2", "PyYAML", "google-api-python-client", "httplib2"]
 
     @classmethod
@@ -52,7 +52,8 @@ class TestEmbedMetadataGdrive(ParallelTestCase):
     def tearDownClass(cls):
         thumbnail_cache_path = os.path.join(cls.app_dir, 'cps', 'cache', 'thumbnails')
         shutil.rmtree(thumbnail_cache_path, ignore_errors=True)
-        try:
+        super().tearDownClass()
+        '''try:
             cls.driver.get("http://127.0.0.1:" + cls.worker_port)
             cls.stop_calibre_web()
             # close the browser window and stop calibre-web
@@ -60,23 +61,8 @@ class TestEmbedMetadataGdrive(ParallelTestCase):
             cls.p.terminate()
         except Exception as e:
             print(e)
-
-        src1 = os.path.join(cls.app_dir, "client_secrets.json")
-        src = os.path.join(cls.app_dir, "gdrive_credentials")
-        if os.path.exists(src):
-            os.chmod(src, 0o764)
-            try:
-                os.unlink(src)
-            except PermissionError:
-                print('gdrive_credentials delete failed')
-        if os.path.exists(src1):
-            os.chmod(src1, 0o764)
-            try:
-                os.unlink(src1)
-            except PermissionError:
-                print('client_secrets.json delete failed')
-        super().tearDownClass()
-
+        finally:
+            super().tearDownClass()'''
 
     def test_download_check_metadata(self):
         # no calibre download

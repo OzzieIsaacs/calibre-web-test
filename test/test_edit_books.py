@@ -19,9 +19,9 @@ from helper_func import startup, createcbz
 
 
 class TestEditBooks(ParallelTestCase):
-    p = None
-    driver = None
-    dependencys = ['limit|py7zr']
+
+
+    dependency = ['limit|py7zr']
 
     @classmethod
     def setUpClass(cls):
@@ -37,14 +37,14 @@ class TestEditBooks(ParallelTestCase):
             cls.driver.quit()
             cls.p.kill()
 
-    @classmethod
+    '''@classmethod
     def tearDownClass(cls):
         cls.driver.get("http://127.0.0.1:" + cls.worker_port)
         cls.stop_calibre_web()
         # close the browser window and stop calibre-web
         cls.driver.quit()
         cls.p.terminate()
-        super().tearDownClass()
+        super().tearDownClass()'''
 
     # goto Book 1
     # Change Title with unicode chars
@@ -1061,7 +1061,6 @@ class TestEditBooks(ParallelTestCase):
         upload_file = os.path.join(base_path, 'files', 'book.cbt')
         upload = self.check_element_on_page((By.ID, 'btn-upload'))
         upload.send_keys(upload_file)
-
         time.sleep(3)
         self.check_element_on_page((By.ID, 'edit_cancel')).click()
         time.sleep(2)

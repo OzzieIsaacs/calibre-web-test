@@ -14,8 +14,8 @@ from helper_func import startup
 
 
 class TestUploadPDF(ParallelTestCase):
-    p = None
-    driver = None
+
+
 
     @classmethod
     def setUpClass(cls):
@@ -38,11 +38,6 @@ class TestUploadPDF(ParallelTestCase):
             os.remove(os.path.join(base_path, 'files', 'book1.pdf'))
         except FileNotFoundError:
             pass
-        cls.driver.get("http://127.0.0.1:" + cls.worker_port)
-        cls.stop_calibre_web()
-        # close the browser window and stop calibre-web
-        cls.driver.quit()
-        cls.p.terminate()
         super().tearDownClass()
 
     def check_uploaded_pdf(self, book_properties, check_properties):

@@ -3,16 +3,12 @@ import unittest
 import os
 import time
 
-
 from selenium.webdriver.common.by import By
-from config_test import BOOT_TIME
-from helper_func import startup
+from helper_func import startup, wait_for_reboot
 
 
 @unittest.skipIf(os.name == 'nt', 'writeonly database on windows is not checked')
 class TestReadOnlyDatabase(ParallelTestCase):
-    p = None
-    driver = None
 
     @classmethod
     def setUpClass(cls):
@@ -28,19 +24,10 @@ class TestReadOnlyDatabase(ParallelTestCase):
             cls.driver.quit()
             cls.p.kill()
 
-    @classmethod
-    def tearDownClass(cls):
-        cls.driver.get("http://127.0.0.1:" + cls.worker_port)
-        cls.stop_calibre_web()
-        # close the browser window and stop calibre-web
-        cls.driver.quit()
-        cls.p.terminate()
-        super().tearDownClass()
-
     @unittest.skipIf(os.name == 'nt', 'readonly database on windows is not checked')
     def test_readonly_path(self):
         self.fill_basic_config({"config_unicode_filename": 1})
-        time.sleep(BOOT_TIME)
+        wait_for_reboot(f"http://127.0.0.1:{self.worker_port}")
         self.assertTrue(self.check_element_on_page((By.ID, "flash_success")))
         self.goto_page('nav_new')
         number_books = self.get_books_displayed()

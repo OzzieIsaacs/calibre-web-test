@@ -12,7 +12,7 @@ import shutil
 import virtualenv
 from test.subproc_wrapper import process_open
 from test.base_test import RESOURCE_DIR, RESOURCE_POOLS
-from test.config_test import CALIBRE_WEB_PATH, VENV_PYTHON
+from test.config_test import CALIBRE_WEB_PATH, VENV_PYTHON, TEST_BASE
 from test.helper_certificate import generate_ssl_testing_files
 from test.helper_func import poweroff, finishing_notifier, result_move
 from test.helper_environment import environment
@@ -238,5 +238,7 @@ def main():
 if __name__ == "__main__":
     generate_ssl_testing_files()
     shutil.rmtree(RESOURCE_DIR, ignore_errors=True)
+    shutil.rmtree(os.path.join(TEST_BASE, "target"), ignore_errors=True)
+    os.makedirs(os.path.join(TEST_BASE, "target"))
     multiprocessing.set_start_method("spawn", force=True)
     main()

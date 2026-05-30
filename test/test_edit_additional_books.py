@@ -12,17 +12,17 @@ from io import BytesIO
 
 from selenium.webdriver.common.by import By
 from selenium.common.exceptions import UnexpectedAlertPresentException
-from config_test import base_path, BOOT_TIME
-from helper_func import startup, unrar_path, is_unrar_not_present, createcbz
+from config_test import base_path
+from helper_func import startup, unrar_path, is_unrar_not_present, createcbz, wait_for_reboot
 from helper_func import change_comic_meta
 
 
 
 @unittest.skipIf(is_unrar_not_present(), "Skipping convert, unrar not found")
 class TestEditAdditionalBooks(ParallelTestCase):
-    p = None
-    driver = None
-    dependencys = ["limit|py7zr", 'comicapi', 'rarfile']
+
+
+    dependency = ["limit|py7zr", 'comicapi', 'rarfile']
 
     @classmethod
     def setUpClass(cls):
@@ -44,14 +44,14 @@ class TestEditAdditionalBooks(ParallelTestCase):
             cls.driver.quit()
             cls.p.kill()
 
-    @classmethod
+    '''@classmethod
     def tearDownClass(cls):
         cls.driver.get("http://127.0.0.1:" + cls.worker_port)
         cls.stop_calibre_web()
         # close the browser window and stop calibre-web
         cls.driver.quit()
         cls.p.terminate()
-        super().tearDownClass()
+        super().tearDownClass()'''
 
     def check_identifier(self, result, key, name, value, only_value=False):
         identifier = [sub[key] for sub in result['identifier'] if key in sub]
@@ -254,7 +254,7 @@ class TestEditAdditionalBooks(ParallelTestCase):
     # limit upload formats to FB2 -> upload fb2 allowed
     def test_change_upload_formats(self):
         self.fill_basic_config({'config_uploading': 1, 'config_upload_formats': 'epub'})
-        time.sleep(BOOT_TIME)
+        wait_for_reboot(f"http://127.0.0.1:{self.worker_port}")
         self.assertTrue(self.check_element_on_page((By.ID, "flash_success")))
         self.goto_page('nav_new')
         upload_file = os.path.join(base_path, 'files', 'book.pdf')

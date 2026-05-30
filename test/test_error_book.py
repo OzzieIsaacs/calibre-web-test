@@ -9,8 +9,8 @@ from helper_func import startup
 
 
 class TestBookDatabase(ParallelTestCase):
-    p = None
-    driver = None
+
+
 
     @classmethod
     def setUpClass(cls):
@@ -25,14 +25,14 @@ class TestBookDatabase(ParallelTestCase):
             cls.driver.quit()
             cls.p.kill()
 
-    @classmethod
+    '''@classmethod
     def tearDownClass(cls):        
         cls.driver.get("http://127.0.0.1:" + cls.worker_port)
         cls.stop_calibre_web()
         # close the browser window and stop calibre-web
         cls.driver.quit()
         cls.p.terminate()
-        super().tearDownClass()
+        super().tearDownClass()'''
 
     def test_invalid_book_path(self):
         change_book_path(os.path.join(self.temp_dir, "metadata.db"), 10)

@@ -4,19 +4,15 @@ from base_test import ParallelTestCase
 import time
 import re
 import requests
-import random
 import json
 
 from selenium.webdriver.common.by import By
 from selenium.webdriver.common.keys import Keys
 from selenium.webdriver.support.ui import Select
-from config_test import BOOT_TIME
-from helper_func import startup
+from helper_func import startup, wait_for_reboot
 
 
 class TestUserList(ParallelTestCase):
-    p = None
-    driver = None
 
     @classmethod
     def setUpClass(cls):
@@ -32,22 +28,6 @@ class TestUserList(ParallelTestCase):
         except Exception:
             cls.driver.quit()
             cls.p.kill()
-
-    @classmethod
-    def tearDownClass(cls):
-        try:
-            cls.stop_calibre_web()
-        except:
-            cls.driver.get("http://127.0.0.1:" + cls.worker_port)
-            time.sleep(2)
-            try:
-                cls.stop_calibre_web()
-            except:
-                pass
-        # close the browser window and stop calibre-web
-        cls.driver.quit()
-        cls.p.terminate()
-        super().tearDownClass()
 
     def check_search(self, bl, term, count, column, value):
         bl['search'].clear()
@@ -555,7 +535,8 @@ class TestUserList(ParallelTestCase):
 
     def test_user_list_guest_edit(self):
         self.fill_basic_config({'config_anonbrowse': 1})
-        time.sleep(BOOT_TIME)
+        wait_for_reboot(f"http://127.0.0.1:" + self.port)
+        self.assertTrue(self.check_element_on_page((By.ID, "flash_success")))
         ul = self.get_user_table(2)
         self.assertEqual(3, len(ul['table']))
         ul = self.get_user_table(1)
@@ -575,7 +556,8 @@ class TestUserList(ParallelTestCase):
         ul['table'][1]['role_Edit Public Shelves']['element'].click()
         self.assertTrue(self.check_element_on_page((By.ID, 'flash_danger')))
         self.fill_basic_config({'config_anonbrowse': 0})
-        time.sleep(BOOT_TIME)
+        wait_for_reboot(f"http://127.0.0.1:" + self.port)
+        self.assertTrue(self.check_element_on_page((By.ID, "flash_success")))
 
     def test_user_list_check_sort(self):
         ul = self.get_user_table(1)
@@ -761,7 +743,9 @@ class TestUserList(ParallelTestCase):
         self.assertEqual(400, result.status_code)
 
         self.fill_basic_config({'config_anonbrowse': 1})
-        time.sleep(BOOT_TIME)
+        wait_for_reboot(f"http://127.0.0.1:" + self.port)
+        self.assertTrue(self.check_element_on_page((By.ID, "flash_success")))
+
         payload = {'name': 'name', 'value': 'Gast', 'pk': "2", "csrf_token": token.group(1)}
         result = r.post('http://127.0.0.1:{}/ajax/editlistusers/name'.format(self.worker_port), data=payload)
         self.assertEqual(400, result.status_code)
@@ -782,7 +766,8 @@ class TestUserList(ParallelTestCase):
         self.assertEqual(400, result.status_code)
         r.close()
         self.fill_basic_config({'config_anonbrowse': 0})
-        time.sleep(BOOT_TIME)
+        wait_for_reboot(f"http://127.0.0.1:" + self.port)
+        self.assertTrue(self.check_element_on_page((By.ID, "flash_success")))
 
     def test_edit_user_email(self):
         self.edit_user("no_one", {'email': " low@de.de "})

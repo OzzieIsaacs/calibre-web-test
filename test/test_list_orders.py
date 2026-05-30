@@ -9,17 +9,8 @@ from helper_db import add_books
 from helper_func import startup
 
 
-RESOURCES = {'ports': 1}
-
-PORTS = ['8083']
-INDEX = ""
-
-
 # other tests regardign order of elements is in test_visibilities
 class TestCalibreWebListOrders(ParallelTestCase):
-
-    p = None
-    driver = None
 
     @classmethod
     def setUpClass(cls):
@@ -33,15 +24,6 @@ class TestCalibreWebListOrders(ParallelTestCase):
         except Exception:
             cls.driver.quit()
             cls.p.kill()
-
-    @classmethod
-    def tearDownClass(cls):
-        cls.driver.get("http://127.0.0.1:" + cls.worker_port)
-        cls.stop_calibre_web()
-        # close the browser window and stop calibre-web
-        cls.driver.quit()
-        cls.p.terminate()
-        super().tearDownClass()
 
     def test_series_sort(self):
         self.goto_page('nav_serie')

@@ -21,10 +21,7 @@ except ImportError:
 @unittest.skipIf(not GR, "Skipping Goodread Test, no config file found")
 class TestGoodreads(ParallelTestCase):
 
-    p = None
-    driver = None
     dependency = ["goodreads", "python-Levenshtein"]
-
 
     @classmethod
     def setUpClass(cls):
@@ -42,15 +39,6 @@ class TestGoodreads(ParallelTestCase):
             cls.driver.quit()
             cls.p.terminate()
             cls.p.poll()
-
-    @classmethod
-    def tearDownClass(cls):
-        cls.driver.get("http://127.0.0.1:" + cls.worker_port)
-        cls.stop_calibre_web()
-        cls.driver.quit()
-        cls.p.terminate()
-        # close the browser window and stop calibre-web
-        super().tearDownClass()
 
     def test_author_page_invalid(self):
         self.fill_basic_config({'config_goodreads_api_key': 'rgg'})

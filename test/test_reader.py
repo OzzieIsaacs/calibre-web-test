@@ -19,9 +19,9 @@ from helper_func import createcbz
 
 class TestReader(ParallelTestCase):
 
-    p = None
-    driver = None
-    dependencys = ["limit|py7zr", "comicapi"]
+
+
+    dependency = ["limit|py7zr", "comicapi"]
 
     @classmethod
     def setUpClass(cls):
@@ -49,11 +49,6 @@ class TestReader(ParallelTestCase):
     @classmethod
     def tearDownClass(cls):
         cls.driver.switch_to.window(cls.current_handle)
-        cls.driver.get("http://127.0.0.1:" + cls.worker_port)
-        cls.stop_calibre_web()
-        cls.driver.quit()
-        cls.p.terminate()
-        # close the browser window and stop calibre-web
         super().tearDownClass()
 
     def test_txt_reader(self):

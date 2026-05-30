@@ -8,14 +8,14 @@ import glob
 import json
 
 from selenium.webdriver.common.by import By
-from config_test import base_path, BOOT_TIME
-from helper_func import startup
+from config_test import base_path
+from helper_func import startup, wait_for_reboot
 from helper_func import read_opf_metadata
 
 
 class TestBackupMetadata(ParallelTestCase):
-    p = None
-    driver = None
+
+
 
     @classmethod
     def setUpClass(cls):
@@ -35,14 +35,14 @@ class TestBackupMetadata(ParallelTestCase):
             cls.driver.quit()
             cls.p.kill()
 
-    @classmethod
+    '''@classmethod
     def tearDownClass(cls):
         cls.driver.get("http://127.0.0.1:" + cls.worker_port)
         cls.stop_calibre_web()
         # close the browser window and stop calibre-web
         cls.driver.quit()
         cls.p.terminate()
-        super().tearDownClass()
+        super().tearDownClass()'''
 
     def test_backup_all(self):
         # press backup all
@@ -644,7 +644,7 @@ class TestBackupMetadata(ParallelTestCase):
 
     def test_upload_book(self):
         self.fill_basic_config({'config_uploading': 1})
-        time.sleep(BOOT_TIME)
+        wait_for_reboot(f"http://127.0.0.1:{self.worker_port}")
         self.assertTrue(self.check_element_on_page((By.ID, "flash_success")))
         epub_file = os.path.join(base_path, 'files', 'book.epub')
         self.goto_page('nav_new')

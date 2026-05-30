@@ -18,8 +18,8 @@ from selenium.webdriver.common.by import By
                  "client_secrets.json and/or gdrive_credentials file is missing")
 class TestEditAuthorsGdrive(ParallelTestCase):
     resource_lock = "gdrive"
-    p = None
-    driver = None
+
+
     dependency = ["oauth2client", "PyDrive2", "PyYAML", "google-api-python-client", "httplib2"]
 
 
@@ -48,30 +48,18 @@ class TestEditAuthorsGdrive(ParallelTestCase):
             except Exception:
                 pass
 
-    @classmethod
+    '''@classmethod
     def tearDownClass(cls):
-        cls.driver.get("http://127.0.0.1:" + cls.worker_port)
-        cls.stop_calibre_web()
-        # close the browser window and stop calibre-web
-        cls.driver.quit()
-        cls.p.terminate()
-
-        src1 = os.path.join(cls.app_dir, "client_secrets.json")
-        src = os.path.join(cls.app_dir, "gdrive_credentials")
-        if os.path.exists(src):
-            os.chmod(src, 0o764)
-            try:
-                os.unlink(src)
-            except PermissionError:
-                print('gdrive_credentials delete failed')
-        if os.path.exists(src1):
-            os.chmod(src1, 0o764)
-            try:
-                os.unlink(src1)
-            except PermissionError:
-                print('client_secrets.json delete failed')
-
-        super().tearDownClass()
+        try:
+            cls.driver.get("http://127.0.0.1:" + cls.worker_port)
+            cls.stop_calibre_web()
+            # close the browser window and stop calibre-web
+            cls.driver.quit()
+            cls.p.terminate()
+        except Exception as e:
+            print(e)
+        finally:
+            super().tearDownClass()'''
 
     # One book of the author present
     def test_change_capital_one_author_one_book(self):

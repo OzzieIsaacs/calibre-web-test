@@ -7,13 +7,12 @@ import os
 import re
 import time
 import requests
-import shutil
 from diffimg import diff
 from io import BytesIO
 
 from selenium.webdriver.common.by import By
-from config_test import base_path, WAIT_GDRIVE, BOOT_TIME
-from helper_func import startup
+from config_test import base_path, WAIT_GDRIVE
+from helper_func import startup, wait_for_reboot
 
 from helper_gdrive import prepare_gdrive, connect_gdrive, check_path_gdrive
 
@@ -24,16 +23,12 @@ from helper_gdrive import prepare_gdrive, connect_gdrive, check_path_gdrive
                  "client_secrets.json and/or gdrive_credentials file is missing")
 class TestEditBooksOnGdrive(ParallelTestCase):
     resource_lock = "gdrive"
-    p = None
-    driver = None
     dependency = ["oauth2client", "PyDrive2", "PyYAML", "google-api-python-client", "httplib2"]
 
     @classmethod
     def setUpClass(cls):
         super().setUpClass()
-
         try:
-
             startup(cls,
                     cls.py_version,
                     {'config_calibre_dir': cls.temp_dir},
@@ -46,9 +41,6 @@ class TestEditBooksOnGdrive(ParallelTestCase):
             time.sleep(4)
             cls.fill_db_config({'config_google_drive_folder': 'test'})
             time.sleep(5)
-            #cls.fill_thumbnail_config({'schedule_generate_series_covers': 1})
-            #time.sleep(5)
-            #cls.restart_calibre_web()
         except Exception as e:
             try:
                 print(e)
@@ -57,7 +49,7 @@ class TestEditBooksOnGdrive(ParallelTestCase):
             except Exception:
                 pass
 
-    @classmethod
+    '''@classmethod
     def tearDownClass(cls):
         try:
             cls.driver.get("http://127.0.0.1:" + cls.worker_port)
@@ -67,22 +59,8 @@ class TestEditBooksOnGdrive(ParallelTestCase):
             cls.p.terminate()
         except Exception as e:
             print(e)
-
-        src1 = os.path.join(cls.app_dir, "client_secrets.json")
-        src = os.path.join(cls.app_dir, "gdrive_credentials")
-        if os.path.exists(src):
-            os.chmod(src, 0o764)
-            try:
-                os.unlink(src)
-            except PermissionError:
-                print('gdrive_credentials delete failed')
-        if os.path.exists(src1):
-            os.chmod(src1, 0o764)
-            try:
-                os.unlink(src1)
-            except PermissionError:
-                print('client_secrets.json delete failed')
-        super().tearDownClass()
+        finally:
+            super().tearDownClass()'''
 
     def wait_page_has_loaded(self):
         time.sleep(5)
@@ -813,7 +791,7 @@ class TestEditBooksOnGdrive(ParallelTestCase):
 
     def test_upload_book_lit(self):
         self.fill_basic_config({'config_uploading': 1})
-        time.sleep(BOOT_TIME)
+        wait_for_reboot(f"http://127.0.0.1:{self.worker_port}")
         self.assertTrue(self.check_element_on_page((By.ID, 'flash_success')))
         self.edit_user('admin', {'upload_role': 1})
         self.goto_page('nav_new')
@@ -840,7 +818,7 @@ class TestEditBooksOnGdrive(ParallelTestCase):
     # @unittest.expectedFailure
     def test_upload_book_epub(self):
         self.fill_basic_config({'config_uploading': 1})
-        time.sleep(BOOT_TIME)
+        wait_for_reboot(f"http://127.0.0.1:{self.worker_port}")
         self.assertTrue(self.check_element_on_page((By.ID, 'flash_success')))
         self.edit_user('admin', {'upload_role': 1})
         self.goto_page('nav_new')

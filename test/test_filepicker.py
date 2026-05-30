@@ -9,8 +9,8 @@ from helper_func import startup
 
 
 class TestFilePicker(ParallelTestCase):
-    p = None
-    driver = None
+
+
 
     @classmethod
     def setUpClass(cls):
@@ -27,13 +27,13 @@ class TestFilePicker(ParallelTestCase):
             cls.driver.quit()
             cls.p.kill()
 
-    @classmethod
+    '''@classmethod
     def tearDownClass(cls):
         # cls.stop_calibre_web()
         # close the browser window and stop calibre-web
         cls.driver.quit()
         cls.p.terminate()
-        super().tearDownClass()
+        super().tearDownClass()'''
 
     def test_filepicker_limited_file(self):
         filepicker = self.check_element_on_page((By.ID, "calibre_modal_path"))

@@ -16,8 +16,6 @@ from helper_ldap import TestLDAPServer
 
 class TestLdapLogin(ParallelTestCase):
 
-    p = None
-    driver = None
     kobo_adress = None
     if os.name == 'nt':
         dependency = ["local|LDAP_WHL|python-ldap", "jsonschema", "Flask-SimpleLDAP"]
@@ -47,16 +45,13 @@ class TestLdapLogin(ParallelTestCase):
     @classmethod
     def tearDownClass(cls):
         try:
-            cls.driver.get("http://127.0.0.1:{}".format(cls.worker_port))
+            cls.driver.get(f"http://127.0.0.1:cls.worker_port")
             if not cls.check_user_logged_in('admin'):
                 cls.login('admin','admin123')
             cls.stop_calibre_web()
         except Exception:
             pass
         cls.server.stop_LdapServer()
-        cls.p.terminate()
-        cls.driver.quit()
-        # close the browser window and stop calibre-web
         shutil.rmtree(os.path.join(cls.app_dir, 'files'), ignore_errors=True)
         super().tearDownClass()
 

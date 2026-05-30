@@ -9,27 +9,19 @@ import re
 
 from selenium import webdriver
 from selenium.webdriver.common.by import By
-from helper_func import kill_dead_cps
-from config_test import BOOT_TIME, base_path
+from helper_func import kill_dead_cps, wait_for_reboot
+from config_test import base_path
 
-
-RESOURCES = {'fix_ports': 5555}
-INDEX = ""
 
 @unittest.skipIf(os.name=="nt", "Sockets are not available on Windows")
 class TestSystemdActivation(ParallelTestCase):
-    driver = None
 
     @classmethod
     def setUpClass(cls):
         super().setUpClass()
         cls.driver = webdriver.Firefox()
-        cls.driver.implicitly_wait(10)
         cls.driver.maximize_window()
-        # startup function is not called, therefore direct print
-        # print("\n%s - %s: " % (cls.py_version, cls.__name__))
         shutil.rmtree(cls.temp_dir, ignore_errors=True)
-
         shutil.copytree(os.path.join(os.path.dirname(os.path.abspath(__file__)), 'Calibre_db'), cls.temp_dir)
 
     def setUp(self):
@@ -48,7 +40,7 @@ class TestSystemdActivation(ParallelTestCase):
             os.remove(os.path.join(cls.app_dir, 'app.db'))
         except Exception:
             print("Can't delete app.db")
-        super().tearDownClass()
+        super().tearDownClass(no=True)
 
 
     # to make this work a running systemd with the following unit files is needed:
@@ -88,7 +80,7 @@ class TestSystemdActivation(ParallelTestCase):
             self.driver.get("http://127.0.0.1:5555")
 
             # wait for cw to reboot
-            time.sleep(BOOT_TIME)
+            wait_for_reboot(f"http://127.0.0.1:5555")
 
             # load again if startup takes to long
             self.driver.get("http://127.0.0.1:5555")
@@ -103,8 +95,8 @@ class TestSystemdActivation(ParallelTestCase):
         except Exception:
             pass
         self.fill_db_config({'config_calibre_dir': self.temp_dir})
-        time.sleep(BOOT_TIME)
-
+        wait_for_reboot(f"http://127.0.0.1:5555")
+        self.assertTrue(self.check_element_on_page((By.ID, "flash_success")))
         self.assertTrue(self.check_element_on_page((By.NAME, "query")))
         self.stop_calibre_web()
         # service has a timeout and will stop on it's own after approx 90sec

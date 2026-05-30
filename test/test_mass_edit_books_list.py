@@ -12,8 +12,6 @@ from helper_func import startup
 
 
 class TestMassEditBooksList(ParallelTestCase):
-    p = None
-    driver = None
 
     @classmethod
     def setUpClass(cls):
@@ -28,15 +26,6 @@ class TestMassEditBooksList(ParallelTestCase):
         except Exception:
             cls.driver.quit()
             cls.p.kill()
-
-    @classmethod
-    def tearDownClass(cls):
-        cls.driver.get("http://127.0.0.1:" + cls.worker_port)
-        cls.stop_calibre_web()
-        # close the browser window and stop calibre-web
-        cls.driver.quit()
-        cls.p.terminate()
-        super().tearDownClass()
 
     def test_wrong_parameter_single(self):
         r = requests.session()

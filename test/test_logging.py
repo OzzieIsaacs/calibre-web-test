@@ -16,10 +16,10 @@ from selenium.webdriver.support.ui import WebDriverWait
 from selenium.webdriver.support import expected_conditions as EC
 from selenium.common.exceptions import TimeoutException
 from config_test import  BOOT_TIME
-from helper_func import startup
+from helper_func import startup, wait_for_reboot
 
 class TestLogging(ParallelTestCase):
-    p = None
+
 
     @classmethod
     def setUpClass(cls):
@@ -41,16 +41,8 @@ class TestLogging(ParallelTestCase):
 
     @classmethod
     def tearDownClass(cls):
-        cls.driver.get("http://127.0.0.1:" + cls.worker_port)
-        cls.stop_calibre_web()
-        # close the browser window and stop calibre-web
-        cls.driver.quit()
-        cls.p.terminate()
-        try:
-            shutil.rmtree(os.path.join(cls.app_dir, u'hü lo'), ignore_errors=True)
-            shutil.rmtree(os.path.join(cls.app_dir, u'hö lo'), ignore_errors=True)
-        except:
-            pass
+        shutil.rmtree(os.path.join(cls.app_dir, u'hü lo'), ignore_errors=True)
+        shutil.rmtree(os.path.join(cls.app_dir, u'hö lo'), ignore_errors=True)
         super().tearDownClass()
 
     def test_failed_login(self):
@@ -74,7 +66,7 @@ class TestLogging(ParallelTestCase):
 
         # Change setting to warning
         self.fill_basic_config({'config_log_level': 'WARNING'})
-        time.sleep(BOOT_TIME)
+        wait_for_reboot(f"http://127.0.0.1:{self.worker_port}")
         WebDriverWait(self.driver, 5).until(EC.presence_of_element_located((By.ID, "flash_success")))
         # error entry by deleting book with subfolder
         self.driver.get("http://127.0.0.1:{}/delete/5".format(self.worker_port))
@@ -92,7 +84,7 @@ class TestLogging(ParallelTestCase):
         # Info entry by adding shelf
         self.driver.get("http://127.0.0.1:{}".format(self.worker_port))
         self.fill_basic_config({'config_log_level': 'INFO'})
-        time.sleep(BOOT_TIME)
+        wait_for_reboot(f"http://127.0.0.1:{self.worker_port}")
         self.driver.get("http://127.0.0.1:{}/shelf/add/7/7".format(self.worker_port))
         time.sleep(4)
         with open(os.path.join(self.app_dir, 'calibre-web.log'), 'r') as logfile:
@@ -114,7 +106,7 @@ class TestLogging(ParallelTestCase):
             # check if path without extension is accepted
             os.makedirs(os.path.join(self.app_dir, 'hü lo'))
             self.fill_basic_config({'config_logfile': os.path.join(self.app_dir, 'hü lo', 'lö g')})
-            time.sleep(BOOT_TIME)
+            wait_for_reboot(f"http://127.0.0.1:{self.worker_port}")
             WebDriverWait(self.driver, 5).until(EC.presence_of_element_located((By.ID, "flash_success")))
             time.sleep(7)
             # wait for restart
@@ -122,7 +114,7 @@ class TestLogging(ParallelTestCase):
             shutil.rmtree(os.path.join(self.app_dir, u'hü lo'), ignore_errors=True)
             # Reset Logfile to default
             self.fill_basic_config({'config_logfile': ''})
-            time.sleep(BOOT_TIME)
+            wait_for_reboot(f"http://127.0.0.1:{self.worker_port}")
             WebDriverWait(self.driver, 5).until(EC.presence_of_element_located((By.ID, "flash_success")))
             time.sleep(7)
 
@@ -134,7 +126,7 @@ class TestLogging(ParallelTestCase):
             os.makedirs(os.path.join(self.app_dir, 'hü lo'))
         self.fill_basic_config({'config_logfile': os.path.join(self.app_dir, 'hü lo', 'lö g')})
         self.check_element_on_page((By.ID, "flash_success"))
-        time.sleep(BOOT_TIME)
+        wait_for_reboot(f"http://127.0.0.1:{self.worker_port}")
         # delete old logfile and check new logfile present
         try:
             os.remove(os.path.join(self.app_dir, 'calibre-web.log'))
@@ -159,7 +151,8 @@ class TestLogging(ParallelTestCase):
             self.assertFalse(os.path.isfile(os.path.join(self.app_dir, 'calibre-web.log')))
             # ToDo: Stop Calibre-Web delete folder restart it and check if folder is the new one
         self.fill_basic_config({'config_logfile': ''})
-        time.sleep(BOOT_TIME)
+        wait_for_reboot(f"http://127.0.0.1:{self.worker_port}")
+        self.check_element_on_page((By.ID, "flash_success"))
         shutil.rmtree(os.path.join(self.app_dir, u'hü lo'), ignore_errors=True)
 
     def test_access_log_recover(self):
@@ -167,8 +160,8 @@ class TestLogging(ParallelTestCase):
             os.makedirs(os.path.join(self.app_dir, 'hö lo'))
         self.fill_basic_config({'config_access_log': 1,
                                 'config_access_logfile': os.path.join(self.app_dir, 'hö lo', 'lü g')})
+        wait_for_reboot(f"http://127.0.0.1:{self.worker_port}")
         self.check_element_on_page((By.ID, "flash_success"))
-        time.sleep(BOOT_TIME)
         # delete old logfile and check new logfile present
         try:
             os.remove(os.path.join(self.app_dir, 'access.log'))
@@ -194,7 +187,8 @@ class TestLogging(ParallelTestCase):
             self.assertFalse(os.path.isfile(os.path.join(self.app_dir, 'access.log')))
             # ToDo: Stop Calibre-Web delete folder restart it and check if folder is the new one
         self.fill_basic_config({'config_access_log': 0, 'config_access_logfile': ''})
-        time.sleep(BOOT_TIME)
+        wait_for_reboot(f"http://127.0.0.1:{self.worker_port}")
+        self.check_element_on_page((By.ID, "flash_success"))
         shutil.rmtree(os.path.join(self.app_dir, u'hö lo'), ignore_errors=True)
 
 
@@ -202,8 +196,8 @@ class TestLogging(ParallelTestCase):
         self.fill_basic_config({'config_logfile': '/dev/stdout',
                                 'config_access_log': 1,
                                 'config_access_logfile': 'access.log'})
+        wait_for_reboot(f"http://127.0.0.1:{self.worker_port}")
         self.check_element_on_page((By.ID, "flash_success"))
-        time.sleep(BOOT_TIME)
         self.goto_page('logviewer')
         time.sleep(2)
         # check stream test is there, no radiobox for calibre log, access logger ticked
@@ -216,8 +210,8 @@ class TestLogging(ParallelTestCase):
         self.fill_basic_config({'config_logfile': 'log.log',
                                 'config_access_log': 0,
                                 'config_access_logfile': ''})
+        wait_for_reboot(f"http://127.0.0.1:{self.worker_port}")
         self.check_element_on_page((By.ID, "flash_success"))
-        time.sleep(BOOT_TIME)
         self.goto_page('logviewer')
         # check stream test is there, no radiobox for calibre log, access logger ticked
         self.assertTrue(self.check_element_on_page((By.ID, 'log1')).is_selected())
@@ -228,8 +222,8 @@ class TestLogging(ParallelTestCase):
         self.fill_basic_config({'config_logfile': 'log.log',
                                 'config_access_log': 1,
                                 'config_access_logfile': 'access.log'})
+        wait_for_reboot(f"http://127.0.0.1:{self.worker_port}")
         self.check_element_on_page((By.ID, "flash_success"))
-        time.sleep(BOOT_TIME)
         self.goto_page('logviewer')
         # check stream test is there, no radiobox for calibre log, access logger ticked
         logger = self.check_element_on_page((By.ID, 'log1'))
@@ -262,7 +256,7 @@ class TestLogging(ParallelTestCase):
     def test_logbook_download(self):
         self.fill_basic_config({'config_logfile': '',
                                 'config_access_log': 1})
-        time.sleep(BOOT_TIME)
+        wait_for_reboot(f"http://127.0.0.1:{self.worker_port}")
         self.assertTrue(self.check_element_on_page((By.ID, "flash_success")))
         self.goto_page('logviewer')
         self.assertTrue(self.check_element_on_page((By.ID, "log_file_0")))

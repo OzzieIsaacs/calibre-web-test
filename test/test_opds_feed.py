@@ -9,13 +9,12 @@ from urllib.parse import quote_plus
 
 from selenium.webdriver.common.by import By
 from helper_ui import RESTRICT_TAG_ME
-from config_test import BOOT_TIME
-from helper_func import startup
+from helper_func import startup, wait_for_reboot
 
 
 class TestOPDSFeed(ParallelTestCase):
-    p = None
-    driver = None
+
+
 
     @classmethod
     def setUpClass(cls):
@@ -34,13 +33,10 @@ class TestOPDSFeed(ParallelTestCase):
             cls.login('admin', 'admin123')
         except Exception:
             pass
-        cls.stop_calibre_web()
-        # close the browser window and stop calibre-web
-        cls.driver.quit()
-        cls.p.terminate()
         super().tearDownClass()
 
     def tearDown(self):
+        super().tearDown()
         try:
             if self.check_user_logged_in('admin'):
                 self.logout()
@@ -97,7 +93,8 @@ class TestOPDSFeed(ParallelTestCase):
         host = 'http://127.0.0.1:' + self.worker_port
         self.login("admin", "admin123")
         self.fill_basic_config({'config_anonbrowse': 1})
-        time.sleep(BOOT_TIME)
+        wait_for_reboot(f"http://127.0.0.1:{self.worker_port}")
+        self.assertTrue(self.check_element_on_page((By.ID, "flash_success")))
         self.edit_user('Guest', {'download_role': 1})
         self.assertTrue(self.check_element_on_page((By.ID, "flash_success")))
         self.edit_user('admin', {'download_role': 0})
@@ -204,7 +201,7 @@ class TestOPDSFeed(ParallelTestCase):
                                  'show_16': 0, 'show_4': 0, 'show_4096': 0, 'show_8': 0, 'show_32': 0})
         self.assertTrue(self.check_element_on_page((By.ID, "flash_success")))
         self.fill_basic_config({'config_anonbrowse': 0})
-        time.sleep(BOOT_TIME)
+        wait_for_reboot(f"http://127.0.0.1:{self.worker_port}")
         self.assertTrue(self.check_element_on_page((By.ID, "flash_success")))
         self.logout()
         # try download from guest account, fails
@@ -812,7 +809,8 @@ class TestOPDSFeed(ParallelTestCase):
     def test_access_right_guest(self):
         self.login("admin","admin123")
         self.fill_basic_config({'config_anonbrowse': 1})
-        time.sleep(BOOT_TIME)
+        wait_for_reboot(f"http://127.0.0.1:{self.worker_port}")
+        self.assertTrue(self.check_element_on_page((By.ID, "flash_success")))
         self.edit_user('Guest', {'show_128': 0, 'show_2': 0, 'show_64': 0, 'show_8192': 0,
                                  'show_16384': 0,
                                  'show_16': 0, 'show_4': 0, 'show_4096': 0, 'show_8': 0, 'show_32': 0})
@@ -852,7 +850,7 @@ class TestOPDSFeed(ParallelTestCase):
         #                         'show_16384': 1,
         #                         'show_16': 1, 'show_4': 1, 'show_4096': 1, 'show_8': 1, 'show_32': 1})
         self.fill_basic_config({'config_anonbrowse': 0})
-        time.sleep(BOOT_TIME)
+        wait_for_reboot(f"http://127.0.0.1:{self.worker_port}")
         self.assertTrue(self.check_element_on_page((By.ID, 'flash_success')))
         self.logout()
 

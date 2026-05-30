@@ -13,8 +13,8 @@ from helper_func import startup
 
 
 class TestReverseProxy(ParallelTestCase):
-    p = None
-    driver = None
+
+
     proxy = None
 
     @classmethod
@@ -49,7 +49,7 @@ class TestReverseProxy(ParallelTestCase):
         cls.driver.quit()
         cls.p.terminate()
         release_resource("port", cls.port)
-        super().tearDownClass()
+        super().tearDownClass(no=True)
 
     def test_reverse_about(self):
         self.assertTrue(self.goto_page('nav_about'))
