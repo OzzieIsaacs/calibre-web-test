@@ -12,8 +12,6 @@ from helper_ui import RESTRICT_COL_USER
 
 class TestErrorReadColumn(ParallelTestCase):
 
-
-
     @classmethod
     def setUpClass(cls):
         super().setUpClass()
@@ -26,15 +24,6 @@ class TestErrorReadColumn(ParallelTestCase):
         except Exception:
             cls.driver.quit()
             cls.p.kill()
-
-    '''@classmethod
-    def tearDownClass(cls):        
-        cls.driver.get("http://127.0.0.1:" + cls.worker_port)
-        cls.stop_calibre_web()
-        # close the browser window and stop calibre-web
-        cls.driver.quit()
-        cls.p.terminate()
-        super().tearDownClass()'''
 
     def test_invalid_custom_read_column(self):
         self.fill_view_config({'config_read_column': "Custom Bool 1 Ä"})

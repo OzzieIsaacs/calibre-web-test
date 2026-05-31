@@ -6,7 +6,7 @@ import os
 
 from selenium.webdriver.common.by import By
 from helper_db import add_books
-from helper_func import startup
+from helper_func import startup, wait_for_reboot
 
 
 # other tests regardign order of elements is in test_visibilities
@@ -326,6 +326,7 @@ class TestCalibreWebListOrders(ParallelTestCase):
         self.edit_user('down', {'delete': 1})
         # enable anonymous browser
         self.fill_basic_config({'config_anonbrowse': 1})
+        wait_for_reboot(f"http://127.0.0.1:{self.worker_port}")
         self.assertTrue(self.check_element_on_page((By.ID, "flash_success")))
         self.edit_user('Guest', {'download_role': 1})
         # check guest user is not listed, and check user "down" disappeared

@@ -12,14 +12,12 @@ from PIL import Image
 from selenium.webdriver.support.ui import Select
 import helper_email_convert
 from config_test import base_path
-from helper_func import startup
+from helper_func import startup, wait_for_reboot
 from selenium.webdriver.common.by import By
 from helper_func import createcbz
 
 
 class TestReader(ParallelTestCase):
-
-
 
     dependency = ["limit|py7zr", "comicapi"]
 
@@ -267,7 +265,7 @@ class TestReader(ParallelTestCase):
         names = ['cover1.jpg']
         createcbz(upload_file, zipdata, names)
         self.fill_basic_config({'config_uploading': 1})
-        time.sleep(3)
+        wait_for_reboot(f"http://127.0.0.1:{self.worker_port}")
         self.assertTrue(self.check_element_on_page((By.ID, "flash_success")))
         self.edit_user('admin', {'upload_role': 1})
         self.goto_page('nav_new')
@@ -293,7 +291,7 @@ class TestReader(ParallelTestCase):
         os.remove(upload_file)
 
         self.fill_basic_config({'config_uploading': 0})
-        time.sleep(3)
+        wait_for_reboot(f"http://127.0.0.1:{self.worker_port}")
         self.assertTrue(self.check_element_on_page((By.ID, "flash_success")))
         
         # Comic file mit einer Datei
@@ -301,7 +299,7 @@ class TestReader(ParallelTestCase):
     @unittest.skip
     def test_cb7_reader(self):
         self.fill_basic_config({'config_uploading': 1})
-        time.sleep(3)
+        wait_for_reboot(f"http://127.0.0.1:{self.worker_port}")
         self.assertTrue(self.check_element_on_page((By.ID, "flash_success")))
         self.goto_page('nav_new')
         upload_file = os.path.join(base_path, 'files', 'book.cb7')
@@ -331,7 +329,7 @@ class TestReader(ParallelTestCase):
         names = ['cover1.weBp', 'cover2.weBp', "/__MACOSX/cover.jpg"]
         createcbz(upload_file, zipdata, names)
         self.fill_basic_config({'config_uploading': 1})
-        time.sleep(3)
+        wait_for_reboot(f"http://127.0.0.1:{self.worker_port}")
         self.assertTrue(self.check_element_on_page((By.ID, "flash_success")))
         createcbz(upload_file, zipdata, names)
         self.goto_page('nav_new')
@@ -412,7 +410,7 @@ class TestReader(ParallelTestCase):
 
     def test_sound_listener(self):
         self.fill_basic_config({'config_uploading': 1})
-        time.sleep(3)
+        wait_for_reboot(f"http://127.0.0.1:{self.worker_port}")
         self.assertTrue(self.check_element_on_page((By.ID, "flash_success")))
         self.edit_user('admin', {'upload_role': 1})
         self.sound_test('music.flac', 'Unknown - music', '0:02')
@@ -423,4 +421,4 @@ class TestReader(ParallelTestCase):
         self.sound_test('music.mp4', 'Unknown - music', '0:02')
         self.fill_basic_config({'config_uploading': 0})
         time.sleep(3)
-
+        self.assertTrue(self.check_element_on_page((By.ID, "flash_success")))

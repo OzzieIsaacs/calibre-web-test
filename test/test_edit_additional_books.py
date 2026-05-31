@@ -77,7 +77,7 @@ class TestEditAdditionalBooks(ParallelTestCase):
         self.assertEqual('Testdummy', details['comment'])
 
         self.fill_basic_config({'config_uploading': 0})
-        time.sleep(2)
+        wait_for_reboot((f"http://127.0.0.1:{self.worker_port}"))
         self.assertTrue(self.check_element_on_page((By.ID, "flash_success")))
         self.delete_book(details['id'])
         os.remove(upload_file)

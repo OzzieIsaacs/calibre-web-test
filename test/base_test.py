@@ -259,11 +259,12 @@ class ParallelTestCase(unittest.TestCase, ui_class):
 
     def tearDown(self):
         if hasattr(self, "driver"):
-            if "problem loading" in self.driver.title.lower():
-                try:
-                    self.driver.refresh()  # reload page
-                except WebDriverException:
-                    pass
+            if self.driver:
+                if "problem loading" in self.driver.title.lower():
+                    try:
+                        self.driver.refresh()  # reload page
+                    except WebDriverException:
+                        pass
 
     @classmethod
     def tearDownClass(cls, no=False):

@@ -10,28 +10,24 @@ import re
 from selenium import webdriver
 from selenium.webdriver.common.by import By
 from selenium.common.exceptions import WebDriverException
-from helper_func import kill_dead_cps, wait_for_reboot
+from helper_func import kill_dead_cps, wait_for_reboot, copy_calibre_web_for_test
 from subproc_wrapper import process_open
-from config_test import base_path
+from config_test import base_path, BOOT_TIME
 from helper_port_forward import SocketForwardServer
 
 
 @unittest.skipIf(os.name=="nt", "Sockets are not available on Windows")
 class TestSocket(ParallelTestCase):
 
-
     @classmethod
     def setUpClass(cls):
         super().setUpClass()
-        shutil.copytree(os.path.join(base_path, 'Calibre_db'), cls.app_dir, dirs_exist_ok=True)
+        copy_calibre_web_for_test(cls.app_dir)
+        shutil.copytree(os.path.join(base_path, 'Calibre_db'), cls.temp_dir, dirs_exist_ok=True)
         cls.port = acquire_resource("port")
         cls.driver = webdriver.Firefox()
-        cls.driver.implicitly_wait(10)
         cls.driver.maximize_window()
         # startup function is not called, therefore direct print
-        # print("\n%s - %s: " % (cls.py_version, cls.__name__))
-        shutil.rmtree(cls.temp_dir, ignore_errors=True)
-        shutil.copytree(os.path.join(os.path.dirname(os.path.abspath(__file__)),'Calibre_db'), cls.temp_dir)
 
     def setUp(self):
         os.chdir(base_path)
@@ -57,10 +53,12 @@ class TestSocket(ParallelTestCase):
         my_env = os.environ.copy()
         socket_file = os.path.join(self.app_dir, "socket_file.sock")
         my_env["CALIBRE_UNIX_SOCKET"] = socket_file
+        my_env["APP_MODE"] = "test"
+        # env = {"APP_MODE": "test", "CALIBRE_PORT": cls.worker_port},
         self.p = process_open([self.py_version, os.path.join(self.app_dir, u'cps.py')],
                               env=my_env,
                               quotes=[0, 1])
-        wait_for_reboot(f"http://127.0.0.1:" + self.port)
+        time.sleep(BOOT_TIME)
         try:
             # navigate to the application home page
             server = SocketForwardServer('localhost', int(self.port), socket_file)
@@ -68,12 +66,13 @@ class TestSocket(ParallelTestCase):
             # Check server not reesponding on normal port
             try:
                 error = ""
-                self.driver.get("http://127.0.0.1:" + self.worker_port)
+                wait_for_reboot(f"http://127.0.0.1:{self.port}")
+                self.driver.get(f"http://127.0.0.1:{self.worker_port}")
             except WebDriverException as e:
                 error = e.msg
             self.assertTrue(re.findall(r'Reached error page:\sabout:neterror\?e=connectionFailure', error))
             time.sleep(3)
-            self.driver.get("http://127.0.0.1:" + self.port)
+            self.driver.get(f"http://127.0.0.1:{self.port}")
             self.check_element_on_page((By.ID, "username"))
 
             server.stop_server()
@@ -81,7 +80,7 @@ class TestSocket(ParallelTestCase):
             # Check server not reesponding on forwarded socket port
             try:
                 error = ""
-                self.driver.get("http://127.0.0.1:" + self.port)
+                self.driver.get(f"http://127.0.0.1:{self.port}")
             except WebDriverException as e:
                 error = e.msg
             self.assertTrue(re.findall(r'Reached error page:\sabout:neterror\?e=connectionFailure', error))
