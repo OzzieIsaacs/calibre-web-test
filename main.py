@@ -9,15 +9,17 @@ import sys
 import glob
 import unittest
 import shutil
+import json
 import virtualenv
+import io
 from test.subproc_wrapper import process_open
-from test.base_test import RESOURCE_DIR, RESOURCE_POOLS
+from test.base_test import RESOURCE_DIR, RESOURCE_POOLS, REPORT_DIR
 from test.config_test import CALIBRE_WEB_PATH, VENV_PYTHON, TEST_BASE
 from test.helper_certificate import generate_ssl_testing_files
 from test.helper_func import poweroff, finishing_notifier, result_move
 from test.helper_environment import environment
 from combine_results import combine_reports, OUTPUT_FILE, INPUT_DIR
-import io
+
 
 TEST_PACKAGE = "test"
 BASE_PORT = 8083
@@ -105,11 +107,33 @@ def run_test_class(args):
         suite = unittest.defaultTestLoader.loadTestsFromTestCase(test_class)
         now = datetime.datetime.now().strftime("%H:%M:%S")
         print(f"[Worker {worker_id}] {now} - {class_name} found {suite.countTestCases()} tests")
-
         silent_stream = io.StringIO()
         result = unittest.TextTestRunner(verbosity=0, stream=silent_stream).run(suite)
         success = result.wasSuccessful()
+        error_holders = [(test, err) for test, err in result.errors if isinstance(test, unittest.suite._ErrorHolder)]
 
+        if error_holders:
+            target_path = os.path.abspath(os.path.join(os.path.dirname(__file__)))
+            report_file = os.path.join(target_path, REPORT_DIR, f"{class_name}.json")
+            with open(report_file, "r", encoding="utf-8") as f:
+                data = json.load(f)
+
+            dict_key = next(iter(data))
+            data[dict_key]['stats']['error'] += 1
+            tid = 1
+            for element in data[dict_key]['tests']:
+                tid = max(element['tid'], tid)
+            addtional_data = {
+                            "tid": tid + 1,
+                            "result": "ERROR",
+                            "duration_seconds": "41.517",
+                            "desc": f"{class_name} - {result.errors[0][0].__class__.__name__}",
+                            "output": result.errors[0][1]
+                        }
+            data[dict_key]['tests'].append(addtional_data)
+
+            with open(report_file, "w", encoding="utf-8") as f:
+                json.dump(data, f, indent=4)
         return {
             "module": module_name,
             "class": class_name,
@@ -143,7 +167,6 @@ def main():
     power = input('Power off after finishing tests? [y/N]').lower() == 'y'
     if power:
         print('!!!! PC will shutdown after tests finished !!!!')
-
     # check pip ist installed
     found = False
     pversion = ["python3.12", "python3", "c:\\python312\\python.exe", "c:\\python310\\python.exe"]
@@ -225,7 +248,7 @@ def main():
 
     html_file = combine_reports()
     # E-Mail tests finished
-    result_json = os.path.join(INPUT_DIR, OUTPUT_FILE)
+    result_json = os.path.join(os.path.join(os.path.dirname(__file__), OUTPUT_FILE))
 
     finishing_notifier(html_file)
     if os.path.isfile(result_json):

@@ -8,9 +8,11 @@ import re
 import requests
 import socket
 import datetime
+import os
 
 from helper_email_convert import AIOSMTPServer
 import helper_email_convert
+from config_test import base_path
 from selenium.webdriver.common.by import By
 from helper_func import startup, wait_Email_received
 
@@ -33,11 +35,12 @@ class TestSTARTTLS(ParallelTestCase):
             port=int(cls.port),
             only_ssl=False,
             startSSL=True,
-            certfile='files/server.crt',
-            keyfile='files/server.key',
+            certfile=os.path.join(base_path,'files','server.crt'),
+            keyfile=os.path.join(base_path,'files', 'server.key'),
             timeout=10
         )
         cls.email_server.start()
+
         try:
             startup(cls, cls.py_version, {'config_calibre_dir': cls.temp_dir,
                                           'config_binariesdir': helper_email_convert.calibre_path()},

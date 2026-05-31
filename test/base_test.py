@@ -133,6 +133,7 @@ class ParallelTestCase(unittest.TestCase, ui_class):
     _end = None
     driver = None
     p = None
+    tearDown_exceptions = []
 
     def __init__(self, tests):
         main_module = sys.modules["__main__"]
@@ -149,10 +150,10 @@ class ParallelTestCase(unittest.TestCase, ui_class):
 
         super().setUpClass()
 
+
         cls._results = []
         cls._counter = 0
         cls._start = time.time()
-
 
         cls.py_resource = acquire_resource("venv")
         cls.py_version = os.path.join(cls.py_resource, VENV_PYTHON)
@@ -235,8 +236,8 @@ class ParallelTestCase(unittest.TestCase, ui_class):
             self._add("SUCCESS", name, duration)
 
         except Exception as e:
-
             self._add("ERROR", name, time.time() - start, str(e))
+            print("huhu")
             raise
 
     def _add(self, status, name, duration, extra=""):
@@ -275,7 +276,10 @@ class ParallelTestCase(unittest.TestCase, ui_class):
                 cls.p.terminate()
             except Exception as e:
                 print(e)
+        super().tearDownClass()
 
+    @classmethod
+    def doClassCleanups(cls):
         try:
             now = datetime.now().strftime("%H:%M:%S")
             print(f"[Worker {cls.worker_id}] {now} - {cls.__name__} saving logbooks")
@@ -340,6 +344,6 @@ class ParallelTestCase(unittest.TestCase, ui_class):
 
             with open(filename, "w", encoding="utf-8") as f:
                 json.dump(data, f, indent=4)
-            super().tearDownClass()
+
         except Exception as e:
             print(e)

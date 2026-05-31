@@ -6,6 +6,8 @@ from pathlib import Path
 from datetime import datetime
 from result import generate_html
 from helper_environment import environment
+import os
+
 
 INPUT_DIR = "test_reports"
 OUTPUT_FILE = "test.json"
@@ -65,7 +67,7 @@ def determine_class_style(stats: dict) -> str:
 
 
 def combine_reports():
-    input_path = Path(INPUT_DIR)
+    input_path = Path(os.path.join(os.path.dirname(__file__), INPUT_DIR))
 
     json_files = sorted(input_path.glob("*.json"))
 
@@ -220,12 +222,12 @@ def combine_reports():
         class_details,
         environment.get_Environment(),
     ]
-
+    out_file = os.path.join(os.path.dirname(__file__), OUTPUT_FILE)
     with open(OUTPUT_FILE, "w", encoding="utf-8") as f:
         json.dump(output, f, indent=4, ensure_ascii=False)
 
     print(f"Ergebnis gespeichert in: {OUTPUT_FILE}")
-    generate_html(output)
+    return generate_html(output)
 
 
 if __name__ == "__main__":

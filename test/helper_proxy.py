@@ -1,4 +1,3 @@
-from mitmproxy import proxy
 from mitmproxy.options import Options
 from mitmproxy.tools.dump import DumpMaster
 from mitmproxy import http
@@ -18,7 +17,7 @@ import traceback
 class ResponseType:
     def __init__(self):
         self.type = []
-        self.Version = None  # [[0,7,7],[0,7,8],[0,7,9]]
+        self.Version = None
         self.parent = None
 
     def set_type(self, new):
