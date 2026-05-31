@@ -28,15 +28,6 @@ class TestEditBooksList(ParallelTestCase):
             cls.driver.quit()
             cls.p.kill()
 
-    '''@classmethod
-    def tearDownClass(cls):
-        cls.driver.get("http://127.0.0.1:" + cls.worker_port)
-        cls.stop_calibre_web()
-        # close the browser window and stop calibre-web
-        cls.driver.quit()
-        cls.p.terminate()
-        super().tearDownClass()'''
-
     def check_search(self, bl, term, count, column, value):
         bl['search'].clear()
         bl['search'].send_keys(term)

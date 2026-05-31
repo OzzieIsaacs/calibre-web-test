@@ -17,10 +17,8 @@ from helper_func import startup, unrar_path, is_unrar_not_present, createcbz, wa
 from helper_func import change_comic_meta
 
 
-
 @unittest.skipIf(is_unrar_not_present(), "Skipping convert, unrar not found")
 class TestEditAdditionalBooks(ParallelTestCase):
-
 
     dependency = ["limit|py7zr", 'comicapi', 'rarfile']
 
@@ -44,15 +42,6 @@ class TestEditAdditionalBooks(ParallelTestCase):
             cls.driver.quit()
             cls.p.kill()
 
-    '''@classmethod
-    def tearDownClass(cls):
-        cls.driver.get("http://127.0.0.1:" + cls.worker_port)
-        cls.stop_calibre_web()
-        # close the browser window and stop calibre-web
-        cls.driver.quit()
-        cls.p.terminate()
-        super().tearDownClass()'''
-
     def check_identifier(self, result, key, name, value, only_value=False):
         identifier = [sub[key] for sub in result['identifier'] if key in sub]
         self.assertTrue(len(identifier))
@@ -62,7 +51,7 @@ class TestEditAdditionalBooks(ParallelTestCase):
 
     def test_cbz_comicinfo(self):
         self.fill_basic_config({'config_uploading': 1})
-        time.sleep(3)
+        wait_for_reboot((f"http://127.0.0.1:{self.worker_port}"))
         self.assertTrue(self.check_element_on_page((By.ID, "flash_success")))
 
         upload_file = os.path.join(base_path, 'files', 'book2.cbz')
@@ -77,7 +66,7 @@ class TestEditAdditionalBooks(ParallelTestCase):
         self.goto_page('nav_new')
         upload = self.check_element_on_page((By.ID, 'btn-upload'))
         upload.send_keys(upload_file)
-        time.sleep(2)
+        time.sleep(4)
         self.check_element_on_page((By.ID, 'edit_cancel')).click()
         time.sleep(2)
         details = self.get_book_details()
@@ -94,13 +83,13 @@ class TestEditAdditionalBooks(ParallelTestCase):
         os.remove(upload_file)
         os.remove(other_file)
         self.fill_basic_config({'config_uploading': 0})
-        time.sleep(3)
+        wait_for_reboot((f"http://127.0.0.1:{self.worker_port}"))
         self.assertTrue(self.check_element_on_page((By.ID, "flash_success")))
         
 
     def test_upload_cbz_coverformats(self):
         self.fill_basic_config({'config_uploading': 1})
-        time.sleep(3)
+        wait_for_reboot((f"http://127.0.0.1:{self.worker_port}"))
         self.assertTrue(self.check_element_on_page((By.ID, "flash_success")))
         # Upload book to be sure we have a reference (delete book test runs maybe before this test)
         upload_file = os.path.join(base_path, 'files', 'book.fb2')
@@ -156,7 +145,7 @@ class TestEditAdditionalBooks(ParallelTestCase):
 
     def test_upload_metadata_cbr(self):
         self.fill_basic_config({'config_uploading': 1})
-        time.sleep(3)
+        wait_for_reboot((f"http://127.0.0.1:{self.worker_port}"))
         self.assertTrue(self.check_element_on_page((By.ID, "flash_success")))
         self.fill_basic_config({'config_rarfile_location': '/bin/ur'})
         self.assertTrue(self.check_element_on_page((By.ID, "flash_danger")))
@@ -603,7 +592,7 @@ class TestEditAdditionalBooks(ParallelTestCase):
 
     def test_upload_edit_role(self):
         self.fill_basic_config({'config_uploading': 1})
-        time.sleep(3)
+        wait_for_reboot((f"http://127.0.0.1:{self.worker_port}"))
         self.assertTrue(self.check_element_on_page((By.ID, "flash_success")))
         self.create_user('user0', {'password': '123AbC*!', 'email': 'a@b.com', 'upload_role': 0, 'edit_role': 1})
         self.assertTrue(self.check_element_on_page((By.ID, "flash_success")))
@@ -695,7 +684,7 @@ class TestEditAdditionalBooks(ParallelTestCase):
 
     def test_delete_role(self):
         self.fill_basic_config({'config_uploading': 1})
-        time.sleep(3)
+        wait_for_reboot((f"http://127.0.0.1:{self.worker_port}"))
         self.assertTrue(self.check_element_on_page((By.ID, "flash_success")))
         self.get_book_details(12)
         self.check_element_on_page((By.ID, "edit_book")).click()
