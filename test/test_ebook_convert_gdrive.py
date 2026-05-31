@@ -45,7 +45,6 @@ class TestEbookConvertCalibreGDrive(ParallelTestCase):
                 only_ssl=False,
                 timeout=10
             )
-
             cls.email_server.start()
 
             startup(cls, cls.py_version, {'config_calibre_dir': cls.temp_dir,
@@ -83,14 +82,6 @@ class TestEbookConvertCalibreGDrive(ParallelTestCase):
         release_resource("port", cls.port)
         thumbnail_cache_path = os.path.join(cls.app_dir, 'cps', 'cache', 'thumbnails')
         shutil.rmtree(thumbnail_cache_path, ignore_errors=True)
-        '''try:
-            cls.driver.get("http://127.0.0.1:" + cls.worker_port)
-            cls.stop_calibre_web()
-            # close the browser window and stop calibre-web
-            cls.driver.quit()
-            cls.p.terminate()
-        except Exception as e:
-            print(e)'''
         super().tearDownClass()
 
     def tearDown(self):
@@ -107,35 +98,35 @@ class TestEbookConvertCalibreGDrive(ParallelTestCase):
     def test_convert_parameter(self):
         time.sleep(WAIT_GDRIVE)
         tasks = self.check_tasks()
+        time.sleep(5)
         self.fill_basic_config({'config_calibre': '--margin-right 11.9'})
-        self.assertTrue(self.check_element_on_page((By.ID, "flash_success")))
+        self.assertTrue(self.check_element_on_page((By.ID, "flash_success"), timeout=10))
         vals = self.get_convert_book(8)
         select = Select(vals['btn_from'])
         select.select_by_visible_text('EPUB')
         select = Select(vals['btn_to'])
         select.select_by_visible_text('LIT')
         self.check_element_on_page((By.ID, "btn-book-convert")).click()
-        time.sleep(1)
-        self.assertTrue(self.check_element_on_page((By.ID, "flash_success")))
+        self.assertTrue(self.check_element_on_page((By.ID, "flash_success"), timeout=10))
         task_len, ret = self.wait_tasks(tasks, 1)
         self.assertEqual(ret[-1]['result'], 'Finished')
 
         self.fill_basic_config({'config_calibre': '--margin-rght 11.9'})
-        self.assertTrue(self.check_element_on_page((By.ID, "flash_success")))
+        self.assertTrue(self.check_element_on_page((By.ID, "flash_success"), timeout=10))
         vals = self.get_convert_book(8)
         select = Select(vals['btn_from'])
         select.select_by_visible_text('EPUB')
         select = Select(vals['btn_to'])
         select.select_by_visible_text('LRF')
         self.check_element_on_page((By.ID, "btn-book-convert")).click()
-        self.assertTrue(self.check_element_on_page((By.ID, "flash_success")))
+        self.assertTrue(self.check_element_on_page((By.ID, "flash_success"), timeout=10))
         time.sleep(8)
         task_len, ret = self.wait_tasks(tasks, 2)
         # task_len, ret = self.check_tasks(tasks)
         # self.assertEqual(2, task_len)
         self.assertEqual(ret[-1]['result'], 'Failed')
         self.fill_basic_config({'config_calibre': ''})
-        self.assertTrue(self.check_element_on_page((By.ID, "flash_success")))
+        self.assertTrue(self.check_element_on_page((By.ID, "flash_success"), timeout=10))
         self.delete_book_format(8, "LIT")
 
     # press send to kindle for not converted book
@@ -151,8 +142,7 @@ class TestEbookConvertCalibreGDrive(ParallelTestCase):
         select = Select(vals['btn_to'])
         select.select_by_visible_text('AZW3')
         self.check_element_on_page((By.ID, "btn-book-convert")).click()
-        time.sleep(1)
-        self.assertTrue(self.check_element_on_page((By.ID, "flash_success")))
+        self.assertTrue(self.check_element_on_page((By.ID, "flash_success"), timeout=5))
         time.sleep(4)
         task_len, ret = self.wait_tasks(tasks, 1)
 
@@ -182,8 +172,7 @@ class TestEbookConvertCalibreGDrive(ParallelTestCase):
         select = Select(vals['btn_to'])
         select.select_by_visible_text('AZW3')
         self.check_element_on_page((By.ID, "btn-book-convert")).click()
-        time.sleep(1)
-        self.assertTrue(self.check_element_on_page((By.ID, "flash_success")))
+        self.assertTrue(self.check_element_on_page((By.ID, "flash_success"), timeout=5))
         time.sleep(4)
         task_len, ret = self.wait_tasks(tasks, 1)
         self.assertEqual(1, task_len)
@@ -239,8 +228,7 @@ class TestEbookConvertCalibreGDrive(ParallelTestCase):
         select = Select(vals['btn_to'])
         select.select_by_visible_text('AZW3')
         self.check_element_on_page((By.ID, "btn-book-convert")).click()
-        time.sleep(1)
-        self.assertTrue(self.check_element_on_page((By.ID, "flash_success")))
+        self.assertTrue(self.check_element_on_page((By.ID, "flash_success"), timeout=10))
         time.sleep(2)
 
         vals = self.get_convert_book(7)
@@ -249,8 +237,7 @@ class TestEbookConvertCalibreGDrive(ParallelTestCase):
         select = Select(vals['btn_to'])
         select.select_by_visible_text('EPUB')
         self.check_element_on_page((By.ID, "btn-book-convert")).click()
-        time.sleep(1)
-        self.assertTrue(self.check_element_on_page((By.ID, "flash_success")))
+        self.assertTrue(self.check_element_on_page((By.ID, "flash_success"), timeout=10))
         time.sleep(2)
 
         vals = self.get_convert_book(7)
@@ -259,8 +246,7 @@ class TestEbookConvertCalibreGDrive(ParallelTestCase):
         select = Select(vals['btn_to'])
         select.select_by_visible_text('TXT')
         self.check_element_on_page((By.ID, "btn-book-convert")).click()
-        time.sleep(1)
-        self.assertTrue(self.check_element_on_page((By.ID, "flash_success")))
+        self.assertTrue(self.check_element_on_page((By.ID, "flash_success"), timeout=10))
         time.sleep(2)
 
         vals = self.get_convert_book(7)
@@ -269,8 +255,7 @@ class TestEbookConvertCalibreGDrive(ParallelTestCase):
         select = Select(vals['btn_to'])
         select.select_by_visible_text('FB2')
         self.check_element_on_page((By.ID, "btn-book-convert")).click()
-        time.sleep(1)
-        self.assertTrue(self.check_element_on_page((By.ID, "flash_success")))
+        self.assertTrue(self.check_element_on_page((By.ID, "flash_success"), timeout=10))
         time.sleep(2)
 
         vals = self.get_convert_book(7)
@@ -279,8 +264,7 @@ class TestEbookConvertCalibreGDrive(ParallelTestCase):
         select = Select(vals['btn_to'])
         select.select_by_visible_text('LIT')
         self.check_element_on_page((By.ID, "btn-book-convert")).click()
-        time.sleep(1)
-        self.assertTrue(self.check_element_on_page((By.ID, "flash_success")))
+        self.assertTrue(self.check_element_on_page((By.ID, "flash_success"), timeout=10))
         time.sleep(2)
 
         vals = self.get_convert_book(7)
@@ -289,7 +273,7 @@ class TestEbookConvertCalibreGDrive(ParallelTestCase):
         select = Select(vals['btn_to'])
         select.select_by_visible_text('HTMLZ')
         self.check_element_on_page((By.ID, "btn-book-convert")).click()
-        self.assertTrue(self.check_element_on_page((By.ID, "flash_success")))
+        self.assertTrue(self.check_element_on_page((By.ID, "flash_success"), timeout=10))
 
         self.create_user('solo', {'password': '123AbC*!', 'email': 'a@b.com', 'edit_role':1})
         task_len, ret = self.wait_tasks(tasks, 6)
@@ -313,7 +297,7 @@ class TestEbookConvertCalibreGDrive(ParallelTestCase):
         select = Select(vals['btn_to'])
         select.select_by_visible_text('RTF')
         self.check_element_on_page((By.ID, "btn-book-convert")).click()
-        self.assertTrue(self.check_element_on_page((By.ID, "flash_success")))
+        self.assertTrue(self.check_element_on_page((By.ID, "flash_success"), timeout=10))
         task_len, ret = self.wait_tasks(ret, 1)
         self.assertEqual(ret[-1]['result'], 'Finished')
 
