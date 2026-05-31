@@ -34,6 +34,7 @@ class TestKoboSyncBig(ParallelTestCase):
             startup(cls, cls.py_version, {'config_calibre_dir': cls.temp_dir, 'config_kobo_sync': 1,
                                           'config_kepubifypath': "",
                                           'config_kobo_proxy': 0},
+                    host=host,
                     port=cls.worker_port,
                     app_dir=cls.app_dir,
                     env={"APP_MODE": "test", "CALIBRE_PORT": cls.worker_port},
@@ -45,9 +46,9 @@ class TestKoboSyncBig(ParallelTestCase):
             cls.check_element_on_page((By.ID, "config_create_kobo_token")).click()
             time.sleep(1)
             link = cls.check_element_on_page((By.CLASS_NAME, "well"))
-            cls.kobo_address = host + ':' + cls.worker_port + '/kobo/' + re.findall(".*/kobo/(.*)", link.text)[0]
+            cls.kobo_address = f'{host}:{cls.worker_port}/kobo/{re.findall(".*/kobo/(.*)", link.text)[0]}'
             cls.check_element_on_page((By.ID, "kobo_close")).click()
-            cls.driver.get("http://127.0.0.1:" + cls.worker_port)
+            cls.driver.get(f"http://127.0.0.1:{cls.worker_port}")
             cls.login('admin', 'admin123')
             time.sleep(2)
         except Exception as e:
@@ -324,7 +325,7 @@ class TestKoboSyncBig(ParallelTestCase):
         # create 2 users
         self.create_user('user1', {'password': '123AbC*!', 'email': 'ada@b.com', "edit_role": 1, "download_role": 1})
         self.create_user('user2', {'password': '321AbC*!', 'email': 'aba@b.com', "edit_role": 1, "download_role": 1})
-        host = 'http://' + get_Host_IP() + ":" + self.worker_port
+        host = f'http://{get_Host_IP()}:{self.worker_port}'
         self.driver.get(host)   # still logged in
         # create links for both users
         self.navigate_to_user("user1")
@@ -453,7 +454,7 @@ class TestKoboSyncBig(ParallelTestCase):
         self.login("admin", "admin123")
         self.edit_user("user1", {"delete": 1})
         self.edit_user("user2", {"delete": 1})
-        self.driver.get('http://127.0.0.1:' + self.worker_port)  # still logged in
+        self.driver.get(f'http://127.0.0.1:{self.worker_port}')  # still logged in
 
     def test_download_cover(self):
         thumbnail_cache_path = os.path.join(self.app_dir, 'cps', 'cache', 'thumbnails')

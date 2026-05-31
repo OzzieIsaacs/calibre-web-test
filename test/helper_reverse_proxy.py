@@ -76,24 +76,6 @@ def proxy(p):
     return response
 
 
-'''class ServerThread(threading.Thread):
-
-    def __init__(self, app):
-        threading.Thread.__init__(self)
-        self.server = make_server("0.0.0.0", 8080, app)
-        self.ctx = app.app_context()
-        self.ctx.push()
-        self.daemon = True
-
-    def run(self):
-        print("Starting Flask server...")
-        self.server.serve_forever()
-
-    def shutdown(self):
-        print("Stopping Flask server...")
-        self.server.shutdown()'''
-
-
 class Reverse_Proxy(threading.Thread):
     def __init__(self, port=8080, path="/cw", scheme="http", sitename="http://10.10.10.10:8083"):
         threading.Thread.__init__(self)
@@ -108,7 +90,7 @@ class Reverse_Proxy(threading.Thread):
         self.daemon = True
 
     def run(self):
-        print("Starting Flask server...")
+        # print("Starting Flask server...")
         self.server.serve_forever()
 
     def stop(self):

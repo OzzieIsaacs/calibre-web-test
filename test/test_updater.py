@@ -9,7 +9,7 @@ import requests
 
 from config_test import  NUM_THUMBNAILS
 from helper_func import startup
-from helper_func import count_files, wait_for_reboot
+from helper_func import count_files, wait_for_reboot, copy_calibre_web_for_test
 from helper_proxy import Proxy, val
 from selenium.webdriver.common.by import By
 from zipfile import ZipFile, ZipInfo
@@ -22,22 +22,24 @@ class TestUpdater(ParallelTestCase):
     @classmethod
     def setUpClass(cls):
         super().setUpClass()
+        copy_calibre_web_for_test(cls.app_dir)
         if cls.copy_cw():
             thumbnail_cache_path = os.path.join(cls.app_dir, 'cps', 'cache', 'thumbnails')
             shutil.rmtree(thumbnail_cache_path, ignore_errors=True)
-            cls.proxy = Proxy()
-            cls.proxy.start()
             cls.port = acquire_resource("port")
+            cls.proxy = Proxy(cls.port)
+            cls.proxy.start()
             pem_file = os.path.join(os.path.expanduser('~'), '.mitmproxy', 'mitmproxy-ca-cert.pem')
             my_env = os.environ.copy()
-            my_env["http_proxy"] = 'http://localhost:' + cls.port
-            my_env["https_proxy"] = 'http://localhost:'  + cls.port
+            my_env["http_proxy"] = f'http://localhost:{cls.port}'
+            my_env["https_proxy"] = f'http://localhost:{cls.port}'
             my_env["REQUESTS_CA_BUNDLE"] = pem_file
             my_env["APP_MODE"] = "test"
+            my_env["CALIBRE_PORT"] = cls.worker_port
             startup(cls, cls.py_version, {'config_calibre_dir': cls.temp_dir},
                     port=cls.worker_port,
                     app_dir=cls.app_dir,
-                    env={"APP_MODE": "test", "CALIBRE_PORT": cls.worker_port},
+                    env=my_env,
                     lib_dest=cls.temp_dir)
         else:
             cls.assertTrue(False, "Target Directory present")
@@ -48,7 +50,7 @@ class TestUpdater(ParallelTestCase):
         shutil.rmtree(thumbnail_cache_path, ignore_errors=True)
         cls.proxy.stop_proxy()
         release_resource("port", cls.port)
-        cls.p.terminate()
+        cls.return_cw()
         # Move original image back in place
         super().tearDownClass()
 
@@ -102,16 +104,11 @@ class TestUpdater(ParallelTestCase):
     def return_cw(cls):
         if os.path.isdir(cls.app_dir + '_2'):
             if os.name != 'nt':
-                shutil.rmtree(cls.app_dir, ignore_errors=True)
-                shutil.move(cls.app_dir + '_2', cls.app_dir)
+                # shutil.rmtree(cls.app_dir, ignore_errors=True)
+                shutil.rmtree(cls.app_dir + '_2', cls.app_dir)
             else:
                 # On windows the Test folder is locked, as the testoutput is going to be written to it
                 # special treatment
-                try:
-                    shutil.rmtree(cls.app_dir, ignore_errors=True)
-                    shutil.copytree(cls.app_dir + '_2', cls.app_dir,  dirs_exist_ok=True)
-                except Exception as e:
-                    print(e)
                 try:
                     shutil.rmtree(cls.app_dir + '_2', ignore_errors=True)
                 except Exception as e:
@@ -123,7 +120,7 @@ class TestUpdater(ParallelTestCase):
 
     def test_check_update_stable_errors(self):
         self.fill_basic_config({'config_updatechannel': 'Stable'})
-        wait_for_reboot(f"http://127.0.0.1:" + self.port)
+        wait_for_reboot(f"http://127.0.0.1:{self.port}")
         self.assertTrue(self.check_element_on_page((By.ID, "flash_success")))
         self.goto_page('admin_setup')
         update_table = self.check_element_on_page((By.ID, "current_version")).find_elements(By.TAG_NAME, 'td')
@@ -152,7 +149,7 @@ class TestUpdater(ParallelTestCase):
 
     def test_check_update_stable_versions(self):
         self.fill_basic_config({'config_updatechannel': 'Stable'})
-        wait_for_reboot(f"http://127.0.0.1:" + self.port)
+        wait_for_reboot(f"http://127.0.0.1:{self.port}")
         self.assertTrue(self.check_element_on_page((By.ID, "flash_success")))
         self.goto_page('admin_setup')
         update_table = self.check_element_on_page((By.ID, "current_version")).find_elements(By.TAG_NAME, 'td')
@@ -213,7 +210,7 @@ class TestUpdater(ParallelTestCase):
 
     def test_check_update_nightly_errors(self):
         self.fill_basic_config({'config_updatechannel': 'Nightly'})
-        wait_for_reboot(f"http://127.0.0.1:" + self.port)
+        wait_for_reboot(f"http://127.0.0.1:{self.port}")
         self.assertTrue(self.check_element_on_page((By.ID, "flash_success")))
 
         self.goto_page('admin_setup')
@@ -243,7 +240,7 @@ class TestUpdater(ParallelTestCase):
 
     def test_check_update_nightly_request_errors(self):
         self.fill_basic_config({'config_updatechannel': 'Nightly'})
-        wait_for_reboot(f"http://127.0.0.1:" + self.port)
+        wait_for_reboot(f"http://127.0.0.1:{self.port}")
         self.assertTrue(self.check_element_on_page((By.ID, "flash_success")))
 
         self.goto_page('admin_setup')
@@ -301,7 +298,7 @@ class TestUpdater(ParallelTestCase):
 
     def test_perform_update_stable_errors(self):
         self.fill_basic_config({'config_updatechannel': 'Stable'})
-        wait_for_reboot(f"http://127.0.0.1:" + self.port)
+        wait_for_reboot(f"http://127.0.0.1:{self.port}")
         self.assertTrue(self.check_element_on_page((By.ID, "flash_success")))
 
         self.goto_page('admin_setup')
@@ -359,8 +356,10 @@ class TestUpdater(ParallelTestCase):
         time.sleep(3)
 
     def test_perform_update(self):
+        os.makedirs(os.path.join(self.app_dir, "venv"))
+        self.assertTrue(os.path.isdir(os.path.join(self.app_dir, "venv")))
         self.fill_basic_config({'config_updatechannel': 'Stable'})
-        wait_for_reboot(f"http://127.0.0.1:" + self.port)
+        wait_for_reboot(f"http://127.0.0.1:{self.port}")
         self.assertTrue(self.check_element_on_page((By.ID, "flash_success")))
 
         self.fill_thumbnail_config({'schedule_generate_book_covers': 1})
@@ -396,7 +395,7 @@ class TestUpdater(ParallelTestCase):
         if button:
             button.click()
         else:
-            self.driver.get("http://127.0.0.1:" + self.worker_port)
+            self.driver.get(f"http://127.0.0.1:{self.worker_port}")
         time.sleep(3)
         # Check all relevant files are kept, venv folder
         self.assertTrue(os.path.isdir(os.path.join(self.app_dir, "venv")))
@@ -405,13 +404,14 @@ class TestUpdater(ParallelTestCase):
         self.assertTrue(os.path.isdir(thumbnail_cache_path))
         self.assertEqual(10 * NUM_THUMBNAILS, count_files(thumbnail_cache_path))
         self.fill_thumbnail_config({'schedule_generate_book_covers': 0})
+        shutil.rmtree(os.path.join(self.app_dir, "venv"))
         # ToDo: Additional folders, additional files
 
     # check cps files not writebale
     @unittest.skipIf(os.name=="nt", "Test isn't running on Windows")
     def test_update_write_protect(self):
         self.fill_basic_config({'config_updatechannel': 'Stable'})
-        wait_for_reboot(f"http://127.0.0.1:" + self.port)
+        wait_for_reboot(f"http://127.0.0.1:{self.port}")
         self.assertTrue(self.check_element_on_page((By.ID, "flash_success")))
 
         self.goto_page('admin_setup')
@@ -451,10 +451,10 @@ class TestUpdater(ParallelTestCase):
         os.chmod(os.path.join(self.app_dir, "cps", "web.py"), 0o766)
 
     def test_reconnect_database(self):
-        self.driver.get("http://127.0.0.1:" + self.worker_port)
+        self.driver.get(f"http://127.0.0.1:{self.worker_port}")
         self.reconnect_database()
         self.assertTrue(self.check_element_on_page((By.ID, "check_for_update")))
         # deactivated by default
-        resp = requests.get('http://127.0.0.1:{}/reconnect'.format(self.worker_port))
+        resp = requests.get(f'http://127.0.0.1:{self.worker_port}/reconnect')
         self.assertEqual(404, resp.status_code)
         # self.assertDictEqual({}, resp.json())

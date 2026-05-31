@@ -264,7 +264,7 @@ def cover(type) -> str:
             result.headers['Accept-Ranges'] = 'bytes'
             return result
     except Exception as e:
-        print('Testfixture broken %e', e)
+        print(f'Testfixture broken {e}')
         return '', 404
 
 

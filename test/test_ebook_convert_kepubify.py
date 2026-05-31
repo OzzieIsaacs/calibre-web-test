@@ -43,19 +43,6 @@ class TestEbookConvertKepubify(ParallelTestCase):
             cls.driver.quit()
             cls.p.kill()
 
-    '''@classmethod
-    def tearDownClass(cls):
-        try:
-            # close the browser window and stop calibre-web
-            cls.driver.get("http://127.0.0.1:" + cls.worker_port)
-            cls.stop_calibre_web()
-            cls.driver.quit()
-            cls.p.terminate()
-        except Exception as e:
-            print(e)
-        time.sleep(2)
-        super().tearDownClass()'''
-
     def tearDown(self):
         super().tearDown()
         if not self.check_user_logged_in('admin'):

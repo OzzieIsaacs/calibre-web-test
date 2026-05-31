@@ -57,20 +57,12 @@ class TestSTARTTLS(ParallelTestCase):
     def tearDownClass(cls):
         cls.email_server.stop()
         release_resource("port", cls.port)
-
-        '''cls.driver.get("http://127.0.0.1:" + cls.worker_port)
-        cls.stop_calibre_web()
-        # close the browser window and stop calibre-web
-        cls.driver.quit()
-        cls.p.terminate()
-        time.sleep(2)
-        super().tearDownClass()'''
+        super().tearDownClass()
 
     # start sending e-mail
     # check email received
     def test_STARTTLS(self):
         self.setup_server(False, {'mail_use_ssl': 'STARTTLS'})
-        # self.goto_page('mail_server')
         password = self.check_element_on_page((By.ID, "mail_password_e"))
         self.assertEqual("", password.text)
         time.sleep(2)
