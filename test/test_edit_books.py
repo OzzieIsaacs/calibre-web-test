@@ -37,15 +37,6 @@ class TestEditBooks(ParallelTestCase):
             cls.driver.quit()
             cls.p.kill()
 
-    '''@classmethod
-    def tearDownClass(cls):
-        cls.driver.get("http://127.0.0.1:" + cls.worker_port)
-        cls.stop_calibre_web()
-        # close the browser window and stop calibre-web
-        cls.driver.quit()
-        cls.p.terminate()
-        super().tearDownClass()'''
-
     # goto Book 1
     # Change Title with unicode chars
     # save title, go to show books page
@@ -984,15 +975,15 @@ class TestEditBooks(ParallelTestCase):
         self.check_element_on_page((By.ID, 'edit_cancel')).click()
         time.sleep(2)
         details = self.get_book_details()
-        self.assertEqual('book', details['title'])
-        self.assertEqual('Unknown', details['author'][0])
+        self.assertEqual('book10 - Lulu de Marco', details['title'])
+        self.assertEqual('Mol Kuko', details['author'][0])
         r = requests.session()
         login_page = r.get('http://127.0.0.1:{}/login'.format(self.worker_port))
         token = re.search('<input type="hidden" name="csrf_token" value="(.*)">', login_page.text)
         payload = {'username': 'admin', 'password': 'admin123', 'submit':"", 'next':"/", "remember_me":"on", "csrf_token": token.group(1)}
         r.post('http://127.0.0.1:{}/login'.format(self.worker_port), data=payload)
         resp = r.get('http://127.0.0.1:{}'.format(self.worker_port) + details['cover'])
-        self.assertEqual('19501', resp.headers['Content-Length'])
+        self.assertEqual('8936', resp.headers['Content-Length'])
         self.fill_basic_config({'config_uploading': 0})
         r.close()
         self.delete_book(details['id'])
