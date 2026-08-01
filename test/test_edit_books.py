@@ -331,6 +331,11 @@ class TestEditBooks(ParallelTestCase):
         self.assertEqual(len(values['tag']), 1)
         self.assertEqual(u'O0ü 执', values['tag'][0])
         self.check_element_on_page((By.ID, "edit_book")).click()
+        self.edit_book(content={'tags':u'Gênot, gênot'})
+        values = self.get_book_details()
+        self.assertEqual(len(values['tag']), 1)
+        self.assertEqual(u'Gênot', values['tag'][0])
+        self.check_element_on_page((By.ID, "edit_book")).click()
         self.edit_book(content={'tags':u'Alf|alfa'})
         values = self.get_book_details()
         self.assertEqual(u'Alf|alfa', values['tag'][0])
@@ -617,6 +622,11 @@ class TestEditBooks(ParallelTestCase):
         self.edit_book(custom_content={r'Custom categories\|, 人物': ''})
         vals = self.get_book_details(5)
         self.assertEqual(0, len(vals['cust_columns']))
+        self.check_element_on_page((By.ID, "edit_book")).click()
+        self.edit_book(custom_content={r'Custom categories\|, 人物': u'Gênot, gênot'})
+        vals = self.get_book_details(5)
+        self.assertEqual(1, len(vals['cust_columns']))
+        self.assertEqual(u'Gênot', vals['cust_columns'][0]['value'])
 
     # change comments, add comments, delete comments
     def test_edit_custom_float(self):
