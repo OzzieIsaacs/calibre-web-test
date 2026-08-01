@@ -16,6 +16,7 @@ from selenium.webdriver.support import expected_conditions as EC
 from helper_email_convert import kepubify_path, is_kepubify_not_present
 from helper_func import startup
 import datetime
+import stat
 
 @unittest.skipIf(is_kepubify_not_present(), "Skipping convert, kepubify not found")
 class TestEbookConvertKepubify(ParallelTestCase):
@@ -68,7 +69,7 @@ class TestEbookConvertKepubify(ParallelTestCase):
     # set excecutable non excecutable and start convert
     def test_convert_wrong_excecutable(self):
         self.fill_basic_config({'config_kepubifypath':'/opt/kepubify/ebook-polish'})
-        self.assertTrue(self.check_element_on_page((By.ID, "flash_success")))
+        self.assertTrue(self.check_element_on_page((By.ID, "flash_danger")))
         self.goto_page('nav_about')
         element = self.check_element_on_page((By.XPATH, "//tr/th[text()='Kepubify']/following::td[1]"))
         self.assertEqual(element.text, 'not installed')
@@ -81,13 +82,18 @@ class TestEbookConvertKepubify(ParallelTestCase):
         self.assertTrue(vals['btn_from'])
         self.assertTrue(vals['btn_to'])
 
-        nonexec = os.path.join(self.app_dir, 'app.db')
-        self.fill_basic_config({'config_kepubifypath': nonexec})
-        self.assertTrue(self.check_element_on_page((By.ID, "flash_success")))
-        self.goto_page('nav_about')
-        element = self.check_element_on_page((By.XPATH, "//tr/th[text()='Kepubify']/following::td[1]"))
-        self.assertEqual(element.text, 'Execution permissions missing')
-        self.fill_basic_config({'config_kepubifypath': kepubify_path()})
+        kepubify = kepubify_path()
+        original_mode = os.stat(kepubify).st_mode
+        try:
+            os.chmod(kepubify, original_mode & ~stat.S_IXUSR & ~stat.S_IXGRP & ~stat.S_IXOTH)
+            self.fill_basic_config({'config_kepubifypath': os.path.dirname(kepubify)})
+            self.assertTrue(self.check_element_on_page((By.ID, "flash_danger")))
+            self.goto_page('nav_about')
+            element = self.check_element_on_page((By.XPATH, "//tr/th[text()='Kepubify']/following::td[1]"))
+            self.assertEqual(element.text, 'not installed')
+        finally:
+            os.chmod(kepubify, original_mode)
+        self.fill_basic_config({'config_kepubifypath': os.path.dirname(kepubify)})
 
     # convert epub to kepub
     # try start conversion of mobi -> not visible

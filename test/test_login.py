@@ -16,7 +16,6 @@ from helper_func import startup, check_response_language_header, curl_available,
 class TestLogin(ParallelTestCase):
 
 
-
     @classmethod
     def setUpClass(cls):
         super().setUpClass()
@@ -236,6 +235,45 @@ class TestLogin(ParallelTestCase):
         self.assertTrue(self.login(u'Kß ü执', ' space123AbC*!'))
         self.logout()
         self.assertFalse(self.login(u'Kß ü执', 'space123AbC*!'))
+
+    # login with admin
+    # create new user with unicode whitespace around the username
+    # logout
+    # try login with the same username including unicode whitespace
+    def test_login_unicode_whitespace_username(self):
+        username = u'\u200bUnicode User\ufeff'
+        self.driver.get("http://127.0.0.1:" + self.worker_port + "/login")
+        self.login('admin', 'admin123')
+        self.create_user(username, {'password': '123AbC*!', 'email': 'unicode-space@example.com'})
+        self.logout()
+        self.assertTrue(self.login(username, '123AbC*!'))
+        self.logout()
+        self.assertTrue(self.login('Unicode User', '123AbC*!'))
+        self.logout()
+        self.login('admin', 'admin123')
+        self.edit_user('Unicode User', {'delete': 1})
+        self.assertTrue(self.check_element_on_page((By.ID, "flash_success")))
+        payload = "\u00a0" * 30 + "\u200b" * 10 + "user" + "\u200d" * 10 + "\ufeff" * 5
+        self.create_user(payload, {'password': '123AbC*!', 'email': 'unicode-space@example.com'})
+        self.logout()
+        self.assertTrue(self.login(payload, '123AbC*!'))
+        self.logout()
+        self.assertTrue(self.login('user', '123AbC*!'))
+        self.logout()
+        self.login('admin', 'admin123')
+        self.edit_user('user', {'delete': 1})
+        self.assertTrue(self.check_element_on_page((By.ID, "flash_success")))
+        payload = "\x00" + ("\t" * 10) + "user2" + ("\t" * 10) + "\x00"
+        self.create_user(payload, {'password': '123AbC*!', 'email': 'unicode-space@example.com'})
+        self.logout()
+        self.assertTrue(self.login(payload, '123AbC*!'))
+        self.logout()
+        self.assertTrue(self.login('user2', '123AbC*!'))
+        self.logout()
+        self.login('admin', 'admin123')
+        self.edit_user('user2', {'delete': 1})
+        self.assertTrue(self.check_element_on_page((By.ID, "flash_success")))
+
 
     # login with admin
     # create new user (spaces within), password with space at end
@@ -800,7 +838,7 @@ class TestLogin(ParallelTestCase):
         payload = {'username': user, 'password': 'admin123', 'submit': "", 'next': "/", "remember_me": "on",
                    "csrf_token": token.group(1)}
         resp = r.post("http://127.0.0.1:" + self.worker_port + "/login", data=payload)
-        self.assertEqual(resp.status_code, 200)
+        self.assertEqual(resp.status_code, 401)
         time.sleep(5)
         with open(os.path.join(self.app_dir,'calibre-web.log'),'r') as logfile:
             data = logfile.read()

@@ -542,7 +542,7 @@ def updateZip(zipname_new, zipname_org, filename, data):
 def change_epub_meta(zipname_new=None, zipname_org=DEFAULT_EPUB, meta={}, item={}, guide={}, meta_change={}):
     with codecs.open(os.path.join(base_path, 'files', 'test.opf'), "r", "utf-8") as f:
         soup = BeautifulSoup(f.read(), "xml")
-    for el in soup.findAll("meta"):
+    for el in soup.find_all("meta"):
         el.prefix = ""
         el.namespace = ""
     soup.find("metadata").prefix = ""
@@ -656,12 +656,12 @@ def read_opf_metadata(file):
             soup = BeautifulSoup(f.read(), "xml")
     elif isinstance(file, str):
         soup = BeautifulSoup(file, "xml")
-    result['identifier'] = soup.findAll("identifier")
+    result['identifier'] = soup.find_all("identifier")
     cover = soup.find("reference")
     result['cover'] = cover.attrs if cover else ""
     title = soup.find("dc:title")
     result['title'] = title.contents[0] if title else ""
-    author = soup.findAll("dc:creator")
+    author = soup.find_all("dc:creator")
     result['author'] = [a.contents[0] for a in author]
     result['author_attr'] = [a.attrs for a in author]
     contributor = soup.find("dc:contributor")
@@ -681,11 +681,11 @@ def read_opf_metadata(file):
         result['pub_date'] = datetime.datetime.strptime(time_string, format_string + "%z")
     except AttributeError:
         result['pub_date'] = ""
-    language = soup.findAll("dc:language")
+    language = soup.find_all("dc:language")
     result['language'] = [lang.contents[0] for lang in language] if language else []
     publisher = soup.find("dc:publisher")
     result['publisher'] = publisher.contents[0] if publisher else ""
-    tags = soup.findAll("dc:subject")
+    tags = soup.find_all("dc:subject")
     result['tags'] = [t.contents[0] for t in tags] if tags else []
     comment = soup.find("dc:description")
     result['description'] = comment.contents[0] if comment else ""

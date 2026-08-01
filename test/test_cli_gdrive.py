@@ -199,10 +199,11 @@ class TestCliGdrivedb(ParallelTestCase):
         # check unconfigured database
         os.chdir(self.app_dir)
         p1 = process_open([self.py_version, u'cps.py'], [1], env={"APP_MODE": "test", "CALIBRE_PORT": self.worker_port})
-        wait_for_reboot("http://127.0.0.1:" + self.worker_port)
+        wait_for_reboot(f"http://127.0.0.1:{self.worker_port}")
         try:
+            time.sleep(5)
             # navigate to the application home page
-            self.driver.get("http://127.0.0.1:" + self.worker_port)
+            self.driver.get(f"http://127.0.0.1:{self.worker_port}")
             # Wait for config screen to show up
             self.fill_db_config({'config_calibre_dir': self.temp_dir})
             # wait for cw to reboot

@@ -13,8 +13,6 @@ from helper_func import startup, wait_for_reboot
 
 class TestShelf(ParallelTestCase):
 
-
-
     @classmethod
     def setUpClass(cls):
         super().setUpClass()

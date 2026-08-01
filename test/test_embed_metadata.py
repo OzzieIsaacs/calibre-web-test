@@ -37,12 +37,6 @@ class TestEmbedMetadata(ParallelTestCase):
         release_resource("port", cls.port)
         super().tearDownClass()
 
-        '''cls.driver.get("http://127.0.0.1:" + cls.worker_port)
-        cls.stop_calibre_web()
-        # close the browser window and stop calibre-web
-        cls.driver.quit()
-        cls.p.terminate()'''
-
     def test_download_check_metadata(self):
         # no calibre download
         self.fill_basic_config({'config_binariesdir': ''})

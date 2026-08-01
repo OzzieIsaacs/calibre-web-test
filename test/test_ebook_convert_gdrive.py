@@ -23,9 +23,9 @@ import datetime
                  "client_secrets.json and/or gdrive_credentials file is missing")
 @unittest.skipIf(is_calibre_not_present(), "Skipping convert, calibre not found")
 class TestEbookConvertCalibreGDrive(ParallelTestCase):
+
     resource_lock = "gdrive"
     p=None
-
     dependency = ["oauth2client", "PyDrive2", "PyYAML", "google-api-python-client", "httplib2"]
     email_server = None
 

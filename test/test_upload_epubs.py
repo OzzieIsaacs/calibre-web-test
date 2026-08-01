@@ -2,9 +2,11 @@
 
 from base_test import ParallelTestCase
 import os
+import sqlite3
 import time
 from diffimg import diff
 from io import BytesIO
+from shutil import copyfile
 
 from selenium.webdriver.support.ui import WebDriverWait
 from selenium.webdriver.support import expected_conditions as EC
@@ -52,6 +54,38 @@ class TestUploadEPubs(ParallelTestCase):
         self.delete_book(details['id'])
         self.delete_book(details2['id'])
         os.remove(epub_file)
+
+    def test_upload_epub_author_accent_sequence(self):
+        self.fill_basic_config({"config_unicode_filename": 0})
+        self.assertTrue(self.check_element_on_page((By.ID, "flash_success")))
+        epub_file = os.path.join(base_path, 'files', 'jose_luis_corral_sequence.epub')
+        copyfile(os.path.join(base_path, 'files', 'book.epub'), epub_file)
+
+        book_ids = []
+        try:
+            change_epub_meta(epub_file, meta={'title': 'Corral Accent 1', 'creator': 'José Luis Corral'})
+            details1 = self.verify_upload(epub_file)
+            book_ids.append(details1['id'])
+            self.assertEqual('Corral Accent 1', details1['title'])
+            self.assertEqual(['José Luis Corral'], details1['author'])
+
+            change_epub_meta(epub_file, meta={'title': 'Corral Accent 2', 'creator': 'Jose Luis Corral'})
+            details2 = self.verify_upload(epub_file)
+            book_ids.append(details2['id'])
+            self.assertEqual('Corral Accent 2', details2['title'])
+
+            change_epub_meta(epub_file, meta={'title': 'Corral Accent 3', 'creator': 'José Luis Corral'})
+            details3 = self.verify_upload(epub_file)
+            book_ids.append(details3['id'])
+            self.assertEqual('Corral Accent 3', details3['title'])
+            self.assertEqual(['José Luis Corral'], details3['author'])
+        finally:
+            for book_id in reversed(book_ids):
+                self.delete_book(book_id)
+            if os.path.exists(epub_file):
+                os.remove(epub_file)
+            self.fill_basic_config({"config_unicode_filename": 1})
+            self.assertTrue(self.check_element_on_page((By.ID, "flash_success")))
 
     def verify_upload(self, epub_file, check_warning=False):
         self.goto_page('nav_new')

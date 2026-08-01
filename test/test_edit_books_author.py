@@ -14,8 +14,6 @@ from selenium.webdriver.common.by import By
 
 class TestEditAuthors(ParallelTestCase):
 
-
-
     @classmethod
     def setUpClass(cls):
         super().setUpClass()
@@ -30,14 +28,6 @@ class TestEditAuthors(ParallelTestCase):
             cls.driver.quit()
             cls.p.kill()
 
-    '''@classmethod
-    def tearDownClass(cls):
-        cls.driver.get("http://127.0.0.1:" + cls.worker_port)
-        cls.stop_calibre_web()
-        # close the browser window and stop calibre-web
-        cls.driver.quit()
-        cls.p.terminate()
-        super().tearDownClass()'''
 
     # One book of the author present
     def test_change_capital_one_author_one_book(self):

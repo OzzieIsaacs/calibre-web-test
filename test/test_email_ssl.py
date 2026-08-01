@@ -58,13 +58,6 @@ class TestSSL(ParallelTestCase):
         release_resource("port", cls.port)
         super().tearDownClass()
 
-        '''cls.driver.get("http://127.0.0.1:" + cls.worker_port)
-        cls.stop_calibre_web()
-        # close the browser window and stop calibre-web
-        cls.driver.quit()
-        cls.p.terminate()
-        time.sleep(2)'''
-
     # start sending e-mail
     # check email received
     def test_SSL_only(self):

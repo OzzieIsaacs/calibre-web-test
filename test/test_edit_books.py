@@ -33,7 +33,7 @@ class TestEditBooks(ParallelTestCase):
                     env={"APP_MODE": "test", "CALIBRE_PORT": cls.worker_port},
                     lib_dest=cls.temp_dir)
             time.sleep(3)
-        except Exception as e:
+        except Exception:
             cls.driver.quit()
             cls.p.kill()
 
@@ -727,17 +727,17 @@ class TestEditBooks(ParallelTestCase):
         time.sleep(1)
         typeahead = self.check_element_on_page((By.CLASS_NAME, "tt-dataset-languages"))
         typeahead_set = set(typeahead.text.split("\n"))
-        result = set(("German", "Greek; Modern (1453-)", "Ga", "Gayo", "Gbaya (Central African Republic)"))
+        result = {"German", "Greek; Modern (1453-)", "Ga", "Gayo", "Gbaya (Central African Republic)"}
         self.assertEqual(typeahead_set, result)
         lang.send_keys('a')
         time.sleep(1)
         typeahead_set = set(typeahead.text.split("\n"))
-        result = set(("Ga", "Gayo", "Gaelic; Scottish", "Galician", "Ganda"))
+        result = {"Ga", "Gayo", "Gaelic; Scottish", "Galician", "Ganda"}
         self.assertEqual(typeahead_set, result)
         lang.send_keys('y')
         time.sleep(1)
         typeahead_set = set(typeahead.text.split("\n"))
-        result = set(("Gayo", "Hiligaynon"))
+        result = {"Gayo", "Hiligaynon"}
         self.assertEqual(typeahead_set, result)
         lang.send_keys('o')
         time.sleep(1)
@@ -781,8 +781,8 @@ class TestEditBooks(ParallelTestCase):
         time.sleep(2.5)
         typeahead = self.check_element_on_page((By.CLASS_NAME, "tt-dataset-authors"))
         typeahead_set = set(typeahead.text.split("\n"))
-        result = set(("John Döe & John Döe", "John Döe & Peter Parker", "John Döe & Asterix Lionherd",
-                      "John Döe & Frodo Beutlin", "John Döe & Norbert Halagal"))
+        result = {"John Döe & John Döe", "John Döe & Peter Parker", "John Döe & Asterix Lionherd",
+                  "John Döe & Frodo Beutlin", "John Döe & Norbert Halagal"}
         self.assertEqual(typeahead_set, result)
         lang.send_keys('ro')
         time.sleep(1)
@@ -1209,6 +1209,23 @@ class TestEditBooks(ParallelTestCase):
         number_books = self.get_books_displayed()
         self.assertEqual(1, len(number_books[1]))
 
+    def test_download_book_without_user_agent(self):
+        self.get_book_details(5)
+        element = self.check_element_on_page((By.XPATH, "//*[starts-with(@id,'btnGroupDrop')]"))
+        download_link = element.get_attribute("href")
+        r = requests.session()
+        # Regression: download_link must tolerate requests without a User-Agent header.
+        r.headers.pop('User-Agent', None)
+        login_page = r.get('http://127.0.0.1:{}/login'.format(self.worker_port))
+        token = re.search('<input type="hidden" name="csrf_token" value="(.*)">', login_page.text)
+        payload = {'username': 'admin', 'password': 'admin123', 'submit':"", 'next':"/", "remember_me":"on",
+                   "csrf_token": token.group(1)}
+        r.post('http://127.0.0.1:{}/login'.format(self.worker_port), data=payload)
+        resp = r.get(download_link, timeout=5)
+        self.assertEqual(resp.headers['Content-Type'], 'application/epub+zip')
+        self.assertEqual(resp.status_code, 200)
+        r.close()
+
     """
     Test the functionality of the book title author exchange operation
     This test performs the following actions:
@@ -1240,4 +1257,3 @@ class TestEditBooks(ParallelTestCase):
         details = self.get_book_details()
         self.assertEqual("book11", details['title'])
         self.assertEqual(["Norbert Halagal"], details['author'])
-

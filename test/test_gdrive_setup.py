@@ -40,19 +40,6 @@ class TestSetupGdrive(ParallelTestCase):
             except Exception:
                 pass
 
-    '''@classmethod
-    def tearDownClass(cls):
-        try:
-            cls.driver.get("http://127.0.0.1:" + cls.worker_port)
-            cls.stop_calibre_web()
-            # close the browser window and stop calibre-web
-            cls.driver.quit()
-            cls.p.terminate()
-        except Exception as e:
-            print(e)
-        finally:
-            super().tearDownClass()'''
-
     def test_config_gdrive(self):
         # invalid db and tick gdrive
         self.fill_db_config(dict(config_calibre_dir=self.temp_dir[:-1], config_use_google_drive=1))

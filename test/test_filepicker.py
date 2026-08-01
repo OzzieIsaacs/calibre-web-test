@@ -27,14 +27,6 @@ class TestFilePicker(ParallelTestCase):
             cls.driver.quit()
             cls.p.kill()
 
-    '''@classmethod
-    def tearDownClass(cls):
-        # cls.stop_calibre_web()
-        # close the browser window and stop calibre-web
-        cls.driver.quit()
-        cls.p.terminate()
-        super().tearDownClass()'''
-
     def test_filepicker_limited_file(self):
         filepicker = self.check_element_on_page((By.ID, "calibre_modal_path"))
         self.assertTrue(filepicker)
