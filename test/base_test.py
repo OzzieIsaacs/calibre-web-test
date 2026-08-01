@@ -1,7 +1,6 @@
 import sys
 import os
 import time
-import re
 import tempfile
 import unittest
 import shutil

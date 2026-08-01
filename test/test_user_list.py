@@ -580,6 +580,24 @@ class TestUserList(ParallelTestCase):
         self.assertTrue(ul['header'][5]['element'].is_enabled())
         self.assertTrue(ul['table'][0]['selector']['element'].is_selected())
 
+    def test_user_list_invalid_order(self):
+        r = requests.session()
+        login_page = r.get('http://127.0.0.1:{}/login'.format(self.worker_port))
+        token = re.search('<input type="hidden" name="csrf_token" value="(.*)">', login_page.text)
+        payload = {'username': 'admin', 'password': 'admin123', 'submit':"", 'next':"/", "remember_me":"on", "csrf_token": token.group(1)}
+        result = r.post('http://127.0.0.1:{}/login'.format(self.worker_port), data=payload)
+        self.assertEqual(200, result.status_code)
+
+        result = r.get('http://127.0.0.1:{}/ajax/listusers'.format(self.worker_port),
+                       params={'offset': 0, 'limit': 10, 'order': 'invalid_value'}, timeout=5)
+        self.assertEqual(200, result.status_code)
+        data = result.json()
+        self.assertIn('rows', data)
+        self.assertIn('total', data)
+        self.assertNotIn('Traceback', result.text)
+        self.assertNotIn('sqlalchemy', result.text.lower())
+        self.assertNotIn('/home/', result.text)
+        r.close()
 
     def test_user_list_requests(self):
         r = requests.session()
