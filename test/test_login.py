@@ -7,6 +7,8 @@ import requests
 import os
 import time
 import socket
+from typing import cast
+from urllib.parse import urlparse
 
 from selenium.webdriver.common.by import By
 from selenium.common.exceptions import WebDriverException
@@ -753,66 +755,91 @@ class TestLogin(ParallelTestCase):
         self.assertTrue("<title>Calibre-Web | Books</title>" in page.text)
         r.close()
 
-    def test_magic_remote_login(self):
+    def _set_remote_login(self, enabled):
+        self.driver.get("http://127.0.0.1:" + self.worker_port + "/login")
         self.login('admin', 'admin123')
         self.assertTrue(self.check_element_on_page((By.ID, "flash_success")))
-        self.fill_basic_config({"config_remote_login":1})
+        self.fill_basic_config({"config_remote_login": 1 if enabled else 0})
         wait_for_reboot(f"http://127.0.0.1:{self.worker_port}")
         self.assertTrue(self.check_element_on_page((By.ID, "flash_success")))
         self.logout()
-        remote = self.check_element_on_page((By.ID, "remote_login"))
-        self.assertTrue(remote)
-        remote.click()
+
+    def _create_remote_login_request(self):
+        requester = requests.session()
+        remote_page = requester.get("http://127.0.0.1:" + self.worker_port + "/remote/login")
+        token = re.search('data-token="([^"]+)"', remote_page.text)
+        verify_element = re.search('id="verify_url"[^>]+href="([^"]+)"', remote_page.text)
+        csrf = re.search('<input type="hidden" name="csrf_token" value="(.*)">', remote_page.text)
+        self.assertTrue(token)
+        self.assertTrue(verify_element)
+        self.assertTrue(csrf)
+        verify_url = urlparse(verify_element.group(1)).path
+        return requester, token.group(1), csrf.group(1), verify_url
+
+    def test_magic_remote_login_normal_flow(self):
+        self._set_remote_login(True)
+
+        self.driver.get("http://127.0.0.1:" + self.worker_port + "/remote/login")
         verify_element = self.check_element_on_page((By.ID, "verify_url"))
         self.assertTrue(verify_element)
-        verifiy_url = "/" + verify_element.text.lstrip('http://127.0.0.1:{}'.format(self.worker_port))
-        r = requests.session()
-        login_page = r.get("http://127.0.0.1:" + self.worker_port + "/login")
-        token = re.search('<input type="hidden" name="csrf_token" value="(.*)">', login_page.text)
-        payload = {'username': 'admin',
-                   'password': 'admin123',
-                   'submit': "",
-                   'next': verifiy_url,
-                   "remember_me": "on",
-                   "csrf_token": token.group(1)
-                   }
-        resp = r.post("http://127.0.0.1:" + self.worker_port + "/login", data=payload)
+        verify_url = urlparse(verify_element.get_attribute("href")).path
+
+        approver = requests.session()
+        login_page = approver.get("http://127.0.0.1:" + self.worker_port + "/login")
+        approver_token = re.search('<input type="hidden" name="csrf_token" value="(.*)">', login_page.text)
+        payload = {'username': 'admin', 'password': 'admin123', 'submit': "", "remember_me": "on",
+                   "csrf_token": approver_token.group(1)}
+        self.assertEqual(approver.post("http://127.0.0.1:" + self.worker_port + "/login", data=payload).status_code, 200)
+
+        verify_page = approver.get("http://127.0.0.1:" + self.worker_port + verify_url)
+        self.assertIn("Approve Magic Link Login", verify_page.text)
+        verify_csrf = re.search('<input type="hidden" name="csrf_token" value="(.*)">', verify_page.text)
+        self.assertTrue(verify_csrf)
+
+        self.assertEqual(approver.post("http://127.0.0.1:" + self.worker_port + verify_url,
+                                        data={"csrf_token": verify_csrf.group(1)}).status_code, 200)
+        time.sleep(6)
+        self.assertTrue(self.check_user_logged_in("admin"))
+        approver.close()
+
+    def test_magic_remote_login(self):
+        self._set_remote_login(True)
+        attacker, token, csrf, verifiy_url = self._create_remote_login_request()
+
+        victim = requests.session()
+        login_page = victim.get("http://127.0.0.1:" + self.worker_port + "/login")
+        victim_token = re.search('<input type="hidden" name="csrf_token" value="(.*)">', login_page.text)
+        payload = {'username': 'admin', 'password': 'admin123', 'submit': "", "remember_me": "on",
+                   "csrf_token": victim_token.group(1)}
+        resp = victim.post("http://127.0.0.1:" + self.worker_port + "/login", data=payload)
         self.assertEqual(resp.status_code, 200)
-        r.close()
-        time.sleep(5)
-        self.assertTrue(self.check_element_on_page((By.ID, "flash_success")))
-        # reuse token without problem
-        r = requests.session()
-        login_page = r.get("http://127.0.0.1:" + self.worker_port + "/login")
-        token = re.search('<input type="hidden" name="csrf_token" value="(.*)">', login_page.text)
-        payload = {'username': 'admin',
-                   'password': 'admin123',
-                   'submit': "",
-                   'next': verifiy_url,
-                   "remember_me": "on",
-                   "csrf_token": token.group(1)
-                   }
-        resp = r.post("http://127.0.0.1:" + self.worker_port + "/login", data=payload)
-        self.assertEqual(resp.status_code, 200)
-        r.close()
+        verify_page = victim.get("http://127.0.0.1:" + self.worker_port + verifiy_url)
+        self.assertIn("Approve Magic Link Login", verify_page.text)
+        verify_csrf = re.search('<input type="hidden" name="csrf_token" value="(.*)">', verify_page.text)
+        self.assertTrue(verify_csrf)
+
+        pending = attacker.post("http://127.0.0.1:" + self.worker_port + "/ajax/verify_token",
+                                data={"token": token, "csrf_token": csrf})
+        self.assertEqual(pending.json()["status"], "not_verified")
+
+        approve = victim.post("http://127.0.0.1:" + self.worker_port + verifiy_url,
+                              data={"csrf_token": verify_csrf.group(1)})
+        self.assertEqual(approve.status_code, 200)
+
+        verified = attacker.post("http://127.0.0.1:" + self.worker_port + "/ajax/verify_token",
+                                 data={"token": token, "csrf_token": csrf})
+        self.assertEqual(verified.json()["status"], "success")
+        self.assertIn("admin", attacker.get("http://127.0.0.1:" + self.worker_port + "/me").text)
+
+        self.login('admin', 'admin123')
         self.fill_basic_config({"config_remote_login": 0})
         wait_for_reboot(f"http://127.0.0.1:{self.worker_port}")
         self.assertTrue(self.check_element_on_page((By.ID, "flash_success")))
         self.logout()
-        r = requests.session()
-        login_page = r.get("http://127.0.0.1:" + self.worker_port + "/login")
-        token = re.search('<input type="hidden" name="csrf_token" value="(.*)">', login_page.text)
-        payload = {'username': 'admin',
-                   'password': 'admin123',
-                   'submit': "",
-                   'next': verifiy_url,
-                   "remember_me": "on",
-                   "csrf_token": token.group(1)
-                   }
-        resp = r.post("http://127.0.0.1:" + self.worker_port + "/login", data=payload)
-        # Remote token not fond so redirect after login puts us to 403 page
-        self.assertEqual(resp.status_code, 403)
-        r.close()
+        disabled = attacker.get("http://127.0.0.1:" + self.worker_port + "/remote/login")
+        self.assertEqual(disabled.status_code, 403)
+        attacker.close()
+        victim.close()
 
     def test_login_cookie_steal(self):
         r = requests.session()
@@ -821,11 +848,14 @@ class TestLogin(ParallelTestCase):
         payload = {'username': 'admin', 'password': 'admin123', 'submit':"", 'next':"/", "remember_me": "on", "csrf_token": token.group(1)}
         resp = r.post("http://127.0.0.1:" + self.worker_port + "/login", data=payload)
         self.assertEqual(resp.status_code, 200)
-        cookies = r.cookies.get_dict()
+        cookies: dict[str, str] = {}
+        for key, value in r.cookies.get_dict().items():
+            if value is not None:
+                cookies[key] = value
         r.get("http://127.0.0.1:" + self.worker_port + "/logout")
         r.close()
         cookie_stealer = requests.session()
-        resp = cookie_stealer.get("http://127.0.0.1:" + self.worker_port, cookies=cookies)
+        resp = cookie_stealer.get("http://127.0.0.1:" + self.worker_port, cookies=cast(dict[str, str], cookies))
         self.assertEqual(resp.status_code, 200)
         self.assertNotIn("logout", resp.text)
         cookie_stealer.close()
