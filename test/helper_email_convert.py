@@ -100,11 +100,15 @@ class MyMessage:
 
     def extract_register_info(self):
         if self.message:
-            message = base64.b64decode(self.message)
-            username = re.findall(r'Username:\s(.*)\r', message.decode('utf-8'))
-            password = re.findall(r'Password:\s(.*)\r', message.decode('utf-8'))
+            message = base64.b64decode(self.message).decode('utf-8')
+            username = re.findall(r'Username:\s(.*)\r', message)
+            password = re.findall(r'Password:\s(.*)\r', message)
             if len(username) and len(password):
                 return [username[0], password[0]]
+            # Fallback for localized registration mails where labels are translated.
+            key_values = re.findall(r'^[^:\r\n]+:\s+([^\r\n]+)\r?$', message, re.MULTILINE)
+            if len(key_values) >= 2:
+                return [key_values[0], key_values[1]]
         return [False, False]
 
     def check_email_received(self):

@@ -189,7 +189,7 @@ class TestRegister(ParallelTestCase):
         self.logout()
         # admin resents password
         self.login('admin', 'admin123')
-        self.assertTrue(self.edit_user(u'upasswd', { 'resend_password': 1}))
+        self.assertTrue(self.edit_user(u'upasswd', {'locale': 'Deutsch', 'resend_password': 1}))
         self.logout()
         self.assertTrue(wait_Email_received(self.email_server.handler.check_email_received))
         user, passw = self.email_server.handler.extract_register_info()
@@ -263,6 +263,5 @@ class TestRegister(ParallelTestCase):
         payload = {"name": "9dsfaf", 'email': "ü执1@ü执1.3", "csrf_token": token.group(1)}
         resp = r.post('http://127.0.0.1:{}/register'.format(self.worker_port), data=payload)
         self.assertTrue("flash_success" in resp.text)
-
 
 
