@@ -5,10 +5,14 @@
 from base_test import ParallelTestCase
 import time
 import os
+import re
+
+import requests
 
 from helper_db import change_tag
 from config_test import base_path
 from helper_func import startup, change_epub_meta, wait_for_reboot
+from selenium.common.exceptions import NoAlertPresentException, UnexpectedAlertPresentException
 from selenium.webdriver.common.by import By
 
 
@@ -550,3 +554,41 @@ class TestEditAuthors(ParallelTestCase):
         self.edit_book(10, content={u'tags': 'Gênot'})
         self.fill_basic_config({'config_uploading': 0})
         self.assertTrue(self.check_element_on_page((By.ID, "flash_success")))
+
+    def test_xss_author_edit(self):
+        r = requests.session()
+        login_page = r.get('http://127.0.0.1:{}/login'.format(self.worker_port))
+        token = re.search('<input type="hidden" name="csrf_token" value="(.*)">', login_page.text)
+        payload = {'username': 'admin', 'password': 'admin123', 'submit': "", 'next': "/", "remember_me": "on",
+                   "csrf_token": token.group(1)}
+        r.post('http://127.0.0.1:{}/login'.format(self.worker_port), data=payload)
+        book_page = r.get('http://127.0.0.1:{}/admin/book/3'.format(self.worker_port))
+        token = re.search('<input type="hidden" name="csrf_token" value="(.*)">', book_page.text)
+        malicious_author = 'x"><script>alert(1)</script>'
+        book_payload = {
+            'authors': malicious_author,
+            'title': 'Comicdemo',
+            'series': 'Djüngel',
+            'series_index': '1',
+            "csrf_token": token.group(1)
+        }
+        result = r.post('http://127.0.0.1:{}/admin/book/3'.format(self.worker_port), data=book_payload)
+        self.assertEqual(200, result.status_code)
+        r.close()
+
+        try:
+            self.goto_page('nav_author')
+            author_list = self.get_list_books_displayed()
+            malicious_entry = next(book for book in author_list if book['title'] == malicious_author)
+            malicious_entry['ele'].click()
+            time.sleep(1)
+        except UnexpectedAlertPresentException:
+            self.fail("XSS in author page")
+        finally:
+            try:
+                self.driver.switch_to.alert.accept()
+            except NoAlertPresentException:
+                pass
+            self.get_book_details(3)
+            self.check_element_on_page((By.ID, "edit_book")).click()
+            self.edit_book(content={'authors': 'Asterix Lionherd'})
