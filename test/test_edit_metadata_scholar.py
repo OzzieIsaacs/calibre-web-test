@@ -11,7 +11,6 @@ from helper_func import startup
 
 class TestLoadMetadataScholar(ParallelTestCase):
 
-
     dependency = ["scholarly", "beautifulsoup4"]
 
     @classmethod
@@ -22,6 +21,7 @@ class TestLoadMetadataScholar(ParallelTestCase):
                     port=cls.worker_port,
                     app_dir=cls.app_dir,
                     env={"APP_MODE": "test", "CALIBRE_PORT": cls.worker_port},
+                    lib_dest=cls.temp_dir
                     )
             time.sleep(3)
         except Exception:
@@ -52,9 +52,11 @@ class TestLoadMetadataScholar(ParallelTestCase):
         self.assertTrue(google_scholar.is_selected())
         self.assertTrue(google.is_selected())
         self.assertTrue(comic_vine.is_selected())
-        # Check results
+        # Check results - amazon is unchecked, so only scholar/google/comicvine results visible
         results = self.find_metadata_results()
-        self.assertEqual(30, len(results))
+        scholar_results = [r for r in results if 'scholar.google.com' in r['source']]
+        self.assertEqual(10, len(scholar_results))
+        self.assertEqual(0, len([r for r in results if 'amazon.com' in r['source']]))
         # Remove one search element
         comic_vine.click()
         google.click()

@@ -535,7 +535,7 @@ class TestUserList(ParallelTestCase):
 
     def test_user_list_guest_edit(self):
         self.fill_basic_config({'config_anonbrowse': 1})
-        wait_for_reboot(f"http://127.0.0.1:" + self.port)
+        wait_for_reboot(f"http://127.0.0.1:" + self.worker_port)
         self.assertTrue(self.check_element_on_page((By.ID, "flash_success")))
         ul = self.get_user_table(2)
         self.assertEqual(3, len(ul['table']))
@@ -556,7 +556,7 @@ class TestUserList(ParallelTestCase):
         ul['table'][1]['role_Edit Public Shelves']['element'].click()
         self.assertTrue(self.check_element_on_page((By.ID, 'flash_danger')))
         self.fill_basic_config({'config_anonbrowse': 0})
-        wait_for_reboot(f"http://127.0.0.1:" + self.port)
+        wait_for_reboot(f"http://127.0.0.1:" + self.worker_port)
         self.assertTrue(self.check_element_on_page((By.ID, "flash_success")))
 
     def test_user_list_check_sort(self):
@@ -761,7 +761,7 @@ class TestUserList(ParallelTestCase):
         self.assertEqual(400, result.status_code)
 
         self.fill_basic_config({'config_anonbrowse': 1})
-        wait_for_reboot(f"http://127.0.0.1:" + self.port)
+        wait_for_reboot(f"http://127.0.0.1:" + self.worker_port)
         self.assertTrue(self.check_element_on_page((By.ID, "flash_success")))
 
         payload = {'name': 'name', 'value': 'Gast', 'pk': "2", "csrf_token": token.group(1)}
@@ -784,7 +784,7 @@ class TestUserList(ParallelTestCase):
         self.assertEqual(400, result.status_code)
         r.close()
         self.fill_basic_config({'config_anonbrowse': 0})
-        wait_for_reboot(f"http://127.0.0.1:" + self.port)
+        wait_for_reboot(f"http://127.0.0.1:" + self.worker_port)
         self.assertTrue(self.check_element_on_page((By.ID, "flash_success")))
 
     def test_edit_user_email(self):

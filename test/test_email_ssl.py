@@ -1,6 +1,7 @@
 # -*- coding: utf-8 -*-
 
 import unittest
+
 from base_test import ParallelTestCase, acquire_resource, release_resource
 import os
 import re
@@ -12,13 +13,12 @@ import datetime
 from selenium.webdriver.common.by import By
 from helper_email_convert import AIOSMTPServer
 import helper_email_convert
-from config_test import base_path
-from helper_func import startup, wait_Email_received
+from config_test import base_path, BOOT_TIME
+from helper_func import startup, wait_Email_received, wait_for_reboot
 
 
 @unittest.skipIf(helper_email_convert.is_calibre_not_present(),"Skipping convert, calibre not found")
 class TestSSL(ParallelTestCase):
-
 
     email_server = None
     LOG_LEVEL = 'DEBUG'
@@ -33,8 +33,8 @@ class TestSSL(ParallelTestCase):
         cls.email_server = AIOSMTPServer(
             hostname=socket.gethostname(), port=int(cls.port),
             only_ssl=True,
-            certfile='files/server.crt',
-            keyfile='files/server.key',
+            certfile=os.path.join(base_path,'files','server.crt'),
+            keyfile=os.path.join(base_path,'files','server.key'),
             timeout=10
         )
         cls.email_server.start()
@@ -113,8 +113,8 @@ class TestSSL(ParallelTestCase):
     def test_email_limit(self):
         # enable upload files
         self.fill_basic_config({'config_uploading': 1})
-        time.sleep(3)
-        self.assertTrue(self.check_element_on_page((By.ID, 'flash_success')))
+        wait_for_reboot("127.0.0.1:" + self.worker_port)
+        self.assertTrue(self.check_element_on_page((By.ID, 'flash_success'), timeout=BOOT_TIME))
         self.edit_user('admin', {'upload_role': 1})
         random_file = os.path.join(base_path, 'files', 'random.mobi')
         # create random .mobi file size >2 mb

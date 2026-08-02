@@ -173,10 +173,11 @@ def startup(inst, pyVersion, config, login=True, host="http://127.0.0.1", port="
             else:
                 if not lib_path:
                     print('No location for split library path given')
-                target_location = os.path.join(base_path, 'Calibre_db', lib_path)
-                shutil.copytree(os.path.join(base_path, 'Calibre_db'), target_location)
-                os.makedirs(lib_dest)
-                shutil.move(os.path.join(target_location, "metadata.db"), os.path.join(lib_dest, "metadata.db"))
+                # target_location = os.path.join(base_path, 'Calibre_db', lib_path)
+                shutil.rmtree(lib_path, ignore_errors=True)
+                shutil.copytree(os.path.join(base_path, 'Calibre_db'), lib_path)
+                # os.makedirs(lib_dest)
+                shutil.move(os.path.join(lib_path, "metadata.db"), os.path.join(lib_dest, "metadata.db"))
         except FileExistsError:
             print('Test DB already present, might not be a clean version')
     else:

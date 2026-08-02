@@ -1,3 +1,4 @@
+from unittest import skip
 
 from base_test import ParallelTestCase, release_resource, acquire_resource
 import time
@@ -7,7 +8,7 @@ import datetime
 from selenium.webdriver.support.ui import Select
 from selenium.webdriver.common.by import By
 from helper_email_convert import AIOSMTPServer
-from config_test import SPLIT_LIB, base_path
+from config_test import SPLIT_LIB, base_path, BOOT_TIME
 from helper_func import startup, count_files, read_metadata_epub, wait_for_reboot
 
 
@@ -24,6 +25,7 @@ class TestSplitLibrary(ParallelTestCase):
                     app_dir=cls.app_dir,
                     env={"APP_MODE": "test", "CALIBRE_PORT": cls.worker_port},
                     split=True,
+                    lib_dest=cls.temp_dir,
                     lib_path=SPLIT_LIB
                     )
             time.sleep(3)
@@ -108,13 +110,15 @@ class TestSplitLibrary(ParallelTestCase):
         self.email_server.stop()
 
     # check kobo sync working
+    @skip("ToDo")
     def test_kobo(self):
         pass
 
     # check book can be renamed and is still found
     def test_change_ebook(self):
         self.fill_basic_config({"config_unicode_filename": 1})
-        self.assertTrue(self.check_element_on_page((By.ID, "flash_success")))
+        wait_for_reboot(f"http://127.0.0.1:{self.worker_port}")
+        self.assertTrue(self.check_element_on_page((By.ID, "flash_success"), timeout=BOOT_TIME))
         details = self.get_book_details(4)
         self.check_element_on_page((By.ID, "edit_book")).click()
         self.edit_book(content={'title': u'O0ü 执'})
@@ -129,8 +133,7 @@ class TestSplitLibrary(ParallelTestCase):
     def test_upload_ebook(self):
         self.fill_basic_config({'config_uploading': 1})
         wait_for_reboot(f"http://127.0.0.1:{self.worker_port}")
-        self.assertTrue(self.check_element_on_page((By.ID, "flash_success")))
-        self.assertTrue(self.check_element_on_page((By.ID, "flash_success")))
+        self.assertTrue(self.check_element_on_page((By.ID, "flash_success"), timeout=BOOT_TIME))
         self.edit_user('admin', {'upload_role': 1})
         self.goto_page('nav_new')
         upload_file = os.path.join(base_path, 'files', 'book.epub')
@@ -169,6 +172,7 @@ class TestSplitLibrary(ParallelTestCase):
         wait_for_reboot(f"http://127.0.0.1:{self.worker_port}")
         self.assertTrue(self.check_element_on_page((By.ID, "flash_success")))
 
+    @skip("Todo")
     def test_wrong_config_lib(self):
         self.fill_db_config({'config_calibre_split_dir': SPLIT_LIB + "::virtual"})
         pass

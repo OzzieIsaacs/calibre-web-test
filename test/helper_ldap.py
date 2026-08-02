@@ -273,7 +273,7 @@ member: uid=user13,ou=People,dc=calibreweb,dc=com
 
 """
 
-config5 = rb"""\
+config5 = b"""\
 dn: dc=com
 dc: com
 objectClass: dcObject
@@ -309,13 +309,13 @@ gn: John1
 sn: Doe1
 userPassword: terces
 
-dn: cn=Doe\, Johnny,ou=people,dc=calibreweb,dc=com
+dn: cn=Doe\\, Johnny,ou=people,dc=calibreweb,dc=com
 objectClass: person
 objectClass: organizationalPerson
 objectClass: inetOrgPerson
 mail: no_user@thata.org
 sAMAccountName: user99
-cn: Doe\, Johnny
+cn: Doe\\, Johnny
 gn: Johnny
 sn: Doe
 userPassword: schnuffel
@@ -330,7 +330,7 @@ dn: cn=cps,ou=groups,dc=calibreweb,dc=com
 objectclass: groupofnames
 cn: cps
 member: cn=John1 Doe1,ou=People,dc=calibreb,dc=com
-member: cn=Doe\, Johnny,ou=People,dc=calibreb,dc=com
+member: cn=Doe\\, Johnny,ou=People,dc=calibreb,dc=com
 
 """
 

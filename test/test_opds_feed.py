@@ -14,8 +14,6 @@ from helper_func import startup, wait_for_reboot
 
 class TestOPDSFeed(ParallelTestCase):
 
-
-
     @classmethod
     def setUpClass(cls):
         super().setUpClass()

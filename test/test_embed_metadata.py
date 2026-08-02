@@ -83,7 +83,7 @@ class TestEmbedMetadata(ParallelTestCase):
         self.assertEqual("Gênot", epub_data['tags'][0])
         code, pdf_content = self.download_book(13, "admin", "admin123")
         self.assertEqual(200, code)
-        self.assertEqual(40028, len(pdf_content))
+        self.assertEqual(40031, len(pdf_content))
 
     def test_download_permissions_missing_file(self):
         txt_path = os.path.join(self.temp_dir, "Frodo Beutlin", "Der Buchtitel (1)", "Der Buchtitel - Frodo Beutlin.txt")

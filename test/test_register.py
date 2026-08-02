@@ -8,6 +8,8 @@ import requests
 from selenium.webdriver.support.ui import WebDriverWait
 from selenium.webdriver.support import expected_conditions as EC
 from selenium.webdriver.common.by import By
+
+from config_test import BOOT_TIME
 from helper_func import startup, wait_Email_received
 from helper_email_convert import AIOSMTPServer
 import datetime
@@ -36,7 +38,7 @@ class TestRegister(ParallelTestCase):
                     app_dir=cls.app_dir,
                     env={"APP_MODE": "test", "CALIBRE_PORT": cls.worker_port},
                     lib_dest=cls.temp_dir)
-            WebDriverWait(cls.driver, 5).until(EC.presence_of_element_located((By.ID, "flash_success")))
+            WebDriverWait(cls.driver, BOOT_TIME).until(EC.presence_of_element_located((By.ID, "flash_success")))
             cls.edit_user('admin', {'email': 'a5@b.com','kindle_mail': 'a1@b.com'})
             cls.setup_server(False, {'mail_server':'127.0.0.1', 'mail_port':cls.port,
                                 'mail_use_ssl':'None','mail_login':'name@host.com','mail_password_e':'10234',

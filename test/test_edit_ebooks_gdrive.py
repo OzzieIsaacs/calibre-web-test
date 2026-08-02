@@ -898,7 +898,7 @@ class TestEditBooksOnGdrive(ParallelTestCase):
         fs.upload(os.path.join('test', 'metadata.db').replace('\\', '/'), metadata)
         metadata.close()
         loop = 0
-        while loop < 3:
+        while loop < 6:
             loop += 1
             # wait a bit
             time.sleep(5)

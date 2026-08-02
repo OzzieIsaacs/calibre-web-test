@@ -16,7 +16,6 @@ from io import BytesIO
 
 class TestCoverEditBooks(ParallelTestCase):
 
-
     proxy = None
 
     @classmethod

@@ -13,6 +13,7 @@ import uuid
 from datetime import datetime, timedelta
 import os
 import traceback
+from config_test import base_path
 
 class ResponseType:
     def __init__(self):
@@ -226,9 +227,8 @@ def cover(type) -> str:
             time.sleep(612)
             return ''
         else:
-            # version='{}.{}.{}'.format(*val.get_Version()[0])
             result = None
-            cover_path = os.path.join(os.getcwd(), "test", "files")
+            cover_path = os.path.join(base_path, 'files')
             if type == 'test.jpg':
                 result = send_from_directory(cover_path, 'cover.jpg',
                                              as_attachment=True,

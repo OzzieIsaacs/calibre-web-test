@@ -4,12 +4,11 @@ from unittest import skipIf
 from base_test import ParallelTestCase
 import time
 import os
-import shutil
 
-from config_test import base_path
+from config_test import base_path, BOOT_TIME
 from helper_func import startup, change_epub_meta
 from config_test import WAIT_GDRIVE
-from helper_gdrive import prepare_gdrive, connect_gdrive
+from helper_gdrive import connect_gdrive
 from selenium.webdriver.common.by import By
 
 

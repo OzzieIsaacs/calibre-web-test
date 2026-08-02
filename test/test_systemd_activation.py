@@ -68,7 +68,7 @@ class TestSystemdActivation(ParallelTestCase):
 
     # The network-online.service waits for the network to be up
     def test_systemd_activation(self):
-        # The test works on the original location of calibre-web and not one one of the venvs!
+        # The test works on the original location of calibre-web and not one of the venvs!
         if os.path.exists(os.path.join(CALIBRE_WEB_PATH, "calibre-web.log")):
             os.unlink(os.path.join(CALIBRE_WEB_PATH, "calibre-web.log"))
 
@@ -99,6 +99,4 @@ class TestSystemdActivation(ParallelTestCase):
         self.assertTrue(self.check_element_on_page((By.NAME, "query")))
         self.stop_calibre_web()
         # service has a timeout and will stop on it's own after approx 90sec
-        self.driver.close()
         time.sleep(100)
-        self.driver.quit()
