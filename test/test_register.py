@@ -51,8 +51,6 @@ class TestRegister(ParallelTestCase):
     def tearDownClass(cls):
         cls.email_server.stop()
         release_resource("port", cls.port)
-        cls.driver.get("http://127.0.0.1:" + cls.worker_port)
-        cls.login('admin', 'admin123')
         super().tearDownClass()
 
     def tearDown(self):

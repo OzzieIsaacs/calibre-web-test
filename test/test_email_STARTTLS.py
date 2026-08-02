@@ -20,7 +20,6 @@ from helper_func import startup, wait_Email_received
 @unittest.skipIf(helper_email_convert.is_calibre_not_present(),"Skipping convert, calibre not found")
 class TestSTARTTLS(ParallelTestCase):
 
-
     email_server = None
 
     @classmethod
@@ -78,7 +77,6 @@ class TestSTARTTLS(ParallelTestCase):
         self.assertTrue(self.check_element_on_page((By.ID, "flash_success")))
         task_len, ret = self.wait_tasks(tasks, 1)
         self.assertEqual(ret[-1]['result'], 'Finished')
-
 
     # check behavior for failed server setup (SSL)
     def test_STARTTLS_SSL_setup_error(self):

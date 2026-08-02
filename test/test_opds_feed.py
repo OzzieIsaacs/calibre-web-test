@@ -26,15 +26,6 @@ class TestOPDSFeed(ParallelTestCase):
                 env={"APP_MODE": "test", "CALIBRE_PORT": cls.worker_port},
                 lib_dest=cls.temp_dir)
 
-    @classmethod
-    def tearDownClass(cls):
-        cls.driver.get("http://127.0.0.1:" + cls.worker_port)
-        try:
-            cls.login('admin', 'admin123')
-        except Exception:
-            pass
-        super().tearDownClass()
-
     def tearDown(self):
         super().tearDown()
         try:

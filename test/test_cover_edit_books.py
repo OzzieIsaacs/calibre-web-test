@@ -47,11 +47,6 @@ class TestCoverEditBooks(ParallelTestCase):
 
     @classmethod
     def tearDownClass(cls):
-        '''cls.driver.get("http://127.0.0.1:" + cls.worker_port)
-        cls.stop_calibre_web()
-        cls.driver.quit()
-        cls.proxy.stop_proxy()
-        cls.p.terminate()'''
         release_resource("port", cls.port)
         super().tearDownClass()
 

@@ -6,7 +6,7 @@ from diffimg import diff
 from io import BytesIO
 
 from selenium.webdriver.common.by import By
-from helper_func import startup, add_dependency, remove_dependency
+from helper_func import startup
 
 
 class TestLoadMetadataScholar(ParallelTestCase):

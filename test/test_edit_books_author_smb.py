@@ -3,6 +3,7 @@
 from base_test import ParallelTestCase
 import time
 import os
+import shutil
 
 from helper_db import change_tag
 from config_test import SMB_LIB, base_path
@@ -11,8 +12,6 @@ from selenium.webdriver.common.by import By
 
 
 class TestEditAuthorsSmb(ParallelTestCase):
-
-
 
     @classmethod
     def setUpClass(cls):
@@ -27,15 +26,6 @@ class TestEditAuthorsSmb(ParallelTestCase):
         except Exception as e:
             cls.driver.quit()
             cls.p.kill()
-
-    '''@classmethod
-    def tearDownClass(cls):
-        cls.driver.get("http://127.0.0.1:" + cls.worker_port)
-        cls.stop_calibre_web()
-        # close the browser window and stop calibre-web
-        cls.driver.quit()
-        cls.p.terminate()
-        super().tearDownClass()'''
 
     # One book of the author present
     def test_change_capital_one_author_one_book(self):
@@ -246,6 +236,10 @@ class TestEditAuthorsSmb(ParallelTestCase):
                                                     'book9 - Hector Goncalves.pdf')))
         self.assertTrue(os.path.isfile(os.path.join(SMB_LIB, 'Hector Goncalves/book9 (11)',
                                                     'cover.jpg')))
+        # Remove leftover nested folder from previous failed rename attempts.
+        nested_hector_folder = os.path.join(SMB_LIB, 'hector Gonçalves', 'Hector Goncalves')
+        if os.path.isdir(nested_hector_folder):
+            shutil.rmtree(nested_hector_folder)
         # Author folder is not found due to utf characters not represented in filename
         self.edit_book(1, content={'authors': "Frodo Beutlin & Norbert Halagal & Liu Yang & hector Gonçalves"})
         self.assertFalse(self.check_element_on_page((By.ID, "flash_danger")))

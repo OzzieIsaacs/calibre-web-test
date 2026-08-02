@@ -9,7 +9,7 @@ import shutil
 import requests
 
 from selenium.webdriver.common.by import By
-from config_test import base_path
+from config_test import base_path, BOOT_TIME
 from helper_func import startup, get_Host_IP, wait_for_reboot
 from helper_ldap import TestLDAPServer
 
@@ -44,14 +44,8 @@ class TestLdapLogin(ParallelTestCase):
 
     @classmethod
     def tearDownClass(cls):
-        try:
-            cls.driver.get(f"http://127.0.0.1:cls.worker_port")
-            if not cls.check_user_logged_in('admin'):
-                cls.login('admin','admin123')
-            cls.stop_calibre_web()
-        except Exception:
-            pass
         cls.server.stop_LdapServer()
+        release_resource("port", cls.port)
         shutil.rmtree(os.path.join(cls.app_dir, 'files'), ignore_errors=True)
         super().tearDownClass()
 
@@ -61,7 +55,6 @@ class TestLdapLogin(ParallelTestCase):
             cls.server.stopListen()
         except Exception as e:
             print(e)
-        release_resource("port", cls.port)
         if not cls.check_user_logged_in('admin'):
             try:
                 cls.driver.get("http://127.0.0.1:{}".format(cls.worker_port))
@@ -99,8 +92,6 @@ class TestLdapLogin(ParallelTestCase):
         except Exception as e:
             print(e)
         session.close()
-
-
 
     def test_invalid_LDAP(self):
         # set to default
@@ -548,7 +539,7 @@ class TestLdapLogin(ParallelTestCase):
                                 'config_ldap_encryption': 'SSL'
                                 })
         wait_for_reboot("127.0.0.1:" + self.worker_port)
-        self.assertTrue(self.check_element_on_page((By.ID, "flash_success")))
+        self.assertTrue(self.check_element_on_page((By.ID, "flash_success"), timeout=BOOT_TIME))
         # create new user
         # give user password different form ldap
         self.create_user('user0',{'email':'user0@exi.com','password':'1235AbC*!'})

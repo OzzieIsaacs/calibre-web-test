@@ -135,6 +135,7 @@ class TestEbookConvertCalibreGDrive(ParallelTestCase):
     def test_convert_email(self):
         self.setup_server(True, {'mail_password_e': '10234', 'mail_use_ssl': 'None'})
         time.sleep(2)
+        self.assertTrue(self.check_element_on_page((By.ID, "flash_info")))
         tasks = self.check_tasks()
         vals = self.get_convert_book(1)
         select = Select(vals['btn_from'])
@@ -190,6 +191,7 @@ class TestEbookConvertCalibreGDrive(ParallelTestCase):
         fout.close()
         self.setup_server(True, {'mail_password_e': '10234'})
         time.sleep(3)
+        self.assertTrue(self.check_element_on_page((By.ID, "flash_info")))
         task_len, tasks = self.wait_tasks(ret, 1)
         details = self.get_book_details(1)
         self.assertEqual(len(details['kindle']), 1)
@@ -197,6 +199,7 @@ class TestEbookConvertCalibreGDrive(ParallelTestCase):
         task_len, ret = self.wait_tasks(tasks, 1)
         self.assertEqual(ret[-1]['result'], 'Failed')
         self.setup_server(True, {'mail_password_e': '1234'})
+        self.assertTrue(self.check_element_on_page((By.ID, "flash_info")))
         fs.remove(orig_file)
         fs.move(moved_file, orig_file, overwrite=True)
         fs.close()
@@ -319,6 +322,7 @@ class TestEbookConvertCalibreGDrive(ParallelTestCase):
     # check filename
     def test_email_only(self):
         self.setup_server(True, {'mail_use_ssl': 'None', 'mail_password_e': '10234'})
+        self.assertTrue(self.check_element_on_page((By.ID, "flash_info")))
         time.sleep(5)
         tasks = self.check_tasks()
         details = self.get_book_details(10)
@@ -331,12 +335,14 @@ class TestEbookConvertCalibreGDrive(ParallelTestCase):
         self.assertEqual(ret[-1]['result'], 'Finished')
         self.assertGreaterEqual(self.email_server.handler.message_size, 5995)
         self.setup_server(False, {'mail_password_e':'1234'})
+        self.assertTrue(self.check_element_on_page((By.ID, "flash_success")))
 
 
     # check behavior for failed email (size)
     # conversion okay, email failed
     def test_email_failed(self):
         self.setup_server(False, {'mail_password_e': '10234'})
+        self.assertTrue(self.check_element_on_page((By.ID, "flash_success")))
         tasks = self.check_tasks()
         details = self.get_book_details(5)
         self.email_server.handler.set_return_value(552)
@@ -347,6 +353,7 @@ class TestEbookConvertCalibreGDrive(ParallelTestCase):
         self.assertEqual(ret[-1]['result'], 'Failed')
         self.email_server.handler.set_return_value(0)
         self.setup_server(False, {'mail_password_e':'1234'})
+        self.assertTrue(self.check_element_on_page((By.ID, "flash_success")))
 
     # @unittest.expectedFailure
     def test_thumbnail_cache(self):

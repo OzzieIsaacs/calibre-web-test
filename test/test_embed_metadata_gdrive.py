@@ -8,10 +8,8 @@ import zipfile
 
 from selenium.webdriver.common.by import By
 from selenium.webdriver.support.ui import Select
-from config_test import base_path
 from helper_func import startup, read_metadata_epub, read_opf_metadata
-from helper_func import add_dependency, remove_dependency
-from helper_gdrive import prepare_gdrive, connect_gdrive
+from helper_gdrive import connect_gdrive
 from helper_email_convert import calibre_path, kepubify_path
 
 
@@ -134,7 +132,7 @@ class TestEmbedMetadataGdrive(ParallelTestCase):
         select.select_by_visible_text('KEPUB')
         self.check_element_on_page((By.ID, "btn-book-convert")).click()
         self.assertTrue(self.check_element_on_page((By.ID, "flash_success")))
-        self.wait_tasks(tasks, 1)
+        self.wait_tasks(tasks, 1, task_text=["Convert", "KEPUB"])
         #i = 0
         #while i < 20:
         #    time.sleep(2)
@@ -168,7 +166,7 @@ class TestEmbedMetadataGdrive(ParallelTestCase):
         select.select_by_visible_text('KEPUB')
         self.check_element_on_page((By.ID, "btn-book-convert")).click()
         self.assertTrue(self.check_element_on_page((By.ID, "flash_success")))
-        self.wait_tasks(tasks, 1)
+        self.wait_tasks(tasks, 1, task_text=["Convert", "KEPUB"])
         #i = 0
         #while i < 20:
         #    time.sleep(2)

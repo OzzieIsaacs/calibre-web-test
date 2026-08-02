@@ -17,11 +17,9 @@ from selenium.webdriver.common.by import By
                  not os.path.exists(os.path.join(base_path, "files", "gdrive_credentials")),
                  "client_secrets.json and/or gdrive_credentials file is missing")
 class TestEditAuthorsGdrive(ParallelTestCase):
+
     resource_lock = "gdrive"
-
-
     dependency = ["oauth2client", "PyDrive2", "PyYAML", "google-api-python-client", "httplib2"]
-
 
     @classmethod
     def setUpClass(cls):
@@ -47,19 +45,6 @@ class TestEditAuthorsGdrive(ParallelTestCase):
                 cls.p.kill()
             except Exception:
                 pass
-
-    '''@classmethod
-    def tearDownClass(cls):
-        try:
-            cls.driver.get("http://127.0.0.1:" + cls.worker_port)
-            cls.stop_calibre_web()
-            # close the browser window and stop calibre-web
-            cls.driver.quit()
-            cls.p.terminate()
-        except Exception as e:
-            print(e)
-        finally:
-            super().tearDownClass()'''
 
     # One book of the author present
     def test_change_capital_one_author_one_book(self):
@@ -498,8 +483,7 @@ class TestEditAuthorsGdrive(ParallelTestCase):
     def test_rename_capital_on_upload(self):
         fs = connect_gdrive("test")
         self.fill_basic_config({'config_uploading': 1})
-        time.sleep(3)
-        self.assertTrue(self.check_element_on_page((By.ID, "flash_success")))
+        self.assertTrue(self.check_element_on_page((By.ID, "flash_success"), timeout=BOOT_TIME))
         # Upload book with one author in database
         epub_file = os.path.join(base_path, 'files', 'title.epub')
         change_epub_meta(epub_file, meta={'title': "Useless", 'creator': "asterix Lionherd"})

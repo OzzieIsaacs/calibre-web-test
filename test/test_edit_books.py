@@ -610,14 +610,15 @@ class TestEditBooks(ParallelTestCase):
         self.assertEqual(len(self.search(u'人 Ü')), 1)
         self.get_book_details(5)
         self.check_element_on_page((By.ID, "edit_book")).click()
-        self.edit_book(custom_content={r'Custom categories\|, 人物': ''})
-        vals = self.get_book_details(5)
-        self.assertEqual(0, len(vals['cust_columns']))
-        self.check_element_on_page((By.ID, "edit_book")).click()
         self.edit_book(custom_content={r'Custom categories\|, 人物': u'Gênot, gênot'})
         vals = self.get_book_details(5)
         self.assertEqual(1, len(vals['cust_columns']))
         self.assertEqual(u'Gênot', vals['cust_columns'][0]['value'])
+        self.get_book_details(5)
+        self.check_element_on_page((By.ID, "edit_book")).click()
+        self.edit_book(custom_content={r'Custom categories\|, 人物': ''})
+        vals = self.get_book_details(5)
+        self.assertEqual(0, len(vals['cust_columns']))
 
     # change comments, add comments, delete comments
     def test_edit_custom_float(self):

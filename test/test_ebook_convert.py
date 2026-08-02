@@ -63,15 +63,6 @@ class TestEbookConvertCalibre(ParallelTestCase):
         cls.email_server.stop()
         release_resource("port", cls.port)
         super().tearDownClass()
-        '''cls.driver.get("http://127.0.0.1:" + cls.worker_port)        
-        try:
-            cls.stop_calibre_web()
-            # close the browser window and stop calibre-web
-        except:
-            pass
-        cls.driver.quit()
-        cls.p.terminate()
-        time.sleep(2)'''
 
     def tearDown(self):
         super().tearDown()

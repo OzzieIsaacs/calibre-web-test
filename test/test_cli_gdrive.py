@@ -19,9 +19,8 @@ import subprocess
                  not os.path.exists(os.path.join(base_path, "files", "gdrive_credentials")),
                  "client_secrets.json and/or gdrive_credentials file is missing")
 class TestCliGdrivedb(ParallelTestCase):
+
     resource_lock = "gdrive"
-
-
     dependency = ["oauth2client", "PyDrive2", "PyYAML", "google-api-python-client", "httplib2"]
 
     @classmethod
@@ -38,7 +37,6 @@ class TestCliGdrivedb(ParallelTestCase):
                 pass
 
             cls.driver = webdriver.Firefox()
-            # cls.driver.implicitly_wait(10)
             cls.driver.maximize_window()
 
         except Exception as e:
@@ -47,20 +45,6 @@ class TestCliGdrivedb(ParallelTestCase):
                 cls.driver.quit()
             except Exception:
                 pass
-
-    '''@classmethod
-    def tearDownClass(cls):
-        os.chdir(base_path)
-        try:
-            cls.driver.get("http://127.0.0.1:" + cls.worker_port)
-            cls.stop_calibre_web()
-            # close the browser window and stop calibre-web
-            cls.driver.quit()
-            cls.p.terminate()
-        except Exception as e:
-            pass
-        finally:
-            super().tearDownClass()'''
 
     def tearDown(self):
         super().tearDown()

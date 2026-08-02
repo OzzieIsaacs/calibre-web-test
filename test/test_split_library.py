@@ -15,6 +15,7 @@ class TestSplitLibrary(ParallelTestCase):
 
     @classmethod
     def setUpClass(cls):
+        super().setUpClass()
         try:
             startup(cls,
                     cls.py_version,

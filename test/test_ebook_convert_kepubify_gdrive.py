@@ -4,20 +4,18 @@ import unittest
 from base_test import ParallelTestCase
 import os
 import time
-import shutil
+import stat
 
-import helper_email_convert
 from selenium.webdriver.common.by import By
 from selenium.webdriver.support.ui import Select
 from config_test import base_path, WAIT_GDRIVE
 from helper_func import startup
-from helper_gdrive import prepare_gdrive
-import datetime
+from helper_email_convert import kepubify_path, is_kepubify_not_present
 
 @unittest.skipIf(not os.path.exists(os.path.join(base_path, "files", "client_secrets.json")) or
                  not os.path.exists(os.path.join(base_path, "files", "gdrive_credentials")),
                  "client_secrets.json and/or gdrive_credentials file is missing")
-@unittest.skipIf(helper_email_convert.is_kepubify_not_present(), "Skipping convert, kepubify not found")
+@unittest.skipIf(is_kepubify_not_present(), "Skipping convert, kepubify not found")
 class TestEbookConvertGDriveKepubify(ParallelTestCase):
     resource_lock = "gdrive"
 
@@ -31,7 +29,7 @@ class TestEbookConvertGDriveKepubify(ParallelTestCase):
         try:
             startup(cls, cls.py_version, {'config_calibre_dir':cls.temp_dir,
                                           'config_binariesdir':'',
-                                          'config_kepubifypath':helper_email_convert.kepubify_path()},
+                                          'config_kepubifypath':kepubify_path()},
                     port=cls.worker_port,
                     app_dir=cls.app_dir,
                     env={"APP_MODE": "test", "CALIBRE_PORT": cls.worker_port},
@@ -44,19 +42,6 @@ class TestEbookConvertGDriveKepubify(ParallelTestCase):
         except Exception:
             cls.driver.quit()
             cls.p.kill()
-
-    '''@classmethod
-    def tearDownClass(cls):
-        try:
-            # close the browser window and stop calibre-web
-            cls.driver.get("http://127.0.0.1:" + cls.worker_port)
-            cls.stop_calibre_web()
-            cls.driver.quit()
-            cls.p.terminate()
-        except Exception as e:
-            print(e)
-        finally:
-            super().tearDownClass()'''
 
     def tearDown(self):
         super().tearDown()
@@ -76,13 +61,14 @@ class TestEbookConvertGDriveKepubify(ParallelTestCase):
         vals = self.get_convert_book(1)
         self.assertFalse(vals['btn_from'])
         self.assertFalse(vals['btn_to'])
-        self.fill_basic_config({'config_kepubifypath':helper_email_convert.kepubify_path()})
+        self.fill_basic_config({'config_kepubifypath':kepubify_path()})
 
     # Set excecutable to wrong exe and start convert
     # set excecutable not existing and start convert
     # set excecutable non excecutable and start convert
     def test_convert_wrong_excecutable(self):
         self.fill_basic_config({'config_kepubifypath':'/opt/kepubify/ebook-polish'})
+        self.assertTrue(self.check_element_on_page((By.ID, "flash_danger")))
         self.goto_page('nav_about')
         element = self.check_element_on_page((By.XPATH, "//tr/th[text()='Kepubify']/following::td[1]"))
         self.assertEqual(element.text, 'not installed')
@@ -91,16 +77,21 @@ class TestEbookConvertGDriveKepubify(ParallelTestCase):
         details = self.get_book_details(5)
         self.assertEqual(len(details['kindle']), 1)
         vals = self.get_convert_book(5)
-        # ToDo: change behavior convert should only be visible if ebookconverter has valid entry
         self.assertTrue(vals['btn_from'])
         self.assertTrue(vals['btn_to'])
 
-        nonexec = os.path.join(self.app_dir, 'app.db')
-        self.fill_basic_config({'config_kepubifypath': nonexec})
-        self.goto_page('nav_about')
-        element = self.check_element_on_page((By.XPATH, "//tr/th[text()='Kepubify']/following::td[1]"))
-        self.assertEqual(element.text, 'Execution permissions missing')
-        self.fill_basic_config({'config_kepubifypath': helper_email_convert.calibre_path()})
+        kepubify = kepubify_path()
+        original_mode = os.stat(kepubify).st_mode
+        try:
+            os.chmod(kepubify, original_mode & ~stat.S_IXUSR & ~stat.S_IXGRP & ~stat.S_IXOTH)
+            self.fill_basic_config({'config_kepubifypath': os.path.dirname(kepubify)})
+            self.assertTrue(self.check_element_on_page((By.ID, "flash_danger")))
+            self.goto_page('nav_about')
+            element = self.check_element_on_page((By.XPATH, "//tr/th[text()='Kepubify']/following::td[1]"))
+            self.assertEqual(element.text, 'not installed')
+        finally:
+            os.chmod(kepubify, original_mode)
+        self.fill_basic_config({'config_kepubifypath': os.path.dirname(kepubify)})
 
     # convert epub to kepub
     # try start conversion of mobi -> not visible

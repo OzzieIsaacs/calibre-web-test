@@ -17,7 +17,6 @@ from helper_func import startup, check_response_language_header, curl_available,
 
 class TestLogin(ParallelTestCase):
 
-
     @classmethod
     def setUpClass(cls):
         super().setUpClass()
@@ -33,8 +32,6 @@ class TestLogin(ParallelTestCase):
 
     @classmethod
     def tearDownClass(cls):
-        cls.driver.get("http://127.0.0.1:" + cls.worker_port + "/login")
-        cls.login('admin', 'admin123')
         try:
             os.unlink(os.path.join(cls.app_dir, 'cps', 'static', 'robots.txt'))
         except:

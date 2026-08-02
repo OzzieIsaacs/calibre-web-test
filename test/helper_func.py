@@ -85,6 +85,7 @@ except ImportError:
 
 DEFAULT_EPUB = os.path.join(base_path, "files", "book.epub")
 
+
 def is_port_in_use(port):
     s = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
     try:
@@ -185,9 +186,14 @@ def startup(inst, pyVersion, config, login=True, host="http://127.0.0.1", port="
         except FileExistsError:
             print('Metadata.db already present, might not be a clean version')
     command = [pyVersion, os.path.join(app_dir, u'cps.py')]
+    my_env = os.environ.copy()
+    ca_cert = os.path.join(base_path, "files", "ca.cert.pem")
+    if os.path.isfile(ca_cert):
+        my_env.setdefault("SSL_CERT_FILE", ca_cert)
     if env:
-        my_env = os.environ.copy()
         env = {**my_env, **env}
+    else:
+        env = my_env
     if parameter:
         command.extend(parameter)
     inst.p = process_open(command, [1], sout=None, env=env, cwd=work_path)
@@ -282,14 +288,21 @@ def digest_login(url, expected_response):
     return True
 
 
-def add_hidden_dependency(names, test_classname, index=""):
+def add_hidden_dependency(py_version, names, testclass_name, index="", worker=-1):
+    now = datetime.datetime.now().strftime("%H:%M:%S")
+    if worker > -1:
+        print(f"[Worker {worker}] {now} - {testclass_name} adding dependencies")
+    else:
+        print(f"[SYSTEM]  {now} - {testclass_name} adding dependencies")
     for name in names:
-        python_exe = os.path.join(CALIBRE_WEB_PATH, 'venv', VENV_PYTHON)
-        with process_open([python_exe, "-m", "pip", "install", name], (0, 4)) as r:
-            while r.poll() is None:
-                r.stdout.readline().strip("\n")
-            environment.add_environment(test_classname, name)
-
+        with process_open([py_version, "-m", "pip", "install", name], (0, 4)) as r:
+            try:
+                r.communicate(timeout=600)
+                r.wait(2)
+            except subprocess.TimeoutExpired:
+                r.kill()
+            r.communicate()
+        environment.add_environment(testclass_name, name)
 
 def add_dependency(py_version, name, testclass_name, worker=-1):
     now = datetime.datetime.now().strftime("%H:%M:%S")

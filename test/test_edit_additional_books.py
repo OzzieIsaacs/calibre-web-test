@@ -12,7 +12,7 @@ from io import BytesIO
 
 from selenium.webdriver.common.by import By
 from selenium.common.exceptions import UnexpectedAlertPresentException
-from config_test import base_path
+from config_test import base_path, BOOT_TIME
 from helper_func import startup, unrar_path, is_unrar_not_present, createcbz, wait_for_reboot
 from helper_func import change_comic_meta
 
@@ -182,12 +182,10 @@ class TestEditAdditionalBooks(ParallelTestCase):
         self.fill_basic_config({'config_uploading': 0})
         time.sleep(3)
         self.assertTrue(self.check_element_on_page((By.ID, "flash_success")))
-        
 
     def test_upload_metadata_cbt(self):
         self.fill_basic_config({'config_uploading': 1})
-        time.sleep(3)
-        self.assertTrue(self.check_element_on_page((By.ID, "flash_success")))
+        self.assertTrue(self.check_element_on_page((By.ID, "flash_success"), timeout=BOOT_TIME))
         self.goto_page('nav_new')
         upload_file = os.path.join(base_path, 'files', 'book.cbt')
         upload = self.check_element_on_page((By.ID, 'btn-upload'))

@@ -11,7 +11,7 @@ from PIL import Image
 
 from selenium.webdriver.support.ui import Select
 import helper_email_convert
-from config_test import base_path
+from config_test import base_path, BOOT_TIME
 from helper_func import startup, wait_for_reboot
 from selenium.webdriver.common.by import By
 from helper_func import createcbz
@@ -145,8 +145,8 @@ class TestReader(ParallelTestCase):
         self.driver.close()
         self.driver.switch_to.window(self.current_handle)
         self.fill_basic_config({'config_anonbrowse': 1})
-        time.sleep(3)
-        self.assertTrue(self.check_element_on_page((By.ID, "flash_success")))
+        wait_for_reboot(f"http://127.0.0.1:{self.worker_port}")
+        self.assertTrue(self.check_element_on_page((By.ID, "flash_success"), timeout=BOOT_TIME))
         self.edit_user('Guest', {'viewer_role': 1})
         self.logout()
         self.get_book_details(13)

@@ -262,13 +262,15 @@ class TestKoboSyncBig(ParallelTestCase):
     def test_kobo_sync_selected_shelves(self):
         self.inital_sync()
         self.change_visibility_me({"kobo_only_shelves_sync": 1})
+        self.assertTrue(self.check_element_on_page((By.ID, "kobo_only_shelves_sync")).is_selected())
         time.sleep(40)
-        self.assertTrue(self.check_element_on_page((By.ID, "flash_success")))
         # create private Shelf without sync, add book to it
         self.create_shelf("Unsyncd_shelf", sync=0)
         self.assertTrue(self.check_element_on_page((By.ID, "flash_success")))
         self.get_book_details(5)
-        self.check_element_on_page((By.ID, "add-to-shelf")).click()
+        add_to_shelf = self.check_element_on_page((By.ID, "add-to-shelf"), timeout=10)
+        self.assertTrue(add_to_shelf)
+        add_to_shelf.click()
         self.check_element_on_page((By.XPATH, "//ul[@id='add-to-shelves']/li/a[contains(.,'Unsyncd_shelf')]")).click()
         data = self.sync_kobo()
         self.assertEqual(0, len(data[0]))
@@ -437,8 +439,8 @@ class TestKoboSyncBig(ParallelTestCase):
         self.check_element_on_page((By.ID, "add-to-shelf")).click()
         self.check_element_on_page((By.XPATH, "//ul[@id='add-to-shelves']/li/a[contains(.,'syncShelf2')]")).click()
         self.change_visibility_me({"kobo_only_shelves_sync": 1})
+        self.assertTrue(self.check_element_on_page((By.ID, "kobo_only_shelves_sync")).is_selected())
         time.sleep(40)   # ToDo: Revert to 40
-        self.assertTrue(self.check_element_on_page((By.ID, "flash_success")))
         self.change_shelf('syncShelf2', sync=1)
         self.logout()
         # sync books for both user -> only changed for user2
@@ -495,4 +497,3 @@ class TestKoboSyncBig(ParallelTestCase):
         self.assertLess(len(r.content), 8000)
         new_session.close()
         shutil.rmtree(thumbnail_cache_path, ignore_errors=True)
-

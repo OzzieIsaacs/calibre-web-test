@@ -10,7 +10,7 @@ import re
 from selenium import webdriver
 from selenium.webdriver.common.by import By
 from helper_func import kill_dead_cps, wait_for_reboot
-from config_test import base_path
+from config_test import base_path, CALIBRE_WEB_PATH
 
 
 @unittest.skipIf(os.name=="nt", "Sockets are not available on Windows")
@@ -21,13 +21,11 @@ class TestSystemdActivation(ParallelTestCase):
         super().setUpClass()
         cls.driver = webdriver.Firefox()
         cls.driver.maximize_window()
+        # Activation file has hardcoded folder for original location of calibre-web, so it has to work with the original and not with one of the copies
         shutil.rmtree(cls.temp_dir, ignore_errors=True)
         shutil.copytree(os.path.join(os.path.dirname(os.path.abspath(__file__)), 'Calibre_db'), cls.temp_dir)
-
-    def setUp(self):
-        os.chdir(base_path)
         try:
-            os.remove(os.path.join(self.app_dir, 'app.db'))
+            os.remove(os.path.join(CALIBRE_WEB_PATH, 'app.db'))
         except Exception:
             pass
 
@@ -37,7 +35,7 @@ class TestSystemdActivation(ParallelTestCase):
         os.chdir(base_path)
         kill_dead_cps(cls.worker_port)
         try:
-            os.remove(os.path.join(cls.app_dir, 'app.db'))
+            os.remove(os.path.join(CALIBRE_WEB_PATH, 'app.db'))
         except Exception:
             print("Can't delete app.db")
         super().tearDownClass(no=True)
@@ -70,9 +68,9 @@ class TestSystemdActivation(ParallelTestCase):
 
     # The network-online.service waits for the network to be up
     def test_systemd_activation(self):
-
-        if os.path.exists(os.path.join(self.app_dir, "calibre-web.log")):
-            os.unlink(os.path.join(self.app_dir, "calibre-web.log"))
+        # The test works on the original location of calibre-web and not one one of the venvs!
+        if os.path.exists(os.path.join(CALIBRE_WEB_PATH, "calibre-web.log")):
+            os.unlink(os.path.join(CALIBRE_WEB_PATH, "calibre-web.log"))
 
         try:
             # create a new Firefox session
@@ -88,7 +86,7 @@ class TestSystemdActivation(ParallelTestCase):
             # Wait for config screen with login button to show up
             self.assertTrue(self.check_element_on_page((By.NAME, "username")))
             time.sleep(2)
-            with open(os.path.join(self.app_dir, 'calibre-web.log'), 'r') as logfile:
+            with open(os.path.join(CALIBRE_WEB_PATH, 'calibre-web.log'), 'r') as logfile:
                 data = logfile.read()
             self.assertIsNotNone(re.findall('server on systemd-socket:[::]:5555', data),
                                  "Systemd startup not in logfile")
@@ -97,6 +95,7 @@ class TestSystemdActivation(ParallelTestCase):
         self.fill_db_config({'config_calibre_dir': self.temp_dir})
         wait_for_reboot(f"http://127.0.0.1:5555")
         self.assertTrue(self.check_element_on_page((By.ID, "flash_success")))
+        self.goto_page("nav_new")
         self.assertTrue(self.check_element_on_page((By.NAME, "query")))
         self.stop_calibre_web()
         # service has a timeout and will stop on it's own after approx 90sec

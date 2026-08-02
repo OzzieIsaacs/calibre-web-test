@@ -2,8 +2,59 @@ import socket
 import random
 from OpenSSL import crypto
 import os
+import datetime
 
 files_path = os.path.dirname(os.path.abspath(__file__))
+
+
+def _get_cert_path(filename):
+    return os.path.join(files_path, 'files', filename)
+
+
+def _certificate_is_valid(cert_path, min_validity_seconds=24 * 60 * 60):
+    if not os.path.isfile(cert_path):
+        return False
+    try:
+        with open(cert_path, 'rb') as cert_file:
+            cert = crypto.load_certificate(crypto.FILETYPE_PEM, cert_file.read())
+        not_after = cert.get_notAfter().decode("ascii")
+        expires = datetime.datetime.strptime(not_after, "%Y%m%d%H%M%SZ")
+    except (OSError, ValueError, crypto.Error):
+        return False
+    return (expires - datetime.datetime.utcnow()).total_seconds() > min_validity_seconds
+
+
+def _refresh_ca_certificate_if_needed():
+    cert_path = _get_cert_path('ca.cert.pem')
+    key_path = _get_cert_path('ca.cert.key')
+    if _certificate_is_valid(cert_path):
+        return
+    if not os.path.isfile(cert_path) or not os.path.isfile(key_path):
+        return
+    try:
+        with open(key_path, 'rb') as key_file:
+            key = crypto.load_privatekey(crypto.FILETYPE_PEM, key_file.read())
+        with open(cert_path, 'rb') as cert_file:
+            old_ca = crypto.load_certificate(crypto.FILETYPE_PEM, cert_file.read())
+        subject_cn = old_ca.get_subject().CN or socket.gethostname() + " CA"
+    except (OSError, crypto.Error):
+        return
+
+    ca = crypto.X509()
+    ca.set_version(2)
+    ca.set_serial_number(1)
+    ca.get_subject().CN = subject_cn
+    ca.gmtime_adj_notBefore(0)
+    ca.gmtime_adj_notAfter(5 * 365 * 24 * 60 * 60)
+    ca.set_issuer(ca.get_subject())
+    ca.set_pubkey(key)
+    ca.add_extensions([
+        crypto.X509Extension(b"basicConstraints", True, b"CA:TRUE"),
+        crypto.X509Extension(b"subjectKeyIdentifier", False, b"hash", subject=ca),
+    ])
+    ca.sign(key, "SHA256")
+    with open(cert_path, 'wb') as cert_file:
+        cert_file.write(crypto.dump_certificate(crypto.FILETYPE_PEM, ca))
 
 def _gen_cert_pkey():
     pkey = crypto.PKey()
@@ -116,6 +167,8 @@ def generate_ssl_testing_files():
             _generate_certificate_from_signing_request('client')
             os.unlink(os.path.join(files_path, 'files', 'server.csr'))
             os.unlink(os.path.join(files_path, 'files', 'client.csr'))
+            return
+    _refresh_ca_certificate_if_needed()
 
 
 # For emailtesting:

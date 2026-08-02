@@ -12,6 +12,12 @@ import shutil
 import json
 import virtualenv
 import io
+
+ROOT_DIR = os.path.dirname(os.path.abspath(__file__))
+TEST_DIR = os.path.join(ROOT_DIR, "test")
+sys.path.insert(0, ROOT_DIR)
+sys.path.insert(0, TEST_DIR)
+
 from test.subproc_wrapper import process_open
 from test.base_test import RESOURCE_DIR, RESOURCE_POOLS, REPORT_DIR
 from test.config_test import CALIBRE_WEB_PATH, VENV_PYTHON, TEST_BASE
@@ -23,9 +29,6 @@ from combine_results import combine_reports, OUTPUT_FILE, INPUT_DIR
 
 TEST_PACKAGE = "test"
 BASE_PORT = 8083
-
-ROOT_DIR = os.path.dirname(os.path.abspath(__file__))
-sys.path.insert(0, ROOT_DIR)
 
 
 # =========================================================
@@ -164,7 +167,7 @@ def main():
     # parser.add_argument("--nopoweroff", type=int, default=1)
     args = parser.parse_args()
 
-    power = input('Power off after finishing tests? [y/N]').lower() == 'y'
+    power = 1 # input('Power off after finishing tests? [y/N]').lower() == 'y'
     if power:
         print('!!!! PC will shutdown after tests finished !!!!')
     # check pip ist installed

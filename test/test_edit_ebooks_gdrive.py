@@ -11,7 +11,7 @@ from diffimg import diff
 from io import BytesIO
 
 from selenium.webdriver.common.by import By
-from config_test import base_path, WAIT_GDRIVE
+from config_test import base_path, WAIT_GDRIVE, BOOT_TIME
 from helper_func import startup, wait_for_reboot
 
 from helper_gdrive import prepare_gdrive, connect_gdrive, check_path_gdrive
@@ -234,7 +234,7 @@ class TestEditBooksOnGdrive(ParallelTestCase):
     # Test Capital letters and lowercase characters
     def test_edit_author(self):
         self.fill_basic_config({"config_unicode_filename": 1})
-        self.check_element_on_page((By.ID, 'flash_success'))
+        self.check_element_on_page((By.ID, "flash_success"), timeout=BOOT_TIME)
         fs = connect_gdrive("test")
         self.get_book_details(8)
         self.check_element_on_page((By.ID, "edit_book")).click()

@@ -280,6 +280,12 @@ class ParallelTestCase(unittest.TestCase, ui_class):
 
     @classmethod
     def doClassCleanups(cls):
+        if (cls._start is None or
+                not hasattr(cls, "worker_id") or
+                not hasattr(cls, "worker_port") or
+                not hasattr(cls, "py_resource")):
+            super().doClassCleanups()
+            return
         try:
             now = datetime.now().strftime("%H:%M:%S")
             print(f"[Worker {cls.worker_id}] {now} - {cls.__name__} saving logbooks")
@@ -298,6 +304,12 @@ class ParallelTestCase(unittest.TestCase, ui_class):
                 now = datetime.now().strftime("%H:%M:%S")
                 print(f"[Worker {cls.worker_id}] {now} - {cls.__name__} remove dependecies")
                 remove_dependency(cls.py_version, cls.dependency)
+
+            if hasattr(cls, "hidden_dependency"):
+                now = datetime.now().strftime("%H:%M:%S")
+                print(f"[Worker {cls.worker_id}] {now} - {cls.__name__} remove hidden dependecies")
+                remove_dependency(cls.py_version, cls.hidden_dependency)
+
 
             if hasattr(cls, "temp_dir"):
                 shutil.rmtree(cls.temp_dir, ignore_errors=True)
@@ -347,3 +359,5 @@ class ParallelTestCase(unittest.TestCase, ui_class):
 
         except Exception as e:
             print(e)
+        finally:
+            super().doClassCleanups()

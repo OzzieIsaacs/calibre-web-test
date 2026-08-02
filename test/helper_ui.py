@@ -1,5 +1,4 @@
 # -*- coding: utf-8 -*-
-import copy
 try:
     import requests
 except ImportError:
@@ -383,10 +382,25 @@ class ui_class():
 
     @classmethod
     def fill_basic_config(cls, elements=None):
+        if not cls.check_user_logged_in('admin'):
+            cls.login('admin', 'admin123')
+            time.sleep(1)
         if not cls.goto_page('basic_config'):
+            # On long-running suites the session can already be back on the login page.
+            if cls.check_element_on_page((By.ID, "username")):
+                cls.login('admin', 'admin123')
+                time.sleep(1)
+            if not cls.goto_page('basic_config'):
+                wait_for_reboot(f"http://127.0.0.1:{cls.worker_port}")
+                if not cls.goto_page('basic_config'):
+                    now = datetime.datetime.now().strftime("%H:%M:%S")
+                    print(f"[Worker {cls.worker_id}] {now} - {cls.__name__} basic_config page not reached")
+                    print("page not reached")
+                    return False
+        if not cls.check_element_on_page((By.ID, "config_port"), timeout=10):
             now = datetime.datetime.now().strftime("%H:%M:%S")
-            print(f"[Worker {cls.worker_id}] {now} - {cls.__name__} basic_config page not reached")
-            print("page not reached")
+            print(f"[Worker {cls.worker_id}] {now} - {cls.__name__} config_port not visible")
+            return False
         cls._fill_basic_config(elements)
 
     @classmethod
@@ -1663,16 +1677,47 @@ class ui_class():
         self.check_element_on_page((By.ID, "DialogFinished")).click()
         time.sleep(3)
 
-    def wait_tasks(self, tasks, expected):
+    def wait_tasks(self, tasks, expected, task_text=None):
+        required_task_text = []
+        if isinstance(task_text, str):
+            required_task_text = [task_text]
+        elif isinstance(task_text, (list, tuple)):
+            required_task_text = list(task_text)
+        old_identities = {self._task_identity(item) for item in tasks}
+        task_len = 0
+        matched_len = 0
         i = 0
         while i < (10 * expected):
             time.sleep(2)
             task_len, ret = self.check_tasks(tasks)
-            if task_len == expected:
-                if ret[-1]['result'] == 'Finished' or ret[-1]['result'] == 'Failed':
-                    return task_len, ret
+            if not ret:
+                i += 1
+                continue
+            if required_task_text:
+                new_tasks = [
+                    task for task in ret
+                    if self._task_identity(task) not in old_identities
+                ]
+                matched_tasks = [
+                    task for task in new_tasks
+                    if all(text in task['task'] for text in required_task_text)
+                ]
+                finished_matched = [
+                    task for task in matched_tasks
+                    if task['result'] == 'Finished' or task['result'] == 'Failed'
+                ]
+                matched_len = len(finished_matched)
+                if matched_len >= expected:
+                    return matched_len, ret
+            else:
+                if task_len == expected:
+                    if ret[-1]['result'] == 'Finished' or ret[-1]['result'] == 'Failed':
+                        return task_len, ret
             i += 1
-        self.assertEqual(expected, task_len)
+        if required_task_text:
+            self.assertGreaterEqual(matched_len, expected)
+        else:
+            self.assertEqual(expected, task_len)
 
     @classmethod
     def check_tasks(cls, ref=None):
@@ -1710,17 +1755,25 @@ class ui_class():
                 except IndexError:
                     pass
             if isinstance(ref, list):
-                # res = len([i for i in val if i in ref])
                 counter = 0
-                cp = copy.deepcopy(ref)
+                cp = [cls._task_identity(item) for item in ref]
                 for i in val:
-                    if i in cp:
-                        cp.pop(cp.index(i))
+                    identity = cls._task_identity(i)
+                    if identity in cp:
+                        cp.pop(cp.index(identity))
                         counter += 1
                 return (len(val) - counter), val
             return val
         else:
             return False
+
+    @staticmethod
+    def _task_identity(task):
+        return (
+            task.get('user'),
+            task.get('task'),
+            task.get('start'),
+        )
 
     @classmethod
     def select_date_with_editor(cls, element, delete_element, target_date):

@@ -7,6 +7,8 @@ import time
 import requests
 import re
 import lxml
+import datetime
+import stat
 from io import StringIO
 
 
@@ -15,8 +17,7 @@ from selenium.webdriver.support.ui import Select, WebDriverWait
 from selenium.webdriver.support import expected_conditions as EC
 from helper_email_convert import kepubify_path, is_kepubify_not_present
 from helper_func import startup
-import datetime
-import stat
+
 
 @unittest.skipIf(is_kepubify_not_present(), "Skipping convert, kepubify not found")
 class TestEbookConvertKepubify(ParallelTestCase):
@@ -78,7 +79,6 @@ class TestEbookConvertKepubify(ParallelTestCase):
         details = self.get_book_details(5)
         self.assertEqual(len(details['kindle']), 1)
         vals = self.get_convert_book(5)
-        # ToDo: change behavior convert should only be visible if ebookconverter has valid entry
         self.assertTrue(vals['btn_from'])
         self.assertTrue(vals['btn_to'])
 

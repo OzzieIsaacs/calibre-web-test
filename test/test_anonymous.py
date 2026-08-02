@@ -26,15 +26,6 @@ class TestAnonymous(ParallelTestCase):
         except Exception as e:
             print(e)
 
-    '''@classmethod
-    def tearDownClass(cls):
-        cls.driver.get("http://127.0.0.1:" + cls.worker_port)
-        cls.stop_calibre_web()
-        # close the browser window and stop calibre-web
-        cls.driver.quit()
-        cls.p.terminate()
-        super().tearDownClass()'''
-
     def tearDown(self):
         super().tearDown()
         if not self.check_user_logged_in('admin'):

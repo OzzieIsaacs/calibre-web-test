@@ -9,7 +9,6 @@ import os
 import re
 
 from selenium.webdriver.common.by import By
-from config_test import BOOT_TIME
 from helper_func import add_hidden_dependency, wait_for_reboot, startup
 import requests
 from selenium.webdriver.support.ui import WebDriverWait
@@ -19,14 +18,13 @@ from helper_redis import Redis as redis_server
 
 class TestSecurity(ParallelTestCase):
 
-
     hidden_dependencys = ["redis"]
 
     @classmethod
     def setUpClass(cls):
         super().setUpClass()
         cls.port = acquire_resource("port")
-        add_hidden_dependency(cls.hidden_dependencys, cls.__name__)
+        add_hidden_dependency(cls.py_version, cls.hidden_dependencys, cls.__name__, cls.worker_id)
         try:
             startup(cls, cls.py_version, {'config_calibre_dir':cls.temp_dir},
                     port=cls.worker_port,
@@ -315,4 +313,3 @@ class TestSecurity(ParallelTestCase):
         attak = r.head('http://127.0.0.1:{}/foo/bar'.format(self.worker_port, headers=header, timeout=5))
         print(attak.headers.get('location'))
         r.get('http://127.0.0.1:{}/foo/bar'.format(self.worker_port), headers=header, timeout=5)
-
