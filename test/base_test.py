@@ -22,7 +22,7 @@ STATE_FILE = os.path.join(RESOURCE_DIR, "resources.json")
 LOCK_FILE = os.path.join(RESOURCE_DIR, "resources.lock")
 
 REPORT_DIR = "test_reports"
-LOG_FILE = os.path.join(RESOURCE_DIR, "test_runner.log")
+LOG_FILE = os.path.join(TEST_BASE, "test_runner.log")
 LOG_FILE_ENV = "CWT_TEST_LOG_FILE"
 
 logger = logging.getLogger("calibre_web_test.test_runner")

@@ -8,11 +8,12 @@ import re
 import sys
 import time
 import socket
-import datetime
 
 from selenium.webdriver.common.by import By
 from helper_email_convert import AIOSMTPServer
 import helper_email_convert
+from selenium.webdriver.support.ui import WebDriverWait
+from selenium.webdriver.support import expected_conditions as EC
 from config_test import base_path, BOOT_TIME
 from helper_func import startup, wait_Email_received, wait_for_reboot
 
@@ -46,9 +47,11 @@ class TestSSL(ParallelTestCase):
                 lib_dest=cls.temp_dir)
 
         cls.edit_user('admin', {'email': 'a5@b.com','kindle_mail': 'a1@b.com'})
+        WebDriverWait(cls.driver, BOOT_TIME).until(EC.presence_of_element_located((By.ID, "flash_success")))
         cls.setup_server(False, {'mail_server':socket.gethostname(), 'mail_port': cls.port,
                             'mail_use_ssl':'SSL/TLS','mail_login':'name@host.com','mail_password_e':'10234',
                             'mail_from':'name@host.com'})
+        WebDriverWait(cls.driver, BOOT_TIME).until(EC.presence_of_element_located((By.ID, "flash_success")))
 
 
     @classmethod
@@ -191,6 +194,7 @@ class TestSSL(ParallelTestCase):
         self.assertTrue(filepicker)
         # open filepicker
         filepicker.click()
+        self.assertTrue(self.check_element_on_page((By.ID, "element_selected"), timeout=10))
         time.sleep(2)
         found = False
         selections = self.driver.find_elements(By.XPATH, "//tr[@class='tr-clickable']/td[2]")
@@ -203,7 +207,6 @@ class TestSSL(ParallelTestCase):
         found = False
         time.sleep(2)
         file_selections = self.driver.find_elements(By.XPATH, "//tr[@class='tr-clickable']/td[2]")
-        time.sleep(2)
         for i in file_selections:
             if i.text == "client.crt":
                 i.click()
@@ -212,19 +215,19 @@ class TestSSL(ParallelTestCase):
         self.assertTrue(found, "client.crt not found")
         crt_element = self.check_element_on_page((By.ID, "element_selected")).text
         self.check_element_on_page((By.ID, "file_confirm")).click()
-        time.sleep(2)
-
+        # the dialog needs some time to animate away
+        time.sleep(1)
         filepicker2 = self.check_element_on_page((By.ID, "keyfile_path"))
         self.assertTrue(filepicker2)
-        found = False
         # open filepicker
         filepicker2.click()
+        self.assertTrue(self.check_element_on_page((By.ID, "element_selected"), timeout=10))
+        found = False
         time.sleep(2)
         selections = self.driver.find_elements(By.XPATH, "//tr[@class='tr-clickable']/td[2]")
         for i in selections:
             if i.text == "files":
                 i.click()
-                time.sleep(1)
                 found = True
                 break
         self.assertTrue(found, "files folder not found")
@@ -239,7 +242,7 @@ class TestSSL(ParallelTestCase):
         self.assertTrue(found, "client.key not found")
         key_element = self.check_element_on_page((By.ID, "element_selected")).text
         self.check_element_on_page((By.ID, "file_confirm")).click()
-        time.sleep(2)
+        time.sleep(1)
 
         self.assertEqual(self.check_element_on_page((By.ID, "config_certfile")).get_attribute('value'), crt_element)
         self.assertEqual(self.check_element_on_page((By.ID, "config_keyfile")).get_attribute('value'), key_element)
