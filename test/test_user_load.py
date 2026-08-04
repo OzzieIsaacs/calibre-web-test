@@ -1,6 +1,6 @@
 # -*- coding: utf-8 -*-
 
-from base_test import ParallelTestCase
+from base_test import ParallelTestCase, log_message
 import time
 import re
 import requests
@@ -38,11 +38,11 @@ def user_change(user, worker_port, result, index):
 
         resp = r.post('http://127.0.0.1:{}/me'.format(worker_port), data=user_load)
         if resp.status_code != 200 or "flash_danger" in resp.text:
-            print('Error: ' + user)
+            log_message('Error: ' + user, class_name="TestUserLoad")
             result[index] = False
             return
     r.close()
-    print('Finished: ' + user)
+    log_message('Finished: ' + user, class_name="TestUserLoad")
     result[index] = True
     return
 

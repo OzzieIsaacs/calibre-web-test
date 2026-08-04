@@ -43,7 +43,7 @@ class TestEditBooksOnGdrive(ParallelTestCase):
             time.sleep(5)
         except Exception as e:
             try:
-                print(e)
+                cls.log_class(str(e))
                 cls.driver.quit()
                 cls.p.kill()
             except Exception:

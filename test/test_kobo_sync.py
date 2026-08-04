@@ -44,7 +44,7 @@ class TestKoboSync(ParallelTestCase):
             cls.login('admin', 'admin123')
             time.sleep(2)
         except Exception as e:
-            print(e)
+            cls.log_class(str(e))
             cls.driver.quit()
             cls.p.terminate()
             cls.p.poll()
@@ -139,7 +139,7 @@ class TestKoboSync(ParallelTestCase):
             self.assertEqual(data[3]['NewEntitlement']['BookMetadata']['Series']['Name'], 'O0ü 执')
             self.assertEqual(data[3]['NewEntitlement']['BookMetadata']['Series']['NumberFloat'], 1.5)
         except Exception as e:
-            print(data)
+            self.log(str(data))
             self.assertFalse(e, data)
         # ToDo: What shall it look like?
         #self.assertEqual(data[0]['NewEntitlement']['BookMetadata']['Series']['Number'], 1)
@@ -610,7 +610,7 @@ class TestKoboSync(ParallelTestCase):
             self.assertEqual('application/epub+zip', download.headers['Content-Type'])
             downloadSession.close()
         except Exception as e:
-            print(e)
+            self.log(str(e))
             self.assertFalse(e, data)
 
     def test_kobo_sync_selected_shelfs(self):

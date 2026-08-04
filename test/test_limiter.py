@@ -33,7 +33,7 @@ class TestSecurity(ParallelTestCase):
                     lib_dest=cls.temp_dir)
             WebDriverWait(cls.driver, 5).until(EC.presence_of_element_located((By.ID, "flash_success")))
         except Exception as e:
-            print(e)
+            cls.log_class(str(e))
             cls.driver.quit()
             cls.p.kill()
 
@@ -311,5 +311,5 @@ class TestSecurity(ParallelTestCase):
 
         header = {"X-Forwarded-Host": "google.de", "Host": "localhost:8083"}
         attak = r.head('http://127.0.0.1:{}/foo/bar'.format(self.worker_port, headers=header, timeout=5))
-        print(attak.headers.get('location'))
+        self.log(attak.headers.get('location'))
         r.get('http://127.0.0.1:{}/foo/bar'.format(self.worker_port), headers=header, timeout=5)

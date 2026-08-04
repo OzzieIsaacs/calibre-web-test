@@ -52,7 +52,7 @@ class TestKoboSyncBig(ParallelTestCase):
             cls.login('admin', 'admin123')
             time.sleep(2)
         except Exception as e:
-            print(e)
+            cls.log_class(str(e))
             cls.driver.quit()
             cls.p.terminate()
             cls.p.poll()
@@ -107,7 +107,7 @@ class TestKoboSyncBig(ParallelTestCase):
         params = {'Filter': 'All', 'DownloadUrlFilter': 'Generic,Android', 'PrioritizeRecentReads': 'true'}
         data = list()
         while True:
-            print(".")
+            self.log(".")
             r = session.get(kobo_address + '/v1/library/sync',
                             params=params,
                             headers=TestKoboSyncBig.syncToken.get(kobo_address),

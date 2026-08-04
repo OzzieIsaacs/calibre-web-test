@@ -35,7 +35,7 @@ class TestGoodreads(ParallelTestCase):
                     lib_dest=cls.temp_dir)
             WebDriverWait(cls.driver, 5).until(EC.presence_of_element_located((By.ID, "flash_success")))
         except Exception as e:
-            print(e)
+            cls.log_class(str(e))
             cls.driver.quit()
             cls.p.terminate()
             cls.p.poll()

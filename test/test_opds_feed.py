@@ -858,7 +858,6 @@ class TestOPDSFeed(ParallelTestCase):
                     found += 1
                     continue
                 else:
-                    print("found wrong element visible {}".format(el))
+                    self.log("found wrong element visible {}".format(el))
                     return False
         return True if found == len(visible) else False
-

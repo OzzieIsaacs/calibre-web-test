@@ -41,7 +41,7 @@ class TestCliGdrivedb(ParallelTestCase):
 
         except Exception as e:
             try:
-                print(e)
+                cls.log_class(str(e))
                 cls.driver.quit()
             except Exception:
                 pass
@@ -52,7 +52,7 @@ class TestCliGdrivedb(ParallelTestCase):
         try:
             os.remove(os.path.join(self.app_dir, 'app.db'))
         except Exception as e:
-            print(e)
+            self.log(str(e))
         os.chdir(base_path)
 
     def wait_page_has_loaded(self):

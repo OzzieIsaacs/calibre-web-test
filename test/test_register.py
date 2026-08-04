@@ -22,8 +22,7 @@ class TestRegister(ParallelTestCase):
     def setUpClass(cls):
         super().setUpClass()
         cls.port = acquire_resource("port")
-        now = datetime.datetime.now().strftime("%H:%M:%S")
-        print(f"[Worker {cls.worker_id}] {now} - {cls.__name__} starting E-Mail Server")
+        cls.log_class("starting E-Mail Server")
         cls.email_server = AIOSMTPServer(
             hostname='127.0.0.1',port=cls.port,
             only_ssl=False,
@@ -45,7 +44,7 @@ class TestRegister(ParallelTestCase):
                                 'mail_from':'name@host.com'})
 
         except Exception as e:
-            print(e)
+            cls.log_class(str(e))
             cls.driver.quit()
             cls.p.kill()
 
@@ -263,5 +262,4 @@ class TestRegister(ParallelTestCase):
         payload = {"name": "9dsfaf", 'email': "ü执1@ü执1.3", "csrf_token": token.group(1)}
         resp = r.post('http://127.0.0.1:{}/register'.format(self.worker_port), data=payload)
         self.assertTrue("flash_success" in resp.text)
-
 

@@ -34,7 +34,7 @@ class TestThumbnailsEnv(ParallelTestCase):
             # generate new id for database to make calibre-web aware of database change
             add_books(os.path.join(cls.temp_dir, "metadata.db"), 100, cover=True, set_id=True)  # 1520
         except Exception as e:
-            print(e)
+            cls.log_class(str(e))
             cls.driver.quit()
             cls.p.terminate()
             cls.p.poll()

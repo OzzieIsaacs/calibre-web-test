@@ -40,8 +40,7 @@ class TestEbookConvertKepubify(ParallelTestCase):
             time.sleep(2)
             WebDriverWait(cls.driver, 5).until(EC.presence_of_element_located((By.ID, "flash_success")))
         except Exception as e:
-            now = datetime.datetime.now().strftime("%H:%M:%S")
-            print(f"[Worker {cls.worker_id}] {now} - {cls.__name__} Dead on Init - check Calibre-Web is starting")
+            cls.log_class("Dead on Init - check Calibre-Web is starting")
             cls.driver.quit()
             cls.p.kill()
 

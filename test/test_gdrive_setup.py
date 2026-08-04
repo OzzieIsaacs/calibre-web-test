@@ -34,7 +34,7 @@ class TestSetupGdrive(ParallelTestCase):
                     only_startup=True)
         except Exception as e:
             try:
-                print(e)
+                cls.log_class(str(e))
                 cls.driver.quit()
                 cls.p.kill()
             except Exception:
@@ -89,4 +89,3 @@ class TestSetupGdrive(ParallelTestCase):
         auth_button.click()
         g_login = self.check_element_on_page((By.ID, "identifierId"))
         self.assertTrue(g_login)
-

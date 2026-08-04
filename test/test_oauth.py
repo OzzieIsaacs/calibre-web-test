@@ -22,7 +22,7 @@ class TestOAuthLogin(ParallelTestCase):
                     env={"APP_MODE": "test", "CALIBRE_PORT": cls.worker_port},
                     lib_dest=cls.temp_dir)
         except Exception as e:
-            print('setup failed')
+            cls.log_class('setup failed')
             cls.driver.quit()
             cls.p.terminate()
 
@@ -83,4 +83,3 @@ class TestOAuthLogin(ParallelTestCase):
 
     def test_oauth_about(self):
         self.assertTrue(self.goto_page('nav_about'))
-

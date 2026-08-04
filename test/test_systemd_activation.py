@@ -37,7 +37,7 @@ class TestSystemdActivation(ParallelTestCase):
         try:
             os.remove(os.path.join(CALIBRE_WEB_PATH, 'app.db'))
         except Exception:
-            print("Can't delete app.db")
+            cls.log_class("Can't delete app.db")
         super().tearDownClass(no=True)
 
 

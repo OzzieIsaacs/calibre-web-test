@@ -212,8 +212,7 @@ class TestEmbedMetadata(ParallelTestCase):
         time.sleep(5)
         self.assertTrue(self.check_element_on_page((By.ID, "flash_success")))
         tasks = self.check_tasks()
-        now = datetime.datetime.now().strftime("%H:%M:%S")
-        print(f"[Worker {self.worker_id}] {now} - {self.__class__.__name__} starting E-Mail Server")
+        self.log("starting E-Mail Server")
         self.email_server = AIOSMTPServer(
             hostname='127.0.0.1',
             port=int(self.port),

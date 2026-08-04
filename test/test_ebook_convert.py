@@ -26,8 +26,7 @@ class TestEbookConvertCalibre(ParallelTestCase):
         super().setUpClass()
         # start email server
         cls.port = acquire_resource("port")
-        now = datetime.datetime.now().strftime("%H:%M:%S")
-        print(f"[Worker {cls.worker_id}] {now} - {cls.__name__} starting E-Mail Server")
+        cls.log_class("starting E-Mail Server")
         cls.email_server = AIOSMTPServer(
             hostname='127.0.0.1',
             port=int(cls.port),
@@ -53,7 +52,7 @@ class TestEbookConvertCalibre(ParallelTestCase):
                                     'mail_from':'name@host.com'})
             time.sleep(2)
         except Exception as e:
-            print(e)
+            cls.log_class(str(e))
             cls.driver.quit()
             cls.p.kill()
 

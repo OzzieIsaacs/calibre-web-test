@@ -35,54 +35,36 @@ BASE_PORT = 8083
 # DISCOVERY
 # =========================================================
 def discover_test_modules():
-
     package = importlib.import_module(TEST_PACKAGE)
-
     modules = []
-
     for _, module_name, is_pkg in pkgutil.walk_packages(
         package.__path__,
         package.__name__ + "."
     ):
-
         if is_pkg:
             continue
-
         if not module_name.split(".")[-1].startswith("test"):
             continue
-
         modules.append(module_name)
-
     return modules
 
 
 def discover_test_classes():
-
     discovered = []
-
     for module_name in discover_test_modules():
-
         module = importlib.import_module(module_name)
-
         for name in dir(module):
-
             obj = getattr(module, name)
-
             if not isinstance(obj, type):
                 continue
-
             if not issubclass(obj, unittest.TestCase):
                 continue
-
             if obj is unittest.TestCase:
                 continue
-
             # skip your abstract/base test class
             if obj.__name__ == "ParallelTestCase":
                 continue
-
             discovered.append((module_name, name))
-
     return discovered
 
 
@@ -200,7 +182,7 @@ def main():
 
     # delete cache folders
     for folder in glob.iglob(CALIBRE_WEB_PATH + "/cps/**/__pycache__/", recursive=True):
-        shutil.rmtree(folder)
+        shutil.rmtree(folder, ignore_errors=True)
 
     requirements_file = os.path.join(CALIBRE_WEB_PATH, 'requirements.txt')
 

@@ -40,7 +40,7 @@ class TestEmbedMetadataGdrive(ParallelTestCase):
             time.sleep(180)
         except Exception as e:
             try:
-                print(e)
+                cls.log_class(str(e))
                 cls.driver.quit()
                 cls.p.kill()
             except Exception:

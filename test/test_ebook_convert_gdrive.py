@@ -37,8 +37,7 @@ class TestEbookConvertCalibreGDrive(ParallelTestCase):
         try:
             cls.port = acquire_resource("port")
             # start email server
-            now = datetime.datetime.now().strftime("%H:%M:%S")
-            print(f"[Worker {cls.worker_id}] {now} - {cls.__name__} starting E-Mail Server")
+            cls.log_class("starting E-Mail Server")
             cls.email_server = AIOSMTPServer(
                 hostname='127.0.0.1',
                 port=int(cls.port),
@@ -70,7 +69,7 @@ class TestEbookConvertCalibreGDrive(ParallelTestCase):
             time.sleep(180)
         except Exception as e:
             try:
-                print(e)
+                cls.log_class(str(e))
                 cls.driver.quit()
                 cls.p.kill()
             except Exception:
@@ -361,4 +360,3 @@ class TestEbookConvertCalibreGDrive(ParallelTestCase):
         self.goto_page("nav_hot")
         self.assertTrue(os.path.exists(thumbnail_cache_path))
         self.assertEqual(count_files(thumbnail_cache_path), 10 * NUM_THUMBNAILS)
-

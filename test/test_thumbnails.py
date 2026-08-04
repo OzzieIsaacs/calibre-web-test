@@ -36,7 +36,7 @@ class TestThumbnails(ParallelTestCase):
             thumbnail_cache_path = os.path.join(cls.app_dir, 'cps', 'cache', 'thumbnails')
             shutil.rmtree(thumbnail_cache_path, ignore_errors=True)
         except Exception as e:
-            print(e)
+            cls.log_class(str(e))
             cls.driver.quit()
             cls.p.terminate()
             cls.p.poll()
@@ -320,4 +320,3 @@ class TestThumbnails(ParallelTestCase):
 
         self.fill_thumbnail_config({'schedule_generate_book_covers': 0})
         self.assertTrue(self.check_element_on_page((By.ID, "flash_success")))
-

@@ -306,9 +306,10 @@ class ui_class():
         checkboxes = ['config_uploading', 'config_anonbrowse', 'config_public_reg', 'config_remote_login',
                       'config_access_log', 'config_kobo_sync', 'config_kobo_proxy', 'config_ldap_openldap',
                       'config_use_goodreads', 'config_register_email', 'config_use_google_drive',
-                      'config_allow_reverse_proxy_header_login', 'config_unicode_filename', 'config_password_policy',
-                      'config_password_number', 'config_password_lower', 'config_password_character',
-                      'config_password_upper', 'config_password_special', 'config_ratelimiter', 'config_embed_metadata']
+                      'config_allow_reverse_proxy_header_login', 'config_reverse_proxy_use_shared_secret',
+                      'config_unicode_filename', 'config_password_policy', 'config_password_number',
+                      'config_password_lower', 'config_password_character', 'config_password_upper',
+                      'config_password_special', 'config_ratelimiter', 'config_embed_metadata']
         options = ['config_log_level', 'config_google_drive_folder', 'config_updatechannel', 'config_login_type',
                    'config_ldap_encryption', 'config_ldap_authentication', 'ldap_import_user_filter', 'config_session']
         # depending on elements open accordions or not
@@ -332,8 +333,12 @@ class ui_class():
                                            'config_1_oauth_client_id', 'config_1_oauth_client_secret',
                                            'config_2_oauth_client_id', 'config_2_oauth_client_secret',
                                            'config_allow_reverse_proxy_header_login',
-                                           'config_reverse_proxy_login_header_name', 'config_unicode_filename',
-                                           'config_embed_metadata']):
+                                           'config_reverse_proxy_login_header_name',
+                                           'config_reverse_proxy_trusted_ips',
+                                           'config_reverse_proxy_use_shared_secret',
+                                           'config_reverse_proxy_login_secret_header_name',
+                                           'config_reverse_proxy_login_header_secret_e',
+                                           'config_unicode_filename', 'config_embed_metadata']):
             opener.append(2)
         if any(key in elements for key in ['config_calibre', 'config_kepubifypath',
                                            'config_binariesdir', 'config_rarfile_location']):

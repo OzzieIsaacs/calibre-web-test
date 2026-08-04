@@ -8,8 +8,6 @@ from selenium.webdriver.common.by import By
 
 class TestDeleteDatabase(ParallelTestCase):
 
-
-
     @classmethod
     def setUpClass(cls):
         super().setUpClass()

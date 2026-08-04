@@ -78,7 +78,7 @@ class TestCli(ParallelTestCase):
         try:
             nextline, __ = p.communicate(timeout=BOOT_TIME)
         except subprocess.TimeoutExpired:
-            print("timeout")
+            self.log("timeout")
             p.kill()
             p.communicate()
         self.assertTrue(re.findall(expectation, nextline), nextline)

@@ -38,7 +38,7 @@ class TestLdapLogin(ParallelTestCase):
                     lib_dest=cls.temp_dir)
             cls.server.stopListen()
         except Exception as e:
-            print(e)
+            cls.log_class(str(e))
             cls.driver.quit()
             cls.p.terminate()
 
@@ -54,7 +54,7 @@ class TestLdapLogin(ParallelTestCase):
         try:
             cls.server.stopListen()
         except Exception as e:
-            print(e)
+            cls.log_class(str(e))
         if not cls.check_user_logged_in('admin'):
             try:
                 cls.driver.get("http://127.0.0.1:{}".format(cls.worker_port))
@@ -90,7 +90,7 @@ class TestLdapLogin(ParallelTestCase):
             r = session.post(self.kobo_adress + '/v1/library/tags', json={'Name': 'Success', 'Items': [Item1]}, timeout=10)
             self.assertEqual(201, r.status_code)
         except Exception as e:
-            print(e)
+            self.log(str(e))
         session.close()
 
     def test_invalid_LDAP(self):

@@ -39,7 +39,7 @@ class TestEditAuthorsGdrive(ParallelTestCase):
             time.sleep(2)
         except Exception as e:
             try:
-                print(e)
+                cls.log_class(str(e))
                 cls.driver.quit()
                 cls.p.kill()
             except Exception:

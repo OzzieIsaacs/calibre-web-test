@@ -27,8 +27,7 @@ class TestSTARTTLS(ParallelTestCase):
         super().setUpClass()
         # start email server
         cls.port = acquire_resource("port")
-        now = datetime.datetime.now().strftime("%H:%M:%S")
-        print(f"[Worker {cls.worker_id}] {now} - {cls.__name__} starting E-Mail Server")
+        cls.log_class("starting E-Mail Server")
         cls.email_server = AIOSMTPServer(
             hostname=socket.gethostname(),
             port=int(cls.port),

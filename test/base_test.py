@@ -6,6 +6,8 @@ import unittest
 import shutil
 import fcntl
 import json
+import logging
+import inspect
 from datetime import datetime
 from helper_func import save_logfiles, add_dependency, remove_dependency
 from helper_ui import ui_class
@@ -20,6 +22,21 @@ STATE_FILE = os.path.join(RESOURCE_DIR, "resources.json")
 LOCK_FILE = os.path.join(RESOURCE_DIR, "resources.lock")
 
 REPORT_DIR = "test_reports"
+LOG_FILE = os.path.join(RESOURCE_DIR, "test_runner.log")
+LOG_FILE_ENV = "CWT_TEST_LOG_FILE"
+
+logger = logging.getLogger("calibre_web_test.test_runner")
+if not logger.handlers:
+    logger.setLevel(logging.INFO)
+    log_target = os.getenv(LOG_FILE_ENV, "").strip()
+    if log_target:
+        target_file = LOG_FILE if log_target.lower() in ("1", "true", "yes") else log_target
+        handler = logging.FileHandler(target_file, encoding="utf-8")
+    else:
+        handler = logging.StreamHandler(sys.stdout)
+    handler.setFormatter(logging.Formatter("%(message)s"))
+    logger.addHandler(handler)
+    logger.propagate = False
 
 # =========================================================
 # CONFIGURE RESOURCES HERE
@@ -46,34 +63,119 @@ def _lock_file(path):
     return f
 
 
-# =========================================================
-# INIT STATE
-# =========================================================
-def _init_state():
-    if os.path.exists(STATE_FILE):
-        return
+def _build_initial_state():
     state = {}
-
     for pool_name, resources in RESOURCE_POOLS.items():
         state[pool_name] = {}
         for resource in resources:
             state[pool_name][str(resource)] = False
+    return state
 
-        with open(STATE_FILE, "w") as f:
-            json.dump(state, f, indent=4)
+
+def _write_state(state):
+    temp_file = f"{STATE_FILE}.{os.getpid()}.tmp"
+    with open(temp_file, "w", encoding="utf-8") as f:
+        json.dump(state, f, indent=4)
+        f.flush()
+        os.fsync(f.fileno())
+    os.replace(temp_file, STATE_FILE)
+
+
+def _read_state():
+    with open(STATE_FILE, "r", encoding="utf-8") as f:
+        return json.load(f)
+
+
+def _resolve_log_context(owner=None, worker_id=None, class_name=None):
+    resolved_worker_id = worker_id
+    resolved_class_name = class_name
+
+    if owner is not None:
+        if resolved_class_name is None:
+            resolved_class_name = owner.__name__ if isinstance(owner, type) else owner.__class__.__name__
+        if resolved_worker_id is None:
+            resolved_worker_id = getattr(owner, "worker_id", None)
+
+    if resolved_class_name is None or resolved_worker_id is None:
+        frame = inspect.currentframe()
+        try:
+            caller = frame.f_back if frame else None
+            while caller:
+                cls_obj = caller.f_locals.get("cls")
+                if isinstance(cls_obj, type):
+                    if resolved_class_name is None:
+                        resolved_class_name = cls_obj.__name__
+                    if resolved_worker_id is None:
+                        resolved_worker_id = getattr(cls_obj, "worker_id", None)
+                    break
+
+                self_obj = caller.f_locals.get("self")
+                if self_obj is not None:
+                    if resolved_class_name is None:
+                        resolved_class_name = self_obj.__class__.__name__
+                    if resolved_worker_id is None:
+                        resolved_worker_id = getattr(self_obj, "worker_id", None)
+                    break
+                caller = caller.f_back
+        finally:
+            del frame
+
+    if resolved_worker_id is None:
+        resolved_worker_id = os.getenv("TEST_WORKER_ID", "?")
+    if resolved_class_name is None:
+        resolved_class_name = "ResourceManager"
+
+    return resolved_worker_id, resolved_class_name
+
+
+def _log(message, owner=None, worker_id=None, class_name=None):
+    resolved_worker_id, resolved_class_name = _resolve_log_context(owner, worker_id, class_name)
+    now = datetime.now().strftime("%H:%M:%S")
+    logger.info(f"[Worker {resolved_worker_id}] {now} - {resolved_class_name} {message}")
+
+
+def log_message(message, owner=None, worker_id=None, class_name=None):
+    _log(message, owner=owner, worker_id=worker_id, class_name=class_name)
+
+
+# =========================================================
+# INIT STATE
+# =========================================================
+def _init_state():
+    lock = _lock_file(LOCK_FILE)
+    try:
+        if os.path.exists(STATE_FILE):
+            try:
+                _read_state()
+                return
+            except (json.JSONDecodeError, OSError):
+                pass
+        _write_state(_build_initial_state())
+    finally:
+        fcntl.flock(lock, fcntl.LOCK_UN)
+        lock.close()
 
 
 # =========================================================
 # ACQUIRE RESOURCE
 # =========================================================
-def acquire_resource(pool_name, wait=True, retry_interval=1):
+def acquire_resource(pool_name, wait=True, retry_interval=1, owner=None, worker_id=None, class_name=None):
     _init_state()
 
     while True:
         lock = _lock_file(LOCK_FILE)
         try:
-            with open(STATE_FILE, "r") as f:
-                state = json.load(f)
+            try:
+                state = _read_state()
+            except (json.JSONDecodeError, OSError):
+                _log(
+                    "resource state empty/corrupt, rebuilding",
+                    owner=owner,
+                    worker_id=worker_id,
+                    class_name=class_name,
+                )
+                state = _build_initial_state()
+                _write_state(state)
 
             if pool_name not in state:
                 raise RuntimeError(f"Unknown resource pool: {pool_name}")
@@ -81,12 +183,15 @@ def acquire_resource(pool_name, wait=True, retry_interval=1):
             for resource, used in state[pool_name].items():
                 if not used:
                     state[pool_name][resource] = True
-
-                    with open(STATE_FILE, "w") as f:
-                        json.dump(state, f, indent=4)
-
+                    _write_state(state)
                     # preserve int type for ports
                     try:
+                        _log(
+                            f"{pool_name}: {resource} acquired",
+                            owner=owner,
+                            worker_id=worker_id,
+                            class_name=class_name,
+                        )
                         return int(resource)
                     except ValueError:
                         return resource
@@ -105,20 +210,24 @@ def acquire_resource(pool_name, wait=True, retry_interval=1):
 # =========================================================
 # RELEASE RESOURCE
 # =========================================================
-def release_resource(pool_name, resource):
+def release_resource(pool_name, resource, owner=None, worker_id=None, class_name=None):
     _init_state()
     lock = _lock_file(LOCK_FILE)
     try:
-        with open(STATE_FILE, "r") as f:
-            state = json.load(f)
+        try:
+            state = _read_state()
+        except (json.JSONDecodeError, OSError):
+            state = _build_initial_state()
 
         state[pool_name][str(resource)] = False
-
-        with open(STATE_FILE, "w") as f:
-
-            json.dump(state, f, indent=4)
-
-        # print(f"[RESOURCE RELEASED] {pool_name}: {resource}")
+        _write_state(state)
+        _write_state(state)
+        _log(
+            f"{pool_name}: {resource} released",
+            owner=owner,
+            worker_id=worker_id,
+            class_name=class_name,
+        )
 
     finally:
         fcntl.flock(lock, fcntl.LOCK_UN)
@@ -133,6 +242,13 @@ class ParallelTestCase(unittest.TestCase, ui_class):
     driver = None
     p = None
     tearDown_exceptions = []
+
+    @classmethod
+    def log_class(cls, message):
+        _log(message, owner=cls)
+
+    def log(self, message):
+        _log(message, owner=self.__class__)
 
     def __init__(self, tests):
         main_module = sys.modules["__main__"]
@@ -154,16 +270,14 @@ class ParallelTestCase(unittest.TestCase, ui_class):
         cls._counter = 0
         cls._start = time.time()
 
-        cls.py_resource = acquire_resource("venv")
-        cls.py_version = os.path.join(cls.py_resource, VENV_PYTHON)
-
         cls.worker_id = int(os.getenv("TEST_WORKER_ID", "0"))
-        cls.worker_port = str(acquire_resource("port"))
+        cls.py_resource = acquire_resource("venv", owner=cls)
+        cls.py_version = os.path.join(cls.py_resource, VENV_PYTHON)
+        cls.worker_port = str(acquire_resource("port", owner=cls))
 
-        now = datetime.now().strftime("%H:%M:%S")
-        print(f"[Worker {cls.worker_id}] {now} - {cls.__name__} start Testing")
-        print(f"[Worker {cls.worker_id}] {now} - {cls.__name__} running on {cls.py_resource}")
-        print(f"[Worker {cls.worker_id}] {now} - {cls.__name__} using port {cls.worker_port}")
+        _log("start Testing", owner=cls)
+        _log(f"running on {cls.py_resource}", owner=cls)
+        _log(f"using port {cls.worker_port}", owner=cls)
 
         cls.temp_dir = tempfile.mkdtemp(prefix=f"cw_test_worker_{cls.worker_id}_", dir=os.path.join(TEST_BASE, "target"))
         cls.app_dir = tempfile.mkdtemp(prefix=f"cw_app_{cls.worker_id}_", dir=os.path.join(TEST_BASE, "target"))
@@ -171,12 +285,10 @@ class ParallelTestCase(unittest.TestCase, ui_class):
         # CLASS LEVEL LOCK
         cls.gdrive_file = None
         if getattr(cls, "resource_lock", None):
-            now = datetime.now().strftime("%H:%M:%S")
-            print(f"[Worker {cls.worker_id}] {now} - {cls.__name__} LOCK WAIT {cls.resource_lock}")
-            cls.gdrive_file = acquire_resource("gdrive", cls.resource_lock)
-            now = datetime.now().strftime("%H:%M:%S")
-            print(f"[Worker {cls.worker_id}] {now} - {cls.__name__} LOCK ACQUIRED {cls.resource_lock}")
-            print(f"[Worker {cls.worker_id}] {now} - {cls.__name__} preparing GDrive")
+            _log(f"LOCK WAIT {cls.resource_lock}", owner=cls)
+            cls.gdrive_file = acquire_resource("gdrive", cls.resource_lock, owner=cls)
+            _log(f"LOCK ACQUIRED {cls.resource_lock}", owner=cls)
+            _log("preparing GDrive", owner=cls)
             prepare_gdrive()
             try:
                 src = os.path.join(base_path, "files", "client_secrets.json")
@@ -236,18 +348,16 @@ class ParallelTestCase(unittest.TestCase, ui_class):
 
         except Exception as e:
             self._add("ERROR", name, time.time() - start, str(e))
-            print("huhu")
+            _log("unexpected exception in run()", owner=self.__class__)
             raise
 
     def _add(self, status, name, duration, extra=""):
         if isinstance(extra, list):
             extra = str(extra[0][1])
         self.__class__._counter += 1
-        now = datetime.now().strftime("%H:%M:%S")
-        print(f"[Worker {self.worker_id}] {now} - {self.__class__.__name__}.{name}: {status} ({duration:.2f}s)")
+        _log(f"{self.__class__.__name__}.{name}: {status} ({duration:.2f}s)", owner=self.__class__)
         if extra != "":
-            now = datetime.now().strftime("%H:%M:%S")
-            print(f"[Worker {self.worker_id}] {now} - {extra}")
+            _log(f"{extra}", owner=self.__class__)
         self.__class__._results.append({
             "tid": self.__class__._counter,
             "result": status,
@@ -275,7 +385,7 @@ class ParallelTestCase(unittest.TestCase, ui_class):
                 cls.driver.quit()
                 cls.p.terminate()
             except Exception as e:
-                print(e)
+                _log(str(e), owner=cls)
         super().tearDownClass()
 
     @classmethod
@@ -287,27 +397,23 @@ class ParallelTestCase(unittest.TestCase, ui_class):
             super().doClassCleanups()
             return
         try:
-            now = datetime.now().strftime("%H:%M:%S")
-            print(f"[Worker {cls.worker_id}] {now} - {cls.__name__} saving logbooks")
+            _log("saving logbooks", owner=cls)
             save_logfiles(cls, cls.__name__)
 
-            print(f"[Worker {cls.worker_id}] {now} - {cls.__name__} RESOURCE released port:{cls.worker_port}")
-            release_resource("port", cls.worker_port)
+            _log(f"RESOURCE released port:{cls.worker_port}", owner=cls)
+            release_resource("port", cls.worker_port, owner=cls)
 
             # release class level lock
             if hasattr(cls, "resource_lock"):
-                now = datetime.now().strftime("%H:%M:%S")
-                print(f"[Worker {cls.worker_id}] {now} - {cls.__name__} LOCK RELEASED {cls.resource_lock}")
-                release_resource("gdrive", cls.gdrive_file)
+                _log(f"LOCK RELEASED {cls.resource_lock}", owner=cls)
+                release_resource("gdrive", cls.gdrive_file, owner=cls)
 
             if hasattr(cls, "dependency"):
-                now = datetime.now().strftime("%H:%M:%S")
-                print(f"[Worker {cls.worker_id}] {now} - {cls.__name__} remove dependecies")
+                _log("remove dependecies", owner=cls)
                 remove_dependency(cls.py_version, cls.dependency)
 
             if hasattr(cls, "hidden_dependency"):
-                now = datetime.now().strftime("%H:%M:%S")
-                print(f"[Worker {cls.worker_id}] {now} - {cls.__name__} remove hidden dependecies")
+                _log("remove hidden dependecies", owner=cls)
                 remove_dependency(cls.py_version, cls.hidden_dependency)
 
 
@@ -316,9 +422,8 @@ class ParallelTestCase(unittest.TestCase, ui_class):
 
             if hasattr(cls, "app_dir"):
                 shutil.rmtree(cls.app_dir, ignore_errors=True)
-            now = datetime.now().strftime("%H:%M:%S")
-            print(f"[Worker {cls.worker_id}] {now} - {cls.__name__} RESOURCE released venv:{cls.py_resource}")
-            release_resource("venv", cls.py_resource)
+            _log(f"RESOURCE released venv:{cls.py_resource}", owner=cls)
+            release_resource("venv", cls.py_resource, owner=cls)
 
             cls._end = time.time()
             total = len(cls._results)
@@ -343,14 +448,15 @@ class ParallelTestCase(unittest.TestCase, ui_class):
                     }
                 }
             }
-            now = datetime.now().strftime("%H:%M:%S")
-            print(
-                f"[Worker {cls.worker_id}] {now} - {cls.__name__} FINISHED "
-                f"Tests: {total} (Pass:{success} Fail:{fail} Error:{error} Skip:{skip})"
+            _log(
+                f"FINISHED Tests: {total} (Pass:{success} Fail:{fail} Error:{error} Skip:{skip})",
+                owner=cls,
             )
             name_class = f"{cls.__module__}.{cls.__name__}"
-            now = datetime.now().strftime("%H:%M:%S")
-            print(f"[Worker {cls.worker_id}] {now} - {cls.__name__} Testresult: Start: {data[name_class]['start_time']} Duration {data[name_class]['duration']}s")
+            _log(
+                f"Testresult: Start: {data[name_class]['start_time']} Duration {data[name_class]['duration']}s",
+                owner=cls,
+            )
             target_path = os.path.abspath(os.path.join(os.path.dirname(__file__),".."))
             filename = os.path.join(target_path, REPORT_DIR, f"{cls.__name__}.json")
 
@@ -358,6 +464,6 @@ class ParallelTestCase(unittest.TestCase, ui_class):
                 json.dump(data, f, indent=4)
 
         except Exception as e:
-            print(e)
+            _log(str(e), owner=cls)
         finally:
             super().doClassCleanups()

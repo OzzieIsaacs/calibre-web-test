@@ -97,7 +97,7 @@ class TestUpdater(ParallelTestCase):
                 zipObj.write(os.path.join(cls.app_dir + '_2', 'cps.py'), arcname='calibre-web-0.6.6/cps.py')
                 return True
         else:
-            print('target directory already existing')
+            cls.log_class('target directory already existing')
             return False
 
     @classmethod
@@ -112,7 +112,7 @@ class TestUpdater(ParallelTestCase):
                 try:
                     shutil.rmtree(cls.app_dir + '_2', ignore_errors=True)
                 except Exception as e:
-                    print(e)
+                    cls.log_class(str(e))
         try:
             os.remove(os.path.join(os.getcwd(),'cps_copy.zip'))
         except Exception:
