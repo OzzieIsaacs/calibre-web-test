@@ -332,16 +332,19 @@ class ParallelTestCase(unittest.TestCase, ui_class):
 
             duration = time.time() - start
 
-            if any(t == self for t, _ in result.failures):
-                self._add("FAIL", name, duration, result.failures)
+            matching_failures = [tb for t, tb in result.failures if t == self]
+            if matching_failures:
+                self._add("FAIL", name, duration, matching_failures[0])
                 return
 
-            if any(t == self for t, _ in result.errors):
-                self._add("ERROR", name, duration, result.errors)
+            matching_errors = [tb for t, tb in result.errors if t == self]
+            if matching_errors:
+                self._add("ERROR", name, duration, matching_errors[0])
                 return
 
-            if any(t == self for t, _ in result.skipped):
-                self._add("SKIP", name, duration)
+            matching_skipped = [reason for t, reason in result.skipped if t == self]
+            if matching_skipped:
+                self._add("SKIP", name, duration, matching_skipped[0])
                 return
 
             self._add("SUCCESS", name, duration)
@@ -352,8 +355,6 @@ class ParallelTestCase(unittest.TestCase, ui_class):
             raise
 
     def _add(self, status, name, duration, extra=""):
-        if isinstance(extra, list):
-            extra = str(extra[0][1])
         self.__class__._counter += 1
         _log(f"{self.__class__.__name__}.{name}: {status} ({duration:.2f}s)", owner=self.__class__)
         if extra != "":

@@ -2,20 +2,19 @@
 # -*- coding: utf-8 -*-
 
 import unittest
-
-from pip._internal.utils import datetime
-
 from base_test import ParallelTestCase, acquire_resource, release_resource
 import os
+import re
 import time
 import shutil
+import requests
 
 from helper_email_convert import AIOSMTPServer, calibre_path, is_calibre_not_present
 from selenium.webdriver.common.by import By
 from selenium.webdriver.support.ui import Select
 from selenium.common.exceptions import UnexpectedAlertPresentException
 from helper_func import startup
-import datetime
+
 
 @unittest.skipIf(is_calibre_not_present(), "Skipping convert, calibre not found")
 class TestEbookConvertCalibre(ParallelTestCase):
@@ -57,11 +56,11 @@ class TestEbookConvertCalibre(ParallelTestCase):
             cls.p.kill()
 
     @classmethod
-    def tearDownClass(cls):
+    def tearDownClass(cls, no=False):
         shutil.rmtree(os.path.join(cls.app_dir, 'exe dir'), ignore_errors=True)
         cls.email_server.stop()
         release_resource("port", cls.port)
-        super().tearDownClass()
+        super().tearDownClass(no)
 
     def tearDown(self):
         super().tearDown()
@@ -532,6 +531,7 @@ class TestEbookConvertCalibre(ParallelTestCase):
             task_len, ret = self.wait_tasks(tasks, 1)
         except UnexpectedAlertPresentException:
             self.assertFalse(True, "XSS in ebook title after conversion in tasks view")
+            ret = []
         self.assertEqual(ret[-1]['result'], 'Finished')
         self.assertEqual(ret[-1]['task'], 'Convert: PDF -> LRF: <p>calibre Quick Start Guide</p><img src=x onerror=alert("hoho")>')
         self.edit_book(11, content={'title': u'book9'})
@@ -559,6 +559,7 @@ class TestEbookConvertCalibre(ParallelTestCase):
             task_len, ret = self.wait_tasks(tasks, 1)
         except UnexpectedAlertPresentException:
             self.assertFalse(True, "XSS in tasks view after malicious user converted book")
+            ret = []
         self.assertEqual(ret[-1]['result'], 'Finished')
         self.assertEqual(ret[-1]['user'], '<p>calibre Quick Start Guide</p><img src=x onerror=alert("jo")>')
         self.edit_user('<p>calibre Quick Start Guide</p><img src=x onerror=alert("jo")>', {'delete': 1})
@@ -568,8 +569,8 @@ class TestEbookConvertCalibre(ParallelTestCase):
         vals = self.get_convert_book(3)
         from_book = set([x.text.strip() for x in vals['from_book']])
         to_book = set([x.text.strip() for x in vals['to_book']])
-        self.assertEqual(from_book, set(['-- select an option --', "CBR"]))
-        self.assertEqual(to_book, set([ '-- select an option --', "PDF", "EPUB", "MOBI", "AZW3", "DOCX", "RTF", "FB2", "LIT", "LRF", "TXT", "HTMLZ", "ODT"]))
+        self.assertEqual(from_book, {'-- select an option --', "CBR"})
+        self.assertEqual(to_book, {'-- select an option --', "PDF", "EPUB", "MOBI", "AZW3", "DOCX", "RTF", "FB2", "LIT", "LRF", "TXT", "HTMLZ", "ODT"})
         select = Select(vals['btn_from'])
         select.select_by_visible_text('CBR')
         select = Select(vals['btn_to'])
@@ -582,19 +583,23 @@ class TestEbookConvertCalibre(ParallelTestCase):
         vals = self.get_convert_book(3)
         from_book = set([x.text.strip() for x in vals['from_book']])
         to_book = set([x.text.strip() for x in vals['to_book']])
-        self.assertEqual(from_book, set(['-- select an option --', "CBR", "EPUB"]))
-        self.assertEqual(to_book, set([ '-- select an option --', "PDF", "MOBI", "AZW3", "DOCX", "RTF", "FB2", "LIT", "LRF", "TXT", "HTMLZ", "ODT"]))
+        self.assertEqual(from_book, {'-- select an option --', "CBR", "EPUB"})
+        self.assertEqual(to_book,
+                         {'-- select an option --', "PDF", "MOBI", "AZW3", "DOCX", "RTF", "FB2", "LIT", "LRF", "TXT",
+                          "HTMLZ", "ODT"})
 
         vals = self.get_convert_book(1)
         from_book = set([x.text for x in vals['from_book']])
         to_book = set([x.text for x in vals['to_book']])
-        self.assertEqual(from_book, set(['-- select an option --', "TXT"]))
-        self.assertEqual(to_book, set(['-- select an option --', "PDF", "EPUB", "MOBI", "AZW3", "DOCX", "RTF", "FB2", "LIT", "LRF", "HTMLZ", "ODT"]))
+        self.assertEqual(from_book, {'-- select an option --', "TXT"})
+        self.assertEqual(to_book,
+                         {'-- select an option --', "PDF", "EPUB", "MOBI", "AZW3", "DOCX", "RTF", "FB2", "LIT", "LRF",
+                          "HTMLZ", "ODT"})
         vals = self.get_convert_book(12)
         from_book = set([x.text for x in vals['from_book']])
         to_book = set([x.text for x in vals['to_book']])
-        self.assertEqual(from_book, set(['-- select an option --', "PDF"]))
-        self.assertEqual(to_book, set(['-- select an option --', "TXT", "EPUB", "MOBI", "AZW3", "DOCX", "RTF", "FB2", "LIT", "LRF", "TXT", "HTMLZ", "ODT"]))
+        self.assertEqual(from_book, {'-- select an option --', "PDF"})
+        self.assertEqual(to_book, {'-- select an option --', "TXT", "EPUB", "MOBI", "AZW3", "DOCX", "RTF", "FB2", "LIT", "LRF", "TXT", "HTMLZ", "ODT"})
 
     def test_calibre_log(self):
         self.fill_basic_config({'config_log_level': 'DEBUG'})
@@ -637,3 +642,71 @@ class TestEbookConvertCalibre(ParallelTestCase):
         self.assertTrue(self.check_element_on_page((By.ID, "flash_success")))
         self.fill_basic_config({'config_log_level': 'INFO'})
         self.assertTrue(self.check_element_on_page((By.ID, "flash_success")))
+
+    # CVE: Non-admin user with edit role posts a path-traversal value as book_format_to
+    # to the /admin/book/convert endpoint, bypassing the UI select-box constraints.
+    # The fix must reject any format value not in the EXTENSIONS_CONVERT_FROM /
+    # EXTENSIONS_CONVERT_TO allowlists before the value is forwarded to Calibre.
+    def test_convert_format_allowlist(self):
+        # Use a dedicated low-privilege user (edit role only, no admin).
+        self.create_user('cveusr', {'password': '123AbC*!', 'email': 'cve@b.com', 'edit_role': 1})
+
+        base_url = f'http://127.0.0.1:{self.worker_port}'
+        r = requests.session()
+
+        # Authenticate as the low-privilege user.
+        login_page = r.get(f'{base_url}/login', timeout=20)
+        token = re.search(r'<input type="hidden" name="csrf_token" value="(.*?)">', login_page.text)
+        payload = {'username': 'cveusr', 'password': '123AbC*!', 'submit': '', 'next': '/',
+                   'remember_me': 'on', 'csrf_token': token.group(1)}
+        r.post(f'{base_url}/login', data=payload, timeout=20)
+
+        # Fetch the book edit page to obtain a fresh CSRF token for the convert form.
+        book_edit_page = r.get(f'{base_url}/admin/book/1', timeout=20)
+        csrf_match = re.search(r'<input type="hidden" name="csrf_token" value="(.*?)">', book_edit_page.text)
+        convert_csrf = csrf_match.group(1)
+
+        # --- path-traversal in book_format_to ---
+        # Supplying a value outside the allowlist must be rejected with an error flash,
+        # and must NOT enqueue a conversion task.
+        tasks_before = self.check_tasks()
+        traversal_format = '../../cps/templates'
+        resp = r.post(
+            f'{base_url}/admin/book/convert/1',
+            data={'book_format_from': 'epub', 'book_format_to': traversal_format,
+                  'csrf_token': convert_csrf},
+            timeout=20,
+            allow_redirects=True
+        )
+        self.assertIn('flash_danger', resp.text,
+                      "Path-traversal in book_format_to must be rejected with an error flash")
+        self.assertNotIn('flash_success', resp.text,
+                         "Path-traversal in book_format_to must not succeed")
+        task_len, _ = self.check_tasks(tasks_before)
+        self.assertEqual(0, task_len,
+                         "No new conversion task must be queued for an invalid format")
+
+        # --- path-traversal in book_format_from ---
+        resp = r.post(
+            f'{base_url}/admin/book/convert/1',
+            data={'book_format_from': traversal_format, 'book_format_to': 'epub',
+                  'csrf_token': convert_csrf},
+            timeout=20,
+            allow_redirects=True
+        )
+        self.assertIn('flash_danger', resp.text,
+                      "Path-traversal in book_format_from must be rejected with an error flash")
+
+        # --- completely unknown format string ---
+        resp = r.post(
+            f'{base_url}/admin/book/convert/1',
+            data={'book_format_from': 'epub', 'book_format_to': 'notaformat',
+                  'csrf_token': convert_csrf},
+            timeout=20,
+            allow_redirects=True
+        )
+        self.assertIn('flash_danger', resp.text,
+                      "Unknown destination format must be rejected with an error flash")
+
+        r.close()
+        self.edit_user('cveusr', {'delete': 1})

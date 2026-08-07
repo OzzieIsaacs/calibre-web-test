@@ -46,6 +46,8 @@ class TestCoverEditBooks(ParallelTestCase):
 
     @classmethod
     def tearDownClass(cls):
+        if cls.proxy:
+            cls.proxy.stop_proxy()
         release_resource("port", cls.port)
         super().tearDownClass()
 
