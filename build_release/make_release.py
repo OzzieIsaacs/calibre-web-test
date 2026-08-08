@@ -16,7 +16,7 @@ import tarfile
 import platform
 import venv
 from subprocess import CalledProcessError
-from .subproc_wrapper import process_open
+from subproc_wrapper import process_open
 import configparser
 import argparse
 import tomlkit
@@ -27,7 +27,7 @@ import tomlkit
 from config import FILEPATH, VENV_PATH, VENV_PYTHON
 
 if platform.machine() in ("i386", "AMD64", "x86_64"):
-    from .helper_environment import environment, add_dependency
+    from helper_environment import environment, add_dependency
 else:
     from helper_environment import environment, add_dependency
 
