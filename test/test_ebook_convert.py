@@ -121,7 +121,7 @@ class TestEbookConvertCalibre(ParallelTestCase):
 
         self.goto_page('nav_about')
         element = self.check_element_on_page((By.XPATH, "//tr/th[text()='Ebook converter']/following::td[1]"))
-        self.assertEqual(element.text, 'Execution permissions missing')
+        self.assertEqual(element.text, 'not installed')
         details = self.get_book_details(5)
         self.assertEqual(len(details['kindle']), 1)
         details['kindlebtn'].click()

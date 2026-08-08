@@ -195,24 +195,26 @@ class TestSSL(ParallelTestCase):
         # open filepicker
         filepicker.click()
         self.assertTrue(self.check_element_on_page((By.ID, "element_selected"), timeout=10))
-        time.sleep(2)
+        time.sleep(3)
         found = False
         selections = self.driver.find_elements(By.XPATH, "//tr[@class='tr-clickable']/td[2]")
+        elements = [i.text for i in selections]
         for i in selections:
             if i.text == "files":
                 i.click()
                 found = True
                 break
-        self.assertTrue(found, "files folder not found")
+        self.assertTrue(found, f"files folder not found in {elements}")
         found = False
-        time.sleep(2)
+        time.sleep(3)
         file_selections = self.driver.find_elements(By.XPATH, "//tr[@class='tr-clickable']/td[2]")
+        elements = [i.text for i in file_selections]
         for i in file_selections:
             if i.text == "client.crt":
                 i.click()
                 found = True
                 break
-        self.assertTrue(found, "client.crt not found")
+        self.assertTrue(found, f"client.crt not found in {elements}")
         crt_element = self.check_element_on_page((By.ID, "element_selected")).text
         self.check_element_on_page((By.ID, "file_confirm")).click()
         # the dialog needs some time to animate away
@@ -225,6 +227,7 @@ class TestSSL(ParallelTestCase):
         found = False
         time.sleep(2)
         selections = self.driver.find_elements(By.XPATH, "//tr[@class='tr-clickable']/td[2]")
+        elements = [i.text for i in selections]
         for i in selections:
             if i.text == "files":
                 i.click()

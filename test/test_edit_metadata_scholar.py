@@ -6,7 +6,7 @@ from diffimg import diff
 from io import BytesIO
 
 from selenium.webdriver.common.by import By
-from helper_func import startup
+from helper_func import startup, wait_for_reboot
 
 
 class TestLoadMetadataScholar(ParallelTestCase):
@@ -21,7 +21,7 @@ class TestLoadMetadataScholar(ParallelTestCase):
                     port=cls.worker_port,
                     app_dir=cls.app_dir,
                     env={"APP_MODE": "test", "CALIBRE_PORT": cls.worker_port},
-                    lib_dest=cls.temp_dir
+                    lib_dest=cls.temp_dir, local_ssl=False
                     )
             time.sleep(3)
         except Exception:
@@ -30,7 +30,7 @@ class TestLoadMetadataScholar(ParallelTestCase):
 
     def test_load_metadata(self):
         self.fill_basic_config({'config_uploading': 1})
-        time.sleep(3)
+        wait_for_reboot(f"http://127.0.0.1:{self.worker_port}")
         self.assertTrue(self.check_element_on_page((By.ID, "flash_success")))
         self.get_book_details(1)
         self.check_element_on_page((By.ID, "edit_book")).click()
@@ -70,8 +70,7 @@ class TestLoadMetadataScholar(ParallelTestCase):
         self.assertEqual(results[0]['author'], self.check_element_on_page((By.ID, "authors")).get_attribute("value"))
         self.assertEqual(results[0]['publisher'], self.check_element_on_page((By.ID, "publisher")).get_attribute("value"))
         self.fill_basic_config({'config_uploading': 0})
-        time.sleep(3)
-        self.assertTrue(self.check_element_on_page((By.ID, "flash_success")))
+        self.assertTrue(self.check_element_on_page((By.ID, "flash_success"), timeout=10))
 
 
 

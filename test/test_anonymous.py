@@ -9,8 +9,6 @@ from helper_func import startup
 
 class TestAnonymous(ParallelTestCase):
 
-
-
     @classmethod
     def setUpClass(cls):
         super().setUpClass()

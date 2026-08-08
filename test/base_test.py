@@ -12,18 +12,17 @@ from datetime import datetime
 from helper_func import save_logfiles, add_dependency, remove_dependency
 from helper_ui import ui_class
 from helper_gdrive import prepare_gdrive
-from config_test import TEST_BASE, VENV_PYTHON, base_path
+from config_test import TEST_BASE, VENV_PYTHON, base_path, LOG_FILE_ENV, RESOURCE_DIR, REPORT_DIR
 from selenium.common.exceptions import WebDriverException
 
-RESOURCE_DIR = "/tmp/calibre_web_test_resources"
-os.makedirs(RESOURCE_DIR,exist_ok=True)
 
+os.makedirs(RESOURCE_DIR,exist_ok=True)
 STATE_FILE = os.path.join(RESOURCE_DIR, "resources.json")
 LOCK_FILE = os.path.join(RESOURCE_DIR, "resources.lock")
 
-REPORT_DIR = "test_reports"
-LOG_FILE = os.path.join(TEST_BASE, "test_runner.log")
-LOG_FILE_ENV = "CWT_TEST_LOG_FILE"
+log_now = datetime.now().strftime("%H:%M:%S")
+LOG_FILE = os.path.join(TEST_BASE, f"test_runner_{log_now}.log")
+
 
 logger = logging.getLogger("calibre_web_test.test_runner")
 if not logger.handlers:

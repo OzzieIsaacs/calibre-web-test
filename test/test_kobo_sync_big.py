@@ -7,7 +7,7 @@ import time
 import requests
 import shutil
 
-from config_test import base_path,  NUM_THUMBNAILS
+from config_test import base_path,  NUM_THUMBNAILS, LOG_FILE_ENV
 from helper_func import startup, get_Host_IP, count_files
 from helper_db import add_books
 from selenium.webdriver.common.by import By
@@ -107,7 +107,8 @@ class TestKoboSyncBig(ParallelTestCase):
         params = {'Filter': 'All', 'DownloadUrlFilter': 'Generic,Android', 'PrioritizeRecentReads': 'true'}
         data = list()
         while True:
-            self.log(".")
+            if not os.environ.get(LOG_FILE_ENV):
+                self.log(".")
             r = session.get(kobo_address + '/v1/library/sync',
                             params=params,
                             headers=TestKoboSyncBig.syncToken.get(kobo_address),

@@ -164,7 +164,7 @@ def copy_calibre_web_for_test(app_dir):
 
 def startup(inst, pyVersion, config, login=True, host="http://127.0.0.1", port="8083", app_dir = "",
             env=None, parameter=None, work_path=None, only_startup=False, only_metadata=False,
-            split=False, lib_path="", lib_dest=""):
+            split=False, lib_path="", lib_dest="", local_ssl=True):
     copy_calibre_web_for_test(app_dir)
     if not only_metadata:
         try:
@@ -188,9 +188,10 @@ def startup(inst, pyVersion, config, login=True, host="http://127.0.0.1", port="
             print('Metadata.db already present, might not be a clean version')
     command = [pyVersion, os.path.join(app_dir, u'cps.py')]
     my_env = os.environ.copy()
-    ca_cert = os.path.join(base_path, "files", "ca.cert.pem")
-    if os.path.isfile(ca_cert):
-        my_env.setdefault("SSL_CERT_FILE", ca_cert)
+    if local_ssl:
+        ca_cert = os.path.join(base_path, "files", "ca.cert.pem")
+        if os.path.isfile(ca_cert):
+            my_env.setdefault("SSL_CERT_FILE", ca_cert)
     if env:
         env = {**my_env, **env}
     else:

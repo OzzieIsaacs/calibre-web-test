@@ -12,6 +12,7 @@ import shutil
 import json
 import virtualenv
 import io
+from queue import Empty
 
 ROOT_DIR = os.path.dirname(os.path.abspath(__file__))
 TEST_DIR = os.path.join(ROOT_DIR, "test")
@@ -64,8 +65,35 @@ def discover_test_classes():
             # skip your abstract/base test class
             if obj.__name__ == "ParallelTestCase":
                 continue
-            discovered.append((module_name, name))
+            discovered.append((module_name, name, getattr(obj, "resource_lock", None)))
     return discovered
+
+
+def _test_queue_worker(worker_id, general_queue, result_queue, gdrive_queue=None):
+    os.environ["TEST_WORKER_ID"] = str(worker_id)
+    os.environ["TEST_PORT"] = str(BASE_PORT + worker_id)
+
+    while True:
+        task = None
+
+        if gdrive_queue is not None:
+            try:
+                task = gdrive_queue.get_nowait()
+            except Empty:
+                gdrive_queue = None
+            else:
+                if task is None:
+                    gdrive_queue = None
+                    task = None
+
+        if task is None:
+            task = general_queue.get()
+
+        if task is None:
+            return
+
+        module_name, class_name = task
+        result_queue.put(run_test_class((module_name, class_name, worker_id)))
 
 
 # =========================================================
@@ -206,14 +234,51 @@ def main():
 
     now = datetime.datetime.now().strftime("%H:%M:%S")
     print(f"[System] {now} - Found {len(discovered)} test classes")
-    tasks = []
+    general_tasks = []
+    gdrive_tasks = []
 
-    for index, (module_name, class_name) in enumerate(discovered):
-        worker_id = index % args.workers
-        tasks.append((module_name, class_name, worker_id,))
+    for module_name, class_name, resource_lock in discovered:
+        task = (module_name, class_name)
+        if resource_lock == "gdrive":
+            gdrive_tasks.append(task)
+        else:
+            general_tasks.append(task)
 
-    with multiprocessing.Pool(processes=args.workers) as pool:
-        results = pool.map(run_test_class,tasks,)
+    general_queue = multiprocessing.Queue()
+    result_queue = multiprocessing.Queue()
+    gdrive_queue = multiprocessing.Queue() if gdrive_tasks else None
+
+    for task in general_tasks:
+        general_queue.put(task)
+    for _ in range(args.workers):
+        general_queue.put(None)
+
+    if gdrive_queue is not None:
+        for task in gdrive_tasks:
+            gdrive_queue.put(task)
+        gdrive_queue.put(None)
+
+    workers = []
+    for worker_id in range(max(args.workers - 1, 0)):
+        process = multiprocessing.Process(
+            target=_test_queue_worker,
+            args=(worker_id, general_queue, result_queue),
+        )
+        process.start()
+        workers.append(process)
+
+    special_worker_id = max(args.workers - 1, 0)
+    special_worker = multiprocessing.Process(
+        target=_test_queue_worker,
+        args=(special_worker_id, general_queue, result_queue, gdrive_queue),
+    )
+    special_worker.start()
+    workers.append(special_worker)
+
+    results = [result_queue.get() for _ in range(len(discovered))]
+
+    for process in workers:
+        process.join()
 
     print("\n====================")
     print("FINAL RESULTS")

@@ -55,6 +55,14 @@ class TestCliGdrivedb(ParallelTestCase):
             self.log(str(e))
         os.chdir(base_path)
 
+    @classmethod
+    def tearDownClass(cls, no=False):
+        super().tearDownClass(no=True)
+        try:
+            cls.driver.quit()
+        except Exception:
+            pass
+
     def wait_page_has_loaded(self):
         time.sleep(5)
         while True:

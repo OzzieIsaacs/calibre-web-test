@@ -3,6 +3,7 @@
 from base_test import ParallelTestCase, log_message
 import time
 import re
+import os
 import requests
 import random
 import threading
@@ -11,6 +12,7 @@ from selenium.webdriver.common.by import By
 from selenium.webdriver.support.ui import WebDriverWait
 from selenium.webdriver.support import expected_conditions as EC
 from helper_func import startup
+from config_test import LOG_FILE_ENV
 
 
 def user_change(user, worker_port, result, index):
@@ -42,7 +44,8 @@ def user_change(user, worker_port, result, index):
             result[index] = False
             return
     r.close()
-    log_message('Finished: ' + user, class_name="TestUserLoad")
+    if not os.environ.get(LOG_FILE_ENV):
+        log_message('Finished: ' + user, class_name="TestUserLoad")
     result[index] = True
     return
 

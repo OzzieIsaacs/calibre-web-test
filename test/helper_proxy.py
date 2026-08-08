@@ -320,12 +320,22 @@ class Proxy():
     def stop_proxy(self):
         try:
             if self._master:
+                proxyserver = self._master.addons.get("proxyserver")
+                if proxyserver and getattr(proxyserver, "servers", None):
+                    future = asyncio.run_coroutine_threadsafe(
+                        proxyserver.servers.update([]), self._master.event_loop
+                    )
+                    future.result(timeout=5)
+
                 self._master.shutdown()
 
-            if self._thread:
-                self._thread.join(timeout=5)
+            if self._thread and self._thread.is_alive():
+                self._thread.join()
         except Exception as e:
             print(e)
+        finally:
+            self._master = None
+            self._thread = None
 
     # ----------------------------------------------------------
     # THREAD
