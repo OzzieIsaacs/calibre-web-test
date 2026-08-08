@@ -1,67 +1,51 @@
-#!/usr/bin/env python
 # -*- coding: utf-8 -*-
 
 import unittest
+from base_test import ParallelTestCase
 import os
 import time
 import requests
 import re
 import lxml
+import datetime
+import stat
 from io import StringIO
 
-import helper_email_convert
+
 from selenium.webdriver.common.by import By
-from selenium.webdriver.support.ui import Select
-from helper_ui import ui_class
-from config_test import CALIBRE_WEB_PATH, TEST_DB
-from helper_func import startup
-from helper_func import save_logfiles
-from selenium.webdriver.support.ui import WebDriverWait
+from selenium.webdriver.support.ui import Select, WebDriverWait
 from selenium.webdriver.support import expected_conditions as EC
+from helper_email_convert import kepubify_path, is_kepubify_not_present
+from helper_func import startup
 
 
-RESOURCES = {'ports': 1}
+@unittest.skipIf(is_kepubify_not_present(), "Skipping convert, kepubify not found")
+class TestEbookConvertKepubify(ParallelTestCase):
 
-PORTS = ['8083']
-INDEX = ""
-
-
-@unittest.skipIf(helper_email_convert.is_kepubify_not_present(), "Skipping convert, kepubify not found")
-class TestEbookConvertKepubify(unittest.TestCase, ui_class):
-    p = None
-    driver = None
     email_server = None
 
     @classmethod
     def setUpClass(cls):
+        super().setUpClass()
         try:
-            startup(cls, cls.py_version, {'config_calibre_dir':TEST_DB,
+            startup(cls, cls.py_version, {'config_calibre_dir':cls.temp_dir,
                                           'config_binariesdir':'',
-                                          'config_kepubifypath':helper_email_convert.kepubify_path()}, 
-                    port=PORTS[0], index=INDEX, env={"APP_MODE": "test"})
+                                          'config_kepubifypath':kepubify_path()},
+                    port=cls.worker_port,
+                    app_dir=cls.app_dir,
+                    env={"APP_MODE": "test", "CALIBRE_PORT": cls.worker_port},
+                    lib_dest=cls.temp_dir)
 
             cls.edit_user('admin', {'email': 'a5@b.com', 'kindle_mail': 'a1@b.com'})
             time.sleep(2)
             WebDriverWait(cls.driver, 5).until(EC.presence_of_element_located((By.ID, "flash_success")))
         except Exception as e:
-            print("Dead on Init - check Calibre-Web is starting")
+            cls.log_class("Dead on Init - check Calibre-Web is starting")
             cls.driver.quit()
             cls.p.kill()
 
-    @classmethod
-    def tearDownClass(cls):
-        try:
-            # close the browser window and stop calibre-web
-            cls.driver.get("http://127.0.0.1:" + PORTS[0])
-            cls.stop_calibre_web()
-            cls.driver.quit()
-            cls.p.terminate()
-        except Exception as e:
-            print(e)
-        time.sleep(2)
-        save_logfiles(cls, cls.__name__)
-
     def tearDown(self):
+        super().tearDown()
         if not self.check_user_logged_in('admin'):
             self.logout()
             self.login('admin', 'admin123')
@@ -78,14 +62,14 @@ class TestEbookConvertKepubify(unittest.TestCase, ui_class):
         vals = self.get_convert_book(1)
         self.assertFalse(vals['btn_from'])
         self.assertFalse(vals['btn_to'])
-        self.fill_basic_config({'config_kepubifypath':helper_email_convert.kepubify_path()})
+        self.fill_basic_config({'config_kepubifypath':kepubify_path()})
 
     # Set excecutable to wrong exe and start convert
     # set excecutable not existing and start convert
     # set excecutable non excecutable and start convert
     def test_convert_wrong_excecutable(self):
         self.fill_basic_config({'config_kepubifypath':'/opt/kepubify/ebook-polish'})
-        self.assertTrue(self.check_element_on_page((By.ID, "flash_success")))
+        self.assertTrue(self.check_element_on_page((By.ID, "flash_danger")))
         self.goto_page('nav_about')
         element = self.check_element_on_page((By.XPATH, "//tr/th[text()='Kepubify']/following::td[1]"))
         self.assertEqual(element.text, 'not installed')
@@ -94,17 +78,21 @@ class TestEbookConvertKepubify(unittest.TestCase, ui_class):
         details = self.get_book_details(5)
         self.assertEqual(len(details['kindle']), 1)
         vals = self.get_convert_book(5)
-        # ToDo: change behavior convert should only be visible if ebookconverter has valid entry
         self.assertTrue(vals['btn_from'])
         self.assertTrue(vals['btn_to'])
 
-        nonexec = os.path.join(CALIBRE_WEB_PATH + INDEX, 'app.db')
-        self.fill_basic_config({'config_kepubifypath': nonexec})
-        self.assertTrue(self.check_element_on_page((By.ID, "flash_success")))
-        self.goto_page('nav_about')
-        element = self.check_element_on_page((By.XPATH, "//tr/th[text()='Kepubify']/following::td[1]"))
-        self.assertEqual(element.text, 'Execution permissions missing')
-        self.fill_basic_config({'config_kepubifypath': helper_email_convert.kepubify_path()})
+        kepubify = kepubify_path()
+        original_mode = os.stat(kepubify).st_mode
+        try:
+            os.chmod(kepubify, original_mode & ~stat.S_IXUSR & ~stat.S_IXGRP & ~stat.S_IXOTH)
+            self.fill_basic_config({'config_kepubifypath': os.path.dirname(kepubify)})
+            self.assertTrue(self.check_element_on_page((By.ID, "flash_danger")))
+            self.goto_page('nav_about')
+            element = self.check_element_on_page((By.XPATH, "//tr/th[text()='Kepubify']/following::td[1]"))
+            self.assertEqual(element.text, 'not installed')
+        finally:
+            os.chmod(kepubify, original_mode)
+        self.fill_basic_config({'config_kepubifypath': os.path.dirname(kepubify)})
 
     # convert epub to kepub
     # try start conversion of mobi -> not visible
@@ -216,28 +204,28 @@ class TestEbookConvertKepubify(unittest.TestCase, ui_class):
 
         r = requests.session()
         r.headers["User-Agent"] = 'kobo 1.0'
-        login_page = r.get('http://127.0.0.1:{}/login'.format(PORTS[0]))
+        login_page = r.get('http://127.0.0.1:{}/login'.format(self.worker_port))
         token = re.search('<input type="hidden" name="csrf_token" value="(.*)">', login_page.text)
         payload = {'username': 'admin', 'password': 'admin123', 'submit':"", 'next':"/", "remember_me":"on",
                    "csrf_token": token.group(1)}
-        r.post('http://127.0.0.1:{}/login'.format(PORTS[0]), data=payload)
-        resp = r.get('http://127.0.0.1:{}/book/9'.format(PORTS[0]))
+        r.post('http://127.0.0.1:{}/login'.format(self.worker_port), data=payload)
+        resp = r.get('http://127.0.0.1:{}/book/9'.format(self.worker_port))
         # try to download book from details as kobo reader -> kepub.epub
         parser = lxml.etree.HTMLParser()
         tree = lxml.etree.parse(StringIO(resp.text), parser)
-        download_link = tree.findall("//*[@aria-labelledby='btnGroupDrop1']//a")
+        download_link = tree.findall(".//*[@aria-labelledby='btnGroupDrop1']//a")
         self.assertTrue(download_link[1].get("href").endswith('/9.kepub.epub'),
                         'Download Link has invalid format for kobo browser, has to end with filename')
         # delete epub
         self.delete_book_format(9, "EPUB")
         self.assertTrue(self.check_element_on_page((By.ID, "flash_success")))
         # try to download book from details as kobo reader -> kepub.epub
-        resp = r.get('http://127.0.0.1:{}/book/9'.format(PORTS[0]))
+        resp = r.get('http://127.0.0.1:{}/book/9'.format(self.worker_port))
         tree = lxml.etree.parse(StringIO(resp.text), parser)
         download_link = tree.xpath("//*[starts-with(@id,'btnGroupDrop')]")
         self.assertTrue(download_link[0].get("href").endswith('/9.kepub.epub'),
                         'Download Link has invalid format for kobo browser, has to end with filename')
-        resp = r.get('http://127.0.0.1:{}/simpleshelf/{}'.format(PORTS[0], shelves[0]['id']))
+        resp = r.get('http://127.0.0.1:{}/simpleshelf/{}'.format(self.worker_port, shelves[0]['id']))
         tree = lxml.etree.parse(StringIO(resp.text), parser)
         download_link = tree.xpath(".//*[starts-with(@id,'btnGroupDrop')]")
         self.assertTrue(download_link[0].get("href").endswith('/9.kepub.epub'),

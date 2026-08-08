@@ -2,45 +2,42 @@
 # -*- coding: utf-8 -*-
 
 
-from unittest import TestCase
+from base_test import ParallelTestCase, acquire_resource, release_resource
 import os
 import time
-# import requests
 
 from selenium.webdriver.common.by import By
-from helper_ui import ui_class
-from config_test import TEST_DB, base_path
+from config_test import base_path
 from helper_func import startup
 from helper_proxy import Proxy, val
-from helper_func import save_logfiles
 from diffimg import diff
 from io import BytesIO
 
-RESOURCES = {'ports':2}
 
-PORTS = ['8083', '8080']
-INDEX = ""
+class TestCoverEditBooks(ParallelTestCase):
 
-
-class TestCoverEditBooks(TestCase, ui_class):
-    p = None
-    driver = None
     proxy = None
 
     @classmethod
     def setUpClass(cls):
-
+        super().setUpClass()
         try:
-            cls.proxy = Proxy()
+            cls.port = acquire_resource("port")
+            cls.proxy = Proxy(cls.port)
             cls.proxy.start()
             pem_file = os.path.join(os.path.expanduser('~'), '.mitmproxy', 'mitmproxy-ca-cert.pem')
             my_env = os.environ.copy()
-            my_env["http_proxy"] = 'http://localhost:' + PORTS[1]
-            my_env["https_proxy"] = 'http://localhost:' + PORTS[1]
+            my_env["http_proxy"] = f'http://localhost:{cls.port}'
+            my_env["https_proxy"] = f'http://localhost:{cls.port}'
             my_env["REQUESTS_CA_BUNDLE"] = pem_file
             my_env["APP_MODE"] = "test"
-            # my_env["LANG"] = 'de_DE.UTF-8'
-            startup(cls, cls.py_version, {'config_calibre_dir': TEST_DB, 'config_uploading': 1}, index=INDEX, env=my_env,
+            my_env["CALIBRE_PORT"] = cls.worker_port
+            startup(cls, cls.py_version,
+                    {'config_calibre_dir': cls.temp_dir, 'config_uploading': 1},
+                    port=cls.worker_port,
+                    app_dir=cls.app_dir,
+                    env=my_env,
+                    lib_dest=cls.temp_dir,
                     parameter=["-l"])
             time.sleep(3)
         except Exception:
@@ -49,12 +46,9 @@ class TestCoverEditBooks(TestCase, ui_class):
 
     @classmethod
     def tearDownClass(cls):
-        cls.driver.get("http://127.0.0.1:" + PORTS[0])
-        cls.stop_calibre_web()
-        cls.driver.quit()
         cls.proxy.stop_proxy()
-        cls.p.terminate()
-        save_logfiles(cls, cls.__name__)
+        release_resource("port", cls.port)
+        super().tearDownClass()
 
     def check_invalid_cover(self, invalid_cover):
         self.get_book_details(9)

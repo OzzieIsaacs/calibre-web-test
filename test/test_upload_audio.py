@@ -1,17 +1,9 @@
-#!/usr/bin/env python
 # -*- coding: utf-8 -*-
+
+from base_test import ParallelTestCase
 import shutil
-from unittest import TestCase
 import os
 import time
-
-from selenium.webdriver.common.by import By
-from helper_ui import ui_class
-from config_test import TEST_DB, base_path
-from helper_func import save_logfiles
-from helper_func import startup, add_dependency, remove_dependency
-from selenium.webdriver.support.ui import WebDriverWait
-from selenium.webdriver.support import expected_conditions as EC
 from diffimg import diff
 from io import BytesIO
 import base64
@@ -19,27 +11,28 @@ import mutagen
 from mutagen import mp3, wave, aiff, flac, oggvorbis, asf, mp4, apev2, oggopus, oggtheora
 from mutagen.flac import Picture
 
-RESOURCES = {'ports': 1}
+from selenium.webdriver.common.by import By
+from selenium.webdriver.support.ui import WebDriverWait
+from selenium.webdriver.support import expected_conditions as EC
+from config_test import base_path
+from helper_func import startup
 
-PORTS = ['8083']
-INDEX = ""
 
+class TestUploadAudio(ParallelTestCase):
 
-class TestUploadAudio(TestCase, ui_class):
-    p = None
-    driver = None
-    dependencys = ["mutagen"]
+    dependency = ["mutagen"]
     png_original = None
     jpg_original = None
 
     @classmethod
     def setUpClass(cls):
-        add_dependency(cls.dependencys, cls.__name__)
-
+        super().setUpClass()
         try:
-            startup(cls, cls.py_version, {'config_calibre_dir': TEST_DB, 'config_uploading': 1},
-                    port=PORTS[0], index=INDEX,
-                    env={"APP_MODE": "test"})
+            startup(cls, cls.py_version, {'config_calibre_dir': cls.temp_dir, 'config_uploading': 1},
+                    port=cls.worker_port,
+                    app_dir=cls.app_dir,
+                    env={"APP_MODE": "test", "CALIBRE_PORT": cls.worker_port},
+                    lib_dest=cls.temp_dir)
             time.sleep(3)
             WebDriverWait(cls.driver, 5).until(EC.presence_of_element_located((By.ID, "flash_success")))
             png_cover_path = os.path.join(base_path, 'files', 'cover.png')
@@ -53,16 +46,6 @@ class TestUploadAudio(TestCase, ui_class):
         except Exception as e:
             cls.driver.quit()
             cls.p.kill()
-
-    @classmethod
-    def tearDownClass(cls):
-        remove_dependency(cls.dependencys)
-        cls.driver.get("http://127.0.0.1:" + PORTS[0])
-        cls.stop_calibre_web()
-        # close the browser window and stop calibre-web
-        cls.driver.quit()
-        cls.p.terminate()
-        save_logfiles(cls, cls.__name__)
 
     def test_upload_mp3(self):
         dest = os.path.join(base_path, "files", 'base.mp3')
@@ -218,7 +201,7 @@ class TestUploadAudio(TestCase, ui_class):
         aiff_file['TRCK'] = mutagen.id3.TRCK(encoding=1, text=['2/12'])
         aiff_file['TPUB'] = mutagen.id3.TPUB(encoding=1, text=['Älsids sdksdsd '])
 
-        with open(os.path.join("files", 'cover.png'), "rb") as f:
+        with open(os.path.join(base_path, "files", 'cover.png'), "rb") as f:
             ref_picture = f.read()
 
         aiff_file.tags.add(
@@ -281,7 +264,7 @@ class TestUploadAudio(TestCase, ui_class):
         ogg_file['LABEL'] = " Älsids sdksdsd "
         ogg_file['GENRE'] = "Genr#Ä"
 
-        with open(os.path.join("files", 'cover.png'), "rb") as f:
+        with open(os.path.join(base_path, "files", 'cover.png'), "rb") as f:
             ref_picture = f.read()
         picture = Picture()
         picture.data = ref_picture
@@ -346,7 +329,7 @@ class TestUploadAudio(TestCase, ui_class):
         flac_file['LABEL'] = " Älsids sdksdsd "
         flac_file['GENRE'] = "Genr#Ä"
 
-        with open(os.path.join("files", 'cover.png'), "rb") as f:
+        with open(os.path.join(base_path, "files", 'cover.png'), "rb") as f:
             ref_picture = f.read()
         picture = Picture()
         picture.data = ref_picture
@@ -499,7 +482,7 @@ class TestUploadAudio(TestCase, ui_class):
         mp4_file['©cmt'] = "MP4 Comments"
         mp4_file['©gen'] = "Genr#Ä"
 
-        with open(os.path.join("files", 'cover.png'), "rb") as f:
+        with open(os.path.join(base_path, "files", 'cover.png'), "rb") as f:
             ref_picture = f.read()
 
         pic = mutagen.mp4.MP4Cover(ref_picture, imageformat=mutagen.mp4.MP4Cover.FORMAT_PNG)
@@ -620,7 +603,7 @@ class TestUploadAudio(TestCase, ui_class):
         opus_file['LABEL'] = " Älsids sdksdsd "
         opus_file['GENRE'] = "Genr#Ä"
 
-        with open(os.path.join("files", 'cover.png'), "rb") as f:
+        with open(os.path.join(base_path, "files", 'cover.png'), "rb") as f:
             ref_picture = f.read()
         picture = Picture()
         picture.data = ref_picture
@@ -670,7 +653,7 @@ class TestUploadAudio(TestCase, ui_class):
         theora_file['LABEL'] = " Älsids sdksdsd "
         theora_file['GENRE'] = "Genr#Ä"
 
-        with open(os.path.join("files", 'cover.png'), "rb") as f:
+        with open(os.path.join(base_path, "files", 'cover.png'), "rb") as f:
             ref_picture = f.read()
 
         picture = Picture()

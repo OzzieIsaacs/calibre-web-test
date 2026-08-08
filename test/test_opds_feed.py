@@ -1,60 +1,44 @@
-#!/usr/bin/env python
 # -*- coding: utf-8 -*-
+
+from base_test import ParallelTestCase
 import json
-import unittest
-from selenium.webdriver.common.by import By
-from helper_ui import ui_class, RESTRICT_TAG_ME
-from config_test import TEST_DB, BOOT_TIME
 import requests
-from helper_func import startup, debug_startup
 import time
-from helper_func import save_logfiles
 import re
 from urllib.parse import quote_plus
 
-
-RESOURCES = {'ports': 1}
-
-PORTS = ['8083']
-INDEX = ""
+from selenium.webdriver.common.by import By
+from helper_ui import RESTRICT_TAG_ME
+from helper_func import startup, wait_for_reboot
 
 
-class TestOPDSFeed(unittest.TestCase, ui_class):
-    p = None
-    driver = None
+class TestOPDSFeed(ParallelTestCase):
 
     @classmethod
     def setUpClass(cls):
-        startup(cls, cls.py_version, {'config_calibre_dir': TEST_DB, 'config_embed_metadata': 0},
-                login=False, port=PORTS[0], index=INDEX, env={"APP_MODE": "test"})
-
-    @classmethod
-    def tearDownClass(cls):
-        cls.driver.get("http://127.0.0.1:" + PORTS[0])
-        try:
-            cls.login('admin', 'admin123')
-        except Exception:
-            pass
-        cls.stop_calibre_web()
-        # close the browser window and stop calibre-web
-        cls.driver.quit()
-        cls.p.terminate()
-        save_logfiles(cls, cls.__name__)
+        super().setUpClass()
+        startup(cls, cls.py_version, {'config_calibre_dir': cls.temp_dir, 'config_embed_metadata': 0},
+                login=False,
+                port=cls.worker_port,
+                app_dir=cls.app_dir,
+                env={"APP_MODE": "test", "CALIBRE_PORT": cls.worker_port},
+                lib_dest=cls.temp_dir)
 
     def tearDown(self):
+        super().tearDown()
         try:
             if self.check_user_logged_in('admin'):
                 self.logout()
                 time.sleep(2)
         except Exception:
-            self.driver.get("http://127.0.0.1:" + PORTS[0])
+            self.driver.get("http://127.0.0.1:" + self.worker_port)
             if self.check_user_logged_in('admin'):
                 self.logout()
                 time.sleep(2)
 
 
     def test_opds(self):
-        host = 'http://127.0.0.1:' + PORTS[0]
+        host = 'http://127.0.0.1:' + self.worker_port
         r = requests.get(host + '/opds')
         self.assertEqual(401, r.status_code)
         r = requests.get(host + '/opds', auth=('admin', '123'))
@@ -95,10 +79,11 @@ class TestOPDSFeed(unittest.TestCase, ui_class):
         self.assertEqual(200, r.status_code)
 
     def test_opds_guest_user(self):
-        host = 'http://127.0.0.1:' + PORTS[0]
+        host = 'http://127.0.0.1:' + self.worker_port
         self.login("admin", "admin123")
         self.fill_basic_config({'config_anonbrowse': 1})
-        time.sleep(BOOT_TIME)
+        wait_for_reboot(f"http://127.0.0.1:{self.worker_port}")
+        self.assertTrue(self.check_element_on_page((By.ID, "flash_success")))
         self.edit_user('Guest', {'download_role': 1})
         self.assertTrue(self.check_element_on_page((By.ID, "flash_success")))
         self.edit_user('admin', {'download_role': 0})
@@ -108,7 +93,7 @@ class TestOPDSFeed(unittest.TestCase, ui_class):
                                  'show_16': 1, 'show_4': 1, 'show_4096': 1, 'show_8': 1, 'show_32': 1})
         self.assertTrue(self.check_element_on_page((By.ID, "flash_success")))
         self.logout()
-        r = requests.get('http://127.0.0.1:{}/opds'.format(PORTS[0]))
+        r = requests.get('http://127.0.0.1:{}/opds'.format(self.worker_port))
         self.assertEqual(200, r.status_code)
         elements = self.get_opds_index(r.text)
         r = requests.get(host + elements['Authors']['link'])
@@ -205,7 +190,7 @@ class TestOPDSFeed(unittest.TestCase, ui_class):
                                  'show_16': 0, 'show_4': 0, 'show_4096': 0, 'show_8': 0, 'show_32': 0})
         self.assertTrue(self.check_element_on_page((By.ID, "flash_success")))
         self.fill_basic_config({'config_anonbrowse': 0})
-        time.sleep(BOOT_TIME)
+        wait_for_reboot(f"http://127.0.0.1:{self.worker_port}")
         self.assertTrue(self.check_element_on_page((By.ID, "flash_success")))
         self.logout()
         # try download from guest account, fails
@@ -219,7 +204,7 @@ class TestOPDSFeed(unittest.TestCase, ui_class):
         self.assertEqual(401, r.status_code)
 
     def test_opds_random(self):
-        host = 'http://127.0.0.1:' + PORTS[0]
+        host = 'http://127.0.0.1:' + self.worker_port
         self.login("admin", "admin123")
         self.fill_view_config({'config_books_per_page': 10})
         self.logout()
@@ -237,7 +222,7 @@ class TestOPDSFeed(unittest.TestCase, ui_class):
         time.sleep(3)
 
     def test_opds_hot(self):
-        host = 'http://127.0.0.1:' + PORTS[0]
+        host = 'http://127.0.0.1:' + self.worker_port
         r = requests.get(host + '/opds/', auth=('admin', 'admin123'))
         self.assertEqual(200, r.status_code)
         elements = self.get_opds_index(r.text)
@@ -247,7 +232,7 @@ class TestOPDSFeed(unittest.TestCase, ui_class):
         self.assertEqual(len(entries['links']), 5)   # no next, prev section
 
     def test_opds_language(self):
-        host = 'http://127.0.0.1:' + PORTS[0]
+        host = 'http://127.0.0.1:' + self.worker_port
         r = requests.get(host + '/opds/', auth=('admin', 'admin123'))
         self.assertEqual(200, r.status_code)
         elements = self.get_opds_index(r.text)
@@ -276,7 +261,7 @@ class TestOPDSFeed(unittest.TestCase, ui_class):
         time.sleep(3)
 
     def test_opds_books(self):
-        host = 'http://127.0.0.1:' + PORTS[0]
+        host = 'http://127.0.0.1:' + self.worker_port
         r = requests.get(host + '/opds/', auth=('admin', 'admin123'))
         self.assertEqual(200, r.status_code)
         elements = self.get_opds_index(r.text)
@@ -298,7 +283,7 @@ class TestOPDSFeed(unittest.TestCase, ui_class):
 
 
     def test_opds_series(self):
-        host = 'http://127.0.0.1:' + PORTS[0]
+        host = 'http://127.0.0.1:' + self.worker_port
         r = requests.get(host + '/opds/', auth=('admin', 'admin123'))
         self.assertEqual(200, r.status_code)
         elements = self.get_opds_index(r.text)
@@ -320,7 +305,7 @@ class TestOPDSFeed(unittest.TestCase, ui_class):
         self.assertEqual(len(entries['elements']), 0)
 
     def test_opds_publisher(self):
-        host = 'http://127.0.0.1:' + PORTS[0]
+        host = 'http://127.0.0.1:' + self.worker_port
         r = requests.get(host + '/opds/', auth=('admin', 'admin123'))
         self.assertEqual(200, r.status_code)
         elements = self.get_opds_index(r.text)
@@ -337,7 +322,7 @@ class TestOPDSFeed(unittest.TestCase, ui_class):
         self.assertEqual(len(entries['elements']), 0)
 
     def test_opds_tags(self):
-        host = 'http://127.0.0.1:' + PORTS[0]
+        host = 'http://127.0.0.1:' + self.worker_port
         r = requests.get(host + '/opds/', auth=('admin', 'admin123'))
         self.assertEqual(200, r.status_code)
         elements = self.get_opds_index(r.text)
@@ -359,7 +344,7 @@ class TestOPDSFeed(unittest.TestCase, ui_class):
         self.assertEqual(len(entries['elements']), 0)
 
     def test_opds_formats(self):
-        host = 'http://127.0.0.1:' + PORTS[0]
+        host = 'http://127.0.0.1:' + self.worker_port
         r = requests.get(host + '/opds/', auth=('admin', 'admin123'))
         self.assertEqual(200, r.status_code)
         elements = self.get_opds_index(r.text)
@@ -376,7 +361,7 @@ class TestOPDSFeed(unittest.TestCase, ui_class):
         self.assertEqual(len(entries['elements']), 0)
 
     def test_opds_author(self):
-        host = 'http://127.0.0.1:' + PORTS[0]
+        host = 'http://127.0.0.1:' + self.worker_port
         self.login("admin", "admin123")
         self.fill_view_config({'config_books_per_page': 6})
         self.logout()
@@ -418,7 +403,7 @@ class TestOPDSFeed(unittest.TestCase, ui_class):
         time.sleep(3)
 
     def test_opds_non_admin(self):
-        host = 'http://127.0.0.1:' + PORTS[0]
+        host = 'http://127.0.0.1:' + self.worker_port
         self.login("admin", "admin123")
         self.create_user('opds', {'email': 'a5@b.com', 'password': '123AbC*!'})
         self.logout()
@@ -453,7 +438,7 @@ class TestOPDSFeed(unittest.TestCase, ui_class):
         self.assertEqual(200, r.status_code)
 
     def test_opds_read_unread(self):
-        host = 'http://127.0.0.1:' + PORTS[0]
+        host = 'http://127.0.0.1:' + self.worker_port
         r = requests.get(host + '/opds', auth=('admin', 'admin123'))
         self.assertEqual(200, r.status_code)
         elements = self.get_opds_index(r.text)
@@ -467,7 +452,7 @@ class TestOPDSFeed(unittest.TestCase, ui_class):
         self.assertEqual(len(entries['links']), 5)
 
     def test_opds_top_rated(self):
-        host = 'http://127.0.0.1:' + PORTS[0]
+        host = 'http://127.0.0.1:' + self.worker_port
         r = requests.get(host + '/opds', auth=('admin', 'admin123'))
         self.assertEqual(200, r.status_code)
         elements = self.get_opds_index(r.text)
@@ -477,7 +462,7 @@ class TestOPDSFeed(unittest.TestCase, ui_class):
         self.assertEqual(len(entries['links']), 5)
 
     def test_opds_ratings(self):
-        host = 'http://127.0.0.1:' + PORTS[0]
+        host = 'http://127.0.0.1:' + self.worker_port
         r = requests.get(host + '/opds', auth=('admin', 'admin123'))
         self.assertEqual(200, r.status_code)
         elements = self.get_opds_index(r.text)
@@ -493,7 +478,7 @@ class TestOPDSFeed(unittest.TestCase, ui_class):
         self.assertEqual(len(entries['elements']), 0)
 
     def test_recently_added(self):
-        host = 'http://127.0.0.1:' + PORTS[0]
+        host = 'http://127.0.0.1:' + self.worker_port
         r = requests.get(host + '/opds', auth=('admin', 'admin123'))
         self.assertEqual(200, r.status_code)
         elements = self.get_opds_index(r.text)
@@ -531,7 +516,7 @@ class TestOPDSFeed(unittest.TestCase, ui_class):
         self.fill_view_config({'config_books_per_page': 30})
 
     def test_opds_unicode_user(self):
-        host = 'http://127.0.0.1:' + PORTS[0]
+        host = 'http://127.0.0.1:' + self.worker_port
         self.login("admin", "admin123")
         self.create_user('一执', {'email': 'a8@b.com', 'password': '123AbC*!'})
         self.logout()
@@ -542,7 +527,7 @@ class TestOPDSFeed(unittest.TestCase, ui_class):
         self.logout()
 
     def test_opds_colon_password(self):
-        host = 'http://127.0.0.1:' + PORTS[0]
+        host = 'http://127.0.0.1:' + self.worker_port
         self.login("admin", "admin123")
         self.create_user('usi', {'email': 'a8@b.com', 'password': '12:34123AbC*!'})
         self.assertTrue(self.check_element_on_page((By.ID, "flash_success")))
@@ -567,7 +552,7 @@ class TestOPDSFeed(unittest.TestCase, ui_class):
         self.logout()
 
     def test_opds_cover(self):
-        host = 'http://127.0.0.1:' + PORTS[0]
+        host = 'http://127.0.0.1:' + self.worker_port
         r = requests.get(host + '/opds', auth=('admin', 'admin123'))
         self.assertEqual(200, r.status_code)
         elements = self.get_opds_index(r.text)
@@ -575,12 +560,12 @@ class TestOPDSFeed(unittest.TestCase, ui_class):
         entries = self.get_opds_feed(r.text)
         r = requests.get(host + entries['elements'][0]['link'])
         self.assertEqual(401, r.status_code)
-        r = requests.get('http://127.0.0.1:{}'.format(PORTS[0]) + entries['elements'][0]['link'], auth=('admin', 'admin123'))
+        r = requests.get('http://127.0.0.1:{}'.format(self.worker_port) + entries['elements'][0]['link'], auth=('admin', 'admin123'))
         self.assertEqual(len(r.content), 37952)
         self.assertEqual(r.headers['Content-Type'], 'image/jpeg')
 
     def test_opds_download_book(self):
-        host = 'http://127.0.0.1:' + PORTS[0]
+        host = 'http://127.0.0.1:' + self.worker_port
         r = requests.get(host + '/opds', auth=('admin', 'admin123'))
         self.assertEqual(200, r.status_code)
         elements = self.get_opds_index(r.text)
@@ -596,11 +581,11 @@ class TestOPDSFeed(unittest.TestCase, ui_class):
         self.assertEqual(401, r.status_code)
 
     def test_opds_calibre_companion(self):
-        host = 'http://127.0.0.1:' + PORTS[0]
+        host = 'http://127.0.0.1:' + self.worker_port
         r = requests.get(host + '/opds', auth=('admin', 'admin123'))
         self.assertEqual(200, r.status_code)
         elements = self.get_opds_index(r.text)
-        r = requests.get('http://127.0.0.1:{}'.format(PORTS[0]) + elements['Recently added Books']['link'], auth=('admin', 'admin123'))
+        r = requests.get('http://127.0.0.1:{}'.format(self.worker_port) + elements['Recently added Books']['link'], auth=('admin', 'admin123'))
         entries = self.get_opds_feed(r.text)
         r = requests.get(host + '/ajax/book/' + entries['elements'][1]['id'][9:],
                          auth=('admin', 'admin123'))
@@ -614,7 +599,7 @@ class TestOPDSFeed(unittest.TestCase, ui_class):
         self.assertEqual(200, r.status_code)
 
     def test_opds_search(self):
-        host = 'http://127.0.0.1:' + PORTS[0]
+        host = 'http://127.0.0.1:' + self.worker_port
         r = requests.get(host + '/opds', auth=('admin', 'admin123'))
         self.assertEqual(200, r.status_code)
         elements = self.get_opds_index(r.text)
@@ -720,7 +705,7 @@ class TestOPDSFeed(unittest.TestCase, ui_class):
 
 
     def test_opds_shelf_access(self):
-        host = 'http://127.0.0.1:' + PORTS[0]
+        host = 'http://127.0.0.1:' + self.worker_port
         r = requests.get(host + '/opds', auth=('admin', 'admin123'))
         self.assertEqual(200, r.status_code)
         elements = self.get_opds_index(r.text)
@@ -755,7 +740,7 @@ class TestOPDSFeed(unittest.TestCase, ui_class):
         time.sleep(2)
 
     def test_opds_stats(self):
-        host = 'http://127.0.0.1:' + PORTS[0]
+        host = 'http://127.0.0.1:' + self.worker_port
         r = requests.get(host + '/opds/stats', auth=('admin', 'admin123'))
         self.assertEqual(200, r.status_code)
         fields = json.loads(r.text)
@@ -813,7 +798,8 @@ class TestOPDSFeed(unittest.TestCase, ui_class):
     def test_access_right_guest(self):
         self.login("admin","admin123")
         self.fill_basic_config({'config_anonbrowse': 1})
-        time.sleep(BOOT_TIME)
+        wait_for_reboot(f"http://127.0.0.1:{self.worker_port}")
+        self.assertTrue(self.check_element_on_page((By.ID, "flash_success")))
         self.edit_user('Guest', {'show_128': 0, 'show_2': 0, 'show_64': 0, 'show_8192': 0,
                                  'show_16384': 0,
                                  'show_16': 0, 'show_4': 0, 'show_4096': 0, 'show_8': 0, 'show_32': 0})
@@ -853,7 +839,7 @@ class TestOPDSFeed(unittest.TestCase, ui_class):
         #                         'show_16384': 1,
         #                         'show_16': 1, 'show_4': 1, 'show_4096': 1, 'show_8': 1, 'show_32': 1})
         self.fill_basic_config({'config_anonbrowse': 0})
-        time.sleep(BOOT_TIME)
+        wait_for_reboot(f"http://127.0.0.1:{self.worker_port}")
         self.assertTrue(self.check_element_on_page((By.ID, 'flash_success')))
         self.logout()
 
@@ -861,7 +847,7 @@ class TestOPDSFeed(unittest.TestCase, ui_class):
         entries = ["Top Rated Books", "Categories", "Hot Books", "Publishers", "Authors",
                    "Random Books", "Series", "Unread Books", "Read Books", "Languages", "File formats", "Ratings"]
         found = 0
-        host = 'http://127.0.0.1:' + PORTS[0]
+        host = 'http://127.0.0.1:' + self.worker_port
         r = requests.get(host + '/opds', auth=auth)
         elements = self.get_opds_index(r.text)
         if r.status_code != 200:
@@ -872,7 +858,6 @@ class TestOPDSFeed(unittest.TestCase, ui_class):
                     found += 1
                     continue
                 else:
-                    print("found wrong element visible {}".format(el))
+                    self.log("found wrong element visible {}".format(el))
                     return False
         return True if found == len(visible) else False
-

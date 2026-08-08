@@ -1,64 +1,55 @@
-#!/usr/bin/env python
 # -*- coding: utf-8 -*-
 
+
 import unittest
+from base_test import ParallelTestCase
 import os
-from selenium.webdriver.common.by import By
-from selenium.webdriver.support.ui import WebDriverWait
-from selenium.webdriver.support import expected_conditions as EC
-from selenium.common.exceptions import TimeoutException
 import time
 import shutil
-from helper_ui import ui_class
-from config_test import CALIBRE_WEB_PATH, TEST_DB, BOOT_TIME
 import re
-from helper_func import startup
-from helper_func import save_logfiles
 import requests
 import zipfile
 import io
 
+from selenium.webdriver.common.by import By
+from selenium.webdriver.support.ui import WebDriverWait
+from selenium.webdriver.support import expected_conditions as EC
+from selenium.common.exceptions import TimeoutException
+from config_test import  BOOT_TIME
+from helper_func import startup, wait_for_reboot
 
-RESOURCES = {'ports': 1}
+class TestLogging(ParallelTestCase):
 
-PORTS = ['8083']
-INDEX = ""
-
-
-class TestLogging(unittest.TestCase, ui_class):
-    p = None
 
     @classmethod
     def setUpClass(cls):
+        super().setUpClass()
         try:
-            os.remove(os.path.join(CALIBRE_WEB_PATH + INDEX, 'calibre-web.log'))
-            os.remove(os.path.join(CALIBRE_WEB_PATH + INDEX, 'calibre-web.log.1'))
-            os.remove(os.path.join(CALIBRE_WEB_PATH + INDEX, 'calibre-web.log.2'))
+            os.remove(os.path.join(cls.app_dir, 'calibre-web.log'))
+            os.remove(os.path.join(cls.app_dir, 'calibre-web.log.1'))
+            os.remove(os.path.join(cls.app_dir, 'calibre-web.log.2'))
         except Exception:
             pass
-        startup(cls, cls.py_version, {'config_calibre_dir': TEST_DB, 'config_log_level': 'DEBUG'}, port=PORTS[0], index=INDEX, env={"APP_MODE": "test"})
+        startup(cls, cls.py_version, {'config_calibre_dir': cls.temp_dir, 'config_log_level': 'DEBUG'},
+                port=cls.worker_port,
+                app_dir=cls.app_dir,
+                env={"APP_MODE": "test", "CALIBRE_PORT": cls.worker_port},
+                lib_dest=cls.temp_dir
+                )
         time.sleep(3)
         WebDriverWait(cls.driver, 5).until(EC.presence_of_element_located((By.ID, "flash_success")))
 
     @classmethod
     def tearDownClass(cls):
-        cls.driver.get("http://127.0.0.1:" + PORTS[0])
-        cls.stop_calibre_web()
-        # close the browser window and stop calibre-web
-        cls.driver.quit()
-        cls.p.terminate()
-        save_logfiles(cls, cls.__name__)
-        try:
-            shutil.rmtree(os.path.join(CALIBRE_WEB_PATH + INDEX, u'hü lo'), ignore_errors=True)
-            shutil.rmtree(os.path.join(CALIBRE_WEB_PATH + INDEX, u'hö lo'), ignore_errors=True)
-        except:
-            pass
+        shutil.rmtree(os.path.join(cls.app_dir, u'hü lo'), ignore_errors=True)
+        shutil.rmtree(os.path.join(cls.app_dir, u'hö lo'), ignore_errors=True)
+        super().tearDownClass()
 
     def test_failed_login(self):
         self.driver.find_element(By.ID, "logout").click()
         self.assertFalse(self.login("admin", "123"))
         self.assertTrue(self.login("admin", "admin123"))
-        with open(os.path.join(CALIBRE_WEB_PATH + INDEX, 'calibre-web.log'), 'r') as logfile:
+        with open(os.path.join(self.app_dir, 'calibre-web.log'), 'r') as logfile:
             data = logfile.read()
         self.assertIsNotNone(re.findall('Login failed for user "admin" IP-adress:', data),
                              "Login failed message not in Logfile")
@@ -69,61 +60,61 @@ class TestLogging(unittest.TestCase, ui_class):
 
     def test_debug_log(self):
         # check Debug entry from starting
-        with open(os.path.join(CALIBRE_WEB_PATH + INDEX, 'calibre-web.log'), 'r') as logfile:
+        with open(os.path.join(self.app_dir, 'calibre-web.log'), 'r') as logfile:
             data = logfile.read()
         self.assertIsNotNone(re.findall('DEBUG - Computing cache-busting values', data))
 
         # Change setting to warning
         self.fill_basic_config({'config_log_level': 'WARNING'})
-        time.sleep(BOOT_TIME)
+        wait_for_reboot(f"http://127.0.0.1:{self.worker_port}")
         WebDriverWait(self.driver, 5).until(EC.presence_of_element_located((By.ID, "flash_success")))
         # error entry by deleting book with subfolder
-        self.driver.get("http://127.0.0.1:{}/delete/5".format(PORTS[0]))
+        self.driver.get("http://127.0.0.1:{}/delete/5".format(self.worker_port))
         time.sleep(4)
         # No Info entry by adding shelf
-        self.driver.get("http://127.0.0.1:{}/shelf/add/7/7".format(PORTS[0]))
+        self.driver.get("http://127.0.0.1:{}/shelf/add/7/7".format(self.worker_port))
         time.sleep(4)
 
-        with open(os.path.join(CALIBRE_WEB_PATH + INDEX, 'calibre-web.log'), 'r') as logfile:
+        with open(os.path.join(self.app_dir, 'calibre-web.log'), 'r') as logfile:
             data = logfile.read()
         self.assertListEqual(re.findall('INFO in web: Invalid shelf specified', data), [])
         self.assertIsNotNone(re.findall('ERROR in helper: Deleting book 5 failed', data))
 
         # Change setting back to Info
         # Info entry by adding shelf
-        self.driver.get("http://127.0.0.1:{}".format(PORTS[0]))
+        self.driver.get("http://127.0.0.1:{}".format(self.worker_port))
         self.fill_basic_config({'config_log_level': 'INFO'})
-        time.sleep(BOOT_TIME)
-        self.driver.get("http://127.0.0.1:{}/shelf/add/7/7".format(PORTS[0]))
+        wait_for_reboot(f"http://127.0.0.1:{self.worker_port}")
+        self.driver.get("http://127.0.0.1:{}/shelf/add/7/7".format(self.worker_port))
         time.sleep(4)
-        with open(os.path.join(CALIBRE_WEB_PATH, 'calibre-web.log'), 'r') as logfile:
+        with open(os.path.join(self.app_dir, 'calibre-web.log'), 'r') as logfile:
             data = logfile.read()
         self.assertIsNotNone(re.findall('INFO in web: Invalid shelf specified', data))
-        self.driver.get("http://127.0.0.1:{}".format(PORTS[0]))
+        self.driver.get("http://127.0.0.1:{}".format(self.worker_port))
 
     def test_logfile_change(self):
         # check if path is accepted
         try:
-            self.fill_basic_config({'config_logfile': CALIBRE_WEB_PATH + INDEX})
+            self.fill_basic_config({'config_logfile': self.app_dir})
             WebDriverWait(self.driver, 5).until(EC.presence_of_element_located((By.ID, "flash_danger")))
             # check if path with trailing slash is accepted
-            self.fill_basic_config({'config_logfile': CALIBRE_WEB_PATH + INDEX +os.sep})
+            self.fill_basic_config({'config_logfile': self.app_dir +os.sep})
             WebDriverWait(self.driver, 5).until(EC.presence_of_element_located((By.ID, "flash_danger")))
             # check if non existing path is accepted
-            self.fill_basic_config({'config_logfile': os.path.join(CALIBRE_WEB_PATH + INDEX, 'hü lo', 'lö g.log')})
+            self.fill_basic_config({'config_logfile': os.path.join(self.app_dir, 'hü lo', 'lö g.log')})
             WebDriverWait(self.driver, 5).until(EC.presence_of_element_located((By.ID, "flash_danger")))
             # check if path without extension is accepted
-            os.makedirs(os.path.join(CALIBRE_WEB_PATH, 'hü lo'))
-            self.fill_basic_config({'config_logfile': os.path.join(CALIBRE_WEB_PATH + INDEX, 'hü lo', 'lö g')})
-            time.sleep(BOOT_TIME)
+            os.makedirs(os.path.join(self.app_dir, 'hü lo'))
+            self.fill_basic_config({'config_logfile': os.path.join(self.app_dir, 'hü lo', 'lö g')})
+            wait_for_reboot(f"http://127.0.0.1:{self.worker_port}")
             WebDriverWait(self.driver, 5).until(EC.presence_of_element_located((By.ID, "flash_success")))
             time.sleep(7)
             # wait for restart
-            self.assertTrue(os.path.isfile(os.path.join(CALIBRE_WEB_PATH + INDEX, 'hü lo', 'lö g')))
-            shutil.rmtree(os.path.join(CALIBRE_WEB_PATH, u'hü lo'), ignore_errors=True)
+            self.assertTrue(os.path.isfile(os.path.join(self.app_dir, 'hü lo', 'lö g')))
+            shutil.rmtree(os.path.join(self.app_dir, u'hü lo'), ignore_errors=True)
             # Reset Logfile to default
             self.fill_basic_config({'config_logfile': ''})
-            time.sleep(BOOT_TIME)
+            wait_for_reboot(f"http://127.0.0.1:{self.worker_port}")
             WebDriverWait(self.driver, 5).until(EC.presence_of_element_located((By.ID, "flash_success")))
             time.sleep(7)
 
@@ -131,23 +122,23 @@ class TestLogging(unittest.TestCase, ui_class):
             self.assertIsNotNone('Fail', 'Element could not be found')
 
     def test_logfile_recover(self):
-        if not os.path.isdir(os.path.join(CALIBRE_WEB_PATH + INDEX, 'hü lo')):
-            os.makedirs(os.path.join(CALIBRE_WEB_PATH + INDEX, 'hü lo'))
-        self.fill_basic_config({'config_logfile': os.path.join(CALIBRE_WEB_PATH + INDEX, 'hü lo', 'lö g')})
+        if not os.path.isdir(os.path.join(self.app_dir, 'hü lo')):
+            os.makedirs(os.path.join(self.app_dir, 'hü lo'))
+        self.fill_basic_config({'config_logfile': os.path.join(self.app_dir, 'hü lo', 'lö g')})
         self.check_element_on_page((By.ID, "flash_success"))
-        time.sleep(BOOT_TIME)
+        wait_for_reboot(f"http://127.0.0.1:{self.worker_port}")
         # delete old logfile and check new logfile present
         try:
-            os.remove(os.path.join(CALIBRE_WEB_PATH + INDEX, 'calibre-web.log'))
+            os.remove(os.path.join(self.app_dir, 'calibre-web.log'))
         except Exception:
             pass
-        self.assertTrue(os.path.isfile(os.path.join(CALIBRE_WEB_PATH, 'hü lo', 'lö g')))
+        self.assertTrue(os.path.isfile(os.path.join(self.app_dir, 'hü lo', 'lö g')))
         # restart calibre-web and check if old logfile is used again
-        shutil.rmtree(os.path.join(CALIBRE_WEB_PATH + INDEX, u'hü lo'), ignore_errors=True)
+        shutil.rmtree(os.path.join(self.app_dir, u'hü lo'), ignore_errors=True)
         self.restart_calibre_web()
         if os.name != 'nt':
-            self.assertFalse(os.path.isfile(os.path.join(CALIBRE_WEB_PATH + INDEX, 'hü lo', 'lö g')))
-            self.assertTrue(os.path.isfile(os.path.join(CALIBRE_WEB_PATH + INDEX, 'calibre-web.log')))
+            self.assertFalse(os.path.isfile(os.path.join(self.app_dir, 'hü lo', 'lö g')))
+            self.assertTrue(os.path.isfile(os.path.join(self.app_dir, 'calibre-web.log')))
             # check if logpath is deleted
             self.goto_page("basic_config")
             accordions = self.driver.find_elements(By.CLASS_NAME, "accordion-toggle")
@@ -156,34 +147,35 @@ class TestLogging(unittest.TestCase, ui_class):
             self.assertEqual(logpath, "", "logfile config value is not empty after reseting to default")
         else:
             # It's NOT possible to delete the path, therefore changed: folder/file is taken
-            self.assertTrue(os.path.isfile(os.path.join(CALIBRE_WEB_PATH + INDEX, 'hü lo', 'lö g')))
-            self.assertFalse(os.path.isfile(os.path.join(CALIBRE_WEB_PATH + INDEX, 'calibre-web.log')))
+            self.assertTrue(os.path.isfile(os.path.join(self.app_dir, 'hü lo', 'lö g')))
+            self.assertFalse(os.path.isfile(os.path.join(self.app_dir, 'calibre-web.log')))
             # ToDo: Stop Calibre-Web delete folder restart it and check if folder is the new one
         self.fill_basic_config({'config_logfile': ''})
-        time.sleep(BOOT_TIME)
-        shutil.rmtree(os.path.join(CALIBRE_WEB_PATH + INDEX, u'hü lo'), ignore_errors=True)
+        wait_for_reboot(f"http://127.0.0.1:{self.worker_port}")
+        self.check_element_on_page((By.ID, "flash_success"))
+        shutil.rmtree(os.path.join(self.app_dir, u'hü lo'), ignore_errors=True)
 
     def test_access_log_recover(self):
-        if not os.path.isdir(os.path.join(CALIBRE_WEB_PATH + INDEX, 'hö lo')):
-            os.makedirs(os.path.join(CALIBRE_WEB_PATH + INDEX, 'hö lo'))
+        if not os.path.isdir(os.path.join(self.app_dir, 'hö lo')):
+            os.makedirs(os.path.join(self.app_dir, 'hö lo'))
         self.fill_basic_config({'config_access_log': 1,
-                                'config_access_logfile': os.path.join(CALIBRE_WEB_PATH + INDEX, 'hö lo', 'lü g')})
+                                'config_access_logfile': os.path.join(self.app_dir, 'hö lo', 'lü g')})
+        wait_for_reboot(f"http://127.0.0.1:{self.worker_port}")
         self.check_element_on_page((By.ID, "flash_success"))
-        time.sleep(BOOT_TIME)
         # delete old logfile and check new logfile present
         try:
-            os.remove(os.path.join(CALIBRE_WEB_PATH + INDEX, 'access.log'))
+            os.remove(os.path.join(self.app_dir, 'access.log'))
         except Exception:
             pass
-        self.assertTrue(os.path.isfile(os.path.join(CALIBRE_WEB_PATH + INDEX, 'hö lo', 'lü g')))
-        shutil.rmtree(os.path.join(CALIBRE_WEB_PATH + INDEX, u'hö lo'), ignore_errors=True)
+        self.assertTrue(os.path.isfile(os.path.join(self.app_dir, 'hö lo', 'lü g')))
+        shutil.rmtree(os.path.join(self.app_dir, u'hö lo'), ignore_errors=True)
         # restart calibre-web and check if old logfile is used again
         self.restart_calibre_web()
         self.goto_page("basic_config")
         if os.name != 'nt':
             # It's possible to delete the path, therefore original file is taken
-            self.assertFalse(os.path.isfile(os.path.join(CALIBRE_WEB_PATH + INDEX, 'hö lo', 'lü g')))
-            self.assertTrue(os.path.isfile(os.path.join(CALIBRE_WEB_PATH + INDEX, 'access.log')))
+            self.assertFalse(os.path.isfile(os.path.join(self.app_dir, 'hö lo', 'lü g')))
+            self.assertTrue(os.path.isfile(os.path.join(self.app_dir, 'access.log')))
             # check if logpath is deleted
             accordions = self.driver.find_elements(By.CLASS_NAME, "accordion-toggle")
             accordions[2].click()
@@ -191,20 +183,21 @@ class TestLogging(unittest.TestCase, ui_class):
             self.assertEqual(logpath, "", "Access logfile config value is not empty after reseting to default")
         else:
             # It's NOT possible to delete the path, therefore changed folder/file is taken
-            self.assertTrue(os.path.isfile(os.path.join(CALIBRE_WEB_PATH + INDEX, 'hö lo', 'lü g')))
-            self.assertFalse(os.path.isfile(os.path.join(CALIBRE_WEB_PATH + INDEX, 'access.log')))
+            self.assertTrue(os.path.isfile(os.path.join(self.app_dir, 'hö lo', 'lü g')))
+            self.assertFalse(os.path.isfile(os.path.join(self.app_dir, 'access.log')))
             # ToDo: Stop Calibre-Web delete folder restart it and check if folder is the new one
         self.fill_basic_config({'config_access_log': 0, 'config_access_logfile': ''})
-        time.sleep(BOOT_TIME)
-        shutil.rmtree(os.path.join(CALIBRE_WEB_PATH + INDEX, u'hö lo'), ignore_errors=True)
+        wait_for_reboot(f"http://127.0.0.1:{self.worker_port}")
+        self.check_element_on_page((By.ID, "flash_success"))
+        shutil.rmtree(os.path.join(self.app_dir, u'hö lo'), ignore_errors=True)
 
 
     def test_logviewer(self):
         self.fill_basic_config({'config_logfile': '/dev/stdout',
                                 'config_access_log': 1,
                                 'config_access_logfile': 'access.log'})
+        wait_for_reboot(f"http://127.0.0.1:{self.worker_port}")
         self.check_element_on_page((By.ID, "flash_success"))
-        time.sleep(BOOT_TIME)
         self.goto_page('logviewer')
         time.sleep(2)
         # check stream test is there, no radiobox for calibre log, access logger ticked
@@ -217,8 +210,8 @@ class TestLogging(unittest.TestCase, ui_class):
         self.fill_basic_config({'config_logfile': 'log.log',
                                 'config_access_log': 0,
                                 'config_access_logfile': ''})
+        wait_for_reboot(f"http://127.0.0.1:{self.worker_port}")
         self.check_element_on_page((By.ID, "flash_success"))
-        time.sleep(BOOT_TIME)
         self.goto_page('logviewer')
         # check stream test is there, no radiobox for calibre log, access logger ticked
         self.assertTrue(self.check_element_on_page((By.ID, 'log1')).is_selected())
@@ -229,8 +222,8 @@ class TestLogging(unittest.TestCase, ui_class):
         self.fill_basic_config({'config_logfile': 'log.log',
                                 'config_access_log': 1,
                                 'config_access_logfile': 'access.log'})
+        wait_for_reboot(f"http://127.0.0.1:{self.worker_port}")
         self.check_element_on_page((By.ID, "flash_success"))
-        time.sleep(BOOT_TIME)
         self.goto_page('logviewer')
         # check stream test is there, no radiobox for calibre log, access logger ticked
         logger = self.check_element_on_page((By.ID, 'log1'))
@@ -249,11 +242,11 @@ class TestLogging(unittest.TestCase, ui_class):
 
     def test_debuginfo_download(self):
         r = requests.session()
-        login_page = r.get('http://127.0.0.1:{}/login'.format(PORTS[0]))
+        login_page = r.get('http://127.0.0.1:{}/login'.format(self.worker_port))
         token = re.search('<input type="hidden" name="csrf_token" value="(.*)">', login_page.text)
         payload = {'username': 'admin', 'password': 'admin123', 'submit':"", 'next':"/", "remember_me":"on", "csrf_token": token.group(1)}
-        r.post('http://127.0.0.1:{}/login'.format(PORTS[0]), data=payload)
-        resp = r.get('http://127.0.0.1:{}/admin/debug'.format(PORTS[0]))
+        r.post('http://127.0.0.1:{}/login'.format(self.worker_port), data=payload)
+        resp = r.get('http://127.0.0.1:{}/admin/debug'.format(self.worker_port))
         self.assertGreater(len(resp.content), 2600)
         self.assertEqual(resp.headers['Content-Type'], 'application/zip')
         zip = zipfile.ZipFile(io.BytesIO(resp.content))
@@ -263,18 +256,18 @@ class TestLogging(unittest.TestCase, ui_class):
     def test_logbook_download(self):
         self.fill_basic_config({'config_logfile': '',
                                 'config_access_log': 1})
-        time.sleep(BOOT_TIME)
+        wait_for_reboot(f"http://127.0.0.1:{self.worker_port}")
         self.assertTrue(self.check_element_on_page((By.ID, "flash_success")))
         self.goto_page('logviewer')
         self.assertTrue(self.check_element_on_page((By.ID, "log_file_0")))
         self.assertTrue(self.check_element_on_page((By.ID, "log_file_1")))
         r = requests.session()
-        login_page = r.get('http://127.0.0.1:{}/login'.format(PORTS[0]))
+        login_page = r.get('http://127.0.0.1:{}/login'.format(self.worker_port))
         token = re.search('<input type="hidden" name="csrf_token" value="(.*)">', login_page.text)
         payload = {'username': 'admin', 'password': 'admin123', 'submit':"", 'next':"/", "remember_me":"on", "csrf_token": token.group(1)}
-        r.post('http://127.0.0.1:{}/login'.format(PORTS[0]), data=payload)
-        resp = r.get('http://127.0.0.1:{}/admin/logdownload/0'.format(PORTS[0]))
+        r.post('http://127.0.0.1:{}/login'.format(self.worker_port), data=payload)
+        resp = r.get('http://127.0.0.1:{}/admin/logdownload/0'.format(self.worker_port))
         self.assertTrue(resp.headers['Content-Type'].startswith('application/octet-stream'))
-        resp = r.get('http://127.0.0.1:{}/admin/logdownload/1'.format(PORTS[0]))
+        resp = r.get('http://127.0.0.1:{}/admin/logdownload/1'.format(self.worker_port))
         self.assertTrue(resp.headers['Content-Type'].startswith('application/octet-stream'))
         r.close()

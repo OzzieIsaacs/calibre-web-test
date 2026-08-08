@@ -1,71 +1,53 @@
-#!/usr/bin/env python
 # -*- coding: utf-8 -*-
 
+from base_test import ParallelTestCase
 import os
 import re
 import time
-import unittest
 import requests
 
-from helper_ui import ui_class
-from config_test import TEST_DB, base_path, BOOT_TIME
-from helper_func import startup, get_Host_IP, add_dependency, remove_dependency
 from selenium.webdriver.common.by import By
-from helper_func import save_logfiles
 from selenium.webdriver.support.ui import WebDriverWait
 from selenium.webdriver.support import expected_conditions as EC
+from config_test import base_path
+from helper_func import startup, get_Host_IP, wait_for_reboot
 
 
-RESOURCES = {'ports': 1}
+class TestKoboSync(ParallelTestCase):
 
-PORTS = ['8083']
-INDEX = ""
-
-
-class TestKoboSync(unittest.TestCase, ui_class):
-
-    p = None
-    driver = None
     kobo_adress = None
     syncToken = None
     header = None
-    json_line = ["jsonschema"]
+    dependency = ["jsonschema"]
 
     @classmethod
     def setUpClass(cls):
-        add_dependency(cls.json_line, cls.__name__)
-
+        super().setUpClass()
         try:
-            host = 'http://' + get_Host_IP() #  + ':' + PORTS[0]
-            startup(cls, cls.py_version, {'config_calibre_dir':TEST_DB, 'config_log_level': 'DEBUG', 'config_kobo_sync':1,
+            host = 'http://' + get_Host_IP() #  + ':' + cls.worker_port
+            startup(cls, cls.py_version, {'config_calibre_dir':cls.temp_dir, 'config_log_level': 'DEBUG', 'config_kobo_sync':1,
                                           'config_kepubifypath': "",
-                                          'config_kobo_proxy':0}, host=host, index=INDEX, port=PORTS[0], env={"APP_MODE": "test"})
+                                          'config_kobo_proxy':0}, host=host,
+                    port=cls.worker_port,
+                    app_dir=cls.app_dir,
+                    env={"APP_MODE": "test", "CALIBRE_PORT": cls.worker_port},
+                    lib_dest=cls.temp_dir)
             time.sleep(3)
             WebDriverWait(cls.driver, 5).until(EC.presence_of_element_located((By.ID, "flash_success")))
             cls.goto_page('user_setup')
             cls.check_element_on_page((By.ID, "config_create_kobo_token")).click()
             time.sleep(1)
             link = cls.check_element_on_page((By.CLASS_NAME, "well"))
-            cls.kobo_adress = host + ':' + PORTS[0] + '/kobo/' + re.findall(".*/kobo/(.*)", link.text)[0]
+            cls.kobo_adress = host + ':' + cls.worker_port + '/kobo/' + re.findall(".*/kobo/(.*)", link.text)[0]
             cls.check_element_on_page((By.ID, "kobo_close")).click()
-            cls.driver.get("http://127.0.0.1:" + PORTS[0])
+            cls.driver.get("http://127.0.0.1:" + cls.worker_port)
             cls.login('admin', 'admin123')
             time.sleep(2)
         except Exception as e:
-            print(e)
+            cls.log_class(str(e))
             cls.driver.quit()
             cls.p.terminate()
             cls.p.poll()
-
-    @classmethod
-    def tearDownClass(cls):
-        cls.driver.get("http://127.0.0.1:" + PORTS[0])
-        cls.stop_calibre_web()
-        cls.driver.quit()
-        cls.p.terminate()
-        # close the browser window and stop calibre-web
-        remove_dependency(cls.json_line)
-        save_logfiles(cls, cls.__name__)
 
     def inital_sync(self, sync=True):
         if TestKoboSync.syncToken:
@@ -90,7 +72,7 @@ class TestKoboSync(unittest.TestCase, ui_class):
             "PlatformId": "00000000-0000-0000-0000-000000000375",
             "UserKey": "12345678-9012-abcd-efgh-a7b6c0d8e7f2"
         }
-        r = requests.post(self.kobo_adress+'/v1/auth/device', json=payload)
+        r = requests.post(self.kobo_adress+'/v1/auth/device', json=payload, timeout=10)
         self.assertEqual(r.status_code, 200)
         # request init request to get metadata format
         TestKoboSync.header = {
@@ -157,7 +139,7 @@ class TestKoboSync(unittest.TestCase, ui_class):
             self.assertEqual(data[3]['NewEntitlement']['BookMetadata']['Series']['Name'], 'O0ü 执')
             self.assertEqual(data[3]['NewEntitlement']['BookMetadata']['Series']['NumberFloat'], 1.5)
         except Exception as e:
-            print(data)
+            self.log(str(data))
             self.assertFalse(e, data)
         # ToDo: What shall it look like?
         #self.assertEqual(data[0]['NewEntitlement']['BookMetadata']['Series']['Number'], 1)
@@ -386,7 +368,7 @@ class TestKoboSync(unittest.TestCase, ui_class):
         r = newSession.put(self.kobo_adress+'/v1/library/tags/'+tagId, json={'Nam':'test'})
         self.assertEqual(400, r.status_code)
 
-        # Change name of shelf and check afterwards
+        # Change name of shelf and check afterward
         r = newSession.put(self.kobo_adress+'/v1/library/tags/'+tagId, json={'Name':'test'})
         self.assertEqual(200, r.status_code)
         self.goto_page('nav_new')
@@ -628,7 +610,7 @@ class TestKoboSync(unittest.TestCase, ui_class):
             self.assertEqual('application/epub+zip', download.headers['Content-Type'])
             downloadSession.close()
         except Exception as e:
-            print(e)
+            self.log(str(e))
             self.assertFalse(e, data)
 
     def test_kobo_sync_selected_shelfs(self):
@@ -714,7 +696,7 @@ class TestKoboSync(unittest.TestCase, ui_class):
 
 
     def test_kobo_limit(self):
-        host = 'http://{}:{}'.format(get_Host_IP(), PORTS[0])
+        host = f"http://{get_Host_IP()}:{self.worker_port}"
         payload = {
             "AffiliateName": "Kobo",
             "AppVersion": "4.19.14123",
@@ -743,7 +725,7 @@ class TestKoboSync(unittest.TestCase, ui_class):
         self.assertEqual(200, r.status_code)
         # switch of limit, logout
         self.fill_basic_config({"config_ratelimiter": 0})
-        time.sleep(BOOT_TIME)
+        wait_for_reboot(host)
         self.assertTrue(self.check_element_on_page((By.ID, "flash_success")))
         self.logout()
         # request several times the same endpoint with different hashes within one minute, from same ip address -> working all the time
@@ -755,5 +737,5 @@ class TestKoboSync(unittest.TestCase, ui_class):
         # switch on limit again
         self.login("admin", "admin123")
         self.fill_basic_config({"config_ratelimiter":1, 'config_public_reg':0})
-        time.sleep(BOOT_TIME)
+        wait_for_reboot(host)
         self.assertTrue(self.check_element_on_page((By.ID, "flash_success")))

@@ -2,12 +2,9 @@
 # -*- coding: utf-8 -*-
 
 import unittest
-from helper_ui import ui_class
-from config_test import TEST_DB
-from helper_func import startup, debug_startup, add_dependency, remove_dependency
+from base_test import ParallelTestCase
+from helper_func import startup
 from selenium.webdriver.common.by import By
-from helper_func import save_logfiles
-import os
 from selenium.webdriver.support.ui import WebDriverWait
 from selenium.webdriver.support import expected_conditions as EC
 
@@ -21,46 +18,27 @@ except ImportError:
     GR = False
 
 
-
-RESOURCES = {'ports': 1}
-
-PORTS = ['8083']
-INDEX = ""
-
-
 @unittest.skipIf(not GR, "Skipping Goodread Test, no config file found")
-class TestGoodreads(unittest.TestCase, ui_class):
+class TestGoodreads(ParallelTestCase):
 
-    p = None
-    driver = None
     dependency = ["goodreads", "python-Levenshtein"]
-
 
     @classmethod
     def setUpClass(cls):
-        add_dependency(cls.dependency, cls.__name__)
-
+        super().setUpClass()
         try:
-            startup(cls, cls.py_version, {'config_calibre_dir':TEST_DB,
-                                          'config_use_goodreads':1}, 
-                                          port=PORTS[0], index=INDEX, env={"APP_MODE": "test"})
+            startup(cls, cls.py_version, {'config_calibre_dir':cls.temp_dir,
+                                          'config_use_goodreads':1},
+                    port=cls.worker_port,
+                    app_dir=cls.app_dir,
+                    env={"APP_MODE": "test", "CALIBRE_PORT": cls.worker_port},
+                    lib_dest=cls.temp_dir)
             WebDriverWait(cls.driver, 5).until(EC.presence_of_element_located((By.ID, "flash_success")))
         except Exception as e:
-            print(e)
+            cls.log_class(str(e))
             cls.driver.quit()
             cls.p.terminate()
             cls.p.poll()
-
-    @classmethod
-    def tearDownClass(cls):
-        cls.driver.get("http://127.0.0.1:" + PORTS[0])
-        cls.stop_calibre_web()
-        cls.driver.quit()
-        cls.p.terminate()
-        # close the browser window and stop calibre-web
-        remove_dependency(cls.dependency)
-        save_logfiles(cls, cls.__name__)
-
 
     def test_author_page_invalid(self):
         self.fill_basic_config({'config_goodreads_api_key': 'rgg'})

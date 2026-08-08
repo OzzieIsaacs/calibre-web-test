@@ -1,58 +1,39 @@
 #!/usr/bin/env python
 # -*- coding: utf-8 -*-
 
-import unittest
-import time
-from helper_ui import ui_class
-from config_test import TEST_DB, BOOT_TIME
-from helper_func import startup, debug_startup, add_dependency, remove_dependency
+from base_test import ParallelTestCase
+
 from selenium.webdriver.common.by import By
-from helper_func import save_logfiles
+from helper_func import startup, wait_for_reboot
 
 
-RESOURCES = {'ports': 1, "oauth":True}
+class TestOAuthLogin(ParallelTestCase):
 
-PORTS = ['8083']
-INDEX = ""
-
-
-class TestOAuthLogin(unittest.TestCase, ui_class):
-
-    p = None
-    driver = None
     kobo_adress = None
-    dep_line = ["flask-dance", "sqlalchemy-utils"]
+    dependency = ["flask-dance", "sqlalchemy-utils"]
 
     @classmethod
     def setUpClass(cls):
-        add_dependency(cls.dep_line, cls.__name__)
-
+        super().setUpClass()
         try:
-            startup(cls, cls.py_version, {'config_calibre_dir':TEST_DB}, port=PORTS[0], index=INDEX, env={"APP_MODE": "test"})
+            startup(cls, cls.py_version, {'config_calibre_dir':cls.temp_dir},
+                    port=cls.worker_port,
+                    app_dir=cls.app_dir,
+                    env={"APP_MODE": "test", "CALIBRE_PORT": cls.worker_port},
+                    lib_dest=cls.temp_dir)
         except Exception as e:
-            print('setup failed')
+            cls.log_class('setup failed')
             cls.driver.quit()
             cls.p.terminate()
-
-    @classmethod
-    def tearDownClass(cls):
-        cls.driver.get("http://127.0.0.1:" + PORTS[0])
-        cls.stop_calibre_web()
-        cls.p.terminate()
-        cls.driver.quit()
-        # close the browser window and stop calibre-web
-        remove_dependency(cls.dep_line)
-        save_logfiles(cls, cls.__name__)
-
 
     def test_visible_oauth(self):
         # set to default
         self.fill_basic_config({'config_login_type':'Use OAuth'})
-        time.sleep(BOOT_TIME)
+        wait_for_reboot(f"http://127.0.0.1:{self.worker_port}")
         self.assertTrue(self.check_element_on_page((By.ID, "flash_success")))
         # enable github oauth
         self.fill_basic_config({'config_1_oauth_client_id': '1234','config_1_oauth_client_secret':'5678' })
-        time.sleep(BOOT_TIME)
+        wait_for_reboot(f"http://127.0.0.1:{self.worker_port}")
         self.assertTrue(self.check_element_on_page((By.ID, "flash_success")))
         # check link button visible
         self.goto_page('user_setup')
@@ -69,7 +50,7 @@ class TestOAuthLogin(unittest.TestCase, ui_class):
         self.login('admin','admin123')
         # enable additionally google oauth
         self.fill_basic_config({'config_2_oauth_client_id': '1234', 'config_2_oauth_client_secret': '5678'})
-        time.sleep(BOOT_TIME)
+        wait_for_reboot(f"http://127.0.0.1:{self.worker_port}")
         self.assertTrue(self.check_element_on_page((By.ID, "flash_success")))
         # Check link button visible
         self.goto_page('user_setup')
@@ -82,14 +63,14 @@ class TestOAuthLogin(unittest.TestCase, ui_class):
         # login
         self.login('admin', 'admin123')
         self.fill_basic_config({'config_1_oauth_client_id': '','config_1_oauth_client_secret':'' })
-        time.sleep(BOOT_TIME)
+        wait_for_reboot(f"http://127.0.0.1:{self.worker_port}")
         self.assertTrue(self.check_element_on_page((By.ID, "flash_success")))
         # Check google link button invisible
         self.goto_page('user_setup')
         self.assertTrue(self.check_element_on_page((By.ID, "config_2_oauth")))
         # deactivate both oauths again
         self.fill_basic_config({'config_2_oauth_client_id': '','config_2_oauth_client_secret':'' })
-        time.sleep(BOOT_TIME)
+        wait_for_reboot(f"http://127.0.0.1:{self.worker_port}")
         self.assertTrue(self.check_element_on_page((By.ID, "flash_success")))
         # open settings
         self.driver.find_elements(By.CLASS_NAME, "accordion-toggle")[3].click()
@@ -102,4 +83,3 @@ class TestOAuthLogin(unittest.TestCase, ui_class):
 
     def test_oauth_about(self):
         self.assertTrue(self.goto_page('nav_about'))
-

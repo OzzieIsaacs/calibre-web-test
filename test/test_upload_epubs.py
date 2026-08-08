@@ -1,51 +1,36 @@
-#!/usr/bin/env python
 # -*- coding: utf-8 -*-
 
-
-from unittest import TestCase
+from base_test import ParallelTestCase
 import os
+import sqlite3
 import time
-
-from selenium.webdriver.common.by import By
-from helper_ui import ui_class
-from config_test import TEST_DB, base_path
-from helper_func import save_logfiles, startup, change_epub_meta, updateZip
-from selenium.webdriver.support.ui import WebDriverWait
-from selenium.webdriver.support import expected_conditions as EC
 from diffimg import diff
 from io import BytesIO
+from shutil import copyfile
+
+from selenium.webdriver.support.ui import WebDriverWait
+from selenium.webdriver.support import expected_conditions as EC
+from selenium.webdriver.common.by import By
+from config_test import base_path
+from helper_func import startup, change_epub_meta, updateZip
 
 
-RESOURCES = {'ports': 1}
-
-PORTS = ['8083']
-INDEX = ""
-
-
-class TestUploadEPubs(TestCase, ui_class):
-    p = None
-    driver = None
+class TestUploadEPubs(ParallelTestCase):
 
     @classmethod
     def setUpClass(cls):
+        super().setUpClass()
         try:
-            startup(cls, cls.py_version, {'config_calibre_dir': TEST_DB, 'config_uploading': 1},
-                    port=PORTS[0], index=INDEX,
-                    env={"APP_MODE": "test"})
+            startup(cls, cls.py_version, {'config_calibre_dir': cls.temp_dir, 'config_uploading': 1},
+                    port=cls.worker_port,
+                    app_dir=cls.app_dir,
+                    env={"APP_MODE": "test", "CALIBRE_PORT": cls.worker_port},
+                    lib_dest=cls.temp_dir)
             time.sleep(3)
             WebDriverWait(cls.driver, 5).until(EC.presence_of_element_located((By.ID, "flash_success")))
         except Exception:
             cls.driver.quit()
             cls.p.kill()
-
-    @classmethod
-    def tearDownClass(cls):
-        cls.driver.get("http://127.0.0.1:" + PORTS[0])
-        cls.stop_calibre_web()
-        # close the browser window and stop calibre-web
-        cls.driver.quit()
-        cls.p.terminate()
-        save_logfiles(cls, cls.__name__)
 
     def test_upload_epub_duplicate(self):
         epub_file = os.path.join(base_path, 'files', 'title.epub')
@@ -69,6 +54,38 @@ class TestUploadEPubs(TestCase, ui_class):
         self.delete_book(details['id'])
         self.delete_book(details2['id'])
         os.remove(epub_file)
+
+    def test_upload_epub_author_accent_sequence(self):
+        self.fill_basic_config({"config_unicode_filename": 0})
+        self.assertTrue(self.check_element_on_page((By.ID, "flash_success")))
+        epub_file = os.path.join(base_path, 'files', 'jose_luis_corral_sequence.epub')
+        copyfile(os.path.join(base_path, 'files', 'book.epub'), epub_file)
+
+        book_ids = []
+        try:
+            change_epub_meta(epub_file, meta={'title': 'Corral Accent 1', 'creator': 'José Luis Corral'})
+            details1 = self.verify_upload(epub_file)
+            book_ids.append(details1['id'])
+            self.assertEqual('Corral Accent 1', details1['title'])
+            self.assertEqual(['José Luis Corral'], details1['author'])
+
+            change_epub_meta(epub_file, meta={'title': 'Corral Accent 2', 'creator': 'Jose Luis Corral'})
+            details2 = self.verify_upload(epub_file)
+            book_ids.append(details2['id'])
+            self.assertEqual('Corral Accent 2', details2['title'])
+
+            change_epub_meta(epub_file, meta={'title': 'Corral Accent 3', 'creator': 'José Luis Corral'})
+            details3 = self.verify_upload(epub_file)
+            book_ids.append(details3['id'])
+            self.assertEqual('Corral Accent 3', details3['title'])
+            self.assertEqual(['José Luis Corral'], details3['author'])
+        finally:
+            for book_id in reversed(book_ids):
+                self.delete_book(book_id)
+            if os.path.exists(epub_file):
+                os.remove(epub_file)
+            self.fill_basic_config({"config_unicode_filename": 1})
+            self.assertTrue(self.check_element_on_page((By.ID, "flash_success")))
 
     def verify_upload(self, epub_file, check_warning=False):
         self.goto_page('nav_new')

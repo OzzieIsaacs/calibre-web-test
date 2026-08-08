@@ -1,45 +1,38 @@
-#!/usr/bin/env python
 # -*- coding: utf-8 -*-
 
 import unittest
+from base_test import ParallelTestCase, acquire_resource, release_resource
 import os
 import time
 import shutil
 import re
 
-from helper_ui import ui_class
-from helper_func import kill_dead_cps, save_logfiles
-from subproc_wrapper import process_open
-from config_test import CALIBRE_WEB_PATH, TEST_DB, BOOT_TIME, base_path
 from selenium import webdriver
 from selenium.webdriver.common.by import By
 from selenium.common.exceptions import WebDriverException
+from helper_func import kill_dead_cps, wait_for_reboot, copy_calibre_web_for_test
+from subproc_wrapper import process_open
+from config_test import base_path, BOOT_TIME
 from helper_port_forward import SocketForwardServer
 
 
-RESOURCES = {'ports': 2, 'socket':True}
-
-PORTS = ['8083', '8000']
-INDEX = ""
-
 @unittest.skipIf(os.name=="nt", "Sockets are not available on Windows")
-class TestSocket(unittest.TestCase, ui_class):
-    driver = None
+class TestSocket(ParallelTestCase):
 
     @classmethod
     def setUpClass(cls):
+        super().setUpClass()
+        copy_calibre_web_for_test(cls.app_dir)
+        shutil.copytree(os.path.join(base_path, 'Calibre_db'), cls.temp_dir, dirs_exist_ok=True)
+        cls.port = acquire_resource("port")
         cls.driver = webdriver.Firefox()
-        cls.driver.implicitly_wait(10)
         cls.driver.maximize_window()
         # startup function is not called, therefore direct print
-        print("\n%s - %s: " % (cls.py_version, cls.__name__))
-        shutil.rmtree(TEST_DB, ignore_errors=True)
-        shutil.copytree('./Calibre_db', TEST_DB)
 
     def setUp(self):
         os.chdir(base_path)
         try:
-            os.remove(os.path.join(CALIBRE_WEB_PATH + INDEX, 'app.db'))
+            os.remove(os.path.join(self.app_dir, 'app.db'))
         except Exception:
             pass
 
@@ -47,35 +40,39 @@ class TestSocket(unittest.TestCase, ui_class):
     def tearDownClass(cls):
         # close the browser window
         os.chdir(base_path)
-        kill_dead_cps()
-        cls.driver.quit()
+        kill_dead_cps(cls.worker_port)
         try:
-            os.remove(os.path.join(CALIBRE_WEB_PATH + INDEX, 'app.db'))
+            os.remove(os.path.join(cls.app_dir, 'app.db'))
         except Exception:
             pass
-        save_logfiles(cls, cls.__name__)
+        cls.driver.quit()
+        release_resource("port", cls.port)
+        super().tearDownClass(no=True)
 
     def test_socket_communication(self):
         my_env = os.environ.copy()
-        socket_file = os.path.join(CALIBRE_WEB_PATH + INDEX, "socket_file.sock")
+        socket_file = os.path.join(self.app_dir, "socket_file.sock")
         my_env["CALIBRE_UNIX_SOCKET"] = socket_file
-        self.p = process_open([self.py_version, os.path.join(CALIBRE_WEB_PATH + INDEX, u'cps.py')],
+        my_env["APP_MODE"] = "test"
+        # env = {"APP_MODE": "test", "CALIBRE_PORT": cls.worker_port},
+        self.p = process_open([self.py_version, os.path.join(self.app_dir, u'cps.py')],
                               env=my_env,
                               quotes=[0, 1])
         time.sleep(BOOT_TIME)
         try:
             # navigate to the application home page
-            server = SocketForwardServer('localhost', int(PORTS[1]), socket_file)
+            server = SocketForwardServer('localhost', int(self.port), socket_file)
             server.start()
             # Check server not reesponding on normal port
             try:
                 error = ""
-                self.driver.get("http://127.0.0.1:" + PORTS[0])
+                wait_for_reboot(f"http://127.0.0.1:{self.port}")
+                self.driver.get(f"http://127.0.0.1:{self.worker_port}")
             except WebDriverException as e:
                 error = e.msg
             self.assertTrue(re.findall(r'Reached error page:\sabout:neterror\?e=connectionFailure', error))
             time.sleep(3)
-            self.driver.get("http://127.0.0.1:" + PORTS[1])
+            self.driver.get(f"http://127.0.0.1:{self.port}")
             self.check_element_on_page((By.ID, "username"))
 
             server.stop_server()
@@ -83,7 +80,7 @@ class TestSocket(unittest.TestCase, ui_class):
             # Check server not reesponding on forwarded socket port
             try:
                 error = ""
-                self.driver.get("http://127.0.0.1:" + PORTS[1])
+                self.driver.get(f"http://127.0.0.1:{self.port}")
             except WebDriverException as e:
                 error = e.msg
             self.assertTrue(re.findall(r'Reached error page:\sabout:neterror\?e=connectionFailure', error))

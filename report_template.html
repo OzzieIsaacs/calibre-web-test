@@ -7,15 +7,15 @@
     <meta http-equiv="Content-Type" content="text/html; charset=UTF-8"/>
     <meta name="viewport" content="width=device-width, initial-scale=1">
     <!-- Bootstrap -->
-    <link href="{% raw %}{{ url_for('static', filename='css/libs/bootstrap.min.css') }}{% endraw %}" rel="stylesheet">
+    <link href="./../cps/static/css/libs/bootstrap.min.css" rel="stylesheet">
     <!-- jQuery (necessary for Bootstrap's JavaScript plugins) -->
-    <script src="{% raw %}{{ url_for('static', filename='js/libs/jquery.min.js') }}{% endraw %}"></script>
+    <script src="./../cps/static/js/libs/jquery.min.js"></script>
     <!-- Include all compiled plugins (below), or include individual files as needed -->
-    <script src="{% raw %}{{ url_for('static', filename='js/libs/bootstrap.min.js') }}{% endraw %}"></script>
+    <script src="./../cps/static/js/libs/bootstrap.min.js"></script>
     <!-- Project CSS -->
-    <link href="{% raw %}{{ url_for('static', filename='css/runner.css') }}{% endraw %}" rel="stylesheet">
+    <link href="css/runner.css" rel="stylesheet">
     <!-- Project JS -->
-    <script src="{% raw %}{{ url_for('static', filename='js/runner.js') }}{% endraw %}"></script>
+    <script src="js/runner.js"></script>
 </head>
 
 <body>
@@ -37,14 +37,14 @@
       <div class="row">
         <div class="col-xs-6 col-md-6 col-sm-offset-3" style="margin-top:50px;">
             {% if header_info.start_time != "" %}
-            <p class='text-justify attribute'><strong>Start Time: </strong>{{ header_info.start_time.strftime("%Y-%m-%d %H:%M:%S") }}</p>
+            <p class='text-justify attribute'><strong>Start Time: </strong>{{ header_info.start_time }}</p>
             {% endif %}
         </div>
       </div>
       <div class="row">
         <div class="col-xs-6 col-md-6 col-sm-offset-3">
             {% if header_info.stop_time != "" %}
-            <p class='text-justify attribute'><strong>Stop Time: </strong>{{ header_info.stop_time.strftime("%Y-%m-%d %H:%M:%S") }}</p>
+            <p class='text-justify attribute'><strong>Stop Time: </strong>{{ header_info.stop_time }}</p>
             {% endif %}
         </div>
       </div>
@@ -200,12 +200,6 @@
 </script>
 
 
-
-<footer>
-<div id='foter' class="text-center">
-    <p>Made with HTMLTestRunner from https://github.com/oldani/HtmlTestRunner</p>
-</div>
-</footer>
 
 </body>
 </html>

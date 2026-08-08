@@ -9,6 +9,7 @@ import sys
 #import pkg_resources
 #import importlib
 import json
+import subprocess
 
 try:
     import importlib
@@ -113,7 +114,7 @@ class Environment:
 
 environment = Environment()
 
-def add_dependency(name, testclass_name):
+def add_dependency(py_version, name, testclass_name):
     print("Adding dependencies")
     element_version = list()
     with open(os.path.join(CALIBRE_WEB_PATH, 'optional-requirements.txt'), 'r') as f:
@@ -141,7 +142,7 @@ def add_dependency(name, testclass_name):
                 break
 
     for indx, element in enumerate(element_version):
-        with process_open([VENV_PYTHON, "-m", "pip", "install", element], (0, 4)) as r:
+        with process_open([py_version, "-m", "pip", "install", element], (0, 4)) as r:
             while r.poll() == None:
                 out = r.stdout.readline()
                 out != "" and print(out.strip("\n"))
@@ -151,16 +152,22 @@ def add_dependency(name, testclass_name):
     environment.add_environment(testclass_name, element_version)
 
 
-def remove_dependency(names):
+def remove_dependency(py_version, names):
     for name in names:
         if name.startswith('git|'):
             name = name[4:]
         if name.startswith('local|'):
             name = name.split('|')[2]
-        with process_open([VENV_PYTHON, "-m", "pip", "uninstall", "-y", name], (0, 5)) as q:
+        with process_open([py_version, "-m", "pip", "uninstall", "-y", name], (0, 5)) as q:
             if os.name == 'nt':
                 while q.poll() == None:
                     out = q.stdout.readline()
                     out != "" and print(out.strip("\n"))
             else:
-                q.wait()
+                try:
+                    q.communicate(timeout=600)
+                    q.wait(2)
+                except subprocess.TimeoutExpired:
+                    q.kill()
+                    q.communicate()
+

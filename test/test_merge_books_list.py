@@ -1,54 +1,38 @@
-#!/usr/bin/env python
 # -*- coding: utf-8 -*-
 
-
-from unittest import TestCase
+from base_test import ParallelTestCase
 import time
 import os
 
-from helper_ui import ui_class
-from config_test import TEST_DB
-from helper_func import startup, debug_startup
-from helper_func import save_logfiles, add_dependency, remove_dependency
 from selenium.webdriver.common.keys import Keys
 from selenium.webdriver.common.by import By
+from helper_func import startup
 
 
-RESOURCES = {'ports': 1}
+class TestMergeBooksList(ParallelTestCase):
 
-PORTS = ['8083']
-INDEX = ""
-
-
-class TestMergeBooksList(TestCase, ui_class):
-    p = None
-    driver = None
 
     @classmethod
     def setUpClass(cls):
+        super().setUpClass()
         try:
-            startup(cls, cls.py_version, {'config_calibre_dir': TEST_DB}, port=PORTS[0], index=INDEX, env={"APP_MODE": "test"})
+            startup(cls, cls.py_version, {'config_calibre_dir': cls.temp_dir},
+                    port=cls.worker_port,
+                    app_dir=cls.app_dir,
+                    env={"APP_MODE": "test", "CALIBRE_PORT": cls.worker_port},
+                    lib_dest=cls.temp_dir)
             time.sleep(3)
             cls.goto_page("nav_new")
         except Exception:
             cls.driver.quit()
             cls.p.kill()
 
-    @classmethod
-    def tearDownClass(cls):
-        cls.driver.get("http://127.0.0.1:" + PORTS[0])
-        cls.stop_calibre_web()
-        # close the browser window and stop calibre-web
-        cls.driver.quit()
-        cls.p.terminate()
-        save_logfiles(cls, cls.__name__)
-
     def test_delete_book(self):
         self.goto_page('nav_new')
         books = self.get_books_displayed()
         details = self.get_book_details(4)
         # add folder to folder
-        book_path1 = os.path.join(TEST_DB, details['author'][0], details['title'][:36] + ' (4)')
+        book_path1 = os.path.join(self.temp_dir, details['author'][0], details['title'][:36] + ' (4)')
         sub_folder = os.path.join(book_path1, 'new_subfolder')
         os.mkdir(sub_folder)
         bl = self.get_books_list(1)
@@ -73,7 +57,7 @@ class TestMergeBooksList(TestCase, ui_class):
         self.assertTrue(self.check_element_on_page((By.ID, "flash_danger")))
 
         # change permission of folder -> delete denied because of access rights
-        book_path = os.path.join(TEST_DB, 'John Doe', 'Buuko (7)')
+        book_path = os.path.join(self.temp_dir, 'John Doe', 'Buuko (7)')
         os.chmod(book_path, 0o400)
         bl = self.get_books_list(1)
         bl['search'].clear()

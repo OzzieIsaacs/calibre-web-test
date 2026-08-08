@@ -2,95 +2,65 @@
 # -*- coding: utf-8 -*-
 
 import unittest
+from base_test import ParallelTestCase, acquire_resource, release_resource
 import os
 import time
 import shutil
 import io
 
-from helper_email_convert import AIOSMTPServer
-import helper_email_convert
 from selenium.webdriver.common.by import By
-from selenium.webdriver.support.ui import Select
-from helper_ui import ui_class
-from config_test import CALIBRE_WEB_PATH, TEST_DB, base_path, WAIT_GDRIVE, NUM_THUMBNAILS
-from helper_func import startup, count_files
-from helper_func import save_logfiles, add_dependency, remove_dependency
-from helper_gdrive import prepare_gdrive, connect_gdrive
-from selenium.webdriver.support.ui import WebDriverWait
+from selenium.webdriver.support.ui import Select, WebDriverWait
 from selenium.webdriver.support import expected_conditions as EC
 
-
-RESOURCES = {'ports': 2, "gdrive": True}
-
-PORTS = ['8083', "1025"]
-INDEX = ""
-
+from helper_email_convert import AIOSMTPServer, is_calibre_not_present, calibre_path
+from config_test import base_path, WAIT_GDRIVE, NUM_THUMBNAILS
+from helper_func import startup, count_files
+from helper_gdrive import connect_gdrive
+import datetime
 
 @unittest.skipIf(not os.path.exists(os.path.join(base_path, "files", "client_secrets.json")) or
                  not os.path.exists(os.path.join(base_path, "files", "gdrive_credentials")),
                  "client_secrets.json and/or gdrive_credentials file is missing")
-@unittest.skipIf(helper_email_convert.is_calibre_not_present(), "Skipping convert, calibre not found")
-class TestEbookConvertCalibreGDrive(unittest.TestCase, ui_class):
+@unittest.skipIf(is_calibre_not_present(), "Skipping convert, calibre not found")
+class TestEbookConvertCalibreGDrive(ParallelTestCase):
+
+    resource_lock = "gdrive"
     p=None
-    driver = None
     dependency = ["oauth2client", "PyDrive2", "PyYAML", "google-api-python-client", "httplib2"]
     email_server = None
 
     @classmethod
     def setUpClass(cls):
-        add_dependency(cls.dependency, cls.__name__)
-        thumbnail_cache_path = os.path.join(CALIBRE_WEB_PATH + INDEX, 'cps', 'cache', 'thumbnails')
+        super().setUpClass()
+        thumbnail_cache_path = os.path.join(cls.app_dir, 'cps', 'cache', 'thumbnails')
         shutil.rmtree(thumbnail_cache_path, ignore_errors=True)
-
-        prepare_gdrive()
         try:
-            src = os.path.join(base_path, "files", "client_secrets.json")
-            dst = os.path.join(CALIBRE_WEB_PATH + INDEX, "client_secrets.json")
-            os.chmod(src, 0o764)
-            if os.path.exists(dst):
-                os.unlink(dst)
-            shutil.copy(src, dst)
-
-            # delete settings_yaml file
-            set_yaml = os.path.join(CALIBRE_WEB_PATH + INDEX, "settings.yaml")
-            if os.path.exists(set_yaml):
-                os.unlink(set_yaml)
-
-            # delete gdrive file
-            gdrive_db = os.path.join(CALIBRE_WEB_PATH + INDEX, "gdrive.db")
-            if os.path.exists(gdrive_db):
-                os.unlink(gdrive_db)
-
-            # delete gdrive authenticated file
-            src = os.path.join(base_path, 'files', "gdrive_credentials")
-            dst = os.path.join(CALIBRE_WEB_PATH + INDEX, "gdrive_credentials")
-            os.chmod(src, 0o764)
-            if os.path.exists(dst):
-                os.unlink(dst)
-            shutil.copy(src, dst)
-
+            cls.port = acquire_resource("port")
             # start email server
+            cls.log_class("starting E-Mail Server")
             cls.email_server = AIOSMTPServer(
                 hostname='127.0.0.1',
-                port=int(PORTS[1]),
+                port=int(cls.port),
                 only_ssl=False,
                 timeout=10
             )
-
             cls.email_server.start()
 
-            startup(cls, cls.py_version, {'config_calibre_dir': TEST_DB,
+            startup(cls, cls.py_version, {'config_calibre_dir': cls.temp_dir,
                                           'config_log_level': 'DEBUG',
                                           'config_kepubifypath': '',
-                                          'config_binariesdir': helper_email_convert.calibre_path()},
-                    port=PORTS[0], index=INDEX,
-                    only_metadata=True, env={"APP_MODE": "test"})
+                                          'config_binariesdir': calibre_path()},
+                    port=cls.worker_port,
+                    app_dir=cls.app_dir,
+                    env={"APP_MODE": "test", "CALIBRE_PORT": cls.worker_port},
+                    lib_dest=cls.temp_dir,
+                    only_metadata=True)
             cls.fill_db_config({'config_use_google_drive': 1})
             time.sleep(2)
             cls.fill_db_config({'config_google_drive_folder': 'test'})
             time.sleep(2)
             cls.edit_user('admin', {'email': 'a5@b.com', 'kindle_mail': 'a1@b.com'})
-            cls.setup_server(True, {'mail_server': '127.0.0.1', 'mail_port': PORTS[1],
+            cls.setup_server(True, {'mail_server': '127.0.0.1', 'mail_port': cls.port,
                                     'mail_use_ssl': 'None', 'mail_login': 'name@host.com', 'mail_password_e': '1234',
                                     'mail_from': 'name@host.com'})
             time.sleep(2)
@@ -99,7 +69,7 @@ class TestEbookConvertCalibreGDrive(unittest.TestCase, ui_class):
             time.sleep(180)
         except Exception as e:
             try:
-                print(e)
+                cls.log_class(str(e))
                 cls.driver.quit()
                 cls.p.kill()
             except Exception:
@@ -107,38 +77,14 @@ class TestEbookConvertCalibreGDrive(unittest.TestCase, ui_class):
 
     @classmethod
     def tearDownClass(cls):
-        save_logfiles(cls, cls.__name__)
         cls.email_server.stop()
-        thumbnail_cache_path = os.path.join(CALIBRE_WEB_PATH + INDEX, 'cps', 'cache', 'thumbnails')
+        release_resource("port", cls.port)
+        thumbnail_cache_path = os.path.join(cls.app_dir, 'cps', 'cache', 'thumbnails')
         shutil.rmtree(thumbnail_cache_path, ignore_errors=True)
-        try:
-            cls.driver.get("http://127.0.0.1:" + PORTS[0])
-            cls.stop_calibre_web()
-            # close the browser window and stop calibre-web
-            cls.driver.quit()
-            cls.p.terminate()
-        except Exception as e:
-            print(e)
-        time.sleep(2)
-
-        remove_dependency(cls.dependency)
-
-        src1 = os.path.join(CALIBRE_WEB_PATH + INDEX, "client_secrets.json")
-        src = os.path.join(CALIBRE_WEB_PATH + INDEX, "gdrive_credentials")
-        if os.path.exists(src):
-            os.chmod(src, 0o764)
-            try:
-                os.unlink(src)
-            except PermissionError:
-                print('gdrive_credentials delete failed')
-        if os.path.exists(src1):
-            os.chmod(src1, 0o764)
-            try:
-                os.unlink(src1)
-            except PermissionError:
-                print('client_secrets.json delete failed')
+        super().tearDownClass()
 
     def tearDown(self):
+        super().tearDown()
         if not self.check_user_logged_in('admin'):
             self.logout()
             self.login('admin', 'admin123')
@@ -151,35 +97,35 @@ class TestEbookConvertCalibreGDrive(unittest.TestCase, ui_class):
     def test_convert_parameter(self):
         time.sleep(WAIT_GDRIVE)
         tasks = self.check_tasks()
+        time.sleep(5)
         self.fill_basic_config({'config_calibre': '--margin-right 11.9'})
-        self.assertTrue(self.check_element_on_page((By.ID, "flash_success")))
+        self.assertTrue(self.check_element_on_page((By.ID, "flash_success"), timeout=10))
         vals = self.get_convert_book(8)
         select = Select(vals['btn_from'])
         select.select_by_visible_text('EPUB')
         select = Select(vals['btn_to'])
         select.select_by_visible_text('LIT')
         self.check_element_on_page((By.ID, "btn-book-convert")).click()
-        time.sleep(1)
-        self.assertTrue(self.check_element_on_page((By.ID, "flash_success")))
+        self.assertTrue(self.check_element_on_page((By.ID, "flash_success"), timeout=10))
         task_len, ret = self.wait_tasks(tasks, 1)
         self.assertEqual(ret[-1]['result'], 'Finished')
 
         self.fill_basic_config({'config_calibre': '--margin-rght 11.9'})
-        self.assertTrue(self.check_element_on_page((By.ID, "flash_success")))
+        self.assertTrue(self.check_element_on_page((By.ID, "flash_success"), timeout=10))
         vals = self.get_convert_book(8)
         select = Select(vals['btn_from'])
         select.select_by_visible_text('EPUB')
         select = Select(vals['btn_to'])
         select.select_by_visible_text('LRF')
         self.check_element_on_page((By.ID, "btn-book-convert")).click()
-        self.assertTrue(self.check_element_on_page((By.ID, "flash_success")))
+        self.assertTrue(self.check_element_on_page((By.ID, "flash_success"), timeout=10))
         time.sleep(8)
         task_len, ret = self.wait_tasks(tasks, 2)
         # task_len, ret = self.check_tasks(tasks)
         # self.assertEqual(2, task_len)
         self.assertEqual(ret[-1]['result'], 'Failed')
         self.fill_basic_config({'config_calibre': ''})
-        self.assertTrue(self.check_element_on_page((By.ID, "flash_success")))
+        self.assertTrue(self.check_element_on_page((By.ID, "flash_success"), timeout=10))
         self.delete_book_format(8, "LIT")
 
     # press send to kindle for not converted book
@@ -188,6 +134,7 @@ class TestEbookConvertCalibreGDrive(unittest.TestCase, ui_class):
     def test_convert_email(self):
         self.setup_server(True, {'mail_password_e': '10234', 'mail_use_ssl': 'None'})
         time.sleep(2)
+        self.assertTrue(self.check_element_on_page((By.ID, "flash_info")))
         tasks = self.check_tasks()
         vals = self.get_convert_book(1)
         select = Select(vals['btn_from'])
@@ -195,8 +142,7 @@ class TestEbookConvertCalibreGDrive(unittest.TestCase, ui_class):
         select = Select(vals['btn_to'])
         select.select_by_visible_text('AZW3')
         self.check_element_on_page((By.ID, "btn-book-convert")).click()
-        time.sleep(1)
-        self.assertTrue(self.check_element_on_page((By.ID, "flash_success")))
+        self.assertTrue(self.check_element_on_page((By.ID, "flash_success"), timeout=5))
         time.sleep(4)
         task_len, ret = self.wait_tasks(tasks, 1)
 
@@ -226,8 +172,7 @@ class TestEbookConvertCalibreGDrive(unittest.TestCase, ui_class):
         select = Select(vals['btn_to'])
         select.select_by_visible_text('AZW3')
         self.check_element_on_page((By.ID, "btn-book-convert")).click()
-        time.sleep(1)
-        self.assertTrue(self.check_element_on_page((By.ID, "flash_success")))
+        self.assertTrue(self.check_element_on_page((By.ID, "flash_success"), timeout=5))
         time.sleep(4)
         task_len, ret = self.wait_tasks(tasks, 1)
         self.assertEqual(1, task_len)
@@ -245,6 +190,7 @@ class TestEbookConvertCalibreGDrive(unittest.TestCase, ui_class):
         fout.close()
         self.setup_server(True, {'mail_password_e': '10234'})
         time.sleep(3)
+        self.assertTrue(self.check_element_on_page((By.ID, "flash_info")))
         task_len, tasks = self.wait_tasks(ret, 1)
         details = self.get_book_details(1)
         self.assertEqual(len(details['kindle']), 1)
@@ -252,6 +198,7 @@ class TestEbookConvertCalibreGDrive(unittest.TestCase, ui_class):
         task_len, ret = self.wait_tasks(tasks, 1)
         self.assertEqual(ret[-1]['result'], 'Failed')
         self.setup_server(True, {'mail_password_e': '1234'})
+        self.assertTrue(self.check_element_on_page((By.ID, "flash_info")))
         fs.remove(orig_file)
         fs.move(moved_file, orig_file, overwrite=True)
         fs.close()
@@ -283,8 +230,7 @@ class TestEbookConvertCalibreGDrive(unittest.TestCase, ui_class):
         select = Select(vals['btn_to'])
         select.select_by_visible_text('AZW3')
         self.check_element_on_page((By.ID, "btn-book-convert")).click()
-        time.sleep(1)
-        self.assertTrue(self.check_element_on_page((By.ID, "flash_success")))
+        self.assertTrue(self.check_element_on_page((By.ID, "flash_success"), timeout=10))
         time.sleep(2)
 
         vals = self.get_convert_book(7)
@@ -293,8 +239,7 @@ class TestEbookConvertCalibreGDrive(unittest.TestCase, ui_class):
         select = Select(vals['btn_to'])
         select.select_by_visible_text('EPUB')
         self.check_element_on_page((By.ID, "btn-book-convert")).click()
-        time.sleep(1)
-        self.assertTrue(self.check_element_on_page((By.ID, "flash_success")))
+        self.assertTrue(self.check_element_on_page((By.ID, "flash_success"), timeout=10))
         time.sleep(2)
 
         vals = self.get_convert_book(7)
@@ -303,8 +248,7 @@ class TestEbookConvertCalibreGDrive(unittest.TestCase, ui_class):
         select = Select(vals['btn_to'])
         select.select_by_visible_text('TXT')
         self.check_element_on_page((By.ID, "btn-book-convert")).click()
-        time.sleep(1)
-        self.assertTrue(self.check_element_on_page((By.ID, "flash_success")))
+        self.assertTrue(self.check_element_on_page((By.ID, "flash_success"), timeout=10))
         time.sleep(2)
 
         vals = self.get_convert_book(7)
@@ -313,8 +257,7 @@ class TestEbookConvertCalibreGDrive(unittest.TestCase, ui_class):
         select = Select(vals['btn_to'])
         select.select_by_visible_text('FB2')
         self.check_element_on_page((By.ID, "btn-book-convert")).click()
-        time.sleep(1)
-        self.assertTrue(self.check_element_on_page((By.ID, "flash_success")))
+        self.assertTrue(self.check_element_on_page((By.ID, "flash_success"), timeout=10))
         time.sleep(2)
 
         vals = self.get_convert_book(7)
@@ -323,8 +266,7 @@ class TestEbookConvertCalibreGDrive(unittest.TestCase, ui_class):
         select = Select(vals['btn_to'])
         select.select_by_visible_text('LIT')
         self.check_element_on_page((By.ID, "btn-book-convert")).click()
-        time.sleep(1)
-        self.assertTrue(self.check_element_on_page((By.ID, "flash_success")))
+        self.assertTrue(self.check_element_on_page((By.ID, "flash_success"), timeout=10))
         time.sleep(2)
 
         vals = self.get_convert_book(7)
@@ -333,7 +275,7 @@ class TestEbookConvertCalibreGDrive(unittest.TestCase, ui_class):
         select = Select(vals['btn_to'])
         select.select_by_visible_text('HTMLZ')
         self.check_element_on_page((By.ID, "btn-book-convert")).click()
-        self.assertTrue(self.check_element_on_page((By.ID, "flash_success")))
+        self.assertTrue(self.check_element_on_page((By.ID, "flash_success"), timeout=10))
 
         self.create_user('solo', {'password': '123AbC*!', 'email': 'a@b.com', 'edit_role':1})
         task_len, ret = self.wait_tasks(tasks, 6)
@@ -357,7 +299,7 @@ class TestEbookConvertCalibreGDrive(unittest.TestCase, ui_class):
         select = Select(vals['btn_to'])
         select.select_by_visible_text('RTF')
         self.check_element_on_page((By.ID, "btn-book-convert")).click()
-        self.assertTrue(self.check_element_on_page((By.ID, "flash_success")))
+        self.assertTrue(self.check_element_on_page((By.ID, "flash_success"), timeout=10))
         task_len, ret = self.wait_tasks(ret, 1)
         self.assertEqual(ret[-1]['result'], 'Finished')
 
@@ -379,6 +321,7 @@ class TestEbookConvertCalibreGDrive(unittest.TestCase, ui_class):
     # check filename
     def test_email_only(self):
         self.setup_server(True, {'mail_use_ssl': 'None', 'mail_password_e': '10234'})
+        self.assertTrue(self.check_element_on_page((By.ID, "flash_info")))
         time.sleep(5)
         tasks = self.check_tasks()
         details = self.get_book_details(10)
@@ -391,12 +334,14 @@ class TestEbookConvertCalibreGDrive(unittest.TestCase, ui_class):
         self.assertEqual(ret[-1]['result'], 'Finished')
         self.assertGreaterEqual(self.email_server.handler.message_size, 5995)
         self.setup_server(False, {'mail_password_e':'1234'})
+        self.assertTrue(self.check_element_on_page((By.ID, "flash_success")))
 
 
     # check behavior for failed email (size)
     # conversion okay, email failed
     def test_email_failed(self):
         self.setup_server(False, {'mail_password_e': '10234'})
+        self.assertTrue(self.check_element_on_page((By.ID, "flash_success")))
         tasks = self.check_tasks()
         details = self.get_book_details(5)
         self.email_server.handler.set_return_value(552)
@@ -407,11 +352,11 @@ class TestEbookConvertCalibreGDrive(unittest.TestCase, ui_class):
         self.assertEqual(ret[-1]['result'], 'Failed')
         self.email_server.handler.set_return_value(0)
         self.setup_server(False, {'mail_password_e':'1234'})
+        self.assertTrue(self.check_element_on_page((By.ID, "flash_success")))
 
     # @unittest.expectedFailure
     def test_thumbnail_cache(self):
-        thumbnail_cache_path = os.path.join(CALIBRE_WEB_PATH + INDEX, 'cps', 'cache', 'thumbnails')
+        thumbnail_cache_path = os.path.join(self.app_dir, 'cps', 'cache', 'thumbnails')
         self.goto_page("nav_hot")
         self.assertTrue(os.path.exists(thumbnail_cache_path))
         self.assertEqual(count_files(thumbnail_cache_path), 10 * NUM_THUMBNAILS)
-

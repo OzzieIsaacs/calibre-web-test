@@ -1,53 +1,36 @@
-#!/usr/bin/env python
 # -*- coding: utf-8 -*-
 
-
-from unittest import TestCase
+from base_test import ParallelTestCase
 import time
 from diffimg import diff
 from io import BytesIO
 
 from selenium.webdriver.common.by import By
-from helper_ui import ui_class
-from config_test import TEST_DB
-from helper_func import startup, add_dependency, remove_dependency
-from helper_func import save_logfiles
+from helper_func import startup, wait_for_reboot
 
 
-RESOURCES = {'ports': 1}
+class TestLoadMetadataScholar(ParallelTestCase):
 
-PORTS = ['8083']
-INDEX = ""
-
-
-class TestLoadMetadataScholar(TestCase, ui_class):
-    p = None
-    driver = None
     dependency = ["scholarly", "beautifulsoup4"]
 
     @classmethod
     def setUpClass(cls):
-        add_dependency(cls.dependency, cls.__name__)
+        super().setUpClass()
         try:
-            startup(cls, cls.py_version, {'config_calibre_dir': TEST_DB}, port=PORTS[0], index=INDEX, env={"APP_MODE": "test"})
+            startup(cls, cls.py_version, {'config_calibre_dir': cls.temp_dir},
+                    port=cls.worker_port,
+                    app_dir=cls.app_dir,
+                    env={"APP_MODE": "test", "CALIBRE_PORT": cls.worker_port},
+                    lib_dest=cls.temp_dir, local_ssl=False
+                    )
             time.sleep(3)
         except Exception:
             cls.driver.quit()
             cls.p.kill()
 
-    @classmethod
-    def tearDownClass(cls):
-        cls.driver.get("http://127.0.0.1:" + PORTS[0])
-        cls.stop_calibre_web()
-        # close the browser window and stop calibre-web
-        cls.driver.quit()
-        cls.p.terminate()
-        save_logfiles(cls, cls.__name__)
-        remove_dependency(cls.dependency)
-
     def test_load_metadata(self):
         self.fill_basic_config({'config_uploading': 1})
-        time.sleep(3)
+        wait_for_reboot(f"http://127.0.0.1:{self.worker_port}")
         self.assertTrue(self.check_element_on_page((By.ID, "flash_success")))
         self.get_book_details(1)
         self.check_element_on_page((By.ID, "edit_book")).click()
@@ -69,9 +52,11 @@ class TestLoadMetadataScholar(TestCase, ui_class):
         self.assertTrue(google_scholar.is_selected())
         self.assertTrue(google.is_selected())
         self.assertTrue(comic_vine.is_selected())
-        # Check results
+        # Check results - amazon is unchecked, so only scholar/google/comicvine results visible
         results = self.find_metadata_results()
-        self.assertEqual(30, len(results))
+        scholar_results = [r for r in results if 'scholar.google.com' in r['source']]
+        self.assertEqual(10, len(scholar_results))
+        self.assertEqual(0, len([r for r in results if 'amazon.com' in r['source']]))
         # Remove one search element
         comic_vine.click()
         google.click()
@@ -85,8 +70,7 @@ class TestLoadMetadataScholar(TestCase, ui_class):
         self.assertEqual(results[0]['author'], self.check_element_on_page((By.ID, "authors")).get_attribute("value"))
         self.assertEqual(results[0]['publisher'], self.check_element_on_page((By.ID, "publisher")).get_attribute("value"))
         self.fill_basic_config({'config_uploading': 0})
-        time.sleep(3)
-        self.assertTrue(self.check_element_on_page((By.ID, "flash_success")))
+        self.assertTrue(self.check_element_on_page((By.ID, "flash_success"), timeout=10))
 
 
 

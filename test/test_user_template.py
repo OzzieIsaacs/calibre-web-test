@@ -1,44 +1,33 @@
-#!/usr/bin/env python
 # -*- coding: utf-8 -*-
 
-import unittest
-from selenium.webdriver.common.by import By
+from base_test import ParallelTestCase
 import time
-from helper_ui import ui_class, RESTRICT_TAG_TEMPLATE, RESTRICT_COL_TEMPLATE
-from config_test import TEST_DB
-from helper_func import startup
-from helper_func import save_logfiles
+
+from selenium.webdriver.common.by import By
 from selenium.webdriver.support.ui import Select
+from helper_ui import RESTRICT_TAG_TEMPLATE, RESTRICT_COL_TEMPLATE
+from helper_func import startup
 
 
-RESOURCES = {'ports': 1}
-
-PORTS = ['8083']
-INDEX = ""
+class TestUserTemplate(ParallelTestCase):
 
 
-class TestUserTemplate(unittest.TestCase, ui_class):
-    p = None
-    driver = None
 
     @classmethod
     def setUpClass(cls):
+        super().setUpClass()
         try:
-            startup(cls, cls.py_version, {'config_calibre_dir': TEST_DB}, port=PORTS[0], index=INDEX, env = {"APP_MODE": "test"})
+            startup(cls, cls.py_version, {'config_calibre_dir': cls.temp_dir},
+                    port=cls.worker_port,
+                    app_dir=cls.app_dir,
+                    env={"APP_MODE": "test", "CALIBRE_PORT": cls.worker_port},
+                    lib_dest=cls.temp_dir)
         except Exception:
             cls.driver.quit()
             cls.p.kill()
 
-    @classmethod
-    def tearDownClass(cls):
-        cls.driver.get("http://127.0.0.1:" + PORTS[0])
-        cls.stop_calibre_web()
-        # close the browser window and stop calibre-web
-        cls.driver.quit()
-        cls.p.terminate()
-        save_logfiles(cls, cls.__name__)
-
     def tearDown(self):
+        super().tearDown()
         if not self.check_user_logged_in('admin'):
             self.logout()
             self.login('admin', 'admin123')
