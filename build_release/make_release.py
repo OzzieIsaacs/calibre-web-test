@@ -355,7 +355,10 @@ def prepare_files_pyinstaller():
     os.mkdir('exe_temp')
     print('* Extracting package file to "exe_temp" directory')
     tar = tarfile.open(files[0], "r:gz")
-    tar.extractall('exe_temp', filter="fully_trusted")
+    try:
+        tar.extractall('exe_temp', filter="fully_trusted")
+    except TypeError:
+        tar.extractall('exe_temp')
     tar.close()
     os.chdir('exe_temp')
     setup_file = glob.glob('**/pyproject.toml', recursive=True)
