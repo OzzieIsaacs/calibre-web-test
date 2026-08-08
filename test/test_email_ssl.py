@@ -186,7 +186,21 @@ class TestSSL(ParallelTestCase):
     # Expected result:
     # The value of the first text input is set to the result of step 5
     # The value of the second text input is set to the result of step 8
+    def _navigate_filepicker_to(self, current_path, target_path):
+        """Navigate the open filepicker from current_path to target_path by clicking folder entries."""
+        if current_path == target_path:
+            return
+        rel = os.path.relpath(target_path, current_path)
+        for part in rel.split(os.sep):
+            time.sleep(2)
+            entries = self.driver.find_elements(By.XPATH, "//tr[@class='tr-clickable']/td[2]")
+            for entry in entries:
+                if entry.text == part:
+                    entry.click()
+                    break
+
     def test_filepicker_two_file(self):
+        files_dir = os.path.join(os.path.dirname(os.path.abspath(__file__)), 'files')
         self.goto_page('basic_config')
         accordions = self.driver.find_elements(By.CLASS_NAME, "accordion-toggle")
         accordions[0].click()
@@ -194,17 +208,10 @@ class TestSSL(ParallelTestCase):
         self.assertTrue(filepicker)
         # open filepicker
         filepicker.click()
-        self.assertTrue(self.check_element_on_page((By.ID, "element_selected"), timeout=10))
+        path = self.check_element_on_page((By.ID, "element_selected"), timeout=10)
+        self.assertTrue(path)
         time.sleep(3)
-        found = False
-        selections = self.driver.find_elements(By.XPATH, "//tr[@class='tr-clickable']/td[2]")
-        elements = [i.text for i in selections]
-        for i in selections:
-            if i.text == "files":
-                i.click()
-                found = True
-                break
-        self.assertTrue(found, f"files folder not found in {elements}")
+        self._navigate_filepicker_to(path.text, files_dir)
         found = False
         time.sleep(3)
         file_selections = self.driver.find_elements(By.XPATH, "//tr[@class='tr-clickable']/td[2]")
@@ -223,17 +230,10 @@ class TestSSL(ParallelTestCase):
         self.assertTrue(filepicker2)
         # open filepicker
         filepicker2.click()
-        self.assertTrue(self.check_element_on_page((By.ID, "element_selected"), timeout=10))
-        found = False
+        path2 = self.check_element_on_page((By.ID, "element_selected"), timeout=10)
+        self.assertTrue(path2)
         time.sleep(2)
-        selections = self.driver.find_elements(By.XPATH, "//tr[@class='tr-clickable']/td[2]")
-        elements = [i.text for i in selections]
-        for i in selections:
-            if i.text == "files":
-                i.click()
-                found = True
-                break
-        self.assertTrue(found, "files folder not found")
+        self._navigate_filepicker_to(path2.text, files_dir)
         found = False
         time.sleep(2)
         file_selections = self.driver.find_elements(By.XPATH, "//tr[@class='tr-clickable']/td[2]")
