@@ -8,7 +8,6 @@ sys.path.append(os.path.dirname(os.path.abspath(__file__)))
 
 import glob
 import shutil
-
 import subprocess
 import codecs
 import re
@@ -21,15 +20,9 @@ import configparser
 import argparse
 import tomlkit
 
-# __package__ = "build_release"
-
-
 from config import FILEPATH, VENV_PATH, VENV_PYTHON
+from helper_environment import environment, add_dependency
 
-if platform.machine() in ("i386", "AMD64", "x86_64"):
-    from helper_environment import environment, add_dependency
-else:
-    from helper_environment import environment, add_dependency
 
 def find_version(file_paths):
     with codecs.open(file_paths, 'r') as fp:
