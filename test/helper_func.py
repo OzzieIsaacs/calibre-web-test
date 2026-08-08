@@ -2,9 +2,10 @@
 # -*- coding: utf-8 -*-
 import shutil
 import re
-import glob
+import requests
+import subprocess
 import mimetypes
-from config_test import CALIBRE_WEB_PATH, TEST_DB, BOOT_TIME, VENV_PYTHON, base_path, TEST_OS
+from config_test import CALIBRE_WEB_PATH, BOOT_TIME, VENV_PYTHON, base_path, TEST_OS
 from selenium.webdriver.support.ui import WebDriverWait
 from selenium.webdriver.firefox.options import Options
 from subproc_wrapper import process_open
@@ -84,6 +85,7 @@ except ImportError:
 
 DEFAULT_EPUB = os.path.join(base_path, "files", "book.epub")
 
+
 def is_port_in_use(port):
     s = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
     try:
@@ -119,13 +121,13 @@ def get_Host_IP():
 
 
 def debug_startup(inst, __, ___, login=True, host="http://127.0.0.1", port="8083", env=None):
-
     # create a new Firefox session
     inst.driver = webdriver.Firefox()
-    inst.driver.implicitly_wait(BOOT_TIME)
+    # inst.driver.implicitly_wait(BOOT_TIME)
     inst.driver.maximize_window()
 
     # navigate to the application home page
+    wait_for_reboot(host + ":" + port)
     inst.driver.get(host)
     WebDriverWait(inst.driver, 5).until(EC.title_contains("Calibre-Web"))
     inst.login("admin", "admin123")
@@ -133,114 +135,110 @@ def debug_startup(inst, __, ___, login=True, host="http://127.0.0.1", port="8083
     if not login:
         inst.logout()
 
+def wait_for_reboot(address):
+    i = 0
+    time.sleep(3)
+    while i < BOOT_TIME:
+        time.sleep(1)
+        try:
+            requests.get(address)
+        except Exception as e:
+            i += 1
+            continue
+        break
 
-def startup(inst, pyVersion, config, login=True, host="http://127.0.0.1", port="8083", index = "",
+
+def copy_calibre_web_for_test(app_dir):
+    # copy cps path
+    cps_dest = os.path.join(app_dir, "cps")
+    cps_src = os.path.join(CALIBRE_WEB_PATH, "cps")
+    try:
+        shutil.copytree(cps_src, cps_dest, dirs_exist_ok=True)
+        for fi in ["cps.py", "requirements.txt", "optional-requirements.txt"]:
+            fi_dest = os.path.join(app_dir, fi)
+            fi_src = os.path.join(CALIBRE_WEB_PATH, fi)
+            shutil.copy(fi_src, fi_dest)
+    except Exception as ex:
+        print(ex)
+
+
+def startup(inst, pyVersion, config, login=True, host="http://127.0.0.1", port="8083", app_dir = "",
             env=None, parameter=None, work_path=None, only_startup=False, only_metadata=False,
-            split=False, lib_path="", lib_dest=TEST_DB):
-    print("\n%s - %s: " % (inst.py_version, inst.__name__))
-    try:
-        os.remove(os.path.join(CALIBRE_WEB_PATH + index, 'app.db'))
-    except PermissionError:
-        kill_dead_cps()
-        time.sleep(5)
-        try:
-            os.remove(os.path.join(CALIBRE_WEB_PATH + index, 'app.db'))
-        except Exception as e:
-            print(e)
-    except Exception as ex:
-        print(ex)
-    try:
-        os.remove(os.path.join(CALIBRE_WEB_PATH + index, 'gdrive.db'))
-    except PermissionError:
-        time.sleep(5)
-        try:
-            os.remove(os.path.join(CALIBRE_WEB_PATH + index, 'gdrive.db'))
-        except Exception as e:
-            print(e)
-    except Exception as ex:
-        print(ex)
-    try:
-        os.chmod(lib_dest + index, 0o764)
-        for element in glob.glob(lib_dest + index + "/**",recursive=True):
-            # set perms on sub-directories
-            os.chmod(element, 0o764)
-            os.chown(element, os.getuid(), os.getgid())
-    except Exception as e:
-        pass
-    shutil.rmtree(lib_dest + index, ignore_errors=True)
-    if split:
-        shutil.rmtree(lib_path, ignore_errors=True)
-
-    thumbail_cache_path = os.path.join(CALIBRE_WEB_PATH + index, 'cps', 'cache')
-    try:
-        os.chmod(thumbail_cache_path, 0o764)
-    except Exception:
-        pass
-    shutil.rmtree(thumbail_cache_path, ignore_errors=True)
-
+            split=False, lib_path="", lib_dest="", local_ssl=True):
+    copy_calibre_web_for_test(app_dir)
     if not only_metadata:
         try:
             if not split:
-                shutil.copytree(os.path.join(base_path, 'Calibre_db'), lib_dest + index, dirs_exist_ok=True)
+                shutil.copytree(os.path.join(base_path, 'Calibre_db'), lib_dest, dirs_exist_ok=True)
             else:
                 if not lib_path:
                     print('No location for split library path given')
-                target_location = os.path.join(base_path, 'Calibre_db', lib_path)
-                shutil.copytree(os.path.join(base_path, 'Calibre_db'), target_location)
-                os.makedirs(lib_dest + index)
-                shutil.move(os.path.join(target_location, "metadata.db"), os.path.join(lib_dest + index, "metadata.db"))
+                # target_location = os.path.join(base_path, 'Calibre_db', lib_path)
+                shutil.rmtree(lib_path, ignore_errors=True)
+                shutil.copytree(os.path.join(base_path, 'Calibre_db'), lib_path)
+                # os.makedirs(lib_dest)
+                shutil.move(os.path.join(lib_path, "metadata.db"), os.path.join(lib_dest, "metadata.db"))
         except FileExistsError:
             print('Test DB already present, might not be a clean version')
     else:
         try:
-            os.makedirs(lib_dest)
-            shutil.copy(os.path.join(base_path, 'Calibre_db', 'metadata.db'), os.path.join(lib_dest + index,
+            shutil.copy(os.path.join(base_path, 'Calibre_db', 'metadata.db'), os.path.join(lib_dest,
                                                                                            'metadata.db'))
         except FileExistsError:
             print('Metadata.db already present, might not be a clean version')
-    command = [pyVersion, os.path.join(CALIBRE_WEB_PATH + index, u'cps.py')]
+    command = [pyVersion, os.path.join(app_dir, u'cps.py')]
+    my_env = os.environ.copy()
+    if local_ssl:
+        ca_cert = os.path.join(base_path, "files", "ca.cert.pem")
+        if os.path.isfile(ca_cert):
+            my_env.setdefault("SSL_CERT_FILE", ca_cert)
     if env:
-        my_env = os.environ.copy()
         env = {**my_env, **env}
+    else:
+        env = my_env
     if parameter:
         command.extend(parameter)
     inst.p = process_open(command, [1], sout=None, env=env, cwd=work_path)
+
     # create a new Firefox session
     options = Options()
+    options.add_argument(f"--user-data-dir={app_dir}")
     if os.environ.get('TESTRUN'):
         options.add_argument("--headless")
-        # options.headless = True
     inst.driver = webdriver.Firefox(options=options)
-    # inst.driver = webdriver.Chrome()
-    time.sleep(BOOT_TIME)
-    if inst.p.poll():
-        kill_old_cps()
-        inst.p = process_open(command, [1], sout=None, env=env, cwd=work_path)
-        print('Calibre-Web restarted...')
-        time.sleep(BOOT_TIME)
-
     inst.driver.maximize_window()
+    wait_for_reboot(host + ":" + port)
 
     # navigate to the application home page
     inst.driver.get(host + ":" + port)
-    WebDriverWait(inst.driver, 5).until(EC.title_contains("Calibre-Web"))
+    WebDriverWait(inst.driver, BOOT_TIME).until(EC.title_contains("Calibre-Web"))
+
+    if inst.p.poll():
+        kill_dead_cps(port=port, worker=inst.worker_id, testclass=inst.__name__)
+        inst.p = process_open(command, [1], sout=None, env=env, cwd=work_path)
+        print('Calibre-Web restarted...')
+
+        wait_for_reboot(host + ":" + port)
+        inst.driver.get(host + ":" + port)
+        WebDriverWait(inst.driver, BOOT_TIME).until(EC.title_contains("Calibre-Web"))
+
     if not only_startup:
         # Wait for config screen to show up
         inst.fill_db_config(dict(config_calibre_dir=config['config_calibre_dir']))
         del config['config_calibre_dir']
 
         # wait for cw to reboot
-        time.sleep(5)
+        wait_for_reboot(host + ":" + port)
         try:
-            WebDriverWait(inst.driver, 5).until(EC.presence_of_element_located((By.ID, "flash_success")))
+            WebDriverWait(inst.driver, BOOT_TIME).until(EC.presence_of_element_located((By.ID, "flash_success")))
         except Exception:
             pass
 
         if config:
             inst.fill_basic_config(config)
-        time.sleep(BOOT_TIME)
+        wait_for_reboot(host + ":" + port)
         try:
-            WebDriverWait(inst.driver, 10).until(EC.presence_of_element_located((By.ID, "flash_success")))
+            WebDriverWait(inst.driver, BOOT_TIME).until(EC.presence_of_element_located((By.ID, "flash_success")))
         except Exception:
             pass
         # login
@@ -292,19 +290,30 @@ def digest_login(url, expected_response):
     return True
 
 
-def add_hidden_dependency(names, test_classname, index=""):
+def add_hidden_dependency(py_version, names, testclass_name, index="", worker=-1):
+    now = datetime.datetime.now().strftime("%H:%M:%S")
+    if worker > -1:
+        print(f"[Worker {worker}] {now} - {testclass_name} adding dependencies")
+    else:
+        print(f"[SYSTEM]  {now} - {testclass_name} adding dependencies")
     for name in names:
-        python_exe = os.path.join(CALIBRE_WEB_PATH + index, 'venv', VENV_PYTHON)
-        with process_open([python_exe, "-m", "pip", "install", name], (0, 4)) as r:
-            while r.poll() is None:
-                r.stdout.readline().strip("\n")
-            environment.add_environment(test_classname, name)
+        with process_open([py_version, "-m", "pip", "install", name], (0, 4)) as r:
+            try:
+                r.communicate(timeout=600)
+                r.wait(2)
+            except subprocess.TimeoutExpired:
+                r.kill()
+            r.communicate()
+        environment.add_environment(testclass_name, name)
 
-
-def add_dependency(name, testclass_name, index=""):
-    print("Adding dependencies")
+def add_dependency(py_version, name, testclass_name, worker=-1):
+    now = datetime.datetime.now().strftime("%H:%M:%S")
+    if worker > -1:
+        print(f"[Worker {worker}] {now} - {testclass_name} adding dependencies")
+    else:
+        print(f"[SYSTEM]  {now} - {testclass_name} adding dependencies")
     element_version = list()
-    with open(os.path.join(CALIBRE_WEB_PATH + index, 'optional-requirements.txt'), 'r') as f:
+    with open(os.path.join(CALIBRE_WEB_PATH, 'optional-requirements.txt'), 'r') as f:
         requirements = f.readlines()
     for element in name:
         if element.lower().startswith('local|'):
@@ -338,23 +347,22 @@ def add_dependency(name, testclass_name, index=""):
                 break
 
     for indx, element in enumerate(element_version):
-        python_exe = os.path.join(CALIBRE_WEB_PATH + index, 'venv', VENV_PYTHON)
-        with process_open([python_exe, "-m", "pip", "install", element], (0, 4)) as r:
-            while r.poll() == None:
-                r.stdout.readline().strip("\n")
-            # if os.name == 'nt':
-            #    while r.poll() == None:
-            #        r.stdout.readline()
-            # else:
-            #    r.wait()
+        # python_exe = os.path.join(CALIBRE_WEB_PATH, 'venv', VENV_PYTHON)
+        with process_open([py_version, "-m", "pip", "install", element], (0, 4)) as r:
+            try:
+                r.communicate(timeout=600)
+                r.wait(2)
+            except subprocess.TimeoutExpired:
+                r.kill()
+                r.communicate()
         if element.lower().startswith('git'):
             element_version[indx] = element[element.rfind('#egg=')+5:]
 
     environment.add_environment(testclass_name, element_version)
 
 
-def remove_dependency(names, index=""):
-    python_exe = os.path.join(CALIBRE_WEB_PATH + index, 'venv', VENV_PYTHON)
+def remove_dependency(py_version, names):
+    # python_exe = os.path.join(CALIBRE_WEB_PATH, 'venv', VENV_PYTHON)
     for name in names:
         if name.startswith('git|'):
             name = name[4:]
@@ -362,18 +370,23 @@ def remove_dependency(names, index=""):
             name = name.split('|')[2]
         if name.startswith('limit|'):
             name = name.split('|')[1]
-        with process_open([python_exe, "-m", "pip", "uninstall", "-y", name], (0, 5)) as q:
+        with process_open([py_version, "-m", "pip", "uninstall", "-y", name], (0, 5)) as q:
             if os.name == 'nt':
                 while q.poll() is None:
                     q.stdout.readline()
             else:
-                q.wait()
+                try:
+                    q.communicate(timeout=600)
+                    q.wait(2)
+                except subprocess.TimeoutExpired:
+                    q.kill()
+                    q.communicate()
 
 
-def kill_old_cps(port=8083):
+'''def kill_old_cps(port=8083):
     for proc in process_iter():
         try:
-            for conns in proc.connections(kind='inet'):
+            for conns in proc.net_connections(kind='inet'):
                 if conns.laddr.port == port:
                     proc.send_signal(SIGKILL)  # or SIGKILL
                     print('Killed old Calibre-Web instance')
@@ -381,22 +394,27 @@ def kill_old_cps(port=8083):
         except (PermissionError, psutil.AccessDenied):
             pass
     # Give Calibre-Web time to die
-    time.sleep(3)
+    time.sleep(3)'''
 
 
-def kill_dead_cps():
+def kill_dead_cps(port, worker=-1, testclass=""):
+    killed = False
     for proc in process_iter():
         try:
-            if 'python' in proc.name():
-                res = [i for i in proc.cmdline() if 'cps.py' in i]
-                if res:
-                    proc.send_signal(SIGKILL)
-                    print('Killed dead Calibre-Web instance')
-                    time.sleep(2)
+            for conns in proc.net_connections(kind='inet'):
+                if conns.laddr.port == int(port):
+                    res = [i for i in proc.cmdline() if 'cps.py' in i]
+                    if res:
+                        proc.send_signal(SIGKILL)
+                        now = datetime.datetime.now().strftime("%H:%M:%S")
+                        print(f"[Worker {worker}] {now} - {testclass} Dead Calibre-Web instance killed")
+                        print('')
+                        killed = True
         except (PermissionError, psutil.AccessDenied, psutil.NoSuchProcess):
             pass
-    # Give Calibre-Web time to die
-    time.sleep(3)
+    if killed:
+        # Give Calibre-Web time to die
+        time.sleep(4)
 
 
 def unrar_path():
@@ -424,7 +442,7 @@ def save_logfiles(inst, module_name, index=""):
         os.makedirs(outdir)
     for file in ['calibre-web.log', 'calibre-web.log', 'calibre-web.log.1', 'calibre-web.log.2',
                  'access.log', 'access.log.1', 'access.log.2']:
-        src = os.path.join(CALIBRE_WEB_PATH + index, file)
+        src = os.path.join(inst.app_dir, file)
         dest = os.path.join(outdir, file)
         if os.path.exists(src):
             with open(src) as fc:
@@ -539,7 +557,7 @@ def updateZip(zipname_new, zipname_org, filename, data):
 def change_epub_meta(zipname_new=None, zipname_org=DEFAULT_EPUB, meta={}, item={}, guide={}, meta_change={}):
     with codecs.open(os.path.join(base_path, 'files', 'test.opf'), "r", "utf-8") as f:
         soup = BeautifulSoup(f.read(), "xml")
-    for el in soup.findAll("meta"):
+    for el in soup.find_all("meta"):
         el.prefix = ""
         el.namespace = ""
     soup.find("metadata").prefix = ""
@@ -653,12 +671,12 @@ def read_opf_metadata(file):
             soup = BeautifulSoup(f.read(), "xml")
     elif isinstance(file, str):
         soup = BeautifulSoup(file, "xml")
-    result['identifier'] = soup.findAll("identifier")
+    result['identifier'] = soup.find_all("identifier")
     cover = soup.find("reference")
     result['cover'] = cover.attrs if cover else ""
     title = soup.find("dc:title")
     result['title'] = title.contents[0] if title else ""
-    author = soup.findAll("dc:creator")
+    author = soup.find_all("dc:creator")
     result['author'] = [a.contents[0] for a in author]
     result['author_attr'] = [a.attrs for a in author]
     contributor = soup.find("dc:contributor")
@@ -678,11 +696,11 @@ def read_opf_metadata(file):
         result['pub_date'] = datetime.datetime.strptime(time_string, format_string + "%z")
     except AttributeError:
         result['pub_date'] = ""
-    language = soup.findAll("dc:language")
+    language = soup.find_all("dc:language")
     result['language'] = [lang.contents[0] for lang in language] if language else []
     publisher = soup.find("dc:publisher")
     result['publisher'] = publisher.contents[0] if publisher else ""
-    tags = soup.findAll("dc:subject")
+    tags = soup.find_all("dc:subject")
     result['tags'] = [t.contents[0] for t in tags] if tags else []
     comment = soup.find("dc:description")
     result['description'] = comment.contents[0] if comment else ""

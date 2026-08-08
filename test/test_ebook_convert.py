@@ -2,39 +2,33 @@
 # -*- coding: utf-8 -*-
 
 import unittest
+from base_test import ParallelTestCase, acquire_resource, release_resource
 import os
+import re
 import time
+import shutil
+import requests
 
-from helper_email_convert import AIOSMTPServer
-import helper_email_convert
+from helper_email_convert import AIOSMTPServer, calibre_path, is_calibre_not_present
 from selenium.webdriver.common.by import By
 from selenium.webdriver.support.ui import Select
-from helper_ui import ui_class
-from config_test import CALIBRE_WEB_PATH, TEST_DB
 from selenium.common.exceptions import UnexpectedAlertPresentException
-# from parameterized import parameterized_class
 from helper_func import startup
-from helper_func import save_logfiles
-import shutil
-
-RESOURCES = {'ports': 2}
-
-PORTS = ['8083', '1025']
-INDEX = ""
 
 
-@unittest.skipIf(helper_email_convert.is_calibre_not_present(), "Skipping convert, calibre not found")
-class TestEbookConvertCalibre(unittest.TestCase, ui_class):
-    p = None
-    driver = None
+@unittest.skipIf(is_calibre_not_present(), "Skipping convert, calibre not found")
+class TestEbookConvertCalibre(ParallelTestCase):
     email_server = None
 
     @classmethod
     def setUpClass(cls):
+        super().setUpClass()
         # start email server
+        cls.port = acquire_resource("port")
+        cls.log_class("starting E-Mail Server")
         cls.email_server = AIOSMTPServer(
             hostname='127.0.0.1',
-            port=int(PORTS[1]),
+            port=int(cls.port),
             only_ssl=False,
             timeout=10
         )
@@ -42,36 +36,34 @@ class TestEbookConvertCalibre(unittest.TestCase, ui_class):
         cls.email_server.start()
 
         try:
-            startup(cls, cls.py_version, {'config_calibre_dir':TEST_DB,
+            startup(cls, cls.py_version, {'config_calibre_dir':cls.temp_dir,
                                           'config_kepubifypath':'',
-                                          'config_binariesdir':helper_email_convert.calibre_path()}, port=PORTS[0], index=INDEX, env={"APP_MODE": "test"})
+                                          'config_binariesdir':calibre_path()},
+                    port=cls.worker_port,
+                    app_dir=cls.app_dir,
+                    env={"APP_MODE": "test", "CALIBRE_PORT": cls.worker_port},
+                    lib_dest=cls.temp_dir
+                    )
 
             cls.edit_user('admin', {'email': 'a5@b.com', 'kindle_mail': 'a1@b.com'})
-            cls.setup_server(True, {'mail_server':'127.0.0.1', 'mail_port':PORTS[1],
+            cls.setup_server(True, {'mail_server':'127.0.0.1', 'mail_port':cls.port,
                                     'mail_use_ssl':'None', 'mail_login':'name@host.com', 'mail_password_e':'1234',
                                     'mail_from':'name@host.com'})
             time.sleep(2)
         except Exception as e:
-            print(e)
+            cls.log_class(str(e))
             cls.driver.quit()
             cls.p.kill()
 
     @classmethod
-    def tearDownClass(cls):
-        shutil.rmtree(os.path.join(CALIBRE_WEB_PATH + INDEX, 'exe dir'), ignore_errors=True)
-        cls.driver.get("http://127.0.0.1:" + PORTS[0])
+    def tearDownClass(cls, no=False):
+        shutil.rmtree(os.path.join(cls.app_dir, 'exe dir'), ignore_errors=True)
         cls.email_server.stop()
-        try:
-            cls.stop_calibre_web()
-            # close the browser window and stop calibre-web
-        except:
-            pass
-        cls.driver.quit()
-        cls.p.terminate()
-        time.sleep(2)
-        save_logfiles(cls, cls.__name__)
+        release_resource("port", cls.port)
+        super().tearDownClass(no)
 
     def tearDown(self):
+        super().tearDown()
         if not self.check_user_logged_in('admin'):
             self.logout()
             self.login('admin', 'admin123')
@@ -89,7 +81,7 @@ class TestEbookConvertCalibre(unittest.TestCase, ui_class):
         self.assertFalse(vals['btn_from'])
         self.assertFalse(vals['btn_to'])
         # self.fill_basic_config({'config_binariesdir': ""})
-        self.fill_basic_config({'config_binariesdir':helper_email_convert.calibre_path()})
+        self.fill_basic_config({'config_binariesdir':calibre_path()})
 
     # Set excecutable to wrong exe and start convert
     # set excecutable not existing and start convert
@@ -113,10 +105,10 @@ class TestEbookConvertCalibre(unittest.TestCase, ui_class):
         self.assertFalse(vals['btn_from'])
         self.assertFalse(vals['btn_to'])
 
-        dst_dir = os.path.join(CALIBRE_WEB_PATH + INDEX, 'exe dir')
+        dst_dir = os.path.join(self.app_dir, 'exe dir')
         # os.mkdir(dst_dir)
         try:
-            shutil.copytree(helper_email_convert.calibre_path(), dst_dir)
+            shutil.copytree(calibre_path(), dst_dir)
         except (shutil.Error, PermissionError):
             pass
         os.chmod(os.path.join(dst_dir, 'ebook-convert'), 0o664)
@@ -129,7 +121,7 @@ class TestEbookConvertCalibre(unittest.TestCase, ui_class):
 
         self.goto_page('nav_about')
         element = self.check_element_on_page((By.XPATH, "//tr/th[text()='Ebook converter']/following::td[1]"))
-        self.assertEqual(element.text, 'Execution permissions missing')
+        self.assertEqual(element.text, 'not installed')
         details = self.get_book_details(5)
         self.assertEqual(len(details['kindle']), 1)
         details['kindlebtn'].click()
@@ -149,7 +141,7 @@ class TestEbookConvertCalibre(unittest.TestCase, ui_class):
         if len(ret) > 1:
             self.assertEqual(ret[-2]['result'], 'Failed')
         self.assertEqual(ret[-1]['result'], 'Failed')
-        self.fill_basic_config({'config_binariesdir': helper_email_convert.calibre_path()})
+        self.fill_basic_config({'config_binariesdir': calibre_path()})
         self.assertTrue(self.check_element_on_page((By.ID, "flash_success")))
         shutil.rmtree(dst_dir, ignore_errors=True)
 
@@ -189,7 +181,7 @@ class TestEbookConvertCalibre(unittest.TestCase, ui_class):
         self.fill_basic_config({'config_calibre': ''})
         self.delete_book_format(8, "LIT")
         self.assertTrue(self.check_element_on_page((By.ID, "flash_success")))
-        self.fill_basic_config({'config_calibre': "--chapter \"//*[re:test(., '^\s*第[零一二三四五六七八九十百千0-9]+(章|回).*', 'i')]\" --language zh"})
+        self.fill_basic_config({'config_calibre': r"--chapter \"//*[re:test(., '^\s*第[零一二三四五六七八九十百千0-9]+(章|回).*', 'i')]\" --language zh"})
         self.assertTrue(self.check_element_on_page((By.ID, "flash_success")))
         vals = self.get_convert_book(8)
         select = Select(vals['btn_from'])
@@ -204,7 +196,7 @@ class TestEbookConvertCalibre(unittest.TestCase, ui_class):
         self.assertEqual(1, task_len)
         self.delete_book_format(8, "LIT")
         self.assertTrue(self.check_element_on_page((By.ID, "flash_success")))
-        self.fill_basic_config({'config_calibre': "--chapter \"//*[re:test(., '^\s*第[零一二三四五六七八九十百千0-9]+(章|回).*', 'i')]\" --language zh "})
+        self.fill_basic_config({'config_calibre': r"--chapter \"//*[re:test(., '^\s*第[零一二三四五六七八九十百千0-9]+(章|回).*', 'i')]\" --language zh "})
         self.assertTrue(self.check_element_on_page((By.ID, "flash_success")))
         vals = self.get_convert_book(8)
         select = Select(vals['btn_from'])
@@ -219,7 +211,7 @@ class TestEbookConvertCalibre(unittest.TestCase, ui_class):
         self.assertEqual(1, task_len)
         self.delete_book_format(8, "LIT")
         self.assertTrue(self.check_element_on_page((By.ID, "flash_success")))
-        self.fill_basic_config({'config_calibre': " --language zh --chapter \"//*[re:test(., '^\s*第[零一二三四五六七八九十百千0-9]+(章|回).*', 'i')]\" "})
+        self.fill_basic_config({'config_calibre': r" --language zh --chapter \"//*[re:test(., '^\s*第[零一二三四五六七八九十百千0-9]+(章|回).*', 'i')]\" "})
         self.assertTrue(self.check_element_on_page((By.ID, "flash_success")))
         vals = self.get_convert_book(8)
         select = Select(vals['btn_from'])
@@ -312,9 +304,9 @@ class TestEbookConvertCalibre(unittest.TestCase, ui_class):
         self.assertEqual(ret[-1]['result'], 'Finished')
 
         # convert book1 to azw3 -> rename azw3 as before and start conversion
-        orig_file = os.path.join(TEST_DB, 'Frodo Beutlin', 'Der Buchtitel (1)',
+        orig_file = os.path.join(self.temp_dir, 'Frodo Beutlin', 'Der Buchtitel (1)',
                                  'Der Buchtitel - Frodo Beutlin.azw3').encode('UTF-8')
-        moved_file = os.path.join(TEST_DB, 'Frodo Beutlin', 'Der Buchtitel (1)',
+        moved_file = os.path.join(self.temp_dir, 'Frodo Beutlin', 'Der Buchtitel (1)',
                                   u'book1.azw3').encode('UTF-8')
         os.rename(orig_file, moved_file)
         with open(orig_file, 'wb') as fout:
@@ -459,7 +451,7 @@ class TestEbookConvertCalibre(unittest.TestCase, ui_class):
         self.assertTrue(len(formats7), 9)
         formats1 = self.driver.find_elements(By.XPATH, "//*[starts-with(@id,'btnGroupDrop1')]")
         self.assertTrue(len(formats1), 1)
-        self.driver.get("http://127.0.0.1:{}/".format(PORTS[0]))
+        self.driver.get("http://127.0.0.1:{}/".format(self.worker_port))
         self.delete_shelf('bookFORMAT')
 
 
@@ -539,6 +531,7 @@ class TestEbookConvertCalibre(unittest.TestCase, ui_class):
             task_len, ret = self.wait_tasks(tasks, 1)
         except UnexpectedAlertPresentException:
             self.assertFalse(True, "XSS in ebook title after conversion in tasks view")
+            ret = []
         self.assertEqual(ret[-1]['result'], 'Finished')
         self.assertEqual(ret[-1]['task'], 'Convert: PDF -> LRF: <p>calibre Quick Start Guide</p><img src=x onerror=alert("hoho")>')
         self.edit_book(11, content={'title': u'book9'})
@@ -566,6 +559,7 @@ class TestEbookConvertCalibre(unittest.TestCase, ui_class):
             task_len, ret = self.wait_tasks(tasks, 1)
         except UnexpectedAlertPresentException:
             self.assertFalse(True, "XSS in tasks view after malicious user converted book")
+            ret = []
         self.assertEqual(ret[-1]['result'], 'Finished')
         self.assertEqual(ret[-1]['user'], '<p>calibre Quick Start Guide</p><img src=x onerror=alert("jo")>')
         self.edit_user('<p>calibre Quick Start Guide</p><img src=x onerror=alert("jo")>', {'delete': 1})
@@ -575,8 +569,8 @@ class TestEbookConvertCalibre(unittest.TestCase, ui_class):
         vals = self.get_convert_book(3)
         from_book = set([x.text.strip() for x in vals['from_book']])
         to_book = set([x.text.strip() for x in vals['to_book']])
-        self.assertEqual(from_book, set(['-- select an option --', "CBR"]))
-        self.assertEqual(to_book, set([ '-- select an option --', "PDF", "EPUB", "MOBI", "AZW3", "DOCX", "RTF", "FB2", "LIT", "LRF", "TXT", "HTMLZ", "ODT"]))
+        self.assertEqual(from_book, {'-- select an option --', "CBR"})
+        self.assertEqual(to_book, {'-- select an option --', "PDF", "EPUB", "MOBI", "AZW3", "DOCX", "RTF", "FB2", "LIT", "LRF", "TXT", "HTMLZ", "ODT"})
         select = Select(vals['btn_from'])
         select.select_by_visible_text('CBR')
         select = Select(vals['btn_to'])
@@ -589,19 +583,23 @@ class TestEbookConvertCalibre(unittest.TestCase, ui_class):
         vals = self.get_convert_book(3)
         from_book = set([x.text.strip() for x in vals['from_book']])
         to_book = set([x.text.strip() for x in vals['to_book']])
-        self.assertEqual(from_book, set(['-- select an option --', "CBR", "EPUB"]))
-        self.assertEqual(to_book, set([ '-- select an option --', "PDF", "MOBI", "AZW3", "DOCX", "RTF", "FB2", "LIT", "LRF", "TXT", "HTMLZ", "ODT"]))
+        self.assertEqual(from_book, {'-- select an option --', "CBR", "EPUB"})
+        self.assertEqual(to_book,
+                         {'-- select an option --', "PDF", "MOBI", "AZW3", "DOCX", "RTF", "FB2", "LIT", "LRF", "TXT",
+                          "HTMLZ", "ODT"})
 
         vals = self.get_convert_book(1)
         from_book = set([x.text for x in vals['from_book']])
         to_book = set([x.text for x in vals['to_book']])
-        self.assertEqual(from_book, set(['-- select an option --', "TXT"]))
-        self.assertEqual(to_book, set(['-- select an option --', "PDF", "EPUB", "MOBI", "AZW3", "DOCX", "RTF", "FB2", "LIT", "LRF", "HTMLZ", "ODT"]))
+        self.assertEqual(from_book, {'-- select an option --', "TXT"})
+        self.assertEqual(to_book,
+                         {'-- select an option --', "PDF", "EPUB", "MOBI", "AZW3", "DOCX", "RTF", "FB2", "LIT", "LRF",
+                          "HTMLZ", "ODT"})
         vals = self.get_convert_book(12)
         from_book = set([x.text for x in vals['from_book']])
         to_book = set([x.text for x in vals['to_book']])
-        self.assertEqual(from_book, set(['-- select an option --', "PDF"]))
-        self.assertEqual(to_book, set(['-- select an option --', "TXT", "EPUB", "MOBI", "AZW3", "DOCX", "RTF", "FB2", "LIT", "LRF", "TXT", "HTMLZ", "ODT"]))
+        self.assertEqual(from_book, {'-- select an option --', "PDF"})
+        self.assertEqual(to_book, {'-- select an option --', "TXT", "EPUB", "MOBI", "AZW3", "DOCX", "RTF", "FB2", "LIT", "LRF", "TXT", "HTMLZ", "ODT"})
 
     def test_calibre_log(self):
         self.fill_basic_config({'config_log_level': 'DEBUG'})
@@ -619,7 +617,7 @@ class TestEbookConvertCalibre(unittest.TestCase, ui_class):
         task_len, ret = self.wait_tasks(tasks, 1)
         self.assertEqual(ret[-1]['result'], 'Failed')
         # check Debug entry from starting
-        with open(os.path.join(CALIBRE_WEB_PATH + INDEX, 'calibre-web.log'), 'r') as logfile:
+        with open(os.path.join(self.app_dir, 'calibre-web.log'), 'r') as logfile:
             data = logfile.read()
         self.assertTrue("ValueError: No plugin to handle output format: odt" in data)
         self.assertTrue("ebook converter failed with error while converting book" in data)
@@ -634,7 +632,7 @@ class TestEbookConvertCalibre(unittest.TestCase, ui_class):
         task_len, ret1 = self.wait_tasks(ret, 1)
         self.assertEqual(ret1[-1]['result'], 'Finished')
         # check Debug entry from starting
-        with open(os.path.join(CALIBRE_WEB_PATH + INDEX, 'calibre-web.log'), 'r') as logfile:
+        with open(os.path.join(self.app_dir, 'calibre-web.log'), 'r') as logfile:
             data = logfile.read()
         try:
             self.assertTrue("1% Converting input to HTML" in data)
@@ -644,3 +642,71 @@ class TestEbookConvertCalibre(unittest.TestCase, ui_class):
         self.assertTrue(self.check_element_on_page((By.ID, "flash_success")))
         self.fill_basic_config({'config_log_level': 'INFO'})
         self.assertTrue(self.check_element_on_page((By.ID, "flash_success")))
+
+    # CVE: Non-admin user with edit role posts a path-traversal value as book_format_to
+    # to the /admin/book/convert endpoint, bypassing the UI select-box constraints.
+    # The fix must reject any format value not in the EXTENSIONS_CONVERT_FROM /
+    # EXTENSIONS_CONVERT_TO allowlists before the value is forwarded to Calibre.
+    def test_convert_format_allowlist(self):
+        # Use a dedicated low-privilege user (edit role only, no admin).
+        self.create_user('cveusr', {'password': '123AbC*!', 'email': 'cve@b.com', 'edit_role': 1})
+
+        base_url = f'http://127.0.0.1:{self.worker_port}'
+        r = requests.session()
+
+        # Authenticate as the low-privilege user.
+        login_page = r.get(f'{base_url}/login', timeout=20)
+        token = re.search(r'<input type="hidden" name="csrf_token" value="(.*?)">', login_page.text)
+        payload = {'username': 'cveusr', 'password': '123AbC*!', 'submit': '', 'next': '/',
+                   'remember_me': 'on', 'csrf_token': token.group(1)}
+        r.post(f'{base_url}/login', data=payload, timeout=20)
+
+        # Fetch the book edit page to obtain a fresh CSRF token for the convert form.
+        book_edit_page = r.get(f'{base_url}/admin/book/1', timeout=20)
+        csrf_match = re.search(r'<input type="hidden" name="csrf_token" value="(.*?)">', book_edit_page.text)
+        convert_csrf = csrf_match.group(1)
+
+        # --- path-traversal in book_format_to ---
+        # Supplying a value outside the allowlist must be rejected with an error flash,
+        # and must NOT enqueue a conversion task.
+        tasks_before = self.check_tasks()
+        traversal_format = '../../cps/templates'
+        resp = r.post(
+            f'{base_url}/admin/book/convert/1',
+            data={'book_format_from': 'epub', 'book_format_to': traversal_format,
+                  'csrf_token': convert_csrf},
+            timeout=20,
+            allow_redirects=True
+        )
+        self.assertIn('flash_danger', resp.text,
+                      "Path-traversal in book_format_to must be rejected with an error flash")
+        self.assertNotIn('flash_success', resp.text,
+                         "Path-traversal in book_format_to must not succeed")
+        task_len, _ = self.check_tasks(tasks_before)
+        self.assertEqual(0, task_len,
+                         "No new conversion task must be queued for an invalid format")
+
+        # --- path-traversal in book_format_from ---
+        resp = r.post(
+            f'{base_url}/admin/book/convert/1',
+            data={'book_format_from': traversal_format, 'book_format_to': 'epub',
+                  'csrf_token': convert_csrf},
+            timeout=20,
+            allow_redirects=True
+        )
+        self.assertIn('flash_danger', resp.text,
+                      "Path-traversal in book_format_from must be rejected with an error flash")
+
+        # --- completely unknown format string ---
+        resp = r.post(
+            f'{base_url}/admin/book/convert/1',
+            data={'book_format_from': 'epub', 'book_format_to': 'notaformat',
+                  'csrf_token': convert_csrf},
+            timeout=20,
+            allow_redirects=True
+        )
+        self.assertIn('flash_danger', resp.text,
+                      "Unknown destination format must be rejected with an error flash")
+
+        r.close()
+        self.edit_user('cveusr', {'delete': 1})

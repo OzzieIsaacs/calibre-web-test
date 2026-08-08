@@ -30,6 +30,7 @@ build/hints.txt
 selenium
 
 /venv/
+test_reports/
 *.key
 *.crt
 *.cert.pem

@@ -100,11 +100,15 @@ class MyMessage:
 
     def extract_register_info(self):
         if self.message:
-            message = base64.b64decode(self.message)
-            username = re.findall(r'Username:\s(.*)\r', message.decode('utf-8'))
-            password = re.findall(r'Password:\s(.*)\r', message.decode('utf-8'))
+            message = base64.b64decode(self.message).decode('utf-8')
+            username = re.findall(r'Username:\s(.*)\r', message)
+            password = re.findall(r'Password:\s(.*)\r', message)
             if len(username) and len(password):
                 return [username[0], password[0]]
+            # Fallback for localized registration mails where labels are translated.
+            key_values = re.findall(r'^[^:\r\n]+:\s+([^\r\n]+)\r?$', message, re.MULTILINE)
+            if len(key_values) >= 2:
+                return [key_values[0], key_values[1]]
         return [False, False]
 
     def check_email_received(self):
@@ -144,7 +148,6 @@ def get_server_context(certfile='files/server.crt', keyfile='files/server.key'):
 
 def AIOSMTPServer(hostname='', port=1025, startSSL=False, only_ssl=False,
                   authenticate=True, certfile=None, keyfile=None, timeout=300):
-    print("Starting E-Mail Server")
     # SSL
     ssl_context = None
     if only_ssl or startSSL:

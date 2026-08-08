@@ -1,47 +1,31 @@
-#!/usr/bin/env python
 # -*- coding: utf-8 -*-
 
-
-from unittest import TestCase
+from base_test import ParallelTestCase
 import time
 import os
+import shutil
 
-from helper_ui import ui_class
 from helper_db import change_tag
-from config_test import SMB_LIB, base_path, BOOT_TIME
-from helper_func import startup, change_epub_meta
-from helper_func import save_logfiles
+from config_test import SMB_LIB, base_path
+from helper_func import startup, change_epub_meta, wait_for_reboot
 from selenium.webdriver.common.by import By
 
 
-RESOURCES = {'ports': 1}
-
-PORTS = ['8083']
-INDEX = ""
-
-
-class TestEditAuthorsSmb(TestCase, ui_class):
-    p = None
-    driver = None
+class TestEditAuthorsSmb(ParallelTestCase):
 
     @classmethod
     def setUpClass(cls):
+        super().setUpClass()
         try:
-            startup(cls, cls.py_version, {'config_calibre_dir': SMB_LIB}, port=PORTS[0], index=INDEX,
-                    env={"APP_MODE": "test"}, lib_dest=SMB_LIB)
+            startup(cls, cls.py_version, {'config_calibre_dir': SMB_LIB},
+                    port=cls.worker_port,
+                    app_dir=cls.app_dir,
+                    env={"APP_MODE": "test", "CALIBRE_PORT": cls.worker_port},
+                    lib_dest=SMB_LIB)
             time.sleep(3)
         except Exception as e:
             cls.driver.quit()
             cls.p.kill()
-
-    @classmethod
-    def tearDownClass(cls):
-        cls.driver.get("http://127.0.0.1:" + PORTS[0])
-        cls.stop_calibre_web()
-        # close the browser window and stop calibre-web
-        cls.driver.quit()
-        cls.p.terminate()
-        save_logfiles(cls, cls.__name__)
 
     # One book of the author present
     def test_change_capital_one_author_one_book(self):
@@ -58,7 +42,7 @@ class TestEditAuthorsSmb(TestCase, ui_class):
                                                     'book8 - Leo baskerville.epub')))
         self.assertTrue(os.path.isfile(os.path.join(SMB_LIB, 'Leo baskerville/book8 (8)',
                                                     'cover.jpg')))
-        # 'Leo baskerville' in os.listdir(TEST_DB)
+        # 'Leo baskerville' in os.listdir(self.temp_dir)
         self.assertFalse('Leo Baskerville' in os.listdir(SMB_LIB))
         ret_code, content = self.download_book(8, "admin", "admin123")
         self.assertEqual(200, ret_code)
@@ -252,6 +236,10 @@ class TestEditAuthorsSmb(TestCase, ui_class):
                                                     'book9 - Hector Goncalves.pdf')))
         self.assertTrue(os.path.isfile(os.path.join(SMB_LIB, 'Hector Goncalves/book9 (11)',
                                                     'cover.jpg')))
+        # Remove leftover nested folder from previous failed rename attempts.
+        nested_hector_folder = os.path.join(SMB_LIB, 'hector Gonçalves', 'Hector Goncalves')
+        if os.path.isdir(nested_hector_folder):
+            shutil.rmtree(nested_hector_folder)
         # Author folder is not found due to utf characters not represented in filename
         self.edit_book(1, content={'authors': "Frodo Beutlin & Norbert Halagal & Liu Yang & hector Gonçalves"})
         self.assertFalse(self.check_element_on_page((By.ID, "flash_danger")))
@@ -486,7 +474,7 @@ class TestEditAuthorsSmb(TestCase, ui_class):
 
     def test_rename_author_emphasis_mark_onupload(self):
         self.fill_basic_config({'config_uploading': 1})
-        time.sleep(BOOT_TIME)
+        wait_for_reboot(f"http://127.0.0.1:{self.worker_port}")
         self.assertTrue(self.check_element_on_page((By.ID, "flash_success")))
         # Upload book with one author in database
         epub_file = os.path.join(base_path, 'files', 'author.epub')
@@ -521,7 +509,7 @@ class TestEditAuthorsSmb(TestCase, ui_class):
 
     def test_rename_tag_emphasis_mark_onupload(self):
         self.fill_basic_config({'config_uploading': 1})
-        time.sleep(BOOT_TIME)
+        wait_for_reboot(f"http://127.0.0.1:{self.worker_port}")
         self.assertTrue(self.check_element_on_page((By.ID, "flash_success")))
         # Upload book with one author in database
         epub_file = os.path.join(base_path, 'files', 'tag.epub')

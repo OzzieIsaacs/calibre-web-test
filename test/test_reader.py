@@ -1,14 +1,7 @@
-#!/usr/bin/env python
 # -*- coding: utf-8 -*-
 
 import unittest
-import helper_email_convert
-from helper_ui import ui_class
-from config_test import TEST_DB, base_path
-from selenium.webdriver.support.ui import Select
-from helper_func import startup, add_dependency, remove_dependency
-from selenium.webdriver.common.by import By
-from helper_func import save_logfiles, createcbz
+from base_test import ParallelTestCase
 import time
 import os
 from diffimg import diff
@@ -16,23 +9,27 @@ from io import BytesIO
 import rarfile
 from PIL import Image
 
+from selenium.webdriver.support.ui import Select
+import helper_email_convert
+from config_test import base_path, BOOT_TIME
+from helper_func import startup, wait_for_reboot
+from selenium.webdriver.common.by import By
+from helper_func import createcbz
 
-RESOURCES = {'ports': 1}
 
-PORTS = ['8083']
-INDEX =""
+class TestReader(ParallelTestCase):
 
-class TestReader(unittest.TestCase, ui_class):
-
-    p = None
-    driver = None
-    dependencys = ["limit|py7zr", "comicapi"]
+    dependency = ["limit|py7zr", "comicapi"]
 
     @classmethod
     def setUpClass(cls):
-        add_dependency(cls.dependencys, cls.__name__)
+        super().setUpClass()
         try:
-            startup(cls, cls.py_version, {'config_calibre_dir':TEST_DB}, port=PORTS[0], index=INDEX, env={"APP_MODE": "test"})
+            startup(cls, cls.py_version, {'config_calibre_dir':cls.temp_dir},
+                    port=cls.worker_port,
+                    app_dir=cls.app_dir,
+                    env={"APP_MODE": "test", "CALIBRE_PORT": cls.worker_port},
+                    lib_dest=cls.temp_dir)
             cls.current_handle = cls.driver.current_window_handle
 
         except Exception:
@@ -49,16 +46,8 @@ class TestReader(unittest.TestCase, ui_class):
 
     @classmethod
     def tearDownClass(cls):
-        remove_dependency(cls.dependencys)
         cls.driver.switch_to.window(cls.current_handle)
-        cls.driver.get("http://127.0.0.1:" + PORTS[0])
-        cls.stop_calibre_web()
-        cls.driver.quit()
-        cls.p.terminate()
-        # close the browser window and stop calibre-web
-        # remove_dependency(cls.dependency)
-        save_logfiles(cls, cls.__name__)
-
+        super().tearDownClass()
 
     def test_txt_reader(self):
         self.get_book_details(1)
@@ -156,8 +145,8 @@ class TestReader(unittest.TestCase, ui_class):
         self.driver.close()
         self.driver.switch_to.window(self.current_handle)
         self.fill_basic_config({'config_anonbrowse': 1})
-        time.sleep(3)
-        self.assertTrue(self.check_element_on_page((By.ID, "flash_success")))
+        wait_for_reboot(f"http://127.0.0.1:{self.worker_port}")
+        self.assertTrue(self.check_element_on_page((By.ID, "flash_success"), timeout=BOOT_TIME))
         self.edit_user('Guest', {'viewer_role': 1})
         self.logout()
         self.get_book_details(13)
@@ -210,7 +199,7 @@ class TestReader(unittest.TestCase, ui_class):
             self.assertFalse('Not exactly one new tab was opened')
         self.driver.switch_to.window(new_handle[0])
         self.assertTrue(self.check_element_on_page((By.ID, "mainContent")))
-        with rarfile.RarFile(os.path.join(TEST_DB,"Asterix Lionherd", "comicdemo (3)",
+        with rarfile.RarFile(os.path.join(self.temp_dir,"Asterix Lionherd", "comicdemo (3)",
                                           "comicdemo - Asterix Lionherd.cbr")) as rf:
             pic1 = rf.read("comic0.jpg")
             pic2 = rf.read("comic1.jpg")
@@ -276,7 +265,7 @@ class TestReader(unittest.TestCase, ui_class):
         names = ['cover1.jpg']
         createcbz(upload_file, zipdata, names)
         self.fill_basic_config({'config_uploading': 1})
-        time.sleep(3)
+        wait_for_reboot(f"http://127.0.0.1:{self.worker_port}")
         self.assertTrue(self.check_element_on_page((By.ID, "flash_success")))
         self.edit_user('admin', {'upload_role': 1})
         self.goto_page('nav_new')
@@ -302,7 +291,7 @@ class TestReader(unittest.TestCase, ui_class):
         os.remove(upload_file)
 
         self.fill_basic_config({'config_uploading': 0})
-        time.sleep(3)
+        wait_for_reboot(f"http://127.0.0.1:{self.worker_port}")
         self.assertTrue(self.check_element_on_page((By.ID, "flash_success")))
         
         # Comic file mit einer Datei
@@ -310,7 +299,7 @@ class TestReader(unittest.TestCase, ui_class):
     @unittest.skip
     def test_cb7_reader(self):
         self.fill_basic_config({'config_uploading': 1})
-        time.sleep(3)
+        wait_for_reboot(f"http://127.0.0.1:{self.worker_port}")
         self.assertTrue(self.check_element_on_page((By.ID, "flash_success")))
         self.goto_page('nav_new')
         upload_file = os.path.join(base_path, 'files', 'book.cb7')
@@ -340,7 +329,7 @@ class TestReader(unittest.TestCase, ui_class):
         names = ['cover1.weBp', 'cover2.weBp', "/__MACOSX/cover.jpg"]
         createcbz(upload_file, zipdata, names)
         self.fill_basic_config({'config_uploading': 1})
-        time.sleep(3)
+        wait_for_reboot(f"http://127.0.0.1:{self.worker_port}")
         self.assertTrue(self.check_element_on_page((By.ID, "flash_success")))
         createcbz(upload_file, zipdata, names)
         self.goto_page('nav_new')
@@ -421,7 +410,7 @@ class TestReader(unittest.TestCase, ui_class):
 
     def test_sound_listener(self):
         self.fill_basic_config({'config_uploading': 1})
-        time.sleep(3)
+        wait_for_reboot(f"http://127.0.0.1:{self.worker_port}")
         self.assertTrue(self.check_element_on_page((By.ID, "flash_success")))
         self.edit_user('admin', {'upload_role': 1})
         self.sound_test('music.flac', 'Unknown - music', '0:02')
@@ -432,4 +421,4 @@ class TestReader(unittest.TestCase, ui_class):
         self.sound_test('music.mp4', 'Unknown - music', '0:02')
         self.fill_basic_config({'config_uploading': 0})
         time.sleep(3)
-
+        self.assertTrue(self.check_element_on_page((By.ID, "flash_success")))

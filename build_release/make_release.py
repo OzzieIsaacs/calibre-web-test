@@ -1,10 +1,13 @@
 # #!/usr/bin/env python
 # # -*- coding: utf-8 -*-
-__package__ = "build_release"
+
 import os
+import sys
+
+sys.path.append(os.path.dirname(os.path.abspath(__file__)))
+
 import glob
 import shutil
-import sys
 import subprocess
 import codecs
 import re
@@ -17,14 +20,9 @@ import configparser
 import argparse
 import tomlkit
 
-sys.path.append(os.path.dirname(os.path.abspath(__file__)))
-
 from config import FILEPATH, VENV_PATH, VENV_PYTHON
+from helper_environment import environment, add_dependency
 
-if platform.machine() in ("i386", "AMD64", "x86_64"):
-    from .helper_environment import environment, add_dependency
-else:
-    from helper_environment import environment, add_dependency
 
 def find_version(file_paths):
     with codecs.open(file_paths, 'r') as fp:
@@ -206,13 +204,9 @@ def generate_package():
         out = p.stdout.readline()
         out != "" and print(out.strip("\n"))
 
-    p = process_open([sys.executable, "-m", "build"])
-    while p.poll() is None:
-        out = p.stdout.readline()
-        out != "" and print(out.strip("\n"))
-
-    err = p.stderr.readlines()
-    print("".join(err), file=sys.stderr)
+    p = process_open([sys.executable, "-m", "build"]) # ToDo: Check-error?: ,sout=sys.stdout, serr=sys.stderr)
+    p.communicate()[0]
+    p.wait()
 
     # check successful
     if p.returncode != 0:
@@ -361,7 +355,10 @@ def prepare_files_pyinstaller():
     os.mkdir('exe_temp')
     print('* Extracting package file to "exe_temp" directory')
     tar = tarfile.open(files[0], "r:gz")
-    tar.extractall('exe_temp', filter="fully_trusted")
+    try:
+        tar.extractall('exe_temp', filter="fully_trusted")
+    except TypeError:
+        tar.extractall('exe_temp')
     tar.close()
     os.chdir('exe_temp')
     setup_file = glob.glob('**/pyproject.toml', recursive=True)

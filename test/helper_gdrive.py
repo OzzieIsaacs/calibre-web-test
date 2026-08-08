@@ -24,7 +24,6 @@ def get_credentials():
 
 
 def prepare_gdrive():
-    print("Preparing GDrive")
     credentials = get_credentials()
     fs = GoogleDriveFS(credentials=credentials)
     try:

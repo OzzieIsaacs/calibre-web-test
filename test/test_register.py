@@ -1,68 +1,61 @@
-#!/usr/bin/env python
 # -*- coding: utf-8 -*-
 
-from helper_email_convert import AIOSMTPServer
-from selenium.webdriver.common.by import By
-from config_test import TEST_DB, BOOT_TIME
-from helper_func import startup, wait_Email_received
-# from parameterized import parameterized_class
-import unittest
+from base_test import ParallelTestCase, acquire_resource, release_resource
 import re
-from helper_ui import ui_class
 import time
-from helper_func import save_logfiles
 import requests
+
 from selenium.webdriver.support.ui import WebDriverWait
 from selenium.webdriver.support import expected_conditions as EC
+from selenium.webdriver.common.by import By
+
+from config_test import BOOT_TIME
+from helper_func import startup, wait_Email_received
+from helper_email_convert import AIOSMTPServer
+import datetime
+
+class TestRegister(ParallelTestCase):
 
 
-RESOURCES = {'ports': 1}
-
-PORTS = ['8083',"1030"]
-INDEX = ""
-
-
-class TestRegister(unittest.TestCase, ui_class):
-    p = None
-    driver = None
-    # py_version = u'/usr/bin/python3'
 
     @classmethod
     def setUpClass(cls):
+        super().setUpClass()
+        cls.port = acquire_resource("port")
+        cls.log_class("starting E-Mail Server")
         cls.email_server = AIOSMTPServer(
-            hostname='127.0.0.1',port=PORTS[1],
+            hostname='127.0.0.1',port=cls.port,
             only_ssl=False,
             timeout=10
         )
         cls.email_server.start()
 
         try:
-            startup(cls, cls.py_version, {'config_calibre_dir':TEST_DB,
-                                          'config_public_reg': 1, "config_ratelimiter": 0}, 
-                    port=PORTS[0], index=INDEX, env={"APP_MODE": "test"})
-            WebDriverWait(cls.driver, 5).until(EC.presence_of_element_located((By.ID, "flash_success")))
+            startup(cls, cls.py_version, {'config_calibre_dir':cls.temp_dir,
+                                          'config_public_reg': 1, "config_ratelimiter": 0},
+                    port=cls.worker_port,
+                    app_dir=cls.app_dir,
+                    env={"APP_MODE": "test", "CALIBRE_PORT": cls.worker_port},
+                    lib_dest=cls.temp_dir)
+            WebDriverWait(cls.driver, BOOT_TIME).until(EC.presence_of_element_located((By.ID, "flash_success")))
             cls.edit_user('admin', {'email': 'a5@b.com','kindle_mail': 'a1@b.com'})
-            cls.setup_server(False, {'mail_server':'127.0.0.1', 'mail_port':PORTS[1],
+            cls.setup_server(False, {'mail_server':'127.0.0.1', 'mail_port':cls.port,
                                 'mail_use_ssl':'None','mail_login':'name@host.com','mail_password_e':'10234',
                                 'mail_from':'name@host.com'})
 
         except Exception as e:
-            print(e)
+            cls.log_class(str(e))
             cls.driver.quit()
             cls.p.kill()
 
     @classmethod
     def tearDownClass(cls):
-        cls.driver.get("http://127.0.0.1:" + PORTS[0])
-        cls.login('admin', 'admin123')
-        cls.stop_calibre_web()
-        # close the browser window and stop calibre-web
-        cls.driver.quit()
-        cls.p.terminate()
         cls.email_server.stop()
-        save_logfiles(cls, cls.__name__)
+        release_resource("port", cls.port)
+        super().tearDownClass()
 
     def tearDown(self):
+        super().tearDown()
         self.email_server.handler.reset_email_received()
         if self.check_user_logged_in('admin'):
             self.logout()
@@ -195,7 +188,7 @@ class TestRegister(unittest.TestCase, ui_class):
         self.logout()
         # admin resents password
         self.login('admin', 'admin123')
-        self.assertTrue(self.edit_user(u'upasswd', { 'resend_password': 1}))
+        self.assertTrue(self.edit_user(u'upasswd', {'locale': 'Deutsch', 'resend_password': 1}))
         self.logout()
         self.assertTrue(wait_Email_received(self.email_server.handler.check_email_received))
         user, passw = self.email_server.handler.extract_register_info()
@@ -240,35 +233,33 @@ class TestRegister(unittest.TestCase, ui_class):
 
     def test_illegal_email(self):
         r = requests.session()
-        login_page = r.get('http://127.0.0.1:{}/login'.format(PORTS[0]))
+        login_page = r.get('http://127.0.0.1:{}/login'.format(self.worker_port))
         token = re.search('<input type="hidden" name="csrf_token" value="(.*)">', login_page.text)
         payload = {'name': 'user0 negativ', 'email': '1234', "csrf_token": token.group(1)}
-        resp = r.post('http://127.0.0.1:{}/register'.format(PORTS[0]), data=payload)
+        resp = r.post('http://127.0.0.1:{}/register'.format(self.worker_port), data=payload)
         self.assertTrue("flash_danger" in resp.text)
         payload = {'email': '1234@gr.de', "csrf_token": token.group(1)}
-        resp = r.post('http://127.0.0.1:{}/register'.format(PORTS[0]), data=payload)
+        resp = r.post('http://127.0.0.1:{}/register'.format(self.worker_port), data=payload)
         self.assertTrue("flash_danger" in resp.text)
         payload = {'name': 'user0 negativ', "csrf_token": token.group(1)}
-        resp = r.post('http://127.0.0.1:{}/register'.format(PORTS[0]), data=payload)
+        resp = r.post('http://127.0.0.1:{}/register'.format(self.worker_port), data=payload)
         self.assertTrue("flash_danger" in resp.text)
         payload = {'name': '/etc/./passwd', 'email': '/etc/./passwd', "csrf_token": token.group(1)}
-        resp = r.post('http://127.0.0.1:{}/register'.format(PORTS[0]), data=payload)
+        resp = r.post('http://127.0.0.1:{}/register'.format(self.worker_port), data=payload)
         self.assertTrue("flash_danger" in resp.text)
         payload = {"name": "abc123@mycom.com'\"[]()", 'email': "abc123@mycom.com'\"[]()", "csrf_token": token.group(1)}
-        resp = r.post('http://127.0.0.1:{}/register'.format(PORTS[0]), data=payload)
+        resp = r.post('http://127.0.0.1:{}/register'.format(self.worker_port), data=payload)
         self.assertTrue("flash_danger" in resp.text)
         payload = {"name": "abc123@mycom.com anD 1028=1028", 'email': "abc123@mycom.com anD 1028=1028", "csrf_token": token.group(1)}
-        resp = r.post('http://127.0.0.1:{}/register'.format(PORTS[0]), data=payload)
+        resp = r.post('http://127.0.0.1:{}/register'.format(self.worker_port), data=payload)
         self.assertTrue("flash_danger" in resp.text)
         payload = {"name": "abc123@myc@om.com", 'email': "abc123@myc@om.com", "csrf_token": token.group(1)}
-        resp = r.post('http://127.0.0.1:{}/register'.format(PORTS[0]), data=payload)
+        resp = r.post('http://127.0.0.1:{}/register'.format(self.worker_port), data=payload)
         self.assertTrue("flash_danger" in resp.text)
         payload = {"name": "1234456", 'email': "1@2.3", "csrf_token": token.group(1)}
-        resp = r.post('http://127.0.0.1:{}/register'.format(PORTS[0]), data=payload)
+        resp = r.post('http://127.0.0.1:{}/register'.format(self.worker_port), data=payload)
         self.assertTrue("flash_success" in resp.text)
         payload = {"name": "9dsfaf", 'email': "ü执1@ü执1.3", "csrf_token": token.group(1)}
-        resp = r.post('http://127.0.0.1:{}/register'.format(PORTS[0]), data=payload)
+        resp = r.post('http://127.0.0.1:{}/register'.format(self.worker_port), data=payload)
         self.assertTrue("flash_success" in resp.text)
-
-
 

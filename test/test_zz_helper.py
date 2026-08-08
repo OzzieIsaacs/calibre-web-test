@@ -1,6 +1,7 @@
 # -*- coding: utf-8 -*-
 
 import sys
+from base_test import ParallelTestCase
 import unittest
 from config_test import CALIBRE_WEB_PATH
 
@@ -17,22 +18,23 @@ def _get_updater_thread():
 class DummyCLI():
     gd_path = ""
 
-class TestCalibreHelper(unittest.TestCase):
+class TestCalibreHelper(ParallelTestCase):
 
     @classmethod
     def setUpClass(cls):
+        super().setUpClass()
         sys.path.append(CALIBRE_WEB_PATH)
 
         global helper
         global updater
-        # cli_param = DummyCLI()
         # if imported at top of file, the import is excecuted at startup and creates ghost calibre-web instance
         from cps import cli_param
         cli_param.gd_path = "gdrive.db"
         from cps import helper, updater
-        # from cps import helper
-        # startup function is not called, therfore direct print
-        print("\n%s - %s: " % ("", cls.__name__))
+
+    @classmethod
+    def tearDownClass(cls):
+        super().tearDownClass(no=True)
 
     def test_check_high23(self):
         helper.config.config_unicode_filename = True

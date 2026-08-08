@@ -97,8 +97,8 @@ class Books(Base):
     path = Column(String, default="", nullable=False)
     has_cover = Column(Integer, default=0)
     uuid = Column(String)
-    isbn = Column(String(collation='NOCASE'), default="")
-    flags = Column(Integer, nullable=False, default=1)
+    # isbn = Column(String(collation='NOCASE'), default="")
+    # flags = Column(Integer, nullable=False, default=1)
 
 class Data(Base):
     __tablename__ = 'data'

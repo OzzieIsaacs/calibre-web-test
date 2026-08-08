@@ -1,46 +1,32 @@
-#!/usr/bin/env python
 # -*- coding: utf-8 -*-
 
-
-from unittest import TestCase
+from base_test import ParallelTestCase
 import time
-
-from helper_ui import ui_class
-from config_test import TEST_DB
-from helper_func import startup
-from helper_func import save_logfiles
-from selenium.webdriver.common.keys import Keys
-from selenium.webdriver.common.by import By
 import requests
 import re
 
-RESOURCES = {'ports': 1}
+from selenium.webdriver.common.keys import Keys
+from selenium.webdriver.common.by import By
+from helper_func import startup
 
-PORTS = ['8083']
-INDEX = ""
 
 
-class TestEditBooksList(TestCase, ui_class):
-    p = None
-    driver = None
+class TestEditBooksList(ParallelTestCase):
 
     @classmethod
     def setUpClass(cls):
+        super().setUpClass()
         try:
-            startup(cls, cls.py_version, {'config_calibre_dir': TEST_DB}, port=PORTS[0], index=INDEX, env={"APP_MODE": "test"})
+            startup(cls, cls.py_version, {'config_calibre_dir': cls.temp_dir},
+                    port=cls.worker_port,
+                    app_dir=cls.app_dir,
+                    env={"APP_MODE": "test", "CALIBRE_PORT": cls.worker_port},
+                    lib_dest=cls.temp_dir
+                    )
             time.sleep(3)
         except Exception:
             cls.driver.quit()
             cls.p.kill()
-
-    @classmethod
-    def tearDownClass(cls):
-        cls.driver.get("http://127.0.0.1:" + PORTS[0])
-        cls.stop_calibre_web()
-        # close the browser window and stop calibre-web
-        cls.driver.quit()
-        cls.p.terminate()
-        save_logfiles(cls, cls.__name__)
 
     def check_search(self, bl, term, count, column, value):
         bl['search'].clear()
@@ -485,19 +471,19 @@ class TestEditBooksList(TestCase, ui_class):
 
     def test_booklist_xss(self):
         r = requests.session()
-        login_page = r.get('http://127.0.0.1:{}/login'.format(PORTS[0]))
+        login_page = r.get('http://127.0.0.1:{}/login'.format(self.worker_port))
         token = re.search('<input type="hidden" name="csrf_token" value="(.*)">', login_page.text)
         payload = {'username': 'admin', 'password': 'admin123', 'submit': "", 'next': "/", "remember_me": "on", "csrf_token": token.group(1)}
-        r.post('http://127.0.0.1:{}/login'.format(PORTS[0]), data=payload)
-        table = r.get('http://127.0.0.1:{}/table?data=list&sort_param=stored'.format(PORTS[0]))
+        r.post('http://127.0.0.1:{}/login'.format(self.worker_port), data=payload)
+        table = r.get('http://127.0.0.1:{}/table?data=list&sort_param=stored'.format(self.worker_port))
         token = re.search('<input type="hidden" name="csrf_token" value="(.*)">', table.text)
         data = {"name": "comments", "value": "<a href=javascr\x1bipt:alert()>Hello</a>", "pk": ["10"], "checkA": "true", "checkT": "true"}
         headers = {"X-CSRFToken": token.group(1)}
-        response = r.post('http://127.0.0.1:{}/ajax/editbooks/comments'.format(PORTS[0]), json=data, headers=headers, timeout=5)
+        response = r.post('http://127.0.0.1:{}/ajax/editbooks/comments'.format(self.worker_port), json=data, headers=headers, timeout=5)
         self.assertEqual(200, response.status_code)
         self.assertEqual("<a>Hello</a>", response.json()['newValue'])
         data = {"name": "comments", "value": "", "pk": ["10"], "checkA": "true", "checkT": "true"}
-        response = r.post('http://127.0.0.1:{}/ajax/editbooks/comments'.format(PORTS[0]), json=data, headers=headers, timeout=5)
+        response = r.post('http://127.0.0.1:{}/ajax/editbooks/comments'.format(self.worker_port), json=data, headers=headers, timeout=5)
         self.assertEqual(200, response.status_code)
         self.assertEqual("", response.json()['newValue'])
         r.close()

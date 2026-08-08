@@ -1,9 +1,9 @@
 #!/usr/bin/env python
 # -*- coding: utf-8 -*-
 
-from unittest import TestCase
-import os
 import unittest
+from base_test import ParallelTestCase
+import os
 import time
 import requests
 import re
@@ -12,32 +12,27 @@ from io import BytesIO
 
 from selenium.webdriver.common.by import By
 from selenium.common.exceptions import UnexpectedAlertPresentException
-from helper_ui import ui_class
-from config_test import TEST_DB, base_path, BOOT_TIME
-# from .parameterized import parameterized_class
-from helper_func import startup, add_dependency, remove_dependency, unrar_path, is_unrar_not_present, createcbz
+from config_test import base_path, BOOT_TIME
+from helper_func import startup, unrar_path, is_unrar_not_present, createcbz, wait_for_reboot
 from helper_func import change_comic_meta
-from helper_func import save_logfiles
-
-
-RESOURCES = {'ports': 1}
-
-PORTS = ['8083']
-INDEX = ""
 
 
 @unittest.skipIf(is_unrar_not_present(), "Skipping convert, unrar not found")
-class TestEditAdditionalBooks(TestCase, ui_class):
-    p = None
-    driver = None
-    dependencys = ["limit|py7zr", 'comicapi', 'rarfile']
+class TestEditAdditionalBooks(ParallelTestCase):
+
+    dependency = ["limit|py7zr", 'comicapi', 'rarfile']
 
     @classmethod
     def setUpClass(cls):
-        add_dependency(cls.dependencys, cls.__name__)
+        super().setUpClass()
 
         try:
-            startup(cls, cls.py_version, {'config_calibre_dir': TEST_DB}, port=PORTS[0], index=INDEX, env={"APP_MODE": "test"})
+            startup(cls, cls.py_version, 
+                    {'config_calibre_dir': cls.temp_dir},
+                    port=cls.worker_port,
+                    app_dir=cls.app_dir,
+                    env={"APP_MODE": "test", "CALIBRE_PORT": cls.worker_port},
+                    lib_dest=cls.temp_dir)
             time.sleep(3)
             cls.fill_thumbnail_config({'schedule_generate_book_covers': 1})
             time.sleep(3)
@@ -46,16 +41,6 @@ class TestEditAdditionalBooks(TestCase, ui_class):
         except Exception:
             cls.driver.quit()
             cls.p.kill()
-
-    @classmethod
-    def tearDownClass(cls):
-        remove_dependency(cls.dependencys)
-        cls.driver.get("http://127.0.0.1:" + PORTS[0])
-        cls.stop_calibre_web()
-        # close the browser window and stop calibre-web
-        cls.driver.quit()
-        cls.p.terminate()
-        save_logfiles(cls, cls.__name__)
 
     def check_identifier(self, result, key, name, value, only_value=False):
         identifier = [sub[key] for sub in result['identifier'] if key in sub]
@@ -66,7 +51,7 @@ class TestEditAdditionalBooks(TestCase, ui_class):
 
     def test_cbz_comicinfo(self):
         self.fill_basic_config({'config_uploading': 1})
-        time.sleep(3)
+        wait_for_reboot((f"http://127.0.0.1:{self.worker_port}"))
         self.assertTrue(self.check_element_on_page((By.ID, "flash_success")))
 
         upload_file = os.path.join(base_path, 'files', 'book2.cbz')
@@ -81,7 +66,7 @@ class TestEditAdditionalBooks(TestCase, ui_class):
         self.goto_page('nav_new')
         upload = self.check_element_on_page((By.ID, 'btn-upload'))
         upload.send_keys(upload_file)
-        time.sleep(2)
+        time.sleep(4)
         self.check_element_on_page((By.ID, 'edit_cancel')).click()
         time.sleep(2)
         details = self.get_book_details()
@@ -92,19 +77,19 @@ class TestEditAdditionalBooks(TestCase, ui_class):
         self.assertEqual('Testdummy', details['comment'])
 
         self.fill_basic_config({'config_uploading': 0})
-        time.sleep(2)
+        wait_for_reboot((f"http://127.0.0.1:{self.worker_port}"))
         self.assertTrue(self.check_element_on_page((By.ID, "flash_success")))
         self.delete_book(details['id'])
         os.remove(upload_file)
         os.remove(other_file)
         self.fill_basic_config({'config_uploading': 0})
-        time.sleep(3)
+        wait_for_reboot((f"http://127.0.0.1:{self.worker_port}"))
         self.assertTrue(self.check_element_on_page((By.ID, "flash_success")))
         
 
     def test_upload_cbz_coverformats(self):
         self.fill_basic_config({'config_uploading': 1})
-        time.sleep(3)
+        wait_for_reboot((f"http://127.0.0.1:{self.worker_port}"))
         self.assertTrue(self.check_element_on_page((By.ID, "flash_success")))
         # Upload book to be sure we have a reference (delete book test runs maybe before this test)
         upload_file = os.path.join(base_path, 'files', 'book.fb2')
@@ -160,7 +145,7 @@ class TestEditAdditionalBooks(TestCase, ui_class):
 
     def test_upload_metadata_cbr(self):
         self.fill_basic_config({'config_uploading': 1})
-        time.sleep(3)
+        wait_for_reboot((f"http://127.0.0.1:{self.worker_port}"))
         self.assertTrue(self.check_element_on_page((By.ID, "flash_success")))
         self.fill_basic_config({'config_rarfile_location': '/bin/ur'})
         self.assertTrue(self.check_element_on_page((By.ID, "flash_danger")))
@@ -182,11 +167,11 @@ class TestEditAdditionalBooks(TestCase, ui_class):
         self.assertEqual('3', details['series_index'])
         self.assertEqual('No Series', details['series'])
         r = requests.session()
-        login_page = r.get('http://127.0.0.1:{}/login'.format(PORTS[0]))
+        login_page = r.get('http://127.0.0.1:{}/login'.format(self.worker_port))
         token = re.search('<input type="hidden" name="csrf_token" value="(.*)">', login_page.text)
         payload = {'username': 'admin', 'password': 'admin123', 'submit': "", 'next': "/", "remember_me": "on", "csrf_token": token.group(1)}
-        r.post('http://127.0.0.1:{}/login'.format(PORTS[0]), data=payload)
-        resp = r.get('http://127.0.0.1:{}'.format(PORTS[0]) + details['cover'])
+        r.post('http://127.0.0.1:{}/login'.format(self.worker_port), data=payload)
+        resp = r.get('http://127.0.0.1:{}'.format(self.worker_port) + details['cover'])
         self.assertEqual('8936', resp.headers['Content-Length'])
         #self.fill_basic_config({'config_rarfile_location': ''})
         #self.assertTrue(self.check_element_on_page((By.ID, "flash_success")))
@@ -197,12 +182,10 @@ class TestEditAdditionalBooks(TestCase, ui_class):
         self.fill_basic_config({'config_uploading': 0})
         time.sleep(3)
         self.assertTrue(self.check_element_on_page((By.ID, "flash_success")))
-        
 
     def test_upload_metadata_cbt(self):
         self.fill_basic_config({'config_uploading': 1})
-        time.sleep(3)
-        self.assertTrue(self.check_element_on_page((By.ID, "flash_success")))
+        self.assertTrue(self.check_element_on_page((By.ID, "flash_success"), timeout=BOOT_TIME))
         self.goto_page('nav_new')
         upload_file = os.path.join(base_path, 'files', 'book.cbt')
         upload = self.check_element_on_page((By.ID, 'btn-upload'))
@@ -216,11 +199,11 @@ class TestEditAdditionalBooks(TestCase, ui_class):
         self.assertEqual('2', details['series_index'])
         self.assertEqual('No S', details['series'])
         r = requests.session()
-        login_page = r.get('http://127.0.0.1:{}/login'.format(PORTS[0]))
+        login_page = r.get('http://127.0.0.1:{}/login'.format(self.worker_port))
         token = re.search('<input type="hidden" name="csrf_token" value="(.*)">', login_page.text)
         payload = {'username': 'admin', 'password': 'admin123', 'submit': "", 'next': "/", "remember_me": "on", "csrf_token": token.group(1)}
-        r.post('http://127.0.0.1:{}/login'.format(PORTS[0]), data=payload)
-        resp = r.get('http://127.0.0.1:{}'.format(PORTS[0]) + details['cover'])
+        r.post('http://127.0.0.1:{}/login'.format(self.worker_port), data=payload)
+        resp = r.get('http://127.0.0.1:{}'.format(self.worker_port) + details['cover'])
         self.fill_basic_config({'config_uploading': 0})
         self.assertEqual('8936', resp.headers['Content-Length'])
         r.close()
@@ -258,7 +241,7 @@ class TestEditAdditionalBooks(TestCase, ui_class):
     # limit upload formats to FB2 -> upload fb2 allowed
     def test_change_upload_formats(self):
         self.fill_basic_config({'config_uploading': 1, 'config_upload_formats': 'epub'})
-        time.sleep(BOOT_TIME)
+        wait_for_reboot(f"http://127.0.0.1:{self.worker_port}")
         self.assertTrue(self.check_element_on_page((By.ID, "flash_success")))
         self.goto_page('nav_new')
         upload_file = os.path.join(base_path, 'files', 'book.pdf')
@@ -332,11 +315,11 @@ class TestEditAdditionalBooks(TestCase, ui_class):
         self.assertEqual('4', details['cust_columns'][0]['value'])
         self.assertEqual('ok', details['cust_columns'][1]['value'])
         self.assertEqual('test text', details['cust_columns'][2]['value'])
-        book_path = os.path.join(TEST_DB, 'John Doe', 'Buuko (7)')
+        book_path = os.path.join(self.temp_dir, 'John Doe', 'Buuko (7)')
 
         # add folder to folder
         details = self.get_book_details(1)
-        book_path1 = os.path.join(TEST_DB, details['author'][0], details['title'] + ' (1)')
+        book_path1 = os.path.join(self.temp_dir, details['author'][0], details['title'] + ' (1)')
         sub_folder = os.path.join(book_path1, 'new_subfolder')
         os.mkdir(sub_folder)
         # delete book, -> denied because of additional folder
@@ -349,7 +332,7 @@ class TestEditAdditionalBooks(TestCase, ui_class):
         self.assertTrue(self.check_element_on_page((By.ID, "flash_danger")))
 
         details = self.get_book_details(7)
-        self.assertTrue(os.path.isdir(os.path.join(TEST_DB, 'John Doe')))
+        self.assertTrue(os.path.isdir(os.path.join(self.temp_dir, 'John Doe')))
         self.assertEqual('Buuko', details['title'])
         self.assertEqual('John Döe', details['author'][0])
         self.assertEqual('4', details['cust_columns'][0]['value'])
@@ -368,11 +351,11 @@ class TestEditAdditionalBooks(TestCase, ui_class):
         self.assertTrue(self.check_element_on_page((By.ID, "flash_success")))
         self.get_book_details(7)
         self.assertTrue(self.check_element_on_page((By.ID, "flash_danger")))
-        self.assertTrue(os.path.isdir(os.path.join(TEST_DB, 'John Doe')))
+        self.assertTrue(os.path.isdir(os.path.join(self.temp_dir, 'John Doe')))
         # delete book -> author folder deleted
         self.delete_book(5)
         self.assertTrue(self.check_element_on_page((By.ID, "flash_success")))
-        self.assertFalse(os.path.isdir(os.path.join(TEST_DB, 'John Doe')))
+        self.assertFalse(os.path.isdir(os.path.join(self.temp_dir, 'John Doe')))
         # ToDo: what happens if folder isn't valid and no book or author folder is present?
         self.fill_basic_config({'config_uploading': 1})
         time.sleep(3)
@@ -607,29 +590,29 @@ class TestEditAdditionalBooks(TestCase, ui_class):
 
     def test_upload_edit_role(self):
         self.fill_basic_config({'config_uploading': 1})
-        time.sleep(3)
+        wait_for_reboot((f"http://127.0.0.1:{self.worker_port}"))
         self.assertTrue(self.check_element_on_page((By.ID, "flash_success")))
         self.create_user('user0', {'password': '123AbC*!', 'email': 'a@b.com', 'upload_role': 0, 'edit_role': 1})
         self.assertTrue(self.check_element_on_page((By.ID, "flash_success")))
         self.logout()
         r = requests.session()
-        login_page = r.get('http://127.0.0.1:{}/login'.format(PORTS[0]))
+        login_page = r.get('http://127.0.0.1:{}/login'.format(self.worker_port))
         token = re.search('<input type="hidden" name="csrf_token" value="(.*)">', login_page.text)
         payload = {'username': 'user0', 'password': '123AbC*!', 'submit': "", 'next': "/",
                    "remember_me": "on", "csrf_token": token.group(1)}
-        r.post('http://127.0.0.1:{}/login'.format(PORTS[0]), data=payload)
+        r.post('http://127.0.0.1:{}/login'.format(self.worker_port), data=payload)
         upload_file = open(os.path.join(base_path, 'files', 'book.cbt'), 'rb')
         files = {'btn-upload': upload_file}
-        result = r.post('http://127.0.0.1:{}/upload'.format(PORTS[0]), files=files,
+        result = r.post('http://127.0.0.1:{}/upload'.format(self.worker_port), files=files,
                         data={"csrf_token": token.group(1)})
         self.assertEqual(403, result.status_code)
         upload_file.close()
-        book_page = r.get('http://127.0.0.1:{}/admin/book/13'.format(PORTS[0]))
+        book_page = r.get('http://127.0.0.1:{}/admin/book/13'.format(self.worker_port))
         token = re.search('<input type="hidden" name="csrf_token" value="(.*)">', book_page.text)
         values = {'book_id': '13', "csrf_token": token.group(1)}
         upload_file = open(os.path.join(base_path, 'files', 'book.cbt'), 'rb')
         files_format = {'btn-upload-format': upload_file}
-        result = r.post('http://127.0.0.1:{}/admin/book/13'.format(PORTS[0]), files=files_format, data=values)
+        result = r.post('http://127.0.0.1:{}/admin/book/13'.format(self.worker_port), files=files_format, data=values)
         self.assertEqual(200, result.status_code)
         self.assertTrue("flash_danger" in result.text)
         upload_file.close()
@@ -637,21 +620,21 @@ class TestEditAdditionalBooks(TestCase, ui_class):
         values = {'title': 'Buuko', 'authors': 'John Döe', 'comments': '',
                   'tags': 'Gênot', 'series': 'Djüngel', 'series_index': '3.0', 'ratings': '4',
                   'pubdate': '', 'languages': '', 'detail_view': 'on', "csrf_token": token.group(1)}
-        #result = r.post('http://127.0.0.1:{}/admin/book/13'.format(PORTS[0]), data=values)
+        #result = r.post('http://127.0.0.1:{}/admin/book/13'.format(self.worker_port), data=values)
         #self.assertEqual(200, result.status_code)
         #self.assertFalse("flash_danger" in result.text)
         cover_file = open(os.path.join(base_path, 'files', 'cover.jpg'), 'rb')
         files_cover = {'btn-upload-cover': cover_file}
         token = re.search('<input type="hidden" name="csrf_token" value="(.*)">', result.text)
         values['csrf_token'] = token.group(1)
-        result = r.post('http://127.0.0.1:{}/admin/book/13'.format(PORTS[0]), files=files_cover, data=values)
+        result = r.post('http://127.0.0.1:{}/admin/book/13'.format(self.worker_port), files=files_cover, data=values)
         self.assertEqual(200, result.status_code)
         self.assertTrue("flash_danger" in result.text)
         cover_file.close()
         values['cover_url'] = "/home/user/kurt.jpg"
         token = re.search('<input type="hidden" name="csrf_token" value="(.*)">', book_page.text)
         values['csrf_token'] = token.group(1)
-        result = r.post('http://127.0.0.1:{}/admin/book/13'.format(PORTS[0]), data=values)
+        result = r.post('http://127.0.0.1:{}/admin/book/13'.format(self.worker_port), data=values)
         self.assertEqual(200, result.status_code)
         self.assertTrue("flash_danger" in result.text)
         r.close()
@@ -682,12 +665,12 @@ class TestEditAdditionalBooks(TestCase, ui_class):
         self.assertFalse(self.check_element_on_page((By.ID, "edit_book")))
         self.logout()
         r = requests.session()
-        login_page = r.get('http://127.0.0.1:{}/login'.format(PORTS[0]))
+        login_page = r.get('http://127.0.0.1:{}/login'.format(self.worker_port))
         token = re.search('<input type="hidden" name="csrf_token" value="(.*)">', login_page.text)
         payload = {'username': 'user0', 'password': '123AbC*!', 'submit': "", 'next': "/",
                    "remember_me": "on", "csrf_token": token.group(1)}
-        r.post('http://127.0.0.1:{}/login'.format(PORTS[0]), data=payload)
-        result = r.get('http://127.0.0.1:{}/admin/book/13'.format(PORTS[0]))
+        r.post('http://127.0.0.1:{}/login'.format(self.worker_port), data=payload)
+        result = r.get('http://127.0.0.1:{}/admin/book/13'.format(self.worker_port))
         self.assertEqual(403, result.status_code)
         r.close()
 
@@ -699,7 +682,7 @@ class TestEditAdditionalBooks(TestCase, ui_class):
 
     def test_delete_role(self):
         self.fill_basic_config({'config_uploading': 1})
-        time.sleep(3)
+        wait_for_reboot((f"http://127.0.0.1:{self.worker_port}"))
         self.assertTrue(self.check_element_on_page((By.ID, "flash_success")))
         self.get_book_details(12)
         self.check_element_on_page((By.ID, "edit_book")).click()
@@ -718,35 +701,35 @@ class TestEditAdditionalBooks(TestCase, ui_class):
         self.assertTrue(self.check_element_on_page((By.ID, "flash_success")))
         self.logout()
         r = requests.session()
-        login_page = r.get('http://127.0.0.1:{}/login'.format(PORTS[0]))
+        login_page = r.get('http://127.0.0.1:{}/login'.format(self.worker_port))
         token = re.search('<input type="hidden" name="csrf_token" value="(.*)">', login_page.text)
         payload = {'username': 'user2', 'password': '123AbC*!', 'submit': "", 'next': "/", "remember_me": "on", "csrf_token": token.group(1)}
-        r.post('http://127.0.0.1:{}/login'.format(PORTS[0]), data=payload)
-        result = r.get('http://127.0.0.1:{}/book/12'.format(PORTS[0]))
+        r.post('http://127.0.0.1:{}/login'.format(self.worker_port), data=payload)
+        result = r.get('http://127.0.0.1:{}/book/12'.format(self.worker_port))
         token = re.search('<input type="hidden" name="csrf_token" value="(.*)">', result.text)
         payload = {"csrf_token": token.group(1)}
-        result = r.post('http://127.0.0.1:{}/delete/12/FB2'.format(PORTS[0]), data=payload)
+        result = r.post('http://127.0.0.1:{}/delete/12/FB2'.format(self.worker_port), data=payload)
         self.assertEqual(403, result.status_code)
-        result = r.post('http://127.0.0.1:{}/delete/12'.format(PORTS[0]), data=payload)
+        result = r.post('http://127.0.0.1:{}/delete/12'.format(self.worker_port), data=payload)
         self.assertEqual(403, result.status_code)
         data = {'bookid': '12'}
         headers = {"X-CSRFToken": token.group(1)}
-        result = r.post('http://127.0.0.1:{}/ajax/deletebook'.format(PORTS[0]), json=data, headers=headers, timeout=5)
+        result = r.post('http://127.0.0.1:{}/ajax/deletebook'.format(self.worker_port), json=data, headers=headers, timeout=5)
         self.assertEqual(200, result.status_code)
         self.assertEqual("danger", result.json()['type'])
 
         data = {'bookid': ['12']}
-        result = r.post('http://127.0.0.1:{}/ajax/deletebook'.format(PORTS[0]), json=data, headers=headers, timeout=5)
+        result = r.post('http://127.0.0.1:{}/ajax/deletebook'.format(self.worker_port), json=data, headers=headers, timeout=5)
         self.assertEqual(200, result.status_code)
         self.assertEqual("danger", result.json()['type'])
 
         data = {'schulli': ['12']}
-        result = r.post('http://127.0.0.1:{}/ajax/deletebook'.format(PORTS[0]), json=data, headers=headers, timeout=5)
+        result = r.post('http://127.0.0.1:{}/ajax/deletebook'.format(self.worker_port), json=data, headers=headers, timeout=5)
         self.assertEqual(200, result.status_code)
         self.assertEqual("danger", result.json()['type'])
 
         data = {'schulli': ['12']}
-        result = r.post('http://127.0.0.1:{}/ajax/deletebook'.format(PORTS[0]), data=data, headers=headers, timeout=5)
+        result = r.post('http://127.0.0.1:{}/ajax/deletebook'.format(self.worker_port), data=data, headers=headers, timeout=5)
         self.assertEqual(415, result.status_code)
 
         self.login('admin', 'admin123')
@@ -757,10 +740,10 @@ class TestEditAdditionalBooks(TestCase, ui_class):
         self.check_element_on_page((By.ID, "edit_book")).click()
         self.assertFalse(self.check_element_on_page((By.ID, "delete")))
         self.logout()
-        result = r.post('http://127.0.0.1:{}/delete/12/FB2'.format(PORTS[0]), data=payload)
+        result = r.post('http://127.0.0.1:{}/delete/12/FB2'.format(self.worker_port), data=payload)
         self.assertEqual(200, result.status_code)
         self.assertTrue('flash_danger' in result.text)
-        result = r.post('http://127.0.0.1:{}/delete/12'.format(PORTS[0]), data=payload)
+        result = r.post('http://127.0.0.1:{}/delete/12'.format(self.worker_port), data=payload)
         self.assertEqual(200, result.status_code)
         self.assertTrue('flash_danger' in result.text)
         self.login('admin', 'admin123')
@@ -810,14 +793,14 @@ class TestEditAdditionalBooks(TestCase, ui_class):
 
     def test_xss_comment_edit(self):
         r = requests.session()
-        login_page = r.get('http://127.0.0.1:{}/login'.format(PORTS[0]))
+        login_page = r.get('http://127.0.0.1:{}/login'.format(self.worker_port))
         token = re.search('<input type="hidden" name="csrf_token" value="(.*)">', login_page.text)
         payload = {'username': 'admin', 'password': 'admin123', 'submit': "", 'next': "/", "remember_me": "on", "csrf_token": token.group(1)}
-        r.post('http://127.0.0.1:{}/login'.format(PORTS[0]), data=payload)
-        book_page = r.get('http://127.0.0.1:{}/admin/book/3'.format(PORTS[0]))
+        r.post('http://127.0.0.1:{}/login'.format(self.worker_port), data=payload)
+        book_page = r.get('http://127.0.0.1:{}/admin/book/3'.format(self.worker_port))
         token = re.search('<input type="hidden" name="csrf_token" value="(.*)">', book_page.text)
         book_payload = {'comments': '<p>calibre Quick Start Guide</p><img src=x onerror=alert("Huhu")>', 'authors': 'Asterix Lionherd', 'title': 'Comicdemo', 'tags':'', 'series':'Djüngel', 'series_index':'1', 'languages':'', 'publisher':'', 'pubdate':'', 'rating': '', 'custom_column_1':'', 'custom_column_2':'', 'custom_column_3':'', 'custom_column_4':'', 'custom_column_5':'', 'custom_column_6':'','custom_column_7':'', 'custom_column_8':'', 'custom_column_9':'', 'custom_column_10':'', "csrf_token": token.group(1)}
-        result = r.post('http://127.0.0.1:{}/admin/book/3'.format(PORTS[0]), data=book_payload)
+        result = r.post('http://127.0.0.1:{}/admin/book/3'.format(self.worker_port), data=book_payload)
         self.assertEqual(200, result.status_code)
         r.close()
         try:
@@ -831,14 +814,14 @@ class TestEditAdditionalBooks(TestCase, ui_class):
 
     def test_xss_custom_comment_edit(self):
         r = requests.session()
-        login_page = r.get('http://127.0.0.1:{}/login'.format(PORTS[0]))
+        login_page = r.get('http://127.0.0.1:{}/login'.format(self.worker_port))
         token = re.search('<input type="hidden" name="csrf_token" value="(.*)">', login_page.text)
         payload = {'username': 'admin', 'password': 'admin123', 'submit': "", 'next': "/", "remember_me": "on", "csrf_token": token.group(1)}
-        r.post('http://127.0.0.1:{}/login'.format(PORTS[0]), data=payload)
-        book_page = r.get('http://127.0.0.1:{}/admin/book/3'.format(PORTS[0]))
+        r.post('http://127.0.0.1:{}/login'.format(self.worker_port), data=payload)
+        book_page = r.get('http://127.0.0.1:{}/admin/book/3'.format(self.worker_port))
         token = re.search('<input type="hidden" name="csrf_token" value="(.*)">', book_page.text)
         book_payload = {'comments': '', 'authors': 'Asterix Lionherd', 'title': '<p>calibre Quick Start Guide</p><img src=x onerror=alert("hoho")>', 'tags':'<p>calibre Quick Start Guide</p><img src=x onerror=alert("ddd")>', 'series':'<p>calibre Quick Start Guide</p><img src=x onerror=alert("hh")>', 'series_index':'1', 'languages':'', 'publisher':'', 'pubdate':'', 'rating': '', 'custom_column_1':'', 'custom_column_2':'', 'custom_column_3':'', 'custom_column_4':'', 'custom_column_5':'<p>calibre Quick Start Guide</p><img src=x onerror=alert("Huhu")>', 'custom_column_6':'','custom_column_7':'', 'custom_column_8':'', 'custom_column_9':'', 'custom_column_10':'', "csrf_token": token.group(1)}
-        result = r.post('http://127.0.0.1:{}/admin/book/3'.format(PORTS[0]), data=book_payload)
+        result = r.post('http://127.0.0.1:{}/admin/book/3'.format(self.worker_port), data=book_payload)
         self.assertEqual(200, result.status_code)
         r.close()
         try:
@@ -853,14 +836,14 @@ class TestEditAdditionalBooks(TestCase, ui_class):
 
     def test_xss_author_edit(self):
         r = requests.session()
-        login_page = r.get('http://127.0.0.1:{}/login'.format(PORTS[0]))
+        login_page = r.get('http://127.0.0.1:{}/login'.format(self.worker_port))
         token = re.search('<input type="hidden" name="csrf_token" value="(.*)">', login_page.text)
         payload = {'username': 'admin', 'password': 'admin123', 'submit': "", 'next': "/", "remember_me": "on", "csrf_token": token.group(1)}
-        r.post('http://127.0.0.1:{}/login'.format(PORTS[0]), data=payload)
-        book_page = r.get('http://127.0.0.1:{}/admin/book/3'.format(PORTS[0]))
+        r.post('http://127.0.0.1:{}/login'.format(self.worker_port), data=payload)
+        book_page = r.get('http://127.0.0.1:{}/admin/book/3'.format(self.worker_port))
         token = re.search('<input type="hidden" name="csrf_token" value="(.*)">', book_page.text)
         book_payload = {'comments': '', 'authors': "-->'\"<script>alert(1)</script>", 'title': '<p>calibre Quick Start Guide</p><img src=x onerror=alert("hoho")>', 'tags':'<p>calibre Quick Start Guide</p><img src=x onerror=alert("ddd")>', 'series':'<p>calibre Quick Start Guide</p><img src=x onerror=alert("hh")>', 'series_index':'1', 'languages':'', 'publisher':'', 'pubdate':'', 'rating': '', 'custom_column_1':'', 'custom_column_2':'', 'custom_column_3':'', 'custom_column_4':'', 'custom_column_5':'<p>calibre Quick Start Guide</p><img src=x onerror=alert("Huhu")>', 'custom_column_6':'','custom_column_7':'', 'custom_column_8':'', 'custom_column_9':'', 'custom_column_10':'', "csrf_token": token.group(1)}
-        result = r.post('http://127.0.0.1:{}/admin/book/3'.format(PORTS[0]), data=book_payload)
+        result = r.post('http://127.0.0.1:{}/admin/book/3'.format(self.worker_port), data=book_payload)
         self.assertEqual(200, result.status_code)
         r.close()
         try:

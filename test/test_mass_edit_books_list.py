@@ -1,85 +1,67 @@
-#!/usr/bin/env python
 # -*- coding: utf-8 -*-
 
-
-from unittest import TestCase, skip
+from base_test import ParallelTestCase
 import time
 import os
 import shutil
-
-from helper_ui import ui_class
-from config_test import TEST_DB
-from helper_func import startup, debug_startup
-from helper_func import save_logfiles
-from selenium.webdriver.common.keys import Keys
-from selenium.webdriver.common.by import By
 import requests
 import re
 
-RESOURCES = {'ports': 1}
-
-PORTS = ['8083']
-INDEX = ""
+from selenium.webdriver.common.by import By
+from helper_func import startup
 
 
-class TestMassEditBooksList(TestCase, ui_class):
-    p = None
-    driver = None
+class TestMassEditBooksList(ParallelTestCase):
 
     @classmethod
     def setUpClass(cls):
+        super().setUpClass()
         try:
-            startup(cls, cls.py_version, {'config_calibre_dir': TEST_DB}, port=PORTS[0], index=INDEX,
-                    env={"APP_MODE": "test"})
+            startup(cls, cls.py_version, {'config_calibre_dir': cls.temp_dir},
+                    port=cls.worker_port,
+                    app_dir=cls.app_dir,
+                    env={"APP_MODE": "test", "CALIBRE_PORT": cls.worker_port},
+                    lib_dest=cls.temp_dir)
             time.sleep(3)
         except Exception:
             cls.driver.quit()
             cls.p.kill()
 
-    @classmethod
-    def tearDownClass(cls):
-        cls.driver.get("http://127.0.0.1:" + PORTS[0])
-        cls.stop_calibre_web()
-        # close the browser window and stop calibre-web
-        cls.driver.quit()
-        cls.p.terminate()
-        save_logfiles(cls, cls.__name__)
-
     def test_wrong_parameter_single(self):
         r = requests.session()
-        login_page = r.get('http://127.0.0.1:{}/login'.format(PORTS[0]))
+        login_page = r.get('http://127.0.0.1:{}/login'.format(self.worker_port))
         token = re.search('<input type="hidden" name="csrf_token" value="(.*)">', login_page.text)
         payload = {'username': 'admin', 'password': 'admin123', 'submit': "", 'next': "/", "remember_me": "on", "csrf_token": token.group(1)}
-        r.post('http://127.0.0.1:{}/login'.format(PORTS[0]), data=payload)
-        table = r.get('http://127.0.0.1:{}/table?data=list&sort_param=stored'.format(PORTS[0]))
+        r.post('http://127.0.0.1:{}/login'.format(self.worker_port), data=payload)
+        table = r.get('http://127.0.0.1:{}/table?data=list&sort_param=stored'.format(self.worker_port))
         token = re.search('<input type="hidden" name="csrf_token" value="(.*)">', table.text)
         data = {"name": "lurgi", "value": "test", "pk": ["10"]}
         headers = {"X-CSRFToken": token.group(1)}
-        response = r.post('http://127.0.0.1:{}/ajax/editbooks/lurgi'.format(PORTS[0]), json=data, headers=headers, timeout=5)
+        response = r.post('http://127.0.0.1:{}/ajax/editbooks/lurgi'.format(self.worker_port), json=data, headers=headers, timeout=5)
         self.assertEqual(400, response.status_code)
         self.assertTrue("Parameter" in response.text)
         data = {"value": "test", "pk": ["22"]}
-        response = r.post('http://127.0.0.1:{}/ajax/editbooks/series'.format(PORTS[0]), json=data, headers=headers,
+        response = r.post('http://127.0.0.1:{}/ajax/editbooks/series'.format(self.worker_port), json=data, headers=headers,
                           timeout=5)
         self.assertEqual(200, response.status_code)
         self.assertNotEqual(None, response.json().get('msg', None))
         data = {"value": "fdt", "pk": [10]}
-        response = r.post('http://127.0.0.1:{}/ajax/editbooks/languages'.format(PORTS[0]), json=data, headers=headers,
+        response = r.post('http://127.0.0.1:{}/ajax/editbooks/languages'.format(self.worker_port), json=data, headers=headers,
                           timeout=5)
         self.assertEqual(200, response.status_code)
         self.assertNotEqual(None, response.json().get('msg', None))
         data = {"pk": [10]}
-        response = r.post('http://127.0.0.1:{}/ajax/editbooks/languages'.format(PORTS[0]), json=data, headers=headers,
+        response = r.post('http://127.0.0.1:{}/ajax/editbooks/languages'.format(self.worker_port), json=data, headers=headers,
                           timeout=5)
         self.assertEqual(200, response.status_code)
         self.assertNotEqual(None, response.json().get('msg', None))
         data = {"value": "fdt"}
-        response = r.post('http://127.0.0.1:{}/ajax/editbooks/languages'.format(PORTS[0]), json=data, headers=headers,
+        response = r.post('http://127.0.0.1:{}/ajax/editbooks/languages'.format(self.worker_port), json=data, headers=headers,
                           timeout=5)
         self.assertEqual(200, response.status_code)
         self.assertNotEqual(None, response.json().get('msg', None))
         data = {"value": "fdt", "pk": "hurtz"}
-        response = r.post('http://127.0.0.1:{}/ajax/editbooks/title'.format(PORTS[0]), json=data, headers=headers,
+        response = r.post('http://127.0.0.1:{}/ajax/editbooks/title'.format(self.worker_port), json=data, headers=headers,
                           timeout=5)
         self.assertEqual(200, response.status_code)
         self.assertNotEqual(None, response.json().get('msg', None))
@@ -87,34 +69,34 @@ class TestMassEditBooksList(TestCase, ui_class):
 
     def test_wrong_parameter_multi(self):
         r = requests.session()
-        login_page = r.get('http://127.0.0.1:{}/login'.format(PORTS[0]))
+        login_page = r.get('http://127.0.0.1:{}/login'.format(self.worker_port))
         token = re.search('<input type="hidden" name="csrf_token" value="(.*)">', login_page.text)
         payload = {'username': 'admin', 'password': 'admin123', 'submit': "", 'next': "/", "remember_me": "on", "csrf_token": token.group(1)}
-        r.post('http://127.0.0.1:{}/login'.format(PORTS[0]), data=payload)
-        table = r.get('http://127.0.0.1:{}/table?data=list&sort_param=stored'.format(PORTS[0]))
+        r.post('http://127.0.0.1:{}/login'.format(self.worker_port), data=payload)
+        table = r.get('http://127.0.0.1:{}/table?data=list&sort_param=stored'.format(self.worker_port))
         token = re.search('<input type="hidden" name="csrf_token" value="(.*)">', table.text)
         data = {"name": "lurgi", "value": "test", "selections": ["10", 7]}
         headers = {"X-CSRFToken": token.group(1)}
-        response = r.post('http://127.0.0.1:{}/ajax/editselectedbooks'.format(PORTS[0]), json=data, headers=headers, timeout=5)
+        response = r.post('http://127.0.0.1:{}/ajax/editselectedbooks'.format(self.worker_port), json=data, headers=headers, timeout=5)
         self.assertEqual(400, response.status_code)
         self.assertTrue("Parameter" in response.text)
         data = {"series": "test", "selections": ["22", 10]}
-        response = r.post('http://127.0.0.1:{}/ajax/editselectedbooks'.format(PORTS[0]), json=data, headers=headers,
+        response = r.post('http://127.0.0.1:{}/ajax/editselectedbooks'.format(self.worker_port), json=data, headers=headers,
                           timeout=5)
         self.assertEqual(200, response.status_code)
         self.assertNotEqual(None, response.json()[0].get('msg', None))
         data = {"languages": "fdt", "selections": [10, 11]}
-        response = r.post('http://127.0.0.1:{}/ajax/editselectedbooks'.format(PORTS[0]), json=data, headers=headers,
+        response = r.post('http://127.0.0.1:{}/ajax/editselectedbooks'.format(self.worker_port), json=data, headers=headers,
                           timeout=5)
         self.assertEqual(200, response.status_code)
         self.assertNotEqual(None, response.json()[0].get('msg', None))
         data = {"selections": [10, 11]}
-        response = r.post('http://127.0.0.1:{}/ajax/editselectedbooks'.format(PORTS[0]), json=data, headers=headers,
+        response = r.post('http://127.0.0.1:{}/ajax/editselectedbooks'.format(self.worker_port), json=data, headers=headers,
                           timeout=5)
         self.assertEqual(400, response.status_code)
         self.assertTrue("Parameter" in response.text)
         data = {"title": "fdt", "selections": [10, "hurtz"]}
-        response = r.post('http://127.0.0.1:{}/ajax/editselectedbooks'.format(PORTS[0]), json=data, headers=headers,
+        response = r.post('http://127.0.0.1:{}/ajax/editselectedbooks'.format(self.worker_port), json=data, headers=headers,
                           timeout=5)
         self.assertEqual(200, response.status_code)
         self.assertNotEqual(None, response.json()[0].get('msg', None))
@@ -166,9 +148,9 @@ class TestMassEditBooksList(TestCase, ui_class):
         self.assertEqual(bl['table'][1]['Author Sort']['text'], "Aäthor sorto")
         self.assertTrue(self.check_element_on_page((By.ID, "autoupdate_titlesort")).is_enabled())
         self.assertTrue(self.check_element_on_page((By.ID, "autoupdate_authorsort")).is_enabled())
-        self.assertTrue(os.path.isfile(os.path.join(TEST_DB, 'Kurt Saart/Test (12)',
+        self.assertTrue(os.path.isfile(os.path.join(self.temp_dir, 'Kurt Saart/Test (12)',
                                                     'Test - Kurt Saart.pdf')))
-        self.assertTrue(os.path.isfile(os.path.join(TEST_DB, 'Kurt Saart/Test (13)',
+        self.assertTrue(os.path.isfile(os.path.join(self.temp_dir, 'Kurt Saart/Test (13)',
                                                     'Test - Kurt Saart.pdf')))
 
         # revert changes
@@ -188,9 +170,9 @@ class TestMassEditBooksList(TestCase, ui_class):
         self.assertEqual(bl['table'][1]['Authors']['text'], "Lulu de Marco")
         self.assertEqual(bl['table'][0]['Author Sort']['text'], "Halagal, Norbert")
         self.assertEqual(bl['table'][1]['Author Sort']['text'], "Marco, Lulu de")
-        self.assertTrue(os.path.isfile(os.path.join(TEST_DB, 'Norbert Halagal/book11 (13)',
+        self.assertTrue(os.path.isfile(os.path.join(self.temp_dir, 'Norbert Halagal/book11 (13)',
                                                     'book11 - Norbert Halagal.pdf')))
-        self.assertTrue(os.path.isfile(os.path.join(TEST_DB, 'Lulu de Marco/book10 (12)',
+        self.assertTrue(os.path.isfile(os.path.join(self.temp_dir, 'Lulu de Marco/book10 (12)',
                                                     'book10 - Lulu de Marco.pdf')))
 
     # Title, autor not exist multi edit
@@ -202,8 +184,8 @@ class TestMassEditBooksList(TestCase, ui_class):
         bl['table'][3]['selector']['element'].click()
         bl['table'][4]['selector']['element'].click()
         # move author-book 3
-        author_book = os.path.join(TEST_DB, 'Peter Parker', 'book7 (10)', 'book7 - Peter Parker.epub')
-        new_author_book = os.path.join(TEST_DB, 'Peter Parker', 'book7 (10)', 'book7 - Nos Parker.epub')
+        author_book = os.path.join(self.temp_dir, 'Peter Parker', 'book7 (10)', 'book7 - Peter Parker.epub')
+        new_author_book = os.path.join(self.temp_dir, 'Peter Parker', 'book7 (10)', 'book7 - Nos Parker.epub')
         shutil.move(author_book, new_author_book)
         # open mass edit dialog
         self.check_element_on_page((By.ID, "edit_selected_books")).click()
@@ -224,8 +206,8 @@ class TestMassEditBooksList(TestCase, ui_class):
         self.assertEqual(bl['table'][4]['Author Sort']['text'], "Jilo, Kurt")
 
         # move title-book 4
-        title_book = os.path.join(TEST_DB, 'Kurt Jilo','book6 (9)')
-        new_title_book = os.path.join(TEST_DB, 'Kurt Jilo', 'book (91)')
+        title_book = os.path.join(self.temp_dir, 'Kurt Jilo','book6 (9)')
+        new_title_book = os.path.join(self.temp_dir, 'Kurt Jilo', 'book (91)')
         shutil.move(title_book, new_title_book)
 
         # open mass edit dialog
@@ -263,15 +245,15 @@ class TestMassEditBooksList(TestCase, ui_class):
         bl = self.get_books_list()
         self.edit_table_element(bl['table'][4]['Authors']['element'], "Sigurd Lindgren")
         bl = self.get_books_list()
-        shutil.move(os.path.join(TEST_DB, 'Kurt Jilo', 'book7 (10)', 'book7 - Nos Parker.epub'),
-                    os.path.join(TEST_DB, 'Kurt Jilo', 'book7 (10)', 'book7 - Peter Parker.epub'))
-        # shutil.move(os.path.join(TEST_DB, 'Kurt Jilo', 'book7 (10)'), author_book)
-        #old_title = os.path.join(TEST_DB, 'Kurt Jilo', 'book6 (9)')
+        shutil.move(os.path.join(self.temp_dir, 'Kurt Jilo', 'book7 (10)', 'book7 - Nos Parker.epub'),
+                    os.path.join(self.temp_dir, 'Kurt Jilo', 'book7 (10)', 'book7 - Peter Parker.epub'))
+        # shutil.move(os.path.join(self.temp_dir, 'Kurt Jilo', 'book7 (10)'), author_book)
+        #old_title = os.path.join(self.temp_dir, 'Kurt Jilo', 'book6 (9)')
         #shutil.rmtree(old_title)
-        shutil.move(os.path.join(TEST_DB, 'Kurt Jilo', 'book7 (10)'), os.path.join(TEST_DB, 'Peter Parker', 'book7 (10)'))
-        # shutil.rmtree(os.path.join(TEST_DB, 'Kurt Jilo'))
-        shutil.move(os.path.join(TEST_DB, 'Kurt Jilo', 'book (91)'),
-                    os.path.join(TEST_DB, 'Kurt Jilo', 'book6 (9)'))
+        shutil.move(os.path.join(self.temp_dir, 'Kurt Jilo', 'book7 (10)'), os.path.join(self.temp_dir, 'Peter Parker', 'book7 (10)'))
+        # shutil.rmtree(os.path.join(self.temp_dir, 'Kurt Jilo'))
+        shutil.move(os.path.join(self.temp_dir, 'Kurt Jilo', 'book (91)'),
+                    os.path.join(self.temp_dir, 'Kurt Jilo', 'book6 (9)'))
         self.edit_table_element(bl['table'][4]['Authors']['element'], "Sigurd Lindgren")
         bl = self.get_books_list()
         self.assertEqual(bl['table'][2]['Title']['text'], "book9")
@@ -289,11 +271,11 @@ class TestMassEditBooksList(TestCase, ui_class):
         self.assertEqual(bl['table'][2]['Author Sort']['text'], "Gonçalves, Hector & Unbekannt")
         self.assertEqual(bl['table'][3]['Author Sort']['text'], "Parker, Peter")
         self.assertEqual(bl['table'][4]['Author Sort']['text'], "Lindgren, Sigurd")
-        self.assertTrue(os.path.isfile(os.path.join(TEST_DB, 'Hector Gonçalves','book9 (11)',
+        self.assertTrue(os.path.isfile(os.path.join(self.temp_dir, 'Hector Gonçalves','book9 (11)',
                                                     'book9 - Hector Gonçalves.pdf')))
-        self.assertTrue(os.path.isfile(os.path.join(TEST_DB, 'Peter Parker','book7 (10)',
+        self.assertTrue(os.path.isfile(os.path.join(self.temp_dir, 'Peter Parker','book7 (10)',
                                                     'book7 - Peter Parker.epub')))
-        self.assertTrue(os.path.isfile(os.path.join(TEST_DB, 'Sigurd Lindgren','book6 (9)',
+        self.assertTrue(os.path.isfile(os.path.join(self.temp_dir, 'Sigurd Lindgren','book6 (9)',
                                                     'book6 - Sigurd Lindgren.epub')))
 
     # Title, autor write write protect  multi edit
@@ -306,7 +288,7 @@ class TestMassEditBooksList(TestCase, ui_class):
         bl['table'][4]['selector']['element'].click()
         bl['table'][5]['selector']['element'].click()
         # write protect author-book 3
-        author_path = os.path.join(TEST_DB, "Leo Baskerville")
+        author_path = os.path.join(self.temp_dir, "Leo Baskerville")
         rights_author = os.stat(author_path).st_mode & 0o777
         os.chmod(author_path, 0o400)
         # open mass edit dialog

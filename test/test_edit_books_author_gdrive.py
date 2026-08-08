@@ -1,109 +1,49 @@
-#!/usr/bin/env python
 # -*- coding: utf-8 -*-
 
-
-from unittest import TestCase, skipIf
+from unittest import skipIf
+from base_test import ParallelTestCase
 import time
 import os
-import shutil
 
-from helper_ui import ui_class
-from config_test import TEST_DB, base_path
+from config_test import base_path, BOOT_TIME
 from helper_func import startup, change_epub_meta
-from config_test import CALIBRE_WEB_PATH, WAIT_GDRIVE
-from helper_func import save_logfiles, add_dependency, remove_dependency
-from helper_gdrive import prepare_gdrive, connect_gdrive
+from config_test import WAIT_GDRIVE
+from helper_gdrive import connect_gdrive
 from selenium.webdriver.common.by import By
-
-
-RESOURCES = {'ports': 1, "gdrive": True}
-
-PORTS = ['8083']
-INDEX = ""
 
 
 @skipIf(not os.path.exists(os.path.join(base_path, "files", "client_secrets.json")) or
                  not os.path.exists(os.path.join(base_path, "files", "gdrive_credentials")),
                  "client_secrets.json and/or gdrive_credentials file is missing")
-class TestEditAuthorsGdrive(TestCase, ui_class):
-    p = None
-    driver = None
-    dependency = ["oauth2client", "PyDrive2", "PyYAML", "google-api-python-client", "httplib2"]
+class TestEditAuthorsGdrive(ParallelTestCase):
 
+    resource_lock = "gdrive"
+    dependency = ["oauth2client", "PyDrive2", "PyYAML", "google-api-python-client", "httplib2"]
 
     @classmethod
     def setUpClass(cls):
-        add_dependency(cls.dependency, cls.__name__)
-
-        prepare_gdrive()
+        super().setUpClass()
         try:
-            src = os.path.join(base_path, "files", "client_secrets.json")
-            dst = os.path.join(CALIBRE_WEB_PATH + INDEX, "client_secrets.json")
-            os.chmod(src, 0o764)
-            if os.path.exists(dst):
-                os.unlink(dst)
-            shutil.copy(src, dst)
-
-            # delete settings_yaml file
-            set_yaml = os.path.join(CALIBRE_WEB_PATH + INDEX, "settings.yaml")
-            if os.path.exists(set_yaml):
-                os.unlink(set_yaml)
-
-            # delete gdrive file
-            gdrive_db = os.path.join(CALIBRE_WEB_PATH + INDEX, "gdrive.db")
-            if os.path.exists(gdrive_db):
-                os.unlink(gdrive_db)
-
-            # delete gdrive authenticated file
-            src = os.path.join(base_path, 'files', "gdrive_credentials")
-            dst = os.path.join(CALIBRE_WEB_PATH + INDEX, "gdrive_credentials")
-            os.chmod(src, 0o764)
-            if os.path.exists(dst):
-                os.unlink(dst)
-            shutil.copy(src, dst)
-
-            startup(cls, cls.py_version, {'config_calibre_dir': TEST_DB,
+            startup(cls, cls.py_version, {'config_calibre_dir': cls.temp_dir,
                                           # 'config_log_level': 'DEBUG',
                                           'config_kepubifypath': '',
                                           'config_binariesdir': ''},
-                    port=PORTS[0], index=INDEX, only_metadata=True, env={"APP_MODE": "test"})
+                    port=cls.worker_port,
+                    app_dir=cls.app_dir,
+                    env={"APP_MODE": "test", "CALIBRE_PORT": cls.worker_port},
+                    lib_dest=cls.temp_dir,
+                    only_metadata=True)
             cls.fill_db_config({'config_use_google_drive': 1})
             time.sleep(2)
             cls.fill_db_config({'config_google_drive_folder': 'test'})
             time.sleep(2)
         except Exception as e:
             try:
-                print(e)
+                cls.log_class(str(e))
                 cls.driver.quit()
                 cls.p.kill()
             except Exception:
                 pass
-
-    @classmethod
-    def tearDownClass(cls):
-        cls.driver.get("http://127.0.0.1:" + PORTS[0])
-        cls.stop_calibre_web()
-        # close the browser window and stop calibre-web
-        cls.driver.quit()
-        cls.p.terminate()
-        remove_dependency(cls.dependency)
-
-        src1 = os.path.join(CALIBRE_WEB_PATH + INDEX, "client_secrets.json")
-        src = os.path.join(CALIBRE_WEB_PATH + INDEX, "gdrive_credentials")
-        if os.path.exists(src):
-            os.chmod(src, 0o764)
-            try:
-                os.unlink(src)
-            except PermissionError:
-                print('gdrive_credentials delete failed')
-        if os.path.exists(src1):
-            os.chmod(src1, 0o764)
-            try:
-                os.unlink(src1)
-            except PermissionError:
-                print('client_secrets.json delete failed')
-
-        save_logfiles(cls, cls.__name__)
 
     # One book of the author present
     def test_change_capital_one_author_one_book(self):
@@ -542,8 +482,7 @@ class TestEditAuthorsGdrive(TestCase, ui_class):
     def test_rename_capital_on_upload(self):
         fs = connect_gdrive("test")
         self.fill_basic_config({'config_uploading': 1})
-        time.sleep(3)
-        self.assertTrue(self.check_element_on_page((By.ID, "flash_success")))
+        self.assertTrue(self.check_element_on_page((By.ID, "flash_success"), timeout=BOOT_TIME))
         # Upload book with one author in database
         epub_file = os.path.join(base_path, 'files', 'title.epub')
         change_epub_meta(epub_file, meta={'title': "Useless", 'creator': "asterix Lionherd"})

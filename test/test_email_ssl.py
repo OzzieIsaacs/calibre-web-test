@@ -1,68 +1,64 @@
-#!/usr/bin/env python
 # -*- coding: utf-8 -*-
 
+import unittest
+
+from base_test import ParallelTestCase, acquire_resource, release_resource
 import os
 import re
 import sys
 import time
-import unittest
 import socket
 
 from selenium.webdriver.common.by import By
 from helper_email_convert import AIOSMTPServer
 import helper_email_convert
-from helper_ui import ui_class
-from config_test import CALIBRE_WEB_PATH, TEST_DB, BOOT_TIME, base_path
-# from parameterized import parameterized_class
-from helper_func import startup, save_logfiles, wait_Email_received
-# from helper_certificate import generate_ssl_testing_files
-
-
-RESOURCES = {'ports': 2}
-
-PORTS = ['8083', '1027']
-INDEX = ""
+from selenium.webdriver.support.ui import WebDriverWait
+from selenium.webdriver.support import expected_conditions as EC
+from config_test import base_path, BOOT_TIME
+from helper_func import startup, wait_Email_received, wait_for_reboot
 
 
 @unittest.skipIf(helper_email_convert.is_calibre_not_present(),"Skipping convert, calibre not found")
-class TestSSL(unittest.TestCase, ui_class):
-    p = None
-    driver = None
+class TestSSL(ParallelTestCase):
+
     email_server = None
     LOG_LEVEL = 'DEBUG'
 
     @classmethod
     def setUpClass(cls):
+        super().setUpClass()
         # start email server
+        cls.port = acquire_resource("port")
+        cls.log_class("starting E-Mail Server")
         cls.email_server = AIOSMTPServer(
-            hostname=socket.gethostname(), port=int(PORTS[1]),
+            hostname=socket.gethostname(), port=int(cls.port),
             only_ssl=True,
-            certfile='files/server.crt',
-            keyfile='files/server.key',
+            certfile=os.path.join(base_path,'files','server.crt'),
+            keyfile=os.path.join(base_path,'files','server.key'),
             timeout=10
         )
         cls.email_server.start()
-        startup(cls, cls.py_version, {'config_calibre_dir':TEST_DB,
+        startup(cls, cls.py_version, {'config_calibre_dir':cls.temp_dir,
                                       'config_binariesdir':helper_email_convert.calibre_path(),
-                                      'config_log_level':cls.LOG_LEVEL}, 
-                port=PORTS[0], index=INDEX, env={"APP_MODE": "test"})
+                                      'config_log_level':cls.LOG_LEVEL},
+                port=cls.worker_port,
+                app_dir=cls.app_dir,
+                env={"APP_MODE": "test", "CALIBRE_PORT": cls.worker_port},
+                lib_dest=cls.temp_dir)
 
         cls.edit_user('admin', {'email': 'a5@b.com','kindle_mail': 'a1@b.com'})
-        cls.setup_server(False, {'mail_server':socket.gethostname(), 'mail_port': PORTS[1],
+        WebDriverWait(cls.driver, BOOT_TIME).until(EC.presence_of_element_located((By.ID, "flash_success")))
+        cls.setup_server(False, {'mail_server':socket.gethostname(), 'mail_port': cls.port,
                             'mail_use_ssl':'SSL/TLS','mail_login':'name@host.com','mail_password_e':'10234',
                             'mail_from':'name@host.com'})
+        WebDriverWait(cls.driver, BOOT_TIME).until(EC.presence_of_element_located((By.ID, "flash_success")))
 
 
     @classmethod
     def tearDownClass(cls):
-        cls.driver.get("http://127.0.0.1:" + PORTS[0])
-        cls.stop_calibre_web()
-        # close the browser window and stop calibre-web
-        cls.driver.quit()
-        cls.p.terminate()
         cls.email_server.stop()
-        time.sleep(2)
-        save_logfiles(cls, cls.__name__)
+        release_resource("port", cls.port)
+        super().tearDownClass()
 
     # start sending e-mail
     # check email received
@@ -111,7 +107,7 @@ class TestSSL(unittest.TestCase, ui_class):
     def test_SSL_logging_email(self):
         self.setup_server(True, {'mail_use_ssl': 'SSL/TLS'})
         time.sleep(5)
-        with open(os.path.join(CALIBRE_WEB_PATH + INDEX,'calibre-web.log'),'r') as logfile:
+        with open(os.path.join(self.app_dir,'calibre-web.log'),'r') as logfile:
             data = logfile.read()
         self.assertTrue(len(re.findall('Subject: Calibre-Web Test Email', data)), "Email logging not working")
 
@@ -119,8 +115,8 @@ class TestSSL(unittest.TestCase, ui_class):
     def test_email_limit(self):
         # enable upload files
         self.fill_basic_config({'config_uploading': 1})
-        time.sleep(3)
-        self.assertTrue(self.check_element_on_page((By.ID, 'flash_success')))
+        wait_for_reboot("127.0.0.1:" + self.worker_port)
+        self.assertTrue(self.check_element_on_page((By.ID, 'flash_success'), timeout=BOOT_TIME))
         self.edit_user('admin', {'upload_role': 1})
         random_file = os.path.join(base_path, 'files', 'random.mobi')
         # create random .mobi file size >2 mb
@@ -190,7 +186,21 @@ class TestSSL(unittest.TestCase, ui_class):
     # Expected result:
     # The value of the first text input is set to the result of step 5
     # The value of the second text input is set to the result of step 8
+    def _navigate_filepicker_to(self, current_path, target_path):
+        """Navigate the open filepicker from current_path to target_path by clicking folder entries."""
+        if current_path == target_path:
+            return
+        rel = os.path.relpath(target_path, current_path)
+        for part in rel.split(os.sep):
+            time.sleep(2)
+            entries = self.driver.find_elements(By.XPATH, "//tr[@class='tr-clickable']/td[2]")
+            for entry in entries:
+                if entry.text == part:
+                    entry.click()
+                    break
+
     def test_filepicker_two_file(self):
+        files_dir = os.path.join(os.path.dirname(os.path.abspath(__file__)), 'files')
         self.goto_page('basic_config')
         accordions = self.driver.find_elements(By.CLASS_NAME, "accordion-toggle")
         accordions[0].click()
@@ -198,43 +208,32 @@ class TestSSL(unittest.TestCase, ui_class):
         self.assertTrue(filepicker)
         # open filepicker
         filepicker.click()
-        time.sleep(2)
+        path = self.check_element_on_page((By.ID, "element_selected"), timeout=10)
+        self.assertTrue(path)
+        time.sleep(3)
+        self._navigate_filepicker_to(path.text, files_dir)
         found = False
-        selections = self.driver.find_elements(By.XPATH, "//tr[@class='tr-clickable']/td[2]")
-        for i in selections:
-            if i.text == "files":
-                i.click()
-                found = True
-                break
-        self.assertTrue(found, "files folder not found")
-        found = False
-        time.sleep(2)
+        time.sleep(3)
         file_selections = self.driver.find_elements(By.XPATH, "//tr[@class='tr-clickable']/td[2]")
-        time.sleep(2)
+        elements = [i.text for i in file_selections]
         for i in file_selections:
             if i.text == "client.crt":
                 i.click()
                 found = True
                 break
-        self.assertTrue(found, "client.crt not found")
+        self.assertTrue(found, f"client.crt not found in {elements}")
         crt_element = self.check_element_on_page((By.ID, "element_selected")).text
         self.check_element_on_page((By.ID, "file_confirm")).click()
-        time.sleep(2)
-
+        # the dialog needs some time to animate away
+        time.sleep(1)
         filepicker2 = self.check_element_on_page((By.ID, "keyfile_path"))
         self.assertTrue(filepicker2)
-        found = False
         # open filepicker
         filepicker2.click()
+        path2 = self.check_element_on_page((By.ID, "element_selected"), timeout=10)
+        self.assertTrue(path2)
         time.sleep(2)
-        selections = self.driver.find_elements(By.XPATH, "//tr[@class='tr-clickable']/td[2]")
-        for i in selections:
-            if i.text == "files":
-                i.click()
-                time.sleep(1)
-                found = True
-                break
-        self.assertTrue(found, "files folder not found")
+        self._navigate_filepicker_to(path2.text, files_dir)
         found = False
         time.sleep(2)
         file_selections = self.driver.find_elements(By.XPATH, "//tr[@class='tr-clickable']/td[2]")
@@ -246,7 +245,7 @@ class TestSSL(unittest.TestCase, ui_class):
         self.assertTrue(found, "client.key not found")
         key_element = self.check_element_on_page((By.ID, "element_selected")).text
         self.check_element_on_page((By.ID, "file_confirm")).click()
-        time.sleep(2)
+        time.sleep(1)
 
         self.assertEqual(self.check_element_on_page((By.ID, "config_certfile")).get_attribute('value'), crt_element)
         self.assertEqual(self.check_element_on_page((By.ID, "config_keyfile")).get_attribute('value'), key_element)

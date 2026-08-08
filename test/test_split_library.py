@@ -1,42 +1,36 @@
+from unittest import skip
 
-from unittest import TestCase
+from base_test import ParallelTestCase, release_resource, acquire_resource
 import time
 import os
+import datetime
 
 from selenium.webdriver.support.ui import Select
 from selenium.webdriver.common.by import By
-
-from helper_ui import ui_class
 from helper_email_convert import AIOSMTPServer
-from config_test import TEST_DB, SPLIT_LIB, BOOT_TIME, base_path, CALIBRE_WEB_PATH
-from helper_func import startup, count_files, read_metadata_epub
-from helper_func import save_logfiles
+from config_test import SPLIT_LIB, base_path, BOOT_TIME
+from helper_func import startup, count_files, read_metadata_epub, wait_for_reboot
 
 
-RESOURCES = {'ports': 2}
-
-PORTS = ['8083', '1028']
-INDEX = ""
-
-
-class TestSplitLibrary(TestCase, ui_class):
-    p = None
-    driver = None
+class TestSplitLibrary(ParallelTestCase):
 
     @classmethod
     def setUpClass(cls):
+        super().setUpClass()
         try:
             startup(cls,
                     cls.py_version,
-                    {'config_calibre_dir': TEST_DB},
-                    port=PORTS[0],
-                    index=INDEX,
-                    env={"APP_MODE": "test"},
+                    {'config_calibre_dir': cls.temp_dir},
+                    port=cls.worker_port,
+                    app_dir=cls.app_dir,
+                    env={"APP_MODE": "test", "CALIBRE_PORT": cls.worker_port},
                     split=True,
+                    lib_dest=cls.temp_dir,
                     lib_path=SPLIT_LIB
                     )
             time.sleep(3)
             cls.fill_db_config({'config_calibre_split': 1, 'config_calibre_split_dir': SPLIT_LIB})
+            cls.port = acquire_resource("port")
             time.sleep(3)
         except Exception:
             cls.driver.quit()
@@ -44,19 +38,15 @@ class TestSplitLibrary(TestCase, ui_class):
 
     @classmethod
     def tearDownClass(cls):
-        cls.driver.get("http://127.0.0.1:" + PORTS[0])
-        cls.stop_calibre_web()
-        # close the browser window and stop calibre-web
-        cls.driver.quit()
-        cls.p.terminate()
-        save_logfiles(cls, cls.__name__)
+        release_resource("port", cls.port)
+        super().tearDownClass()
 
     # check thumbnail generation working
     def test_thumbnails(self):
         self.fill_thumbnail_config({'schedule_generate_book_covers': 1})
         self.assertTrue(self.check_element_on_page((By.ID, "flash_success")))
         self.restart_calibre_web()
-        thumbnail_cache_path = os.path.join(CALIBRE_WEB_PATH + INDEX, 'cps', 'cache', 'thumbnails')
+        thumbnail_cache_path = os.path.join(self.app_dir, 'cps', 'cache', 'thumbnails')
         book_thumbnail_reference = count_files(thumbnail_cache_path)
         self.assertTrue(book_thumbnail_reference > 10)
 
@@ -87,15 +77,16 @@ class TestSplitLibrary(TestCase, ui_class):
     # check ebook can be emailed
     def test_email_ebook(self):
         self.edit_user('admin', {'email': 'a5@b.com', 'kindle_mail': 'a1@b.com'})
-        self.setup_server(False, {'mail_server': '127.0.0.1', 'mail_port': PORTS[1],
+        self.setup_server(False, {'mail_server': '127.0.0.1', 'mail_port': self.port,
                         'mail_use_ssl': 'None', 'mail_login': 'name@host.com', 'mail_password_e': '10234',
                         'mail_from': 'name@host.com'})
         time.sleep(5)
         self.assertTrue(self.check_element_on_page((By.ID, "flash_success")))
         tasks = self.check_tasks()
+        self.log("starting E-Mail Server")
         self.email_server = AIOSMTPServer(
             hostname='127.0.0.1',
-            port=int(PORTS[1]),
+            port=int(self.port),
             only_ssl=False,
             timeout=10
         )
@@ -118,13 +109,15 @@ class TestSplitLibrary(TestCase, ui_class):
         self.email_server.stop()
 
     # check kobo sync working
+    @skip("ToDo")
     def test_kobo(self):
         pass
 
     # check book can be renamed and is still found
     def test_change_ebook(self):
         self.fill_basic_config({"config_unicode_filename": 1})
-        self.assertTrue(self.check_element_on_page((By.ID, "flash_success")))
+        wait_for_reboot(f"http://127.0.0.1:{self.worker_port}")
+        self.assertTrue(self.check_element_on_page((By.ID, "flash_success"), timeout=BOOT_TIME))
         details = self.get_book_details(4)
         self.check_element_on_page((By.ID, "edit_book")).click()
         self.edit_book(content={'title': u'O0ü 执'})
@@ -138,8 +131,8 @@ class TestSplitLibrary(TestCase, ui_class):
 
     def test_upload_ebook(self):
         self.fill_basic_config({'config_uploading': 1})
-        time.sleep(BOOT_TIME)
-        self.assertTrue(self.check_element_on_page((By.ID, "flash_success")))
+        wait_for_reboot(f"http://127.0.0.1:{self.worker_port}")
+        self.assertTrue(self.check_element_on_page((By.ID, "flash_success"), timeout=BOOT_TIME))
         self.edit_user('admin', {'upload_role': 1})
         self.goto_page('nav_new')
         upload_file = os.path.join(base_path, 'files', 'book.epub')
@@ -161,7 +154,7 @@ class TestSplitLibrary(TestCase, ui_class):
 
     def test_download_book(self):
         self.fill_basic_config({'config_embed_metadata': 0})
-        time.sleep(BOOT_TIME)
+        wait_for_reboot(f"http://127.0.0.1:{self.worker_port}")
         self.assertTrue(self.check_element_on_page((By.ID, "flash_success")))
         code, epub_content = self.download_book(8, "admin", "admin123", format="EPUB")
         self.assertEqual(200, code)
@@ -175,9 +168,10 @@ class TestSplitLibrary(TestCase, ui_class):
         epub_metadata = read_metadata_epub(epub_content)
         self.assertEqual("Leo Baskerville", epub_metadata['author'][0])
         self.fill_basic_config({'config_embed_metadata': 0})
-        time.sleep(BOOT_TIME)
+        wait_for_reboot(f"http://127.0.0.1:{self.worker_port}")
         self.assertTrue(self.check_element_on_page((By.ID, "flash_success")))
 
+    @skip("Todo")
     def test_wrong_config_lib(self):
         self.fill_db_config({'config_calibre_split_dir': SPLIT_LIB + "::virtual"})
         pass

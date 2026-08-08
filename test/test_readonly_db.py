@@ -1,55 +1,33 @@
-from unittest import TestCase
-import os
+from base_test import ParallelTestCase
 import unittest
+import os
 import time
-import requests
-import re
-from diffimg import diff
-from io import BytesIO
 
 from selenium.webdriver.common.by import By
-from selenium.common.exceptions import UnexpectedAlertPresentException
-from helper_ui import ui_class
-from config_test import TEST_DB, base_path, BOOT_TIME
-# from .parameterized import parameterized_class
-from helper_func import startup, add_dependency, remove_dependency, unrar_path, is_unrar_not_present, createcbz
-from helper_func import change_comic_meta
-from helper_func import save_logfiles
-
-
-RESOURCES = {'ports': 1}
-
-PORTS = ['8083']
-INDEX = ""
+from helper_func import startup, wait_for_reboot
 
 
 @unittest.skipIf(os.name == 'nt', 'writeonly database on windows is not checked')
-class TestReadOnlyDatabase(TestCase, ui_class):
-    p = None
-    driver = None
+class TestReadOnlyDatabase(ParallelTestCase):
 
     @classmethod
     def setUpClass(cls):
+        super().setUpClass()
         try:
-            startup(cls, cls.py_version, {'config_calibre_dir': TEST_DB}, port=PORTS[0], index=INDEX,)
+            startup(cls, cls.py_version, {'config_calibre_dir': cls.temp_dir},
+                    port=cls.worker_port,
+                    app_dir=cls.app_dir,
+                    env={"APP_MODE": "test", "CALIBRE_PORT": cls.worker_port},
+                    lib_dest=cls.temp_dir)
             time.sleep(3)
         except Exception:
             cls.driver.quit()
             cls.p.kill()
 
-    @classmethod
-    def tearDownClass(cls):
-        cls.driver.get("http://127.0.0.1:" + PORTS[0])
-        cls.stop_calibre_web()
-        # close the browser window and stop calibre-web
-        cls.driver.quit()
-        cls.p.terminate()
-        save_logfiles(cls, cls.__name__)
-
     @unittest.skipIf(os.name == 'nt', 'readonly database on windows is not checked')
     def test_readonly_path(self):
         self.fill_basic_config({"config_unicode_filename": 1})
-        time.sleep(BOOT_TIME)
+        wait_for_reboot(f"http://127.0.0.1:{self.worker_port}")
         self.assertTrue(self.check_element_on_page((By.ID, "flash_success")))
         self.goto_page('nav_new')
         number_books = self.get_books_displayed()
@@ -63,8 +41,8 @@ class TestReadOnlyDatabase(TestCase, ui_class):
         self.edit_book(content={'tags': 'Gênot',
                                 "authors": 'John Döe',
                                 'title': 'Buuko'})
-        rights = os.stat(TEST_DB).st_mode & 0o777
-        os.chmod(TEST_DB, 0o400)
+        rights = os.stat(self.temp_dir).st_mode & 0o777
+        os.chmod(self.temp_dir, 0o400)
         self.get_book_details(9)
         element = self.check_element_on_page((By.XPATH, '//*[@title="Return to Database config"]'))
         self.assertTrue(element)
@@ -105,13 +83,13 @@ class TestReadOnlyDatabase(TestCase, ui_class):
         # restart and check it fails
         self.restart_calibre_web()
         self.goto_page('nav_new')'''
-        os.chmod(TEST_DB, rights)
-        self.fill_db_config(dict(config_calibre_dir=TEST_DB))
+        os.chmod(self.temp_dir, rights)
+        self.fill_db_config(dict(config_calibre_dir=self.temp_dir))
         # wait for cw to reboot
         time.sleep(2)
         self.fill_basic_config({'config_uploading': 0, "config_unicode_filename": 0})
         self.assertTrue(self.check_element_on_page((By.ID, "flash_success")))
-        book_path = os.path.join(TEST_DB, 'John Doe', 'Buuko (9)')
+        book_path = os.path.join(self.temp_dir, 'John Doe', 'Buuko (9)')
         self.assertTrue(os.path.isdir(book_path))
         self.goto_page('nav_new')
 

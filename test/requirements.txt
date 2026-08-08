@@ -6,21 +6,25 @@ ldaptor>=16.0
 psutil>=3.0.0
 public>=0.0.0
 pycurl>=7.19.0
-pyOpenSSL>=16.0.0,<22.0.0
+pyOpenSSL>=26.0.0,<26.2.0
 Pillow >=7.1.0
 diffimg >=0.2.0
 fpdf2>=2.3.1
 Pikepdf>=2.8.0
-beautifulsoup4>=4.0.1, <4.12.0
+beautifulsoup4>=4.0.1, <4.15.0
 rarfile>=4.0
 mutagen>=1.46.0
+jinja2>=3.1.0
+
+# Building whl
+setuptools>=77.0.0
 
 #Running Updater Test
 flask>=2.0.0
-mitmproxy==6.0.2
+mitmproxy>=12.0.0
 # protobuf max version, otherwise mitmproxy isn't working
-protobuf<=3.20.0
-blinker<1.5.0
+# protobuf<=3.20.0
+# blinker<1.5.0
 
 # For running tests on helper
 Babel>=2.6.0
