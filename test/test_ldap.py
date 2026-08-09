@@ -844,45 +844,45 @@ class TestLdapLogin(ParallelTestCase):
         self.assertTrue(self.check_element_on_page((By.ID, "flash_success")))
         self.logout()
 
-        r = requests.get('http://127.0.0.1:{}/opds'.format(self.worker_port), auth=('admin', 'admin123'))
+        r = requests.get('http://127.0.0.1:{}/opds'.format(self.worker_port), auth=('admin', 'admin123'), timeout=5)
         self.assertEqual(401, r.status_code)
         # try to login with wrong password for user
-        r = requests.get('http://127.0.0.1:{}/opds'.format(self.worker_port), auth=('执一'.encode('utf-8'), 'wrong'))
+        r = requests.get('http://127.0.0.1:{}/opds'.format(self.worker_port), auth=('执一'.encode('utf-8'), 'wrong'), timeout=5)
         self.assertEqual(401, r.status_code)
         # login user and check content
-        r = requests.get('http://127.0.0.1:{}/opds'.format(self.worker_port), auth=('执一'.encode('utf-8'), 'eekretsay'))
+        r = requests.get('http://127.0.0.1:{}/opds'.format(self.worker_port), auth=('执一'.encode('utf-8'), 'eekretsay'), timeout=5)
         self.assertEqual(200, r.status_code)
         elements = self.get_opds_index(r.text)
         r = requests.get('http://127.0.0.1:{}'.format(self.worker_port) + elements['Recently added Books']['link'],
-                         auth=('执一'.encode('utf-8'), 'eekretsay'))
+                         auth=('执一'.encode('utf-8'), 'eekretsay'), timeout=5)
         entries = self.get_opds_feed(r.text)
         # check download book
         r = requests.get('http://127.0.0.1:{}'.format(self.worker_port) + entries['elements'][0]['download'],
-                         auth=('执一'.encode('utf-8'), 'eekretsay'))
+                         auth=('执一'.encode('utf-8'), 'eekretsay'), timeout=15)
         self.assertEqual(len(r.content), 28590)
         self.assertEqual(r.headers['Content-Type'], 'application/pdf')
 
         # create cookies by logging in to admin account and try to download book again
         req_session = requests.session()
         payload = {'username': 'admin', 'password': 'admin123', 'submit': "", 'next': "/", "remember_me": "on"}
-        req_session.post('http://127.0.0.1:{}/login'.format(self.worker_port), data=payload)
+        req_session.post('http://127.0.0.1:{}/login'.format(self.worker_port), data=payload, timeout=5)
         # admin is logged in via cookies, admin is not allowed to download, no auth credentials provided
-        r = req_session.get('http://127.0.0.1:{}'.format(self.worker_port) + entries['elements'][0]['download'])
+        r = req_session.get('http://127.0.0.1:{}'.format(self.worker_port) + entries['elements'][0]['download'], timeout=15)
         self.assertEqual(401, r.status_code)
         # admin is logged in via cookies, admin is not allowed to download, auth credentials for user provided
         # download success
         r = req_session.get('http://127.0.0.1:{}'.format(self.worker_port) + entries['elements'][0]['download'],
-                            auth=('执一'.encode('utf-8'), 'eekretsay'))
+                            auth=('执一'.encode('utf-8'), 'eekretsay'), timeout=15)
         self.assertEqual(200, r.status_code)
 
         # logout admin account, cookies now invalid,
         # now login is done via not existing basic header, means no login, guest account is deactivated
-        req_session.get('http://127.0.0.1:{}/logout'.format(self.worker_port))
-        r = req_session.get('http://127.0.0.1:{}'.format(self.worker_port) + entries['elements'][0]['download'])
+        req_session.get('http://127.0.0.1:{}/logout'.format(self.worker_port), timeout=5)
+        r = req_session.get('http://127.0.0.1:{}'.format(self.worker_port) + entries['elements'][0]['download'], timeout=15)
         self.assertEqual(401, r.status_code)
         # auth credentials for user provided, invalid cookies
         r = req_session.get('http://127.0.0.1:{}'.format(self.worker_port) + entries['elements'][0]['download'],
-                            auth=('执一'.encode('utf-8'), 'eekretsay'))
+                            auth=('执一'.encode('utf-8'), 'eekretsay'), timeout=15)
         self.assertEqual(200, r.status_code)
         # Close session, delete cookies
         req_session.close()
@@ -895,16 +895,16 @@ class TestLdapLogin(ParallelTestCase):
         self.logout()
         # try to download book without download rights
         r = requests.get('http://127.0.0.1:{}'.format(self.worker_port)+ entries['elements'][0]['download'],
-                         auth=('执一'.encode('utf-8'), 'terces'))
+                         auth=('执一'.encode('utf-8'), 'terces'), timeout=15)
         self.assertEqual(401, r.status_code)
         # stop ldap
         self.server.stopListen()
         time.sleep(3)
         # try to login without ldap reachable
-        r = requests.get('http://127.0.0.1:{}/opds'.format(self.worker_port), auth=('执一'.encode('utf-8'), 'eekretsay'))
+        r = requests.get('http://127.0.0.1:{}/opds'.format(self.worker_port), auth=('执一'.encode('utf-8'), 'eekretsay'), timeout=5)
         self.assertEqual(401, r.status_code)
         # user is logged in via cookies, admin is not allowed to download
-        r = req_session.get('http://127.0.0.1:{}'.format(self.worker_port) + entries['elements'][0]['download'])
+        r = req_session.get('http://127.0.0.1:{}'.format(self.worker_port) + entries['elements'][0]['download'], timeout=15)
         self.assertEqual(401, r.status_code)
 
         # login admin and delete user0
@@ -935,29 +935,29 @@ class TestLdapLogin(ParallelTestCase):
         self.create_user('Mümmy 7',{'email':'use1223@oxi.com','password':'1234AbC*!', 'download_role': 1})
         self.logout()
         # access opds feed
-        r = requests.get('http://127.0.0.1:{}/opds'.format(self.worker_port))
+        r = requests.get('http://127.0.0.1:{}/opds'.format(self.worker_port), timeout=5)
         self.assertEqual(200, r.status_code)
         elements = self.get_opds_index(r.text)
         # check download from guest account is possible
-        r = requests.get('http://127.0.0.1:{}'.format(self.worker_port) + elements['Recently added Books']['link'])
+        r = requests.get('http://127.0.0.1:{}'.format(self.worker_port) + elements['Recently added Books']['link'], timeout=5)
         entries = self.get_opds_feed(r.text)
-        r = requests.get('http://127.0.0.1:{}'.format(self.worker_port) + entries['elements'][0]['download'])
+        r = requests.get('http://127.0.0.1:{}'.format(self.worker_port) + entries['elements'][0]['download'], timeout=15)
         self.assertEqual(200, r.status_code)
         self.assertEqual(len(r.content), 28590)
         self.assertEqual(r.headers['Content-Type'], 'application/pdf')
         # create cookies by logging in to admin account and try to download book again -> ToDo: cookie no longer working
         req_session = requests.session()
-        login_page = req_session.get('http://127.0.0.1:{}/login'.format(self.worker_port))
+        login_page = req_session.get('http://127.0.0.1:{}/login'.format(self.worker_port), timeout=5)
         token = re.search('<input type="hidden" name="csrf_token" value="(.*)">', login_page.text)
         payload = {'username': 'admin', 'password': 'admin123', 'submit': "", 'next': "/", "remember_me": "on", "csrf_token": token.group(1)}
-        req_session.post('http://127.0.0.1:{}/login'.format(self.worker_port), data=payload)
-        r = req_session.get('http://127.0.0.1:{}'.format(self.worker_port) + entries['elements'][0]['download'])
+        req_session.post('http://127.0.0.1:{}/login'.format(self.worker_port), data=payload, timeout=5)
+        r = req_session.get('http://127.0.0.1:{}'.format(self.worker_port) + entries['elements'][0]['download'], timeout=15)
         # not logged in via cookies from admin account -> guest is not allowed to download, situation unchanged
         self.assertEqual(200, r.status_code)
         # logout admin account, still no cookies
         # now login is done via basic header, means no login, guest account can download
-        req_session.get('http://127.0.0.1:{}/logout'.format(self.worker_port))
-        r = req_session.get('http://127.0.0.1:{}'.format(self.worker_port) + entries['elements'][0]['download'])
+        req_session.get('http://127.0.0.1:{}/logout'.format(self.worker_port), timeout=5)
+        r = req_session.get('http://127.0.0.1:{}'.format(self.worker_port) + entries['elements'][0]['download'], timeout=15)
         self.assertEqual(200, r.status_code)
         # Close session, delete cookies
         req_session.close()
@@ -971,17 +971,17 @@ class TestLdapLogin(ParallelTestCase):
         self.assertEqual(401, r.status_code)
         # create cookies by logging in to admin account and try to download book again, this will not work as cookies don't lead to log in
         req_session = requests.session()
-        login_page = req_session.get('http://127.0.0.1:{}/login'.format(self.worker_port))
+        login_page = req_session.get('http://127.0.0.1:{}/login'.format(self.worker_port), timeout=5)
         token = re.search('<input type="hidden" name="csrf_token" value="(.*)">', login_page.text)
         payload = {'username': 'admin', 'password': 'admin123', 'submit': "", 'next': "/", "remember_me": "on", "csrf_token": token.group(1)}
-        req_session.post('http://127.0.0.1:{}/login'.format(self.worker_port), data=payload)
+        req_session.post('http://127.0.0.1:{}/login'.format(self.worker_port), data=payload, timeout=5)
         # user is not logged in via cookies, admin is not allowed to download
-        r = req_session.get('http://127.0.0.1:{}'.format(self.worker_port) + entries['elements'][0]['download'])
+        r = req_session.get('http://127.0.0.1:{}'.format(self.worker_port) + entries['elements'][0]['download'], timeout=15)
         self.assertEqual(401, r.status_code)
         # logout admin account, still no cookies
         # now login is done via not existing basic header, means no login, guest account also not allowed to download
-        req_session.get('http://127.0.0.1:{}/logout'.format(self.worker_port))
-        r = req_session.get('http://127.0.0.1:{}'.format(self.worker_port) + entries['elements'][0]['download'])
+        req_session.get('http://127.0.0.1:{}/logout'.format(self.worker_port), timeout=5)
+        r = req_session.get('http://127.0.0.1:{}'.format(self.worker_port) + entries['elements'][0]['download'], timeout=15)
         self.assertEqual(401, r.status_code)
         # Close session, delete cookies
         req_session.close()
@@ -991,16 +991,16 @@ class TestLdapLogin(ParallelTestCase):
         time.sleep(3)
         self.logout()
         # try download with invalid credentials -> annoymous role is not taken, download denied
-        r = requests.get('http://127.0.0.1:{}/opds/'.format(self.worker_port), auth=('admin', 'admin131'))
+        r = requests.get('http://127.0.0.1:{}/opds/'.format(self.worker_port), auth=('admin', 'admin131'), timeout=5)
         self.assertEqual(401, r.status_code)
         # try download with invalid ldap credentials
-        r = requests.get('http://127.0.0.1:{}/opds/'.format(self.worker_port), auth=('admin', 'admin123'))
+        r = requests.get('http://127.0.0.1:{}/opds/'.format(self.worker_port), auth=('admin', 'admin123'), timeout=5)
         self.assertEqual(401, r.status_code)
         # try download with valid ldap credentials
-        r = requests.get('http://127.0.0.1:{}/opds/'.format(self.worker_port), auth=('Mümmy 7', 'terces'))
+        r = requests.get('http://127.0.0.1:{}/opds/'.format(self.worker_port), auth=('Mümmy 7', 'terces'), timeout=5)
         self.assertEqual(200, r.status_code)
         # try download with invalid ldap credentials
-        r = requests.get('http://127.0.0.1:{}/opds/'.format(self.worker_port), auth=('Mümmy 7', 'secret'))
+        r = requests.get('http://127.0.0.1:{}/opds/'.format(self.worker_port), auth=('Mümmy 7', 'secret'), timeout=5)
         self.assertEqual(401, r.status_code)
 
 
@@ -1012,13 +1012,13 @@ class TestLdapLogin(ParallelTestCase):
         self.edit_user('Mümmy 7', {'delete': 1})
         time.sleep(3)
         # try download from guest account, fails
-        r = requests.get('http://127.0.0.1:{}'.format(self.worker_port) + entries['elements'][0]['download'])
+        r = requests.get('http://127.0.0.1:{}'.format(self.worker_port) + entries['elements'][0]['download'], timeout=15)
         self.assertEqual(401, r.status_code)
         # try download with invalid credentials
-        r = requests.get('http://127.0.0.1:{}/opds/'.format(self.worker_port), auth=('admin', 'admin131'))
+        r = requests.get('http://127.0.0.1:{}/opds/'.format(self.worker_port), auth=('admin', 'admin131'), timeout=5)
         self.assertEqual(401, r.status_code)
         # try download with invalid credentials
-        r = requests.get('http://127.0.0.1:{}/opds/'.format(self.worker_port), auth=('hudo', 'admin123'))
+        r = requests.get('http://127.0.0.1:{}/opds/'.format(self.worker_port), auth=('hudo', 'admin123'), timeout=5)
         self.assertEqual(401, r.status_code)
 
     def test_ldap_kobo_sync(self):

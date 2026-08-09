@@ -141,8 +141,8 @@ def wait_for_reboot(address):
     while i < BOOT_TIME:
         time.sleep(1)
         try:
-            requests.get(address)
-        except Exception as e:
+            requests.get(address, timeout=1)
+        except Exception:
             i += 1
             continue
         break

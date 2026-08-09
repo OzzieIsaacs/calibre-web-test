@@ -91,7 +91,7 @@ class TestSystemdActivation(ParallelTestCase):
             self.assertIsNotNone(re.findall('server on systemd-socket:[::]:5555', data),
                                  "Systemd startup not in logfile")
         except Exception:
-            pass
+            self.assertTrue(False, "Systemd startup failed")
         self.fill_db_config({'config_calibre_dir': self.temp_dir})
         wait_for_reboot(f"http://127.0.0.1:5555")
         self.assertTrue(self.check_element_on_page((By.ID, "flash_success")))
