@@ -20,7 +20,7 @@ os.makedirs(RESOURCE_DIR,exist_ok=True)
 STATE_FILE = os.path.join(RESOURCE_DIR, "resources.json")
 LOCK_FILE = os.path.join(RESOURCE_DIR, "resources.lock")
 
-log_now = datetime.now().strftime("%H:%M:%S")
+log_now = datetime.now().strftime("%H%M%S")
 LOG_FILE = os.path.join(TEST_BASE, f"test_runner_{log_now}.log")
 
 

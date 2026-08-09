@@ -824,7 +824,7 @@ class TestCli(ParallelTestCase):
         time.sleep(2)
         self.assertTrue(self.check_element_on_page((By.ID, 'flash_success')))
         # readonly template "tasks.html"
-        mode = os.path.join(self.app_dir, "cps", "templates", "tasks.html")
+        mode = os.path.join(self.app_dir, "cps", "themes", "standard", "templates", "tasks.html")
         os.chmod(mode, 0o200)
         r = requests.session()
         login_page = r.get('http://127.0.0.1:{}/login'.format(self.worker_port))

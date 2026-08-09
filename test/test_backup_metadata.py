@@ -15,8 +15,6 @@ from helper_func import read_opf_metadata
 
 class TestBackupMetadata(ParallelTestCase):
 
-
-
     @classmethod
     def setUpClass(cls):
         super().setUpClass()
