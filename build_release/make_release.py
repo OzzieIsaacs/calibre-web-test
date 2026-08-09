@@ -21,7 +21,10 @@ import argparse
 import tomlkit
 
 from config import FILEPATH, VENV_PATH, VENV_PYTHON
-from helper_environment import environment, add_dependency
+if __package__:
+    from .helper_environment import environment, add_dependency
+else:
+    from helper_environment import environment, add_dependency
 
 
 def find_version(file_paths):

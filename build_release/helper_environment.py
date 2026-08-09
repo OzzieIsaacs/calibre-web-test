@@ -2,12 +2,9 @@
 import platform
 from subproc_wrapper import process_open
 from config import FILEPATH as CALIBRE_WEB_PATH
-from config import VENV_PYTHON
 import re
 import os
 import sys
-#import pkg_resources
-#import importlib
 import json
 import subprocess
 
