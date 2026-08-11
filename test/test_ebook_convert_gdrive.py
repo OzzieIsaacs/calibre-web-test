@@ -276,15 +276,16 @@ class TestEbookConvertCalibreGDrive(ParallelTestCase):
         select.select_by_visible_text('HTMLZ')
         self.check_element_on_page((By.ID, "btn-book-convert")).click()
         self.assertTrue(self.check_element_on_page((By.ID, "flash_success"), timeout=10))
-
         self.create_user('solo', {'password': '123AbC*!', 'email': 'a@b.com', 'edit_role':1})
+        # wait to make sure all conversions are finished before checking the task list. Otherwise the task list might not be complete and the test fails
+        time.sleep(60)
         task_len, ret = self.wait_tasks(tasks, 6)
-        self.assertEqual(ret[-6]['result'], 'Finished')
-        self.assertEqual(ret[-5]['result'], 'Finished')
-        self.assertEqual(ret[-4]['result'], 'Finished')
-        self.assertEqual(ret[-3]['result'], 'Finished')
-        self.assertEqual(ret[-2]['result'], 'Finished')
-        self.assertEqual(ret[-1]['result'], 'Finished')
+        self.assertEqual(ret[-6]['result'], 'Finished', ret)
+        self.assertEqual(ret[-5]['result'], 'Finished', ret)
+        self.assertEqual(ret[-4]['result'], 'Finished', ret)
+        self.assertEqual(ret[-3]['result'], 'Finished', ret)
+        self.assertEqual(ret[-2]['result'], 'Finished', ret)
+        self.assertEqual(ret[-1]['result'], 'Finished', ret)
         # memory = len(ret)
 
         self.logout()

@@ -51,7 +51,7 @@ class TestCli(ParallelTestCase):
             os.chmod(os.path.join(cls.app_dir, "exclude.txt"), 0o644)
         except Exception:
             pass
-        os.chmod(os.path.join(cls.app_dir, "cps", "templates", "tasks.html"), 0o644)
+        os.chmod(os.path.join(cls.app_dir, "cps", "themes", "standard", "templates", "tasks.html"), 0o644)
         os.chmod(os.path.join(cls.app_dir, "cps", "static"), 0o755)
         os.chmod(os.path.join(cls.app_dir, "cps", "static", "js", "main.js"), 0o644)
         # close the browser window
