@@ -84,7 +84,6 @@ class TestReverseProxy(ParallelTestCase):
         self.fill_basic_config(config)
         wait_for_reboot(self.host + ":" + self.worker_port)
         self.assertTrue(self.check_element_on_page((By.ID, "flash_success")))
-        # self._wait_http_ready()
 
     def _proxy_get(self, path="/", headers=None):
         return requests.get(f"http://127.0.0.1:{self.port}/cw{path}", headers=headers or {}, allow_redirects=False)
@@ -142,6 +141,17 @@ class TestReverseProxy(ParallelTestCase):
         self._configure_reverse_proxy_login(use_shared_secret=False)
         self.proxy.set_auth_header(self.proxy_login_header, "admin")
         resp = self._proxy_get("/me")
+        self._assert_admin_authenticated(resp)
+
+    # Ensures reverse-proxy login still works when the trusted source is an IPv6 loopback address
+    # and shared-secret validation is disabled.
+    def test_proxy_auth_04a_ipv6_trusted_proxy_without_shared_secret_allows_login(self):
+        self._configure_reverse_proxy_login(use_shared_secret=False, trusted_proxy_ips=self.trusted_proxy_ip)
+        self.proxy.set_auth_header(self.proxy_login_header, "admin")
+        try:
+            resp = requests.get(f"http://[::1]:{self.port}/cw/me", allow_redirects=False, timeout=5)
+        except RequestException as exc:
+            self.skipTest(f"IPv6 loopback is not available for the reverse proxy: {exc}")
         self._assert_admin_authenticated(resp)
 
     # Ensures login is denied if shared-secret mode is enabled but the secret header is missing.

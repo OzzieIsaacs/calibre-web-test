@@ -117,14 +117,15 @@ def proxy(p):
 
 
 class Reverse_Proxy(threading.Thread):
-    def __init__(self, port=8080, path="/cw", scheme="http", sitename="http://10.10.10.10:8083"):
+    def __init__(self, port=8080, path="/cw", scheme="http", sitename="http://10.10.10.10:8083", host="::"):
         threading.Thread.__init__(self)
         global SERVER_PATH, SCHEME, SITE_NAME
         SERVER_PATH = path
         SCHEME = scheme
         SITE_NAME = sitename
-        self.port=port
-        self.server = make_server("127.0.0.1",  self.port, app)
+        self.port = port
+        self.host = host
+        self.server = make_server(host, self.port, app)
         self.ctx = app.app_context()
         self.ctx.push()
         self.daemon = True
