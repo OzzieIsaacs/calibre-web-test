@@ -8,8 +8,10 @@ import requests
 from requests.exceptions import RequestException
 
 from selenium.webdriver.common.by import By
+
+from config_test import BOOT_TIME
 from helper_reverse_proxy import Reverse_Proxy
-from helper_func import get_Host_IP, startup, wait_for_reboot
+from helper_func import get_Host_IP, startup
 
 
 class TestReverseProxy(ParallelTestCase):
@@ -69,7 +71,7 @@ class TestReverseProxy(ParallelTestCase):
         self.proxy.set_upstream_headers({})
         super().tearDown()
 
-    def _configure_reverse_proxy_login(self, use_shared_secret=False, trusted_proxy_ips=None):
+    def _configure_reverse_proxy_login(self, use_shared_secret=False, trusted_proxy_ips=None, reboot_address=None):
         config = {
             'config_allow_reverse_proxy_header_login': 1,
             'config_reverse_proxy_login_header_name': self.proxy_login_header,
@@ -81,9 +83,8 @@ class TestReverseProxy(ParallelTestCase):
                 'config_reverse_proxy_login_secret_header_name': self.proxy_secret_header,
                 'config_reverse_proxy_login_header_secret_e': self.proxy_secret_value,
             })
-        self.fill_basic_config(config)
-        wait_for_reboot(self.host + ":" + self.worker_port)
-        self.assertTrue(self.check_element_on_page((By.ID, "flash_success")))
+        self.fill_basic_config(config, reboot_address=reboot_address)
+        self.assertTrue(self.check_element_on_page((By.ID, "flash_success"), timeout=BOOT_TIME))
 
     def _proxy_get(self, path="/", headers=None):
         return requests.get(f"http://127.0.0.1:{self.port}/cw{path}", headers=headers or {}, allow_redirects=False)
@@ -146,13 +147,27 @@ class TestReverseProxy(ParallelTestCase):
     # Ensures reverse-proxy login still works when the trusted source is an IPv6 loopback address
     # and shared-secret validation is disabled.
     def test_proxy_auth_04a_ipv6_trusted_proxy_without_shared_secret_allows_login(self):
-        self._configure_reverse_proxy_login(use_shared_secret=False, trusted_proxy_ips=self.trusted_proxy_ip)
+        self.proxy.stop()
+        self.proxy = Reverse_Proxy(sitename=f"http://{self.host}:{self.worker_port}", port=self.port, host="::1")
+        self.proxy.start()
+        ipv6_proxy_url = f"http://[::1]:{self.port}/cw"
+        self.driver.get(ipv6_proxy_url)
+        self._configure_reverse_proxy_login(
+            use_shared_secret=False,
+            trusted_proxy_ips=self.trusted_proxy_ip,
+            reboot_address=ipv6_proxy_url,
+        )
         self.proxy.set_auth_header(self.proxy_login_header, "admin")
         try:
             resp = requests.get(f"http://[::1]:{self.port}/cw/me", allow_redirects=False, timeout=5)
+            self._assert_admin_authenticated(resp)
         except RequestException as exc:
             self.skipTest(f"IPv6 loopback is not available for the reverse proxy: {exc}")
-        self._assert_admin_authenticated(resp)
+        finally:
+            self.proxy.stop()
+            self.proxy = Reverse_Proxy(sitename=f"http://{self.host}:{self.worker_port}", port=self.port, host="127.0.0.1")
+            self.proxy.start()
+            self.driver.get(f"http://127.0.0.1:{self.port}/cw")
 
     # Ensures login is denied if shared-secret mode is enabled but the secret header is missing.
     def test_proxy_auth_05_shared_secret_enabled_missing_secret_denied(self):

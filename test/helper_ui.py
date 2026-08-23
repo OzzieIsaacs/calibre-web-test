@@ -386,7 +386,7 @@ class ui_class():
 
 
     @classmethod
-    def fill_basic_config(cls, elements=None):
+    def fill_basic_config(cls, elements=None, reboot_address=None):
         if not cls.check_user_logged_in('admin'):
             cls.login('admin', 'admin123')
             time.sleep(1)
@@ -396,7 +396,7 @@ class ui_class():
                 cls.login('admin', 'admin123')
                 time.sleep(1)
             if not cls.goto_page('basic_config'):
-                wait_for_reboot(f"http://127.0.0.1:{cls.worker_port}")
+                wait_for_reboot(reboot_address or f"http://127.0.0.1:{cls.worker_port}")
                 if not cls.goto_page('basic_config'):
                     now = datetime.datetime.now().strftime("%H:%M:%S")
                     print(f"[Worker {cls.worker_id}] {now} - {cls.__name__} basic_config page not reached")
