@@ -169,6 +169,22 @@ def change_book_path(location, id):
     session.close()
     engine.dispose()
 
+
+def change_book_author_sort(location, book_id, author_sort):
+    engine = create_engine('sqlite:///{0}'.format(location), echo=False)
+    Session = scoped_session(sessionmaker())
+    Session.configure(bind=engine)
+    session = Session()
+
+    Base.metadata.create_all(engine)
+    update_title_sort(session)
+    book = session.query(Books).filter(Books.id == book_id).first()
+    book.author_sort = author_sort
+    session.commit()
+    session.close()
+    engine.dispose()
+
+
 def change_tag(location, old_name, new_name):
     engine = create_engine('sqlite:///{0}'.format(location), echo=False)
     Session = scoped_session(sessionmaker())

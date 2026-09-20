@@ -9,7 +9,7 @@ import re
 
 import requests
 
-from helper_db import change_tag
+from helper_db import change_book_author_sort, change_tag
 from config_test import base_path
 from helper_func import startup, change_epub_meta, wait_for_reboot
 from selenium.common.exceptions import NoAlertPresentException, UnexpectedAlertPresentException
@@ -31,6 +31,19 @@ class TestEditAuthors(ParallelTestCase):
         except Exception as e:
             cls.driver.quit()
             cls.p.kill()
+
+    def test_rename_author_with_null_author_sort(self):
+        change_book_author_sort(os.path.join(self.temp_dir, "metadata.db"), 1, None)
+
+        self.driver.get("http://127.0.0.1:" + self.worker_port)
+        self.assertTrue(self.check_element_on_page((By.ID, "nav_new")))
+        self.assertFalse(self.check_element_on_page((By.ID, "flash_danger")))
+
+        self.edit_book(1, content={'authors': "Frodo Beutlin & Norbert Halagal & Liu yang & Hector Gonçalves"})
+
+        self.assertFalse(self.check_element_on_page((By.ID, "flash_danger")))
+        details = self.get_book_details(-1)
+        self.assertEqual(['Frodo Beutlin', 'Norbert Halagal', 'Liu yang', 'Hector Gonçalves'], details['author'])
 
 
     # One book of the author present
