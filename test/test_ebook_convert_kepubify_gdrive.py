@@ -39,9 +39,9 @@ class TestEbookConvertGDriveKepubify(ParallelTestCase):
 
             cls.edit_user('admin', {'email': 'a5@b.com', 'kindle_mail': 'a1@b.com'})
             time.sleep(2)
-        except Exception:
-            cls.driver.quit()
-            cls.p.kill()
+        except Exception as e:
+            cls._handle_setup_failure(e)
+            raise
 
     def tearDown(self):
         super().tearDown()

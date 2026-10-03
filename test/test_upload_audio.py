@@ -44,8 +44,8 @@ class TestUploadAudio(ParallelTestCase):
             cls.jpg_original = cls.check_element_on_page((By.ID, "detailcover")).screenshot_as_png
 
         except Exception as e:
-            cls.driver.quit()
-            cls.p.kill()
+            cls._handle_setup_failure(e)
+            raise
 
     def test_upload_mp3(self):
         dest = os.path.join(base_path, "files", 'base.mp3')

@@ -38,9 +38,9 @@ class TestEditAdditionalBooks(ParallelTestCase):
             time.sleep(3)
             cls.restart_calibre_web()
             time.sleep(3)
-        except Exception:
-            cls.driver.quit()
-            cls.p.kill()
+        except Exception as e:
+            cls._handle_setup_failure(e)
+            raise
 
     def check_identifier(self, result, key, name, value, only_value=False):
         identifier = [sub[key] for sub in result['identifier'] if key in sub]

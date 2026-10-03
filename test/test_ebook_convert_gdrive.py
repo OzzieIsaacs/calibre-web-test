@@ -68,12 +68,8 @@ class TestEbookConvertCalibreGDrive(ParallelTestCase):
             cls.restart_calibre_web()
             time.sleep(180)
         except Exception as e:
-            try:
-                cls.log_class(str(e))
-                cls.driver.quit()
-                cls.p.kill()
-            except Exception:
-                pass
+            cls._handle_setup_failure(e)
+            raise
 
     @classmethod
     def tearDownClass(cls):

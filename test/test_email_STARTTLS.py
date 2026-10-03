@@ -50,9 +50,9 @@ class TestSTARTTLS(ParallelTestCase):
             cls.setup_server(True, {'mail_server': socket.gethostname(), 'mail_port': cls.port,
                                     'mail_use_ssl': 'SSL/TLS', 'mail_login': 'name@host.com', 'mail_password_e':'10234',
                                     'mail_from': 'name@host.com'})
-        except:
-            cls.driver.quit()
-            cls.p.kill()
+        except Exception as e:
+            cls._handle_setup_failure(e)
+            raise
 
     @classmethod
     def tearDownClass(cls):
@@ -70,7 +70,7 @@ class TestSTARTTLS(ParallelTestCase):
         tasks = self.check_tasks()
         details = self.get_book_details(7)
         details['kindlebtn'].click()
-        conv = self.check_element_on_page((By.LINK_TEXT, details['kindle'][0].text))
+        conv = self.check_element_on_page((By.CSS_SELECTOR, ".dropdown-menu .sendbtn-form"))
         self.assertTrue(conv)
         conv.click()
         self.assertTrue(self.check_element_on_page((By.ID, "flash_success")))
@@ -83,7 +83,7 @@ class TestSTARTTLS(ParallelTestCase):
         self.setup_server(False, {'mail_use_ssl':'SSL/TLS'})
         details = self.get_book_details(7)
         details['kindlebtn'].click()
-        conv = self.check_element_on_page((By.LINK_TEXT, details['kindle'][0].text))
+        conv = self.check_element_on_page((By.CSS_SELECTOR, ".dropdown-menu .sendbtn-form"))
         self.assertTrue(conv)
         conv.click()
         self.assertTrue(self.check_element_on_page((By.ID, "flash_success")))

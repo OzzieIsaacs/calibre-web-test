@@ -40,9 +40,9 @@ class TestCoverEditBooks(ParallelTestCase):
                     lib_dest=cls.temp_dir,
                     parameter=["-l"])
             time.sleep(3)
-        except Exception:
-            cls.driver.quit()
-            cls.p.kill()
+        except Exception as e:
+            cls._handle_setup_failure(e)
+            raise
 
     @classmethod
     def tearDownClass(cls):

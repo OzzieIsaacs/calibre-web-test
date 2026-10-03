@@ -43,9 +43,9 @@ class TestReverseProxy(ParallelTestCase):
             time.sleep(3)
             cls.driver.get(f'http://127.0.0.1:{cls.port}/cw')
             cls.login('admin', 'admin123')
-        except Exception:
-            cls.driver.quit()
-            cls.p.kill()
+        except Exception as e:
+            cls._handle_setup_failure(e)
+            raise
 
     @classmethod
     def tearDownClass(cls):

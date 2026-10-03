@@ -44,9 +44,8 @@ class TestRegister(ParallelTestCase):
                                 'mail_from':'name@host.com'})
 
         except Exception as e:
-            cls.log_class(str(e))
-            cls.driver.quit()
-            cls.p.kill()
+            cls._handle_setup_failure(e)
+            raise
 
     @classmethod
     def tearDownClass(cls):
@@ -101,16 +100,16 @@ class TestRegister(ParallelTestCase):
         self.add_domains('dod@google.com', allow=False)
         d_domains = self.list_domains(allow=False)
         self.assertEqual(d_domains[0]['domain'], 'dod@google.com')
-        self.delete_domains(d_domains[0]['id'], accept=False, allow=True)
+        self.delete_domains(d_domains[0]['id'], accept=False, allow=False)
         d_domains = self.list_domains(allow=False)
         self.assertEqual(d_domains[0]['domain'], 'dod@google.com')
-        self.delete_domains(d_domains[0]['id'], accept=True, allow=True)
+        self.delete_domains(d_domains[0]['id'], accept=True, allow=False)
         d_domains = self.list_domains(allow=False)
         self.assertEqual(len(d_domains), 0)
         self.add_domains('dod@g?ogle.com', allow=False)
         d_domains = self.list_domains(allow=False)
         self.assertEqual(d_domains[0]['domain'], 'dod@g?ogle.com')
-        self.edit_domains(d_domains[0]['id'], '*dod@g?ogle.c*', accept=True, allow=True)
+        self.edit_domains(d_domains[0]['id'], '*dod@g?ogle.c*', accept=True, allow=False)
         d_domains = self.list_domains(allow=False)
         self.assertEqual(d_domains[0]['domain'], '*dod@g?ogle.c*')
         self.logout()
@@ -262,4 +261,3 @@ class TestRegister(ParallelTestCase):
         payload = {"name": "9dsfaf", 'email': "ü执1@ü执1.3", "csrf_token": token.group(1)}
         resp = r.post('http://127.0.0.1:{}/register'.format(self.worker_port), data=payload)
         self.assertTrue("flash_success" in resp.text)
-

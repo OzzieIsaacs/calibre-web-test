@@ -24,8 +24,8 @@ class TestEditAuthorsSmb(ParallelTestCase):
                     lib_dest=SMB_LIB)
             time.sleep(3)
         except Exception as e:
-            cls.driver.quit()
-            cls.p.kill()
+            cls._handle_setup_failure(e)
+            raise
 
     # One book of the author present
     def test_change_capital_one_author_one_book(self):

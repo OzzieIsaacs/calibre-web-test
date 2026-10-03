@@ -21,9 +21,9 @@ class TestErrorReadColumn(ParallelTestCase):
                     app_dir=cls.app_dir,
                     env={"APP_MODE": "test", "CALIBRE_PORT": cls.worker_port},
                     lib_dest=cls.temp_dir)
-        except Exception:
-            cls.driver.quit()
-            cls.p.kill()
+        except Exception as e:
+            cls._handle_setup_failure(e)
+            raise
 
     def test_invalid_custom_read_column(self):
         self.fill_view_config({'config_read_column': "Custom Bool 1 Ä"})

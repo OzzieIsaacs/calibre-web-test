@@ -29,9 +29,9 @@ class TestBackupMetadata(ParallelTestCase):
             )
             time.sleep(3)
             cls.fill_thumbnail_config({'schedule_metadata_backup': 1})
-        except Exception:
-            cls.driver.quit()
-            cls.p.kill()
+        except Exception as e:
+            cls._handle_setup_failure(e)
+            raise
 
     def test_backup_all(self):
         # press backup all

@@ -41,9 +41,9 @@ class TestBackupMetadataGdrive(ParallelTestCase):
             time.sleep(2)
             cls.fill_thumbnail_config({'schedule_metadata_backup': 1})
             cls.restart_calibre_web()
-        except Exception:
-            cls.driver.quit()
-            cls.p.kill()
+        except Exception as e:
+            cls._handle_setup_failure(e)
+            raise
 
     def test_backup_gdrive(self):
         fs = connect_gdrive("test")

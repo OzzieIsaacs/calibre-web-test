@@ -28,9 +28,9 @@ class TestUploadEPubs(ParallelTestCase):
                     lib_dest=cls.temp_dir)
             time.sleep(3)
             WebDriverWait(cls.driver, 5).until(EC.presence_of_element_located((By.ID, "flash_success")))
-        except Exception:
-            cls.driver.quit()
-            cls.p.kill()
+        except Exception as e:
+            cls._handle_setup_failure(e)
+            raise
 
     def test_upload_epub_duplicate(self):
         epub_file = os.path.join(base_path, 'files', 'title.epub')

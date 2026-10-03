@@ -39,16 +39,13 @@ class TestKoboSync(ParallelTestCase):
             time.sleep(1)
             link = cls.check_element_on_page((By.CLASS_NAME, "well"))
             cls.kobo_adress = host + ':' + cls.worker_port + '/kobo/' + re.findall(".*/kobo/(.*)", link.text)[0]
-            cls.check_element_on_page((By.ID, "kobo_cklose")).click()
+            cls.check_element_on_page((By.ID, "kobo_close")).click()
             cls.driver.get("http://127.0.0.1:" + cls.worker_port)
             cls.login('admin', 'admin123')
             time.sleep(2)
         except Exception as e:
-            cls.log_class(str(e))
-            cls.driver.quit()
-            cls.p.terminate()
-            cls.p.poll()
-            raise e
+            cls._handle_setup_failure(e)
+            raise
 
     def inital_sync(self, sync=True):
         if TestKoboSync.syncToken:

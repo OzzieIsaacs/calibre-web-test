@@ -25,9 +25,9 @@ class TestUserList(ParallelTestCase):
                     lib_dest=cls.temp_dir)
             time.sleep(3)
             cls.mass_create_users(1)
-        except Exception:
-            cls.driver.quit()
-            cls.p.kill()
+        except Exception as e:
+            cls._handle_setup_failure(e)
+            raise
 
     def check_search(self, bl, term, count, column, value):
         bl['search'].clear()
@@ -386,7 +386,8 @@ class TestUserList(ParallelTestCase):
         ul = self.get_user_table(1)
         ul['table'][0]['role_Admin']['element'].click()
         ul = self.get_user_table(-1)
-        self.assertEqual(1, len(ul['table']))
+        # The admin-only table endpoint no longer returns rows after demotion.
+        self.assertEqual(0, len(ul['table']))
         self.logout()
         self.login("1_no", "123AbC*!")
         ul = self.get_user_table(1)

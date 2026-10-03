@@ -40,11 +40,8 @@ class TestCliGdrivedb(ParallelTestCase):
             cls.driver.maximize_window()
 
         except Exception as e:
-            try:
-                cls.log_class(str(e))
-                cls.driver.quit()
-            except Exception:
-                pass
+            cls._handle_setup_failure(e)
+            raise
 
     def tearDown(self):
         super().tearDown()

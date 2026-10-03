@@ -38,9 +38,8 @@ class TestLdapLogin(ParallelTestCase):
                     lib_dest=cls.temp_dir)
             cls.server.stopListen()
         except Exception as e:
-            cls.log_class(str(e))
-            cls.driver.quit()
-            cls.p.terminate()
+            cls._handle_setup_failure(e)
+            raise
 
     @classmethod
     def tearDownClass(cls):

@@ -36,10 +36,8 @@ class TestThumbnails(ParallelTestCase):
             thumbnail_cache_path = os.path.join(cls.app_dir, 'cps', 'cache', 'thumbnails')
             shutil.rmtree(thumbnail_cache_path, ignore_errors=True)
         except Exception as e:
-            cls.log_class(str(e))
-            cls.driver.quit()
-            cls.p.terminate()
-            cls.p.poll()
+            cls._handle_setup_failure(e)
+            raise
 
     @classmethod
     def tearDownClass(cls):

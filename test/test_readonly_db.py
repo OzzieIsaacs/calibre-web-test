@@ -20,9 +20,9 @@ class TestReadOnlyDatabase(ParallelTestCase):
                     env={"APP_MODE": "test", "CALIBRE_PORT": cls.worker_port},
                     lib_dest=cls.temp_dir)
             time.sleep(3)
-        except Exception:
-            cls.driver.quit()
-            cls.p.kill()
+        except Exception as e:
+            cls._handle_setup_failure(e)
+            raise
 
     @unittest.skipIf(os.name == 'nt', 'readonly database on windows is not checked')
     def test_readonly_path(self):
@@ -92,5 +92,4 @@ class TestReadOnlyDatabase(ParallelTestCase):
         book_path = os.path.join(self.temp_dir, 'John Doe', 'Buuko (9)')
         self.assertTrue(os.path.isdir(book_path))
         self.goto_page('nav_new')
-
 

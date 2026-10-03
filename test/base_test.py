@@ -8,6 +8,8 @@ import fcntl
 import json
 import logging
 import inspect
+import subprocess
+import traceback
 from datetime import datetime
 from helper_func import save_logfiles, add_dependency, remove_dependency
 from helper_ui import ui_class
@@ -238,6 +240,7 @@ class ParallelTestCase(unittest.TestCase, ui_class):
     _counter = 0
     _start = None
     _end = None
+    _setup_failure_handled = False
     driver = None
     p = None
     tearDown_exceptions = []
@@ -248,6 +251,84 @@ class ParallelTestCase(unittest.TestCase, ui_class):
 
     def log(self, message):
         _log(message, owner=self.__class__)
+
+    @classmethod
+    def _cleanup_driver_and_process(cls):
+        driver = getattr(cls, "driver", None)
+        if driver is not None:
+            try:
+                driver.quit()
+            except Exception as cleanup_error:
+                _log(f"Cleanup failed while closing WebDriver: {cleanup_error}", owner=cls)
+
+        process = getattr(cls, "p", None)
+        if process is not None:
+            try:
+                running = process.poll() is None
+            except Exception as cleanup_error:
+                running = True
+                _log(f"Cleanup failed while checking application process: {cleanup_error}", owner=cls)
+
+            if running:
+                try:
+                    process.terminate()
+                except Exception as cleanup_error:
+                    _log(f"Cleanup failed while stopping application process: {cleanup_error}", owner=cls)
+
+            try:
+                process.wait(timeout=5)
+            except subprocess.TimeoutExpired:
+                try:
+                    process.kill()
+                    process.wait(timeout=5)
+                except Exception as cleanup_error:
+                    _log(f"Cleanup failed while killing application process: {cleanup_error}", owner=cls)
+            except Exception as cleanup_error:
+                _log(f"Cleanup failed while waiting for application process: {cleanup_error}", owner=cls)
+
+    @classmethod
+    def _handle_setup_failure(cls, error):
+        if cls._setup_failure_handled:
+            return
+        cls._setup_failure_handled = True
+
+        duration = time.time() - cls._start if cls._start is not None else 0
+        details = "".join(traceback.format_exception(type(error), error, error.__traceback__))
+        cls._counter += 1
+        _log(f"{cls.__name__}.setUpClass: ERROR ({duration:.2f}s)", owner=cls)
+        _log(f"Setup failure:\n{details}", owner=cls)
+        cls._results.append({
+            "tid": cls._counter,
+            "result": "ERROR",
+            "desc": f"{cls.__name__} - setUpClass",
+            "duration_seconds": f"{duration:.3f}",
+            "output": details,
+        })
+
+        for attribute, methods in (
+                ("email_server", ("stop",)),
+                ("server", ("stop_LdapServer",)),
+                ("proxy", ("stop", "stop_proxy"))):
+            resource = getattr(cls, attribute, None)
+            if resource is None:
+                continue
+            cleanup = next((getattr(resource, method, None) for method in methods
+                            if callable(getattr(resource, method, None))), None)
+            if cleanup is not None:
+                try:
+                    cleanup()
+                except Exception as cleanup_error:
+                    _log(f"Cleanup failed while stopping {attribute}: {cleanup_error}", owner=cls)
+
+        extra_port = getattr(cls, "port", None)
+        worker_port = getattr(cls, "worker_port", None)
+        if extra_port is not None and str(extra_port) != str(worker_port):
+            try:
+                release_resource("port", extra_port, owner=cls)
+            except Exception as cleanup_error:
+                _log(f"Cleanup failed while releasing port {extra_port}: {cleanup_error}", owner=cls)
+
+        cls._cleanup_driver_and_process()
 
     def __init__(self, tests):
         main_module = sys.modules["__main__"]
@@ -261,35 +342,44 @@ class ParallelTestCase(unittest.TestCase, ui_class):
 
     @classmethod
     def setUpClass(cls):
-
-        super().setUpClass()
-
-
         cls._results = []
         cls._counter = 0
         cls._start = time.time()
-
-        cls.worker_id = int(os.getenv("TEST_WORKER_ID", "0"))
-        cls.py_resource = acquire_resource("venv", owner=cls)
-        cls.py_version = os.path.join(cls.py_resource, VENV_PYTHON)
-        cls.worker_port = str(acquire_resource("port", owner=cls))
-
-        _log("start Testing", owner=cls)
-        _log(f"running on {cls.py_resource}", owner=cls)
-        _log(f"using port {cls.worker_port}", owner=cls)
-
-        cls.temp_dir = tempfile.mkdtemp(prefix=f"cw_test_worker_{cls.worker_id}_", dir=os.path.join(TEST_BASE, "target"))
-        cls.app_dir = tempfile.mkdtemp(prefix=f"cw_app_{cls.worker_id}_", dir=os.path.join(TEST_BASE, "target"))
-
-        # CLASS LEVEL LOCK
+        cls._end = None
+        cls._setup_failure_handled = False
+        cls.driver = None
+        cls.p = None
+        cls.worker_id = None
+        cls.py_resource = None
+        cls.py_version = None
+        cls.worker_port = None
+        cls.port = None
+        cls.temp_dir = None
+        cls.app_dir = None
         cls.gdrive_file = None
-        if getattr(cls, "resource_lock", None):
-            _log(f"LOCK WAIT {cls.resource_lock}", owner=cls)
-            cls.gdrive_file = acquire_resource("gdrive", cls.resource_lock, owner=cls)
-            _log(f"LOCK ACQUIRED {cls.resource_lock}", owner=cls)
-            _log("preparing GDrive", owner=cls)
-            prepare_gdrive()
-            try:
+
+        try:
+            super().setUpClass()
+
+            cls.worker_id = int(os.getenv("TEST_WORKER_ID", "0"))
+            cls.py_resource = acquire_resource("venv", owner=cls)
+            cls.py_version = os.path.join(cls.py_resource, VENV_PYTHON)
+            cls.worker_port = str(acquire_resource("port", owner=cls))
+
+            _log("start Testing", owner=cls)
+            _log(f"running on {cls.py_resource}", owner=cls)
+            _log(f"using port {cls.worker_port}", owner=cls)
+
+            cls.temp_dir = tempfile.mkdtemp(prefix=f"cw_test_worker_{cls.worker_id}_", dir=os.path.join(TEST_BASE, "target"))
+            cls.app_dir = tempfile.mkdtemp(prefix=f"cw_app_{cls.worker_id}_", dir=os.path.join(TEST_BASE, "target"))
+
+            # CLASS LEVEL LOCK
+            if getattr(cls, "resource_lock", None):
+                _log(f"LOCK WAIT {cls.resource_lock}", owner=cls)
+                cls.gdrive_file = acquire_resource("gdrive", cls.resource_lock, owner=cls)
+                _log(f"LOCK ACQUIRED {cls.resource_lock}", owner=cls)
+                _log("preparing GDrive", owner=cls)
+                prepare_gdrive()
                 src = os.path.join(base_path, "files", "client_secrets.json")
                 dst = os.path.join(cls.app_dir, "client_secrets.json")
                 os.chmod(src, 0o764)
@@ -314,11 +404,12 @@ class ParallelTestCase(unittest.TestCase, ui_class):
                 if os.path.exists(dst):
                     os.unlink(dst)
                 shutil.copy(src, dst)
-            except Exception as e:
-                pass
 
-        if hasattr(cls, "dependency"):
-            add_dependency(cls.py_version, cls.dependency, cls.__name__, cls.worker_id)
+            if hasattr(cls, "dependency"):
+                add_dependency(cls.py_version, cls.dependency, cls.__name__, cls.worker_id)
+        except Exception as error:
+            cls._handle_setup_failure(error)
+            raise
 
     def run(self, result=None):
 
@@ -378,52 +469,73 @@ class ParallelTestCase(unittest.TestCase, ui_class):
     @classmethod
     def tearDownClass(cls, no=False):
         if not no:
-            try:
-                # close the browser window and stop calibre-web
-                cls.driver.get("http://127.0.0.1:" + cls.worker_port)
-                cls.stop_calibre_web()
-                cls.driver.quit()
-                cls.p.terminate()
-            except Exception as e:
-                _log(str(e), owner=cls)
+            driver = getattr(cls, "driver", None)
+            if driver is not None:
+                try:
+                    driver.get("http://127.0.0.1:" + cls.worker_port)
+                except Exception as e:
+                    _log(f"Class teardown failed while loading the application: {e}", owner=cls)
+                try:
+                    cls.stop_calibre_web()
+                except Exception as e:
+                    _log(f"Class teardown failed while stopping the application: {e}", owner=cls)
+            cls._cleanup_driver_and_process()
         super().tearDownClass()
 
     @classmethod
     def doClassCleanups(cls):
-        if (cls._start is None or
-                not hasattr(cls, "worker_id") or
-                not hasattr(cls, "worker_port") or
-                not hasattr(cls, "py_resource")):
+        if cls._start is None:
             super().doClassCleanups()
             return
+
+        def run_cleanup(description, cleanup):
+            try:
+                cleanup()
+            except Exception as error:
+                _log(f"{description}: {error}", owner=cls)
+
         try:
-            _log("saving logbooks", owner=cls)
-            save_logfiles(cls, cls.__name__)
+            if cls.app_dir is not None:
+                _log("saving logbooks", owner=cls)
+                run_cleanup("Failed to save logbooks", lambda: save_logfiles(cls, cls.__name__))
 
-            _log(f"RESOURCE released port:{cls.worker_port}", owner=cls)
-            release_resource("port", cls.worker_port, owner=cls)
+            if cls.worker_port is not None:
+                run_cleanup(
+                    f"Failed to release port {cls.worker_port}",
+                    lambda: release_resource("port", cls.worker_port, owner=cls),
+                )
+            if cls.gdrive_file is not None:
+                run_cleanup(
+                    f"Failed to release GDrive lock {cls.resource_lock}",
+                    lambda: release_resource("gdrive", cls.gdrive_file, owner=cls),
+                )
 
-            # release class level lock
-            if hasattr(cls, "resource_lock"):
-                _log(f"LOCK RELEASED {cls.resource_lock}", owner=cls)
-                release_resource("gdrive", cls.gdrive_file, owner=cls)
-
-            if hasattr(cls, "dependency"):
+            if cls.py_version is not None and hasattr(cls, "dependency"):
                 _log("remove dependecies", owner=cls)
-                remove_dependency(cls.py_version, cls.dependency)
+                run_cleanup(
+                    "Failed to remove dependencies",
+                    lambda: remove_dependency(cls.py_version, cls.dependency),
+                )
 
-            if hasattr(cls, "hidden_dependency"):
+            if cls.py_version is not None and hasattr(cls, "hidden_dependency"):
                 _log("remove hidden dependecies", owner=cls)
-                remove_dependency(cls.py_version, cls.hidden_dependency)
+                run_cleanup(
+                    "Failed to remove hidden dependencies",
+                    lambda: remove_dependency(cls.py_version, cls.hidden_dependency),
+                )
 
+            if cls.temp_dir is not None:
+                run_cleanup("Failed to remove temporary test directory",
+                            lambda: shutil.rmtree(cls.temp_dir, ignore_errors=True))
 
-            if hasattr(cls, "temp_dir"):
-                shutil.rmtree(cls.temp_dir, ignore_errors=True)
-
-            if hasattr(cls, "app_dir"):
-                shutil.rmtree(cls.app_dir, ignore_errors=True)
-            _log(f"RESOURCE released venv:{cls.py_resource}", owner=cls)
-            release_resource("venv", cls.py_resource, owner=cls)
+            if cls.app_dir is not None:
+                run_cleanup("Failed to remove temporary application directory",
+                            lambda: shutil.rmtree(cls.app_dir, ignore_errors=True))
+            if cls.py_resource is not None:
+                run_cleanup(
+                    f"Failed to release venv {cls.py_resource}",
+                    lambda: release_resource("venv", cls.py_resource, owner=cls),
+                )
 
             cls._end = time.time()
             total = len(cls._results)
@@ -460,10 +572,11 @@ class ParallelTestCase(unittest.TestCase, ui_class):
             target_path = os.path.abspath(os.path.join(os.path.dirname(__file__),".."))
             filename = os.path.join(target_path, REPORT_DIR, f"{cls.__name__}.json")
 
-            with open(filename, "w", encoding="utf-8") as f:
-                json.dump(data, f, indent=4)
-
+            def write_report():
+                with open(filename, "w", encoding="utf-8") as f:
+                    json.dump(data, f, indent=4)
+            run_cleanup(f"Failed to write test report {filename}", write_report)
         except Exception as e:
-            _log(str(e), owner=cls)
+            _log(f"Failed while finalizing test class: {e}", owner=cls)
         finally:
             super().doClassCleanups()

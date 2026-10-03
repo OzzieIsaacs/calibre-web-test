@@ -22,7 +22,8 @@ class TestAnonymous(ParallelTestCase):
                 lib_dest=cls.temp_dir
             )
         except Exception as e:
-            cls.log_class(str(e))
+            cls._handle_setup_failure(e)
+            raise
 
     def tearDown(self):
         super().tearDown()

@@ -26,9 +26,9 @@ class TestShelf(ParallelTestCase):
             cls.create_user('shelf', {'edit_shelf_role':1, "upload_role": 1,
                                       'password':'123AbC*!', 'email':'a@b.com'})
             cls.edit_user('admin',{'edit_shelf_role':1, 'email':'e@fe.de'})
-        except Exception:
-            cls.driver.quit()
-            cls.p.terminate()
+        except Exception as e:
+            cls._handle_setup_failure(e)
+            raise
 
     def tearDown(self):
         super().tearDown()
@@ -643,5 +643,4 @@ class TestShelf(ParallelTestCase):
         r.close()
         self.edit_user("tester", {"delete": 1})
         self.delete_shelf("access")
-
 

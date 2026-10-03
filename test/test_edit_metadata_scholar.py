@@ -11,7 +11,7 @@ from helper_func import startup, wait_for_reboot
 
 class TestLoadMetadataScholar(ParallelTestCase):
 
-    dependency = ["scholarly", "beautifulsoup4"]
+    dependency = ["limit|bibtexparser", "scholarly", "beautifulsoup4"]
 
     @classmethod
     def setUpClass(cls):
@@ -24,9 +24,9 @@ class TestLoadMetadataScholar(ParallelTestCase):
                     lib_dest=cls.temp_dir, local_ssl=False
                     )
             time.sleep(3)
-        except Exception:
-            cls.driver.quit()
-            cls.p.kill()
+        except Exception as e:
+            cls._handle_setup_failure(e)
+            raise
 
     def test_load_metadata(self):
         self.fill_basic_config({'config_uploading': 1})
@@ -71,7 +71,6 @@ class TestLoadMetadataScholar(ParallelTestCase):
         self.assertEqual(results[0]['publisher'], self.check_element_on_page((By.ID, "publisher")).get_attribute("value"))
         self.fill_basic_config({'config_uploading': 0})
         self.assertTrue(self.check_element_on_page((By.ID, "flash_success"), timeout=10))
-
 
 
 

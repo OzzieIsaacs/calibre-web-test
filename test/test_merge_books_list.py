@@ -23,9 +23,9 @@ class TestMergeBooksList(ParallelTestCase):
                     lib_dest=cls.temp_dir)
             time.sleep(3)
             cls.goto_page("nav_new")
-        except Exception:
-            cls.driver.quit()
-            cls.p.kill()
+        except Exception as e:
+            cls._handle_setup_failure(e)
+            raise
 
     def test_delete_book(self):
         self.goto_page('nav_new')
@@ -137,4 +137,3 @@ class TestMergeBooksList(ParallelTestCase):
         self.assertEqual("Der Buchtitel", merged_book['title'])
         self.assertEqual(4, len(merged_book['author']))
         self.assertEqual(2, len(merged_book['download']))
-

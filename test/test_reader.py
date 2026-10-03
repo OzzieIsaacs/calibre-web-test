@@ -32,10 +32,9 @@ class TestReader(ParallelTestCase):
                     lib_dest=cls.temp_dir)
             cls.current_handle = cls.driver.current_window_handle
 
-        except Exception:
-            cls.driver.quit()
-            cls.p.terminate()
-            cls.p.poll()
+        except Exception as e:
+            cls._handle_setup_failure(e)
+            raise
 
     @classmethod
     def tearDown(cls):

@@ -27,7 +27,6 @@ class TestSocket(ParallelTestCase):
         cls.port = acquire_resource("port")
         cls.driver = webdriver.Firefox()
         cls.driver.maximize_window()
-        # startup function is not called, therefore direct print
 
     def setUp(self):
         os.chdir(base_path)

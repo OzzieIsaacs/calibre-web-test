@@ -51,9 +51,8 @@ class TestEbookConvertCalibre(ParallelTestCase):
                                     'mail_from':'name@host.com'})
             time.sleep(2)
         except Exception as e:
-            cls.log_class(str(e))
-            cls.driver.quit()
-            cls.p.kill()
+            cls._handle_setup_failure(e)
+            raise
 
     @classmethod
     def tearDownClass(cls, no=False):
@@ -494,7 +493,7 @@ class TestEbookConvertCalibre(ParallelTestCase):
         self.setup_server(False, {'mail_use_ssl':'STARTTLS', 'mail_password_e':'10234'})
         details = self.get_book_details(7)
         details['kindlebtn'].click()
-        conv = self.check_element_on_page((By.LINK_TEXT, details['kindle'][0].text))
+        conv = self.check_element_on_page((By.CSS_SELECTOR, ".dropdown-menu .sendbtn-form"))
         self.assertTrue(conv)
         conv.click()
         self.assertTrue(self.check_element_on_page((By.ID, "flash_success")))
@@ -507,7 +506,7 @@ class TestEbookConvertCalibre(ParallelTestCase):
         self.setup_server(False, {'mail_use_ssl':'SSL/TLS', 'mail_password_e':'10234'})
         details = self.get_book_details(7)
         details['kindlebtn'].click()
-        conv = self.check_element_on_page((By.LINK_TEXT, details['kindle'][0].text))
+        conv = self.check_element_on_page((By.CSS_SELECTOR, ".dropdown-menu .sendbtn-form"))
         self.assertTrue(conv)
         conv.click()
         self.assertTrue(self.check_element_on_page((By.ID, "flash_success")))

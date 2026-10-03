@@ -21,9 +21,9 @@ class TestBookDatabase(ParallelTestCase):
                     app_dir=cls.app_dir,
                     env={"APP_MODE": "test", "CALIBRE_PORT": cls.worker_port},
                     lib_dest=cls.temp_dir)
-        except Exception:
-            cls.driver.quit()
-            cls.p.kill()
+        except Exception as e:
+            cls._handle_setup_failure(e)
+            raise
 
     def test_invalid_book_path(self):
         change_book_path(os.path.join(self.temp_dir, "metadata.db"), 10)
@@ -34,4 +34,3 @@ class TestBookDatabase(ParallelTestCase):
         self.goto_page('nav_new')
         books = self.get_books_displayed()
         self.assertTrue(10, len(books[1]))
-

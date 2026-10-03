@@ -29,8 +29,8 @@ class TestEditAuthors(ParallelTestCase):
                     lib_dest=cls.temp_dir)
             time.sleep(3)
         except Exception as e:
-            cls.driver.quit()
-            cls.p.kill()
+            cls._handle_setup_failure(e)
+            raise
 
     def test_rename_author_with_null_author_sort(self):
         change_book_author_sort(os.path.join(self.temp_dir, "metadata.db"), 1, None)

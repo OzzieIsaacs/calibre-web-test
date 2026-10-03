@@ -40,9 +40,8 @@ class TestEbookConvertKepubify(ParallelTestCase):
             time.sleep(2)
             WebDriverWait(cls.driver, 5).until(EC.presence_of_element_located((By.ID, "flash_success")))
         except Exception as e:
-            cls.log_class("Dead on Init - check Calibre-Web is starting")
-            cls.driver.quit()
-            cls.p.kill()
+            cls._handle_setup_failure(e)
+            raise
 
     def tearDown(self):
         super().tearDown()

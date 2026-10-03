@@ -7,6 +7,7 @@ import os
 import re
 import time
 import requests
+from googleapiclient.discovery import build
 from diffimg import diff
 from io import BytesIO
 
@@ -14,7 +15,7 @@ from selenium.webdriver.common.by import By
 from config_test import base_path, WAIT_GDRIVE, BOOT_TIME
 from helper_func import startup, wait_for_reboot
 
-from helper_gdrive import prepare_gdrive, connect_gdrive, check_path_gdrive
+from helper_gdrive import prepare_gdrive, connect_gdrive, check_path_gdrive, get_credentials
 
 
 # test editing books on gdrive
@@ -42,12 +43,8 @@ class TestEditBooksOnGdrive(ParallelTestCase):
             cls.fill_db_config({'config_google_drive_folder': 'test'})
             time.sleep(5)
         except Exception as e:
-            try:
-                cls.log_class(str(e))
-                cls.driver.quit()
-                cls.p.kill()
-            except Exception:
-                pass
+            cls._handle_setup_failure(e)
+            raise
 
     def wait_page_has_loaded(self):
         time.sleep(5)
@@ -892,11 +889,27 @@ class TestEditBooksOnGdrive(ParallelTestCase):
         self.assertEqual(book['series'], 'test')
         # upload new metadata.db from outside
         fs = connect_gdrive("test")
+        drive = build('drive', 'v2', credentials=get_credentials(), cache_discovery=False)
+        change_id = drive.changes().list(
+            maxResults=1, fields='largestChangeId').execute()['largestChangeId']
         # upload unchanged database from hdd -> watch metadata should recognize this and replace current
         # used metadata.db
-        metadata = open(os.path.join(base_path, 'Calibre_db', 'metadata.db'), 'rb')
-        fs.upload(os.path.join('test', 'metadata.db').replace('\\', '/'), metadata)
-        metadata.close()
+        with open(os.path.join(base_path, 'Calibre_db', 'metadata.db'), 'rb') as metadata:
+            fs.upload(os.path.join('test', 'metadata.db').replace('\\', '/'), metadata)
+        fs.close()
+        changes = drive.changes().list(
+            startChangeId=int(change_id) + 1,
+            fields='items(id,file(title))').execute()['items']
+        metadata_changes = [change for change in changes
+                            if change.get('file', {}).get('title') == 'metadata.db']
+        self.assertTrue(metadata_changes, 'Uploaded database change was not returned by Google Drive')
+        # Registered external callbacks cannot route notifications to each parallel worker.
+        response = requests.post(
+            'http://127.0.0.1:{}/gdrive/watch/callback'.format(self.worker_port),
+            headers={'X-Goog-Channel-Token': 'target=calibreweb-watch_files',
+                     'X-Goog-Resource-State': 'change'},
+            json={'id': metadata_changes[-1]['id']}, timeout=60)
+        self.assertEqual(200, response.status_code)
         loop = 0
         while loop < 6:
             loop += 1

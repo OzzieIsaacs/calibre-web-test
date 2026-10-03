@@ -38,12 +38,8 @@ class TestEditAuthorsGdrive(ParallelTestCase):
             cls.fill_db_config({'config_google_drive_folder': 'test'})
             time.sleep(2)
         except Exception as e:
-            try:
-                cls.log_class(str(e))
-                cls.driver.quit()
-                cls.p.kill()
-            except Exception:
-                pass
+            cls._handle_setup_failure(e)
+            raise
 
     # One book of the author present
     def test_change_capital_one_author_one_book(self):

@@ -26,9 +26,9 @@ class TestLogin(ParallelTestCase):
                     app_dir=cls.app_dir,
                     env={"APP_MODE": "test", "CALIBRE_PORT": cls.worker_port},
                     lib_dest=cls.temp_dir)
-        except Exception:
-            cls.driver.quit()
-            cls.p.kill()
+        except Exception as e:
+            cls._handle_setup_failure(e)
+            raise
 
     @classmethod
     def tearDownClass(cls):
@@ -467,26 +467,26 @@ class TestLogin(ParallelTestCase):
         self.assertTrue(check_response_language_header(url,
                                                        ['Accept-Language: de-de;q=0.9,en;q=0.7,*;q=0.8'],
                                                        200,
-                                                       '<label for="username">Benutzername</label>'),
+                                                       '<label for="username"[^>]*>Benutzername</label>'),
                         'Locale detect with "-" failed')
         self.assertTrue(check_response_language_header(url,
                                                        ['Accept-Language: *;q=0.9,de;q=0.7,en;q=0.8'],
                                                        200,
-                                                       '<label for="username">Username</label>'),
+                                                       '<label for="username"[^>]*>Username</label>'),
                         'Locale detect with different q failed')
         self.assertTrue(check_response_language_header(url,
                                                        ['Accept-Language: zh_cn;q=0.9,de;q=0.8,en;q=0.7'],
                                                        200,
-                                                       '<label for="username">用户名</label>'))
+                                                       '<label for="username"[^>]*>用户名</label>'))
         self.assertTrue(check_response_language_header(url,
                                                        ['Accept-Language: xx'],
                                                        200,
-                                                       '<label for="username">Username</label>'),
+                                                       '<label for="username"[^>]*>Username</label>'),
                         'Locale detect with unknown locale failed')
         self.assertTrue(check_response_language_header(url,
                                                        ['Accept-Language: *'],
                                                        200,
-                                                       '<label for="username">Username</label>'),
+                                                       '<label for="username"[^>]*>Username</label>'),
                         'Locale detect with only "*" failed')
 
     # Check that digest Authentication header doesn't crash the application

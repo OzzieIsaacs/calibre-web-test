@@ -33,12 +33,8 @@ class TestSetupGdrive(ParallelTestCase):
                     lib_dest=cls.temp_dir,
                     only_startup=True)
         except Exception as e:
-            try:
-                cls.log_class(str(e))
-                cls.driver.quit()
-                cls.p.kill()
-            except Exception:
-                pass
+            cls._handle_setup_failure(e)
+            raise
 
     def test_config_gdrive(self):
         # invalid db and tick gdrive

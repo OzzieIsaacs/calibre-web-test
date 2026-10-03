@@ -52,10 +52,8 @@ class TestKoboSyncBig(ParallelTestCase):
             cls.login('admin', 'admin123')
             time.sleep(2)
         except Exception as e:
-            cls.log_class(str(e))
-            cls.driver.quit()
-            cls.p.terminate()
-            cls.p.poll()
+            cls._handle_setup_failure(e)
+            raise
 
     def inital_sync(self, user_id=None):
         kobo_address = user_id or self.kobo_address

@@ -23,9 +23,9 @@ class TestFilePicker(ParallelTestCase):
                     lib_dest=cls.temp_dir,
                     only_startup=True, only_metadata=True)
             cls.login("admin", "admin123")
-        except Exception:
-            cls.driver.quit()
-            cls.p.kill()
+        except Exception as e:
+            cls._handle_setup_failure(e)
+            raise
 
     def test_filepicker_limited_file(self):
         filepicker = self.check_element_on_page((By.ID, "calibre_modal_path"))

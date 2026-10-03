@@ -24,9 +24,9 @@ class TestEditBooksList(ParallelTestCase):
                     lib_dest=cls.temp_dir
                     )
             time.sleep(3)
-        except Exception:
-            cls.driver.quit()
-            cls.p.kill()
+        except Exception as e:
+            cls._handle_setup_failure(e)
+            raise
 
     def check_search(self, bl, term, count, column, value):
         bl['search'].clear()
@@ -448,6 +448,10 @@ class TestEditBooksList(ParallelTestCase):
         values = self.get_book_details(9)
         self.assertEqual("Test1234", values['cust_columns'][0]['value'])
         bl = self.get_books_list(1)
+        self.edit_table_html(bl['table'][4]["Custom Comment 人物"]['element'], "Cancelled", cancel=True)
+        values = self.get_book_details(9)
+        self.assertEqual("Test1234", values['cust_columns'][0]['value'])
+        bl = self.get_books_list(1)
         self.edit_table_html(bl['table'][4]["Custom Comment 人物"]['element'], "")
         bl = self.get_books_list(-1)
         self.assertEqual("+", bl['table'][4]["Custom Comment 人物"]['text'])
@@ -460,6 +464,10 @@ class TestEditBooksList(ParallelTestCase):
         self.edit_table_html(bl['table'][4]["Comments"]['element'], "Test1234")
         bl = self.get_books_list(-1)
         self.assertEqual("[...]", bl['table'][4]["Comments"]['text'])
+        values = self.get_book_details(9)
+        self.assertEqual("Test1234", values['comment'])
+        bl = self.get_books_list(1)
+        self.edit_table_html(bl['table'][4]["Comments"]['element'], "Cancelled", cancel=True)
         values = self.get_book_details(9)
         self.assertEqual("Test1234", values['comment'])
         bl = self.get_books_list(1)
@@ -543,5 +551,3 @@ class TestEditBooksList(ParallelTestCase):
         bl = self.get_books_list(1)
         self.assertFalse(bl['table'][0]['Read Status']['element'].is_selected())
         self.assertFalse(bl['table'][0]['Archive Status']['element'].is_selected())
-
-

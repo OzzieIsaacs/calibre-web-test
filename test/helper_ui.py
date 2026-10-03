@@ -173,9 +173,46 @@ class ui_class():
             return ret_shelfs
 
     @classmethod
-    def click_config_accordion(cls, collapse_id):
-        selector = ".accordion-button[aria-controls='{}']".format(collapse_id)
-        cls.driver.find_element(By.CSS_SELECTOR, selector).click()
+    def _robust_click(cls, target, timeout=10):
+        from selenium.common.exceptions import (ElementClickInterceptedException, ElementNotInteractableException,
+                                                StaleElementReferenceException)
+        if not target:
+            raise NoSuchElementException("Element to click not found")
+
+        def click_when_ready(driver):
+            try:
+                element = driver.find_element(*target) if isinstance(target, tuple) else target
+                driver.execute_script(
+                    "arguments[0].scrollIntoView({block: 'center', inline: 'nearest'});", element)
+                if element.is_displayed() and element.is_enabled():
+                    element.click()
+                    return element
+            except (ElementClickInterceptedException, ElementNotInteractableException,
+                    StaleElementReferenceException, NoSuchElementException):
+                return False
+            return False
+
+        return WebDriverWait(cls.driver, timeout, poll_frequency=0.25).until(
+            click_when_ready, "Element {} could not be clicked".format(target))
+
+    @classmethod
+    def _wait_modal_hidden(cls, modal_id, timeout=10):
+        WebDriverWait(cls.driver, timeout).until(lambda d: d.execute_script(
+            "var m = document.getElementById(arguments[0]);"
+            "return (!m || !m.classList.contains('show')) && !document.querySelector('.modal-backdrop');",
+            modal_id), "Modal {} did not close".format(modal_id))
+
+    @classmethod
+    def click_config_accordion(cls, collapse_id, timeout=10):
+        # Only open the accordion section (clicking an already opened one would collapse it again) and wait until
+        # the collapse transition is finished, otherwise the contained inputs are not interactable yet
+        is_open = ("var c = document.getElementById(arguments[0]);"
+                   "return !!c && c.classList.contains('show') && !c.classList.contains('collapsing');")
+        if not cls.driver.execute_script(is_open, collapse_id):
+            selector = ".accordion-button[aria-controls='{}']".format(collapse_id)
+            WebDriverWait(cls.driver, timeout).until(EC.presence_of_element_located((By.CSS_SELECTOR, selector)))
+            cls._robust_click((By.CSS_SELECTOR, selector), timeout=timeout)
+            WebDriverWait(cls.driver, timeout).until(lambda d: d.execute_script(is_open, collapse_id))
 
     @classmethod
     def goto_page(cls, page_target):
@@ -357,7 +394,6 @@ class ui_class():
 
         # open all necessary accordions
         for o in opener:
-            time.sleep(1)
             cls.click_config_accordion(o)
         # check if checkboxes are in list and seperate lists
         for element,key in enumerate(elements):
@@ -373,7 +409,10 @@ class ui_class():
         for checkbox in process_checkboxes:
             ele = cls.driver.find_element(By.ID, checkbox)
             if (elements[checkbox] == 1 and not ele.is_selected() ) or elements[checkbox] == 0 and ele.is_selected():
-                ele.click()
+                cls._robust_click(ele)
+                WebDriverWait(cls.driver, 5).until(
+                    lambda d: ele.is_selected() == bool(elements[checkbox]),
+                    "Checkbox {} not toggled".format(checkbox))
 
         # process all selects
         for option, key in enumerate(process_options):
@@ -476,12 +515,37 @@ class ui_class():
 
     @classmethod
     def restart_calibre_web(cls, host="127.0.0.1:"):
-        cls.goto_page('admin_setup')
-        cls.driver.find_element(By.ID, 'admin_restart').click()
-        time.sleep(1)
-        element = cls.check_element_on_page((By.ID, "restart"))
-        element.click()
-        wait_for_reboot(host + cls.worker_port)
+        address = host + cls.worker_port
+        if not address.startswith("http"):
+            address = "http://" + address
+        if not cls.check_element_on_page((By.ID, 'admin_restart'), timeout=1):
+            cls.goto_page('admin_setup')
+        WebDriverWait(cls.driver, 10).until(EC.presence_of_element_located((By.ID, 'admin_restart')))
+        cls._robust_click((By.ID, 'admin_restart'))
+        WebDriverWait(cls.driver, 10).until(EC.visibility_of_element_located((By.ID, "restart")))
+        cls._robust_click((By.ID, "restart"))
+        # wait until the old instance is gone, otherwise the "reboot" would be detected on the old instance
+        end = time.time() + 15
+        while time.time() < end:
+            try:
+                requests.get(address, timeout=1)
+            except (requests.exceptions.ConnectionError, requests.exceptions.Timeout):
+                break
+            time.sleep(0.3)
+        else:
+            raise TimeoutException("Calibre-Web did not stop before restarting")
+        wait_for_reboot(address)
+        # make sure the new instance really answers requests before continuing
+        end = time.time() + 30
+        while time.time() < end:
+            try:
+                if requests.get(address + "/login", timeout=3).status_code < 500:
+                    break
+            except (requests.exceptions.ConnectionError, requests.exceptions.Timeout):
+                pass
+            time.sleep(0.5)
+        else:
+            raise TimeoutException("Calibre-Web did not respond after restarting")
 
     def reconnect_database(self):
         self.goto_page('admin_setup')
@@ -548,8 +612,9 @@ class ui_class():
             try:
                 go = va.getchildren()[0].getchildren()[0]
                 id = go.attrib['data-pk']
-                delButton = self.driver.find_element(By.CSS_SELECTOR, "a[data-pk='"+id+"']")
-                editButton = self.driver.find_element(By.CSS_SELECTOR, "a[data-value='"+id+"']")
+                table = self.driver.find_element(By.ID, table_id)
+                editButton = table.find_element(By.CSS_SELECTOR, "a[data-pk='"+id+"']")
+                delButton = table.find_element(By.CSS_SELECTOR, "a[data-value='"+id+"']")
                 val.append({'domain':go.text, 'delete': delButton, 'edit':editButton, 'id': id})
             except IndexError:
                 pass
@@ -562,20 +627,21 @@ class ui_class():
             table_id = 'domain-deny-table'
         if not self.check_element_on_page((By.ID, table_id)):
             return False
-        editButton = self.check_element_on_page((By.CSS_SELECTOR, "a[data-pk='" + id + "']"))
+        table = self.driver.find_element(By.ID, table_id)
+        editButton = table.find_element(By.CSS_SELECTOR, "a[data-pk='" + str(id) + "']")
         if not editButton:
             return False
         editButton.click()
-        editor=self.check_element_on_page((By.CLASS_NAME, "input-sm"))
-        if not editor:
-            return False
+        editor = WebDriverWait(self.driver, 10).until(
+            lambda driver: next((element for element in table.find_elements(
+                By.CSS_SELECTOR, ".editable-container input")
+                if element.is_displayed() and element.is_enabled()), False))
         editor.clear()
         editor.send_keys(new_value)
-        if accept:
-            submit = self.check_element_on_page((By.CLASS_NAME, "editable-submit"))
-        else:
-            submit = self.check_element_on_page((By.CLASS_NAME, "editable-cancel"))
+        form = editor.find_element(By.XPATH, "ancestor::form")
+        submit = form.find_element(By.CLASS_NAME, "editable-submit" if accept else "editable-cancel")
         submit.click()
+        WebDriverWait(self.driver, 10).until(EC.invisibility_of_element(editor))
 
     def delete_domains(self, id, accept, allow=True):
         if allow:
@@ -1283,19 +1349,23 @@ class ui_class():
 
         tree = lxml.etree.parse(StringIO(html), parser)
         books_rand = list()
-        br = tree.xpath("//*[@class='discover random-books']/div/div")
+        br = tree.xpath(
+            "//div[contains(concat(' ', normalize-space(@class), ' '), ' random-books ')]"
+            "//div[contains(concat(' ', normalize-space(@class), ' '), ' book ')]")
         for book_rand in br:
             ele = book_rand.getchildren()
             meta=ele[1].getchildren()
             book_r = dict()
             book_r['link'] = ele[0].getchildren()[0].attrib['href']
-            book_r['read'] = bool(ele[0].getchildren()[0].xpath(".//span[contains(@class, 'read')]"))
+            book_r['read'] = bool(ele[0].getchildren()[0].xpath(
+                ".//span[contains(concat(' ', normalize-space(@class), ' '), ' read ')"
+                " or contains(concat(' ', normalize-space(@class), ' '), ' cover-check-badge ')]"))
             book_r['ele'] = cls.check_element_on_page((By.XPATH,"//a[@href='"+book_r['link']+"']//img"))
             book_r['id'] = book_r['link'][6:]
             book_r['title']= meta[0].getchildren()[0].text
             authors = meta[1].getchildren()
             book_r['author'] = [a.text for a in authors if a.text != '&' and a.attrib.get('class') != 'author-name author-hidden']
-            book_r['author_ele'] = [cls.check_element_on_page((By.XPATH, "//div[contains(@class, 'load-more')]//a[@href='" + a.attrib['href'] + "']"), (By.CLASS_NAME, "load-more")) for a in authors if a.attrib.get('href')]
+            book_r['author_ele'] = [cls.check_element_on_page((By.XPATH, "//div[contains(@class, 'random-books')]//a[@href='" + a.attrib['href'] + "']"), (By.CLASS_NAME, "random-books")) for a in authors if a.attrib.get('href')]
 
             if len(meta) >= 3:
                 for met in meta[2:]:
@@ -1314,14 +1384,18 @@ class ui_class():
                                                                               "//div[contains(@class, 'random-books')]//a[@href='" + element[0].attrib['href'] + "']"))
             books_rand.append(book_r)
         books = list()
-        b = tree.xpath("//*[@class='discover load-more']/div/div")
+        b = tree.xpath(
+            "//div[contains(concat(' ', normalize-space(@class), ' '), ' load-more ')]"
+            "//div[contains(concat(' ', normalize-space(@class), ' '), ' book ')]")
         for book in b:
             ele = book.getchildren()
             # ele[0] -> cover
             meta=ele[1].getchildren()
             bk = dict()
             bk['link'] = ele[0].getchildren()[0].attrib['href']
-            bk['read'] = bool(ele[0].getchildren()[0].xpath(".//span[contains(@class, 'read')]"))
+            bk['read'] = bool(ele[0].getchildren()[0].xpath(
+                ".//span[contains(concat(' ', normalize-space(@class), ' '), ' read ')"
+                " or contains(concat(' ', normalize-space(@class), ' '), ' cover-check-badge ')]"))
             bk['id'] = bk['link'][6:]
             bk['ele'] = cls.check_element_on_page((By.XPATH,"//a[@href='"+bk['link']+"']//img"))
             bk['title']= meta[0].getchildren()[0].text
@@ -1349,7 +1423,9 @@ class ui_class():
                             bk['series_index'] = element[0].tail.rstrip().lstrip().strip(')').lstrip('(')
             books.append(bk)
 
-        pages = tree.xpath("//*[@class='pagination']/a")
+        pages = tree.xpath(
+            "//*[contains(concat(' ', normalize-space(@class), ' '), ' pagination ')]/a"
+            " | //*[contains(concat(' ', normalize-space(@class), ' '), ' pagination ')]/li/a")
         pagination = None
         if len(pages):
             pagination = [p.text for p in pages]
@@ -1456,14 +1532,18 @@ class ui_class():
         tree = lxml.etree.parse(StringIO(html), parser)
 
         books = list()
-        b = tree.xpath("//*[@class='row display-flex']/div")
+        b = tree.xpath(
+            "//div[contains(concat(' ', normalize-space(@class), ' '), ' display-flex ')]"
+            "/div[contains(concat(' ', normalize-space(@class), ' '), ' book ')]")
         for book in b:
             ele = book.getchildren()
             # ele[0] -> cover
             meta=ele[1].getchildren()
             bk = dict()
             bk['link'] = ele[0].getchildren()[0].attrib['href']
-            bk['read'] = bool(ele[0].getchildren()[0].xpath(".//span[contains(@class, 'read')]"))
+            bk['read'] = bool(ele[0].getchildren()[0].xpath(
+                ".//span[contains(concat(' ', normalize-space(@class), ' '), ' read ')"
+                " or contains(concat(' ', normalize-space(@class), ' '), ' cover-check-badge ')]"))
             bk['id'] = bk['link'][6:]
             bk['ele'] = self.check_element_on_page((By.XPATH,"//a[@href='"+bk['link']+"']//img"))
             bk['title']= meta[0].getchildren()[0].text
@@ -1532,6 +1612,10 @@ class ui_class():
             html = cls.driver.page_source
 
             tree = lxml.etree.parse(StringIO(html), parser)
+            error = tree.find(".//*[@id='flash_danger']")
+            if tree.find(".//*[@class='cover']//img") is None and error is not None:
+                ret['error'] = ''.join(error.itertext()).strip()
+                return ret
             reader = tree.findall(".//*[@aria-labelledby='read-in-browser']/li/a")
             ret['reader'] = [r.text for r in reader]
 
@@ -1542,15 +1626,18 @@ class ui_class():
             ret['author'] = [aut.text for aut in author]
 
             ret['rating'] = len(tree.xpath(
-                ".//*[contains(concat(' ', normalize-space(@class), ' '), ' bi-star-fill ')]"))
+                ".//*[contains(concat(' ', normalize-space(@class), ' '), ' rating ')]"
+                "//*[contains(concat(' ', normalize-space(@class), ' '), ' bi-star-fill ')]"))
 
             languages = tree.findall(".//*[@class='languages']//span")
             if languages:
                 only_lang = languages[0].text.split(': ')[1].lstrip()
                 ret['languages'] = only_lang.split(', ')
 
-            ids = tree.findall(".//*[@class='identifiers']//a")
-            ret['identifier'] = [{id.text:id.attrib['href']} for id in ids]
+            ids = tree.xpath(".//*[@class='identifiers']//*[self::a or self::span[@title]]")
+            ret['identifier'] = [
+                {identifier.text: identifier.get('href') if identifier.tag == 'a' else identifier.attrib['title']}
+                for identifier in ids]
 
             # find cover
             ret['cover'] = tree.find(".//*[@class='cover']//img").attrib['src']
@@ -1569,18 +1656,9 @@ class ui_class():
             comment = tree.find(".//*[@class='comments']")
             ret['comment'] = ''
             if comment is not None:
-                if len(comment.getchildren()) == 1:
-                    ret['comment'] = comment.getchildren()[0].tail.strip()
-                else:
-                    comm = tree.xpath(".//*[@class='comments']/h3/following-sibling::*")
-                    if comm[0].getchildren():
-                        for ele in comm[0].getchildren():
-                            if isinstance(ele.text,str):
-                                ret['comment'] += ele.text.strip()
-                    else:
-                        for ele in comm:
-                            if isinstance(ele.text, str):
-                                ret['comment'] += ele.text.strip()
+                ret['comment'] = ''.join(
+                    text.strip() for text in comment.xpath(
+                        "./text() | ./*[not(self::h3)]//text()"))
 
             add_shelf = tree.findall(".//*[@id='add-to-shelves']//a")
             ret['add_shelf'] = [sh.text.strip().lstrip() for sh in add_shelf]
@@ -1593,7 +1671,9 @@ class ui_class():
             ele = tree.xpath(".//*[starts-with(@id,'sendbtn')]")
             # bk['ele'] = cls.check_element_on_page((By.XPATH, "//a[@href='" + bk['link'] + "']/img"))
             if len(ele):
-                all = tree.findall(".//*[@aria-labelledby='send-to-ereader']/li/a")
+                all = tree.xpath(
+                    ".//*[@aria-labelledby='send-to-ereader' or @aria-labelledby='sendbtn2']"
+                    "/li/*[self::a or self::button]")
                 if all:
                     ret['kindlebtn'] = cls.driver.find_element(By.ID, "sendbtn2")
                     ret['kindle'] = all
@@ -1642,10 +1722,14 @@ class ui_class():
                     if len(col.text.strip()):
                         if len(col.getchildren()):
                             element['Text'] = col.text.lstrip().split(':')[0]
-                            try:
-                                element['value'] = col.getchildren()[0].attrib['class'][20:]
-                            except KeyError:
-                                element['value'] = col.getchildren()[0].text
+                            value = col.getchildren()[0]
+                            classes = value.attrib.get('class', '').split()
+                            if 'bi-check' in classes or 'bi-check-lg' in classes:
+                                element['value'] = 'ok'
+                            elif 'bi-x' in classes or 'bi-x-lg' in classes:
+                                element['value'] = 'remove'
+                            else:
+                                element['value'] = ''.join(value.itertext()).strip()
                             ret['cust_columns'].append(element)
                         elif ':' in col.text:
                             element['Text'] = col.text.lstrip().split(':')[0]
@@ -1654,9 +1738,9 @@ class ui_class():
                             ret['cust_columns'].append(element)
                         else:
                             pass
-        except Exception as e:
-            print(e)
-            pass
+        except (AttributeError, IndexError, KeyError, TypeError, ValueError) as e:
+            raise AssertionError(
+                "Could not parse book details at {}".format(cls.driver.current_url)) from e
         return ret
 
     # works only if there is one format per book
@@ -1681,10 +1765,12 @@ class ui_class():
 
     def queue_metadata_backup(self):
         self.goto_page("admin_setup")
-        self.check_element_on_page((By.ID, "metadata_backup")).click()
+        WebDriverWait(self.driver, 10).until(EC.presence_of_element_located((By.ID, "metadata_backup")))
+        self._robust_click((By.ID, "metadata_backup"))
+        WebDriverWait(self.driver, 20).until(EC.visibility_of_element_located((By.ID, "DialogFinished")))
+        self._robust_click((By.ID, "DialogFinished"))
+        self._wait_modal_hidden("StatusDialog")
         time.sleep(1)
-        self.check_element_on_page((By.ID, "DialogFinished")).click()
-        time.sleep(3)
 
     def wait_tasks(self, tasks, expected, task_text=None):
         required_task_text = []
@@ -1831,8 +1917,7 @@ class ui_class():
             root_url = f'http://127.0.0.1:{cls.worker_port}'
         if id > 0:
             cls.driver.get(root_url + "/admin/book/" + str(id))
-            time.sleep(2)
-        cls.check_element_on_page((By.ID,"book_edit_frm"))
+        edit_form = cls.check_element_on_page((By.ID, "book_edit_frm"), timeout=10)
 
         if custom_content:
             # Handle custom columns:
@@ -1872,8 +1957,14 @@ class ui_class():
             content.pop('local_cover')
 
         if 'rating' in content:
-            cls.driver.execute_script("arguments[0].setAttribute('value', arguments[1])",
-                                  cls.driver.find_element(By.XPATH, "//input[@id='rating']"), content['rating'])
+            # Set the value via the rating widget (falls back to the plain input), setting only the value attribute
+            # doesn't change the submitted value as soon as the input value was touched by the widget
+            cls.driver.execute_script(
+                "var input = arguments[0]; var value = String(arguments[1]);"
+                "var widget = window.jQuery ? jQuery(input).data('rating') : null;"
+                "if (widget) { widget.setValue(value); }"
+                "input.value = value; input.setAttribute('value', value);",
+                cls.driver.find_element(By.ID, "rating"), content['rating'])
             content.pop('rating')
 
         if 'comments' in content:
@@ -1898,12 +1989,21 @@ class ui_class():
         if 'pubdate' in content:
             cls.select_date_with_editor('pubdate', 'pubdate_delete', content['pubdate'])
 
-        # don't stay on page after edit
-        if detail_v:
-            cls.check_element_on_page((By.NAME, "detail_view")).click()
+        # detail_v=True: stay on edit page after save (uncheck "View Book on Save"), otherwise show book details
+        detail_view = cls.check_element_on_page((By.NAME, "detail_view"))
+        if detail_view and detail_view.is_selected() == bool(detail_v):
+            # click the visible label wrapping the checkbox, it's the regular user hit area
+            cls._robust_click((By.XPATH, "//input[@name='detail_view']/ancestor::label[1]"))
+            WebDriverWait(cls.driver, 5).until(lambda d: detail_view.is_selected() != bool(detail_v),
+                                               "View Book on Save checkbox not toggled")
 
-        submit = cls.check_element_on_page((By.ID, "submit"))
-        submit.click()
+        form_valid = edit_form and cls.driver.execute_script("return arguments[0].checkValidity();", edit_form)
+        cls._robust_click((By.ID, "submit"))
+        if form_valid:
+            # wait for the page to be reloaded, otherwise following checks run on the old page
+            WebDriverWait(cls.driver, 15).until(EC.staleness_of(edit_form))
+            WebDriverWait(cls.driver, 10).until(
+                lambda d: d.execute_script("return document.readyState") == "complete")
         return
 
     def add_identifier(self, key, value):
@@ -1959,24 +2059,26 @@ class ui_class():
             root_url = f"http://127.0.0.1:{self.worker_port}"
         if id != -1:
             self.get_book_details(id, root_url)
-            self.check_element_on_page((By.ID, "edit_book")).click()
-        self.check_element_on_page((By.ID, "delete")).click()
-        time.sleep(0.5)
-        self.check_element_on_page((By.ID, "delete_confirm")).click()
+            self._robust_click(self.check_element_on_page((By.ID, "edit_book"), timeout=10))
+        self._robust_click(self.check_element_on_page((By.ID, "delete"), timeout=10))
+        WebDriverWait(self.driver, 10).until(EC.element_to_be_clickable((By.ID, "delete_confirm")))
+        self._robust_click((By.ID, "delete_confirm"))
+        self._wait_modal_hidden("deleteModal")
         time.sleep(2)
 
     def delete_book_format(self, id, format):
         self.get_book_details(id)
-        self.check_element_on_page((By.ID, "edit_book")).click()
+        self._robust_click(self.check_element_on_page((By.ID, "edit_book"), timeout=10))
         b = self.check_element_on_page((By.XPATH, "//*[@data-delete-format='" + format.upper() + "']"))
         if not b:
             return False
-        b.click()
-        time.sleep(1)
-        c = self.check_element_on_page((By.ID, "delete_confirm"))
-        if not c:
+        self._robust_click(b)
+        try:
+            WebDriverWait(self.driver, 10).until(EC.element_to_be_clickable((By.ID, "delete_confirm")))
+        except TimeoutException:
             return False
-        c.click()
+        self._robust_click((By.ID, "delete_confirm"))
+        self._wait_modal_hidden("deleteModal")
         time.sleep(2)
         return True
 
@@ -2002,7 +2104,10 @@ class ui_class():
         else:
             time.sleep(1)
         header_edit = list()
-        header = self.driver.find_elements(By.XPATH, "//table[@id='books-table']/thead/tr/th")
+        WebDriverWait(self.driver, 10).until(
+            EC.presence_of_element_located((By.CSS_SELECTOR, "#books-table tbody tr")))
+        header = [head for head in self.driver.find_elements(
+            By.CSS_SELECTOR, "#books-table thead tr th") if head.is_displayed()]
         for cnt, head in enumerate(header):
             header_edit.insert(cnt, dict())
             header_edit[cnt]['sort'] = head.find_element(By.XPATH, "./div[starts-with(@class, 'th-inner')]")
@@ -2011,7 +2116,7 @@ class ui_class():
             else:
                 header_edit[cnt]['text'] = header_edit[cnt]['sort'].text.split('\n')[-1]
 
-        rows = self.driver.find_elements(By.XPATH, "//tbody/tr")
+        rows = self.driver.find_elements(By.CSS_SELECTOR, "#books-table tbody tr[data-index]")
         table = list()
         ret = dict()
         for element in rows:
@@ -2040,8 +2145,9 @@ class ui_class():
                 ret['pagination'][page.text] = {'link': page.find_element(By.XPATH, './a'), 'active': active, 'disabled': disabled}
         ret['table'] = table
         ret['column'] = self.check_element_on_page((By.XPATH, "//*[@aria-label='Columns']"))
-        ret['column_elements'] = self.driver.find_elements(By.XPATH, "//*[@role='menuitem']/label/input")
-        ret['column_texts'] = self.driver.find_elements(By.XPATH, "//*[@role='menuitem']/label/span")
+        toolbar = ret['column'].find_element(By.XPATH, "ancestor::div[contains(@class, 'columns')]")
+        ret['column_elements'] = toolbar.find_elements(By.CSS_SELECTOR, ".dropdown-menu label input")
+        ret['column_texts'] = toolbar.find_elements(By.CSS_SELECTOR, ".dropdown-menu label span")
         ret['search'] = self.check_element_on_page((By.CLASS_NAME, "search-input"))
         ret['remove-btn'] = self.check_element_on_page((By.ID, "book_delete_selection"))
         ret['merge-btn'] = self.check_element_on_page((By.ID, "merge_books"))
@@ -2050,38 +2156,57 @@ class ui_class():
         return ret
 
     def edit_table_select(self, table_select, new_value, cancel=False):
+        cell = table_select.find_element(By.XPATH, "ancestor::td")
         table_select.click()
-        select = Select(table_select.find_element(By.XPATH, "..//select"))
+        editor = WebDriverWait(self.driver, 10).until(
+            lambda driver: next((element for element in cell.find_elements(
+                By.CSS_SELECTOR, ".editable-container select")
+                if element.is_displayed() and element.is_enabled()), False))
+        select = Select(editor)
         select.select_by_visible_text(new_value)
-
-        if not cancel:
-            table_select.find_element(By.XPATH, "..//button[contains(@class,'btn-primary')]").click()
-        else:
-            table_select.find_element(By.XPATH, "..//button[contains(@class,'btn-default')]").click()
+        editor.find_element(By.XPATH, "ancestor::form").find_element(
+            By.CLASS_NAME, "editable-cancel" if cancel else "editable-submit").click()
+        WebDriverWait(self.driver, 10).until(EC.invisibility_of_element(editor))
 
     def edit_table_element(self, table_element, new_value, cancel=False):
-        # get text of element
+        cell = table_element.find_element(By.XPATH, "ancestor::td")
         table_element.click()
-        element = table_element.find_element(By.XPATH, "..//input") # .get_attribute('value')
+        element = WebDriverWait(self.driver, 10).until(
+            lambda driver: next((element for element in cell.find_elements(
+                By.CSS_SELECTOR, ".editable-container input")
+                if element.is_displayed() and element.is_enabled()), False))
         element.clear()
         element.send_keys(new_value)
-        if not cancel:
-            table_element.find_element(By.XPATH, "..//button[contains(@class,'btn-primary')]").click()
-        else:
-            table_element.find_element(By.XPATH, "..//button[contains(@class,'btn-default')]").click()
+        element.find_element(By.XPATH, "ancestor::form").find_element(
+            By.CLASS_NAME, "editable-cancel" if cancel else "editable-submit").click()
+        WebDriverWait(self.driver, 10).until(
+            lambda driver: EC.invisibility_of_element(element)(driver) or any(
+                error.is_displayed() and error.text for error in cell.find_elements(
+                    By.CSS_SELECTOR, ".editable-error-block")) or element.get_property("validationMessage"))
 
     def edit_table_html(self, table_element, new_value, cancel=False):
         table_element.click()
-        self.driver.switch_to.frame(self.driver.find_element(By.CLASS_NAME, "wysihtml5-sandbox"))
-        ele = self.check_element_on_page((By.CLASS_NAME, 'wysihtml5-editor'))
-        ele.clear()
-        ele.click()
-        ele.send_keys(new_value)
-        self.driver.switch_to.default_content()
-        if not cancel:
-            self.driver.find_element(By.XPATH, "//button[contains(@class,'btn-primary')]").click()
-        else:
-            self.driver.find_element(By.XPATH, "//button[contains(@class,'btn-default')]").click()
+        container = WebDriverWait(self.driver, 10).until(
+            lambda driver: next((element for element in driver.find_elements(
+                By.CLASS_NAME, "editable-container") if element.is_displayed()), False))
+        frame = WebDriverWait(self.driver, 10).until(
+            lambda driver: next((element for element in container.find_elements(
+                By.CLASS_NAME, "wysihtml5-sandbox") if element.is_displayed()), False))
+        try:
+            self.driver.switch_to.frame(frame)
+            editor = WebDriverWait(self.driver, 10).until(
+                EC.element_to_be_clickable((By.CSS_SELECTOR, "body.wysihtml5-editor[contenteditable='true']")))
+            # Wysihtml5 focuses its iframe itself; clicking the body can dismiss
+            # the editable popup and discard Firefox's current frame.
+            editor.send_keys(Keys.CONTROL, "a")
+            editor.send_keys(Keys.BACKSPACE)
+            if new_value:
+                editor.send_keys(new_value)
+        finally:
+            self.driver.switch_to.default_content()
+        container.find_element(By.CSS_SELECTOR, "." + (
+            "editable-cancel" if cancel else "editable-submit")).click()
+        WebDriverWait(self.driver, 10).until(EC.invisibility_of_element(frame))
 
     def get_user_table(self, page=1):
         # get current page
@@ -2094,7 +2219,10 @@ class ui_class():
             time.sleep(1)
         # header = self.driver.find_elements(By.XPATH, "//thead/tr/th/div[starts-with(@class, 'th-inner')]")
         header_edit = list()
-        header = self.driver.find_elements(By.XPATH, "//table[@id='user-table']/thead/tr/th")
+        WebDriverWait(self.driver, 10).until(
+            EC.presence_of_element_located((By.CSS_SELECTOR, "#user-table tbody tr")))
+        header = [head for head in self.driver.find_elements(
+            By.CSS_SELECTOR, "#user-table thead tr th") if head.is_displayed()]
         for cnt, head in enumerate(header):
             header_edit.insert(cnt, dict())
             header_edit[cnt]['sort'] = head.find_element(By.XPATH, "./div[starts-with(@class, 'th-inner')]")
@@ -2124,7 +2252,7 @@ class ui_class():
                 else:
                     header_edit[cnt]['text'] = header_edit[cnt]['sort'].text.split('\n')[-1]
 
-        rows = self.driver.find_elements(By.XPATH, "//tbody/tr")
+        rows = self.driver.find_elements(By.CSS_SELECTOR, "#user-table tbody tr[data-index]")
 
         table = list()
         ret = dict()
@@ -2158,8 +2286,9 @@ class ui_class():
         ret['table'] = table
         ret['header'] = header_edit
         ret['column'] = self.check_element_on_page((By.XPATH, "//*[@aria-label='Columns']"))
-        ret['column_elements'] = self.driver.find_elements(By.XPATH, "//*[@role='menuitem']/label/input")
-        ret['column_texts'] = self.driver.find_elements(By.XPATH, "//*[@role='menuitem']/label/span")
+        toolbar = ret['column'].find_element(By.XPATH, "ancestor::div[contains(@class, 'columns')]")
+        ret['column_elements'] = toolbar.find_elements(By.CSS_SELECTOR, ".dropdown-menu label input")
+        ret['column_texts'] = toolbar.find_elements(By.CSS_SELECTOR, ".dropdown-menu label span")
         ret['search'] = self.check_element_on_page((By.CLASS_NAME, "search-input"))
         ret['remove-btn'] = self.check_element_on_page((By.ID, "user_delete_selection"))
         return ret
@@ -2202,20 +2331,23 @@ class ui_class():
         if isinstance(option_texts, str):
             option_texts = [option_texts]
 
-        control = container.find_element(By.CSS_SELECTOR, ".ts-control")
         for option_text in option_texts:
-            options = [option for option in self.driver.find_elements(
-                By.CSS_SELECTOR, ".ts-dropdown [role='option']") if option.is_displayed()]
-            if not options:
-                control.click()
-                options = WebDriverWait(self.driver, 5).until(
-                    lambda driver: [option for option in driver.find_elements(
-                        By.CSS_SELECTOR, ".ts-dropdown [role='option']") if option.is_displayed()])
-
-            option = next((candidate for candidate in options if candidate.text.strip() == option_text), None)
-            if option is None:
-                raise NoSuchElementException("TomSelect option not found: {}".format(option_text))
+            control = WebDriverWait(self.driver, 10).until(
+                lambda driver: next((element for element in container.find_elements(
+                    By.CSS_SELECTOR, ".ts-control input")
+                    if element.is_displayed() and element.is_enabled()), False))
+            control.click()
+            control.send_keys(Keys.CONTROL, "a")
+            control.send_keys(Keys.BACKSPACE)
+            control.send_keys(option_text)
+            option = WebDriverWait(self.driver, 10).until(
+                lambda driver: next((candidate for candidate in container.find_elements(
+                    By.CSS_SELECTOR, ".ts-dropdown [role='option']")
+                    if candidate.is_displayed() and candidate.text.strip() == option_text), False),
+                message="TomSelect option not found: {}".format(option_text))
             option.click()
+        if option_texts:
+            control.send_keys(Keys.ESCAPE)
 
     # currently only title, author, comment
     def adv_search(self, term_dict, get=False):
