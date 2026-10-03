@@ -68,9 +68,8 @@ class TestFilePicker(ParallelTestCase):
         self.assertTrue(self.check_element_on_page((By.ID, 'flash_success')))
         self.goto_page('basic_config')
         time.sleep(2)
-        accordions = self.driver.find_elements(by=By.CLASS_NAME, value='accordion-toggle')
         time.sleep(1)
-        accordions[0].click()
+        self.click_config_accordion("collapseone")
 
         input1 = self.check_element_on_page((By.ID, 'config_certfile'))
         filepicker1 = self.check_element_on_page((By.ID, 'certfile_path'))

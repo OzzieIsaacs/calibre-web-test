@@ -73,7 +73,7 @@ class TestUpdater(ParallelTestCase):
         time.sleep(timeout)
         self.assertTrue(responsetext in self.check_element_on_page((By.ID, "message")).text)
         self.assertTrue(self.check_element_on_page((By.CLASS_NAME, className)))
-        self.check_element_on_page((By.CLASS_NAME, "close")).click()
+        self.check_element_on_page((By.CLASS_NAME, "btn-close")).click()
 
     @classmethod
     def copy_cw(cls):

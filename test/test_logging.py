@@ -141,8 +141,7 @@ class TestLogging(ParallelTestCase):
             self.assertTrue(os.path.isfile(os.path.join(self.app_dir, 'calibre-web.log')))
             # check if logpath is deleted
             self.goto_page("basic_config")
-            accordions = self.driver.find_elements(By.CLASS_NAME, "accordion-toggle")
-            accordions[2].click()
+            self.click_config_accordion("collapsetwo")
             logpath = self.driver.find_element(By.ID, "config_logfile").get_attribute("value")
             self.assertEqual(logpath, "", "logfile config value is not empty after reseting to default")
         else:
@@ -177,8 +176,7 @@ class TestLogging(ParallelTestCase):
             self.assertFalse(os.path.isfile(os.path.join(self.app_dir, 'hö lo', 'lü g')))
             self.assertTrue(os.path.isfile(os.path.join(self.app_dir, 'access.log')))
             # check if logpath is deleted
-            accordions = self.driver.find_elements(By.CLASS_NAME, "accordion-toggle")
-            accordions[2].click()
+            self.click_config_accordion("collapsetwo")
             logpath = self.driver.find_element(By.ID, "config_access_logfile").get_attribute("value")
             self.assertEqual(logpath, "", "Access logfile config value is not empty after reseting to default")
         else:

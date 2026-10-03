@@ -562,7 +562,7 @@ class TestLogin(ParallelTestCase):
         r.headers['X-LoGiN'] = "admin"
         resp = r.get(f"http://127.0.0.1:{self.worker_port}/")
         self.assertEqual(resp.status_code, 200)
-        self.assertTrue('class="hidden-sm">Admin</span>' in resp.text)
+        self.assertTrue('class="d-none d-lg-inline">Admin</span>' in resp.text)
         r.close()
         # ToDo: Additional test with reverse proxy
         self.assertTrue(self.login('admin', 'admin123'))
@@ -610,11 +610,11 @@ class TestLogin(ParallelTestCase):
         resp = r.get("http://127.0.0.1:" + self.worker_port + "/me")
         self.assertEqual(resp.status_code, 200)
         self.assertFalse("Calibre-Web | Login" in resp.text)
-        self.assertTrue('class="hidden-sm">admin</span></a>' in resp.text)
+        self.assertTrue('class="d-none d-lg-inline">admin</span></a>' in resp.text)
         r.headers['X-LOGIN'] = "new_user1"
         resp = r.get("http://127.0.0.1:" + self.worker_port + "/me")
         self.assertEqual(resp.status_code, 200)
-        self.assertTrue('class="hidden-sm">new_user1</span></a>' in resp.text)
+        self.assertTrue('class="d-none d-lg-inline">new_user1</span></a>' in resp.text)
         r.close()
 
         self.assertTrue(self.login('admin', 'admin123'))

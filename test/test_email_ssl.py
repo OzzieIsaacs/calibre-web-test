@@ -202,8 +202,7 @@ class TestSSL(ParallelTestCase):
     def test_filepicker_two_file(self):
         files_dir = os.path.join(os.path.dirname(os.path.abspath(__file__)), 'files')
         self.goto_page('basic_config')
-        accordions = self.driver.find_elements(By.CLASS_NAME, "accordion-toggle")
-        accordions[0].click()
+        self.click_config_accordion("collapseone")
         filepicker = self.check_element_on_page((By.ID, "certfile_path"))
         self.assertTrue(filepicker)
         # open filepicker

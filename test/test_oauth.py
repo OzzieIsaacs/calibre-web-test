@@ -73,7 +73,7 @@ class TestOAuthLogin(ParallelTestCase):
         wait_for_reboot(f"http://127.0.0.1:{self.worker_port}")
         self.assertTrue(self.check_element_on_page((By.ID, "flash_success")))
         # open settings
-        self.driver.find_elements(By.CLASS_NAME, "accordion-toggle")[3].click()
+        self.click_config_accordion("collapsefour")
         # check all 4 fields are empty
         self.assertEqual('', self.check_element_on_page((By.ID, "config_1_oauth_client_id")).get_attribute('value'))
         self.assertEqual('', self.check_element_on_page((By.ID, "config_1_oauth_client_secret")).get_attribute('value'))

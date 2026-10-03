@@ -63,7 +63,7 @@ page['create_user'] = {'check': (By.ID, "name"), 'click': [(By.ID, "top_admin"),
 page['register'] = {'check': (By.ID, "email"), 'click': [(By.ID, "register")]}
 page['tasks'] = {'check': (By.TAG_NAME, "h2"), 'click': [(By.ID, "top_tasks")]}
 page['login'] = {'check': (By.NAME, "username"), 'click': [(By.ID, "logout")]}
-page['unlogged_login'] = {'check': (By.NAME, "username"), 'click': [(By.CLASS_NAME, "glyphicon-log-in")]}
+page['unlogged_login'] = {'check': (By.NAME, "username"), 'click': [(By.ID, "login")]}
 page['logviewer'] = {'check': (By.ID, "log_group"), 'click': [(By.ID, "top_admin"), (By.ID, "logfile")]}
 page['adv_search'] = {'check': (By.ID, "adv_submit"), 'click': [(By.ID, "advanced_search")]}
 
@@ -146,7 +146,8 @@ class ui_class():
 
     @classmethod
     def list_shelfs(cls, search_name=None):
-        all_shelfs = cls.driver.find_elements(By.XPATH, "//a/span[@class='glyphicon glyphicon-list shelf']//ancestor::a")
+        all_shelfs = cls.driver.find_elements(
+            By.XPATH, "//a/i[contains(concat(' ', normalize-space(@class), ' '), ' shelf ')]/ancestor::a")
         ret_shelfs = list()
         ret_ele = None
 
@@ -170,6 +171,11 @@ class ui_class():
             return ret_ele
         else:
             return ret_shelfs
+
+    @classmethod
+    def click_config_accordion(cls, collapse_id):
+        selector = ".accordion-button[aria-controls='{}']".format(collapse_id)
+        cls.driver.find_element(By.CSS_SELECTOR, selector).click()
 
     @classmethod
     def goto_page(cls, page_target):
@@ -314,10 +320,10 @@ class ui_class():
                    'config_ldap_encryption', 'config_ldap_authentication', 'ldap_import_user_filter', 'config_session']
         # depending on elements open accordions or not
         if any(key in elements for key in ['config_port', 'config_certfile','config_keyfile', 'config_updatechannel']):
-            opener.append(0)
+            opener.append("collapseone")
         if any(key in elements for key in ['config_log_level','config_logfile', 'config_access_logfile',
                                            'config_access_log']):
-            opener.append(1)
+            opener.append("collapsetwo")
         if any(key in elements for key in ['config_uploading', 'config_anonbrowse', 'config_public_reg',
                                            'config_register_email', 'config_upload_formats',
                                            'config_remote_login', 'config_use_goodreads', 'config_goodreads_api_key',
@@ -339,21 +345,20 @@ class ui_class():
                                            'config_reverse_proxy_login_secret_header_name',
                                            'config_reverse_proxy_login_header_secret_e',
                                            'config_unicode_filename', 'config_embed_metadata']):
-            opener.append(2)
+            opener.append("collapsefour")
         if any(key in elements for key in ['config_calibre', 'config_kepubifypath',
                                            'config_binariesdir', 'config_rarfile_location']):
-            opener.append(3)
+            opener.append("collapsefive")
         if any(key in elements for key in ['config_password_policy', 'config_password_number', 'config_password_lower',
                                            'config_password_upper', 'config_password_special', 'config_session',
                                            'config_password_min_length', 'config_password_character',
                                            'config_ratelimiter', 'config_limiter_uri', 'config_limiter_options']):
-            opener.append(4)
+            opener.append("collapsesix")
 
         # open all necessary accordions
-        accordions = cls.driver.find_elements(By.CLASS_NAME, "accordion-toggle")
         for o in opener:
             time.sleep(1)
-            accordions[o].click()
+            cls.click_config_accordion(o)
         # check if checkboxes are in list and seperate lists
         for element,key in enumerate(elements):
             if key in checkboxes:
@@ -412,7 +417,6 @@ class ui_class():
     def fill_view_config(cls,elements=None):
         cls.goto_page('view_config')
         WebDriverWait(cls.driver, 5).until(EC.presence_of_element_located((By.CLASS_NAME, "discover")))
-        accordions=cls.driver.find_elements(By.CLASS_NAME, "accordion-toggle")
         opener = list()
         process_checkboxes = dict()
         process_elements = dict()
@@ -428,18 +432,18 @@ class ui_class():
         if any(key in elements for key in ['config_calibre_web_title', 'config_books_per_page', 'config_theme',
                                            'config_random_books', 'config_columns_to_ignore', 'config_authors_max',
                                            'config_restricted_column', 'config_read_column', 'config_title_regex']):
-            opener.append(0)
+            opener.append("collapsefour")
         if any(key in elements for key in ['admin_role', 'download_role', 'upload_role', 'edit_role', 'viewer_role',
                                            'delete_role', 'passwd_role', 'edit_shelf_role']):
-            opener.append(1)
+            opener.append("collapsesix")
         if any(key in elements for key in ['show_32', 'show_16', 'show_128', 'show_32768', 'show_65536',
                                            'show_2', 'show_4', 'show_8', 'show_64', 'show_8192', 'show_16384',
                                            'show_256', 'Show_detail_random', 'show_4096', 'show_131072']):
-            opener.append(2)
+            opener.append("collapseseven")
 
         # open all necessary accordions
         for o in opener:
-            accordions[o].click()
+            cls.click_config_accordion(o)
         # check if checkboxes are in list and seperate lists
         for element,key in enumerate(elements):
             if key in checkboxes:
@@ -655,8 +659,7 @@ class ui_class():
         elif type == RESTRICT_TAG_TEMPLATE:
             self.goto_page('view_config')
             WebDriverWait(self.driver, 5).until(EC.presence_of_element_located((By.CLASS_NAME, "discover")))
-            accordions = self.driver.find_elements(By.CLASS_NAME, "accordion-toggle")
-            accordions[2].click()
+            self.click_config_accordion("collapseseven")
             restrict = self.check_element_on_page((By.ID, 'get_tags'))
             if not restrict:
                 return False
@@ -664,8 +667,7 @@ class ui_class():
         elif type == RESTRICT_COL_TEMPLATE:
             self.goto_page('view_config')
             WebDriverWait(self.driver, 5).until(EC.presence_of_element_located((By.CLASS_NAME, "discover")))
-            accordions = self.driver.find_elements(By.CLASS_NAME, "accordion-toggle")
-            accordions[2].click()
+            self.click_config_accordion("collapseseven")
             restrict = self.check_element_on_page((By.ID, 'get_column_values'))
             if not restrict:
                 return False
@@ -1302,7 +1304,7 @@ class ui_class():
                         if 'class' in element[0].attrib:
                             counter = 0
                             for rating in element:
-                                if rating.attrib['class'] == 'glyphicon glyphicon-star good':
+                                if 'bi-star-fill' in rating.attrib.get('class', '').split():
                                     counter += 1
                             book_r['rating'] = counter
                         elif 'href' in element[0].attrib:
@@ -1334,7 +1336,7 @@ class ui_class():
                         if 'class' in element[0].attrib:
                             counter = 0
                             for rating in element:
-                                if rating.attrib['class'] == 'glyphicon glyphicon-star good':
+                                if 'bi-star-fill' in rating.attrib.get('class', '').split():
                                     counter += 1
                             bk['rating'] = counter
                         elif 'href' in element[0].attrib:
@@ -1411,7 +1413,8 @@ class ui_class():
             if not rating:
                 bk['title']= ele[index].text
             else:
-                bk['title'] = str(len(book.find_elements(By.XPATH, ".//*[@class='glyphicon glyphicon-star good']")))
+                bk['title'] = str(len(book.find_elements(
+                    By.XPATH, ".//*[contains(concat(' ', normalize-space(@class), ' '), ' bi-star-fill ')]")))
             books.append(bk)
         if grid:
             return sorted(books, key=cmp_to_key(cust_compare))
@@ -1475,7 +1478,7 @@ class ui_class():
                         if 'class' in element[0].attrib:
                             counter = 0
                             for rating in element:
-                                if rating.attrib['class'] == 'glyphicon glyphicon-star good':
+                                if 'bi-star-fill' in rating.attrib.get('class', '').split():
                                     counter += 1
                             bk['rating'] = counter
                         elif 'href' in element[0].attrib:
@@ -1538,7 +1541,8 @@ class ui_class():
             author = tree.findall(".//*[@class='author']/a")
             ret['author'] = [aut.text for aut in author]
 
-            ret['rating']= len(tree.findall(".//*[@class='glyphicon glyphicon-star good']"))
+            ret['rating'] = len(tree.xpath(
+                ".//*[contains(concat(' ', normalize-space(@class), ' '), ' bi-star-fill ')]"))
 
             languages = tree.findall(".//*[@class='languages']//span")
             if languages:
@@ -1584,7 +1588,7 @@ class ui_class():
             del_shelf = tree.findall(".//*[@id='remove-from-shelves']//a")
             ret['del_shelf'] = [sh.text.strip().lstrip() for sh in del_shelf]
 
-            ret['edit_enable'] = tree.find(".//*[@class='glyphicon glyphicon-edit']") is not None
+            ret['edit_enable'] = tree.find(".//*[@id='edit_book']") is not None
 
             ele = tree.xpath(".//*[starts-with(@id,'sendbtn')]")
             # bk['ele'] = cls.check_element_on_page((By.XPATH, "//a[@href='" + bk['link'] + "']/img"))
@@ -2021,7 +2025,7 @@ class ui_class():
                     click_element = el
                 index = header_edit[cnt]['text']
                 if click_element.text == "" and click_element.tag_name == "a":
-                    element_text = "+" if "glyphicon-plus" in click_element.find_elements(By.XPATH, "./span")[0].get_attribute('class') else ""
+                    element_text = "+" if "bi-plus-lg" in click_element.find_elements(By.XPATH, "./span")[0].get_attribute('class') else ""
                 else:
                     element_text = el.text
                 ele[index] = {'element': click_element, 'sort': header_edit[cnt]['sort'], 'text': element_text}
@@ -2136,7 +2140,7 @@ class ui_class():
                 index = header_edit[cnt]['text']
                 if click_element.text == "" and click_element.tag_name == "a":
                     try:
-                        element_text = "+" if "glyphicon-plus" in click_element.find_elements(By.XPATH, "./span")[0].get_attribute('class') else ""
+                        element_text = "+" if "bi-plus-lg" in click_element.find_elements(By.XPATH, "./span")[0].get_attribute('class') else ""
                     except:
                         element_text = ""
                 else:
@@ -2193,6 +2197,25 @@ class ui_class():
                 send.click()
                 return self.get_shelf_books_displayed()
         return False
+
+    def select_tom_select_options(self, container, option_texts):
+        if isinstance(option_texts, str):
+            option_texts = [option_texts]
+
+        control = container.find_element(By.CSS_SELECTOR, ".ts-control")
+        for option_text in option_texts:
+            options = [option for option in self.driver.find_elements(
+                By.CSS_SELECTOR, ".ts-dropdown [role='option']") if option.is_displayed()]
+            if not options:
+                control.click()
+                options = WebDriverWait(self.driver, 5).until(
+                    lambda driver: [option for option in driver.find_elements(
+                        By.CSS_SELECTOR, ".ts-dropdown [role='option']") if option.is_displayed()])
+
+            option = next((candidate for candidate in options if candidate.text.strip() == option_text), None)
+            if option is None:
+                raise NoSuchElementException("TomSelect option not found: {}".format(option_text))
+            option.click()
 
     # currently only title, author, comment
     def adv_search(self, term_dict, get=False):
@@ -2270,14 +2293,9 @@ class ui_class():
                     select.select_by_visible_text(process_select[key])
 
                 for element, key in enumerate(process_mulitselect):
-                    button = self.driver.find_element(By.XPATH, "//select[@id='"+key+"']/following-sibling::button")
-                    button.click()
-                    ele = self.driver.find_elements(By.XPATH,
-                                              "//select[@id='" + key + "']/following-sibling::div//a[@role='option']")
-                    for e in ele:
-                        if e.text == process_mulitselect[key]:
-                            e.click()
-                            break
+                    select = self.driver.find_element(By.ID, key)
+                    self.select_tom_select_options(select.find_element(By.XPATH, ".."),
+                                                   process_mulitselect[key])
                     #select.select_by_visible_text(process_mulitselect[key])
 
                 for element, key in enumerate(process_checkboxes):
@@ -2290,12 +2308,12 @@ class ui_class():
         return False
 
     def find_metadata_results(self):
-        entries = self.driver.find_elements(By.CLASS_NAME, "media")
+        entries = self.driver.find_elements(By.CSS_SELECTOR, "#book-list > li[data-related]")
         result = []
         for entry in entries:
             if entry.is_displayed():
                 res=dict()
-                res['cover_element'] = entry.find_element(By.CLASS_NAME, "img-responsive")
+                res['cover_element'] = entry.find_element(By.CLASS_NAME, "img-fluid")
                 res['cover'] = res['cover_element'].get_attribute('src')
                 res['source'] = entry.find_element(By.CLASS_NAME, "meta_source").get_attribute('href')
                 try:

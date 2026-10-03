@@ -59,16 +59,7 @@ class TestUserList(ParallelTestCase):
         time.sleep(1)
 
     def mass_change_multi(self, element, tag_list, remove, cancel=False):
-        button = element.find_element(By.XPATH, ".//select/following-sibling::button")
-        button.click()
-        ele = element.find_elements(By.XPATH,
-                                        ".//select/following-sibling::div//a[@role='option']")
-        for tag in tag_list:
-            for e in ele:
-                if e.text == tag:
-                    e.click()
-                    break
-        button.click()
+        self.select_tom_select_options(element, tag_list)
         action_button = element.find_elements(By.XPATH, ".//div[contains(@class,'multi_head')]")
         if remove == "Remove":
             action_button[0].click()
