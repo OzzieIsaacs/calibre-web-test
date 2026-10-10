@@ -464,7 +464,10 @@ class TestKoboSyncBig(ParallelTestCase):
         self.fill_thumbnail_config({'schedule_generate_book_covers': 1})
         self.assertTrue(self.check_element_on_page((By.ID, "flash_success")))
         self.restart_calibre_web()
-        time.sleep(120)
+        expected_thumbnails = (BOOK_COUNT + 10) * NUM_THUMBNAILS
+        WebDriverWait(self.driver, 180, poll_frequency=0.5).until(
+            lambda _: count_files(thumbnail_cache_path) == expected_thumbnails,
+            message=f"Expected {expected_thumbnails} thumbnail files in {thumbnail_cache_path}")
         self.assertTrue(os.path.exists(thumbnail_cache_path))
         self.assertEqual(count_files(thumbnail_cache_path), (BOOK_COUNT+10) * NUM_THUMBNAILS)
         # get cover cache enabled

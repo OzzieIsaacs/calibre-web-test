@@ -183,7 +183,7 @@ class ui_class():
             try:
                 element = driver.find_element(*target) if isinstance(target, tuple) else target
                 driver.execute_script(
-                    "arguments[0].scrollIntoView({block: 'center', inline: 'nearest'});", element)
+                    "arguments[0].scrollIntoView({block: 'center', inline: 'nearest', behavior: 'instant'});", element)
                 if element.is_displayed() and element.is_enabled():
                     element.click()
                     return element

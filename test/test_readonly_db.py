@@ -43,7 +43,8 @@ class TestReadOnlyDatabase(ParallelTestCase):
                                 'title': 'Buuko'})
         rights = os.stat(self.temp_dir).st_mode & 0o777
         os.chmod(self.temp_dir, 0o400)
-        self.get_book_details(9)
+        # Expect a database error page, not book details; get_book_details would reject the missing cover.
+        self.driver.get("http://127.0.0.1:{}/book/9".format(self.worker_port))
         element = self.check_element_on_page((By.XPATH, '//*[@title="Return to Database config"]'))
         self.assertTrue(element)
         element.click()
@@ -92,4 +93,3 @@ class TestReadOnlyDatabase(ParallelTestCase):
         book_path = os.path.join(self.temp_dir, 'John Doe', 'Buuko (9)')
         self.assertTrue(os.path.isdir(book_path))
         self.goto_page('nav_new')
-

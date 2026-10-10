@@ -65,5 +65,6 @@ class TestDeleteDatabase(ParallelTestCase):
         list_element = self.goto_page("nav_cat")
         self.assertEqual(0, len(list_element))
         bl = self.get_books_list(1)
-        self.assertEqual(1, len(bl['table']))
-        self.assertEqual("No matching records found", bl['table'][0]['selector']['text'])
+        self.assertEqual(0, len(bl['table']))
+        empty_message = self.driver.find_element(By.CSS_SELECTOR, "#books-table tbody .no-records-found td")
+        self.assertEqual("No matching records found", empty_message.text)

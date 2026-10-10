@@ -5,6 +5,9 @@ import time
 import os
 import shutil
 import zipfile
+from io import BytesIO
+
+import pikepdf
 
 from helper_email_convert import AIOSMTPServer
 from selenium.webdriver.common.by import By
@@ -12,6 +15,15 @@ from selenium.webdriver.support.ui import Select
 from helper_func import startup, read_metadata_epub, read_opf_metadata, wait_Email_received
 from helper_email_convert import calibre_path, kepubify_path
 import datetime
+
+DC = "{http://purl.org/dc/elements/1.1/}"
+CALIBRE_XMP = "{http://calibre-ebook.com/xmp-namespace}"
+
+
+def read_pdf_xmp(pdf_content):
+    with pikepdf.open(BytesIO(pdf_content)) as pdf:
+        return {key: value for key, value in pdf.open_metadata().items()}
+
 
 class TestEmbedMetadata(ParallelTestCase):
 
@@ -37,6 +49,13 @@ class TestEmbedMetadata(ParallelTestCase):
         release_resource("port", cls.port)
         super().tearDownClass()
 
+    def assert_pdf_unchanged(self, pdf_content):
+        # Without embedding the library file has to be delivered byte by byte (it has no XMP metadata at all)
+        pdf_path = os.path.join(self.temp_dir, "Norbert Halagal", "book11 (13)", "book11 - Norbert Halagal.pdf")
+        with open(pdf_path, "rb") as f:
+            self.assertEqual(f.read(), pdf_content)
+        self.assertEqual({}, read_pdf_xmp(pdf_content))
+
     def test_download_check_metadata(self):
         # no calibre download
         self.fill_basic_config({'config_binariesdir': ''})
@@ -54,6 +73,7 @@ class TestEmbedMetadata(ParallelTestCase):
         code, pdf_content = self.download_book(13, "admin", "admin123")
         self.assertEqual(200, code)
         self.assertEqual(28590, len(pdf_content))
+        self.assert_pdf_unchanged(pdf_content)
         self.fill_basic_config({'config_binariesdir': calibre_path(), 'config_embed_metadata': 0})
         self.assertTrue(self.check_element_on_page((By.ID, "flash_success")))
         code, txt_content = self.download_book(1, "admin", "admin123")
@@ -68,6 +88,7 @@ class TestEmbedMetadata(ParallelTestCase):
         code, pdf_content = self.download_book(13, "admin", "admin123")
         self.assertEqual(200, code)
         self.assertEqual(28590, len(pdf_content))
+        self.assert_pdf_unchanged(pdf_content)
         self.fill_basic_config({'config_embed_metadata': 1})
         self.assertTrue(self.check_element_on_page((By.ID, "flash_success")))
         code, txt_content = self.download_book(1, "admin", "admin123")
@@ -83,7 +104,13 @@ class TestEmbedMetadata(ParallelTestCase):
         self.assertEqual("Gênot", epub_data['tags'][0])
         code, pdf_content = self.download_book(13, "admin", "admin123")
         self.assertEqual(200, code)
-        self.assertEqual(40031, len(pdf_content))
+        # The exact size of the calibre generated file depends on the calibre version, check the embedded metadata
+        pdf_data = read_pdf_xmp(pdf_content)
+        self.assertIn(DC + "title", pdf_data, "No metadata embedded, original pdf file was delivered")
+        self.assertEqual("book11", pdf_data[DC + "title"])
+        self.assertEqual(["Norbert Halagal"], list(pdf_data[DC + "creator"]))
+        self.assertEqual({"nb"}, set(pdf_data[DC + "language"]))
+        self.assertEqual("Halagal, Norbert", pdf_data[CALIBRE_XMP + "author_sort"])
 
     def test_download_permissions_missing_file(self):
         txt_path = os.path.join(self.temp_dir, "Frodo Beutlin", "Der Buchtitel (1)", "Der Buchtitel - Frodo Beutlin.txt")
